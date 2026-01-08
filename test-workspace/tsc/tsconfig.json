@@ -1,31 +1,656 @@
 {
 	"include": [],
 	"references": [
-		{ "path": "./failureFixtures/#3632" },
-		{ "path": "./failureFixtures/#4569" },
-		{ "path": "./failureFixtures/#5071" },
-		{ "path": "./failureFixtures/directives" },
-
-		{ "path": "./passedFixtures/#1886" },
-		{ "path": "./passedFixtures/#2157" },
-		{ "path": "./passedFixtures/#2472" },
-		{ "path": "./passedFixtures/#3373" },
-		{ "path": "./passedFixtures/#3574" },
-		{ "path": "./passedFixtures/#3592" },
-		{ "path": "./passedFixtures/#3819" },
-		{ "path": "./passedFixtures/#4503" },
-		{ "path": "./passedFixtures/#5106" },
-		{ "path": "./passedFixtures/#5111" },
-		{ "path": "./passedFixtures/#5136" },
-		{ "path": "./passedFixtures/#5338" },
-		{ "path": "./passedFixtures/core#9923" },
-		{ "path": "./passedFixtures/fallthroughAttributes" },
-		{ "path": "./passedFixtures/fallthroughAttributes_strictTemplate" },
-		{ "path": "./passedFixtures/noPropertyAccessFromIndexSignature" },
-		// { "path": "./passedFixtures/petite-vue" },
-		{ "path": "./passedFixtures/pug" },
-		{ "path": "./passedFixtures/vue3" },
-		{ "path": "./passedFixtures/vue3_strictTemplate" },
-		{ "path": "./passedFixtures/vue3.4" }
+		{
+			"path": "./#1855/tsconfig.json"
+		},
+		{
+			"path": "./#1886/tsconfig.json"
+		},
+		{
+			"path": "./#2048/tsconfig.json"
+		},
+		{
+			"path": "./#2157/tsconfig.json"
+		},
+		{
+			"path": "./#2166/tsconfig.json"
+		},
+		{
+			"path": "./#2206/tsconfig.json"
+		},
+		{
+			"path": "./#2225/tsconfig.json"
+		},
+		{
+			"path": "./#2250/tsconfig.json"
+		},
+		{
+			"path": "./#2308/tsconfig.json"
+		},
+		{
+			"path": "./#2370/tsconfig.json"
+		},
+		{
+			"path": "./#2399/tsconfig.json"
+		},
+		{
+			"path": "./#2431/tsconfig.json"
+		},
+		{
+			"path": "./#2468/tsconfig.json"
+		},
+		{
+			"path": "./#2472/tsconfig.json"
+		},
+		{
+			"path": "./#2514/tsconfig.json"
+		},
+		{
+			"path": "./#2554/tsconfig.json"
+		},
+		{
+			"path": "./#2586/tsconfig.json"
+		},
+		{
+			"path": "./#2588/tsconfig.json"
+		},
+		{
+			"path": "./#2590/tsconfig.json"
+		},
+		{
+			"path": "./#2617/tsconfig.json"
+		},
+		{
+			"path": "./#2629/tsconfig.json"
+		},
+		{
+			"path": "./#2638/tsconfig.json"
+		},
+		{
+			"path": "./#2639/tsconfig.json"
+		},
+		{
+			"path": "./#2640/tsconfig.json"
+		},
+		{
+			"path": "./#2646/tsconfig.json"
+		},
+		{
+			"path": "./#2647/tsconfig.json"
+		},
+		{
+			"path": "./#2678/tsconfig.json"
+		},
+		{
+			"path": "./#2683/tsconfig.json"
+		},
+		{
+			"path": "./#2691/tsconfig.json"
+		},
+		{
+			"path": "./#2700/tsconfig.json"
+		},
+		{
+			"path": "./#2709/tsconfig.json"
+		},
+		{
+			"path": "./#2712/tsconfig.json"
+		},
+		{
+			"path": "./#2720/tsconfig.json"
+		},
+		{
+			"path": "./#2725/tsconfig.json"
+		},
+		{
+			"path": "./#2726/tsconfig.json"
+		},
+		{
+			"path": "./#2730/tsconfig.json"
+		},
+		{
+			"path": "./#2744/tsconfig.json"
+		},
+		{
+			"path": "./#2754/tsconfig.json"
+		},
+		{
+			"path": "./#2758/tsconfig.json"
+		},
+		{
+			"path": "./#3100/tsconfig.json"
+		},
+		{
+			"path": "./#3102/tsconfig.json"
+		},
+		{
+			"path": "./#3109/tsconfig.json"
+		},
+		{
+			"path": "./#3117/tsconfig.json"
+		},
+		{
+			"path": "./#3121/tsconfig.json"
+		},
+		{
+			"path": "./#3122/tsconfig.json"
+		},
+		{
+			"path": "./#3123/tsconfig.json"
+		},
+		{
+			"path": "./#3129/tsconfig.json"
+		},
+		{
+			"path": "./#3138/tsconfig.json"
+		},
+		{
+			"path": "./#3140/tsconfig.json"
+		},
+		{
+			"path": "./#3152/tsconfig.json"
+		},
+		{
+			"path": "./#3164/tsconfig.json"
+		},
+		{
+			"path": "./#3171/tsconfig.json"
+		},
+		{
+			"path": "./#3204/tsconfig.json"
+		},
+		{
+			"path": "./#3255/tsconfig.json"
+		},
+		{
+			"path": "./#3257/tsconfig.json"
+		},
+		{
+			"path": "./#3258/tsconfig.json"
+		},
+		{
+			"path": "./#3289/tsconfig.json"
+		},
+		{
+			"path": "./#329/tsconfig.json"
+		},
+		{
+			"path": "./#3295/tsconfig.json"
+		},
+		{
+			"path": "./#3311/tsconfig.json"
+		},
+		{
+			"path": "./#3318/tsconfig.json"
+		},
+		{
+			"path": "./#3327/tsconfig.json"
+		},
+		{
+			"path": "./#3340/tsconfig.json"
+		},
+		{
+			"path": "./#3353/tsconfig.json"
+		},
+		{
+			"path": "./#3371/tsconfig.json"
+		},
+		{
+			"path": "./#3373/tsconfig.json"
+		},
+		{
+			"path": "./#3374/tsconfig.json"
+		},
+		{
+			"path": "./#3379/tsconfig.json"
+		},
+		{
+			"path": "./#3405/tsconfig.json"
+		},
+		{
+			"path": "./#3414/tsconfig.json"
+		},
+		{
+			"path": "./#3433/tsconfig.json"
+		},
+		{
+			"path": "./#3440/tsconfig.json"
+		},
+		{
+			"path": "./#3476/tsconfig.json"
+		},
+		{
+			"path": "./#3488/tsconfig.json"
+		},
+		{
+			"path": "./#3518/tsconfig.json"
+		},
+		{
+			"path": "./#3539/tsconfig.json"
+		},
+		{
+			"path": "./#3561/tsconfig.json"
+		},
+		{
+			"path": "./#3574/tsconfig.json"
+		},
+		{
+			"path": "./#3592/tsconfig.json"
+		},
+		{
+			"path": "./#3612/tsconfig.json"
+		},
+		{
+			"path": "./#3615/tsconfig.json"
+		},
+		{
+			"path": "./#3629/tsconfig.json"
+		},
+		{
+			"path": "./#3637/tsconfig.json"
+		},
+		{
+			"path": "./#3643/tsconfig.json"
+		},
+		{
+			"path": "./#3656/tsconfig.json"
+		},
+		{
+			"path": "./#3671/tsconfig.json"
+		},
+		{
+			"path": "./#3672/tsconfig.json"
+		},
+		{
+			"path": "./#3688/tsconfig.json"
+		},
+		{
+			"path": "./#3718/tsconfig.json"
+		},
+		{
+			"path": "./#3732/tsconfig.json"
+		},
+		{
+			"path": "./#3748/tsconfig.json"
+		},
+		{
+			"path": "./#3756/tsconfig.json"
+		},
+		{
+			"path": "./#3779/tsconfig.json"
+		},
+		{
+			"path": "./#3782/tsconfig.json"
+		},
+		{
+			"path": "./#3819/tsconfig.json"
+		},
+		{
+			"path": "./#3820/tsconfig.json"
+		},
+		{
+			"path": "./#3845/tsconfig.json"
+		},
+		{
+			"path": "./#3997/tsconfig.json"
+		},
+		{
+			"path": "./#4050/tsconfig.json"
+		},
+		{
+			"path": "./#4209/tsconfig.json"
+		},
+		{
+			"path": "./#4263/tsconfig.json"
+		},
+		{
+			"path": "./#4326/tsconfig.json"
+		},
+		{
+			"path": "./#4327/tsconfig.json"
+		},
+		{
+			"path": "./#4333/tsconfig.json"
+		},
+		{
+			"path": "./#4353/tsconfig.json"
+		},
+		{
+			"path": "./#4361/tsconfig.json"
+		},
+		{
+			"path": "./#4369/tsconfig.json"
+		},
+		{
+			"path": "./#4386/tsconfig.json"
+		},
+		{
+			"path": "./#4387/tsconfig.json"
+		},
+		{
+			"path": "./#4391/tsconfig.json"
+		},
+		{
+			"path": "./#4413/tsconfig.json"
+		},
+		{
+			"path": "./#4433/tsconfig.json"
+		},
+		{
+			"path": "./#4503/tsconfig.json"
+		},
+		{
+			"path": "./#4512/tsconfig.json"
+		},
+		{
+			"path": "./#4537/tsconfig.json"
+		},
+		{
+			"path": "./#4539/tsconfig.json"
+		},
+		{
+			"path": "./#4540/tsconfig.json"
+		},
+		{
+			"path": "./#4600/tsconfig.json"
+		},
+		{
+			"path": "./#4604/tsconfig.json"
+		},
+		{
+			"path": "./#4646/tsconfig.json"
+		},
+		{
+			"path": "./#4649/tsconfig.json"
+		},
+		{
+			"path": "./#4668/tsconfig.json"
+		},
+		{
+			"path": "./#4682/tsconfig.json"
+		},
+		{
+			"path": "./#4699/tsconfig.json"
+		},
+		{
+			"path": "./#4785/tsconfig.json"
+		},
+		{
+			"path": "./#4799/tsconfig.json"
+		},
+		{
+			"path": "./#4812/tsconfig.json"
+		},
+		{
+			"path": "./#4820/tsconfig.json"
+		},
+		{
+			"path": "./#4822/tsconfig.json"
+		},
+		{
+			"path": "./#4826/tsconfig.json"
+		},
+		{
+			"path": "./#4827/tsconfig.json"
+		},
+		{
+			"path": "./#4828/tsconfig.json"
+		},
+		{
+			"path": "./#4862/tsconfig.json"
+		},
+		{
+			"path": "./#4878/tsconfig.json"
+		},
+		{
+			"path": "./#4890/tsconfig.json"
+		},
+		{
+			"path": "./#4899/tsconfig.json"
+		},
+		{
+			"path": "./#4972/tsconfig.json"
+		},
+		{
+			"path": "./#4978/tsconfig.json"
+		},
+		{
+			"path": "./#4979/tsconfig.json"
+		},
+		{
+			"path": "./#5027/tsconfig.json"
+		},
+		{
+			"path": "./#5067/tsconfig.json"
+		},
+		{
+			"path": "./#5097/tsconfig.json"
+		},
+		{
+			"path": "./#5106/tsconfig.json"
+		},
+		{
+			"path": "./#5111/tsconfig.json"
+		},
+		{
+			"path": "./#5120/tsconfig.json"
+		},
+		{
+			"path": "./#5136/tsconfig.json"
+		},
+		{
+			"path": "./#5157/tsconfig.json"
+		},
+		{
+			"path": "./#5159/tsconfig.json"
+		},
+		{
+			"path": "./#5207/tsconfig.json"
+		},
+		{
+			"path": "./#5228/tsconfig.json"
+		},
+		{
+			"path": "./#5262/tsconfig.json"
+		},
+		{
+			"path": "./#5267/tsconfig.json"
+		},
+		{
+			"path": "./#5338/tsconfig.json"
+		},
+		{
+			"path": "./#5428/tsconfig.json"
+		},
+		{
+			"path": "./#5474/tsconfig.json"
+		},
+		{
+			"path": "./#5492/tsconfig.json"
+		},
+		{
+			"path": "./#5592/tsconfig.json"
+		},
+		{
+			"path": "./#5604/tsconfig.json"
+		},
+		{
+			"path": "./#5617/tsconfig.json"
+		},
+		{
+			"path": "./#5680/tsconfig.json"
+		},
+		{
+			"path": "./#5729/tsconfig.json"
+		},
+		{
+			"path": "./#5751/tsconfig.json"
+		},
+		{
+			"path": "./#5776/tsconfig.json"
+		},
+		{
+			"path": "./#5780/tsconfig.json"
+		},
+		{
+			"path": "./#5810/tsconfig.json"
+		},
+		{
+			"path": "./#5819/tsconfig.json"
+		},
+		{
+			"path": "./#5840/tsconfig.json"
+		},
+		{
+			"path": "./#5843/tsconfig.json"
+		},
+		{
+			"path": "./#5895/tsconfig.json"
+		},
+		{
+			"path": "./#5899/tsconfig.json"
+		},
+		{
+			"path": "./#625/tsconfig.json"
+		},
+		{
+			"path": "./_failed_#3632/tsconfig.json"
+		},
+		{
+			"path": "./_failed_#4569/tsconfig.json"
+		},
+		{
+			"path": "./_failed_#5071/tsconfig.json"
+		},
+		{
+			"path": "./_failed_#5823/tsconfig.json"
+		},
+		{
+			"path": "./_failed_directives/tsconfig.json"
+		},
+		{
+			"path": "./attrs/tsconfig.json"
+		},
+		{
+			"path": "./components/tsconfig.json"
+		},
+		{
+			"path": "./core#9923/tsconfig.json"
+		},
+		{
+			"path": "./cssModule/tsconfig.json"
+		},
+		{
+			"path": "./dataAttributes/tsconfig.json"
+		},
+		{
+			"path": "./defineEmits/tsconfig.json"
+		},
+		{
+			"path": "./defineExpose/tsconfig.json"
+		},
+		{
+			"path": "./defineModel/tsconfig.json"
+		},
+		{
+			"path": "./defineModelModifiers/tsconfig.json"
+		},
+		{
+			"path": "./defineOptions/tsconfig.json"
+		},
+		{
+			"path": "./directiveComments/tsconfig.json"
+		},
+		{
+			"path": "./directives/tsconfig.json"
+		},
+		{
+			"path": "./dynamic-component/tsconfig.json"
+		},
+		{
+			"path": "./events/tsconfig.json"
+		},
+		{
+			"path": "./fallthroughAttributes/tsconfig.json"
+		},
+		{
+			"path": "./fallthroughAttributes_duplicateNameEvent/tsconfig.json"
+		},
+		{
+			"path": "./fallthroughAttributes_duplicateNameProp/tsconfig.json"
+		},
+		{
+			"path": "./fallthroughAttributes_generic/tsconfig.json"
+		},
+		{
+			"path": "./fallthroughAttributes_requiredProp/tsconfig.json"
+		},
+		{
+			"path": "./fallthroughAttributes_unknownTag/tsconfig.json"
+		},
+		{
+			"path": "./input-radio/tsconfig.json"
+		},
+		{
+			"path": "./intrinsicProps/tsconfig.json"
+		},
+		{
+			"path": "./namespace-component/tsconfig.json"
+		},
+		{
+			"path": "./no-script-block/tsconfig.json"
+		},
+		{
+			"path": "./noPropertyAccessFromIndexSignature/tsconfig.json"
+		},
+		{
+			"path": "./pug/tsconfig.json"
+		},
+		{
+			"path": "./reference-type-in-template/tsconfig.json"
+		},
+		{
+			"path": "./rootEl/tsconfig.json"
+		},
+		{
+			"path": "./script-setup-scope/tsconfig.json"
+		},
+		{
+			"path": "./script_src/tsconfig.json"
+		},
+		{
+			"path": "./slots/tsconfig.json"
+		},
+		{
+			"path": "./templateRef/tsconfig.json"
+		},
+		{
+			"path": "./type-helpers/tsconfig.json"
+		},
+		{
+			"path": "./unknownProp/tsconfig.json"
+		},
+		{
+			"path": "./unknownTag/tsconfig.json"
+		},
+		{
+			"path": "./v-bind-require-object/tsconfig.json"
+		},
+		{
+			"path": "./v-bind-shorthand/tsconfig.json"
+		},
+		{
+			"path": "./v-for/tsconfig.json"
+		},
+		{
+			"path": "./v-generic/tsconfig.json"
+		},
+		{
+			"path": "./v-if/tsconfig.json"
+		},
+		{
+			"path": "./withDefaults/tsconfig.json"
+		}
 	]
 }

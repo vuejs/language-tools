@@ -5,46 +5,29 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import { createPlugins } from './plugins';
 import type { VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
-import { VueVirtualCode } from './virtualFile/vueFile';
+import { VueVirtualCode } from './virtualCode';
 
-const fileRegistries: {
-	key: string;
-	plugins: VueLanguagePlugin[];
-	files: Map<string, VueVirtualCode>;
-}[] = [];
+const fileRegistries: Record<string, Map<string, VueVirtualCode>> = {};
 
-function getVueFileRegistry(key: string, plugins: VueLanguagePlugin[]) {
-	let fileRegistry = fileRegistries.find(r =>
-		r.key === key
-		&& r.plugins.length === plugins.length
-		&& r.plugins.every(plugin => plugins.includes(plugin))
-	)?.files;
-	if (!fileRegistry) {
-		fileRegistry = new Map();
-		fileRegistries.push({
-			key: key,
-			plugins: plugins,
-			files: fileRegistry,
-		});
-	}
-	return fileRegistry;
-}
-
-function getFileRegistryKey(
+function getVueFileRegistry(
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 	plugins: VueLanguagePluginReturn[],
 ) {
-	const values = [
+	const key = JSON.stringify([
+		...plugins.map(plugin => plugin.name)
+			.filter(name => typeof name === 'string')
+			.sort(),
 		...Object.keys(vueCompilerOptions)
-			.sort()
 			.filter(key => key !== 'plugins')
+			.sort()
 			.map(key => [key, vueCompilerOptions[key as keyof VueCompilerOptions]]),
-		[...new Set(plugins.map(plugin => plugin.requiredCompilerOptions ?? []).flat())]
+		...[...new Set(plugins.flatMap(plugin => plugin.requiredCompilerOptions ?? []))]
 			.sort()
 			.map(key => [key, compilerOptions[key as keyof ts.CompilerOptions]]),
-	];
-	return JSON.stringify(values);
+	]);
+
+	return fileRegistries[key] ??= new Map();
 }
 
 export function createVueLanguagePlugin<T>(
@@ -62,10 +45,7 @@ export function createVueLanguagePlugin<T>(
 		vueCompilerOptions,
 	};
 	const plugins = createPlugins(pluginContext);
-	const fileRegistry = getVueFileRegistry(
-		getFileRegistryKey(compilerOptions, vueCompilerOptions, plugins),
-		vueCompilerOptions.plugins,
-	);
+	const fileRegistry = getVueFileRegistry(compilerOptions, vueCompilerOptions, plugins);
 
 	return {
 		getLanguageId(scriptId) {
@@ -80,7 +60,7 @@ export function createVueLanguagePlugin<T>(
 		createVirtualCode(scriptId, languageId, snapshot) {
 			const fileName = asFileName(scriptId);
 			if (plugins.some(plugin => plugin.isValidFile?.(fileName, languageId))) {
-				const code = fileRegistry.get(fileName);
+				const code = fileRegistry.get(String(scriptId));
 				if (code) {
 					code.update(snapshot);
 					return code;
@@ -94,14 +74,17 @@ export function createVueLanguagePlugin<T>(
 						plugins,
 						ts,
 					);
-					fileRegistry.set(fileName, code);
+					fileRegistry.set(String(scriptId), code);
 					return code;
 				}
 			}
 		},
-		updateVirtualCode(_fileId, code, snapshot) {
+		updateVirtualCode(_scriptId, code, snapshot) {
 			code.update(snapshot);
 			return code;
+		},
+		disposeVirtualCode(scriptId) {
+			fileRegistry.delete(String(scriptId));
 		},
 		typescript: {
 			extraFileExtensions: getAllExtensions(vueCompilerOptions)

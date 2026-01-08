@@ -1,6 +1,6 @@
 {
 	"name": "@vue/typescript-plugin",
-	"version": "3.1.0",
+	"version": "3.2.2",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
@@ -13,10 +13,11 @@
 		"directory": "packages/typescript-plugin"
 	},
 	"dependencies": {
-		"@volar/typescript": "2.4.23",
-		"@vue/language-core": "3.1.0",
+		"@volar/typescript": "2.4.27",
+		"@vue/language-core": "workspace:*",
 		"@vue/shared": "^3.5.0",
-		"path-browserify": "^1.0.1"
+		"path-browserify": "^1.0.1",
+		"vue-component-meta": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/node": "^22.10.4",

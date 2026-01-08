@@ -79,7 +79,7 @@
       "name": "v-text",
       "description": {
         "kind": "markdown",
-        "value": "Update the element's text content.\n\n- **Expects:** `string`\n\n- **Details**\n\n  `v-text` works by setting the element's [textContent](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent) property, so it will overwrite any existing content inside the element. If you need to update the part of `textContent`, you should use [mustache interpolations](https://vuejs.org/guide/essentials/template-syntax.html#text-interpolation) instead.\n\n- **Example**\n\n  ```html\n  <span v-text=\"msg\"></span>\n  <!-- same as -->\n  <span>{{msg}}</span>\n  ```\n\n- **See also** [Template Syntax - Text Interpolation](https://vuejs.org/guide/essentials/template-syntax.html#text-interpolation)"
+        "value": "Update the element's text content.\n\n- **Expects:** `string`\n\n- **Details**\n\n  `v-text` works by setting the element's [textContent](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent) property, so it will overwrite any existing content inside the element. If you need to update only part of the `textContent`, you should use [mustache interpolations](https://vuejs.org/guide/essentials/template-syntax.html#text-interpolation) instead (ie. <span v-pre>`<span>Keep this but update a {{dynamicPortion}}</span>`</span>).\n\n- **Example**\n\n  ```html\n  <span v-text=\"msg\"></span>\n  <!-- same as -->\n  <span>{{msg}}</span>\n  ```\n\n- **See also** [Template Syntax - Text Interpolation](https://vuejs.org/guide/essentials/template-syntax.html#text-interpolation)"
       },
       "references": "api/built-in-directives.html#v-text"
     },

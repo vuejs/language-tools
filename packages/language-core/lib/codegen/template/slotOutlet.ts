@@ -1,16 +1,17 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
-import { getElementTagOffsets } from '../../utils/shared';
+import { getElementTagOffsets, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
+import * as names from '../names';
 import { endOfLine, newLine } from '../utils';
-import { wrapWith } from '../utils/wrapWith';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
-import { generateElementChildren } from './elementChildren';
 import { generateElementProps, generatePropExp } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
+import { generateTemplateChild } from './templateChild';
 
 export function* generateSlotOutlet(
 	options: TemplateCodegenOptions,
@@ -37,18 +38,8 @@ export function* generateSlotOutlet(
 		if (nameProp) {
 			let codes: Generator<Code> | Code[];
 			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
-				let { source, start: { offset } } = nameProp.value.loc;
-				if (source.startsWith('"') || source.startsWith("'")) {
-					source = source.slice(1, -1);
-					offset++;
-				}
-				codes = generatePropertyAccess(
-					options,
-					ctx,
-					source,
-					offset,
-					codeFeatures.navigationAndVerification,
-				);
+				const [content, offset] = normalizeAttributeValue(nameProp.value);
+				codes = generatePropertyAccess(options, ctx, content, offset, codeFeatures.navigationAndVerification);
 			}
 			else if (
 				nameProp.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -69,45 +60,32 @@ export function* generateSlotOutlet(
 				codes = [`['default']`];
 			}
 
-			yield* wrapWith(
-				nameProp.loc.start.offset,
-				nameProp.loc.end.offset,
-				codeFeatures.verification,
-				options.slotsAssignName ?? '__VLS_slots',
-				...codes,
-			);
+			const token = yield* startBoundary('template', nameProp.loc.start.offset, codeFeatures.verification);
+			yield options.slotsAssignName ?? names.slots;
+			yield* codes;
+			yield endBoundary(token, nameProp.loc.end.offset);
 		}
 		else {
-			yield* wrapWith(
-				startTagOffset,
-				startTagEndOffset,
-				codeFeatures.verification,
-				`${options.slotsAssignName ?? '__VLS_slots'}[`,
-				...wrapWith(
-					startTagOffset,
-					startTagEndOffset,
-					codeFeatures.verification,
-					`'default'`,
-				),
-				`]`,
-			);
+			const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+			yield `${options.slotsAssignName ?? names.slots}[`;
+			const token2 = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+			yield `'default'`;
+			yield endBoundary(token2, startTagEndOffset);
+			yield `]`;
+			yield endBoundary(token, startTagEndOffset);
 		}
 		yield `)(`;
-		yield* wrapWith(
-			startTagOffset,
-			startTagEndOffset,
-			codeFeatures.verification,
-			`{${newLine}`,
-			...generateElementProps(
-				options,
-				ctx,
-				node,
-				node.props.filter(prop => prop !== nameProp),
-				true,
-				true,
-			),
-			`}`,
+		const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+		yield `{${newLine}`;
+		yield* generateElementProps(
+			options,
+			ctx,
+			node,
+			node.props.filter(prop => prop !== nameProp),
+			true,
 		);
+		yield `}`;
+		yield endBoundary(token, startTagEndOffset);
 		yield `)${endOfLine}`;
 	}
 	else {
@@ -118,7 +96,6 @@ export function* generateSlotOutlet(
 			node,
 			node.props.filter(prop => prop !== nameProp),
 			options.vueCompilerOptions.checkUnknownProps,
-			true,
 		);
 		yield `}${endOfLine}`;
 
@@ -147,8 +124,10 @@ export function* generateSlotOutlet(
 			yield* generateInterpolation(
 				options,
 				ctx,
-				'template',
-				codeFeatures.all,
+				options.template,
+				isShortHand
+					? codeFeatures.withoutHighlightAndCompletion
+					: codeFeatures.all,
 				nameProp.exp.content,
 				nameProp.exp.loc.start.offset,
 			);
@@ -167,5 +146,7 @@ export function* generateSlotOutlet(
 			});
 		}
 	}
-	yield* generateElementChildren(options, ctx, node.children);
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child);
+	}
 }

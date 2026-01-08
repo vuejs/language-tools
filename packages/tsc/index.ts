@@ -1,5 +1,5 @@
 import { runTsc } from '@volar/typescript/lib/quickstart/runTsc';
-import * as vue from '@vue/language-core';
+import * as core from '@vue/language-core';
 
 const windowsPathReg = /\\/g;
 
@@ -14,16 +14,15 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 			(ts, options) => {
 				const { configFilePath } = options.options;
 				const vueOptions = typeof configFilePath === 'string'
-					? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
-					: vue.createParsedCommandLineByJson(ts, ts.sys, (options.host ?? ts.sys).getCurrentDirectory(), {})
+					? core.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
+					: core.createParsedCommandLineByJson(ts, ts.sys, (options.host ?? ts.sys).getCurrentDirectory(), {})
 						.vueOptions;
-				vue.writeGlobalTypes(vueOptions, ts.sys.writeFile);
-				const allExtensions = vue.getAllExtensions(vueOptions);
+				const allExtensions = core.getAllExtensions(vueOptions);
 				if (
 					runExtensions.length === allExtensions.length
 					&& runExtensions.every(ext => allExtensions.includes(ext))
 				) {
-					const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
+					const vueLanguagePlugin = core.createVueLanguagePlugin<string>(
 						ts,
 						options.options,
 						vueOptions,

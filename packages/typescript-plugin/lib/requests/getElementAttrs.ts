@@ -1,4 +1,6 @@
+import { names } from '@vue/language-core';
 import type * as ts from 'typescript';
+import { getComponentMeta as _get } from 'vue-component-meta/lib/componentMeta';
 import { getVariableType } from './utils';
 
 export function getElementAttrs(
@@ -6,9 +8,14 @@ export function getElementAttrs(
 	program: ts.Program,
 	fileName: string,
 	tag: string,
-): string[] {
+) {
+	const sourceFile = program.getSourceFile(fileName);
+	if (!sourceFile) {
+		return [];
+	}
+
 	const checker = program.getTypeChecker();
-	const elements = getVariableType(ts, program, fileName, '__VLS_elements');
+	const elements = getVariableType(ts, checker, sourceFile, names.intrinsics);
 	if (!elements) {
 		return [];
 	}
@@ -18,6 +25,12 @@ export function getElementAttrs(
 		return [];
 	}
 
-	const attrs = checker.getTypeOfSymbol(elementType).getProperties();
-	return attrs.map(c => c.name);
+	return checker.getTypeOfSymbol(elementType).getProperties().map(c => ({
+		name: c.name,
+		type: checker.typeToString(
+			checker.getTypeOfSymbolAtLocation(c, sourceFile),
+			elements.node,
+			ts.TypeFormatFlags.NoTruncation,
+		),
+	}));
 }

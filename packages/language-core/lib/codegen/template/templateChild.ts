@@ -5,7 +5,6 @@ import { codeFeatures } from '../codeFeatures';
 import { endOfLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement } from './element';
-import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateSlotOutlet } from './slotOutlet';
@@ -13,27 +12,11 @@ import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
 import { generateVSlot } from './vSlot';
 
-// @ts-ignore
-const transformContext: CompilerDOM.TransformContext = {
-	onError: () => {},
-	helperString: str => str.toString(),
-	replaceNode: () => {},
-	cacheHandlers: false,
-	prefixIdentifiers: false,
-	scopes: {
-		vFor: 0,
-		vOnce: 0,
-		vPre: 0,
-		vSlot: 0,
-	},
-	expressionPlugins: ['typescript'],
-};
-
 export function* generateTemplateChild(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
-	enterNode: boolean = true,
+	enterNode = true,
 ): Generator<Code> {
 	if (enterNode && !ctx.enter(node)) {
 		return;
@@ -48,42 +31,33 @@ export function* generateTemplateChild(
 		for (const item of collectSingleRootNodes(options, node.children)) {
 			ctx.singleRootNodes.add(item);
 		}
-		yield* generateElementChildren(options, ctx, node.children);
+		for (const child of node.children) {
+			yield* generateTemplateChild(options, ctx, child);
+		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
-		const vForNode = getVForNode(node);
-		const vIfNode = getVIfNode(node);
-		if (vForNode) {
-			yield* generateVFor(options, ctx, vForNode);
-		}
-		else if (vIfNode) {
-			yield* generateVIf(options, ctx, vIfNode);
-		}
-		else if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
+		let slotDir: CompilerDOM.DirectiveNode | undefined;
+
+		if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
 			yield* generateSlotOutlet(options, ctx, node);
 		}
-		else {
-			const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as
+		else if (
+			node.tagType === CompilerDOM.ElementTypes.TEMPLATE
+			&& ctx.components.length
+			&& (slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as
 				| CompilerDOM.DirectiveNode
-				| undefined;
-			if (
-				node.tagType === CompilerDOM.ElementTypes.TEMPLATE
-				&& ctx.currentComponent
-				&& slotDir
-			) {
-				yield* generateVSlot(options, ctx, node, slotDir);
-			}
-			else if (
-				node.tagType === CompilerDOM.ElementTypes.ELEMENT
-				|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE
-			) {
-				yield* generateElement(options, ctx, node);
-			}
-			else {
-				const { currentComponent } = ctx;
-				yield* generateComponent(options, ctx, node);
-				ctx.currentComponent = currentComponent;
-			}
+				| undefined)
+		) {
+			yield* generateVSlot(options, ctx, node, slotDir, ctx.components[ctx.components.length - 1]!());
+		}
+		else if (
+			node.tagType === CompilerDOM.ElementTypes.ELEMENT
+			|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE
+		) {
+			yield* generateElement(options, ctx, node);
+		}
+		else {
+			yield* generateComponent(options, ctx, node);
 		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
@@ -92,7 +66,12 @@ export function* generateTemplateChild(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 		// {{ ... }} {{ ... }}
-		yield* generateElementChildren(options, ctx, node.children.filter(child => typeof child === 'object'), false);
+		for (const child of node.children) {
+			if (typeof child !== 'object') {
+				continue;
+			}
+			yield* generateTemplateChild(options, ctx, child, false);
+		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 		// {{ ... }}
@@ -100,7 +79,7 @@ export function* generateTemplateChild(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			'template',
+			options.template,
 			codeFeatures.all,
 			content,
 			start,
@@ -129,6 +108,9 @@ function* collectSingleRootNodes(
 	options: TemplateCodegenOptions,
 	children: CompilerDOM.TemplateChildNode[],
 ): Generator<CompilerDOM.ElementNode | null> {
+	// Exclude the effect of comments on the root node
+	children = children.filter(node => node.type !== CompilerDOM.NodeTypes.COMMENT);
+
 	if (children.length !== 1) {
 		// "null" is used to determine whether the component is not always has a single root
 		if (children.length > 1) {
@@ -155,73 +137,17 @@ function* collectSingleRootNodes(
 	}
 }
 
-// TODO: track https://github.com/vuejs/vue-next/issues/3498
-export function getVForNode(node: CompilerDOM.ElementNode) {
-	const forDirective = node.props.find(
-		(prop): prop is CompilerDOM.DirectiveNode =>
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'for',
-	);
-	if (forDirective) {
-		let forNode: CompilerDOM.ForNode | undefined;
-		CompilerDOM.processFor(node, forDirective, transformContext, _forNode => {
-			forNode = { ..._forNode };
-			return undefined;
-		});
-		if (forNode) {
-			forNode.children = [{
-				...node,
-				props: node.props.filter(prop => prop !== forDirective),
-			}];
-			return forNode;
-		}
-	}
-}
-
-function getVIfNode(node: CompilerDOM.ElementNode) {
-	const ifDirective = node.props.find(
-		(prop): prop is CompilerDOM.DirectiveNode =>
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'if',
-	);
-	if (ifDirective) {
-		let ifNode: CompilerDOM.IfNode | undefined;
-		CompilerDOM.processIf(node, ifDirective, transformContext, _ifNode => {
-			ifNode = { ..._ifNode };
-			return undefined;
-		});
-		if (ifNode) {
-			for (const branch of ifNode.branches) {
-				branch.children = [{
-					...node,
-					props: node.props.filter(prop => prop !== ifDirective),
-				}];
-			}
-			return ifNode;
-		}
-	}
-}
-
 export function parseInterpolationNode(node: CompilerDOM.InterpolationNode, template: string) {
-	let content = node.content.loc.source;
 	let start = node.content.loc.start.offset;
-	let leftCharacter: string;
-	let rightCharacter: string;
+	let end = node.content.loc.end.offset;
 
 	// fix https://github.com/vuejs/language-tools/issues/1787
-	while ((leftCharacter = template.slice(start - 1, start)).trim() === '' && leftCharacter.length) {
+	while (template[start - 1]?.trim() === '') {
 		start--;
-		content = leftCharacter + content;
 	}
-	while (
-		(rightCharacter = template.slice(start + content.length, start + content.length + 1)).trim() === ''
-		&& rightCharacter.length
-	) {
-		content = content + rightCharacter;
+	while (template[end]?.trim() === '') {
+		end++;
 	}
 
-	return [
-		content,
-		start,
-	] as const;
+	return [template.slice(start, end), start] as const;
 }

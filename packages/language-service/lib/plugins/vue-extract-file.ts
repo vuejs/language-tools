@@ -299,19 +299,18 @@ export function createAddComponentToOptionEdit(
 	ast: ts.SourceFile,
 	componentName: string,
 ) {
-	const scriptRanges = tsCodegen.get(sfc)?.getScriptRanges();
-	if (!scriptRanges?.componentOptions) {
+	const componentOptions = tsCodegen.get(sfc)?.getScriptRanges()?.exportDefault?.options;
+	if (!componentOptions) {
 		return;
 	}
-	const { componentOptions } = scriptRanges;
 
 	// https://github.com/microsoft/TypeScript/issues/36174
 	const printer = ts.createPrinter();
-	if (componentOptions.components && componentOptions.componentsNode) {
-		const newNode: typeof componentOptions.componentsNode = {
-			...componentOptions.componentsNode,
+	if (componentOptions.components) {
+		const newNode: ts.ObjectLiteralExpression = {
+			...componentOptions.components.node,
 			properties: [
-				...componentOptions.componentsNode.properties,
+				...componentOptions.components.node.properties,
 				ts.factory.createShorthandPropertyAssignment(componentName),
 			] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
 		};
@@ -322,10 +321,10 @@ export function createAddComponentToOptionEdit(
 		};
 	}
 	else {
-		const newNode: typeof componentOptions.argsNode = {
-			...componentOptions.argsNode,
+		const newNode: ts.ObjectLiteralExpression = {
+			...componentOptions.args.node,
 			properties: [
-				...componentOptions.argsNode.properties,
+				...componentOptions.args.node.properties,
 				ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
 			] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
 		};

@@ -1,7 +1,6 @@
-import { camelize, NOOP as noop } from '@vue/shared';
+import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
-import { generateGlobalTypes, getGlobalTypesFileName } from './codegen/globalTypes';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from './types';
 import { hyphenateTag } from './utils/shared';
 
@@ -31,8 +30,15 @@ export function createParsedCommandLineByJson(
 			return [];
 		},
 	};
-	const parsed = ts.parseJsonConfigFileContent(json, proxyHost, rootDir, {}, configFileName);
-	const resolver = new CompilerOptionsResolver(host.fileExists);
+	const config = ts.readJsonConfigFile(rootDir, () => JSON.stringify(json));
+	const parsed = ts.parseJsonSourceFileConfigFileContent(
+		config,
+		proxyHost,
+		rootDir,
+		{},
+		configFileName,
+	);
+	const resolver = new CompilerOptionsResolver(ts, host.readFile);
 
 	for (const extendPath of [...extendedPaths].reverse()) {
 		try {
@@ -44,8 +50,7 @@ export function createParsedCommandLineByJson(
 		catch {}
 	}
 
-	// ensure the rootDir is added to the config roots
-	resolver.addConfig({}, rootDir);
+	resolver.addConfig(json?.vueCompilerOptions ?? {}, rootDir);
 
 	return {
 		...parsed,
@@ -80,7 +85,7 @@ export function createParsedCommandLine(
 			{},
 			configFileName,
 		);
-		const resolver = new CompilerOptionsResolver(host.fileExists);
+		const resolver = new CompilerOptionsResolver(ts, host.readFile);
 
 		for (const extendPath of [...extendedPaths].reverse()) {
 			try {
@@ -107,13 +112,14 @@ export function createParsedCommandLine(
 }
 
 export class CompilerOptionsResolver {
-	options: Omit<RawVueCompilerOptions, 'target' | 'globalTypesPath' | 'plugins'> = {};
+	options: Omit<RawVueCompilerOptions, 'target' | 'strictTemplates' | 'typesRoot' | 'plugins'> = {};
 	target: number | undefined;
-	globalTypesPath: string | undefined;
+	typesRoot: string | undefined;
 	plugins: VueLanguagePlugin[] = [];
 
 	constructor(
-		public fileExists?: (path: string) => boolean,
+		public ts: typeof import('typescript'),
+		public readFile: (fileName: string) => string | undefined,
 	) {}
 
 	addConfig(options: RawVueCompilerOptions, rootDir: string) {
@@ -121,22 +127,36 @@ export class CompilerOptionsResolver {
 			switch (key) {
 				case 'target':
 					if (options[key] === 'auto') {
-						this.target = findVueVersion(rootDir);
+						this.target = this.resolveVueVersion(rootDir);
 					}
 					else {
 						this.target = options[key];
 					}
 					break;
-				case 'globalTypesPath':
+				case 'strictTemplates':
+					const strict = !!options.strictTemplates;
+					this.options.strictVModel ??= strict;
+					this.options.checkUnknownProps ??= strict;
+					this.options.checkUnknownEvents ??= strict;
+					this.options.checkUnknownDirectives ??= strict;
+					this.options.checkUnknownComponents ??= strict;
+					break;
+				case 'typesRoot':
 					if (options[key] !== undefined) {
-						this.globalTypesPath = path.join(rootDir, options[key]);
+						if (path.isAbsolute(options[key])) {
+							this.typesRoot = options[key];
+						}
+						else {
+							this.typesRoot = path.join(rootDir, options[key]);
+						}
 					}
 					break;
 				case 'plugins':
 					for (let raw of options.plugins ?? []) {
 						raw = typeof raw === 'string' ? { name: raw } : raw;
 						try {
-							const resolvedPath = resolvePath(raw.name, rootDir);
+							const resolve = (require as NodeJS.Require | undefined)?.resolve;
+							const resolvedPath = resolve?.(raw.name, { paths: [rootDir] });
 							if (resolvedPath) {
 								const plugin = require(resolvedPath);
 								const plugins = Array.isArray(plugin) ? plugin : [plugin];
@@ -161,13 +181,18 @@ export class CompilerOptionsResolver {
 			}
 		}
 		if (options.target === undefined) {
-			this.target ??= findVueVersion(rootDir);
+			this.target ??= this.resolveVueVersion(rootDir);
 		}
 	}
 
-	build(defaults?: VueCompilerOptions) {
-		defaults ??= getDefaultCompilerOptions(this.target, this.options.lib, this.options.strictTemplates);
-
+	build(
+		defaults = getDefaultCompilerOptions(
+			this.target,
+			this.options.lib,
+			undefined,
+			this.typesRoot,
+		),
+	): VueCompilerOptions {
 		const resolvedOptions: VueCompilerOptions = {
 			...defaults,
 			...this.options,
@@ -184,7 +209,7 @@ export class CompilerOptionsResolver {
 				...defaults.fallthroughComponentNames,
 				...this.options.fallthroughComponentNames ?? [],
 			].map(hyphenateTag),
-			// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
+			// https://github.com/vuejs/core/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 			// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
 			experimentalModelPropName: Object.fromEntries(
 				Object.entries(
@@ -193,86 +218,47 @@ export class CompilerOptionsResolver {
 			),
 		};
 
-		if (resolvedOptions.globalTypesPath === noop) {
-			if (this.fileExists && this.globalTypesPath === undefined) {
-				const fileDirToGlobalTypesPath = new Map<string, string | undefined>();
-				resolvedOptions.globalTypesPath = fileName => {
-					const fileDir = path.dirname(fileName);
-					if (fileDirToGlobalTypesPath.has(fileDir)) {
-						return fileDirToGlobalTypesPath.get(fileDir);
-					}
-
-					const root = this.findNodeModulesRoot(fileDir, resolvedOptions.lib);
-					const result = root
-						? path.join(
-							root,
-							'node_modules',
-							'.vue-global-types',
-							getGlobalTypesFileName(resolvedOptions),
-						)
-						: undefined;
-
-					fileDirToGlobalTypesPath.set(fileDir, result);
-					return result;
-				};
-			}
-			else {
-				resolvedOptions.globalTypesPath = () => this.globalTypesPath;
-			}
-		}
-
 		return resolvedOptions;
 	}
 
-	private findNodeModulesRoot(dir: string, lib: string) {
-		while (!this.fileExists!(path.join(dir, 'node_modules', lib, 'package.json'))) {
-			const parentDir = path.dirname(dir);
-			if (dir === parentDir) {
-				return;
-			}
-			dir = parentDir;
+	resolveVueVersion(folder: string): number | undefined {
+		const packageJsonPath = this.ts.findConfigFile(
+			folder,
+			fileName => this.readFile(fileName) !== undefined,
+			'node_modules/vue/package.json',
+		);
+		if (!packageJsonPath) {
+			return;
 		}
-		return dir;
+		const packageJsonContent = this.readFile(packageJsonPath);
+		if (!packageJsonContent) {
+			return;
+		}
+		const packageJson = JSON.parse(packageJsonContent);
+		const version: string = packageJson.version;
+		const [majorVersion, minorVersion] = version.split('.');
+		return Number(majorVersion + '.' + minorVersion);
 	}
 }
 
-function findVueVersion(rootDir: string) {
-	const resolvedPath = resolvePath('vue/package.json', rootDir);
-	if (resolvedPath) {
-		const vuePackageJson = require(resolvedPath);
-		const versionNumbers = vuePackageJson.version.split('.');
-		return Number(versionNumbers[0] + '.' + versionNumbers[1]);
-	}
-	else {
-		// console.warn('Load vue/package.json failed from', folder);
-	}
-}
-
-function resolvePath(scriptPath: string, root: string) {
-	try {
-		if ((require as NodeJS.Require | undefined)?.resolve) {
-			return require.resolve(scriptPath, { paths: [root] });
-		}
-		else {
-			// console.warn('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
-		}
-	}
-	catch {
-		// console.warn(error);
-	}
-}
-
-export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTemplates = false): VueCompilerOptions {
+export function getDefaultCompilerOptions(
+	target = 99,
+	lib = 'vue',
+	strictTemplates = false,
+	typesRoot = typeof __dirname !== 'undefined'
+		? path.join(__dirname.replace(/\\/g, '/'), '..', 'types')
+		: '@vue/language-core/types',
+): VueCompilerOptions {
 	return {
 		target,
 		lib,
-		globalTypesPath: noop,
+		typesRoot,
 		extensions: ['.vue'],
 		vitePressExtensions: [],
 		petiteVueExtensions: [],
 		jsxSlots: false,
-		strictVModel: strictTemplates,
 		strictCssModules: false,
+		strictVModel: strictTemplates,
 		checkUnknownProps: strictTemplates,
 		checkUnknownEvents: strictTemplates,
 		checkUnknownDirectives: strictTemplates,
@@ -322,21 +308,5 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 				select: true,
 			},
 		},
-	};
-}
-
-export function writeGlobalTypes(
-	vueOptions: VueCompilerOptions,
-	writeFile: (fileName: string, data: string) => void,
-) {
-	const writed = new Set<string>();
-	const { globalTypesPath } = vueOptions;
-	vueOptions.globalTypesPath = (fileName: string) => {
-		const result = globalTypesPath(fileName);
-		if (result && !writed.has(result)) {
-			writed.add(result);
-			writeFile(result, generateGlobalTypes(vueOptions));
-		}
-		return result;
 	};
 }

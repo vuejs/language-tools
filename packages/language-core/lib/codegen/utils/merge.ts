@@ -1,23 +1,23 @@
 import type { Code } from '../../types';
 import { newLine } from './index';
 
-export function* generateIntersectMerge(codes: Code[]): Generator<Code> {
-	yield codes[0]!;
-	for (let i = 1; i < codes.length; i++) {
+export function* generateIntersectMerge(generates: Iterable<Code>[]): Generator<Code> {
+	yield* generates[0]!;
+	for (let i = 1; i < generates.length; i++) {
 		yield ` & `;
-		yield codes[i]!;
+		yield* generates[i]!;
 	}
 }
 
-export function* generateSpreadMerge(codes: Code[]): Generator<Code> {
-	if (codes.length === 1) {
-		yield codes[0]!;
+export function* generateSpreadMerge(generates: Iterable<Code>[]): Generator<Code> {
+	if (generates.length === 1) {
+		yield* generates[0]!;
 	}
 	else {
 		yield `{${newLine}`;
-		for (const code of codes) {
+		for (const generate of generates) {
 			yield `...`;
-			yield code;
+			yield* generate;
 			yield `,${newLine}`;
 		}
 		yield `}`;

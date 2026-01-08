@@ -1,11 +1,13 @@
 import { SourceMap } from '@volar/source-map';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { VueLanguagePlugin } from '@vue/language-core';
-import * as pug from 'volar-service-pug/lib/languageService';
+import { baseParse } from './lib/baseParse';
 
 const classRegex = /^class\s*=/;
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
+	const CompilerDOM = modules['@vue/compiler-dom'];
+
 	return {
 		name: require('./package.json').name,
 
@@ -45,77 +47,76 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 		compileSFCTemplate(lang, template, options) {
 			if (lang === 'pug') {
-				let pugFile: ReturnType<typeof pug.baseParse>;
+				let parsed: ReturnType<typeof baseParse>;
 				let baseOffset = 0;
 
 				const minIndent = calculateMinIndent(template);
 				if (minIndent === 0) {
-					pugFile = pug.baseParse(template);
+					parsed = baseParse(template);
 				}
 				else {
-					pugFile = pug.baseParse(`template\n${template}`);
+					parsed = baseParse(`template\n${template}`);
 					baseOffset = 'template\n'.length;
-					pugFile.htmlCode = ' '.repeat('<template>'.length)
-						+ pugFile.htmlCode.slice('<template>'.length, -'</template>'.length)
+					parsed.htmlCode = ' '.repeat('<template>'.length)
+						+ parsed.htmlCode.slice('<template>'.length, -'</template>'.length)
 						+ ' '.repeat('</template>'.length);
 				}
 
-				const map = new SourceMap(pugFile.mappings);
-				const compiler = modules['@vue/compiler-dom'];
-				const completed = compiler.compile(pugFile.htmlCode, {
+				const map = new SourceMap(parsed.mappings);
+				let ast = CompilerDOM.parse(parsed.htmlCode, {
 					...options,
 					comments: true,
 					onWarn(warning) {
-						options.onWarn?.(createProxyObject(warning));
+						if (warning.loc) {
+							warning.loc.start.offset = toPugOffset(warning.loc.start.offset);
+							warning.loc.end.offset = toPugOffset(warning.loc.end.offset);
+						}
+						options.onWarn?.(warning);
 					},
 					onError(error) {
 						// #5099
 						if (
 							error.code === 2 satisfies CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE
-							&& classRegex.test(pugFile.htmlCode.slice(error.loc?.start.offset))
+							&& classRegex.test(parsed.htmlCode.slice(error.loc?.start.offset))
 						) {
 							return;
 						}
-						options.onError?.(createProxyObject(error));
+						if (error.loc) {
+							error.loc.start.offset = toPugOffset(error.loc.start.offset);
+							error.loc.end.offset = toPugOffset(error.loc.end.offset);
+						}
+						options.onError?.(error);
 					},
 				});
+				CompilerDOM.transform(ast, options);
 
-				return createProxyObject(completed);
+				const visited = new Set<object>();
+				visit(ast);
 
-				function createProxyObject(target: any) {
-					const proxys = new WeakMap();
-					return new Proxy(target, {
-						get(target, prop, receiver) {
-							if (prop === 'getClassOffset') {
-								// div.foo#baz.bar
-								//     ^^^     ^^^
-								// class=" foo bar"
-								//         ^^^ ^^^
-								// NOTE: we need to expose source offset getter
-								return function(startOffset: number) {
-									return getOffset(target.offset + startOffset);
-								};
+				return {
+					ast,
+					code: '',
+					preamble: '',
+				};
+
+				function visit(obj: object) {
+					for (const key in obj) {
+						const value = (obj as any)[key];
+						if (value && typeof value === 'object') {
+							if (visited.has(value)) {
+								continue;
 							}
-							if (prop === 'offset') {
-								return getOffset(target.offset);
+							visited.add(value);
+							if ('offset' in value && typeof value.offset === 'number') {
+								const originalOffset = value.offset;
+								value.offset = toPugOffset(originalOffset);
 							}
-							const value = Reflect.get(target, prop, receiver);
-							if (typeof value === 'object' && value !== null) {
-								let proxyed = proxys.get(value);
-								if (proxyed) {
-									return proxyed;
-								}
-								proxyed = createProxyObject(value);
-								proxys.set(value, proxyed);
-								return proxyed;
-							}
-							return value;
-						},
-					});
+							visit(value);
+						}
+					}
 				}
 
-				function getOffset(offset: number) {
-					const htmlOffset = offset;
+				function toPugOffset(htmlOffset: number) {
 					const nums: number[] = [];
 					for (const mapped of map.toSourceLocation(htmlOffset)) {
 						nums.push(mapped[0] - baseOffset);

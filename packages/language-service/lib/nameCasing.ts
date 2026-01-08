@@ -1,87 +1,89 @@
 import type { LanguageServiceContext, VirtualCode } from '@volar/language-service';
 import type { NodeTypes } from '@vue/compiler-dom';
+import type * as CompilerDOM from '@vue/compiler-dom';
 import { forEachElementNode, hyphenateTag, VueVirtualCode } from '@vue/language-core';
 import type { URI } from 'vscode-uri';
 
-export enum TagNameCasing {
+type CollectResult = Map<string, [tagType: CompilerDOM.ElementTypes, attrs: string[]]>;
+
+const collectCache = new WeakMap<VirtualCode, CollectResult>();
+
+export const enum TagNameCasing {
 	Kebab,
 	Pascal,
 }
 
-export enum AttrNameCasing {
+export const enum AttrNameCasing {
 	Kebab,
 	Camel,
 }
 
-export async function checkCasing(context: LanguageServiceContext, uri: URI) {
-	const detected = detect(context, uri);
-	const [attr, tag] = await Promise.all([
-		context.env.getConfiguration<'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase'>?.(
-			'vue.suggest.propNameCasing',
-			uri.toString(),
-		),
-		context.env.getConfiguration<'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase'>?.(
-			'vue.suggest.componentNameCasing',
-			uri.toString(),
-		),
-	]);
-	const tagNameCasing = detected.tag.length === 1 && (tag === 'preferPascalCase' || tag === 'preferKebabCase')
-		? detected.tag[0]
-		: (tag === 'preferKebabCase' || tag === 'alwaysKebabCase')
-		? TagNameCasing.Kebab
-		: TagNameCasing.Pascal;
-	const attrNameCasing = detected.attr.length === 1 && (attr === 'preferCamelCase' || attr === 'preferKebabCase')
-		? detected.attr[0]
-		: (attr === 'preferCamelCase' || attr === 'alwaysCamelCase')
-		? AttrNameCasing.Camel
-		: AttrNameCasing.Kebab;
-	return {
-		tag: tagNameCasing,
-		attr: attrNameCasing,
-	};
-}
+export async function getTagNameCasing(context: LanguageServiceContext, uri: URI) {
+	const config = await context.env.getConfiguration<
+		'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase'
+	>?.('vue.suggest.componentNameCasing', uri.toString());
 
-type Tags = Map<string, string[]>;
+	if (config === 'alwaysKebabCase') {
+		return TagNameCasing.Kebab;
+	}
+	if (config === 'alwaysPascalCase') {
+		return TagNameCasing.Pascal;
+	}
 
-const cache = new WeakMap<VirtualCode, Tags | undefined>();
-
-function detect(
-	context: LanguageServiceContext,
-	uri: URI,
-): {
-	tag: TagNameCasing[];
-	attr: AttrNameCasing[];
-} {
 	const root = context.language.scripts.get(uri)?.generated?.root;
-	if (!(root instanceof VueVirtualCode)) {
-		return { tag: [], attr: [] };
+
+	if (root instanceof VueVirtualCode) {
+		const detectedCasings = detectTagCasing(root);
+		if (detectedCasings.length === 1) {
+			return detectedCasings[0];
+		}
 	}
-	return {
-		tag: detectTagCasing(root),
-		attr: detectAttrCasing(root),
-	};
+	if (config === 'preferKebabCase') {
+		return TagNameCasing.Kebab;
+	}
+
+	return TagNameCasing.Pascal;
 }
 
-function detectAttrCasing(code: VirtualCode) {
-	let tags: Tags | undefined;
-	if (cache.has(code)) {
-		tags = cache.get(code);
+export async function getAttrNameCasing(context: LanguageServiceContext, uri: URI) {
+	const config = await context.env.getConfiguration<
+		'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase'
+	>?.('vue.suggest.propNameCasing', uri.toString());
+
+	if (config === 'alwaysKebabCase') {
+		return AttrNameCasing.Kebab;
 	}
-	else {
-		cache.set(code, tags = collectTags(code));
+	if (config === 'alwaysCamelCase') {
+		return AttrNameCasing.Camel;
 	}
+
+	const root = context.language.scripts.get(uri)?.generated?.root;
+
+	if (root instanceof VueVirtualCode) {
+		const detectedCasings = detectAttrCasing(root);
+		if (detectedCasings.length === 1) {
+			return detectedCasings[0];
+		}
+	}
+	if (config === 'preferKebabCase') {
+		return AttrNameCasing.Kebab;
+	}
+
+	return AttrNameCasing.Camel;
+}
+
+function detectAttrCasing(code: VueVirtualCode) {
+	const tags = collectTagsWithCache(code);
 	const result = new Set<AttrNameCasing>();
 
-	for (const [, attrs] of tags ?? []) {
+	for (const [, [_, attrs]] of tags) {
 		for (const attr of attrs) {
-			// attrName
 			if (attr !== hyphenateTag(attr)) {
 				result.add(AttrNameCasing.Camel);
 				break;
 			}
 		}
 		for (const attr of attrs) {
-			// attr-name
 			if (attr.includes('-')) {
 				result.add(AttrNameCasing.Kebab);
 				break;
@@ -92,41 +94,43 @@ function detectAttrCasing(code: VirtualCode) {
 }
 
 function detectTagCasing(code: VueVirtualCode): TagNameCasing[] {
-	let tags: Tags | undefined;
-	if (cache.has(code)) {
-		tags = cache.get(code);
-	}
-	else {
-		cache.set(code, tags = collectTags(code));
-	}
+	const tags = collectTagsWithCache(code);
 	const result = new Set<TagNameCasing>();
 
-	for (const [tag] of tags ?? []) {
+	for (const [tag, [tagType]] of tags) {
+		if (
+			tagType === 0 satisfies CompilerDOM.ElementTypes.ELEMENT
+			|| tagType === 3 satisfies CompilerDOM.ElementTypes.TEMPLATE
+		) {
+			continue;
+		}
 		if (tag !== hyphenateTag(tag)) {
-			// TagName
 			result.add(TagNameCasing.Pascal);
 		}
 		else {
-			// tag-name
 			result.add(TagNameCasing.Kebab);
 		}
 	}
 	return [...result];
 }
 
-function collectTags(root: VirtualCode) {
-	if (!(root instanceof VueVirtualCode)) {
-		return undefined;
+function collectTagsWithCache(code: VueVirtualCode) {
+	let cache = collectCache.get(code);
+	if (!cache) {
+		const ast = code.sfc.template?.ast;
+		cache = ast ? collectTags(ast) : new Map();
+		collectCache.set(code, cache);
 	}
-	const ast = root.sfc.template?.ast;
-	if (!ast) {
-		return undefined;
-	}
-	const tags: Tags = new Map();
+	return cache;
+}
+
+function collectTags(ast: CompilerDOM.RootNode) {
+	const tags: CollectResult = new Map();
+
 	for (const node of forEachElementNode(ast)) {
 		let tag = tags.get(node.tag);
 		if (!tag) {
-			tags.set(node.tag, tag = []);
+			tags.set(node.tag, tag = [node.tagType, []]);
 		}
 		for (const prop of node.props) {
 			let name: string | undefined;
@@ -143,9 +147,10 @@ function collectTags(root: VirtualCode) {
 				name = prop.name;
 			}
 			if (name !== undefined) {
-				tag.push(name);
+				tag[1].push(name);
 			}
 		}
 	}
+
 	return tags;
 }

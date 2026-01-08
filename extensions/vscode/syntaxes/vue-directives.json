@@ -4,7 +4,7 @@
 	"injectionSelector": "L:meta.tag -meta.attribute -meta.ng-binding -entity.name.tag.pug -attribute_value -source.tsx -source.js.jsx, L:meta.element -meta.attribute",
 	"patterns": [
 		{
-			"include": "source.vue#vue-directives"
+			"include": "text.html.vue#vue-directives"
 		}
 	],
 	"scopeName": "vue.directives"

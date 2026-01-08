@@ -3,39 +3,33 @@ import type { TextRange } from '../types';
 import { collectBindingRanges } from '../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../utils/shared';
 
-export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.SourceFile) {
-	const bindings: {
-		range: TextRange;
-		moduleName?: string;
-		isDefaultImport?: boolean;
-		isNamespace?: boolean;
-	}[] = [];
+export function parseBindingRanges(
+	ts: typeof import('typescript'),
+	ast: ts.SourceFile,
+	componentExtsensions: string[],
+) {
+	const bindings: TextRange[] = [];
+	const components: TextRange[] = [];
 
 	ts.forEachChild(ast, node => {
 		if (ts.isVariableStatement(node)) {
 			for (const decl of node.declarationList.declarations) {
 				const ranges = collectBindingRanges(ts, decl.name, ast);
-				bindings.push(...ranges.map(range => ({ range })));
+				bindings.push(...ranges);
 			}
 		}
 		else if (ts.isFunctionDeclaration(node)) {
 			if (node.name && ts.isIdentifier(node.name)) {
-				bindings.push({
-					range: _getStartEnd(node.name),
-				});
+				bindings.push(_getStartEnd(node.name));
 			}
 		}
 		else if (ts.isClassDeclaration(node)) {
 			if (node.name) {
-				bindings.push({
-					range: _getStartEnd(node.name),
-				});
+				bindings.push(_getStartEnd(node.name));
 			}
 		}
 		else if (ts.isEnumDeclaration(node)) {
-			bindings.push({
-				range: _getStartEnd(node.name),
-			});
+			bindings.push(_getStartEnd(node.name));
 		}
 
 		if (ts.isImportDeclaration(node)) {
@@ -45,11 +39,12 @@ export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.Sour
 				const { name, namedBindings } = node.importClause;
 
 				if (name) {
-					bindings.push({
-						range: _getStartEnd(name),
-						moduleName,
-						isDefaultImport: true,
-					});
+					if (componentExtsensions.some(ext => moduleName.endsWith(ext))) {
+						components.push(_getStartEnd(name));
+					}
+					else {
+						bindings.push(_getStartEnd(name));
+					}
 				}
 				if (namedBindings) {
 					if (ts.isNamedImports(namedBindings)) {
@@ -57,26 +52,30 @@ export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.Sour
 							if (element.isTypeOnly) {
 								continue;
 							}
-							bindings.push({
-								range: _getStartEnd(element.name),
-								moduleName,
-								isDefaultImport: element.propertyName?.text === 'default',
-							});
+							if (
+								element.propertyName
+								&& _getNodeText(element.propertyName) === 'default'
+								&& componentExtsensions.some(ext => moduleName.endsWith(ext))
+							) {
+								components.push(_getStartEnd(element.name));
+							}
+							else {
+								bindings.push(_getStartEnd(element.name));
+							}
 						}
 					}
 					else {
-						bindings.push({
-							range: _getStartEnd(namedBindings.name),
-							moduleName,
-							isNamespace: true,
-						});
+						bindings.push(_getStartEnd(namedBindings.name));
 					}
 				}
 			}
 		}
 	});
 
-	return bindings;
+	return {
+		bindings,
+		components,
+	};
 
 	function _getStartEnd(node: ts.Node) {
 		return getStartEnd(ts, node, ast);
@@ -92,7 +91,7 @@ export function getClosestMultiLineCommentRange(
 	node: ts.Node,
 	parents: ts.Node[],
 	ast: ts.SourceFile,
-) {
+): TextRange | undefined {
 	for (let i = parents.length - 1; i >= 0; i--) {
 		if (ts.isStatement(node)) {
 			break;
@@ -105,6 +104,7 @@ export function getClosestMultiLineCommentRange(
 
 	if (comment) {
 		return {
+			node,
 			start: comment.pos,
 			end: comment.end,
 		};

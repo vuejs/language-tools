@@ -4,82 +4,65 @@ import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
-import { createTsAst, endOfLine, newLine } from '../utils';
-import { wrapWith } from '../utils/wrapWith';
+import { endOfLine, getTypeScriptAST, newLine } from '../utils';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
-import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
+import { generateTemplateChild } from './templateChild';
 
 export function* generateVSlot(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	slotDir: CompilerDOM.DirectiveNode | undefined,
+	ctxVar: string,
 ): Generator<Code> {
-	if (!ctx.currentComponent) {
-		return;
-	}
-	const slotBlockVars: string[] = [];
 	const slotVar = ctx.getInternalVariable();
-
 	if (slotDir) {
 		yield `{${newLine}`;
-	}
-
-	if (slotDir || node.children.length) {
-		ctx.currentComponent.used = true;
-
 		yield `const { `;
-		if (slotDir) {
-			if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
-				yield* generateObjectProperty(
-					options,
-					ctx,
-					slotDir.arg.loc.source,
-					slotDir.arg.loc.start.offset,
-					slotDir.arg.isStatic ? codeFeatures.withoutHighlight : codeFeatures.all,
-					false,
-					true,
-				);
-			}
-			else {
-				yield* wrapWith(
-					slotDir.loc.start.offset,
-					slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
-					codeFeatures.withoutHighlightAndCompletion,
-					`default`,
-				);
-			}
-		}
-		else {
-			// #932: reference for implicit default slot
-			yield* wrapWith(
-				node.loc.start.offset,
-				node.loc.end.offset,
-				codeFeatures.navigation,
-				`default`,
+		if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
+			yield* generateObjectProperty(
+				options,
+				ctx,
+				slotDir.arg.loc.source,
+				slotDir.arg.loc.start.offset,
+				slotDir.arg.isStatic ? codeFeatures.withoutHighlight : codeFeatures.all,
+				false,
+				true,
 			);
 		}
-		yield `: ${slotVar} } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
+		else {
+			const token = yield* startBoundary(
+				'template',
+				slotDir.loc.start.offset,
+				codeFeatures.withoutHighlightAndCompletion,
+			);
+			yield `default`;
+			yield endBoundary(token, slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0));
+		}
 	}
+	else {
+		yield `const { `;
+		// #932: reference for implicit default slot
+		const token = yield* startBoundary('template', node.loc.start.offset, codeFeatures.navigation);
+		yield `default`;
+		yield endBoundary(token, node.loc.end.offset);
+	}
+	yield `: ${slotVar} } = ${ctxVar}.slots!${endOfLine}`;
 
+	const endScope = ctx.startScope();
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		const slotAst = createTsAst(options.ts, ctx.inlineTsAsts, `(${slotDir.exp.content}) => {}`);
-		slotBlockVars.push(...collectBindingNames(options.ts, slotAst, slotAst));
+		const slotAst = getTypeScriptAST(options.typescript, options.template, `(${slotDir.exp.content}) => {}`);
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
+		ctx.declare(...collectBindingNames(options.typescript, slotAst, slotAst));
 	}
-
-	for (const varName of slotBlockVars) {
-		ctx.addLocalVariable(varName);
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child);
 	}
-
-	yield* generateElementChildren(options, ctx, node.children);
-
-	for (const varName of slotBlockVars) {
-		ctx.removeLocalVariable(varName);
-	}
+	yield* endScope();
 
 	if (slotDir) {
 		let isStatic = true;
@@ -87,7 +70,7 @@ export function* generateVSlot(
 			isStatic = slotDir.arg.isStatic;
 		}
 		if (isStatic && !slotDir.arg) {
-			yield `${ctx.currentComponent.ctxVar}.slots!['`;
+			yield `${ctxVar}.slots!['`;
 			yield [
 				'',
 				'template',
@@ -113,9 +96,8 @@ function* generateSlotParameters(
 	exp: CompilerDOM.SimpleExpressionNode,
 	slotVar: string,
 ): Generator<Code> {
-	const { ts } = options;
+	const { typescript: ts } = options;
 	const statement = ast.statements[0];
-
 	if (!statement || !ts.isExpressionStatement(statement) || !ts.isArrowFunction(statement.expression)) {
 		return;
 	}
@@ -123,11 +105,10 @@ function* generateSlotParameters(
 	const { expression } = statement;
 	const startOffset = exp.loc.start.offset - 1;
 	const types: (Code | null)[] = [];
-
 	const interpolation = [...generateInterpolation(
 		options,
 		ctx,
-		'template',
+		options.template,
 		codeFeatures.all,
 		ast.text,
 		startOffset,
@@ -158,18 +139,15 @@ function* generateSlotParameters(
 
 	yield `const [`;
 	yield* interpolation;
-	yield `] = __VLS_getSlotParameters(${slotVar}!`;
+	yield `] = __VLS_vSlot(${slotVar}!`;
 
 	if (types.some(t => t)) {
 		yield `, `;
-		yield* wrapWith(
-			exp.loc.start.offset,
-			exp.loc.end.offset,
-			codeFeatures.verification,
-			`(`,
-			...types.flatMap(type => type ? [`_`, type, `, `] : `_, `),
-			`) => [] as any`,
-		);
+		const token = yield* startBoundary('template', exp.loc.start.offset, codeFeatures.verification);
+		yield `(`;
+		yield* types.flatMap(type => type ? [`_`, type, `, `] : `_, `);
+		yield `) => [] as any`;
+		yield endBoundary(token, exp.loc.end.offset);
 	}
 	yield `)${endOfLine}`;
 }

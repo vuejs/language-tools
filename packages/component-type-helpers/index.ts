@@ -1,13 +1,8 @@
-export type ComponentType<T> = T extends new(...args: any) => {} ? 1
-	: T extends (...args: any) => any ? 2
-	: 0;
-
 export type ComponentProps<T> = T extends new(...args: any) => { $props: infer P } ? NonNullable<P>
 	: T extends (props: infer P, ...args: any) => any ? P
 	: {};
 
 export type ComponentSlots<T> = T extends new(...args: any) => { $slots: infer S } ? NonNullable<S>
-	: T extends new(...args: any) => { $scopedSlots: infer S } ? NonNullable<S> // Vue 2
 	: T extends (props: any, ctx: { slots: infer S; attrs: any; emit: any }, ...args: any) => any ? NonNullable<S>
 	: {};
 

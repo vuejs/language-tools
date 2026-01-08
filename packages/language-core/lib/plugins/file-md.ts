@@ -10,10 +10,10 @@ const codeblockReg = /(`{3,})[\s\S]+?\1/g;
 const inlineCodeblockReg = /`[^\n`]+?`/g;
 const latexBlockReg = /(\${2,})[\s\S]+?\1/g;
 const scriptSetupReg = /\\<[\s\S]+?>\n?/g;
+const codeSnippetImportReg = /^\s*<<<\s*.+/gm;
+const sfcBlockReg = /<(script|style)\b[\s\S]*?>([\s\S]*?)<\/\1>/g;
 const angleBracketReg = /<\S*:\S*>/g;
 const linkReg = /\[[\s\S]*?\]\([\s\S]*?\)/g;
-const sfcBlockReg = /<(script|style)\b[\s\S]*?>([\s\S]*?)<\/\1>/g;
-const codeSnippetImportReg = /^\s*<<<\s*.+/gm;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
@@ -46,11 +46,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				// # \<script setup>
 				.replace(scriptSetupReg, match => ' '.repeat(match.length))
 				// <<< https://vitepress.dev/guide/markdown#import-code-snippets
-				.replace(codeSnippetImportReg, match => ' '.repeat(match.length))
-				// angle bracket: <http://foo.com>
-				.replace(angleBracketReg, match => ' '.repeat(match.length))
-				// [foo](http://foo.com)
-				.replace(linkReg, match => ' '.repeat(match.length));
+				.replace(codeSnippetImportReg, match => ' '.repeat(match.length));
 
 			const codes: Segment[] = [];
 
@@ -61,6 +57,12 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				content = content.slice(0, match.index) + ' '.repeat(matchText.length)
 					+ content.slice(match.index + matchText.length);
 			}
+
+			content = content
+				// angle bracket: <http://foo.com>
+				.replace(angleBracketReg, match => ' '.repeat(match.length))
+				// [foo](http://foo.com)
+				.replace(linkReg, match => ' '.repeat(match.length));
 
 			codes.push('<template>\n');
 			codes.push([content, undefined, 0]);
