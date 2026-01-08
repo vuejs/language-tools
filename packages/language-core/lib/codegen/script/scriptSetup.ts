@@ -474,7 +474,7 @@ function* generateModels(
 	yield `}${endOfLine}`;
 
 	// avoid `defineModel<...>()` to prevent JS AST issues
-	yield `let ${names.modelEmit}!: ReturnType<typeof defineEmits<${names.ModelEmit}>>${endOfLine}`;
+	yield `let ${names.modelEmit}!: __VLS_ShortEmits<${names.ModelEmit}>${endOfLine}`;
 }
 
 function* generateModelProp(
