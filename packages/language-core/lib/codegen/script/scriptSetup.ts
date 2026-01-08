@@ -279,7 +279,7 @@ export function* generateSetupFunction(
 		(start, end) => generateSfcBlockSection(scriptSetup, start, end, codeFeatures.all),
 	);
 	yield* generateMacros(options);
-	yield* generateModels(options, scriptSetup, scriptSetupRanges);
+	yield* generateModels(scriptSetup, scriptSetupRanges);
 	yield* generatePublicProps(options, ctx, scriptSetup, scriptSetupRanges);
 	yield* body;
 
@@ -412,7 +412,6 @@ function hasSlotsType(options: ScriptCodegenOptions): boolean {
 }
 
 function* generateModels(
-	options: ScriptCodegenOptions,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
@@ -474,7 +473,8 @@ function* generateModels(
 	}
 	yield `}${endOfLine}`;
 
-	yield `let ${names.modelEmit}!: import('${options.vueCompilerOptions.lib}').ShortEmits<${names.ModelEmit}>${endOfLine}`;
+	// avoid `defineModel<...>()` to prevent JS AST issues
+	yield `let ${names.modelEmit}!: ReturnType<typeof defineEmits<${names.ModelEmit}>>${endOfLine}`;
 }
 
 function* generateModelProp(
