@@ -1,21 +1,23 @@
 <script setup lang="ts">
+import { exactType } from '../shared';
+
 enum EnumA {
-  Value1 = 'v1',
-  Value2 = 'v2',
+  Foo = 'foo',
+  Bar = 'bar',
 }
 
-const definitions: {
+const enumKeyRecord: {
   [key in EnumA]: string;
 } = {
-  [EnumA.Value1]: 'test1',
-  [EnumA.Value2]: 'test2',
+  [EnumA.Foo]: 'a',
+  [EnumA.Bar]: 'b',
 };
-
-const test = (key: EnumA, value: string) => `${key}: ${value}`;
 </script>
 
 <template>
-  <template v-for="(row, rowIndex) of definitions" :key="rowIndex">
-    {{ test(rowIndex, row) }}
+  <template v-for="(row, rowIndex, index) of enumKeyRecord" :key="rowIndex">
+    {{ exactType(row, {} as string) }}
+    {{ exactType(rowIndex, {} as EnumA) }}
+    {{ exactType(index, {} as number) }}
   </template>
 </template>
