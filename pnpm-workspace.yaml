@@ -1,5 +1,6 @@
 packages:
   - extensions/*
+  - extensions/vscode/e2e/workspace
   - packages/*
   - test-workspace
 

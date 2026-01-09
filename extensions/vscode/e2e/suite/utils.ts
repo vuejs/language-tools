@@ -39,7 +39,12 @@ export async function ensureTypeScriptServerReady(fileName: string, keyword: str
 		throw new Error(`Document ${fileName} was not opened successfully.`);
 	}
 
-	const position = openDoc.positionAt(openDoc.getText().indexOf(keyword));
+	const keywordIndex = openDoc.getText().indexOf(keyword);
+	if (keywordIndex === -1) {
+		throw new Error(`Keyword "${keyword}" not found in ${fileName}`);
+	}
+
+	const position = openDoc.positionAt(keywordIndex);
 
 	let attempt = 0;
 	const maxAttempts = 60; // Approx 30 seconds if each attempt is 500ms
@@ -62,9 +67,10 @@ export async function ensureTypeScriptServerReady(fileName: string, keyword: str
 
 		const hover = typeof content === 'string' ? content : content.value;
 
-		// Check for specific content indicating the server is ready and AST is parsed
-		// "a?: string" is part of the ServerReadinessProbe type definition in canary.ts
-		if (!hover.includes('loading') && hover.includes('a?: string')) {
+		// Check that the server is ready and AST is parsed.
+		// The server is considered ready when it provides hover content
+		// that is not still "loading" or empty.
+		if (!hover.includes('loading') && hover.trim().length > 0) {
 			console.log(`TypeScript server is ready after ${attempt} attempts.`);
 			return; // Server is ready
 		}
@@ -157,4 +163,195 @@ export function nthIndex(str: string, pattern: string, n: number): number {
 		if (index === -1) break;
 	}
 	return index;
+}
+
+/**
+ * Retrieves diagnostics for the currently opened document.
+ * Waits for diagnostics to be published if they haven't arrived yet.
+ * @param fileName - Optional file name to get diagnostics for. If not provided, uses the currently opened document.
+ * @param waitMs - Maximum time to wait for diagnostics to arrive (default: 3000ms).
+ * @returns Array of vscode.Diagnostic objects with message, range, and severity info.
+ */
+export async function getDiagnostics(fileName?: string, waitMs: number = 3000): Promise<vscode.Diagnostic[]> {
+	const doc = fileName ? await vscode.workspace.openTextDocument(
+		vscode.Uri.file(path.join(workspacePath, fileName))
+	) : openDoc;
+
+	assert.ok(doc, `Document ${fileName || 'not specified'} was not opened.`);
+
+	// Wait for diagnostics to be published
+	const startTime = Date.now();
+	const checkInterval = 100; // ms
+
+	while (Date.now() - startTime < waitMs) {
+		const allDiagnostics = vscode.languages.getDiagnostics(doc.uri);
+
+		// If we got diagnostics, return them immediately
+		if (allDiagnostics.length > 0) {
+			return allDiagnostics;
+		}
+
+		// Otherwise wait a bit and try again
+		await new Promise(resolve => setTimeout(resolve, checkInterval));
+	}
+
+	// Return whatever we have after timeout (even if empty)
+	return vscode.languages.getDiagnostics(doc.uri);
+}
+
+/**
+ * Retrieves completions at a specific position in the currently opened document.
+ * @param getPosition - Callback function that receives the document and returns the position to get completions at.
+ * @returns Array of completion items with label, kind, and other properties.
+ */
+export async function getCompletions(
+	getPosition: (doc: vscode.TextDocument) => vscode.Position,
+): Promise<vscode.CompletionItem[]> {
+	const position = getPosition(openDoc);
+
+	const completionList = await vscode.commands.executeCommand<vscode.CompletionList>(
+		'vscode.executeCompletionItemProvider',
+		openDoc.uri,
+		position,
+	);
+
+	assert.ok(completionList, 'Expected completion list to be defined');
+
+	return completionList.items || [];
+}
+
+/**
+ * Gets the "Go to Definition" location for a position in the currently opened document.
+ * @param getPosition - Callback function that receives the document and returns the position.
+ * @returns Array of Location objects (can be multiple if multiple definitions exist).
+ */
+export async function goToDefinition(
+	getPosition: (doc: vscode.TextDocument) => vscode.Position,
+): Promise<vscode.Location[]> {
+	const position = getPosition(openDoc);
+
+	const definitions = await vscode.commands.executeCommand<vscode.Location[]>(
+		'vscode.executeDefinitionProvider',
+		openDoc.uri,
+		position,
+	);
+
+	assert.ok(definitions, 'Expected definition results to be defined');
+
+	return definitions || [];
+}
+
+/**
+ * Finds all references to a symbol at a position in the currently opened document.
+ * @param getPosition - Callback function that receives the document and returns the position.
+ * @returns Array of Location objects pointing to all references.
+ */
+export async function findReferences(
+	getPosition: (doc: vscode.TextDocument) => vscode.Position,
+): Promise<vscode.Location[]> {
+	const position = getPosition(openDoc);
+
+	const references = await vscode.commands.executeCommand<vscode.Location[]>(
+		'vscode.executeReferenceProvider',
+		openDoc.uri,
+		position,
+	);
+
+	assert.ok(references, 'Expected reference results to be defined');
+
+	return references || [];
+}
+
+/**
+ * Waits for diagnostics to be published for the current document.
+ * Useful after making changes to allow LSP to catch up.
+ * @param maxWaitMs - Maximum time to wait for diagnostics (default: 5000ms).
+ * @param expectedDiagnosticCount - Optional expected number of diagnostics to wait for.
+ */
+export async function waitForDiagnostics(
+	maxWaitMs: number = 5000,
+	expectedDiagnosticCount?: number,
+): Promise<void> {
+	const startTime = Date.now();
+	const checkInterval = 100;
+
+	while (Date.now() - startTime < maxWaitMs) {
+		const diagnostics = await getDiagnostics();
+
+		if (expectedDiagnosticCount !== undefined) {
+			if (diagnostics.length === expectedDiagnosticCount) {
+				return; // Got the expected count
+			}
+		} else {
+			// Just wait for at least one update cycle
+			return;
+		}
+
+		await new Promise(resolve => setTimeout(resolve, checkInterval));
+	}
+
+	console.warn(
+		`Waited ${maxWaitMs}ms for diagnostics but did not reach expected count.`,
+	);
+}
+
+/**
+ * Modifies the content of a file and waits for the LSP to process the change.
+ * @param fileName - Name of the file to modify (relative to workspace).
+ * @param modifyFn - Function that receives the current content and returns the new content.
+ * @param waitAfterMs - Time to wait after modification for LSP to process (default: 500ms).
+ */
+export async function modifyFile(
+	fileName: string,
+	modifyFn: (content: string) => string,
+	waitAfterMs: number = 500,
+): Promise<void> {
+	const fileUri = vscode.Uri.file(path.join(workspacePath, fileName));
+	const doc = await vscode.workspace.openTextDocument(fileUri);
+	const currentContent = doc.getText();
+	const newContent = modifyFn(currentContent);
+
+	const edit = new vscode.WorkspaceEdit();
+	edit.replace(
+		fileUri,
+		new vscode.Range(0, 0, doc.lineCount, 0),
+		newContent,
+	);
+
+	const success = await vscode.workspace.applyEdit(edit);
+	assert.ok(success, `Failed to modify file ${fileName}`);
+
+	// Wait for LSP to process the change
+	await new Promise(resolve => setTimeout(resolve, waitAfterMs));
+}
+
+/**
+ * Assertion helper for checking diagnostic content.
+ * @param diagnostics - Array of diagnostics from getDiagnostics().
+ * @param expectedMessage - Text that should appear in the diagnostic message.
+ * @param expectedLineContent - Optional: text that should appear on the diagnostic's line.
+ */
+export function assertDiagnostic(
+	diagnostics: vscode.Diagnostic[],
+	expectedMessage: string,
+	expectedLineContent?: string,
+): vscode.Diagnostic {
+	const diagnostic = diagnostics.find(d => {
+		const messageMatches = typeof d.message === 'string'
+			? d.message.includes(expectedMessage)
+			: false;
+
+		if (!messageMatches) return false;
+
+		if (expectedLineContent && openDoc) {
+			const line = openDoc.lineAt(d.range.start.line).text;
+			return line.includes(expectedLineContent);
+		}
+
+		return true;
+	});
+
+	assert.ok(diagnostic, `Expected diagnostic with message containing "${expectedMessage}"`);
+
+	return diagnostic!;
 }
