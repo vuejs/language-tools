@@ -109,11 +109,13 @@ declare global {
 	};
 	type __VLS_PrettifyGlobal<T> = (T extends any ? { [K in keyof T]: T[K] } : { [K in keyof T as K]: T[K] }) & {};
 
-	function __VLS_vFor<T>(source: T): T extends number ? [number, number][]
-		: T extends string ? [string, number][]
-		: T extends (infer U)[] ? [U, number][]
-		: T extends Iterable<infer V> ? [V, number][]
-		: [T[keyof T], `${keyof T & (string | number)}`, number][];
+	function __VLS_vFor<T>(source: T): (
+		T extends number ? [number, number]
+			: T extends string ? [string, number]
+			: T extends (infer U)[] ? [U, number]
+			: T extends Iterable<infer V> ? [V, number]
+			: [T[keyof T], Exclude<keyof T, symbol>, number]
+	)[];
 	function __VLS_vSlot<S, D extends S>(slot: S, decl?: D): D extends (...args: infer P) => any ? P : any[];
 	function __VLS_asFunctionalDirective<T, ObjectDirective>(
 		dir: T,
