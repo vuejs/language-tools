@@ -1,9 +1,5 @@
 import * as assert from 'node:assert';
-import { 
-	ensureTypeScriptServerReady, 
-	getCompletions, 
-	openDocument
-} from './utils';
+import { ensureTypeScriptServerReady, getCompletions, openDocument } from './utils';
 
 suite('Completions', () => {
 	suiteSetup(async function() {
@@ -12,7 +8,7 @@ suite('Completions', () => {
 
 	test('string method completions available after member access', async () => {
 		await openDocument('completions-test.vue');
-		
+
 		const completions = await getCompletions(doc => {
 			// Find "text." position
 			const textDotPos = doc.getText().indexOf('{{ text.');
@@ -20,28 +16,26 @@ suite('Completions', () => {
 			return doc.positionAt(textDotPos + 8);
 		});
 
-		const labels = completions.map(c => 
-			typeof c.label === 'string' ? c.label : c.label.label
-		);
-		
+		const labels = completions.map(c => typeof c.label === 'string' ? c.label : c.label.label);
+
 		// Should include common string methods
 		assert.ok(
 			labels.includes('toUpperCase') || labels.some(l => l.startsWith('toUpperCase')),
-			`Expected 'toUpperCase' in completions, got: ${labels.slice(0, 10).join(', ')}`
+			`Expected 'toUpperCase' in completions, got: ${labels.slice(0, 10).join(', ')}`,
 		);
 		assert.ok(
 			labels.includes('toLowerCase') || labels.some(l => l.startsWith('toLowerCase')),
-			`Expected 'toLowerCase' in completions`
+			`Expected 'toLowerCase' in completions`,
 		);
 		assert.ok(
 			labels.includes('slice') || labels.some(l => l.startsWith('slice')),
-			`Expected 'slice' in completions`
+			`Expected 'slice' in completions`,
 		);
 	});
 
 	test('completions not empty', async () => {
 		await openDocument('completions-test.vue');
-		
+
 		const completions = await getCompletions(doc => {
 			const textDotPos = doc.getText().indexOf('{{ text.');
 			return doc.positionAt(textDotPos + 8);

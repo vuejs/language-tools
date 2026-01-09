@@ -173,9 +173,11 @@ export function nthIndex(str: string, pattern: string, n: number): number {
  * @returns Array of vscode.Diagnostic objects with message, range, and severity info.
  */
 export async function getDiagnostics(fileName?: string, waitMs: number = 3000): Promise<vscode.Diagnostic[]> {
-	const doc = fileName ? await vscode.workspace.openTextDocument(
-		vscode.Uri.file(path.join(workspacePath, fileName))
-	) : openDoc;
+	const doc = fileName
+		? await vscode.workspace.openTextDocument(
+			vscode.Uri.file(path.join(workspacePath, fileName)),
+		)
+		: openDoc;
 
 	assert.ok(doc, `Document ${fileName || 'not specified'} was not opened.`);
 
@@ -282,7 +284,8 @@ export async function waitForDiagnostics(
 			if (diagnostics.length === expectedDiagnosticCount) {
 				return; // Got the expected count
 			}
-		} else {
+		}
+		else {
 			// Just wait for at least one update cycle
 			return;
 		}

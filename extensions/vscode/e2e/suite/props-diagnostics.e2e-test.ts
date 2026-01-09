@@ -1,10 +1,5 @@
 import * as assert from 'node:assert';
-import { 
-	ensureTypeScriptServerReady, 
-	getDiagnostics, 
-	openDocument,
-	assertDiagnostic
-} from './utils';
+import { assertDiagnostic, ensureTypeScriptServerReady, getDiagnostics, openDocument } from './utils';
 
 suite('Props Type Checking Diagnostics', () => {
 	suiteSetup(async function() {
@@ -17,11 +12,11 @@ suite('Props Type Checking Diagnostics', () => {
 
 		// Should have a diagnostic about missing 'title' prop on first Child usage
 		const error = assertDiagnostic(
-			diagnostics, 
+			diagnostics,
 			'title',
-			':count="123"'  // Check it's on the first Child line
+			':count="123"', // Check it's on the first Child line
 		);
-		
+
 		assert.ok(error, 'Should have diagnostic for missing required prop');
 	});
 
@@ -37,7 +32,7 @@ suite('Props Type Checking Diagnostics', () => {
 
 		assert.ok(
 			relevantDiags.length > 0,
-			'Should have diagnostic for type mismatch on count prop'
+			'Should have diagnostic for type mismatch on count prop',
 		);
 	});
 
@@ -53,7 +48,7 @@ suite('Props Type Checking Diagnostics', () => {
 
 		assert.ok(
 			childErrors.length >= 1,
-			`Should have at least 1 diagnostic for Child prop errors, got ${childErrors.length}`
+			`Should have at least 1 diagnostic for Child prop errors, got ${childErrors.length}`,
 		);
 	});
 });
