@@ -4,7 +4,7 @@
 // Meta info
 export const publisher = 'Vue';
 export const name = 'volar';
-export const version = '3.2.0';
+export const version = '3.2.2';
 export const displayName = 'Vue (Official)';
 export const description = 'Language Support for Vue';
 export const extensionId = `${publisher}.${name}`;
@@ -62,6 +62,7 @@ export type ConfigKey =
 	| 'vue.server.path'
 	| 'vue.server.includeLanguages'
 	| 'vue.codeActions.askNewComponentName'
+	| 'vue.hover.rich'
 	| 'vue.suggest.componentNameCasing'
 	| 'vue.suggest.propNameCasing'
 	| 'vue.suggest.defineAssignment'
@@ -88,6 +89,7 @@ export interface ConfigKeyTypeMap {
 	'vue.server.path': string | undefined;
 	'vue.server.includeLanguages': string[];
 	'vue.codeActions.askNewComponentName': boolean;
+	'vue.hover.rich': boolean;
 	'vue.suggest.componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
 	'vue.suggest.propNameCasing': 'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase';
 	'vue.suggest.defineAssignment': boolean;
@@ -122,6 +124,7 @@ export interface ConfigShorthandMap {
 	serverPath: 'vue.server.path';
 	serverIncludeLanguages: 'vue.server.includeLanguages';
 	codeActionsAskNewComponentName: 'vue.codeActions.askNewComponentName';
+	hoverRich: 'vue.hover.rich';
 	suggestComponentNameCasing: 'vue.suggest.componentNameCasing';
 	suggestPropNameCasing: 'vue.suggest.propNameCasing';
 	suggestDefineAssignment: 'vue.suggest.defineAssignment';
@@ -149,6 +152,7 @@ export interface ConfigShorthandTypeMap {
 	serverPath: string | undefined;
 	serverIncludeLanguages: string[];
 	codeActionsAskNewComponentName: boolean;
+	hoverRich: boolean;
 	suggestComponentNameCasing: 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
 	suggestPropNameCasing: 'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase';
 	suggestDefineAssignment: boolean;
@@ -247,6 +251,15 @@ export const configs = {
 		key: 'vue.codeActions.askNewComponentName',
 		default: true,
 	} as ConfigItem<'vue.codeActions.askNewComponentName'>,
+	/**
+	 * @key `vue.hover.rich`
+	 * @default `false`
+	 * @type `boolean`
+	 */
+	hoverRich: {
+		key: 'vue.hover.rich',
+		default: false,
+	} as ConfigItem<'vue.hover.rich'>,
 	/**
 	 * @key `vue.suggest.componentNameCasing`
 	 * @default `"preferPascalCase"`
@@ -410,6 +423,7 @@ export interface ScopedConfigKeyTypeMap {
 	'server.path': string | undefined;
 	'server.includeLanguages': string[];
 	'codeActions.askNewComponentName': boolean;
+	'hover.rich': boolean;
 	'suggest.componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
 	'suggest.propNameCasing': 'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase';
 	'suggest.defineAssignment': boolean;
@@ -446,6 +460,7 @@ export const scopedConfigs = {
 		'server.path': undefined,
 		'server.includeLanguages': ['vue'],
 		'codeActions.askNewComponentName': true,
+		'hover.rich': false,
 		'suggest.componentNameCasing': 'preferPascalCase',
 		'suggest.propNameCasing': 'preferKebabCase',
 		'suggest.defineAssignment': true,
@@ -482,6 +497,9 @@ export interface NestedConfigs {
 		};
 		'codeActions': {
 			'askNewComponentName': boolean;
+		};
+		'hover': {
+			'rich': boolean;
 		};
 		'suggest': {
 			'componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
@@ -539,6 +557,9 @@ export interface NestedScopedConfigs {
 	};
 	'codeActions': {
 		'askNewComponentName': boolean;
+	};
+	'hover': {
+		'rich': boolean;
 	};
 	'suggest': {
 		'componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';

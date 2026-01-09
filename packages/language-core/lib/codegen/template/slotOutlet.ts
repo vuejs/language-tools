@@ -125,7 +125,9 @@ export function* generateSlotOutlet(
 				options,
 				ctx,
 				options.template,
-				codeFeatures.all,
+				isShortHand
+					? codeFeatures.withoutHighlightAndCompletion
+					: codeFeatures.all,
 				nameProp.exp.content,
 				nameProp.exp.loc.start.offset,
 			);

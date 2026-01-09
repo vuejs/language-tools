@@ -1,5 +1,43 @@
 # Changelog
 
+## 3.2.2 (2026-01-06)
+
+### language-core
+
+- **fix:** correct code features on v-bind shorthands of special attributes - Thanks to @KazariEX!
+
+### language-plugin-pug
+
+- **feat:** accurate Pug shorthand mapping (#5906)
+- **fix:** pre-map HTML to Pug offset attribute (#5905)
+
+### language-service
+
+- **feat:** strip `=""` for boolean props completion edits (#5888) - Thanks to @KazariEX!
+- **fix:** avoid duplicate directive modifiers in completion (#5920) - Thanks to @KazariEX!
+
+### typescript-plugin
+
+- **fix:** only forward quick info and suggestion diagnostics for setup bindings (#5892) - Thanks to @KazariEX!
+
+## 3.2.1 (2025-12-22)
+
+### language-core
+
+- **fix:** infer array type in `v-for` (#5896) - Thanks to @serkodev!
+
+### component-meta
+
+- **fix:** skip schema resolution correctly when `option` is `false` (#5891) - Thanks to @KazariEX!
+
+### component-type-helpers
+
+- **fix:** npm package is missing build files (#5893)
+
+### language-service
+
+- **feat:** props completion now only suggests `:xxx` (shorthand) when no prefix is typed, instead of both `xxx` and `:xxx`
+
 ## 3.2.0 (2025-12-20)
 
 ### vscode

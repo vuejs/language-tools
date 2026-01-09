@@ -93,6 +93,9 @@ declare global {
 			) => any;
 		}
 	>;
+	type __VLS_ShortEmits<E extends Record<string, any[]>> = __VLS_UnionToIntersection<
+		{ [K in keyof E]: (event: K, ...args: E[K]) => void }[keyof E]
+	>;
 	type __VLS_ShortEmitsToObject<E> = E extends Record<string, any[]> ? { [K in keyof E]: (...args: E[K]) => any }
 		: E;
 	type __VLS_ResolveEmits<
@@ -108,7 +111,7 @@ declare global {
 
 	function __VLS_vFor<T>(source: T): T extends number ? [number, number][]
 		: T extends string ? [string, number][]
-		: T extends any[] ? [T[number], number][]
+		: T extends (infer U)[] ? [U, number][]
 		: T extends Iterable<infer V> ? [V, number][]
 		: [T[keyof T], `${keyof T & (string | number)}`, number][];
 	function __VLS_vSlot<S, D extends S>(slot: S, decl?: D): D extends (...args: infer P) => any ? P : any[];

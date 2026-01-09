@@ -65,9 +65,8 @@ function* generateTemplateCtx(
 		propTypes.push(names.EmitProps);
 	}
 	if (propTypes.length) {
-		yield `type ${names.InternalProps} = ${propTypes.join(` & `)}${endOfLine}`;
-		exps.push([`{} as { $props: ${names.InternalProps} }`]);
-		exps.push([`{} as ${names.InternalProps}`]);
+		exps.push([`{} as { $props: ${propTypes.join(` & `)} }`]);
+		exps.push([`{} as ${propTypes.join(` & `)}`]);
 	}
 
 	if (ctx.generatedTypes.has(names.SetupExposed)) {

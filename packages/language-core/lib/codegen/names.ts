@@ -21,7 +21,6 @@ export const TemplateRefs = '__VLS_TemplateRefs';
 export const RootEl = '__VLS_RootEl';
 export const ModelEmit = '__VLS_ModelEmit';
 export const EmitProps = '__VLS_EmitProps';
-export const InternalProps = '__VLS_InternalProps';
 export const Emit = '__VLS_Emit';
 export const SetupExposed = '__VLS_SetupExposed';
 export const PublicProps = '__VLS_PublicProps';
