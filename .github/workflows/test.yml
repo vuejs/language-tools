@@ -23,3 +23,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: npm run test
+
+      - run: xvfb-run -a npm run test:vscode
+        if: runner.os == 'Linux'
+
+      - run: npm run test:vscode
+        if: runner.os != 'Linux'
