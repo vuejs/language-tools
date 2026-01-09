@@ -21,7 +21,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "^22.10.4",
-		"@vue/compiler-dom": "^3.5.0",
+		"@vue/compiler-dom": "^3.5.24",
 		"@vue/language-core": "workspace:*"
 	}
 }

@@ -3,6 +3,7 @@
 import { forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
+import * as LanguageCore from '../index';
 import { createPlugins } from './plugins';
 import type { VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
 import { VueVirtualCode } from './virtualCode';
@@ -39,6 +40,7 @@ export function createVueLanguagePlugin<T>(
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
 			'@vue/compiler-dom': CompilerDOM,
+			'@vue/language-core': LanguageCore,
 			typescript: ts,
 		},
 		compilerOptions,

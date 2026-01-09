@@ -350,6 +350,35 @@ export function* generateElement(
 	}
 }
 
+export function* generateFragment(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	node: CompilerDOM.ElementNode,
+): Generator<Code> {
+	const [startTagOffset] = getElementTagOffsets(node, options.template);
+
+	// special case for <template v-for="..." :key="..." />
+	if (node.props.length) {
+		yield `__VLS_asFunctionalElement(__VLS_intrinsics.template)(`;
+		const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+		yield `{${newLine}`;
+		yield* generateElementProps(
+			options,
+			ctx,
+			node,
+			node.props,
+			options.vueCompilerOptions.checkUnknownProps,
+		);
+		yield `}`;
+		yield endBoundary(token, startTagOffset + node.tag.length);
+		yield `)${endOfLine}`;
+	}
+
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child);
+	}
+}
+
 function* generateStyleScopedClassReferences(
 	{ template, typescript: ts }: TemplateCodegenOptions,
 	node: CompilerDOM.ElementNode,

@@ -19,7 +19,7 @@
 	"dependencies": {
 		"@volar/language-service": "2.4.27",
 		"@vue/language-core": "workspace:*",
-		"@vue/shared": "^3.5.0",
+		"@vue/shared": "^3.5.24",
 		"path-browserify": "^1.0.1",
 		"volar-service-css": "0.0.68",
 		"volar-service-emmet": "0.0.68",
@@ -36,7 +36,7 @@
 		"@types/path-browserify": "^1.0.1",
 		"@volar/kit": "2.4.27",
 		"@volar/typescript": "2.4.27",
-		"@vue/compiler-dom": "^3.5.0",
+		"@vue/compiler-dom": "^3.5.24",
 		"@vue/typescript-plugin": "workspace:*",
 		"vscode-css-languageservice": "^6.3.1"
 	}

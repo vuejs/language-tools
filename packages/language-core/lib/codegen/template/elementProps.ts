@@ -111,7 +111,7 @@ export function* generateElementProps(
 			}
 
 			const shouldSpread = propName === 'style' || propName === 'class';
-			const shouldCamelize = isComponent && getShouldCamelize(options, prop, propName);
+			const shouldCamelize = getShouldCamelize(options, node, prop, propName);
 			const features = getPropsCodeFeatures(strictPropsCheck);
 
 			if (shouldSpread) {
@@ -168,7 +168,7 @@ export function* generateElementProps(
 			}
 
 			const shouldSpread = prop.name === 'style' || prop.name === 'class';
-			const shouldCamelize = isComponent && getShouldCamelize(options, prop, prop.name);
+			const shouldCamelize = getShouldCamelize(options, node, prop, prop.name);
 			const features = getPropsCodeFeatures(strictPropsCheck);
 
 			if (shouldSpread) {
@@ -296,13 +296,16 @@ function* generateAttrValue(
 
 function getShouldCamelize(
 	options: TemplateCodegenOptions,
+	node: CompilerDOM.ElementNode,
 	prop: CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode,
 	propName: string,
 ) {
 	return (
+		node.tagType === CompilerDOM.ElementTypes.COMPONENT
+		|| node.tagType === CompilerDOM.ElementTypes.SLOT
+	) && (
 		prop.type !== CompilerDOM.NodeTypes.DIRECTIVE
-		|| !prop.arg
-		|| (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
+		|| prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic
 	)
 		&& hyphenateAttr(propName) === propName
 		&& !options.vueCompilerOptions.htmlAttributes.some(pattern => isMatch(propName, pattern));
