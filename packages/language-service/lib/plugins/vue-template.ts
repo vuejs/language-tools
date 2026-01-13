@@ -618,23 +618,26 @@ export function create(
 			}
 
 			async function loadHtmlCustomData(): Promise<html.IHTMLDataProvider[]> {
-				if (htmlCustomData) { return htmlCustomData }
+				if (htmlCustomData) {
+					return htmlCustomData;
+				}
 				const newData: html.IHTMLDataProvider[] = [];
-				const customData: string[] = await context.env.getConfiguration?.('html.customData') ?? []
-				const workspaceFolder = context.env.workspaceFolders?.[0] ?? undefined
+				const customData: string[] = await context.env.getConfiguration?.('html.customData') ?? [];
+				const workspaceFolder = context.env.workspaceFolders?.[0] ?? undefined;
 				for (const customDataPath of customData) {
 					try {
-						const uri = Utils.resolvePath(URI.parse(workspaceFolder?.toString() ?? "."), customDataPath);
-						const json = await context.env.fs?.readFile?.(uri, "utf-8");
+						const uri = Utils.resolvePath(URI.parse(workspaceFolder?.toString() ?? '.'), customDataPath);
+						const json = await context.env.fs?.readFile?.(uri, 'utf-8');
 						if (json) {
-							const data = JSON.parse(json) as html.HTMLDataV1
+							const data = JSON.parse(json) as html.HTMLDataV1;
 							newData.push(html.newHTMLDataProvider(customDataPath, data));
 						}
-					} catch(e) {
-						continue
+					}
+					catch (e) {
+						continue;
 					}
 				}
-				return newData
+				return newData;
 			}
 
 			async function provideHtmlData(
@@ -656,7 +659,7 @@ export function create(
 
 				const tasks: Promise<void>[] = [];
 				const tagDataMap = new Map<string, TagInfo>();
-				htmlCustomData = await loadHtmlCustomData()
+				htmlCustomData = await loadHtmlCustomData();
 
 				updateExtraCustomData([
 					{
