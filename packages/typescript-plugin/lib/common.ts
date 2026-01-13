@@ -5,7 +5,13 @@ import {
 	toSourceRanges,
 } from '@volar/typescript/lib/node/transform';
 import { getServiceScript } from '@volar/typescript/lib/node/utils';
-import { type Language, type VueCodeInformation, type VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
+import {
+	type Language,
+	tsCodegen,
+	type VueCodeInformation,
+	type VueCompilerOptions,
+	VueVirtualCode,
+} from '@vue/language-core';
 import { capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
 
@@ -31,31 +37,42 @@ export function preprocessLanguageService(
 		if (!language) {
 			return result;
 		}
-		const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
+		const [serviceScript, , sourceScript] = getServiceScript(language, fileName);
 		if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
 			return result;
 		}
+		const codegen = tsCodegen.get(sourceScript.generated.root.sfc);
+		const leadingOffset = sourceScript.snapshot.getLength();
 		for (
-			const sourceOffset of toSourceOffsets(
+			const sourceRange of toSourceRanges(
 				sourceScript,
 				language,
 				serviceScript,
-				position,
+				result.textSpan.start,
+				result.textSpan.start + result.textSpan.length,
+				true,
 				() => true,
 			)
 		) {
-			const generatedOffset2 = toGeneratedOffset(
+			const generateRange2 = toGeneratedRange(
 				language,
 				serviceScript,
 				sourceScript,
-				sourceOffset[1],
+				sourceRange[1],
+				sourceRange[2],
 				(data: VueCodeInformation) => !!data.__importCompletion,
 			);
-			if (generatedOffset2 !== undefined) {
-				const extraInfo = getQuickInfoAtPosition(fileName, generatedOffset2, ...rests);
-				if (extraInfo) {
-					result.tags ??= [];
-					result.tags.push(...extraInfo.tags ?? []);
+			if (generateRange2 !== undefined) {
+				const variableName = serviceScript.code.snapshot.getText(
+					generateRange2[0] - leadingOffset,
+					generateRange2[1] - leadingOffset,
+				);
+				if (codegen?.getSetupExposed().has(variableName)) {
+					const extraInfo = getQuickInfoAtPosition(fileName, generateRange2[0], ...rests);
+					if (extraInfo) {
+						result.tags ??= [];
+						result.tags.push(...extraInfo.tags ?? []);
+					}
 				}
 			}
 		}
@@ -67,10 +84,12 @@ export function preprocessLanguageService(
 		if (!language) {
 			return result;
 		}
-		const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
+		const [serviceScript, , sourceScript] = getServiceScript(language, fileName);
 		if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
 			return result;
 		}
+		const codegen = tsCodegen.get(sourceScript.generated.root.sfc);
+		const leadingOffset = sourceScript.snapshot.getLength();
 		for (const diagnostic of result) {
 			for (
 				const sourceRange of toSourceRanges(
@@ -92,9 +111,15 @@ export function preprocessLanguageService(
 					(data: VueCodeInformation) => !data.__importCompletion,
 				);
 				if (generateRange2 !== undefined) {
-					diagnostic.start = generateRange2[0];
-					diagnostic.length = generateRange2[1] - generateRange2[0];
-					break;
+					const variableName = serviceScript.code.snapshot.getText(
+						generateRange2[0] - leadingOffset,
+						generateRange2[1] - leadingOffset,
+					);
+					if (codegen?.getSetupExposed().has(variableName)) {
+						diagnostic.start = generateRange2[0];
+						diagnostic.length = generateRange2[1] - generateRange2[0];
+						break;
+					}
 				}
 			}
 		}
