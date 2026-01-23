@@ -261,7 +261,10 @@ export function* generatePropExp(
 				exp.loc.source,
 				'template',
 				exp.loc.start.offset,
-				codeFeatures.withoutHighlightAndCompletion,
+				{
+					...codeFeatures.withoutHighlightAndCompletion,
+					__shorthandExpression: 'html',
+				},
 			);
 
 			if (ctx.scopes.some(scope => scope.has(propVariableName))) {
