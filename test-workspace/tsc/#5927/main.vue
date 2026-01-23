@@ -15,9 +15,9 @@ const enumKeyRecord: {
 </script>
 
 <template>
-	<template v-for="(row, rowIndex, index) of enumKeyRecord" :key="rowIndex">
-		{{ exactType(row, {} as string) }}
-		{{ exactType(rowIndex, {} as EnumA) }}
+	<template v-for="(value, key, index) of enumKeyRecord" :key>
+		{{ exactType(value, {} as string) }}
+		{{ exactType(key, {} as EnumA) }}
 		{{ exactType(index, {} as number) }}
 	</template>
 </template>
