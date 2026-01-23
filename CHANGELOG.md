@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.2.3 (2026-01-23)
+
+### language-core
+
+- **feat:** support configuration for language plugins (#5678) - Thanks to @KazariEX!
+- **fix:** avoid `defineModel` breaking ast in `lang="js"` (#5935) - Thanks to @KazariEX!
+- **fix:** infer object keys as string if it does not extend string (#5933) - Thanks to @serkodev!
+
+### typescript-plugin
+
+- **feat:** correct rename behavior on same name shorthands in template (#5907) - Thanks to @KazariEX!
+- **fix:** only forward quick info for original results without tags (#5938) - Thanks to @KazariEX!
+
+### vscode
+
+- **fix:** correct indent for `<style>` and `<script>` tags (#5925) - Thanks to @serkodev!
+
 ## 3.2.2 (2026-01-06)
 
 ### language-core
@@ -159,7 +176,7 @@
 - fix(language-core): infer `$el` type for generic components using `inferComponentDollarEl` (#5794)
 - fix(language-core): ensure `<script>` content generates before `<script setup>` (#5795)
 - fix(language-core): remove `bypassDefineComponent` hack for better JS support (#4876) (#5379)
-- fix(language-core): `Prettify<T>` caused generic props gets inferred as `unknown`  (#5667) - Thanks to @so1ve!
+- fix(language-core): `Prettify<T>` caused generic props gets inferred as `unknown` (#5667) - Thanks to @so1ve!
 - fix(vscode): handle leading `<` as operator in SFC scripts (#5801) - Thanks to @serkodev!
 - fix(vscode): patch `isTypeScriptDocument` in VSCode for `typescript.preferences.autoImportSpecifierExcludeRegexes` config support (#5364)
 - fix(language-core): ensure type consistency for optional boolean props (#5803)
