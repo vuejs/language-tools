@@ -1,5 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { camelize } from '@vue/shared';
+import { camelize, isBuiltInDirective } from '@vue/shared';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import * as names from '../names';
@@ -12,15 +12,6 @@ import { generatePropExp } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
-
-const builtInDirectives = new Set([
-	'cloak',
-	'html',
-	'memo',
-	'once',
-	'show',
-	'text',
-]);
 
 export function* generateElementDirectives(
 	options: TemplateCodegenOptions,
@@ -66,10 +57,10 @@ function* generateIdentifier(
 		prop.loc.start.offset,
 		{
 			...codeFeatures.withoutHighlightAndCompletion,
-			verification: options.vueCompilerOptions.checkUnknownDirectives && !builtInDirectives.has(prop.name),
+			verification: options.vueCompilerOptions.checkUnknownDirectives && !isBuiltInDirective(prop.name),
 		},
 	);
-	if (!builtInDirectives.has(prop.name)) {
+	if (!isBuiltInDirective(prop.name)) {
 		ctx.recordComponentAccess('template', camelize(rawName), prop.loc.start.offset);
 	}
 	yield endBoundary(token, startOffset + rawName.length);
