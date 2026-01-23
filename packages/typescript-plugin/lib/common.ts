@@ -30,7 +30,7 @@ export function preprocessLanguageService(
 
 	languageService.getQuickInfoAtPosition = (fileName, position, ...rests) => {
 		const result = getQuickInfoAtPosition(fileName, position, ...rests);
-		if (!result) {
+		if (!result || result.tags?.length) {
 			return result;
 		}
 		const language = getLanguage();
@@ -69,10 +69,7 @@ export function preprocessLanguageService(
 				);
 				if (codegen?.getSetupExposed().has(variableName)) {
 					const extraInfo = getQuickInfoAtPosition(fileName, generateRange2[0], ...rests);
-					if (extraInfo) {
-						result.tags ??= [];
-						result.tags.push(...extraInfo.tags ?? []);
-					}
+					result.tags = extraInfo?.tags;
 				}
 			}
 		}

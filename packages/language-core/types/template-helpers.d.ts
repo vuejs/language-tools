@@ -93,6 +93,9 @@ declare global {
 			) => any;
 		}
 	>;
+	type __VLS_ShortEmits<E extends Record<string, any[]>> = __VLS_UnionToIntersection<
+		{ [K in keyof E]: (event: K, ...args: E[K]) => void }[keyof E]
+	>;
 	type __VLS_ShortEmitsToObject<E> = E extends Record<string, any[]> ? { [K in keyof E]: (...args: E[K]) => any }
 		: E;
 	type __VLS_ResolveEmits<

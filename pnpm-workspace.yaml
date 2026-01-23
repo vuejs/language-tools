@@ -4,8 +4,6 @@ packages:
   - test-workspace
 
 onlyBuiltDependencies:
-  - '@tsslint/core'
-  - '@tsslint/eslint'
   - '@vscode/vsce-sign'
   - dprint
   - esbuild
