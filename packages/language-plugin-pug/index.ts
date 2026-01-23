@@ -1,7 +1,7 @@
 import { SourceMap } from '@volar/source-map';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { VueLanguagePlugin } from '@vue/language-core';
-import * as pug from 'volar-service-pug/lib/languageService';
+import { baseParse } from './lib/baseParse';
 
 const classRegex = /^class\s*=/;
 
@@ -47,15 +47,15 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 		compileSFCTemplate(lang, template, options) {
 			if (lang === 'pug') {
-				let parsed: ReturnType<typeof pug.baseParse>;
+				let parsed: ReturnType<typeof baseParse>;
 				let baseOffset = 0;
 
 				const minIndent = calculateMinIndent(template);
 				if (minIndent === 0) {
-					parsed = pug.baseParse(template);
+					parsed = baseParse(template);
 				}
 				else {
-					parsed = pug.baseParse(`template\n${template}`);
+					parsed = baseParse(`template\n${template}`);
 					baseOffset = 'template\n'.length;
 					parsed.htmlCode = ' '.repeat('<template>'.length)
 						+ parsed.htmlCode.slice('<template>'.length, -'</template>'.length)
@@ -110,13 +110,6 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 							if ('offset' in value && typeof value.offset === 'number') {
 								const originalOffset = value.offset;
 								value.offset = toPugOffset(originalOffset);
-								if (typeof value.getClassOffset === 'function') {
-									const originalGetClassOffset = value.getClassOffset.bind(value);
-									value.getClassOffset = (startOffset: number) => {
-										const classOffset = originalGetClassOffset(startOffset);
-										return toPugOffset(classOffset);
-									};
-								}
 							}
 							visit(value);
 						}

@@ -186,7 +186,7 @@ exports[`Input: generic/component.vue, Output: generic/component.vue.d.ts 1`] = 
             foo: number;
         }) => any;
     };
-    emit: ((e: "bar", data: number) => void) & ((evt: "update:title", value: string) => void);
+    emit: ((e: "bar", data: number) => void) & ((event: "update:title", value: string) => void);
 }>) => import("vue").VNode & {
     __ctx?: Awaited<typeof __VLS_setup>;
 };
@@ -221,7 +221,7 @@ exports[`Input: generic/custom-extension-component.cext, Output: generic/custom-
             foo: number;
         }) => any;
     };
-    emit: ((e: "bar", data: number) => void) & ((evt: "update:title", value: string) => void);
+    emit: ((e: "bar", data: number) => void) & ((event: "update:title", value: string) => void);
 }>) => import("vue").VNode & {
     __ctx?: Awaited<typeof __VLS_setup>;
 };

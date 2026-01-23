@@ -30,6 +30,7 @@ export function* generateComponent(
 	let { tag, props } = node;
 	let [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
 	let isExpression = false;
+	let isIsShorthand = false;
 
 	if (tag.includes('.')) {
 		isExpression = true;
@@ -42,7 +43,8 @@ export function* generateComponent(
 				&& prop.arg?.loc.source === 'is'
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				if (prop.arg.loc.end.offset === prop.exp.loc.end.offset) {
+				isIsShorthand = prop.arg.loc.end.offset === prop.exp.loc.end.offset;
+				if (isIsShorthand) {
 					ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.exp.loc, 'is'));
 				}
 				isExpression = true;
@@ -63,7 +65,9 @@ export function* generateComponent(
 			options,
 			ctx,
 			options.template,
-			codeFeatures.all,
+			isIsShorthand
+				? codeFeatures.withoutHighlightAndCompletion
+				: codeFeatures.all,
 			tag,
 			startTagOffset,
 			`(`,
@@ -356,18 +360,9 @@ function* generateStyleScopedClassReferences(
 			&& prop.name === 'class'
 			&& prop.value
 		) {
-			if (template.lang === 'pug') {
-				const getClassOffset = Reflect.get(prop.value.loc.start, 'getClassOffset') as (offset: number) => number;
-				const content = prop.value.loc.source.slice(1, -1);
-				for (const [className, pos] of forEachClassName(content)) {
-					yield* generateStyleScopedClassReference(template, className, getClassOffset(pos + 1));
-				}
-			}
-			else {
-				const [text, start] = normalizeAttributeValue(prop.value);
-				for (const [className, offset] of forEachClassName(text)) {
-					yield* generateStyleScopedClassReference(template, className, start + offset);
-				}
+			const [text, start] = normalizeAttributeValue(prop.value);
+			for (const [className, offset] of forEachClassName(text)) {
+				yield* generateStyleScopedClassReference(template, className, start + offset);
 			}
 		}
 		else if (

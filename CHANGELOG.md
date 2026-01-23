@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.2.2 (2026-01-06)
+
+### language-core
+
+- **fix:** correct code features on v-bind shorthands of special attributes - Thanks to @KazariEX!
+
+### language-plugin-pug
+
+- **feat:** accurate Pug shorthand mapping (#5906)
+- **fix:** pre-map HTML to Pug offset attribute (#5905)
+
+### language-service
+
+- **feat:** strip `=""` for boolean props completion edits (#5888) - Thanks to @KazariEX!
+- **fix:** avoid duplicate directive modifiers in completion (#5920) - Thanks to @KazariEX!
+
+### typescript-plugin
+
+- **fix:** only forward quick info and suggestion diagnostics for setup bindings (#5892) - Thanks to @KazariEX!
+
 ## 3.2.1 (2025-12-22)
 
 ### language-core
