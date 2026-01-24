@@ -115,14 +115,15 @@ export interface VueLanguagePluginReturn {
 	resolveEmbeddedCode?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedCode): void;
 }
 
-export type VueLanguagePlugin = (
-	ctx: Record<string, any> & {
+export type VueLanguagePlugin<T extends Record<string, any> = {}> = (
+	ctx: {
 		modules: {
 			typescript: typeof ts;
 			'@vue/compiler-dom': typeof CompilerDOM;
 		};
 		compilerOptions: ts.CompilerOptions;
 		vueCompilerOptions: VueCompilerOptions;
+		config: T;
 	},
 ) => VueLanguagePluginReturn | VueLanguagePluginReturn[];
 
