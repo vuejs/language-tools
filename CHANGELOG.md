@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.2.4 (2026-01-26)
+
+### language-core
+
+- **feat:** place plugin configs under `ctx.config` and support type annotation via generics (#5944) - Thanks to @KazariEX!
+
+### workspace
+
+- **chore:** publish to npm with OIDC (#5912) - Thanks to @ghiscoding!
+
 ## 3.2.3 (2026-01-23)
 
 ### language-core
