@@ -3,25 +3,63 @@
 <p>
   <a href="https://marketplace.visualstudio.com/items?itemName=Vue.volar"><img src="https://img.shields.io/visual-studio-marketplace/v/Vue.volar?labelColor=18181B&color=1584FC" alt="Version"></a>
   <a href="https://marketplace.visualstudio.com/items?itemName=Vue.volar"><img src="https://img.shields.io/visual-studio-marketplace/i/Vue.volar?labelColor=18181B&color=1584FC" alt="Downloads"></a>
-  <a href="https://github.com/vuejs/language-tools/tree/master/LICENSE"><img src="https://img.shields.io/github/license/vuejs/language-tools.svg?labelColor=18181B&color=1584FC" alt="License"></a>
+  <a href="https://github.com/vuejs/language-tools/blob/master/LICENSE"><img src="https://img.shields.io/github/license/vuejs/language-tools.svg?labelColor=18181B&color=1584FC" alt="License"></a>
 </p>
 
 > ⚡ Vue language toolset with native TypeScript performance based-on [Volar.js](https://volarjs.dev/)
 
 💬 **#language-tools** on our [Discord Server](https://discord.gg/vue)
 
+## Quick Start
+
+### For VSCode Users
+
+Install the [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) extension to get full Vue language support.
+
+### Command-Line Type Checking
+
+```bash
+npm install vue-tsc typescript --save-dev
+```
+
+```json
+{
+  "scripts": {
+    "type-check": "vue-tsc --noEmit"
+  }
+}
+```
+
 ## Packages
 
-- [Vue (Official)](https://github.com/vuejs/language-tools/tree/master/extensions/vscode) \
-*Vue, Vitepress, petite-vue language support extension for VSCode*
-- [vue-tsc](https://github.com/vuejs/language-tools/tree/master/packages/tsc) \
-*Type-check and dts build command line tool*
-- [vue-component-meta](https://github.com/vuejs/language-tools/tree/master/packages/component-meta) \
-*Component props, events, slots types information extract tool*
-- [`@vue/language-server`](/packages/language-server/) \
-*The language server itself*.
-- [`@vue/typescript-plugin`](/packages/typescript-plugin/) \
-*TypeScript LanguageService Plugin for Vue*.
+### For End Users
+
+| Package | Description |
+| :--- | :--- |
+| [Vue (Official)](./extensions/vscode) | Vue, Vitepress, petite-vue language support extension for VSCode |
+| [vue-tsc](./packages/tsc) | Type-check and dts build command line tool |
+
+### For Editor Integration
+
+| Package | Description |
+| :--- | :--- |
+| [@vue/language-server](./packages/language-server) | The language server itself |
+| [@vue/language-service](./packages/language-service) | Language service plugin collection |
+| [@vue/typescript-plugin](./packages/typescript-plugin) | TypeScript language service plugin |
+
+### Core Module
+
+| Package | Description |
+| :--- | :--- |
+| [@vue/language-core](./packages/language-core) | SFC parsing and virtual code generation |
+
+### Helper Tools
+
+| Package | Description |
+| :--- | :--- |
+| [vue-component-meta](./packages/component-meta) | Component props, events, slots types information extract tool |
+| [vue-component-type-helpers](./packages/component-type-helpers) | Component type helper utilities |
+| [@vue/language-plugin-pug](./packages/language-plugin-pug) | Pug template support |
 
 ## Community Integration
 
@@ -59,10 +97,25 @@
 *Vue language server configuration for Eclipse*
 
 <!-- Editor link: https://www.mermaidchart.com/app/projects/c62d8944-0e06-47f0-a8de-f89a7378490f/diagrams/91fd02c0-5c91-4f72-a8b4-7af21b7c4d86/version/v0.1/edit -->
-
 <a href="https://www.mermaidchart.com/raw/91fd02c0-5c91-4f72-a8b4-7af21b7c4d86?theme=light&version=v0.1&format=svg">
 	<img src="https://www.mermaidchart.com/raw/91fd02c0-5c91-4f72-a8b4-7af21b7c4d86?theme=light&version=v0.1&format=svg"/>
 </a>
+
+## `vueCompilerOptions`
+
+Configure Vue compiler options in `tsconfig.json`:
+
+```jsonc
+{
+  "compilerOptions": { /* ... */ },
+  "vueCompilerOptions": {
+    "target": 3.5,
+    "strictTemplates": true
+  }
+}
+```
+
+For detailed options, please refer to the [@vue/language-core](./packages/language-core) documentation.
 
 ## Contribution Guide
 
@@ -78,6 +131,7 @@ npm run build
 ```
 
 The recommended way to develop the volar extension is to use the [Debug Tools](https://code.visualstudio.com/Docs/editor/debugging) provided by VSCode.
+
 Alternatively, you can run one of the scripts defined in the [package.json](https://github.com/vuejs/language-tools/blob/master/package.json) file.
 
 ❗ You should always use the debug launch configs or package.json scripts defined in the root of the project.
@@ -86,12 +140,16 @@ Additional info for contributing to open source projects can be found here: http
 
 To develop with upstream Volar.js modules, you can setup a workspace with https://github.com/volarjs/workspace.
 
-## ❤️ Thanks to Our Sponsors
+## ❤️ Sponsors
 
 This project is made possible thanks to our generous sponsors:
 
 <p align="center">
-	<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">
-		<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.png"/>
-	</a>
+  <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">
+    <img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.png"/>
+  </a>
 </p>
+
+## License
+
+[MIT](./LICENSE) License
