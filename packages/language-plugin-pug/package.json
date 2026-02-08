@@ -13,7 +13,7 @@
 		"directory": "packages/language-plugin-pug"
 	},
 	"dependencies": {
-		"@volar/source-map": "2.4.27",
+		"@volar/source-map": "2.4.28",
 		"muggle-string": "^0.4.1",
 		"pug-lexer": "^5.0.1",
 		"pug-parser": "^6.0.0",

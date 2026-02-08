@@ -11,9 +11,9 @@
 		"lint:fix": "npm run lint -- --fix"
 	},
 	"devDependencies": {
-		"@tsslint/cli": "3.0.0",
-		"@tsslint/compat-eslint": "3.0.0",
-		"@tsslint/config": "3.0.0",
+		"@tsslint/cli": "latest",
+		"@tsslint/compat-eslint": "latest",
+		"@tsslint/config": "latest",
 		"@typescript-eslint/eslint-plugin": "latest",
 		"@typescript/native-preview": "latest",
 		"dprint": "latest",
