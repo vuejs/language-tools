@@ -56,14 +56,14 @@ export function getComponentType(
 		else {
 			const name = getSelfComponentName(fileName);
 			if (name === capitalize(camelize(tag))) {
-				return getVariableType(ts, checker, sourceFile, names._export);
+				return getVariableType(ts, checker, sourceFile, names.export);
 			}
 		}
 	}
 
 	const selfName = getSelfComponentName(fileName);
 	if (testNames.has(selfName)) {
-		return getVariableType(ts, checker, sourceFile, names._export);
+		return getVariableType(ts, checker, sourceFile, names.export);
 	}
 }
 

@@ -12,6 +12,9 @@
 		"url": "https://github.com/vuejs/language-tools.git",
 		"directory": "packages/language-core"
 	},
+	"scripts": {
+		"generate-names": "node scripts/generate-names.js"
+	},
 	"dependencies": {
 		"@volar/language-core": "2.4.28",
 		"@vue/compiler-dom": "^3.5.0",

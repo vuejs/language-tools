@@ -2,7 +2,7 @@ import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import * as names from '../names';
+import { names } from '../names';
 import { endOfLine, generateSfcBlockSection, identifierRegex, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
@@ -45,7 +45,7 @@ export function* generateGeneric(
 	}
 	yield `(${newLine}`
 		+ `	${names.props}: NonNullable<Awaited<typeof ${names.setup}>>['props'],${newLine}`
-		+ `	${names.ctx}?: ${ctx.localTypes.PrettifyLocal}<Pick<NonNullable<Awaited<typeof ${names.setup}>>, 'attrs' | 'emit' | 'slots'>>,${newLine}` // use __VLS_Prettify for less dts code
+		+ `	${names.ctx}?: ${ctx.localTypes.PrettifyLocal}<Pick<NonNullable<Awaited<typeof ${names.setup}>>, 'attrs' | 'emit' | 'slots'>>,${newLine}`
 		+ `	${names.exposed}?: NonNullable<Awaited<typeof ${names.setup}>>['expose'],${newLine}`
 		+ `	${names.setup} = (async () => {${newLine}`;
 
@@ -175,7 +175,7 @@ export function* generateSetupFunction(
 					yield endOfLine;
 				}),
 				replace(arg.start, arg.end, function*() {
-					yield `${names.exposed}`;
+					yield names.exposed;
 				}),
 			);
 		}
@@ -474,7 +474,7 @@ function* generateModels(
 	yield `}${endOfLine}`;
 
 	// avoid `defineModel<...>()` to prevent JS AST issues
-	yield `let ${names.modelEmit}!: __VLS_ShortEmits<${names.ModelEmit}>${endOfLine}`;
+	yield `let ${names.modelEmit}!: ${names.ShortEmits}<${names.ModelEmit}>${endOfLine}`;
 }
 
 function* generateModelProp(
