@@ -3,14 +3,14 @@ import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, SfcBlock, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import * as names from '../names';
+import { names } from '../names';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateGeneric, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
 import { generateTemplate } from './template';
 
-const exportExpression = `{} as typeof ${names._export}`;
+const exportExpression = `{} as typeof ${names.export}`;
 
 export interface ScriptCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
@@ -50,7 +50,7 @@ function* generateWorker(
 			src = src.slice(0, -'.tsx'.length) + '.jsx';
 		}
 
-		yield `import __VLS_default from `;
+		yield `import ${names.src} from `;
 		const token = yield* startBoundary('main', script.src.offset, {
 			...codeFeatures.all,
 			...src !== script.src.text ? codeFeatures.navigationWithoutRename : {},
@@ -61,9 +61,9 @@ function* generateWorker(
 		yield `'`;
 		yield endBoundary(token, script.src.offset + script.src.text.length);
 		yield endOfLine;
-		yield `export default __VLS_default;${endOfLine}`;
+		yield `export default ${names.src}${endOfLine}`;
 
-		yield* generateTemplate(options, ctx, '__VLS_default');
+		yield* generateTemplate(options, ctx, names.src);
 	}
 	// <script> + <script setup>
 	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
@@ -88,7 +88,7 @@ function* generateWorker(
 		}
 
 		// <script setup>
-		yield* generateExportDeclareEqual(scriptSetup, names._export);
+		yield* generateExportDeclareEqual(scriptSetup, names.export);
 		if (scriptSetup.generic) {
 			yield* generateGeneric(
 				options,
@@ -123,7 +123,7 @@ function* generateWorker(
 		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
 
 		if (scriptSetup.generic) {
-			yield* generateExportDeclareEqual(scriptSetup, names._export);
+			yield* generateExportDeclareEqual(scriptSetup, names.export);
 			yield* generateGeneric(
 				options,
 				ctx,
@@ -147,7 +147,7 @@ function* generateWorker(
 				scriptSetup,
 				scriptSetupRanges,
 				generateTemplate(options, ctx),
-				generateExportDeclareEqual(scriptSetup, names._export),
+				generateExportDeclareEqual(scriptSetup, names.export),
 			);
 		}
 		yield `export default ${exportExpression}${endOfLine}`;
@@ -162,15 +162,15 @@ function* generateWorker(
 				scriptRanges,
 				exportDefault,
 				vueCompilerOptions,
-				names._export,
-				generateTemplate(options, ctx, names._export),
+				names.export,
+				generateTemplate(options, ctx, names.export),
 			);
 		}
 		else {
 			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
-			yield* generateExportDeclareEqual(script, names._export);
+			yield* generateExportDeclareEqual(script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
-			yield* generateTemplate(options, ctx, names._export);
+			yield* generateTemplate(options, ctx, names.export);
 			yield `export default ${exportExpression}${endOfLine}`;
 		}
 	}

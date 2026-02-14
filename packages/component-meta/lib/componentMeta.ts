@@ -178,11 +178,11 @@ export function getComponentMeta(
 
 		// const __VLS_export = ...
 		const text = componentFile.text.slice(decl.pos, decl.end);
-		if (text.includes(core.names._export)) {
+		if (text.includes(core.names.export)) {
 			ts.forEachChild(componentFile, child2 => {
 				if (ts.isVariableStatement(child2)) {
 					for (const { name, initializer } of child2.declarationList.declarations) {
-						if (name.getText() === core.names._export && initializer) {
+						if (name.getText() === core.names.export && initializer) {
 							decl = initializer;
 						}
 					}

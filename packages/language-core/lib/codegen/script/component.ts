@@ -1,7 +1,7 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import * as names from '../names';
+import { names } from '../names';
 import { generateSfcBlockSection, newLine } from '../utils';
 import { generateIntersectMerge, generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
@@ -15,15 +15,8 @@ export function* generateComponent(
 ): Generator<Code> {
 	yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 
-	const returns: string[][] = [];
-
 	if (scriptSetupRanges.defineExpose) {
-		returns.push([names.exposed]);
-	}
-	if (returns.length) {
-		yield `setup: () => (`;
-		yield* generateSpreadMerge(returns);
-		yield `),${newLine}`;
+		yield `setup: () => ${names.exposed},${newLine}`;
 	}
 
 	const emitOptionCodes = [...generateEmitsOption(options, scriptSetupRanges)];
@@ -55,12 +48,12 @@ function* generateEmitsOption(
 	const typeOptionCodes: Code[][] = [];
 
 	if (scriptSetupRanges.defineModel.length) {
-		optionCodes.push([`{} as __VLS_NormalizeEmits<typeof ${names.modelEmit}>`]);
+		optionCodes.push([`{} as ${names.NormalizeEmits}<typeof ${names.modelEmit}>`]);
 		typeOptionCodes.push([names.ModelEmit]);
 	}
 	if (scriptSetupRanges.defineEmits) {
 		const { name, typeArg, hasUnionTypeArg } = scriptSetupRanges.defineEmits;
-		optionCodes.push([`{} as __VLS_NormalizeEmits<typeof ${name ?? names.emit}>`]);
+		optionCodes.push([`{} as ${names.NormalizeEmits}<typeof ${name ?? names.emit}>`]);
 		if (typeArg && !hasUnionTypeArg) {
 			typeOptionCodes.push([names.Emit]);
 		}
@@ -96,7 +89,7 @@ function* generatePropsOption(
 			? `Omit<${names.InheritedAttrs}, keyof ${names.EmitProps}>`
 			: names.InheritedAttrs;
 		optionGenerates.push(function*() {
-			const propsType = `__VLS_PickNotAny<${ctx.localTypes.OmitIndexSignature}<${attrsType}>, {}>`;
+			const propsType = `${names.PickNotAny}<${ctx.localTypes.OmitIndexSignature}<${attrsType}>, {}>`;
 			const optionType = `${ctx.localTypes.TypePropsToOption}<${propsType}>`;
 			yield `{} as ${optionType}`;
 		});

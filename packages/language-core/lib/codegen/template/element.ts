@@ -6,7 +6,7 @@ import type { Code } from '../../types';
 import { getElementTagOffsets, getNodeText, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import * as names from '../names';
+import { names } from '../names';
 import { endOfLine, forEachNode, getTypeScriptAST, identifierRegex, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
@@ -119,9 +119,9 @@ export function* generateComponent(
 			yield endOfLine;
 		}
 		else {
-			yield `let ${componentVar}!: __VLS_WithComponent<'${tag}', __VLS_LocalComponents, __VLS_GlobalComponents`;
+			yield `let ${componentVar}!: ${names.WithComponent}<'${tag}', ${names.LocalComponents}, ${names.GlobalComponents}`;
 			yield originalNames.has(options.componentName)
-				? `, typeof ${names._export}`
+				? `, typeof ${names.export}`
 				: `, void`;
 			for (const name of originalNames) {
 				yield `, '${name}'`;
@@ -192,20 +192,20 @@ function* generateComponentBody(
 		failGeneratedExpressions,
 	)];
 	const functionalVar = ctx.getInternalVariable();
-	const vNodeVar = ctx.getInternalVariable();
+	const vnodeVar = ctx.getInternalVariable();
 	const ctxVar = ctx.getInternalVariable();
 	const propsVar = ctx.getInternalVariable();
 
 	yield `// @ts-ignore${newLine}`;
 	yield `const ${functionalVar} = ${
-		options.vueCompilerOptions.checkUnknownProps ? '__VLS_asFunctionalComponent0' : '__VLS_asFunctionalComponent1'
+		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
 	yield toString(propCodes);
 	yield `}))${endOfLine}`;
 
 	yield `const `;
 	const token = yield* startBoundary('template', node.loc.start.offset, codeFeatures.doNotReportTs6133);
-	yield vNodeVar;
+	yield vnodeVar;
 	yield endBoundary(token, node.loc.end.offset);
 	yield ` = ${functionalVar}`;
 
@@ -224,7 +224,7 @@ function* generateComponentBody(
 	yield* propCodes;
 	yield `}`;
 	yield endBoundary(token2, tagOffset + tag.length);
-	yield `, ...__VLS_functionalComponentArgsRest(${functionalVar}))${endOfLine}`;
+	yield `, ...${names.functionalComponentArgsRest}(${functionalVar}))${endOfLine}`;
 
 	yield* generateFailedExpressions(options, ctx, failGeneratedExpressions);
 	yield* generateElementEvents(
@@ -272,10 +272,10 @@ function* generateComponentBody(
 	}
 
 	if (isCtxVarUsed) {
-		yield `var ${ctxVar}!: __VLS_FunctionalComponentCtx<typeof ${componentVar}, typeof ${vNodeVar}>${endOfLine}`;
+		yield `var ${ctxVar}!: ${names.FunctionalComponentCtx}<typeof ${componentVar}, typeof ${vnodeVar}>${endOfLine}`;
 	}
 	if (isPropsVarUsed) {
-		yield `var ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${vNodeVar}>${endOfLine}`;
+		yield `var ${propsVar}!: ${names.FunctionalComponentProps}<typeof ${componentVar}, typeof ${vnodeVar}>${endOfLine}`;
 	}
 	ctx.components.pop();
 }
@@ -289,7 +289,7 @@ export function* generateElement(
 	const failedPropExps: FailGeneratedExpression[] = [];
 
 	yield `${
-		options.vueCompilerOptions.checkUnknownProps ? `__VLS_asFunctionalElement0` : `__VLS_asFunctionalElement1`
+		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalElement0 : names.asFunctionalElement1
 	}(${names.intrinsics}`;
 	yield* generatePropertyAccess(
 		options,
@@ -329,18 +329,18 @@ export function* generateElement(
 
 	const templateRef = getTemplateRef(node);
 	if (templateRef) {
-		let typeExp = `__VLS_Elements['${node.tag}']`;
+		let typeExp = `${names.Elements}['${node.tag}']`;
 		if (ctx.inVFor) {
 			typeExp += `[]`;
 		}
 		ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 	}
 	if (ctx.singleRootNodes.has(node)) {
-		ctx.singleRootElTypes.add(`__VLS_Elements['${node.tag}']`);
+		ctx.singleRootElTypes.add(`${names.Elements}['${node.tag}']`);
 	}
 
 	if (hasVBindAttrs(options, ctx, node)) {
-		ctx.inheritedAttrVars.add(`__VLS_intrinsics.${node.tag}`);
+		ctx.inheritedAttrVars.add(`${names.intrinsics}.${node.tag}`);
 	}
 
 	yield* generateStyleScopedClassReferences(options, node);

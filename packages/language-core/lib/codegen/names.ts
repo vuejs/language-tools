@@ -1,27 +1,71 @@
-export const ctx = '__VLS_ctx';
-export const dollars = '__VLS_dollars';
-export const slots = '__VLS_slots';
-export const props = '__VLS_props';
-export const defaults = '__VLS_defaults';
-export const defaultModels = '__VLS_defaultModels';
-export const modelEmit = '__VLS_modelEmit';
-export const emit = '__VLS_emit';
-export const exposed = '__VLS_exposed';
-export const setup = '__VLS_setup';
-export const components = '__VLS_components';
-export const directives = '__VLS_directives';
-export const intrinsics = '__VLS_intrinsics';
-export const _export = '__VLS_export';
+export const names = {
+	export: '__VLS_export',
+	components: '__VLS_components',
+	ctx: '__VLS_ctx',
+	defaultModels: '__VLS_defaultModels',
+	defaults: '__VLS_defaults',
+	directives: '__VLS_directives',
+	dollars: '__VLS_dollars',
+	emit: '__VLS_emit',
+	exposed: '__VLS_exposed',
+	intrinsics: '__VLS_intrinsics',
+	modelEmit: '__VLS_modelEmit',
+	props: '__VLS_props',
+	setup: '__VLS_setup',
+	slots: '__VLS_slots',
+	src: '__VLS_src',
 
-export const ModelProps = '__VLS_ModelProps';
-export const Props = '__VLS_Props';
-export const Slots = '__VLS_Slots';
-export const InheritedAttrs = '__VLS_InheritedAttrs';
-export const TemplateRefs = '__VLS_TemplateRefs';
-export const RootEl = '__VLS_RootEl';
-export const ModelEmit = '__VLS_ModelEmit';
-export const EmitProps = '__VLS_EmitProps';
-export const Emit = '__VLS_Emit';
-export const SetupExposed = '__VLS_SetupExposed';
-export const PublicProps = '__VLS_PublicProps';
-export const StyleModules = '__VLS_StyleModules';
+	Emit: '__VLS_Emit',
+	EmitProps: '__VLS_EmitProps',
+	GlobalComponents: '__VLS_GlobalComponents',
+	InheritedAttrs: '__VLS_InheritedAttrs',
+	LocalComponents: '__VLS_LocalComponents',
+	LocalDirectives: '__VLS_LocalDirectives',
+	ModelEmit: '__VLS_ModelEmit',
+	ModelProps: '__VLS_ModelProps',
+	Props: '__VLS_Props',
+	PublicProps: '__VLS_PublicProps',
+	RootEl: '__VLS_RootEl',
+	SetupExposed: '__VLS_SetupExposed',
+	Slots: '__VLS_Slots',
+	StyleModules: '__VLS_StyleModules',
+	StyleScopedClasses: '__VLS_StyleScopedClasses',
+	TemplateRefs: '__VLS_TemplateRefs',
+
+	// #region template helpers
+	asFunctionalComponent0: '__VLS_asFunctionalComponent0',
+	asFunctionalComponent1: '__VLS_asFunctionalComponent1',
+	asFunctionalDirective: '__VLS_asFunctionalDirective',
+	asFunctionalElement0: '__VLS_asFunctionalElement0',
+	asFunctionalElement1: '__VLS_asFunctionalElement1',
+	asFunctionalSlot: '__VLS_asFunctionalSlot',
+	directiveBindingRestFields: '__VLS_directiveBindingRestFields',
+	functionalComponentArgsRest: '__VLS_functionalComponentArgsRest',
+	tryAsConstant: '__VLS_tryAsConstant',
+	vFor: '__VLS_vFor',
+	vSlot: '__VLS_vSlot',
+
+	ConstructorOverloads: '__VLS_ConstructorOverloads',
+	Elements: '__VLS_Elements',
+	EmitsToProps: '__VLS_EmitsToProps',
+	FunctionalComponent0: '__VLS_FunctionalComponent0',
+	FunctionalComponent1: '__VLS_FunctionalComponent1',
+	FunctionalComponentCtx: '__VLS_FunctionalComponentCtx',
+	FunctionalComponentProps: '__VLS_FunctionalComponentProps',
+	IsAny: '__VLS_IsAny',
+	IsFunction: '__VLS_IsFunction',
+	NormalizeComponentEvent: '__VLS_NormalizeComponentEvent',
+	NormalizeEmits: '__VLS_NormalizeEmits',
+	OverloadUnion: '__VLS_OverloadUnion',
+	OverloadUnionInner: '__VLS_OverloadUnionInner',
+	PickNotAny: '__VLS_PickNotAny',
+	PrettifyGlobal: '__VLS_PrettifyGlobal',
+	ResolveDirectives: '__VLS_ResolveDirectives',
+	ResolveEmits: '__VLS_ResolveEmits',
+	ShortEmits: '__VLS_ShortEmits',
+	ShortEmitsToObject: '__VLS_ShortEmitsToObject',
+	SpreadMerge: '__VLS_SpreadMerge',
+	UnionToIntersection: '__VLS_UnionToIntersection',
+	WithComponent: '__VLS_WithComponent',
+	// #endregion
+};

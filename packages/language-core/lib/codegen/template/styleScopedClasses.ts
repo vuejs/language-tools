@@ -1,5 +1,6 @@
 import type { Code, SfcBlock } from '../../types';
 import { codeFeatures } from '../codeFeatures';
+import { names } from '../names';
 import { endOfLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateEscaped } from '../utils/escaped';
@@ -16,7 +17,7 @@ export function* generateStyleScopedClassReference(
 	fullStart = offset,
 ): Generator<Code> {
 	if (!className) {
-		yield `/** @type {__VLS_StyleScopedClasses['`;
+		yield `/** @type {${names.StyleScopedClasses}['`;
 		yield ['', 'template', offset, codeFeatures.completion];
 		yield `']} */${endOfLine}`;
 		return;
@@ -32,7 +33,7 @@ export function* generateStyleScopedClassReference(
 		cache[1].push([className, offset]);
 	}
 
-	yield `/** @type {__VLS_StyleScopedClasses[`;
+	yield `/** @type {${names.StyleScopedClasses}[`;
 	const token = yield* startBoundary(block.name, fullStart, codeFeatures.navigation);
 	yield `'`;
 	yield* generateEscaped(

@@ -5,6 +5,7 @@
 		"allowImportingTsExtensions": true
 	},
 	"include": [
+		"packages/*/scripts",
 		"packages/*/tests",
 		"tsslint.config.ts",
 		"lint/*.ts"
