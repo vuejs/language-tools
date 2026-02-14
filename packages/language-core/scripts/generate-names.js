@@ -33,9 +33,9 @@ async function generateNames() {
 		namesPath,
 		namesText.replace(
 			/(?<=\/\/ #region .*\n).*?(?=\t\/\/ #endregion)/ms,
-			[...camelNames].sort().map(name => `\t${name}: '${prefix + name}',\n`).join('')
+			[...camelNames].sort().map(name => `\t${name}: '',\n`).join('')
 				+ '\n'
-				+ [...pascalNames].sort().map(name => `\t${name}: '${prefix + name}',\n`).join(''),
+				+ [...pascalNames].sort().map(name => `\t${name}: '',\n`).join(''),
 		),
 	);
 }
