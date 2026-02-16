@@ -578,6 +578,24 @@ export function create(
 					}
 				},
 
+				async provideDocumentSymbols(document, token) {
+					if (document.languageId !== languageId) {
+						return;
+					}
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
+						return;
+					}
+					const { result } = await runWithVueDataProvider(
+						info.script.id,
+						info.root,
+						undefined,
+						'outline',
+						() => baseServiceInstance.provideDocumentSymbols?.(document, token),
+					);
+					return result;
+				},
+
 				async provideDocumentLinks(document, token) {
 					modulePathCache = new Map();
 					while (true) {
@@ -602,7 +620,7 @@ export function create(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
 				hint: string | undefined,
-				mode: 'completion' | 'hover',
+				mode: 'completion' | 'hover' | 'outline',
 				fn: () => T,
 			) {
 				// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
@@ -621,7 +639,7 @@ export function create(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
 				hint: string | undefined,
-				mode: 'completion' | 'hover',
+				mode: 'completion' | 'hover' | 'outline',
 			) {
 				const [tagNameCasing, attrNameCasing] = await Promise.all([
 					getTagNameCasing(context, sourceDocumentUri),
