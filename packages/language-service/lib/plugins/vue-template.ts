@@ -672,7 +672,7 @@ export function create(
 							}
 
 							const added = new Set<string>(tags.map(t => t.name));
-							for (const name of names) {
+							for (const name of [...names, ...defaultHtmlTags.keys()]) {
 								if (!added.has(name)) {
 									const defaultTag = defaultHtmlTags.get(name);
 									tags.push({
