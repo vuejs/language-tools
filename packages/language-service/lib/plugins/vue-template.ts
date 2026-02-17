@@ -618,7 +618,7 @@ export function create(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
 				hint: string | undefined,
-				mode: 'completion' | 'hover' | 'outline',
+				mode: 'completion' | 'hover',
 				fn: () => T,
 			) {
 				// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
@@ -637,7 +637,7 @@ export function create(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
 				hint: string | undefined,
-				mode: 'completion' | 'hover' | 'outline',
+				mode: 'completion' | 'hover',
 			) {
 				const [tagNameCasing, attrNameCasing] = await Promise.all([
 					getTagNameCasing(context, sourceDocumentUri),
