@@ -242,11 +242,20 @@ export function baseParse(pugCode: string) {
 						if (typeof attrToken.val === 'string' && attrText.indexOf('=') >= 0) {
 							let valText = attrToken.val;
 							if (valText.startsWith('`') && valText.endsWith('`')) {
-								if (valText.indexOf('"') === -1) {
-									valText = `"${valText.slice(1, -1)}"`;
+								const innerContent = valText.slice(1, -1);
+								const hasDoubleQuotes = innerContent.indexOf('"') !== -1;
+								const hasSingleQuotes = innerContent.indexOf("'") !== -1;
+
+								if (!hasDoubleQuotes) {
+									valText = `"${innerContent}"`;
+								}
+								else if (!hasSingleQuotes) {
+									valText = `'${innerContent}'`;
 								}
 								else {
-									valText = `'${valText.slice(1, -1)}'`;
+									// Both quote types present: escape double quotes and use double-quoted attribute
+									// This preserves single quotes which is better for JavaScript parsing
+									valText = `"${innerContent.replace(/"/g, '&quot;')}"`;
 								}
 							}
 							valText = valText.replace(/ \\\n/g, '//\n');
