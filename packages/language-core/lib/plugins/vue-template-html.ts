@@ -191,6 +191,9 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 							}
 							else {
 								node.content = node.loc.source;
+								if (node.content.includes('{{') || node.content.includes('}}')) {
+									return false;
+								}
 							}
 						}
 					}
