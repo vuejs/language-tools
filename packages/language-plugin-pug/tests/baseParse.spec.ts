@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import * as CompilerDOM from '@vue/compiler-dom';
+import { describe, expect, it } from 'vitest';
 import { baseParse } from '../lib/baseParse';
 
 describe('baseParse', () => {
@@ -31,7 +31,7 @@ describe('baseParse', () => {
 			const result = baseParse(pugCode);
 
 			expect(result.error).toBeUndefined();
-			expect(result.htmlCode).toContain(':class="[\'foo\', \'bar\']"');
+			expect(result.htmlCode).toContain(":class=\"['foo', 'bar']\"");
 		});
 
 		it('should correctly convert backtick to single quotes when double quotes inside', () => {
@@ -40,7 +40,7 @@ describe('baseParse', () => {
 			const result = baseParse(pugCode);
 
 			expect(result.error).toBeUndefined();
-			expect(result.htmlCode).toContain(":class='[\"foo\", \"bar\"]'");
+			expect(result.htmlCode).toContain(':class=\'["foo", "bar"]\'');
 		});
 
 		it('should handle multiline backtick values with newlines', () => {
@@ -89,7 +89,7 @@ describe('baseParse', () => {
 
 			expect(result.error).toBeUndefined();
 			// Inner single quotes are converted to double quotes, outer delimiter becomes single quote
-			expect(result.htmlCode).toContain(":class='[\"foo\", \"bar\"]'");
+			expect(result.htmlCode).toContain(':class=\'["foo", "bar"]\'');
 		});
 
 		it('should produce valid JavaScript expression when both quote types present', () => {
