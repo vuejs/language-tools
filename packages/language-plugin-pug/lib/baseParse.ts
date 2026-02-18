@@ -253,9 +253,10 @@ export function baseParse(pugCode: string) {
 									valText = `'${innerContent}'`;
 								}
 								else {
-									// Both quote types present: escape double quotes and use double-quoted attribute
-									// This preserves single quotes which is better for JavaScript parsing
-									valText = `"${innerContent.replace(/"/g, '&quot;')}"`;
+									// Both quote types present: convert inner single quotes to double quotes
+									// This allows using single quotes as the outer delimiter
+									// JavaScript accepts both 'str' and "str" for string literals
+									valText = `'${innerContent.replace(/'/g, '"')}'`;
 								}
 							}
 							valText = valText.replace(/ \\\n/g, '//\n');

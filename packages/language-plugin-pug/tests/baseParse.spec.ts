@@ -83,15 +83,16 @@ describe('baseParse', () => {
 			expect(errors).toHaveLength(0);
 		});
 
-		it('should escape double quotes with HTML entities when both quote types present', () => {
+		it('should convert inner single quotes to double quotes when both quote types present', () => {
 			const pugCode = `div(:class=\`["foo", 'bar']\`)`;
 			const result = baseParse(pugCode);
 
 			expect(result.error).toBeUndefined();
-			expect(result.htmlCode).toContain(':class="[&quot;foo&quot;, \'bar\']"');
+			// Inner single quotes are converted to double quotes, outer delimiter becomes single quote
+			expect(result.htmlCode).toContain(":class='[\"foo\", \"bar\"]'");
 		});
 
-		it('should produce expression that Vue decodes HTML entities correctly', () => {
+		it('should produce valid JavaScript expression when both quote types present', () => {
 			const pugCode = `div(:class=\`["foo", 'bar']\`)`;
 			const result = baseParse(pugCode);
 
@@ -109,7 +110,8 @@ describe('baseParse', () => {
 				p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'bind'
 			);
 
-			expect((classDir?.exp as CompilerDOM.SimpleExpressionNode)?.content).toBe('["foo", \'bar\']');
+			// Single quotes in the original are converted to double quotes
+			expect((classDir?.exp as CompilerDOM.SimpleExpressionNode)?.content).toBe('["foo", "bar"]');
 		});
 	});
 });
