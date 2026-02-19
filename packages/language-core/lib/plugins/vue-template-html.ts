@@ -179,6 +179,9 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						if (!tryUpdateNode(node.content)) {
 							return false;
 						}
+						if (node.content.loc.source.includes('{{') || node.content.loc.source.includes('}}')) {
+							return false;
+						}
 					}
 					else if (node.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 						if (withinChangeRange(node.loc)) { // TODO: review this (slot name?)
@@ -191,9 +194,6 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 							}
 							else {
 								node.content = node.loc.source;
-								if (node.content.includes('{{') || node.content.includes('}}')) {
-									return false;
-								}
 							}
 						}
 					}
