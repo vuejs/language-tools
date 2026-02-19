@@ -179,8 +179,11 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						if (!tryUpdateNode(node.content)) {
 							return false;
 						}
-						if (node.content.loc.source.includes('{{') || node.content.loc.source.includes('}}')) {
-							return false;
+						if (node.content.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+							const { content } = node.content;
+							if (content.includes('{{') || content.includes('}}')) {
+								return false;
+							}
 						}
 					}
 					else if (node.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
