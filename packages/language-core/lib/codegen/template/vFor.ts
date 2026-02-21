@@ -2,6 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
+import { names } from '../names';
 import { endOfLine, getTypeScriptAST, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -30,7 +31,7 @@ export function* generateVFor(
 	}
 	yield `] of `;
 	if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		yield `__VLS_vFor(`;
+		yield `${names.vFor}(`;
 		yield* generateInterpolation(
 			options,
 			ctx,
