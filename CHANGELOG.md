@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.2.5 (2026-02-21)
+
+### language-core
+
+- **fix:** re-parse template when interpolation syntax breaks (#5971) - Thanks to @Dsaquel!
+
+### language-service
+
+- **fix:** use default html data provider for document symbols (#5968) - Thanks to @liangmiQwQ!
+
+### language-plugin-pug
+
+- **fix:** handle backtick attributes containing both quote types (#5970) - Thanks to @baptistejamin!
+
+### workspace
+
+- **docs:** document all packages with consistent README structure (#5953)
+- **docs:** update tsconfig schema of `plugins` option - Thanks to @KazariEX!
+
 ## 3.2.4 (2026-01-26)
 
 ### language-core
