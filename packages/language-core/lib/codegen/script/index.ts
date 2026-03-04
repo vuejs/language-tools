@@ -22,6 +22,7 @@ export interface ScriptCodegenOptions {
 	templateAndStyleTypes: Set<string>;
 	templateAndStyleCodes: Code[];
 	exposed: Set<string>;
+	exposedShouldUseDeclaredType: Set<string>;
 }
 
 export { generate as generateScript };

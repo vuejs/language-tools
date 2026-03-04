@@ -23,5 +23,6 @@ export const ModelEmit = '__VLS_ModelEmit';
 export const EmitProps = '__VLS_EmitProps';
 export const Emit = '__VLS_Emit';
 export const SetupExposed = '__VLS_SetupExposed';
+export const SetupExposedBindings = '__VLS_SetupExposedBindings';
 export const PublicProps = '__VLS_PublicProps';
 export const StyleModules = '__VLS_StyleModules';
