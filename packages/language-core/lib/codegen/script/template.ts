@@ -160,7 +160,7 @@ function* generateSetupExposed(
 		yield `class ${names.SetupExposedBindings} {${newLine}`;
 		for (const bindingName of bindingsUseDeclaredType) {
 			const token = tokens.get(bindingName)!;
-			yield `readonly [`;
+			yield `[`;
 			yield ['', undefined, 0, { __linkedToken: token }];
 			yield `'${bindingName}'`;
 			yield `] = `;
