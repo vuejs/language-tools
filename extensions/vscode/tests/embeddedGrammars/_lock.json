@@ -2,7 +2,7 @@
 	{
 		"file": "css.tmLanguage.json",
 		"url": "https://raw.githubusercontent.com/microsoft/vscode/main/extensions/css/syntaxes/css.tmLanguage.json",
-		"checksum": "sha256-bcc97d1a3a6bf112f72d8bdb58bc438eb68aa0e070b94d00c6064b75f5cab69b"
+		"checksum": "sha256-9678e7410bd051eafc1ad51d3c8562885a17e7d61602d76cc5030d06520724cd"
 	},
 	{
 		"file": "html.tmLanguage.json",
