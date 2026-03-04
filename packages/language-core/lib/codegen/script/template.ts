@@ -149,38 +149,16 @@ function* generateSetupExposed(
 	}
 	ctx.generatedTypes.add(names.SetupExposed);
 
-	const tokens = new Map<string, symbol>();
-	for (const bindingName of exposed) {
-		tokens.set(bindingName, Symbol(bindingName.length));
-	}
-
-	const bindingsUseDeclaredType = [...exposed].filter(bindingName => exposedShouldUseDeclaredType.has(bindingName));
-
-	if (bindingsUseDeclaredType.length) {
-		yield `class ${names.SetupExposedBindings} {${newLine}`;
-		for (const bindingName of bindingsUseDeclaredType) {
-			const token = tokens.get(bindingName)!;
-			yield `[`;
-			yield ['', undefined, 0, { __linkedToken: token }];
-			yield `'${bindingName}'`;
-			yield `] = `;
-			yield ['', undefined, 0, { __linkedToken: token }];
-			yield bindingName;
-			yield endOfLine;
-		}
-		yield `}${endOfLine}`;
-	}
-
 	yield `type ${names.SetupExposed} = import('${vueCompilerOptions.lib}').ShallowUnwrapRef<{${newLine}`;
 	for (const bindingName of exposed) {
-		const token = tokens.get(bindingName)!;
+		const token = Symbol(bindingName.length);
 		yield ['', undefined, 0, { __linkedToken: token }];
 		yield `${bindingName}: `;
 		if (exposedShouldUseDeclaredType.has(bindingName)) {
-			yield `${names.SetupExposedBindings}[`;
+			yield `ReturnType<() => typeof `;
 			yield ['', undefined, 0, { __linkedToken: token }];
-			yield `'${bindingName}'`;
-			yield `]`;
+			yield bindingName;
+			yield `>`;
 		}
 		else {
 			yield `typeof `;
