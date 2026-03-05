@@ -281,7 +281,17 @@ export = createLanguageServicePlugin(
 				const [fileName, tag]: Parameters<Requests['getComponentMeta']> = request.arguments;
 				const { program, virtualCode, language } = getProjectAndVirtualCode(fileName);
 				const sourceFile = program.getSourceFile(virtualCode.fileName)!;
-				return createResponse(getComponentMeta(ts, program, language, fileName => language.scripts.get(fileName), sourceFile, virtualCode, tag));
+				return createResponse(
+					getComponentMeta(
+						ts,
+						program,
+						language,
+						fileName => language.scripts.get(fileName),
+						sourceFile,
+						virtualCode,
+						tag,
+					),
+				);
 			});
 			session.addProtocolHandler('_vue:getComponentSlots', request => {
 				const [fileName]: Parameters<Requests['getComponentSlots']> = request.arguments;
