@@ -677,12 +677,10 @@ export function create(
 								names.add(tag);
 							}
 							if (codegen) {
-								for (
-									const name of [
-										...codegen.getImportedComponents(),
-										...codegen.getSetupExposed(),
-									]
-								) {
+								for (const name of codegen.getImportedComponents()) {
+									names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name);
+								}
+								for (const [name] of codegen.getSetupExposed()) {
 									names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name);
 								}
 							}
