@@ -150,12 +150,12 @@ function* generateSetupExposed(
 	ctx.generatedTypes.add(names.SetupExposed);
 
 	yield `type ${names.SetupExposed} = import('${vueCompilerOptions.lib}').ShallowUnwrapRef<{${newLine}`;
-	for (const bindingName of exposed) {
-		const token = Symbol(bindingName.length);
+	for (const [name] of exposed) {
+		const token = Symbol(name.length);
 		yield ['', undefined, 0, { __linkedToken: token }];
-		yield `${bindingName}: typeof `;
+		yield `${name}: typeof `;
 		yield ['', undefined, 0, { __linkedToken: token }];
-		yield bindingName;
+		yield name;
 		yield endOfLine;
 	}
 	yield `}>${endOfLine}`;
