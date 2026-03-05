@@ -102,6 +102,7 @@ export function createCheckerBase(
 				checker,
 				printer,
 				language,
+				fileName => language.scripts.get(fileName),
 				componentNode,
 				componentType,
 				checkerOptions.schema ?? false,

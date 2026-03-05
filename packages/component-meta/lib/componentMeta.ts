@@ -15,7 +15,8 @@ export function getComponentMeta(
 	ts: typeof import('typescript'),
 	typeChecker: ts.TypeChecker,
 	printer: ts.Printer,
-	language: core.Language<string>,
+	language: core.Language,
+	getSourceScript: (fileName: string) => core.SourceScript | undefined,
 	componentNode: ts.Node,
 	componentType: ts.Type,
 	options: MetaCheckerSchemaOptions,
@@ -91,13 +92,13 @@ export function getComponentMeta(
 			.map(prop => {
 				const {
 					resolveNestedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
 
 				return resolveNestedProperties(prop);
 			})
 			.filter((prop): prop is PropertyMeta => !!prop && !eventProps.has(prop.name));
 
-		const defaults = getDefaultsFromScriptSetup(ts, printer, language, componentFile.fileName);
+		const defaults = getDefaultsFromScriptSetup(ts, printer, getSourceScript(componentFile.fileName));
 
 		for (const prop of result) {
 			if (prop.name.match(/^onVnode[A-Z]/)) {
@@ -118,7 +119,7 @@ export function getComponentMeta(
 			return calls.map(call => {
 				const {
 					resolveEventSignature,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
 
 				return resolveEventSignature(call);
 			}).filter(event => event.name);
@@ -136,7 +137,7 @@ export function getComponentMeta(
 			return properties.map(prop => {
 				const {
 					resolveSlotProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
 
 				return resolveSlotProperties(prop);
 			});
@@ -164,7 +165,7 @@ export function getComponentMeta(
 			return properties.map(prop => {
 				const {
 					resolveExposedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
 
 				return resolveExposedProperties(prop);
 			});
