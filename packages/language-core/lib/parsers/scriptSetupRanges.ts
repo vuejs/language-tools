@@ -2,7 +2,7 @@ import type * as ts from 'typescript';
 import type { TextRange, VueCompilerOptions } from '../types';
 import { collectBindingIdentifiers } from '../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../utils/shared';
-import { getClosestMultiLineCommentRange, parseBindingRanges } from './utils';
+import { getClosestMultiLineCommentRange, parseBindings } from './utils';
 
 const tsCheckReg = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
 
@@ -77,7 +77,7 @@ export function parseScriptSetupRanges(
 		range => tsCheckReg.test(text.slice(range.pos, range.end)),
 	)?.end ?? 0;
 
-	let { bindings, components } = parseBindingRanges(ts, sourceFile, vueCompilerOptions.extensions);
+	const { bindings, components } = parseBindings(ts, sourceFile, vueCompilerOptions.extensions);
 	let foundNonImportExportNode = false;
 	let importSectionEndOffset = 0;
 
@@ -112,11 +112,11 @@ export function parseScriptSetupRanges(
 	});
 	ts.forEachChild(sourceFile, node => visitNode(node, [sourceFile]));
 
-	const templateRefNames = new Set(useTemplateRef.map(ref => ref.name));
-	bindings = bindings.filter(range => {
-		const name = text.slice(range.start, range.end);
-		return !templateRefNames.has(name);
-	});
+	for (const { name } of useTemplateRef) {
+		if (name) {
+			bindings.delete(name);
+		}
+	}
 
 	return {
 		leadingCommentEndOffset,
