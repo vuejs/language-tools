@@ -9,8 +9,7 @@ import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
 import type { Sfc, VueCompilerOptions, VueLanguagePlugin } from '../types';
-import { collectBindingNames } from '../utils/collectBindings';
-import { computedSet } from '../utils/signals';
+import { computedMap, computedSet } from '../utils/signals';
 
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof useCodegen>>();
 
@@ -91,13 +90,13 @@ function useCodegen(
 		const names = new Set<string>();
 		const scriptSetupRanges = getScriptSetupRanges();
 		if (sfc.scriptSetup && scriptSetupRanges) {
-			for (const range of scriptSetupRanges.components) {
-				names.add(sfc.scriptSetup.content.slice(range.start, range.end));
+			for (const name of scriptSetupRanges.components) {
+				names.add(name);
 			}
 			const scriptRange = getScriptRanges();
 			if (sfc.script && scriptRange) {
-				for (const range of scriptRange.components) {
-					names.add(sfc.script.content.slice(range.start, range.end));
+				for (const name of scriptRange.components) {
+					names.add(name);
 				}
 			}
 		}
@@ -190,48 +189,32 @@ function useCodegen(
 		});
 	});
 
-	const getSetupExposed = computedSet(() => {
-		const allVars = new Set<string>();
+	const getSetupExposed = computedMap(() => {
 		const scriptSetupRanges = getScriptSetupRanges();
 		if (!sfc.scriptSetup || !scriptSetupRanges) {
-			return allVars;
+			return new Map();
 		}
-		for (const range of scriptSetupRanges.bindings) {
-			const name = sfc.scriptSetup.content.slice(range.start, range.end);
-			allVars.add(name);
-		}
+		const bindings = new Map(scriptSetupRanges.bindings);
 		const scriptRanges = getScriptRanges();
 		if (sfc.script && scriptRanges) {
-			for (const range of scriptRanges.bindings) {
-				const name = sfc.script.content.slice(range.start, range.end);
-				allVars.add(name);
+			for (const entity of scriptRanges.bindings) {
+				bindings.set(...entity);
 			}
 		}
-		if (!allVars.size) {
-			return allVars;
+		if (!bindings.size) {
+			return bindings;
 		}
-		const exposedNames = new Set<string>();
-		const generatedTemplate = getGeneratedTemplate();
-		const generatedStyle = getGeneratedStyle();
-		for (const [name] of generatedTemplate?.componentAccessMap ?? []) {
-			if (allVars.has(name)) {
-				exposedNames.add(name);
+		const exposed = new Set([
+			...getGeneratedTemplate()?.componentAccessMap.keys() ?? [],
+			...getGeneratedStyle()?.componentAccessMap.keys() ?? [],
+			...sfc.template?.ast?.components.flatMap(name => [camelize(name), capitalize(camelize(name))]) ?? [],
+		]);
+		for (const [name] of bindings) {
+			if (!exposed.has(name)) {
+				bindings.delete(name);
 			}
 		}
-		for (const [name] of generatedStyle?.componentAccessMap ?? []) {
-			if (allVars.has(name)) {
-				exposedNames.add(name);
-			}
-		}
-		for (const component of sfc.template?.ast?.components ?? []) {
-			const testNames = new Set([camelize(component), capitalize(camelize(component))]);
-			for (const testName of testNames) {
-				if (allVars.has(testName)) {
-					exposedNames.add(testName);
-				}
-			}
-		}
-		return exposedNames;
+		return bindings;
 	});
 
 	const getSetupExposedShouldUseDeclaredType = computedSet(() => {

@@ -1,35 +1,41 @@
 import type * as ts from 'typescript';
 import type { TextRange } from '../types';
-import { collectBindingRanges } from '../utils/collectBindings';
-import { getNodeText, getStartEnd } from '../utils/shared';
+import { collectBindingNames } from '../utils/collectBindings';
+import { getNodeText } from '../utils/shared';
 
-export function parseBindingRanges(
+export type BindingType = 'let' | 'const';
+
+export function parseBindings(
 	ts: typeof import('typescript'),
 	ast: ts.SourceFile,
 	componentExtsensions: string[],
 ) {
-	const bindings: TextRange[] = [];
-	const components: TextRange[] = [];
+	const bindings = new Map<string, BindingType>();
+	const components: string[] = [];
 
 	ts.forEachChild(ast, node => {
 		if (ts.isVariableStatement(node)) {
 			for (const decl of node.declarationList.declarations) {
-				const ranges = collectBindingRanges(ts, decl.name, ast);
-				bindings.push(...ranges);
+				for (const name of collectBindingNames(ts, decl.name, ast)) {
+					bindings.set(
+						name,
+						node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ConstKeyword) ? 'const' : 'let',
+					);
+				}
 			}
 		}
 		else if (ts.isFunctionDeclaration(node)) {
 			if (node.name && ts.isIdentifier(node.name)) {
-				bindings.push(_getStartEnd(node.name));
+				bindings.set(_getNodeText(node.name), 'const');
 			}
 		}
 		else if (ts.isClassDeclaration(node)) {
 			if (node.name) {
-				bindings.push(_getStartEnd(node.name));
+				bindings.set(_getNodeText(node.name), 'const');
 			}
 		}
 		else if (ts.isEnumDeclaration(node)) {
-			bindings.push(_getStartEnd(node.name));
+			bindings.set(_getNodeText(node.name), 'const');
 		}
 
 		if (ts.isImportDeclaration(node)) {
@@ -40,10 +46,10 @@ export function parseBindingRanges(
 
 				if (name) {
 					if (componentExtsensions.some(ext => moduleName.endsWith(ext))) {
-						components.push(_getStartEnd(name));
+						components.push(_getNodeText(name));
 					}
 					else {
-						bindings.push(_getStartEnd(name));
+						bindings.set(_getNodeText(name), 'const');
 					}
 				}
 				if (namedBindings) {
@@ -57,15 +63,15 @@ export function parseBindingRanges(
 								&& _getNodeText(element.propertyName) === 'default'
 								&& componentExtsensions.some(ext => moduleName.endsWith(ext))
 							) {
-								components.push(_getStartEnd(element.name));
+								components.push(_getNodeText(element.name));
 							}
 							else {
-								bindings.push(_getStartEnd(element.name));
+								bindings.set(_getNodeText(element.name), 'const');
 							}
 						}
 					}
 					else {
-						bindings.push(_getStartEnd(namedBindings.name));
+						bindings.set(_getNodeText(namedBindings.name), 'const');
 					}
 				}
 			}
@@ -76,10 +82,6 @@ export function parseBindingRanges(
 		bindings,
 		components,
 	};
-
-	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(ts, node, ast);
-	}
 
 	function _getNodeText(node: ts.Node) {
 		return getNodeText(ts, node, ast);

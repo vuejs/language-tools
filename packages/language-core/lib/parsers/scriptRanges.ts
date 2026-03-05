@@ -1,7 +1,7 @@
 import type * as ts from 'typescript';
 import type { TextRange, VueCompilerOptions } from '../types';
 import { getNodeText, getStartEnd } from '../utils/shared';
-import { getClosestMultiLineCommentRange, parseBindingRanges } from './utils';
+import { getClosestMultiLineCommentRange, parseBindings } from './utils';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> {}
 
@@ -26,7 +26,7 @@ export function parseScriptRanges(
 		}
 		| undefined;
 
-	const { bindings, components } = parseBindingRanges(ts, sourceFile, vueCompilerOptions.extensions);
+	const { bindings, components } = parseBindings(ts, sourceFile, vueCompilerOptions.extensions);
 
 	ts.forEachChild(sourceFile, child => {
 		if (ts.isExportAssignment(child)) {

@@ -1,6 +1,7 @@
 import * as path from 'path-browserify';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
+import type { BindingType } from '../../parsers/utils';
 import type { Code, Sfc, SfcBlock, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import * as names from '../names';
@@ -21,8 +22,7 @@ export interface ScriptCodegenOptions {
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateAndStyleTypes: Set<string>;
 	templateAndStyleCodes: Code[];
-	exposed: Set<string>;
-	exposedShouldUseDeclaredType: Set<string>;
+	exposed: Map<string, BindingType>;
 }
 
 export { generate as generateScript };
