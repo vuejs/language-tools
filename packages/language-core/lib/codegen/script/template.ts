@@ -141,7 +141,7 @@ function* generateTemplateDirectives(
 }
 
 function* generateSetupExposed(
-	{ vueCompilerOptions, exposed, exposedShouldUseDeclaredType }: ScriptCodegenOptions,
+	{ vueCompilerOptions, exposed }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
 	if (!exposed.size) {
@@ -150,11 +150,11 @@ function* generateSetupExposed(
 	ctx.generatedTypes.add(names.SetupExposed);
 
 	yield `type ${names.SetupExposed} = import('${vueCompilerOptions.lib}').ShallowUnwrapRef<{${newLine}`;
-	for (const [name] of exposed) {
+	for (const [name, bindingType] of exposed) {
 		const token = Symbol(name.length);
 		yield ['', undefined, 0, { __linkedToken: token }];
 		yield `${name}: `;
-		if (exposedShouldUseDeclaredType.has(name)) {
+		if (bindingType === 'let') {
 			yield `ReturnType<() => typeof `;
 			yield ['', undefined, 0, { __linkedToken: token }];
 			yield name;

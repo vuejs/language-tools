@@ -217,13 +217,6 @@ function useCodegen(
 		return bindings;
 	});
 
-	const getSetupExposedShouldUseDeclaredType = computedSet(() => {
-		const names = new Set<string>();
-		collectExposedBindingsWithInitializerType(sfc.scriptSetup, names);
-		collectExposedBindingsWithInitializerType(sfc.script, names);
-		return names;
-	});
-
 	const getGeneratedScript = computed(() => {
 		return generateScript({
 			vueCompilerOptions: getResolvedOptions(),
@@ -231,7 +224,6 @@ function useCodegen(
 			script: sfc.script,
 			scriptSetup: sfc.scriptSetup,
 			exposed: getSetupExposed(),
-			exposedShouldUseDeclaredType: getSetupExposedShouldUseDeclaredType(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateAndStyleTypes: new Set([
@@ -253,29 +245,4 @@ function useCodegen(
 		getImportedComponents,
 		getSetupExposed,
 	};
-
-	function collectExposedBindingsWithInitializerType(
-		block: Sfc['script' | 'scriptSetup'],
-		names: Set<string>,
-	) {
-		if (!block || !validLangs.has(block.lang)) {
-			return;
-		}
-		ts.forEachChild(block.ast, node => {
-			if (!ts.isVariableStatement(node)) {
-				return;
-			}
-			if (node.declarationList.flags & ts.NodeFlags.Const) {
-				return;
-			}
-			for (const declaration of node.declarationList.declarations) {
-				if (!declaration.type || !declaration.initializer) {
-					continue;
-				}
-				for (const name of collectBindingNames(ts, declaration.name, block.ast)) {
-					names.add(name);
-				}
-			}
-		});
-	}
 }
