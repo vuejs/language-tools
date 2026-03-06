@@ -209,28 +209,11 @@ function useCodegen(
 		if (!allVars.size) {
 			return allVars;
 		}
-		const exposedNames = new Set<string>();
-		const generatedTemplate = getGeneratedTemplate();
-		const generatedStyle = getGeneratedStyle();
-		for (const [name] of generatedTemplate?.componentAccessMap ?? []) {
-			if (allVars.has(name)) {
-				exposedNames.add(name);
-			}
-		}
-		for (const [name] of generatedStyle?.componentAccessMap ?? []) {
-			if (allVars.has(name)) {
-				exposedNames.add(name);
-			}
-		}
-		for (const component of sfc.template?.ast?.components ?? []) {
-			const testNames = new Set([camelize(component), capitalize(camelize(component))]);
-			for (const testName of testNames) {
-				if (allVars.has(testName)) {
-					exposedNames.add(testName);
-				}
-			}
-		}
-		return exposedNames;
+		return new Set([
+			...getGeneratedTemplate()?.componentAccessMap.keys() ?? [],
+			...getGeneratedStyle()?.componentAccessMap.keys() ?? [],
+			...sfc.template?.ast?.components.flatMap(name => [camelize(name), capitalize(camelize(name))]) ?? [],
+		].filter(name => allVars.has(name)));
 	});
 
 	const getGeneratedScript = computed(() => {
