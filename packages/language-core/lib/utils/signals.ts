@@ -50,7 +50,19 @@ export function reactiveArray<I, O>(
 	}) as unknown as readonly Readonly<O>[];
 }
 
-export function computedSet<T>(source: () => Set<T>): () => Set<T> {
+export function computedMap<K, V>(source: () => Map<K, V>) {
+	return computed<Map<K, V>>(
+		oldValue => {
+			const newValue = source();
+			if (oldValue?.size === newValue.size && [...oldValue].every(([k, v]) => newValue.get(k) === v)) {
+				return oldValue;
+			}
+			return newValue;
+		},
+	);
+}
+
+export function computedSet<T>(source: () => Set<T>) {
 	return computed<Set<T>>(
 		oldValue => {
 			const newValue = source();

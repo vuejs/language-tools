@@ -150,12 +150,21 @@ function* generateSetupExposed(
 	ctx.generatedTypes.add(names.SetupExposed);
 
 	yield `type ${names.SetupExposed} = import('${vueCompilerOptions.lib}').ShallowUnwrapRef<{${newLine}`;
-	for (const bindingName of exposed) {
-		const token = Symbol(bindingName.length);
+	for (const [name, bindingType] of exposed) {
+		const token = Symbol(name.length);
 		yield ['', undefined, 0, { __linkedToken: token }];
-		yield `${bindingName}: typeof `;
-		yield ['', undefined, 0, { __linkedToken: token }];
-		yield bindingName;
+		yield `${name}: `;
+		if (bindingType === 'let') {
+			yield `ReturnType<() => typeof `;
+			yield ['', undefined, 0, { __linkedToken: token }];
+			yield name;
+			yield `>`;
+		}
+		else {
+			yield `typeof `;
+			yield ['', undefined, 0, { __linkedToken: token }];
+			yield name;
+		}
 		yield endOfLine;
 	}
 	yield `}>${endOfLine}`;
