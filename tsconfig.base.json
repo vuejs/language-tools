@@ -9,7 +9,6 @@
 		"skipLibCheck": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
-		"esModuleInterop": false,
 		"forceConsistentCasingInFileNames": true,
 		"noUncheckedIndexedAccess": true
 	},

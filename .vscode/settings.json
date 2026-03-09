@@ -1,5 +1,5 @@
 {
-	"typescript.experimental.useTsgo": true,
+	"js/ts.experimental.useTsgo": true,
 	"dprint.path": "node_modules/dprint/dprint",
 	"[javascript]": {
 		"editor.defaultFormatter": "dprint.dprint"
