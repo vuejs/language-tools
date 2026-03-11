@@ -328,25 +328,43 @@ function patchTypeScriptExtension() {
 		if (args[0] === extensionJsPath) {
 			let text = readFileSync(...args) as string;
 
+			const id = String.raw`[\w$]+(?:\.[\w$]+)?`;
+
 			// patch jsTsLanguageModes
+			// before 1.110: t.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]
+			// since 1.110:  "javascriptreact",Oh=[Ma,Ua,bl,Ns]
 			text = text.replace(
-				't.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]',
-				s => s + '.concat("vue")',
+				new RegExp(
+					String
+						.raw`(\.jsTsLanguageModes=\[${id},${id},${id},${id}\])|("javascriptreact",(${id})=\[(${id},${id},${id},${id})\])`,
+				),
+				(_match, oldFormat, _newFull, newLhs, newElements) => {
+					if (oldFormat) {
+						return oldFormat + '.concat("vue")';
+					}
+					return `"javascriptreact",${newLhs}=[${newElements}].concat("vue")`;
+				},
 			);
-			// patch isSupportedLanguageMode
+			// patch isSupportedLanguageMode (4 language IDs)
+			// before 1.110: .languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]
+			// since 1.110:  .languages.match([bl,Ns,Ma,Ua],r)>0
 			text = text.replace(
-				'.languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]',
-				s => s + '.concat("vue")',
+				new RegExp(String.raw`\.languages\.match\(\[(${id},${id},${id},${id})\]`),
+				(_, ids) => `.languages.match([${ids}].concat("vue")`,
 			);
-			// patch isTypeScriptDocument
+			// patch isTypeScriptDocument (2 language IDs)
+			// before 1.110: .languages.match([t.typescript,t.typescriptreact]
+			// since 1.110:  .languages.match([bl,Ns],r)>0
 			text = text.replace(
-				'.languages.match([t.typescript,t.typescriptreact]',
-				s => s + '.concat("vue")',
+				new RegExp(String.raw`\.languages\.match\(\[(${id},${id})\]`),
+				(_, ids) => `.languages.match([${ids}].concat("vue")`,
 			);
 
 			// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
+			// before 1.110: "--globalPlugins",i.plugins
+			// since 1.110:  "--globalPlugins",o.plugins.map(v=>v.name).join(","))
 			text = text.replace(
-				'"--globalPlugins",i.plugins',
+				/"--globalPlugins",([\w$]+)\.plugins/,
 				s => s + `.sort((a,b)=>(b.name==="${tsPluginName}"?-1:0)-(a.name==="${tsPluginName}"?-1:0))`,
 			);
 
