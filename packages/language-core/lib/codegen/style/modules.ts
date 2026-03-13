@@ -1,6 +1,6 @@
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import * as names from '../names';
+import { names } from '../names';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, newLine } from '../utils';
 import type { StyleCodegenOptions } from '.';
@@ -34,7 +34,7 @@ export function* generateStyleModules(
 		if (!vueCompilerOptions.strictCssModules) {
 			yield `Record<string, string> & `;
 		}
-		yield `__VLS_PrettifyGlobal<{}`;
+		yield `${names.PrettifyGlobal}<{}`;
 		if (vueCompilerOptions.resolveStyleImports) {
 			yield* generateStyleImports(style);
 		}

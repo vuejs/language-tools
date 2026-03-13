@@ -3,7 +3,7 @@ import type { Code } from '../../types';
 import { getElementTagOffsets, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import * as names from '../names';
+import { names } from '../names';
 import { endOfLine, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
@@ -34,7 +34,7 @@ export function* generateSlotOutlet(
 	});
 
 	if (options.hasDefineSlots) {
-		yield `__VLS_asFunctionalSlot(`;
+		yield `${names.asFunctionalSlot}(`;
 		if (nameProp) {
 			let codes: Generator<Code> | Code[];
 			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
@@ -120,7 +120,7 @@ export function* generateSlotOutlet(
 				ctx.inlayHints.push(createVBindShorthandInlayHintInfo(nameProp.exp.loc, 'name'));
 			}
 			const expVar = ctx.getInternalVariable();
-			yield `var ${expVar} = __VLS_tryAsConstant(`;
+			yield `var ${expVar} = ${names.tryAsConstant}(`;
 			yield* generateInterpolation(
 				options,
 				ctx,
