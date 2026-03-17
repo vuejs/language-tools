@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.2.6 (2026-03-17)
+
+### language-core
+
+- **fix:** generate `$slots` type in template correctly with `defineSlots` (#5984) - Thanks to @KazariEX!
+- **fix:** infer only readonly component of arrays in `v-for` (#5987) - Thanks to @ascott18!
+- **fix:** avoid false positives for destructured props detection on binding property names (#5994) - Thanks to @KazariEX!
+
+### vscode
+
+- **fix:** use regex for TS extension patching to support VS Code 1.110+ (#5983) - Thanks to @ebiryu!
+
 ## 3.2.5 (2026-02-21)
 
 ### language-core
