@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isBuiltInDirective } from '@vue/shared';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import * as names from '../names';
+import { names } from '../names';
 import { endOfLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
@@ -29,9 +29,9 @@ export function* generateElementDirectives(
 			continue;
 		}
 		const token = yield* startBoundary('template', prop.loc.start.offset, codeFeatures.verification);
-		yield `__VLS_asFunctionalDirective(`;
+		yield `${names.asFunctionalDirective}(`;
 		yield* generateIdentifier(options, ctx, prop);
-		yield `, {} as import('${options.vueCompilerOptions.lib}').ObjectDirective)(null!, { ...__VLS_directiveBindingRestFields, `;
+		yield `, {} as import('${options.vueCompilerOptions.lib}').ObjectDirective)(null!, { ...${names.directiveBindingRestFields}, `;
 		yield* generateArg(options, ctx, prop);
 		yield* generateModifiers(options, ctx, prop);
 		yield* generateValue(options, ctx, prop);

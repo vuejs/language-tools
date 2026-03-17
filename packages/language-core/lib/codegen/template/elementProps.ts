@@ -5,7 +5,7 @@ import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import * as names from '../names';
+import { names } from '../names';
 import { identifierRegex, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
@@ -155,7 +155,7 @@ export function* generateElementProps(
 			if (isComponent && prop.name === 'model' && prop.modifiers.length) {
 				const propertyName = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 					? !prop.arg.isStatic
-						? `[__VLS_tryAsConstant(\`\${${prop.arg.content}}Modifiers\`)]`
+						? `[${names.tryAsConstant}(\`\${${prop.arg.content}}Modifiers\`)]`
 						: camelize(propName) + `Modifiers`
 					: `modelModifiers`;
 				yield* generateModifiers(options, ctx, prop, propertyName);

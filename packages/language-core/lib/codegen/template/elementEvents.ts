@@ -3,6 +3,7 @@ import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
+import { names } from '../names';
 import { endOfLine, getTypeScriptAST, identifierRegex, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
@@ -33,7 +34,7 @@ export function* generateElementEvents(
 		) {
 			if (!emitsVar) {
 				emitsVar = ctx.getInternalVariable();
-				yield `let ${emitsVar}!: __VLS_ResolveEmits<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>${endOfLine}`;
+				yield `let ${emitsVar}!: ${names.ResolveEmits}<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>${endOfLine}`;
 			}
 
 			let source = prop.arg?.loc.source ?? 'model-value';
@@ -54,7 +55,7 @@ export function* generateElementEvents(
 			const emitName = emitPrefix + source;
 			const camelizedEmitName = camelize(emitName);
 
-			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'> = (${newLine}`;
+			yield `const ${ctx.getInternalVariable()}: ${names.NormalizeComponentEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'> = (${newLine}`;
 			if (prop.name === 'on') {
 				yield `{ `;
 				yield* generateEventArg(options, source, start!, emitPrefix.slice(0, -1), codeFeatures.navigation);
