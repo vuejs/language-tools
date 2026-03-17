@@ -59,7 +59,7 @@ export function* generateGeneric(
 		propTypes.push(names.PublicProps);
 	}
 	if (scriptSetupRanges.defineProps?.arg) {
-		yield `const __VLS_propsOption = `;
+		yield `const ${names.propsOption} = `;
 		yield* generateSfcBlockSection(
 			scriptSetup,
 			scriptSetupRanges.defineProps.arg.start,
@@ -70,7 +70,7 @@ export function* generateGeneric(
 		propTypes.push(
 			`import('${vueCompilerOptions.lib}').${
 				vueCompilerOptions.target >= 3.3 ? `ExtractPublicPropTypes` : `ExtractPropTypes`
-			}<typeof __VLS_propsOption>`,
+			}<typeof ${names.propsOption}>`,
 		);
 	}
 	if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
@@ -285,11 +285,11 @@ export function* generateSetupFunction(
 
 	if (output) {
 		if (hasSlotsType(options)) {
-			yield `const __VLS_base = `;
+			yield `const ${names.base} = `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 			yield* output;
-			yield `{} as ${ctx.localTypes.WithSlots}<typeof __VLS_base, ${names.Slots}>${endOfLine}`;
+			yield `{} as ${ctx.localTypes.WithSlots}<typeof ${names.base}, ${names.Slots}>${endOfLine}`;
 		}
 		else {
 			yield* output;

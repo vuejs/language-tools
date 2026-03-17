@@ -79,7 +79,7 @@ function* generateWorker(
 				scriptRanges,
 				exportDefault,
 				vueCompilerOptions,
-				selfType = '__VLS_self',
+				selfType = names.self,
 			);
 		}
 		else {
