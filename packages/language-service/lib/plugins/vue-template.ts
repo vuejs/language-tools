@@ -528,7 +528,7 @@ export function create(
 						if (meta.description) {
 							// blank line for terminate HTML to support markdown
 							// see: https://github.github.com/gfm/#example-118
-							desc = `\n\n${meta.description}<br>${desc}`;
+							desc = `\n\n${meta.description}\n<br>${desc}`;
 						}
 						return desc;
 					}
