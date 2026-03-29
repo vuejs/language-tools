@@ -409,7 +409,7 @@ export function create(
 					const templateAst = info.root.ir.template?.ast;
 					const enabledRichMessage = await context.env.getConfiguration?.('vue.hover.rich');
 
-					if (!templateAst || !enabledRichMessage || (htmlHover && hasContents(htmlHover.contents))) {
+					if (!templateAst || enabledRichMessage === 'off' || (htmlHover && hasContents(htmlHover.contents))) {
 						return htmlHover;
 					}
 
