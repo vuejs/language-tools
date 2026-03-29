@@ -7,6 +7,7 @@ import {
 	transformCompletionItem,
 } from '@volar/language-service';
 import { getSourceRange } from '@volar/language-service/lib/utils/featureWorkers';
+import type { ElementNode } from '@vue/compiler-dom';
 import {
 	forEachElementNode,
 	forEachInterpolationNode,
@@ -412,125 +413,154 @@ export function create(
 						return htmlHover;
 					}
 
-					for (const element of forEachElementNode(templateAst)) {
-						const tagStart = element.loc.start.offset + element.loc.source.indexOf(element.tag);
-						const tagEnd = tagStart + element.tag.length;
-						const offset = document.offsetAt(position);
+					// replace with `forEachElementNode(templateAst).find(...)` once available
+					const element = (() => {
+						for (const element of forEachElementNode(templateAst)) {
+							const { start, end } = getElementOffset(element);
+							const offset = document.offsetAt(position);
 
-						if (offset >= tagStart && offset <= tagEnd) {
-							const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
-							const props = meta?.props.filter(p => !p.global);
-							const modelProps = new Set<PropertyMeta>();
-							let tableContents: string[] = [];
+							if (offset >= start && offset <= end) {
+								return element;
+							}
+						}
+					})();
 
-							for (const event of meta?.events ?? []) {
-								if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
-									const modelName = event.name.slice(UPDATE_EVENT_PREFIX.length);
-									const modelProp = props?.find(p => p.name === modelName);
-									if (modelProp) {
-										modelProps.add(modelProp);
-									}
+					if (!element) {
+						return htmlHover;
+					}
+
+					const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
+
+					if (!meta) {
+						return htmlHover;
+					}
+
+					const table = formatTable(meta);
+					const { start, end } = getElementOffset(element);
+
+					return {
+						range: {
+							start: document.positionAt(start),
+							end: document.positionAt(end),
+						},
+						contents: {
+							kind: 'markdown',
+							value: table ?? `No type information available.`,
+						},
+					};
+
+					function formatTable(meta: ComponentMeta) {
+						const props = meta.props.filter(p => !p.global);
+						const modelProps = new Set<PropertyMeta>();
+						const tableContents: string[] = [];
+
+						for (const event of meta.events ?? []) {
+							if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
+								const modelName = event.name.slice(UPDATE_EVENT_PREFIX.length);
+								const modelProp = props?.find(p => p.name === modelName);
+								if (modelProp) {
+									modelProps.add(modelProp);
 								}
 							}
-							for (const prop of props ?? []) {
-								if (prop.name.startsWith(UPDATE_PROP_PREFIX)) {
-									const modelName = prop.name.slice(UPDATE_PROP_PREFIX.length);
-									const modelProp = props?.find(p => p.name === modelName);
-									if (modelProp) {
-										modelProps.add(modelProp);
-									}
+						}
+						for (const prop of props ?? []) {
+							if (prop.name.startsWith(UPDATE_PROP_PREFIX)) {
+								const modelName = prop.name.slice(UPDATE_PROP_PREFIX.length);
+								const modelProp = props?.find(p => p.name === modelName);
+								if (modelProp) {
+									modelProps.add(modelProp);
 								}
 							}
+						}
 
-							if (props?.length) {
-								let table =
-									`<tr><th align="left">Prop</th><th align="left">Description</th><th align="left">Default</th></tr>\n`;
-								for (const p of props) {
-									table += `<tr>
-											<td>${printName(p, modelProps.has(p))}</td>
-											<td>${printDescription(p)}</td>
-											<td>${p.default ? `<code>${p.default}</code>` : ''}</td>
-										</tr>\n`;
-								}
-								tableContents.push(table);
+						if (props.length) {
+							let table =
+								`<tr><th align="left">Prop</th><th align="left">Description</th><th align="left">Default</th></tr>\n`;
+							for (const p of props) {
+								table += `<tr>
+									<td>${printName(p, modelProps.has(p))}</td>
+									<td>${printDescription(p)}</td>
+									<td>${p.default ? `<code>${p.default}</code>` : ''}</td>
+								</tr>\n`;
 							}
+							tableContents.push(table);
+						}
 
-							if (meta?.events?.length) {
-								let table = `<tr><th align="left">Event</th><th align="left">Description</th><th></th></tr>\n`;
-								for (const e of meta.events) {
-									table += `<tr>
-											<td>${printName(e)}</td>
-											<td colspan="2">${printDescription(e)}</td>
-										</tr>\n`;
-								}
-								tableContents.push(table);
+						if (meta.events.length) {
+							let table = `<tr><th align="left">Event</th><th align="left">Description</th><th></th></tr>\n`;
+							for (const e of meta.events) {
+								table += `<tr>
+									<td>${printName(e)}</td>
+									<td colspan="2">${printDescription(e)}</td>
+								</tr>\n`;
 							}
+							tableContents.push(table);
+						}
 
-							if (meta?.slots?.length) {
-								let table = `<tr><th align="left">Slot</th><th align="left">Description</th><th></th></tr>\n`;
-								for (const s of meta.slots) {
-									table += `<tr>
-											<td>${printName(s)}</td>
-											<td colspan="2">${printDescription(s)}</td>
-										</tr>\n`;
-								}
-								tableContents.push(table);
+						if (meta.slots.length) {
+							let table = `<tr><th align="left">Slot</th><th align="left">Description</th><th></th></tr>\n`;
+							for (const s of meta.slots) {
+								table += `<tr>
+									<td>${printName(s)}</td>
+									<td colspan="2">${printDescription(s)}</td>
+								</tr>\n`;
 							}
+							tableContents.push(table);
+						}
 
-							if (meta?.exposed.length) {
-								let table = `<tr><th align="left">Exposed</th><th align="left">Description</th><th></th></tr>\n`;
-								for (const e of meta.exposed) {
-									table += `<tr>
-											<td>${printName(e)}</td>
-											<td colspan="2">${printDescription(e)}</td>
-										</tr>\n`;
-								}
-								tableContents.push(table);
+						if (meta.exposed.length) {
+							let table = `<tr><th align="left">Exposed</th><th align="left">Description</th><th></th></tr>\n`;
+							for (const e of meta.exposed) {
+								table += `<tr>
+									<td>${printName(e)}</td>
+									<td colspan="2">${printDescription(e)}</td>
+								</tr>\n`;
 							}
+							tableContents.push(table);
+						}
 
-							htmlHover ??= {
-								range: {
-									start: document.positionAt(tagStart),
-									end: document.positionAt(tagEnd),
-								},
-								contents: '',
-							};
+						if (!tableContents.length) {
+							return;
+						}
 
-							// 2px height per <tr>
-							const tableGap = `<tr></tr>`.repeat(4);
-							htmlHover.contents = {
-								kind: 'markdown',
-								value: tableContents
-									? `<table>\n${tableContents.join(`\n${tableGap}\n`)}\n</table>`
-									: `No type information available.`,
-							};
+						// 2px height per <tr>
+						const tableGap = `<tr></tr>`.repeat(4);
+
+						return `<table>\n${tableContents.join(`\n${tableGap}\n`)}\n</table>`;
+
+						function printName(meta: { name: string; tags: { name: string }[]; required?: boolean }, model?: boolean) {
+							let name = meta.name;
+							if (meta.tags.some(tag => tag.name === 'deprecated')) {
+								name = `<del>${name}</del>`;
+							}
+							if (meta.required) {
+								name += ' <sup><em>required</em></sup>';
+							}
+							if (model) {
+								name += ' <sup><em>model</em></sup>';
+							}
+							return name;
+						}
+
+						function printDescription(meta: { description?: string; type: string }) {
+							let desc = `<code>${meta.type}</code>`;
+							if (meta.description) {
+								// blank line for terminate HTML to support markdown
+								// see: https://github.github.com/gfm/#example-118
+								desc = `\n\n${meta.description}\n<br>${desc}`;
+							}
+							return desc;
 						}
 					}
 
-					return htmlHover;
+					function getElementOffset(element: ElementNode) {
+						const start = element.loc.start.offset + element.loc.source.indexOf(element.tag);
+						const end = start + element.tag.length;
 
-					function printName(meta: { name: string; tags: { name: string }[]; required?: boolean }, model?: boolean) {
-						let name = meta.name;
-						if (meta.tags.some(tag => tag.name === 'deprecated')) {
-							name = `<del>${name}</del>`;
-						}
-						if (meta.required) {
-							name += ' <sup><em>required</em></sup>';
-						}
-						if (model) {
-							name += ' <sup><em>model</em></sup>';
-						}
-						return name;
-					}
-
-					function printDescription(meta: { description?: string; type: string }) {
-						let desc = `<code>${meta.type}</code>`;
-						if (meta.description) {
-							// blank line for terminate HTML to support markdown
-							// see: https://github.github.com/gfm/#example-118
-							desc = `\n\n${meta.description}\n<br>${desc}`;
-						}
-						return desc;
+						return {
+							start,
+							end,
+						};
 					}
 
 					function hasContents(contents: html.MarkupContent | html.MarkedString | html.MarkedString[]) {
