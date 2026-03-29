@@ -435,7 +435,7 @@ export function create(
 						return htmlHover;
 					}
 
-					const hoverContent = enabledRichMessage === 'Markdown' ? formatMarkdown(meta) : formatTable(meta);
+					const hoverContent = getHoverContent(enabledRichMessage)(meta);
 					const { start, end } = getElementOffset(element);
 
 					return {
@@ -448,6 +448,19 @@ export function create(
 							value: hoverContent ?? `No type information available.`,
 						},
 					};
+
+					function getHoverContent(setting: unknown) {
+						switch (setting) {
+							case 'Markdown':
+								return formatMarkdown;
+							case 'Table':
+								return formatTable;
+							case 'JSDoc':
+								return formatJSDoc;
+							default:
+								return formatTable;
+						}
+					}
 
 					function formatTable(meta: ComponentMeta) {
 						const props = meta.props.filter(p => !p.global);
@@ -632,6 +645,103 @@ export function create(
 							}
 
 							return description;
+						}
+					}
+
+					function formatJSDoc(meta: ComponentMeta) {
+						const { models, props, events } = extractMetaLists(meta);
+
+						return [
+							formatSection('Models', models, formatProp),
+							formatSection('Props', props, formatProp),
+							formatSection('Events', events, formatEvent),
+							formatSection('Slots', meta?.slots, formatSlot),
+							formatSection('Exposed', meta?.exposed, formatExposed),
+						].filter(el => el !== undefined).join('\n\n\n');
+
+						function formatSection<T extends AnyMeta>(
+							title: string,
+							metaList: T[] | undefined,
+							formatter: (meta: T) => string,
+						) {
+							if (!metaList?.length) {
+								return;
+							}
+
+							return `## ${title}\n\n`
+								+ '~~~ts'
+								+ metaList.map(meta => {
+									let element = formatter(meta);
+
+									return [
+										formatDescription(meta),
+										element,
+									].join('\n');
+								}).join('\n')
+								+ '\n~~~';
+						}
+
+						function formatProp(prop: PropertyMeta): string {
+							let propString = prop.name;
+
+							if (!prop.required) {
+								propString += '?';
+							}
+
+							propString += `: ${prop.type}`;
+
+							if (prop.default) {
+								propString += ` = ${prop.default}`;
+							}
+
+							return propString;
+						}
+
+						function formatEvent(event: EventMeta): string {
+							const eventString = `@${event.name}`;
+
+							if (event.type !== '[]') {
+								return eventString + `: ${event.type}`;
+							}
+
+							return eventString;
+						}
+
+						function formatSlot(slot: SlotMeta): string {
+							const slotString = `#${slot.name}`;
+
+							const hasSlotProps = slot.type !== '{}' && slot.type !== 'any';
+							if (hasSlotProps) {
+								return slotString + `: ${slot.type}`;
+							}
+
+							return slotString;
+						}
+
+						function formatExposed(expose: ExposeMeta): string {
+							return `${expose.name}: ${expose.type}`;
+						}
+
+						type AnyMeta = PropertyMeta | EventMeta | SlotMeta | ExposeMeta;
+
+						function formatDescription(meta: AnyMeta) {
+							let description = meta.description;
+
+							if (meta.tags.length) {
+								if (description) {
+									description += '\n\n';
+								}
+
+								description += meta.tags.map(tag => `@${tag.name} ${tag.text ?? ''}`).join('\n\n');
+							}
+
+							if (!description) {
+								return '';
+							}
+
+							description = '/**\n * ' + description.replace(/\n/g, '\n * ');
+
+							return '\n' + description + '\n */';
 						}
 					}
 
