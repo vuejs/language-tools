@@ -597,14 +597,8 @@ export function create(
 							return propString;
 						}
 
-						function formatEvent(event: EventMeta | PropertyMeta): string {
-							const eventString = `\`@${event.name}\``;
-
-							if (event.type !== '[]') {
-								return eventString + ` - \`${event.type}\``;
-							}
-
-							return eventString;
+						function formatEvent(event: EventMeta): string {
+							return `\`@${event.name}: ${formatEventType(event)}\``;
 						}
 
 						function formatSlot(slot: SlotMeta): string {
@@ -698,13 +692,7 @@ export function create(
 						}
 
 						function formatEvent(event: EventMeta): string {
-							const eventString = `@${event.name}`;
-
-							if (event.type !== '[]') {
-								return eventString + `: ${event.type}`;
-							}
-
-							return eventString;
+							return `@${event.name}: ${formatEventType(event)}`;
 						}
 
 						function formatSlot(slot: SlotMeta): string {
@@ -780,7 +768,7 @@ export function create(
 
 						const models: PropertyMeta[] = [];
 
-						const events: (EventMeta | PropertyMeta)[] = meta.events.filter(event => {
+						const events: EventMeta[] = meta.events.filter(event => {
 							if (!event.name.startsWith(UPDATE_EVENT_PREFIX)) {
 								return true;
 							}
@@ -845,6 +833,20 @@ export function create(
 						}
 
 						return modelProps;
+					}
+
+					/**
+					 * Extracts the event type from the EventMeta
+					 */
+					function formatEventType(event: EventMeta): string {
+						// the signature is the only stable source between the different ways of writing
+						// a `defineEmit`
+						// It looks like `(event: MouseEvent, value: string): void` and we want to extract
+						// the parameters afters the event (e.g. `(value: string) => any`)
+						const match = event.signature.match(/\([^,]*,? ?(.*)\)/);
+						const params = match?.[1] ?? '';
+
+						return `(${params}) => any`;
 					}
 				},
 
