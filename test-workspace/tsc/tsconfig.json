@@ -596,6 +596,9 @@
 			"path": "./fallthroughAttributes_unknownTag/tsconfig.json"
 		},
 		{
+			"path": "./hover/tsconfig.json"
+		},
+		{
 			"path": "./input-radio/tsconfig.json"
 		},
 		{
