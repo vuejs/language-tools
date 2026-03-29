@@ -691,7 +691,7 @@ export function create(
 							return propString;
 						}
 
-						function formatEvent(event: EventMeta): string {
+						function formatEvent(event: EventMeta | PropertyMeta): string {
 							return `@${event.name}: ${formatEventType(event)}`;
 						}
 
@@ -755,9 +755,9 @@ export function create(
 
 					/**
 					 * Extracts the following from ComponentMeta:
-					 * - models: Props that are usably with v-model
-					 * - props: Removes global and model props
-					 * - events: Removes model events
+					 * - models: Props that are usable with v-model
+					 * - props: Removes global, model, and event props
+					 * - events: Removes model events and adds event props
 					 */
 					function extractMetaLists(meta: ComponentMeta) {
 						const propsMap = new Map(
@@ -767,8 +767,20 @@ export function create(
 						);
 
 						const models: PropertyMeta[] = [];
+						const propEvents: PropertyMeta[] = [];
 
-						const events: EventMeta[] = meta.events.filter(event => {
+						for (const prop of propsMap.values()) {
+							// Props starting with `onX` are considered event props by Vue
+							if (/^on[A-Z]/.test(prop.name)) {
+								propEvents.push({
+									...prop,
+									name: prop.name.slice(2, 3).toLowerCase() + prop.name.slice(3),
+								});
+								propsMap.delete(prop.name);
+							}
+						}
+
+						const events = [...meta.events, ...propEvents].filter(event => {
 							if (!event.name.startsWith(UPDATE_EVENT_PREFIX)) {
 								return true;
 							}
@@ -784,23 +796,6 @@ export function create(
 							propsMap.delete(modelName);
 							return false;
 						});
-
-						for (const prop of propsMap.values()) {
-							if (!prop.name.startsWith(UPDATE_PROP_PREFIX)) {
-								continue;
-							}
-
-							const modelName = prop.name.slice(UPDATE_PROP_PREFIX.length);
-							const modelProp = propsMap.get(modelName);
-
-							if (!modelProp) {
-								continue;
-							}
-
-							models.push(modelProp);
-							propsMap.delete(prop.name);
-							propsMap.delete(modelName);
-						}
 
 						return {
 							models,
@@ -836,17 +831,23 @@ export function create(
 					}
 
 					/**
-					 * Extracts the event type from the EventMeta
+					 * Extracts the event type from the EventMeta / PropertyMeta
 					 */
-					function formatEventType(event: EventMeta): string {
-						// the signature is the only stable source between the different ways of writing
-						// a `defineEmit`
-						// It looks like `(event: MouseEvent, value: string): void` and we want to extract
-						// the parameters afters the event (e.g. `(value: string) => any`)
-						const match = event.signature.match(/\([^,]*,? ?(.*)\)/);
-						const params = match?.[1] ?? '';
+					function formatEventType(event: EventMeta | PropertyMeta): string {
+						// only `EventMeta` has the `signature` property
+						if ('signature' in event) {
+							// the signature is the only stable source between the different ways of writing
+							// a `defineEmit`
+							// It looks like `(event: MouseEvent, value: string): void` and we want to extract
+							// the parameters afters the event (e.g. `(value: string) => any`)
+							const match = event.signature.match(/\([^,]*,? ?(.*)\)/);
+							const params = match?.[1] ?? '';
 
-						return `(${params}) => any`;
+							return `(${params}) => any`;
+						}
+
+						// for prop based events we just use the `type` as is
+						return event.type;
 					}
 				},
 
@@ -1211,7 +1212,7 @@ export function create(
 					? vBindModifiers
 					: isVModel
 					? vModelModifiers
-					: undefined;
+							: undefined;
 
 				if (!currentModifiers) {
 					return;
