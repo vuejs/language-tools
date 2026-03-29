@@ -22,7 +22,7 @@ import { create as createPugService } from 'volar-service-pug';
 import { applyCompletionEntryDetails, convertCompletionInfo } from 'volar-service-typescript/lib/utils/lspConverters';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
-import type { PropertyMeta } from 'vue-component-meta';
+import type { ComponentMeta, EventMeta, ExposeMeta, PropertyMeta, SlotMeta } from 'vue-component-meta';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
@@ -435,7 +435,7 @@ export function create(
 						return htmlHover;
 					}
 
-					const table = formatTable(meta);
+					const hoverContent = enabledRichMessage === 'Markdown' ? formatMarkdown(meta) : formatTable(meta);
 					const { start, end } = getElementOffset(element);
 
 					return {
@@ -445,33 +445,14 @@ export function create(
 						},
 						contents: {
 							kind: 'markdown',
-							value: table ?? `No type information available.`,
+							value: hoverContent ?? `No type information available.`,
 						},
 					};
 
 					function formatTable(meta: ComponentMeta) {
 						const props = meta.props.filter(p => !p.global);
-						const modelProps = new Set<PropertyMeta>();
+						const modelProps = extractModelProps(meta);
 						const tableContents: string[] = [];
-
-						for (const event of meta.events ?? []) {
-							if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
-								const modelName = event.name.slice(UPDATE_EVENT_PREFIX.length);
-								const modelProp = props?.find(p => p.name === modelName);
-								if (modelProp) {
-									modelProps.add(modelProp);
-								}
-							}
-						}
-						for (const prop of props ?? []) {
-							if (prop.name.startsWith(UPDATE_PROP_PREFIX)) {
-								const modelName = prop.name.slice(UPDATE_PROP_PREFIX.length);
-								const modelProp = props?.find(p => p.name === modelName);
-								if (modelProp) {
-									modelProps.add(modelProp);
-								}
-							}
-						}
 
 						if (props.length) {
 							let table =
@@ -553,6 +534,107 @@ export function create(
 						}
 					}
 
+					function formatMarkdown(meta: ComponentMeta) {
+						const { models, props, events } = extractMetaLists(meta);
+
+						return [
+							formatSection('Models', [...models], formatProp),
+							formatSection('Props', props, formatProp),
+							formatSection('Events', events, formatEvent),
+							formatSection('Slots', meta?.slots, formatSlot),
+							formatSection('Exposed', meta?.exposed, formatExposed),
+						].filter(el => el !== undefined).join('\n\n');
+
+						function formatSection<T extends AnyMeta>(
+							title: string,
+							metaList: T[] | undefined,
+							formatter: (meta: T) => string,
+						) {
+							if (!metaList?.length) {
+								return;
+							}
+
+							return `## ${title}\n\n`
+								+ metaList.map(meta => {
+									let element = formatter(meta);
+
+									if (isDeprecated(meta)) {
+										element = `~~${element}~~`;
+									}
+
+									return element + formatDescription(meta);
+								}).join('\n\n');
+						}
+
+						function formatProp(prop: PropertyMeta): string {
+							let propString = `\`${prop.name}`;
+
+							if (!prop.required) {
+								propString += '?';
+							}
+
+							propString += `: ${prop.type}`;
+
+							if (prop.default) {
+								propString += ` = ${prop.default}`;
+							}
+
+							propString += '`';
+
+							return propString;
+						}
+
+						function formatEvent(event: EventMeta | PropertyMeta): string {
+							const eventString = `\`@${event.name}\``;
+
+							if (event.type !== '[]') {
+								return eventString + ` - \`${event.type}\``;
+							}
+
+							return eventString;
+						}
+
+						function formatSlot(slot: SlotMeta): string {
+							const slotString = `\`#${slot.name}\``;
+
+							const hasSlotProps = slot.type !== '{}' && slot.type !== 'any';
+							if (hasSlotProps) {
+								return slotString + ` - \`${slot.type}\``;
+							}
+
+							return slotString;
+						}
+
+						function formatExposed(expose: ExposeMeta): string {
+							return `\`${expose.name}: ${expose.type}\``;
+						}
+
+						type AnyMeta = PropertyMeta | EventMeta | SlotMeta | ExposeMeta;
+
+						function isDeprecated(meta: AnyMeta) {
+							return meta.tags.some(tag => tag.name === 'deprecated');
+						}
+
+						function formatDescription(meta: AnyMeta) {
+							let description = meta.description;
+
+							if (meta.tags.length) {
+								description += '\n\n' + meta.tags.map(tag => `***@${tag.name}*** ${tag.text ?? ''}`).join('\n\n');
+							}
+
+							if (description) {
+								// prepend each line with '> '
+								description = '> ' + description.replace(/\n/g, '\n> ');
+							}
+
+							if (description) {
+								return `\n\n${description}`;
+							}
+
+							return description;
+						}
+					}
+
 					function getElementOffset(element: ElementNode) {
 						const start = element.loc.start.offset + element.loc.source.indexOf(element.tag);
 						const end = start + element.tag.length;
@@ -576,8 +658,8 @@ export function create(
 					/**
 					 * Extracts the following from ComponentMeta:
 					 * - models: Props that are usably with v-model
-					 * - props: Removes global, model, and event props
-					 * - events: Removes model events and adds event props
+					 * - props: Removes global and model props
+					 * - events: Removes model events
 					 */
 					function extractMetaLists(meta: ComponentMeta) {
 						const propsMap = new Map(
@@ -588,7 +670,7 @@ export function create(
 
 						const models: PropertyMeta[] = [];
 
-						const events = meta.events.filter(event => {
+						const events: (EventMeta | PropertyMeta)[] = meta.events.filter(event => {
 							if (!event.name.startsWith(UPDATE_EVENT_PREFIX)) {
 								return true;
 							}
@@ -627,6 +709,32 @@ export function create(
 							props: [...propsMap.values()],
 							events,
 						};
+					}
+
+					function extractModelProps(meta: ComponentMeta) {
+						const props = meta.props.filter(p => !p.global);
+						const modelProps = new Set<PropertyMeta>();
+
+						for (const event of meta.events ?? []) {
+							if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
+								const modelName = event.name.slice(UPDATE_EVENT_PREFIX.length);
+								const modelProp = props?.find(p => p.name === modelName);
+								if (modelProp) {
+									modelProps.add(modelProp);
+								}
+							}
+						}
+						for (const prop of props ?? []) {
+							if (prop.name.startsWith(UPDATE_PROP_PREFIX)) {
+								const modelName = prop.name.slice(UPDATE_PROP_PREFIX.length);
+								const modelProp = props?.find(p => p.name === modelName);
+								if (modelProp) {
+									modelProps.add(modelProp);
+								}
+							}
+						}
+
+						return modelProps;
 					}
 				},
 
