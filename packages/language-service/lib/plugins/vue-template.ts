@@ -572,6 +572,62 @@ export function create(
 						}
 						return !!contents.value;
 					}
+
+					/**
+					 * Extracts the following from ComponentMeta:
+					 * - models: Props that are usably with v-model
+					 * - props: Removes global, model, and event props
+					 * - events: Removes model events and adds event props
+					 */
+					function extractMetaLists(meta: ComponentMeta) {
+						const propsMap = new Map(
+							meta.props
+								.filter(p => !p.global)
+								.map(prop => [prop.name, prop]),
+						);
+
+						const models: PropertyMeta[] = [];
+
+						const events = meta.events.filter(event => {
+							if (!event.name.startsWith(UPDATE_EVENT_PREFIX)) {
+								return true;
+							}
+
+							const modelName = event.name.slice(UPDATE_EVENT_PREFIX.length);
+							const modelProp = propsMap.get(modelName);
+
+							if (!modelProp) {
+								return true;
+							}
+
+							models.push(modelProp);
+							propsMap.delete(modelName);
+							return false;
+						});
+
+						for (const prop of propsMap.values()) {
+							if (!prop.name.startsWith(UPDATE_PROP_PREFIX)) {
+								continue;
+							}
+
+							const modelName = prop.name.slice(UPDATE_PROP_PREFIX.length);
+							const modelProp = propsMap.get(modelName);
+
+							if (!modelProp) {
+								continue;
+							}
+
+							models.push(modelProp);
+							propsMap.delete(prop.name);
+							propsMap.delete(modelName);
+						}
+
+						return {
+							models,
+							props: [...propsMap.values()],
+							events,
+						};
+					}
 				},
 
 				async provideDocumentLinks(document, token) {
