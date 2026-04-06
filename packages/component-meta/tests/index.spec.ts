@@ -689,6 +689,26 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(text?.default).toEqual('"foobar"');
 		});
 
+		test('reference-type-props-non-ascii-default', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/reference-type-props/component-non-ascii.vue',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+			const label = meta.props.find(prop => prop.name === 'label');
+			expect(label?.default).toEqual('"こんにちは"');
+		});
+
+		test('reference-type-props-non-ascii-default-destructured', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/reference-type-props/component-non-ascii-destructure.vue',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+			const label = meta.props.find(prop => prop.name === 'label');
+			expect(label?.default).toEqual('"こんにちは"');
+		});
+
 		test('reference-type-props-js', () => {
 			const componentPath = path.resolve(
 				__dirname,

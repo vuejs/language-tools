@@ -68,7 +68,8 @@ export function createCheckerBase(
 	);
 	const { languageServiceHost } = createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost);
 	const tsLs = ts.createLanguageService(languageServiceHost);
-	const printer = ts.createPrinter(checkerOptions.printer);
+	// @ts-expect-error neverAsciiEscape is an internal printer option to prevent unicode-escaping non-ASCII characters
+	const printer = ts.createPrinter({ ...checkerOptions.printer, neverAsciiEscape: true });
 	const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
 
 	if (checkerOptions.forceUseTs ?? true) {
