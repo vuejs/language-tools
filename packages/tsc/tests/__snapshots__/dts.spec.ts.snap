@@ -172,8 +172,8 @@ exports[`Input: generic/component.vue, Output: generic/component.vue.d.ts 1`] = 
     } & {
         title?: string;
     }) & {
-        "onUpdate:title"?: (value: string) => any;
-        onBar?: (data: number) => any;
+        "onUpdate:title"?: ((value: string | undefined) => any) | undefined;
+        onBar?: ((data: number) => any) | undefined;
     }> & (typeof globalThis extends {
         __VLS_PROPS_FALLBACK: infer P;
     } ? P : {});
@@ -186,7 +186,7 @@ exports[`Input: generic/component.vue, Output: generic/component.vue.d.ts 1`] = 
             foo: number;
         }) => any;
     };
-    emit: ((e: "bar", data: number) => void) & ((event: "update:title", value: string) => void);
+    emit: ((e: "bar", data: number) => void) & ((event: "update:title", value: string | undefined) => void);
 }>) => import("vue").VNode & {
     __ctx?: Awaited<typeof __VLS_setup>;
 };
@@ -207,8 +207,8 @@ exports[`Input: generic/custom-extension-component.cext, Output: generic/custom-
     } & {
         title?: string;
     }) & {
-        "onUpdate:title"?: (value: string) => any;
-        onBar?: (data: number) => any;
+        "onUpdate:title"?: ((value: string | undefined) => any) | undefined;
+        onBar?: ((data: number) => any) | undefined;
     }> & (typeof globalThis extends {
         __VLS_PROPS_FALLBACK: infer P;
     } ? P : {});
@@ -221,7 +221,7 @@ exports[`Input: generic/custom-extension-component.cext, Output: generic/custom-
             foo: number;
         }) => any;
     };
-    emit: ((e: "bar", data: number) => void) & ((event: "update:title", value: string) => void);
+    emit: ((e: "bar", data: number) => void) & ((event: "update:title", value: string | undefined) => void);
 }>) => import("vue").VNode & {
     __ctx?: Awaited<typeof __VLS_setup>;
 };
@@ -311,7 +311,7 @@ declare const _default: import("vue").DefineComponent2<{
          */
         complexDefault: {
             type: ArrayConstructor;
-            default: (props: any) => any[];
+            default: (props: any) => never[] | undefined;
         };
     };
     computed: {};
@@ -1030,14 +1030,14 @@ exports[`Input: ts-named-export/component.ts, Output: ts-named-export/component.
 }, string[], {}, {
     foo: string;
 } & {
-    [x: \`on\${Capitalize<string>}\`]: (...args: any[]) => any;
+    [x: \`on\${Capitalize<string>}\`]: ((...args: any[]) => any) | undefined;
 }, import("vue").PublicProps>;
 export declare const Bar: import("vue").DefineSetupFnComponent<{
     bar?: number;
 }, string[], {}, {
     bar?: number;
 } & {
-    [x: \`on\${Capitalize<string>}\`]: (...args: any[]) => any;
+    [x: \`on\${Capitalize<string>}\`]: ((...args: any[]) => any) | undefined;
 }, import("vue").PublicProps>;
 "
 `;

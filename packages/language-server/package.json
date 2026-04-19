@@ -20,7 +20,7 @@
 		"@vue/language-core": "workspace:*",
 		"@vue/language-service": "workspace:*",
 		"@vue/typescript-plugin": "workspace:*",
-		"vscode-uri": "^3.0.8"
+		"vscode-uri": "^3.1.0"
 	},
 	"peerDependencies": {
 		"typescript": "*"
