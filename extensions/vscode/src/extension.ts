@@ -4,13 +4,12 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
 	defineExtension,
-	executeCommand,
+	defineLogger,
 	extensionContext,
 	nextTick,
 	onDeactivate,
 	useActiveTextEditor,
 	useCommand,
-	useOutputChannel,
 	useVisibleTextEditors,
 	watch,
 } from 'reactive-vscode';
@@ -43,6 +42,8 @@ for (
 		});
 	}
 }
+
+const logger = defineLogger('Vue Language Server');
 
 export = defineExtension(() => {
 	let client: lsp.BaseLanguageClient | undefined;
@@ -87,7 +88,7 @@ export = defineExtension(() => {
 				'Restart Extension Host',
 			);
 			if (reload) {
-				executeCommand('workbench.action.restartExtensionHost');
+				vscode.commands.executeCommand('workbench.action.restartExtensionHost');
 			}
 		});
 
@@ -138,7 +139,7 @@ export = defineExtension(() => {
 
 	useCommand('vue.welcome', () => welcome.execute(context));
 	useCommand('vue.action.restartServer', async () => {
-		await executeCommand('typescript.restartTsServer');
+		await vscode.commands.executeCommand('typescript.restartTsServer');
 		await client?.stop();
 		client?.outputChannel.clear();
 		await client?.start();
@@ -208,7 +209,7 @@ function launch(serverPath: string, tsdk: string) {
 				isTrusted: true,
 				supportHtml: true,
 			},
-			outputChannel: useOutputChannel('Vue Language Server'),
+			outputChannel: logger.logger.value!,
 		},
 	);
 
