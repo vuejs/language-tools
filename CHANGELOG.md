@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.2.7 (2026-04-19)
+
+### component-meta
+
+- **fix:** preserve non-ASCII characters in prop default values (#6012) - Thanks to @ef81sp!
+
+### workspace
+
+- **chore:** bump typescript to 6.0.3 (#6017) - Thanks to @KazariEX!
+
 ## 3.2.6 (2026-03-17)
 
 ### language-core
