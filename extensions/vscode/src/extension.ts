@@ -209,7 +209,7 @@ function launch(serverPath: string, tsdk: string) {
 				isTrusted: true,
 				supportHtml: true,
 			},
-			outputChannel: logger.logger.value,
+			outputChannel: logger.logger.value!,
 		},
 	);
 
