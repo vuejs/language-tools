@@ -735,36 +735,6 @@ export default _default;
 "
 `;
 
-exports[`Input: reference-type-props/component-non-ascii-destructure.vue, Output: reference-type-props/component-non-ascii-destructure.vue.d.ts 1`] = `
-"type __VLS_Props = {
-    label?: string;
-};
-declare const __VLS_export: import("vue").DefineComponent2<{
-    setup(): {};
-    data(): {};
-    props: {};
-    computed: {};
-    methods: {};
-    mixins: {}[];
-    extends: {};
-    emits: string[];
-    slots: {};
-    inject: {};
-    components: {};
-    directives: {};
-    provide: {};
-    expose: string;
-    __typeProps: __VLS_Props;
-    __typeEmits: unknown;
-    __typeRefs: {};
-    __typeEl: any;
-    __defaults: unknown;
-}>;
-declare const _default: typeof __VLS_export;
-export default _default;
-"
-`;
-
 exports[`Input: reference-type-props/my-props.ts, Output: reference-type-props/my-props.d.ts 1`] = `
 "export interface MyNestedProps {
     /**
