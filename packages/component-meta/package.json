@@ -1,6 +1,6 @@
 {
 	"name": "vue-component-meta",
-	"version": "3.2.6",
+	"version": "3.2.7",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
