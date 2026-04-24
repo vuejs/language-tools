@@ -39,8 +39,6 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				.replace(frontmatterReg, match => ' '.repeat(match.length))
 				// code block
 				.replace(codeblockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
-				// inline code block
-				.replace(inlineCodeblockReg, match => `\`${' '.repeat(match.length - 2)}\``)
 				// latex block
 				.replace(latexBlockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
 				// # \<script setup>
@@ -59,6 +57,8 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 			}
 
 			content = content
+				// inline code block
+				.replace(inlineCodeblockReg, match => `\`${' '.repeat(match.length - 2)}\``)
 				// angle bracket: <http://foo.com>
 				.replace(angleBracketReg, match => ' '.repeat(match.length))
 				// [foo](http://foo.com)
