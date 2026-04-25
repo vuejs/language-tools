@@ -69,6 +69,10 @@ function* generateTemplateCtx(
 		exps.push([`{} as ${propTypes.join(` & `)}`]);
 	}
 
+	// allow plugins to augment the context type easily
+	yield `interface __VLS_Context {}${newLine}`;
+	exps.push([`{} as __VLS_Context`]);
+
 	if (ctx.generatedTypes.has(names.SetupExposed)) {
 		exps.push([`{} as ${names.SetupExposed}`]);
 	}
