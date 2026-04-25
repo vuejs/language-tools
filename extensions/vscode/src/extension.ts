@@ -21,9 +21,6 @@ import { restrictFormattingEditsToRange } from './rangeFormatting';
 import * as reactivityVisualization from './reactivityVisualization';
 import * as welcome from './welcome';
 
-let serverPath = resolveServerPath();
-const neededRestart = !patchTypeScriptExtension();
-
 for (
 	const incompatibleExtensionId of [
 		'johnsoncodehk.vscode-typescript-vue-plugin',
@@ -46,6 +43,8 @@ for (
 const logger = defineLogger('Vue Language Server');
 
 export = defineExtension(() => {
+	let serverPath = resolveServerPath();
+	const neededRestart = !patchTypeScriptExtension();
 	let client: lsp.BaseLanguageClient | undefined;
 
 	const context = extensionContext.value!;
