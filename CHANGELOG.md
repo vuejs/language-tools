@@ -1,5 +1,56 @@
 # Changelog
 
+## 3.2.7 (2026-04-19)
+
+### component-meta
+
+- **fix:** preserve non-ASCII characters in prop default values (#6012) - Thanks to @ef81sp!
+
+### workspace
+
+- **chore:** bump typescript to 6.0.3 (#6017) - Thanks to @KazariEX!
+
+## 3.2.6 (2026-03-17)
+
+### language-core
+
+- **fix:** generate `$slots` type in template correctly with `defineSlots` (#5984) - Thanks to @KazariEX!
+- **fix:** infer only readonly component of arrays in `v-for` (#5987) - Thanks to @ascott18!
+- **fix:** avoid false positives for destructured props detection on binding property names (#5994) - Thanks to @KazariEX!
+
+### vscode
+
+- **fix:** use regex for TS extension patching to support VS Code 1.110+ (#5983) - Thanks to @ebiryu!
+
+## 3.2.5 (2026-02-21)
+
+### language-core
+
+- **fix:** re-parse template when interpolation syntax breaks (#5971) - Thanks to @Dsaquel!
+
+### language-service
+
+- **fix:** use default html data provider for document symbols (#5968) - Thanks to @liangmiQwQ!
+
+### language-plugin-pug
+
+- **fix:** handle backtick attributes containing both quote types (#5970) - Thanks to @baptistejamin!
+
+### workspace
+
+- **docs:** document all packages with consistent README structure (#5953)
+- **docs:** update tsconfig schema of `plugins` option - Thanks to @KazariEX!
+
+## 3.2.4 (2026-01-26)
+
+### language-core
+
+- **feat:** place plugin configs under `ctx.config` and support type annotation via generics (#5944) - Thanks to @KazariEX!
+
+### workspace
+
+- **chore:** publish to npm with OIDC (#5912) - Thanks to @ghiscoding!
+
 ## 3.2.3 (2026-01-23)
 
 ### language-core

@@ -43,6 +43,7 @@ export function createVueLanguagePlugin<T>(
 		},
 		compilerOptions,
 		vueCompilerOptions,
+		config: {},
 	};
 	const plugins = createPlugins(pluginContext);
 	const fileRegistry = getVueFileRegistry(compilerOptions, vueCompilerOptions, plugins);

@@ -317,6 +317,16 @@ export function findDestructuredProps(
 			}
 		}
 
+		if (
+			ts.isBindingElement(parent)
+			|| ts.isImportSpecifier(parent)
+			|| ts.isExportSpecifier(parent)
+		) {
+			if (parent.propertyName === id) {
+				return false;
+			}
+		}
+
 		return true;
 	}
 }
