@@ -6,7 +6,7 @@ export function resolveModuleName(
 	languageServiceHost: ts.LanguageServiceHost,
 	fileName: string,
 	moduleName: string,
-	allowNonExistent: boolean = false,
+	allowNonExistent?: boolean,
 ): string | undefined {
 	const compilerOptions = languageServiceHost.getCompilationSettings();
 
