@@ -104,7 +104,7 @@ export function create(
 					throw cached;
 				}
 				if (cached) {
-					return cached;
+					return URI.file(cached).toString();
 				}
 			}
 			return resolveReference(ref, baseUri, context.env.workspaceFolders);

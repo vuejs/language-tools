@@ -299,9 +299,9 @@ export = createLanguageServicePlugin(
 				return createResponse(getComponentSlots(ts, program, virtualCode));
 			});
 			session.addProtocolHandler('_vue:getElementAttrs', request => {
-				const [fileName, tag]: Parameters<Requests['getElementAttrs']> = request.arguments;
+				const [fileName, ...args]: Parameters<Requests['getElementAttrs']> = request.arguments;
 				const { program } = getProject(fileName);
-				return createResponse(getElementAttrs(ts, program, fileName, tag));
+				return createResponse(getElementAttrs(ts, program, fileName, ...args));
 			});
 			session.addProtocolHandler('_vue:getElementNames', request => {
 				const [fileName]: Parameters<Requests['getElementNames']> = request.arguments;
@@ -309,8 +309,8 @@ export = createLanguageServicePlugin(
 				return createResponse(getElementNames(ts, program, fileName));
 			});
 			session.addProtocolHandler('_vue:resolveModuleName', request => {
-				const [fileName, moduleName]: Parameters<Requests['resolveModuleName']> = request.arguments;
-				return createResponse(resolveModuleName(ts, info.languageServiceHost, fileName, moduleName));
+				const [fileName, ...args]: Parameters<Requests['resolveModuleName']> = request.arguments;
+				return createResponse(resolveModuleName(ts, info.languageServiceHost, fileName, ...args));
 			});
 
 			projectService.logger.info('Vue specific commands are successfully added.');
