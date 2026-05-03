@@ -141,18 +141,21 @@ export function* generateComponent(
 
 			if (identifierRegex.test(camelize(tag))) {
 				// navigation support
-				yield `/** @ts-ignore @type {typeof ${names.components}.`;
-				yield* generateCamelized(tag, 'template', startTagOffset, codeFeatures.navigation);
-				if (tag[0] !== tag[0]!.toUpperCase()) {
+				yield `/** @ts-ignore @type {`;
+				for (const offset of [startTagOffset, endTagOffset]) {
+					if (offset === undefined) {
+						continue;
+					}
 					yield ` | typeof ${names.components}.`;
-					yield* generateCamelized(capitalize(tag), 'template', startTagOffset, codeFeatures.navigation);
-				}
-				if (endTagOffset !== undefined) {
-					yield ` | typeof ${names.components}.`;
-					yield* generateCamelized(tag, 'template', endTagOffset, codeFeatures.navigation);
+					yield* generateCamelized(tag, 'template', offset, codeFeatures.navigation);
 					if (tag[0] !== tag[0]!.toUpperCase()) {
 						yield ` | typeof ${names.components}.`;
-						yield* generateCamelized(capitalize(tag), 'template', endTagOffset, codeFeatures.navigation);
+						yield* generateCamelized(capitalize(tag), 'template', offset, codeFeatures.navigation);
+					}
+					if (tag.includes('-')) {
+						yield ` | typeof ${names.components}[`;
+						yield* generateStringLiteralKey(tag, offset, codeFeatures.navigation);
+						yield `]`;
 					}
 				}
 				yield `} */${newLine}`;

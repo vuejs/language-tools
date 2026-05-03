@@ -1026,7 +1026,13 @@ test('#5847', async () => {
 		  "kindModifiers": "export",
 		  "name": "testFn",
 		  "sortText": "16",
-		  "source": "tsconfigProject/fixture",
+		  "source": "../fixture",
+		  "sourceDisplay": [
+		    {
+		      "kind": "text",
+		      "text": "./fixture",
+		    },
+		  ],
 		}
 	`);
 });

@@ -1,6 +1,6 @@
 {
 	"name": "vue-component-meta",
-	"version": "3.2.4",
+	"version": "3.2.7",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
@@ -19,7 +19,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "^22.10.4",
-		"@types/path-browserify": "^1.0.1"
+		"@types/path-browserify": "^1.0.3"
 	},
 	"peerDependencies": {
 		"typescript": "*"

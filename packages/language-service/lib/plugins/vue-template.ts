@@ -104,7 +104,7 @@ export function create(
 					throw cached;
 				}
 				if (cached) {
-					return cached;
+					return URI.file(cached).toString();
 				}
 			}
 			return resolveReference(ref, baseUri, context.env.workspaceFolders);
@@ -595,6 +595,22 @@ export function create(
 							}
 						}
 					}
+				},
+
+				provideDocumentSymbols(document, token) {
+					if (document.languageId !== languageId) {
+						return;
+					}
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
+						return;
+					}
+
+					updateExtraCustomData([
+						html.getDefaultHTMLDataProvider(),
+					]);
+
+					return baseServiceInstance.provideDocumentSymbols?.(document, token);
 				},
 			};
 

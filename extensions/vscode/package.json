@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "3.2.4",
+	"version": "3.2.7",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -490,7 +490,7 @@
 		"@vue/language-server": "workspace:*",
 		"@vue/typescript-plugin": "workspace:*",
 		"laplacenoma": "latest",
-		"reactive-vscode": "^0.4.1",
+		"reactive-vscode": "^1.0.2",
 		"rolldown": "latest",
 		"vscode-ext-gen": "latest",
 		"vscode-tmlanguage-snapshot": "latest"

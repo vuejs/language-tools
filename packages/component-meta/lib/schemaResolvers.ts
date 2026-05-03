@@ -14,7 +14,8 @@ export function createSchemaResolvers(
 	ts: typeof import('typescript'),
 	typeChecker: ts.TypeChecker,
 	printer: ts.Printer,
-	language: core.Language<string>,
+	language: core.Language,
+	getSourceScript: (fileName: string) => core.SourceScript | undefined,
 	options: import('./types').MetaCheckerSchemaOptions,
 	deprecatedOptions: { noDeclarations: boolean; rawType: boolean },
 ) {
@@ -349,7 +350,7 @@ export function createSchemaResolvers(
 	}
 	function getDeclaration(declaration: ts.Declaration): Declaration | undefined {
 		const fileName = declaration.getSourceFile().fileName;
-		const sourceScript = language.scripts.get(fileName);
+		const sourceScript = getSourceScript(fileName);
 		if (sourceScript?.generated) {
 			const script = sourceScript.generated.languagePlugin.typescript?.getServiceScript(sourceScript.generated.root);
 			if (script) {
@@ -357,7 +358,7 @@ export function createSchemaResolvers(
 					for (const [start] of map.toSourceLocation(declaration.getStart())) {
 						for (const [end] of map.toSourceLocation(declaration.getEnd())) {
 							return {
-								file: sourceScript.id,
+								file: String(sourceScript.id),
 								range: [start, end],
 							};
 						}
