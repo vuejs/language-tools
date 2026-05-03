@@ -63,8 +63,8 @@ importers:
         specifier: latest
         version: 0.0.3
       reactive-vscode:
-        specifier: ^1.0.1
-        version: 1.0.1(@types/vscode@1.88.0)
+        specifier: ^1.0.2
+        version: 1.0.2(@types/vscode@1.88.0)
       rolldown:
         specifier: latest
         version: 1.0.0-rc.16
@@ -506,8 +506,8 @@ packages:
   '@oxc-project/types@0.126.0':
     resolution: {integrity: sha512-oGfVtjAgwQVVpfBrbtk4e1XDyWHRFta6BS3GWVzrF8xYBT2VGQAk39yJS/wFSMrZqoiCU4oghT3Ch0HaHGIHcQ==}
 
-  '@reactive-vscode/reactivity@1.0.1':
-    resolution: {integrity: sha512-wP27JK/xKwuSpARPH0Aj36HwbPzZywUaUKBH0JhHMmUnueYkH9ixC+ZRokmYH845XK9Yl4pnsPJWgJKA8mpcpQ==}
+  '@reactive-vscode/reactivity@1.0.2':
+    resolution: {integrity: sha512-zBrxU91zXK+zMV+RZRVS1uzUycADJPlYaEEYuvFB6MZI9DnEonsHMUf1VEGlCKD41LcgvAXug1moFydn4+DXbw==}
 
   '@rolldown/binding-android-arm64@1.0.0-rc.15':
     resolution: {integrity: sha512-YYe6aWruPZDtHNpwu7+qAHEMbQ/yRl6atqb/AhznLTnD3UY99Q1jE7ihLSahNWkF4EqRPVC4SiR4O0UkLK02tA==}
@@ -1512,8 +1512,8 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
-  reactive-vscode@1.0.1:
-    resolution: {integrity: sha512-oYDPt7cOpgMemFjrFfA6a7yT1UlqaDxWkLPzm294r4LbuVyUhka7PRAzr6unQP53rzgwbC8om1qkBWd8N9QAAg==}
+  reactive-vscode@1.0.2:
+    resolution: {integrity: sha512-RmLJ75xv/RF6c/C+9DMJd4K1h5r+QY6Ykg0MgiVxKUsJ5BAegYtT+A8cMmJKp44Wqo0whxBkFvNvfIjYvhE0XA==}
     peerDependencies:
       '@types/vscode': ^1.101.0
 
@@ -1993,7 +1993,7 @@ snapshots:
 
   '@oxc-project/types@0.126.0': {}
 
-  '@reactive-vscode/reactivity@1.0.1': {}
+  '@reactive-vscode/reactivity@1.0.2': {}
 
   '@rolldown/binding-android-arm64@1.0.0-rc.15':
     optional: true
@@ -2962,9 +2962,9 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  reactive-vscode@1.0.1(@types/vscode@1.88.0):
+  reactive-vscode@1.0.2(@types/vscode@1.88.0):
     dependencies:
-      '@reactive-vscode/reactivity': 1.0.1
+      '@reactive-vscode/reactivity': 1.0.2
       '@types/vscode': 1.88.0
 
   request-light@0.7.0: {}
