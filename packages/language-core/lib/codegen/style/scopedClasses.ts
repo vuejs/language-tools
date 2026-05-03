@@ -1,4 +1,5 @@
 import type { Code } from '../../types';
+import { names } from '../names';
 import { generateStyleScopedClassReference } from '../template/styleScopedClasses';
 import { endOfLine } from '../utils';
 import type { StyleCodegenOptions } from '.';
@@ -17,7 +18,7 @@ export function* generateStyleScopedClasses(
 	}
 	const visited = new Set<string>();
 	const deferredGenerations: Generator<Code>[] = [];
-	yield `type __VLS_StyleScopedClasses = {}`;
+	yield `type ${names.StyleScopedClasses} = {}`;
 	for (const style of scopedStyles) {
 		if (resolveStyleImports) {
 			yield* generateStyleImports(style);
