@@ -110,6 +110,7 @@ export function create(
 			return resolveReference(ref, baseUri, context.env.workspaceFolders);
 		},
 	});
+	const defaultHTMLProvider = html.getDefaultHTMLDataProvider();
 	const baseService = languageId === 'jade'
 		? createPugService({
 			useDefaultDataProvider: false,
@@ -176,33 +177,10 @@ export function create(
 							...codegen.getImportedComponents(),
 							...codegen.getSetupExposed(),
 						]);
-						// copied from https://github.com/microsoft/vscode-html-languageservice/blob/10daf45dc16b4f4228987cf7cddf3a7dbbdc7570/src/beautify/beautify-html.js#L2746-L2761
-						voidElements = [
-							'area',
-							'base',
-							'br',
-							'col',
-							'embed',
-							'hr',
-							'img',
-							'input',
-							'keygen',
-							'link',
-							'menuitem',
-							'meta',
-							'param',
-							'source',
-							'track',
-							'wbr',
-							'!doctype',
-							'?xml',
-							'basefont',
-							'isindex',
-						].filter(tag =>
-							tag
-							&& !componentNames.has(tag)
-							&& !componentNames.has(capitalize(camelize(tag)))
-						);
+						voidElements = defaultHTMLProvider.provideTags()
+							.filter(tag => tag.void)
+							.map(tag => tag.name)
+							.filter(tag => !componentNames.has(tag) && !componentNames.has(capitalize(tag)));
 					}
 					return format(document, range, options, voidElements);
 				};
@@ -219,7 +197,7 @@ export function create(
 			const transformedItems = new WeakSet<html.CompletionItem>();
 			const defaultHtmlTags = new Map<string, html.ITagData>();
 
-			for (const tag of html.getDefaultHTMLDataProvider().provideTags()) {
+			for (const tag of defaultHTMLProvider.provideTags()) {
 				defaultHtmlTags.set(tag.name, tag);
 			}
 
@@ -607,7 +585,7 @@ export function create(
 					}
 
 					updateExtraCustomData([
-						html.getDefaultHTMLDataProvider(),
+						defaultHTMLProvider,
 					]);
 
 					return baseServiceInstance.provideDocumentSymbols?.(document, token);
