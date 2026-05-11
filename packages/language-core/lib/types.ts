@@ -120,6 +120,7 @@ export type VueLanguagePlugin<T extends Record<string, any> = {}> = (
 		modules: {
 			typescript: typeof ts;
 			'@vue/compiler-dom': typeof CompilerDOM;
+			'@vue/language-core': typeof import('../index');
 		};
 		compilerOptions: ts.CompilerOptions;
 		vueCompilerOptions: VueCompilerOptions;

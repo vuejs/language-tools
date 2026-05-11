@@ -41,9 +41,6 @@ export function* forEachInterpolationNode(
 			yield* forEachInterpolationNode(child);
 		}
 	}
-	else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
-		yield* forEachInterpolationNode(node.content);
-	}
 	else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 		for (const child of node.children) {
 			if (typeof child === 'object') {
