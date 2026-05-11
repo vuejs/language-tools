@@ -161,7 +161,7 @@ importers:
         specifier: ^22.10.4
         version: 22.19.17
       '@vue/compiler-dom':
-        specifier: ^3.5.24
+        specifier: ^3.5.0
         version: 3.5.32
       '@vue/language-core':
         specifier: workspace:*
@@ -204,7 +204,7 @@ importers:
         specifier: workspace:*
         version: link:../language-core
       '@vue/shared':
-        specifier: ^3.5.24
+        specifier: ^3.5.0
         version: 3.5.32
       path-browserify:
         specifier: ^1.0.1
@@ -284,7 +284,7 @@ importers:
         specifier: workspace:*
         version: link:../language-core
       '@vue/shared':
-        specifier: ^3.5.24
+        specifier: ^3.5.0
         version: 3.5.32
       path-browserify:
         specifier: ^1.0.1
