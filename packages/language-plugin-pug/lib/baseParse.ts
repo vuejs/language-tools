@@ -239,14 +239,21 @@ export function baseParse(pugCode: string) {
 							getDocOffset(attrToken.loc.start.line, attrToken.loc.start.column),
 							getDocOffset(attrToken.loc.end.line, attrToken.loc.end.column),
 						);
-						if (typeof attrToken.val === 'string' && attrText.indexOf('=') >= 0) {
+						if (typeof attrToken.val === 'string' && attrText.includes('=')) {
 							let valText = attrToken.val;
 							if (valText.startsWith('`') && valText.endsWith('`')) {
-								if (valText.indexOf('"') === -1) {
-									valText = `"${valText.slice(1, -1)}"`;
+								const innerContent = valText.slice(1, -1);
+								if (!innerContent.includes('"')) {
+									valText = `"${innerContent}"`;
+								}
+								else if (!innerContent.includes("'")) {
+									valText = `'${innerContent}'`;
 								}
 								else {
-									valText = `'${valText.slice(1, -1)}'`;
+									// Both quote types present: convert inner single quotes to double quotes
+									// This allows using single quotes as the outer delimiter
+									// JavaScript accepts both 'str' and "str" for string literals
+									valText = `'${innerContent.replace(/'/g, '"')}'`;
 								}
 							}
 							valText = valText.replace(/ \\\n/g, '//\n');

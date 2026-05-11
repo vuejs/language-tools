@@ -40,6 +40,7 @@ export interface Requests {
 	resolveModuleName(
 		fileName: string,
 		moduleName: string,
+		allowNonExistent?: boolean,
 	): Response<ReturnType<typeof import('./resolveModuleName.js')['resolveModuleName']>>;
 	getDocumentHighlights(
 		fileName: string,

@@ -4,7 +4,7 @@ import type { Code, SfcBlock, VueCodeInformation } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
-import * as names from '../names';
+import { names } from '../names';
 import { forEachNode, getTypeScriptAST, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
 
@@ -61,6 +61,8 @@ export function* generateInterpolation(
 				start + offset,
 				type === 'errorMappingOnly'
 					? codeFeatures.verification
+					: type === 'shorthand'
+					? { ...data, __shorthandExpression: 'js' }
 					: data,
 			];
 		}
@@ -81,7 +83,7 @@ function* forEachInterpolationSegment(
 	[
 		code: string,
 		offset: number,
-		type?: 'errorMappingOnly' | 'startEnd',
+		type?: 'errorMappingOnly' | 'shorthand' | 'startEnd',
 	] | string
 > {
 	const code = prefix + originalCode + suffix;
@@ -120,7 +122,7 @@ function* forEachInterpolationSegment(
 				yield names.ctx;
 			}
 			yield `.`;
-			yield [name, offset];
+			yield [name, offset, isShorthand ? 'shorthand' : undefined];
 		}
 
 		prevEnd = offset + name.length;

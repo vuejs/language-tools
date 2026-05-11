@@ -1,4 +1,27 @@
 <!-- @inferTemplateDollarSlots true -->
+ 
+<script lang="ts" setup>
+import { ref, useSlots, type VNode } from 'vue';
+import { exactType } from '../shared';
+
+type Slots = {
+	bar?: (props: { str: string; num: number; }) => any;
+} & {
+	baz?: (props: { str: string; num: number; }) => any;
+}
+
+declare const Comp: new <T>(props: { value: T; }) => {
+	$props: typeof props;
+	$slots: {
+		foo: (props: T) => VNode[];
+	},
+};
+
+const baz = ref('baz' as const);
+
+const slots = useSlots();
+exactType(slots, {} as Slots);
+</script>
 
 <template>
 	<!-- component slots type -->
@@ -25,31 +48,7 @@
 			{{ exactType(num, {} as number) }}
 		</template>
 	</Self>
+
+	<!-- dollar slots type -->
+	{{ exactType($slots, {} as Slots) }}
 </template>
-
-<script lang="ts">
-export default {
-	name: 'Self',
-};
-
-declare const Comp: new <T>(props: { value: T; }) => {
-	$props: typeof props;
-	$slots: {
-		foo: (props: T) => VNode[];
-	},
-};
-</script>
-
-<script lang="ts" setup>
-import { ref, useSlots, type VNode } from 'vue';
-import { exactType } from '../shared';
-
-const baz = ref('baz' as const);
-
-const slots = useSlots();
-exactType(slots, {} as {
-	bar?: (props: { str: string; num: number; }) => any;
-} & {
-	baz?: (props: { str: string; num: number; }) => any;
-});
-</script>

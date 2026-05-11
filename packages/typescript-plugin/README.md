@@ -1,28 +1,81 @@
-# typescript plugin
+# @vue/typescript-plugin
 
-This is a plug-in for `tsserver` or `typescript-language-server`. It must be installed in a file-system location accessible by the language server or in the `node_modules` directory of projects being edited.
+<p>
+  <a href="https://www.npmjs.com/package/@vue/typescript-plugin"><img src="https://img.shields.io/npm/v/@vue/typescript-plugin.svg?labelColor=18181B&color=1584FC" alt="NPM version"></a>
+  <a href="https://github.com/vuejs/language-tools/blob/master/LICENSE"><img src="https://img.shields.io/github/license/vuejs/language-tools.svg?labelColor=18181B&color=1584FC" alt="License"></a>
+</p>
 
-The LSP client must be configured to explicitly enable this plug-in. This is done by passing `initializationOptions` with the appropriate [`plugins`] configuration to the language server:
+A TypeScript language service plugin that enables `tsserver` to understand `.vue` files. This plugin is used by `@vue/language-server` to collaborate with the TypeScript language service.
 
-[`plugins`]: https://github.com/typescript-language-server/typescript-language-server/blob/b224b878652438bcdd639137a6b1d1a6630129e4/docs/configuration.md?plain=1#L27-L31
+## Installation
 
-```json
-"initializationOptions":  {
-    "plugins": [
-        {
-          "name": "@vue/typescript-plugin",
-          "location": "/usr/local/lib/node_modules/@vue/language-server",
-          "languages": ["vue"],
-        },
-    ],
-  },
+```bash
+npm install @vue/typescript-plugin --save-dev
 ```
 
-The `languages` field must specify file-types for which the plug-in will be enabled. If the plug-in package is installed in the local `node_modules`, the `location` field may contain any arbitrary string, but MUST be present.
+## Configuration
 
-## Client-specific configuration
+### VSCode
 
-- For neovim, see the [details on configuring `tsserver`][nvim].
+Create `.vscode/settings.json` in your project root:
 
-[nvim]: https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#vue-support
-  
+```json
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
+}
+```
+
+### tsconfig.json
+
+```jsonc
+{
+  "compilerOptions": {
+    "plugins": [
+      { "name": "@vue/typescript-plugin" }
+    ]
+  }
+}
+```
+
+## Provided Features
+
+This plugin registers the following Vue-specific commands for `tsserver`:
+
+| Command | Description |
+| :--- | :--- |
+| `_vue:projectInfo` | Get project information |
+| `_vue:collectExtractProps` | Collect extractable props |
+| `_vue:getImportPathForFile` | Get import path for a file |
+| `_vue:getAutoImportSuggestions` | Get auto-import suggestions |
+| `_vue:resolveAutoImportCompletionEntry` | Resolve auto-import completion entry |
+| `_vue:isRefAtPosition` | Check if position is a ref |
+| `_vue:getComponentDirectives` | Get component directives |
+| `_vue:getComponentNames` | Get component name list |
+| `_vue:getComponentMeta` | Get component metadata |
+| `_vue:getComponentSlots` | Get component slots |
+| `_vue:getElementAttrs` | Get element attributes |
+| `_vue:getElementNames` | Get element name list |
+| `_vue:resolveModuleName` | Resolve module name |
+| `_vue:documentHighlights-full` | Document highlights |
+| `_vue:encodedSemanticClassifications-full` | Semantic classifications |
+| `_vue:quickinfo` | Quick info |
+
+## How it Works
+
+This plugin is created using `createLanguageServicePlugin` from `@volar/typescript`. It:
+
+1. Reads `vueCompilerOptions` from `tsconfig.json`
+2. Creates a Vue language plugin to process `.vue` files
+3. Intercepts and handles TypeScript language service requests
+4. Registers Vue-specific protocol handlers
+
+## Related Packages
+
+- [`@vue/language-core`](../language-core) - Core module
+- [`@vue/language-server`](../language-server) - Language server
+- [`vue-component-meta`](../component-meta) - Component metadata
+
+## License
+
+[MIT](https://github.com/vuejs/language-tools/blob/master/LICENSE) License

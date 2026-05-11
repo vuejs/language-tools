@@ -169,6 +169,12 @@ const plugin: VueLanguagePlugin = () => {
 						if (!tryUpdateNode(node.content)) {
 							return false;
 						}
+						if (node.content.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+							const { content } = node.content;
+							if (content.includes('{{') || content.includes('}}')) {
+								return false;
+							}
+						}
 					}
 					else if (node.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 						if (withinChangeRange(node.loc)) { // TODO: review this (slot name?)

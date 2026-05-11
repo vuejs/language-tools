@@ -1125,6 +1125,7 @@ test('Scoped Classes', async () => {
 		            "line": 5,
 		            "offset": 20,
 		          },
+		          "suffixText": ": foo",
 		        },
 		        {
 		          "end": {
@@ -1230,6 +1231,178 @@ test('Template Ref', async () => {
 		          "start": {
 		            "line": 8,
 		            "offset": 31,
+		          },
+		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+});
+
+test('Same Name Shorthand', async () => {
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<Comp :foo-bar| />
+				{{ new Comp({ fooBar }) }}
+			</template>
+
+			<script lang="ts" setup>
+			const fooBar = 1;
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "fooBar",
+		    "fullDisplayName": "__object.fooBar",
+		    "kind": "property",
+		    "kindModifiers": "",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 3,
+		        "offset": 19,
+		      },
+		      "start": {
+		        "line": 3,
+		        "offset": 12,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
+		        {
+		          "contextEnd": {
+		            "line": 8,
+		            "offset": 21,
+		          },
+		          "contextStart": {
+		            "line": 8,
+		            "offset": 4,
+		          },
+		          "end": {
+		            "line": 8,
+		            "offset": 16,
+		          },
+		          "start": {
+		            "line": 8,
+		            "offset": 10,
+		          },
+		        },
+		        {
+		          "end": {
+		            "line": 4,
+		            "offset": 25,
+		          },
+		          "prefixText": "fooBar: ",
+		          "start": {
+		            "line": 4,
+		            "offset": 19,
+		          },
+		        },
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 19,
+		          },
+		          "prefixText": "foo-bar="",
+		          "start": {
+		            "line": 3,
+		            "offset": 12,
+		          },
+		          "suffixText": """,
+		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<Comp :foo-bar />
+				{{ new Comp({ fooBar }) }}
+			</template>
+
+			<script lang="ts" setup>
+			declare function Comp(props: {
+				fooBar|: number;
+			}): void;
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "fooBar",
+		    "fullDisplayName": "__type.fooBar",
+		    "kind": "property",
+		    "kindModifiers": "declare",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 9,
+		        "offset": 11,
+		      },
+		      "start": {
+		        "line": 9,
+		        "offset": 5,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 4,
+		            "offset": 25,
+		          },
+		          "start": {
+		            "line": 4,
+		            "offset": 19,
+		          },
+		          "suffixText": ": fooBar",
+		        },
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 19,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 12,
+		          },
+		          "suffixText": "="fooBar"",
+		        },
+		        {
+		          "contextEnd": {
+		            "line": 9,
+		            "offset": 20,
+		          },
+		          "contextStart": {
+		            "line": 9,
+		            "offset": 5,
+		          },
+		          "end": {
+		            "line": 9,
+		            "offset": 11,
+		          },
+		          "start": {
+		            "line": 9,
+		            "offset": 5,
 		          },
 		        },
 		      ],

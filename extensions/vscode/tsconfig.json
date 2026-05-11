@@ -4,8 +4,7 @@
 	"compilerOptions": {
 		"outDir": "out",
 		"rootDir": "src",
-		"module": "CommonJS",
-		"moduleResolution": "Node"
+		"module": "CommonJS"
 	},
 	"references": [
 		{ "path": "../../packages/language-core/tsconfig.json" },

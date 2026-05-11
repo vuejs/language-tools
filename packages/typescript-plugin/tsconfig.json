@@ -1,9 +1,14 @@
 {
 	"extends": "../../tsconfig.base.json",
-	"include": ["*", "lib/**/*"],
-	"exclude": ["tests"],
+	"compilerOptions": {
+		"types": [
+			"node"
+		]
+	},
 	"references": [
 		{ "path": "../component-meta/tsconfig.json" },
 		{ "path": "../language-core/tsconfig.json" }
-	]
+	],
+	"include": ["*", "lib/**/*"],
+	"exclude": ["tests"]
 }

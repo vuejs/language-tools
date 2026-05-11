@@ -1,3 +1,4 @@
+import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
 
 export function resolveModuleName(
@@ -5,6 +6,7 @@ export function resolveModuleName(
 	languageServiceHost: ts.LanguageServiceHost,
 	fileName: string,
 	moduleName: string,
+	allowNonExistent?: boolean,
 ): string | undefined {
 	const compilerOptions = languageServiceHost.getCompilationSettings();
 
@@ -18,15 +20,24 @@ export function resolveModuleName(
 		},
 		{
 			fileExists(fileName) {
-				fileName = transformFileName(fileName, ext);
-				return languageServiceHost.fileExists(fileName);
+				return languageServiceHost.fileExists(
+					transformFileName(fileName, ext),
+				);
 			},
-		} as ts.ModuleResolutionHost,
+			readFile: languageServiceHost.readFile.bind(languageServiceHost),
+		},
 	);
 
-	const resolveFileName = result.resolvedModule?.resolvedFileName;
-	if (resolveFileName) {
-		return transformFileName(resolveFileName, ext);
+	const resolved = result.resolvedModule?.resolvedFileName;
+	if (resolved) {
+		return transformFileName(resolved, ext);
+	}
+
+	if (allowNonExistent && 'failedLookupLocations' in result) {
+		const alternative = (result.failedLookupLocations as string[])?.[0];
+		if (alternative) {
+			return path.join(alternative, '..', path.basename(moduleName));
+		}
 	}
 }
 

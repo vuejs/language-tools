@@ -190,6 +190,22 @@
 				"plugins": {
 					"type": "array",
 					"default": [],
+					"items": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string",
+										"markdownDescription": "Name of the plugin module to be required."
+									}
+								}
+							}
+						]
+					},
 					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
 				"experimentalModelPropName": {

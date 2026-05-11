@@ -5,8 +5,14 @@ import {
 	toSourceRanges,
 } from '@volar/typescript/lib/node/transform';
 import { getServiceScript } from '@volar/typescript/lib/node/utils';
-import { type Language, type VueCodeInformation, type VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
-import { capitalize, isGloballyAllowed } from '@vue/shared';
+import {
+	type Language,
+	tsCodegen,
+	type VueCodeInformation,
+	type VueCompilerOptions,
+	VueVirtualCode,
+} from '@vue/language-core';
+import { camelize, capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
 
 const windowsPathReg = /\\/g;
@@ -15,72 +21,62 @@ export function preprocessLanguageService(
 	languageService: ts.LanguageService,
 	getLanguage: () => Language<any> | undefined,
 ) {
-	const {
-		getQuickInfoAtPosition,
-		getSuggestionDiagnostics,
-		getCompletionsAtPosition,
-		getCodeFixesAtPosition,
-	} = languageService;
-
-	languageService.getQuickInfoAtPosition = (fileName, position, ...rests) => {
-		const result = getQuickInfoAtPosition(fileName, position, ...rests);
-		if (!result) {
-			return result;
+	const proxyCache = new Map<string | symbol, Function | undefined>();
+	const getProxyMethod = (target: ts.LanguageService, p: string | symbol) => {
+		switch (p) {
+			case 'getQuickInfoAtPosition':
+				return getQuickInfoAtPosition(target[p]);
+			case 'getCompletionsAtPosition':
+				return getCompletionsAtPosition(target[p]);
+			case 'getSuggestionDiagnostics':
+				return getSuggestionDiagnostics(target[p]);
+			case 'getCodeFixesAtPosition':
+				return getCodeFixesAtPosition(target[p]);
+			case 'findRenameLocations':
+				return findRenameLocations(target[p]);
 		}
-		const language = getLanguage();
-		if (!language) {
-			return result;
-		}
-		const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
-		if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
-			return result;
-		}
-		for (
-			const sourceOffset of toSourceOffsets(
-				sourceScript,
-				language,
-				serviceScript,
-				position,
-				() => true,
-			)
-		) {
-			const generatedOffset2 = toGeneratedOffset(
-				language,
-				serviceScript,
-				sourceScript,
-				sourceOffset[1],
-				(data: VueCodeInformation) => !!data.__importCompletion,
-			);
-			if (generatedOffset2 !== undefined) {
-				const extraInfo = getQuickInfoAtPosition(fileName, generatedOffset2, ...rests);
-				if (extraInfo) {
-					result.tags ??= [];
-					result.tags.push(...extraInfo.tags ?? []);
-				}
-			}
-		}
-		return result;
 	};
-	languageService.getSuggestionDiagnostics = (fileName, ...rests) => {
-		const result = getSuggestionDiagnostics(fileName, ...rests);
-		const language = getLanguage();
-		if (!language) {
-			return result;
-		}
-		const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
-		if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
-			return result;
-		}
-		for (const diagnostic of result) {
+
+	return new Proxy(languageService, {
+		get(target, p, receiver) {
+			if (!proxyCache.has(p)) {
+				proxyCache.set(p, getProxyMethod(target, p));
+			}
+			const proxyMethod = proxyCache.get(p);
+			if (proxyMethod) {
+				return proxyMethod;
+			}
+			return Reflect.get(target, p, receiver);
+		},
+	});
+
+	function getQuickInfoAtPosition(
+		getQuickInfoAtPosition: ts.LanguageService['getQuickInfoAtPosition'],
+	): ts.LanguageService['getQuickInfoAtPosition'] {
+		return (fileName, position, ...rests) => {
+			const result = getQuickInfoAtPosition(fileName, position, ...rests);
+			if (!result || result.tags?.length) {
+				return result;
+			}
+			const language = getLanguage();
+			if (!language) {
+				return result;
+			}
+			const [serviceScript, , sourceScript] = getServiceScript(language, fileName);
+			if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
+				return result;
+			}
+			const codegen = tsCodegen.get(sourceScript.generated.root.sfc);
+			const leadingOffset = sourceScript.snapshot.getLength();
 			for (
 				const sourceRange of toSourceRanges(
 					sourceScript,
 					language,
 					serviceScript,
-					diagnostic.start,
-					diagnostic.start + diagnostic.length,
+					result.textSpan.start,
+					result.textSpan.start + result.textSpan.length,
 					true,
-					(data: VueCodeInformation) => !!data.__importCompletion,
+					() => true,
 				)
 			) {
 				const generateRange2 = toGeneratedRange(
@@ -89,117 +85,299 @@ export function preprocessLanguageService(
 					sourceScript,
 					sourceRange[1],
 					sourceRange[2],
-					(data: VueCodeInformation) => !data.__importCompletion,
+					(data: VueCodeInformation) => !!data.__importCompletion,
 				);
 				if (generateRange2 !== undefined) {
-					diagnostic.start = generateRange2[0];
-					diagnostic.length = generateRange2[1] - generateRange2[0];
-					break;
+					const variableName = serviceScript.code.snapshot.getText(
+						generateRange2[0] - leadingOffset,
+						generateRange2[1] - leadingOffset,
+					);
+					if (codegen?.getSetupExposed().has(variableName)) {
+						const extraInfo = getQuickInfoAtPosition(fileName, generateRange2[0], ...rests);
+						result.tags = extraInfo?.tags;
+					}
 				}
 			}
-		}
-		return result;
-	};
-	languageService.getCompletionsAtPosition = (fileName, position, ...rests) => {
-		const result = getCompletionsAtPosition(fileName, position, ...rests);
-		if (!result) {
 			return result;
-		}
-		const language = getLanguage();
-		if (!language) {
-			return result;
-		}
-		const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
-		if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
-			return result;
-		}
-		for (
-			const sourceOffset of toSourceOffsets(
-				sourceScript,
-				language,
-				serviceScript,
-				position,
-				() => true,
-			)
-		) {
-			const generatedOffset2 = toGeneratedOffset(
-				language,
-				serviceScript,
-				sourceScript,
-				sourceOffset[1],
-				(data: VueCodeInformation) => !!data.__importCompletion,
-			);
-			if (generatedOffset2 !== undefined) {
-				const completion2 = getCompletionsAtPosition(fileName, generatedOffset2, ...rests);
-				if (completion2) {
-					const nameToIndex = new Map(result.entries.map((entry, index) => [entry.name, index]));
-					for (const entry of completion2.entries) {
-						if (entry.kind === 'warning') {
-							continue;
-						}
-						if (nameToIndex.has(entry.name)) {
-							const index = nameToIndex.get(entry.name)!;
-							const existingEntry = result.entries[index]!;
-							if (existingEntry.kind === 'warning') {
-								result.entries[index] = entry;
+		};
+	}
+
+	function getCompletionsAtPosition(
+		getCompletionsAtPosition: ts.LanguageService['getCompletionsAtPosition'],
+	): ts.LanguageService['getCompletionsAtPosition'] {
+		return (fileName, position, ...rests) => {
+			const result = getCompletionsAtPosition(fileName, position, ...rests);
+			if (!result) {
+				return result;
+			}
+			const language = getLanguage();
+			if (!language) {
+				return result;
+			}
+			const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
+			if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
+				return result;
+			}
+			for (
+				const sourceOffset of toSourceOffsets(
+					sourceScript,
+					language,
+					serviceScript,
+					position,
+					() => true,
+				)
+			) {
+				const generatedOffset2 = toGeneratedOffset(
+					language,
+					serviceScript,
+					sourceScript,
+					sourceOffset[1],
+					(data: VueCodeInformation) => !!data.__importCompletion,
+				);
+				if (generatedOffset2 !== undefined) {
+					const completion2 = getCompletionsAtPosition(fileName, generatedOffset2, ...rests);
+					if (completion2) {
+						const nameToIndex = new Map(result.entries.map((entry, index) => [entry.name, index]));
+						for (const entry of completion2.entries) {
+							if (entry.kind === 'warning') {
+								continue;
 							}
-						}
-						else {
-							result.entries.push(entry);
+							if (nameToIndex.has(entry.name)) {
+								const index = nameToIndex.get(entry.name)!;
+								const existingEntry = result.entries[index]!;
+								if (existingEntry.kind === 'warning') {
+									result.entries[index] = entry;
+								}
+							}
+							else {
+								result.entries.push(entry);
+							}
 						}
 					}
 				}
 			}
-		}
-		return result;
-	};
-	languageService.getCodeFixesAtPosition = (fileName, start, end, errorCodes, ...rests) => {
-		let result = getCodeFixesAtPosition(fileName, start, end, errorCodes, ...rests);
-		// Property 'xxx' does not exist on type 'yyy'.ts(2339)
-		if (!errorCodes.includes(2339)) {
 			return result;
-		}
-		const language = getLanguage();
-		if (!language) {
-			return result;
-		}
-		const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
-		if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
-			return result;
-		}
-		for (
-			const sourceRange of toSourceRanges(
-				sourceScript,
-				language,
-				serviceScript,
-				start,
-				end,
-				true,
-				() => true,
-			)
-		) {
-			const generateRange2 = toGeneratedRange(
-				language,
-				serviceScript,
-				sourceScript,
-				sourceRange[1],
-				sourceRange[2],
-				(data: VueCodeInformation) => !!data.__importCompletion,
-			);
-			if (generateRange2 !== undefined) {
-				let importFixes = getCodeFixesAtPosition(
-					fileName,
-					generateRange2[0],
-					generateRange2[1],
-					[2304], // Cannot find name 'xxx'.ts(2304)
-					...rests,
-				);
-				importFixes = importFixes.filter(fix => fix.fixName === 'import');
-				result = result.concat(importFixes);
+		};
+	}
+
+	function getSuggestionDiagnostics(
+		getSuggestionDiagnostics: ts.LanguageService['getSuggestionDiagnostics'],
+	): ts.LanguageService['getSuggestionDiagnostics'] {
+		return (fileName, ...rests) => {
+			const result = getSuggestionDiagnostics(fileName, ...rests);
+			const language = getLanguage();
+			if (!language) {
+				return result;
 			}
+			const [serviceScript, , sourceScript] = getServiceScript(language, fileName);
+			if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
+				return result;
+			}
+			const codegen = tsCodegen.get(sourceScript.generated.root.sfc);
+			const leadingOffset = sourceScript.snapshot.getLength();
+			for (const diagnostic of result) {
+				for (
+					const sourceRange of toSourceRanges(
+						sourceScript,
+						language,
+						serviceScript,
+						diagnostic.start,
+						diagnostic.start + diagnostic.length,
+						true,
+						(data: VueCodeInformation) => !!data.__importCompletion,
+					)
+				) {
+					const generateRange2 = toGeneratedRange(
+						language,
+						serviceScript,
+						sourceScript,
+						sourceRange[1],
+						sourceRange[2],
+						(data: VueCodeInformation) => !data.__importCompletion,
+					);
+					if (generateRange2 !== undefined) {
+						const variableName = serviceScript.code.snapshot.getText(
+							generateRange2[0] - leadingOffset,
+							generateRange2[1] - leadingOffset,
+						);
+						if (codegen?.getSetupExposed().has(variableName)) {
+							diagnostic.start = generateRange2[0];
+							diagnostic.length = generateRange2[1] - generateRange2[0];
+							break;
+						}
+					}
+				}
+			}
+			return result;
+		};
+	}
+
+	function getCodeFixesAtPosition(
+		getCodeFixesAtPosition: ts.LanguageService['getCodeFixesAtPosition'],
+	): ts.LanguageService['getCodeFixesAtPosition'] {
+		return (fileName, start, end, errorCodes, ...rests) => {
+			let result = getCodeFixesAtPosition(fileName, start, end, errorCodes, ...rests);
+			// Property 'xxx' does not exist on type 'yyy'.ts(2339)
+			if (!errorCodes.includes(2339)) {
+				return result;
+			}
+			const language = getLanguage();
+			if (!language) {
+				return result;
+			}
+			const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
+			if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
+				return result;
+			}
+			for (
+				const sourceRange of toSourceRanges(
+					sourceScript,
+					language,
+					serviceScript,
+					start,
+					end,
+					true,
+					() => true,
+				)
+			) {
+				const generateRange2 = toGeneratedRange(
+					language,
+					serviceScript,
+					sourceScript,
+					sourceRange[1],
+					sourceRange[2],
+					(data: VueCodeInformation) => !!data.__importCompletion,
+				);
+				if (generateRange2 !== undefined) {
+					let importFixes = getCodeFixesAtPosition(
+						fileName,
+						generateRange2[0],
+						generateRange2[1],
+						[2304], // Cannot find name 'xxx'.ts(2304)
+						...rests,
+					);
+					importFixes = importFixes.filter(fix => fix.fixName === 'import');
+					result = result.concat(importFixes);
+				}
+			}
+			return result;
+		};
+	}
+
+	function findRenameLocations(
+		findRenameLocations: ts.LanguageService['findRenameLocations'],
+	): ts.LanguageService['findRenameLocations'] {
+		return (fileName, position, ...rests) => {
+			// @ts-expect-error
+			const result = findRenameLocations(fileName, position, ...rests);
+			if (!result?.length) {
+				return result;
+			}
+
+			const language = getLanguage();
+			if (!language) {
+				return result;
+			}
+
+			const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
+			if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
+				return result;
+			}
+
+			const map = language.maps.get(serviceScript.code, sourceScript);
+			const leadingOffset = sourceScript.snapshot.getLength();
+			const isShorthand = (data: VueCodeInformation) => !!data.__shorthandExpression;
+
+			// { foo: __VLS_ctx.foo }
+			//   ^^^            ^^^
+			// if the rename is triggered directly on the shorthand,
+			// skip the entire request on the generated property name
+			if ([...map.toSourceLocation(position - leadingOffset, isShorthand)].length === 0) {
+				for (const [offset] of map.toSourceLocation(position - leadingOffset, () => true)) {
+					for (const _ of map.toGeneratedLocation(offset, isShorthand)) {
+						return;
+					}
+				}
+			}
+
+			const preferAlias = typeof rests[2] === 'boolean'
+				? rests[2]
+				: rests[2]?.providePrefixAndSuffixTextForRename ?? true;
+			if (!preferAlias) {
+				return result;
+			}
+
+			const locations = [...result];
+			outer: for (let i = 0; i < locations.length; i++) {
+				const { textSpan } = locations[i]!;
+				const generatedLeft = textSpan.start - leadingOffset;
+				const generatedRight = textSpan.start + textSpan.length - leadingOffset;
+
+				// { foo: __VLS_ctx.foo }
+				//                  ^^^
+				for (const [start, end, { data }] of map.toSourceRange(generatedLeft, generatedRight, true, isShorthand)) {
+					locations.splice(i, 1, {
+						...locations[i]!,
+						...getPrefixAndSuffixForShorthandRename(
+							(data as VueCodeInformation).__shorthandExpression!,
+							'right',
+							sourceScript.snapshot.getText(start, end),
+						),
+					});
+					continue outer;
+				}
+
+				// { foo: __VLS_ctx.foo }
+				//   ^^^
+				for (const [start, end] of map.toSourceRange(generatedLeft, generatedRight, true, () => true)) {
+					for (const [, , { data }] of map.toGeneratedRange(start, end, true, isShorthand)) {
+						locations.splice(i, 1, {
+							...locations[i]!,
+							...getPrefixAndSuffixForShorthandRename(
+								(data as VueCodeInformation).__shorthandExpression!,
+								'left',
+								sourceScript.snapshot.getText(start, end),
+							),
+						});
+						continue outer;
+					}
+				}
+			}
+			return locations;
+		};
+	}
+}
+
+function getPrefixAndSuffixForShorthandRename(
+	type: 'html' | 'js',
+	target: 'left' | 'right',
+	originalText: string,
+): Pick<ts.RenameLocation, 'prefixText' | 'suffixText'> {
+	if (type === 'html') {
+		if (target === 'left') {
+			return {
+				suffixText: `="${camelize(originalText)}"`,
+			};
 		}
-		return result;
-	};
+		else {
+			return {
+				prefixText: `${originalText}="`,
+				suffixText: `"`,
+			};
+		}
+	}
+	else {
+		if (target === 'left') {
+			return {
+				suffixText: `: ${originalText}`,
+			};
+		}
+		else {
+			return {
+				prefixText: `${originalText}: `,
+			};
+		}
+	}
 }
 
 export function postprocessLanguageService<T>(
@@ -210,7 +388,7 @@ export function postprocessLanguageService<T>(
 	asScriptId: (fileName: string) => T,
 ) {
 	const proxyCache = new Map<string | symbol, Function | undefined>();
-	const getProxyMethod = (target: ts.LanguageService, p: string | symbol): Function | undefined => {
+	const getProxyMethod = (target: ts.LanguageService, p: string | symbol) => {
 		switch (p) {
 			case 'findReferences':
 				return findReferences(target[p]);
@@ -235,9 +413,6 @@ export function postprocessLanguageService<T>(
 				return proxyMethod;
 			}
 			return Reflect.get(target, p, receiver);
-		},
-		set(target, p, value, receiver) {
-			return Reflect.set(target, p, value, receiver);
 		},
 	});
 

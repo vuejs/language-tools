@@ -12,11 +12,18 @@ export { VueEmbeddedCode };
 export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
 	strictTemplates?: boolean;
 	target?: 'auto' | 3 | 3.3 | 3.5 | 3.6 | 99 | number;
-	plugins?: string[];
+	plugins?: RawPlugin[];
 };
+
+export type RawPlugin =
+	| string
+	| Record<string, any> & {
+		name: string;
+	};
 
 export interface VueCodeInformation extends CodeInformation {
 	__importCompletion?: boolean;
+	__shorthandExpression?: 'html' | 'js';
 	__combineToken?: symbol;
 	__linkedToken?: symbol;
 }
@@ -108,15 +115,18 @@ export interface VueLanguagePluginReturn {
 	resolveEmbeddedCode?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedCode): void;
 }
 
-export type VueLanguagePlugin = (ctx: {
-	modules: {
-		'@vue/compiler-dom': typeof CompilerDOM;
-		'@vue/language-core': typeof import('../index');
-		typescript: typeof ts;
-	};
-	compilerOptions: ts.CompilerOptions;
-	vueCompilerOptions: VueCompilerOptions;
-}) => VueLanguagePluginReturn | VueLanguagePluginReturn[];
+export type VueLanguagePlugin<T extends Record<string, any> = {}> = (
+	ctx: {
+		modules: {
+			typescript: typeof ts;
+			'@vue/compiler-dom': typeof CompilerDOM;
+			'@vue/language-core': typeof import('../index');
+		};
+		compilerOptions: ts.CompilerOptions;
+		vueCompilerOptions: VueCompilerOptions;
+		config: T;
+	},
+) => VueLanguagePluginReturn | VueLanguagePluginReturn[];
 
 export interface SfcBlock {
 	name: string;

@@ -1,5 +1,112 @@
 # Changelog
 
+## 3.2.8 (2026-05-04)
+
+### language-core
+
+- **fix:** replace inline code blocks after sfc blocks processing (#6024) - Thanks to @KazariEX!
+- **fix:** support navigation for kebab-case declarations in `GlobalComponents` (#6026) - Thanks to @Gehbt!
+
+### language-service
+
+- **feat:** support TS module resolution for SCSS `@import` navigation (#6033) - Thanks to @KazariEX!
+
+### typescript-plugin
+
+- **fix:** replace language service per-method overrides with a proxy (#6035) - Thanks to @KazariEX!
+
+### vscode
+
+- **chore:** upgrade `reactive-vscode` to v1.0.1 (#6019) - Thanks to @kermanx!
+
+## 3.2.7 (2026-04-19)
+
+### component-meta
+
+- **fix:** preserve non-ASCII characters in prop default values (#6012) - Thanks to @ef81sp!
+
+### workspace
+
+- **chore:** bump typescript to 6.0.3 (#6017) - Thanks to @KazariEX!
+
+## 3.2.6 (2026-03-17)
+
+### language-core
+
+- **fix:** generate `$slots` type in template correctly with `defineSlots` (#5984) - Thanks to @KazariEX!
+- **fix:** infer only readonly component of arrays in `v-for` (#5987) - Thanks to @ascott18!
+- **fix:** avoid false positives for destructured props detection on binding property names (#5994) - Thanks to @KazariEX!
+
+### vscode
+
+- **fix:** use regex for TS extension patching to support VS Code 1.110+ (#5983) - Thanks to @ebiryu!
+
+## 3.2.5 (2026-02-21)
+
+### language-core
+
+- **fix:** re-parse template when interpolation syntax breaks (#5971) - Thanks to @Dsaquel!
+
+### language-service
+
+- **fix:** use default html data provider for document symbols (#5968) - Thanks to @liangmiQwQ!
+
+### language-plugin-pug
+
+- **fix:** handle backtick attributes containing both quote types (#5970) - Thanks to @baptistejamin!
+
+### workspace
+
+- **docs:** document all packages with consistent README structure (#5953)
+- **docs:** update tsconfig schema of `plugins` option - Thanks to @KazariEX!
+
+## 3.2.4 (2026-01-26)
+
+### language-core
+
+- **feat:** place plugin configs under `ctx.config` and support type annotation via generics (#5944) - Thanks to @KazariEX!
+
+### workspace
+
+- **chore:** publish to npm with OIDC (#5912) - Thanks to @ghiscoding!
+
+## 3.2.3 (2026-01-23)
+
+### language-core
+
+- **feat:** support configuration for language plugins (#5678) - Thanks to @KazariEX!
+- **fix:** avoid `defineModel` breaking ast in `lang="js"` (#5935) - Thanks to @KazariEX!
+- **fix:** infer object keys as string if it does not extend string (#5933) - Thanks to @serkodev!
+
+### typescript-plugin
+
+- **feat:** correct rename behavior on same name shorthands in template (#5907) - Thanks to @KazariEX!
+- **fix:** only forward quick info for original results without tags (#5938) - Thanks to @KazariEX!
+
+### vscode
+
+- **fix:** correct indent for `<style>` and `<script>` tags (#5925) - Thanks to @serkodev!
+
+## 3.2.2 (2026-01-06)
+
+### language-core
+
+- **fix:** correct code features on v-bind shorthands of special attributes - Thanks to @KazariEX!
+
+### language-plugin-pug
+
+- **feat:** accurate Pug shorthand mapping (#5906)
+- **fix:** pre-map HTML to Pug offset attribute (#5905)
+
+### language-service
+
+- **feat:** strip `=""` for boolean props completion edits (#5888) - Thanks to @KazariEX!
+- **fix:** avoid duplicate directive modifiers in completion (#5920) - Thanks to @KazariEX!
+
+### typescript-plugin
+
+- **fix:** only forward quick info and suggestion diagnostics for setup bindings (#5892) - Thanks to @KazariEX!
+
 ## 3.2.1 (2025-12-22)
 
 ### language-core
@@ -139,7 +246,7 @@
 - fix(language-core): infer `$el` type for generic components using `inferComponentDollarEl` (#5794)
 - fix(language-core): ensure `<script>` content generates before `<script setup>` (#5795)
 - fix(language-core): remove `bypassDefineComponent` hack for better JS support (#4876) (#5379)
-- fix(language-core): `Prettify<T>` caused generic props gets inferred as `unknown`  (#5667) - Thanks to @so1ve!
+- fix(language-core): `Prettify<T>` caused generic props gets inferred as `unknown` (#5667) - Thanks to @so1ve!
 - fix(vscode): handle leading `<` as operator in SFC scripts (#5801) - Thanks to @serkodev!
 - fix(vscode): patch `isTypeScriptDocument` in VSCode for `typescript.preferences.autoImportSpecifierExcludeRegexes` config support (#5364)
 - fix(language-core): ensure type consistency for optional boolean props (#5803)
