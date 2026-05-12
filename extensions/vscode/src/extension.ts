@@ -362,8 +362,8 @@ function patchTypeScriptExtension() {
 			);
 			// patch getJsTsFileBeingMoved (4 extensions)
 			text = text.replace(
-				new RegExp(String.raw`.RelativePattern\((${id}),"\*\*\/\*\.\{(${id},${id},${id},${id})\}"\)`),
-				(_, resource, ids) => `.RelativePattern(${resource},"**/*.{${ids},vue}")`,
+				new RegExp(String.raw`.RelativePattern\((${id}),"\*\*\/\*\.\{(ts,tsx,js,jsx)`),
+				(_, resource, ids) => `.RelativePattern(${resource},"**/*.{${ids},vue`,
 			);
 
 			// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
