@@ -7,6 +7,10 @@
 - **fix:** do not process inline markdown syntax in semantic-aware segments (#6038) - Thanks to @KazariEX!
 - **perf:** rewrite a subset of template node transforms (#5769) - Thanks to @KazariEX!
 
+### vscode
+
+- **fix:** trigger file rename edits when moving folders with Vue files (#6046) - Thanks to @KazariEX!
+
 ### workspace
 
 - **chore:** bump volar services to 0.0.71 (#6043) - Thanks to @TRIS-H!
