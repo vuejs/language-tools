@@ -7,6 +7,10 @@
 - **fix:** do not process inline markdown syntax in semantic-aware segments (#6038) - Thanks to @KazariEX!
 - **perf:** rewrite a subset of template node transforms (#5769) - Thanks to @KazariEX!
 
+### workspace
+
+- **chore:** bump volar services to 0.0.71 (#6043) - Thanks to @TRIS-H!
+
 ## 3.2.8 (2026-05-04)
 
 ### language-core
