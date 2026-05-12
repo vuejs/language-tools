@@ -94,7 +94,7 @@ export function createVueLanguagePlugin<T>(
 				.map<ts.FileExtensionInfo>(ext => ({
 					extension: ext.slice(1),
 					isMixedContent: true,
-					scriptKind: 7 satisfies ts.ScriptKind.Deferred,
+					scriptKind: getDeferredScriptKind(ts),
 				})),
 			getServiceScript(root) {
 				for (const code of forEachEmbeddedCode(root)) {
@@ -116,6 +116,11 @@ export function createVueLanguagePlugin<T>(
 			},
 		},
 	};
+}
+
+function getDeferredScriptKind(ts: typeof import('typescript')): ts.ScriptKind {
+	return (ts.ScriptKind as { Deferred?: ts.ScriptKind }).Deferred
+		?? ts.ScriptKind.TS;
 }
 
 export function getAllExtensions(options: VueCompilerOptions) {
