@@ -24,6 +24,6 @@
 		"@vue/language-core": "workspace:*"
 	},
 	"devDependencies": {
-		"@types/node": "^22.10.4"
+		"@types/node": "^24.1.0"
 	}
 }

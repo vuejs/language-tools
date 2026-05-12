@@ -1,11 +1,13 @@
+blockExoticSubdeps: false
+shellEmulator: true
+trustPolicy: no-downgrade
+
 packages:
   - extensions/*
   - packages/*
   - test-workspace
 
-onlyBuiltDependencies:
-  - '@vscode/vsce-sign'
-  - dprint
-  - esbuild
-  - keytar
-  - rolldown
+allowBuilds:
+  '@vscode/vsce-sign': true
+  dprint: true
+  keytar: true

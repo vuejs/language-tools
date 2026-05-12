@@ -20,7 +20,7 @@
 		"vscode-languageserver-textdocument": "^1.0.12"
 	},
 	"devDependencies": {
-		"@types/node": "^22.10.4",
+		"@types/node": "^24.1.0",
 		"@vue/compiler-dom": "^3.5.0",
 		"@vue/language-core": "workspace:*"
 	}
