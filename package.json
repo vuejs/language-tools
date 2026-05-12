@@ -14,7 +14,7 @@
 		"@tsslint/cli": "latest",
 		"@tsslint/compat-eslint": "latest",
 		"@tsslint/config": "latest",
-		"@typescript-eslint/eslint-plugin": "latest",
+		"@typescript-eslint/eslint-plugin": "~8.58.2",
 		"@typescript/native-preview": "latest",
 		"dprint": "latest",
 		"typescript": "latest",
