@@ -3,8 +3,11 @@
 	"version": "3.2.8",
 	"license": "MIT",
 	"files": [
-		"**/*.js",
-		"**/*.d.ts"
+		"bin",
+		"index.d.ts",
+		"index.js",
+		"lib/**/*.d.ts",
+		"lib/**/*.js"
 	],
 	"bin": {
 		"vue-language-server": "./bin/vue-language-server.js"

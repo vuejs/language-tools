@@ -4,8 +4,8 @@
 	"license": "MIT",
 	"files": [
 		"bin",
-		"**/*.js",
-		"**/*.d.ts"
+		"index.d.ts",
+		"index.js"
 	],
 	"sideEffects": false,
 	"repository": {

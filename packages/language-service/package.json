@@ -4,8 +4,10 @@
 	"license": "MIT",
 	"files": [
 		"data",
-		"**/*.js",
-		"**/*.d.ts"
+		"index.d.ts",
+		"index.js",
+		"lib/**/*.d.ts",
+		"lib/**/*.js"
 	],
 	"sideEffects": false,
 	"repository": {
