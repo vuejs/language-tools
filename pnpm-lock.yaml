@@ -255,6 +255,9 @@ importers:
       vscode-css-languageservice:
         specifier: ^6.3.10
         version: 6.3.10
+      vue-component-meta:
+        specifier: workspace:*
+        version: link:../component-meta
 
   packages/tsc:
     dependencies:
@@ -296,6 +299,9 @@ importers:
       '@types/path-browserify':
         specifier: ^1.0.3
         version: 1.0.3
+      '@vue/compiler-dom':
+        specifier: ^3.5.0
+        version: 3.5.34
 
   test-workspace:
     devDependencies:

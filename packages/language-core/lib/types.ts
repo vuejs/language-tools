@@ -23,6 +23,7 @@ export type RawPlugin =
 
 export interface VueCodeInformation extends CodeInformation {
 	__importCompletion?: boolean;
+	__propsCompletion?: boolean;
 	__shorthandExpression?: 'html' | 'js';
 	__combineToken?: symbol;
 	__linkedToken?: symbol;

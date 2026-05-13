@@ -20,13 +20,17 @@ export interface Requests {
 	getComponentDirectives(
 		fileName: string,
 	): Response<ReturnType<typeof import('./getComponentDirectives.js')['getComponentDirectives']>>;
-	getComponentNames(
-		fileName: string,
-	): Response<ReturnType<typeof import('./getComponentNames.js')['getComponentNames']>>;
 	getComponentMeta(
 		fileName: string,
 		tag: string,
 	): Response<ReturnType<typeof import('./getComponentMeta.js')['getComponentMeta']>>;
+	getComponentNames(
+		fileName: string,
+	): Response<ReturnType<typeof import('./getComponentNames.js')['getComponentNames']>>;
+	getComponentProps(
+		fileName: string,
+		position: number,
+	): Response<ReturnType<typeof import('./getComponentProps.js')['getComponentProps']>>;
 	getComponentSlots(
 		fileName: string,
 	): Response<ReturnType<typeof import('./getComponentSlots.js')['getComponentSlots']>>;
