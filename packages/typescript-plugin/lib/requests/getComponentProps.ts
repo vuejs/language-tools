@@ -45,8 +45,9 @@ export function getComponentProps(
 		return;
 	}
 
-	const position2 = node.props.some(prop => position >= prop.loc.start.offset && position <= prop.loc.end.offset)
-		? toGeneratedOffset(
+	let position2: number | undefined;
+	if (node.props.some(prop => position >= prop.loc.start.offset && position <= prop.loc.end.offset)) {
+		position2 = toGeneratedOffset(
 			language,
 			serviceScript,
 			sourceScript,
@@ -54,15 +55,16 @@ export function getComponentProps(
 				// <Comp :foo-| /> -> { "foo"|: ... }
 				sfc.template.content[position - 1] === '-' ? 1 : 0
 			),
-			(data: VueCodeInformation) => !!data.semantic && !data.__shorthandExpression,
-		)
-		: toGeneratedOffset(
-			language,
-			serviceScript,
-			sourceScript,
-			sfc.template.startTagEnd + node.loc.start.offset,
 			(data: VueCodeInformation) => !!data.__propsCompletion,
 		);
+	}
+	position2 ??= toGeneratedOffset(
+		language,
+		serviceScript,
+		sourceScript,
+		sfc.template.startTagEnd + node.loc.start.offset,
+		(data: VueCodeInformation) => !!data.__propsCompletion,
+	);
 	if (!position2) {
 		return;
 	}

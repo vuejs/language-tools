@@ -320,6 +320,7 @@ function getPropsCodeFeatures(strictPropsCheck: boolean): VueCodeInformation {
 		...strictPropsCheck
 			? codeFeatures.verification
 			: codeFeatures.doNotReportTs2353AndTs2561,
+		__propsCompletion: true,
 	};
 }
 
