@@ -84,7 +84,9 @@ export function getComponentProps(
 			entry.data,
 		);
 		const info: ComponentPropInfo = {
-			name: entry.name,
+			name: entry.name.startsWith('"') && entry.name.endsWith('"')
+				? entry.name.slice(1, -1)
+				: entry.name,
 			description: ts.displayPartsToString(details?.documentation) + (
 				details?.tags
 					? '\n\n' + details.tags.map(tag => `*@${tag.name}* — ${ts.displayPartsToString(tag.text)}`).join('\n')
