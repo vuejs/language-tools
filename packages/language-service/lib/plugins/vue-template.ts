@@ -51,11 +51,6 @@ const DIRECTIVE_V_FOR_NAME = 'v-for';
 // Templates
 const V_FOR_SNIPPET = '="${1:value} in ${2:source}"';
 
-interface TagInfo {
-	attrs: { name: string; type: string }[];
-	props: ComponentPropInfo[];
-}
-
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
 
@@ -634,7 +629,8 @@ export function create(
 				let values: string[] | undefined;
 
 				const tasks: Promise<void>[] = [];
-				const tagDataMap = new Map<string, TagInfo>();
+				const tagToAttrs = new Map<string, { name: string; type: string }[]>();
+				const positionToProps = new Map<number, ComponentPropInfo[]>();
 
 				updateExtraCustomData([
 					{
@@ -685,8 +681,9 @@ export function create(
 							return tags;
 						},
 						provideAttributes: tag => {
+							const attrs = getAttrs(tag);
+							const props = getProps(position);
 							const directives = getDirectives();
-							const { attrs, props } = getTagData(tag, position);
 							const attributes: html.IAttributeData[] = [];
 
 							let addPlainAttrs = false;
@@ -813,7 +810,7 @@ export function create(
 							return attributes;
 						},
 						provideValues: (tag, attr) => {
-							return getAttrValues(tag, attr).map(value => ({ name: value }));
+							return getValues(tag, attr).map(value => ({ name: value }));
 						},
 					},
 					{
@@ -838,33 +835,24 @@ export function create(
 					},
 				};
 
-				function getAttrValues(tag: string, attr: string) {
-					if (!values) {
-						values = [];
+				function getAttrs(tag: string) {
+					return tagToAttrs.get(tag) ?? (
 						tasks.push((async () => {
-							if (tag === 'slot' && attr === 'name') {
-								values = await tsserver.getComponentSlots(root.fileName) ?? [];
-							}
+							const attrs = await tsserver.getElementAttrs(root.fileName, tag) ?? [];
+							tagToAttrs.set(tag, attrs);
 							version++;
-						})());
-					}
-					return values;
+						})()), []
+					);
 				}
 
-				function getTagData(tag: string, position: number) {
-					let data = tagDataMap.get(tag);
-					if (!data) {
-						data = { attrs: [], props: [] };
-						tagDataMap.set(tag, data);
+				function getProps(position: number) {
+					return positionToProps.get(position) ?? (
 						tasks.push((async () => {
-							tagDataMap.set(tag, {
-								attrs: await tsserver.getElementAttrs(root.fileName, tag) ?? [],
-								props: await tsserver.getComponentProps(root.fileName, position) ?? [],
-							});
+							const props = await tsserver.getComponentProps(root.fileName, position);
+							positionToProps.set(position, props ?? []);
 							version++;
-						})());
-					}
-					return data;
+						})()), []
+					);
 				}
 
 				function getDirectives() {
@@ -896,6 +884,19 @@ export function create(
 						components,
 						elements,
 					};
+				}
+
+				function getValues(tag: string, attr: string) {
+					if (!values) {
+						values = [];
+						tasks.push((async () => {
+							if (tag === 'slot' && attr === 'name') {
+								values = await tsserver.getComponentSlots(root.fileName) ?? [];
+							}
+							version++;
+						})());
+					}
+					return values;
 				}
 			}
 
