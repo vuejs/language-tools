@@ -1,6 +1,8 @@
 blockExoticSubdeps: false
 shellEmulator: true
 trustPolicy: no-downgrade
+trustPolicyExclude:
+  - semver@5.7.2
 
 packages:
   - extensions/*
