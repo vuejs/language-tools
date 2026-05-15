@@ -2,8 +2,6 @@ import {
 	type CompletionItemKind,
 	type CompletionItemTag,
 	type CompletionList,
-	type Disposable,
-	type LanguageServiceContext,
 	type LanguageServicePlugin,
 	type TextDocument,
 	transformCompletionItem,
@@ -23,7 +21,7 @@ import { create as createHtmlService, resolveReference } from 'volar-service-htm
 import { create as createPugService } from 'volar-service-pug';
 import { applyCompletionEntryDetails, convertCompletionInfo } from 'volar-service-typescript/lib/utils/lspConverters';
 import * as html from 'vscode-html-languageservice';
-import { URI } from 'vscode-uri';
+import { URI, Utils } from 'vscode-uri';
 import type { PropertyMeta } from 'vue-component-meta';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
@@ -48,6 +46,7 @@ const DIRECTIVE_V_FOR_NAME = 'v-for';
 // Templates
 const V_FOR_SNIPPET = '="${1:value} in ${2:source}"';
 
+let customData: html.IHTMLDataProvider[];
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
 
@@ -62,65 +61,60 @@ export function create(
 		| undefined;
 
 	const onDidChangeCustomDataListeners = new Set<() => void>();
-	const onDidChangeCustomData = (listener: () => void): Disposable => {
-		onDidChangeCustomDataListeners.add(listener);
-		return {
-			dispose() {
-				onDidChangeCustomDataListeners.delete(listener);
-			},
-		};
-	};
-	const getDocumentContext: (context: LanguageServiceContext) => html.DocumentContext = context => ({
-		resolveReference(ref, base) {
-			let baseUri = URI.parse(base);
-			const decoded = context.decodeEmbeddedDocumentUri(baseUri);
-			if (decoded) {
-				baseUri = decoded[0];
-			}
-			if (
-				modulePathCache
-				&& baseUri.scheme === 'file'
-				&& !ref.startsWith('./')
-				&& !ref.startsWith('../')
-			) {
-				const map = modulePathCache;
-				if (!map.has(ref)) {
-					const fileName = baseUri.fsPath.replace(/\\/g, '/');
-					const promise = tsserver.resolveModuleName(fileName, ref);
-					map.set(ref, promise);
-					if (promise instanceof Promise) {
-						promise.then(res => map.set(ref, res));
+	const serviceOptions: Parameters<typeof createHtmlService>[0] = {
+		useDefaultDataProvider: false,
+		getDocumentContext: context => ({
+			resolveReference(ref, base) {
+				let baseUri = URI.parse(base);
+				const decoded = context.decodeEmbeddedDocumentUri(baseUri);
+				if (decoded) {
+					baseUri = decoded[0];
+				}
+				if (
+					modulePathCache
+					&& baseUri.scheme === 'file'
+					&& !ref.startsWith('./')
+					&& !ref.startsWith('../')
+				) {
+					const map = modulePathCache;
+					if (!map.has(ref)) {
+						const fileName = baseUri.fsPath.replace(/\\/g, '/');
+						const promise = tsserver.resolveModuleName(fileName, ref);
+						map.set(ref, promise);
+						if (promise instanceof Promise) {
+							promise.then(res => map.set(ref, res));
+						}
+					}
+					const cached = modulePathCache.get(ref);
+					if (cached instanceof Promise) {
+						throw cached;
+					}
+					if (cached) {
+						return URI.file(cached).toString();
 					}
 				}
-				const cached = modulePathCache.get(ref);
-				if (cached instanceof Promise) {
-					throw cached;
-				}
-				if (cached) {
-					return URI.file(cached).toString();
-				}
-			}
-			return resolveReference(ref, baseUri, context.env.workspaceFolders);
+				return resolveReference(ref, baseUri, context.env.workspaceFolders);
+			},
+		}),
+		getCustomData() {
+			return customData?.length ? htmlData.concat(customData) : htmlData;
 		},
-	});
-	const defaultHTMLProvider = html.getDefaultHTMLDataProvider();
+		onDidChangeCustomData(listener) {
+			onDidChangeCustomDataListeners.add(listener);
+			return {
+				dispose() {
+					onDidChangeCustomDataListeners.delete(listener);
+				},
+			};
+		},
+	};
+
+	const defaultDataProvider = html.getDefaultHTMLDataProvider();
 	const baseService = languageId === 'jade'
-		? createPugService({
-			useDefaultDataProvider: false,
-			getDocumentContext,
-			getCustomData() {
-				return htmlData;
-			},
-			onDidChangeCustomData,
-		})
+		? createPugService(serviceOptions)
 		: createHtmlService({
+			...serviceOptions,
 			documentSelector: ['html', 'markdown'],
-			useDefaultDataProvider: false,
-			getDocumentContext,
-			getCustomData() {
-				return htmlData;
-			},
-			onDidChangeCustomData,
 		});
 
 	return {
@@ -170,7 +164,7 @@ export function create(
 							...codegen.getImportedComponents(),
 							...codegen.getSetupExposed(),
 						]);
-						voidElements = defaultHTMLProvider.provideTags()
+						voidElements = defaultDataProvider.provideTags()
 							.filter(tag => tag.void)
 							.map(tag => tag.name)
 							.filter(tag => !componentNames.has(tag) && !componentNames.has(capitalize(tag)));
@@ -188,10 +182,10 @@ export function create(
 			const vBindModifiers = extractDirectiveModifiers(builtInData.globalAttributes?.find(x => x.name === 'v-bind'));
 			const vModelModifiers = extractModelModifiers(modelData.globalAttributes);
 			const transformedItems = new WeakSet<html.CompletionItem>();
-			const defaultHtmlTags = new Map<string, html.ITagData>();
+			const defaultTags = new Map<string, html.ITagData>();
 
-			for (const tag of defaultHTMLProvider.provideTags()) {
-				defaultHtmlTags.set(tag.name, tag);
+			for (const tag of defaultDataProvider.provideTags()) {
+				defaultTags.set(tag.name, tag);
 			}
 
 			let lastCompletionDocument: TextDocument | undefined;
@@ -579,8 +573,8 @@ export function create(
 						return;
 					}
 
-					updateExtraCustomData([
-						defaultHTMLProvider,
+					updateHtmlData([
+						defaultDataProvider,
 					]);
 
 					return baseServiceInstance.provideDocumentSymbols?.(document, token);
@@ -619,6 +613,8 @@ export function create(
 					getAttrNameCasing(context, sourceDocumentUri),
 				]);
 
+				customData ??= await getCustomData();
+
 				let version = 0;
 				let components: string[] | undefined;
 				let elements: string[] | undefined;
@@ -629,7 +625,7 @@ export function create(
 				const tagToAttrs = new Map<string, { name: string; type: string }[]>();
 				const positionToProps = new Map<number, ComponentPropInfo[]>();
 
-				updateExtraCustomData([
+				updateHtmlData([
 					{
 						getId: () => 'vue-template',
 						isApplicable: () => true,
@@ -666,7 +662,7 @@ export function create(
 							const added = new Set<string>(tags.map(t => t.name));
 							for (const name of names) {
 								if (!added.has(name)) {
-									const defaultTag = defaultHtmlTags.get(name);
+									const defaultTag = defaultTags.get(name);
 									tags.push({
 										...defaultTag,
 										name,
@@ -754,10 +750,6 @@ export function create(
 								}
 								else {
 									const labelName = attrNameCasing === AttrNameCasing.Camel ? propName : hyphenateAttr(propName);
-									const propInfo = props.find(prop => {
-										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
-										return name === labelName;
-									});
 
 									if (addPlainAttrs) {
 										attributes.push({
@@ -897,6 +889,25 @@ export function create(
 				}
 			}
 
+			async function getCustomData() {
+				const paths: string[] = await context.env.getConfiguration?.('html.customData') ?? [];
+				const customData: html.IHTMLDataProvider[] = [];
+				for (const path of paths) {
+					for (const workspaceFolder of context.env.workspaceFolders) {
+						const uri = Utils.resolvePath(workspaceFolder, path);
+						const text = await context.env.fs?.readFile(uri) ?? '';
+						try {
+							const data = JSON.parse(text);
+							customData.push(html.newHTMLDataProvider(path, data));
+						}
+						catch (error) {
+							console.error(error);
+						}
+					}
+				}
+				return customData;
+			}
+
 			function addDirectiveModifiers(
 				list: CompletionList,
 				item: html.CompletionItem,
@@ -950,7 +961,7 @@ export function create(
 		},
 	};
 
-	function updateExtraCustomData(newData: html.IHTMLDataProvider[]) {
+	function updateHtmlData(newData: html.IHTMLDataProvider[]) {
 		htmlData = newData;
 		onDidChangeCustomDataListeners.forEach(l => l());
 	}
