@@ -2,8 +2,6 @@ import {
 	type CompletionItemKind,
 	type CompletionItemTag,
 	type CompletionList,
-	type Disposable,
-	type LanguageServiceContext,
 	type LanguageServicePlugin,
 	type TextDocument,
 	transformCompletionItem,
@@ -23,13 +21,8 @@ import { create as createHtmlService, resolveReference } from 'volar-service-htm
 import { create as createPugService } from 'volar-service-pug';
 import { applyCompletionEntryDetails, convertCompletionInfo } from 'volar-service-typescript/lib/utils/lspConverters';
 import * as html from 'vscode-html-languageservice';
-<<<<<<< master
 import { URI, Utils } from 'vscode-uri';
-import type { ComponentMeta, PropertyMeta } from '../../../component-meta';
-=======
-import { URI } from 'vscode-uri';
 import type { PropertyMeta } from 'vue-component-meta';
->>>>>>> master
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
@@ -53,15 +46,7 @@ const DIRECTIVE_V_FOR_NAME = 'v-for';
 // Templates
 const V_FOR_SNIPPET = '="${1:value} in ${2:source}"';
 
-<<<<<<< master
-interface TagInfo {
-	attrs: { name: string; type: string }[];
-	meta: ComponentMeta | undefined | null;
-}
-
-let htmlCustomData: html.IHTMLDataProvider[] | undefined = undefined;
-=======
->>>>>>> master
+let customData: html.IHTMLDataProvider[];
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
 
@@ -76,65 +61,60 @@ export function create(
 		| undefined;
 
 	const onDidChangeCustomDataListeners = new Set<() => void>();
-	const onDidChangeCustomData = (listener: () => void): Disposable => {
-		onDidChangeCustomDataListeners.add(listener);
-		return {
-			dispose() {
-				onDidChangeCustomDataListeners.delete(listener);
-			},
-		};
-	};
-	const getDocumentContext: (context: LanguageServiceContext) => html.DocumentContext = context => ({
-		resolveReference(ref, base) {
-			let baseUri = URI.parse(base);
-			const decoded = context.decodeEmbeddedDocumentUri(baseUri);
-			if (decoded) {
-				baseUri = decoded[0];
-			}
-			if (
-				modulePathCache
-				&& baseUri.scheme === 'file'
-				&& !ref.startsWith('./')
-				&& !ref.startsWith('../')
-			) {
-				const map = modulePathCache;
-				if (!map.has(ref)) {
-					const fileName = baseUri.fsPath.replace(/\\/g, '/');
-					const promise = tsserver.resolveModuleName(fileName, ref);
-					map.set(ref, promise);
-					if (promise instanceof Promise) {
-						promise.then(res => map.set(ref, res));
+	const serviceOptions: Parameters<typeof createHtmlService>[0] = {
+		useDefaultDataProvider: false,
+		getDocumentContext: context => ({
+			resolveReference(ref, base) {
+				let baseUri = URI.parse(base);
+				const decoded = context.decodeEmbeddedDocumentUri(baseUri);
+				if (decoded) {
+					baseUri = decoded[0];
+				}
+				if (
+					modulePathCache
+					&& baseUri.scheme === 'file'
+					&& !ref.startsWith('./')
+					&& !ref.startsWith('../')
+				) {
+					const map = modulePathCache;
+					if (!map.has(ref)) {
+						const fileName = baseUri.fsPath.replace(/\\/g, '/');
+						const promise = tsserver.resolveModuleName(fileName, ref);
+						map.set(ref, promise);
+						if (promise instanceof Promise) {
+							promise.then(res => map.set(ref, res));
+						}
+					}
+					const cached = modulePathCache.get(ref);
+					if (cached instanceof Promise) {
+						throw cached;
+					}
+					if (cached) {
+						return URI.file(cached).toString();
 					}
 				}
-				const cached = modulePathCache.get(ref);
-				if (cached instanceof Promise) {
-					throw cached;
-				}
-				if (cached) {
-					return URI.file(cached).toString();
-				}
-			}
-			return resolveReference(ref, baseUri, context.env.workspaceFolders);
+				return resolveReference(ref, baseUri, context.env.workspaceFolders);
+			},
+		}),
+		getCustomData() {
+			return customData?.length ? htmlData.concat(customData) : htmlData;
 		},
-	});
-	const defaultHTMLProvider = html.getDefaultHTMLDataProvider();
+		onDidChangeCustomData(listener) {
+			onDidChangeCustomDataListeners.add(listener);
+			return {
+				dispose() {
+					onDidChangeCustomDataListeners.delete(listener);
+				},
+			};
+		},
+	};
+
+	const defaultDataProvider = html.getDefaultHTMLDataProvider();
 	const baseService = languageId === 'jade'
-		? createPugService({
-			useDefaultDataProvider: false,
-			getDocumentContext,
-			getCustomData() {
-				return htmlCustomData ? [...htmlCustomData, ...htmlData] : htmlData;
-			},
-			onDidChangeCustomData,
-		})
+		? createPugService(serviceOptions)
 		: createHtmlService({
+			...serviceOptions,
 			documentSelector: ['html', 'markdown'],
-			useDefaultDataProvider: false,
-			getDocumentContext,
-			getCustomData() {
-				return htmlCustomData ? [...htmlCustomData, ...htmlData] : htmlData;
-			},
-			onDidChangeCustomData,
 		});
 
 	return {
@@ -184,7 +164,7 @@ export function create(
 							...codegen.getImportedComponents(),
 							...codegen.getSetupExposed(),
 						]);
-						voidElements = defaultHTMLProvider.provideTags()
+						voidElements = defaultDataProvider.provideTags()
 							.filter(tag => tag.void)
 							.map(tag => tag.name)
 							.filter(tag => !componentNames.has(tag) && !componentNames.has(capitalize(tag)));
@@ -195,16 +175,17 @@ export function create(
 
 			builtInData ??= loadTemplateData(context.env.locale ?? 'en');
 			modelData ??= loadModelModifiersData(context.env.locale ?? 'en');
+
 			// https://vuejs.org/api/built-in-directives.html#v-on
 			const vOnModifiers = extractDirectiveModifiers(builtInData.globalAttributes?.find(x => x.name === 'v-on'));
 			// https://vuejs.org/api/built-in-directives.html#v-bind
 			const vBindModifiers = extractDirectiveModifiers(builtInData.globalAttributes?.find(x => x.name === 'v-bind'));
 			const vModelModifiers = extractModelModifiers(modelData.globalAttributes);
 			const transformedItems = new WeakSet<html.CompletionItem>();
-			const defaultHtmlTags = new Map<string, html.ITagData>();
+			const defaultTags = new Map<string, html.ITagData>();
 
-			for (const tag of defaultHTMLProvider.provideTags()) {
-				defaultHtmlTags.set(tag.name, tag);
+			for (const tag of defaultDataProvider.provideTags()) {
+				defaultTags.set(tag.name, tag);
 			}
 
 			let lastCompletionDocument: TextDocument | undefined;
@@ -592,8 +573,8 @@ export function create(
 						return;
 					}
 
-					updateExtraCustomData([
-						defaultHTMLProvider,
+					updateHtmlData([
+						defaultDataProvider,
 					]);
 
 					return baseServiceInstance.provideDocumentSymbols?.(document, token);
@@ -620,29 +601,6 @@ export function create(
 				return { result, ...lastSync };
 			}
 
-			async function loadHtmlCustomData(): Promise<html.IHTMLDataProvider[]> {
-				if (htmlCustomData) {
-					return htmlCustomData;
-				}
-				const newData: html.IHTMLDataProvider[] = [];
-				const customData: string[] = await context.env.getConfiguration?.('html.customData') ?? [];
-				const workspaceFolder = context.env.workspaceFolders?.[0] ?? undefined;
-				for (const customDataPath of customData) {
-					try {
-						const uri = Utils.resolvePath(URI.parse(workspaceFolder?.toString() ?? '.'), customDataPath);
-						const json = await context.env.fs?.readFile?.(uri, 'utf-8');
-						if (json) {
-							const data = JSON.parse(json) as html.HTMLDataV1;
-							newData.push(html.newHTMLDataProvider(customDataPath, data));
-						}
-					}
-					catch (e) {
-						continue;
-					}
-				}
-				return newData;
-			}
-
 			async function provideHtmlData(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
@@ -655,6 +613,8 @@ export function create(
 					getAttrNameCasing(context, sourceDocumentUri),
 				]);
 
+				customData ??= await getCustomData();
+
 				let version = 0;
 				let components: string[] | undefined;
 				let elements: string[] | undefined;
@@ -662,15 +622,10 @@ export function create(
 				let values: string[] | undefined;
 
 				const tasks: Promise<void>[] = [];
-<<<<<<< master
-				const tagDataMap = new Map<string, TagInfo>();
-				htmlCustomData = await loadHtmlCustomData();
-=======
 				const tagToAttrs = new Map<string, { name: string; type: string }[]>();
 				const positionToProps = new Map<number, ComponentPropInfo[]>();
->>>>>>> master
 
-				updateExtraCustomData([
+				updateHtmlData([
 					{
 						getId: () => 'vue-template',
 						isApplicable: () => true,
@@ -678,14 +633,7 @@ export function create(
 							const { components, elements } = getComponentsAndElements();
 							const codegen = tsCodegen.get(root.sfc);
 							const names = new Set<string>();
-							const tags: html.ITagData[] = [];
-
-							for (const tag of builtInData?.tags ?? []) {
-								tags.push({
-									...tag,
-									name: tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name,
-								});
-							}
+							const tags = new Map<string, html.ITagData>();
 
 							for (const tag of components) {
 								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag) : tag);
@@ -704,19 +652,23 @@ export function create(
 								}
 							}
 
-							const added = new Set<string>(tags.map(t => t.name));
 							for (const name of names) {
-								if (!added.has(name)) {
-									const defaultTag = defaultHtmlTags.get(name);
-									tags.push({
-										...defaultTag,
-										name,
-										attributes: [],
-									});
-								}
+								tags.set(name, {
+									...defaultTags.get(name),
+									name,
+									attributes: [],
+								});
 							}
 
-							return tags;
+							for (const tag of builtInData?.tags ?? []) {
+								const name = tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name;
+								tags.set(name, {
+									...tag,
+									name,
+								});
+							}
+
+							return [...tags.values()];
 						},
 						provideAttributes: tag => {
 							const attrs = getAttrs(tag);
@@ -795,10 +747,6 @@ export function create(
 								}
 								else {
 									const labelName = attrNameCasing === AttrNameCasing.Camel ? propName : hyphenateAttr(propName);
-									const propInfo = props.find(prop => {
-										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
-										return name === labelName;
-									});
 
 									if (addPlainAttrs) {
 										attributes.push({
@@ -938,6 +886,25 @@ export function create(
 				}
 			}
 
+			async function getCustomData() {
+				const paths: string[] = await context.env.getConfiguration?.('html.customData') ?? [];
+				const customData: html.IHTMLDataProvider[] = [];
+				for (const path of paths) {
+					for (const workspaceFolder of context.env.workspaceFolders) {
+						const uri = Utils.resolvePath(workspaceFolder, path);
+						const text = await context.env.fs?.readFile(uri) ?? '';
+						try {
+							const data = JSON.parse(text);
+							customData.push(html.newHTMLDataProvider(path, data));
+						}
+						catch (error) {
+							console.error(error);
+						}
+					}
+				}
+				return customData;
+			}
+
 			function addDirectiveModifiers(
 				list: CompletionList,
 				item: html.CompletionItem,
@@ -991,7 +958,7 @@ export function create(
 		},
 	};
 
-	function updateExtraCustomData(newData: html.IHTMLDataProvider[]) {
+	function updateHtmlData(newData: html.IHTMLDataProvider[]) {
 		htmlData = newData;
 		onDidChangeCustomDataListeners.forEach(l => l());
 	}
