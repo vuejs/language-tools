@@ -1,5 +1,5 @@
 import type * as ts from 'typescript';
-import type { VueCompletionData } from '../common.js';
+import type { VueCompletionData } from '../common';
 
 type Response<T> = T | null | undefined | Promise<T | null | undefined>;
 

@@ -1,4 +1,4 @@
-import { transformFileTextChanges } from '@volar/typescript/lib/node/transform.js';
+import { transformFileTextChanges } from '@volar/typescript/lib/node/transform';
 import { createLanguageServicePlugin } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
 import * as core from '@vue/language-core';
 import type * as ts from 'typescript';

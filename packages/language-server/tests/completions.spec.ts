@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import type * as ts from 'typescript';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
-import { getLanguageServer, testWorkspacePath } from './server.js';
+import { getLanguageServer, testWorkspacePath } from './server';
 
 test('Vue tags', async () => {
 	expect(

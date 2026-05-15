@@ -21,10 +21,7 @@ import { camelize, capitalize } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService, resolveReference } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
-import {
-	applyCompletionEntryDetails,
-	convertCompletionInfo,
-} from 'volar-service-typescript/lib/utils/lspConverters.js';
+import { applyCompletionEntryDetails, convertCompletionInfo } from 'volar-service-typescript/lib/utils/lspConverters';
 import * as html from 'vscode-html-languageservice';
 import { URI } from 'vscode-uri';
 import type { PropertyMeta } from 'vue-component-meta';
