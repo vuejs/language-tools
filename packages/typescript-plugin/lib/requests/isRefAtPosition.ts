@@ -1,36 +1,25 @@
 /// <reference types="@volar/typescript" />
 
+import { toGeneratedOffset } from '@volar/typescript/lib/node/transform';
 import { isCompletionEnabled, type Language, type SourceScript, type VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
+import { forEachTouchingNode } from './utils';
 
 export function isRefAtPosition(
 	ts: typeof import('typescript'),
 	language: Language,
 	program: ts.Program,
-	sourceScript: SourceScript,
+	sourceScript: SourceScript<string>,
 	virtualCode: VueVirtualCode,
 	position: number,
-	leadingOffset: number = 0,
 ): boolean {
 	const serviceScript = sourceScript.generated!.languagePlugin.typescript?.getServiceScript(virtualCode);
 	if (!serviceScript) {
 		return false;
 	}
 
-	let mapped = false;
-	for (const [_sourceScript, map] of language.maps.forEach(serviceScript.code)) {
-		for (const [position2, mapping] of map.toGeneratedLocation(position)) {
-			if (isCompletionEnabled(mapping.data)) {
-				position = position2;
-				mapped = true;
-				break;
-			}
-		}
-		if (mapped) {
-			break;
-		}
-	}
-	if (!mapped) {
+	const position2 = toGeneratedOffset(language, serviceScript, sourceScript, position, isCompletionEnabled);
+	if (!position2) {
 		return false;
 	}
 
@@ -39,7 +28,13 @@ export function isRefAtPosition(
 		return false;
 	}
 
-	const node = findPositionIdentifier(sourceFile, sourceFile, position + leadingOffset);
+	let node: ts.Node | undefined;
+	for (const child of forEachTouchingNode(ts, sourceFile, position2)) {
+		if (ts.isIdentifier(child)) {
+			node = child;
+			break;
+		}
+	}
 	if (!node) {
 		return false;
 	}
@@ -56,21 +51,4 @@ export function isRefAtPosition(
 			&& decl.name.expression.text === 'RefSymbol'
 		)
 	);
-
-	function findPositionIdentifier(sourceFile: ts.SourceFile, node: ts.Node, offset: number) {
-		let result: ts.Node | undefined;
-
-		node.forEachChild(child => {
-			if (!result) {
-				if (child.end === offset && ts.isIdentifier(child)) {
-					result = child;
-				}
-				else if (child.end >= offset && child.getStart(sourceFile) < offset) {
-					result = findPositionIdentifier(sourceFile, child, offset);
-				}
-			}
-		});
-
-		return result;
-	}
 }

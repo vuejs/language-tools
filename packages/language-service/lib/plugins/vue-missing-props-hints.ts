@@ -6,13 +6,13 @@ import type {
 	TextDocument,
 } from '@volar/language-service';
 import { hyphenateAttr, hyphenateTag } from '@vue/language-core';
+import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import * as html from 'vscode-html-languageservice';
-import type { PropertyMeta } from '../../../component-meta';
 import { AttrNameCasing, getAttrNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
 
 export function create(
-	{ getComponentNames, getElementNames, getComponentMeta }: import('@vue/typescript-plugin/lib/requests').Requests,
+	{ getComponentNames, getComponentProps, getElementNames }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-missing-props-hints',
@@ -42,7 +42,6 @@ export function create(
 					const result: InlayHint[] = [];
 					const attrNameCasing = await getAttrNameCasing(context, info.script.id);
 					const components = await getComponentNames(info.root.fileName) ?? [];
-					const componentProps = new Map<string, PropertyMeta[]>();
 
 					intrinsicElementNames ??= new Set(
 						await getElementNames(info.root.fileName) ?? [],
@@ -50,7 +49,7 @@ export function create(
 
 					let token: html.TokenType;
 					let current: {
-						unburnedRequiredProps: PropertyMeta[];
+						unburnedRequiredProps: ComponentPropInfo[];
 						labelOffset: number;
 					} | undefined;
 
@@ -71,20 +70,13 @@ export function create(
 							if (tagOffset > document.offsetAt(range.end)) {
 								break;
 							}
-
-							if (!componentProps.has(checkTag)) {
-								if (cancellationToken.isCancellationRequested) {
-									break;
-								}
-								componentProps.set(
-									checkTag,
-									((await getComponentMeta(info.root.fileName, checkTag))?.props ?? [])
-										.filter(prop => prop.required),
-								);
+							if (cancellationToken.isCancellationRequested) {
+								break;
 							}
 
 							current = {
-								unburnedRequiredProps: [...componentProps.get(checkTag)!],
+								unburnedRequiredProps: (await getComponentProps(info.root.fileName, tagOffset) ?? [])
+									.filter(prop => !prop.optional),
 								labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
 							};
 						}

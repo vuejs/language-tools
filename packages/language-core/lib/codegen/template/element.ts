@@ -166,18 +166,6 @@ export function* generateComponent(
 		}
 	}
 
-	yield* generateComponentBody(options, ctx, node, tag, startTagOffset, props, componentVar);
-}
-
-function* generateComponentBody(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
-	tag: string,
-	tagOffset: number,
-	props: (CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode)[],
-	componentVar: string,
-): Generator<Code> {
 	let isCtxVarUsed = false;
 	let isPropsVarUsed = false;
 
@@ -222,11 +210,13 @@ function* generateComponentBody(
 	}
 
 	yield `(`;
-	const token2 = yield* startBoundary('template', tagOffset, codeFeatures.verification);
-	yield `{${newLine}`;
+	const token2 = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+	yield `{`;
+	yield [``, 'template', node.loc.start.offset, { __propsCompletion: true }];
+	yield newLine;
 	yield* propCodes;
 	yield `}`;
-	yield endBoundary(token2, tagOffset + tag.length);
+	yield endBoundary(token2, startTagOffset + tag.length);
 	yield `, ...${names.functionalComponentArgsRest}(${functionalVar}))${endOfLine}`;
 
 	yield* generateFailedExpressions(options, ctx, failGeneratedExpressions);

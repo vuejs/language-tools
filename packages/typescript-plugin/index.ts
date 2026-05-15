@@ -14,6 +14,7 @@ import { collectExtractProps } from './lib/requests/collectExtractProps';
 import { getComponentDirectives } from './lib/requests/getComponentDirectives';
 import { getComponentMeta } from './lib/requests/getComponentMeta';
 import { getComponentNames } from './lib/requests/getComponentNames';
+import { getComponentProps } from './lib/requests/getComponentProps';
 import { getComponentSlots } from './lib/requests/getComponentSlots';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
@@ -252,44 +253,47 @@ export = createLanguageServicePlugin(
 				}
 				return createResponse(details);
 			});
-			session.addProtocolHandler('_vue:isRefAtPosition', request => {
-				const [fileName, position]: Parameters<Requests['isRefAtPosition']> = request.arguments;
-				const { program, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
-				return createResponse(
-					isRefAtPosition(
-						ts,
-						language,
-						program,
-						sourceScript,
-						virtualCode,
-						position,
-						sourceScript.generated ? sourceScript.snapshot.getLength() : 0,
-					),
-				);
-			});
 			session.addProtocolHandler('_vue:getComponentDirectives', request => {
 				const [fileName]: Parameters<Requests['getComponentDirectives']> = request.arguments;
 				const { program } = getProject(fileName);
 				return createResponse(getComponentDirectives(ts, program, fileName));
 			});
-			session.addProtocolHandler('_vue:getComponentNames', request => {
-				const [fileName]: Parameters<Requests['getComponentNames']> = request.arguments;
-				const { program, virtualCode } = getProjectAndVirtualCode(fileName);
-				return createResponse(getComponentNames(ts, program, virtualCode));
-			});
 			session.addProtocolHandler('_vue:getComponentMeta', request => {
 				const [fileName, tag]: Parameters<Requests['getComponentMeta']> = request.arguments;
 				const { program, virtualCode, language } = getProjectAndVirtualCode(fileName);
-				const sourceFile = program.getSourceFile(virtualCode.fileName)!;
 				return createResponse(
 					getComponentMeta(
 						ts,
 						program,
 						language,
 						fileName => language.scripts.get(fileName),
-						sourceFile,
+						program.getSourceFile(virtualCode.fileName)!,
 						virtualCode,
 						tag,
+					),
+				);
+			});
+			session.addProtocolHandler('_vue:getComponentNames', request => {
+				const [fileName]: Parameters<Requests['getComponentNames']> = request.arguments;
+				const { program, virtualCode } = getProjectAndVirtualCode(fileName);
+				return createResponse(getComponentNames(ts, program, virtualCode));
+			});
+			session.addProtocolHandler('_vue:getComponentProps', request => {
+				const [fileName, position]: Parameters<Requests['getComponentProps']> = request.arguments;
+				const { project, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
+				const tsLanguageService = projectToOriginalLanguageService.get(project);
+				if (!tsLanguageService) {
+					return createResponse(undefined);
+				}
+				return createResponse(
+					getComponentProps(
+						ts,
+						tsLanguageService,
+						session,
+						language,
+						sourceScript,
+						virtualCode,
+						position,
 					),
 				);
 			});
@@ -307,6 +311,20 @@ export = createLanguageServicePlugin(
 				const [fileName]: Parameters<Requests['getElementNames']> = request.arguments;
 				const { program } = getProject(fileName);
 				return createResponse(getElementNames(ts, program, fileName));
+			});
+			session.addProtocolHandler('_vue:isRefAtPosition', request => {
+				const [fileName, position]: Parameters<Requests['isRefAtPosition']> = request.arguments;
+				const { program, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
+				return createResponse(
+					isRefAtPosition(
+						ts,
+						language,
+						program,
+						sourceScript,
+						virtualCode,
+						position,
+					),
+				);
 			});
 			session.addProtocolHandler('_vue:resolveModuleName', request => {
 				const [fileName, ...args]: Parameters<Requests['resolveModuleName']> = request.arguments;
