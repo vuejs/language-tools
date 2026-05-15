@@ -1,10 +1,13 @@
 {
 	"name": "@vue/language-server",
-	"version": "3.2.7",
+	"version": "3.2.9",
 	"license": "MIT",
 	"files": [
-		"**/*.js",
-		"**/*.d.ts"
+		"bin",
+		"index.d.ts",
+		"index.js",
+		"lib/**/*.d.ts",
+		"lib/**/*.js"
 	],
 	"bin": {
 		"vue-language-server": "./bin/vue-language-server.js"

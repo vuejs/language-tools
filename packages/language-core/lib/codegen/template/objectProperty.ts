@@ -1,5 +1,6 @@
 import { camelize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
+import { names } from '../names';
 import { identifierRegex } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
@@ -26,7 +27,7 @@ export function* generateObjectProperty(
 				features,
 				code.slice(1, -1),
 				offset + 1,
-				`[__VLS_tryAsConstant(`,
+				`[${names.tryAsConstant}(`,
 				`)]`,
 			);
 		}

@@ -5,7 +5,7 @@ import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import * as names from '../names';
+import { names } from '../names';
 import { identifierRegex, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
@@ -111,7 +111,7 @@ export function* generateElementProps(
 			}
 
 			const shouldSpread = propName === 'style' || propName === 'class';
-			const shouldCamelize = isComponent && getShouldCamelize(options, prop, propName);
+			const shouldCamelize = getShouldCamelize(options, node, prop, propName);
 			const features = getPropsCodeFeatures(strictPropsCheck);
 
 			if (shouldSpread) {
@@ -155,7 +155,7 @@ export function* generateElementProps(
 			if (isComponent && prop.name === 'model' && prop.modifiers.length) {
 				const propertyName = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 					? !prop.arg.isStatic
-						? `[__VLS_tryAsConstant(\`\${${prop.arg.content}}Modifiers\`)]`
+						? `[${names.tryAsConstant}(\`\${${prop.arg.content}}Modifiers\`)]`
 						: camelize(propName) + `Modifiers`
 					: `modelModifiers`;
 				yield* generateModifiers(options, ctx, prop, propertyName);
@@ -168,7 +168,7 @@ export function* generateElementProps(
 			}
 
 			const shouldSpread = prop.name === 'style' || prop.name === 'class';
-			const shouldCamelize = isComponent && getShouldCamelize(options, prop, prop.name);
+			const shouldCamelize = getShouldCamelize(options, node, prop, prop.name);
 			const features = getPropsCodeFeatures(strictPropsCheck);
 
 			if (shouldSpread) {
@@ -299,13 +299,16 @@ function* generateAttrValue(
 
 function getShouldCamelize(
 	options: TemplateCodegenOptions,
+	node: CompilerDOM.ElementNode,
 	prop: CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode,
 	propName: string,
 ) {
 	return (
+		node.tagType === CompilerDOM.ElementTypes.COMPONENT
+		|| node.tagType === CompilerDOM.ElementTypes.SLOT
+	) && (
 		prop.type !== CompilerDOM.NodeTypes.DIRECTIVE
-		|| !prop.arg
-		|| (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
+		|| prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic
 	)
 		&& hyphenateAttr(propName) === propName
 		&& !options.vueCompilerOptions.htmlAttributes.some(pattern => isMatch(propName, pattern));
@@ -317,6 +320,7 @@ function getPropsCodeFeatures(strictPropsCheck: boolean): VueCodeInformation {
 		...strictPropsCheck
 			? codeFeatures.verification
 			: codeFeatures.doNotReportTs2353AndTs2561,
+		__propsCompletion: true,
 	};
 }
 

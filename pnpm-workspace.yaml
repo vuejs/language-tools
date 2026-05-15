@@ -1,11 +1,15 @@
+blockExoticSubdeps: false
+shellEmulator: true
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - semver@5.7.2
+
 packages:
   - extensions/*
   - packages/*
   - test-workspace
 
-onlyBuiltDependencies:
-  - '@vscode/vsce-sign'
-  - dprint
-  - esbuild
-  - keytar
-  - rolldown
+allowBuilds:
+  '@vscode/vsce-sign': true
+  dprint: true
+  keytar: true

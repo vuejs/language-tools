@@ -1,5 +1,5 @@
 import type * as ts from 'typescript';
-import type { VueCompletionData } from '../common.js';
+import type { VueCompletionData } from '../common';
 
 type Response<T> = T | null | undefined | Promise<T | null | undefined>;
 
@@ -20,13 +20,17 @@ export interface Requests {
 	getComponentDirectives(
 		fileName: string,
 	): Response<ReturnType<typeof import('./getComponentDirectives.js')['getComponentDirectives']>>;
-	getComponentNames(
-		fileName: string,
-	): Response<ReturnType<typeof import('./getComponentNames.js')['getComponentNames']>>;
 	getComponentMeta(
 		fileName: string,
 		tag: string,
 	): Response<ReturnType<typeof import('./getComponentMeta.js')['getComponentMeta']>>;
+	getComponentNames(
+		fileName: string,
+	): Response<ReturnType<typeof import('./getComponentNames.js')['getComponentNames']>>;
+	getComponentProps(
+		fileName: string,
+		position: number,
+	): Response<ReturnType<typeof import('./getComponentProps.js')['getComponentProps']>>;
 	getComponentSlots(
 		fileName: string,
 	): Response<ReturnType<typeof import('./getComponentSlots.js')['getComponentSlots']>>;
@@ -40,6 +44,7 @@ export interface Requests {
 	resolveModuleName(
 		fileName: string,
 		moduleName: string,
+		allowNonExistent?: boolean,
 	): Response<ReturnType<typeof import('./resolveModuleName.js')['resolveModuleName']>>;
 	getDocumentHighlights(
 		fileName: string,

@@ -1,10 +1,12 @@
 {
 	"name": "@vue/typescript-plugin",
-	"version": "3.2.7",
+	"version": "3.2.9",
 	"license": "MIT",
 	"files": [
-		"**/*.js",
-		"**/*.d.ts"
+		"index.d.ts",
+		"index.js",
+		"lib/**/*.d.ts",
+		"lib/**/*.js"
 	],
 	"sideEffects": false,
 	"repository": {
@@ -20,7 +22,8 @@
 		"vue-component-meta": "workspace:*"
 	},
 	"devDependencies": {
-		"@types/node": "^22.10.4",
-		"@types/path-browserify": "^1.0.3"
+		"@types/node": "^24.1.0",
+		"@types/path-browserify": "^1.0.3",
+		"@vue/compiler-dom": "^3.5.0"
 	}
 }

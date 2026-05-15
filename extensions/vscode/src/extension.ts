@@ -360,6 +360,17 @@ function patchTypeScriptExtension() {
 				new RegExp(String.raw`\.languages\.match\(\[(${id},${id})\]`),
 				(_, ids) => `.languages.match([${ids}].concat("vue")`,
 			);
+			// patch configureOptions
+			text = text.replace(
+				new RegExp(String.raw`this.executeWithoutWaitingForResponse\("configure",(${id})`),
+				(match, id) =>
+					`${id}.extraFileExtensions??=[];${id}.extraFileExtensions.push({scriptKind:7,extension:"vue"});${match}`,
+			);
+			// patch getJsTsFileBeingMoved
+			text = text.replace(
+				new RegExp(String.raw`.RelativePattern\((${id}),"\*\*\/\*\.\{(ts,tsx,js,jsx)`),
+				(_, resource, ids) => `.RelativePattern(${resource},"**/*.{${ids},vue`,
+			);
 
 			// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
 			// before 1.110: "--globalPlugins",i.plugins

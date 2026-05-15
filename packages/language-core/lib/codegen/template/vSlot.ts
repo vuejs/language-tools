@@ -4,6 +4,7 @@ import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
+import { names } from '../names';
 import { endOfLine, getTypeScriptAST, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
@@ -139,7 +140,7 @@ function* generateSlotParameters(
 
 	yield `const [`;
 	yield* interpolation;
-	yield `] = __VLS_vSlot(${slotVar}!`;
+	yield `] = ${names.vSlot}(${slotVar}!`;
 
 	if (types.some(t => t)) {
 		yield `, `;

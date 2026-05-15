@@ -1,10 +1,13 @@
 {
 	"name": "@vue/language-core",
-	"version": "3.2.7",
+	"version": "3.2.9",
 	"license": "MIT",
 	"files": [
-		"**/*.js",
-		"**/*.d.ts"
+		"index.d.ts",
+		"index.js",
+		"lib/**/*.d.ts",
+		"lib/**/*.js",
+		"types"
 	],
 	"sideEffects": false,
 	"repository": {
@@ -12,17 +15,20 @@
 		"url": "https://github.com/vuejs/language-tools.git",
 		"directory": "packages/language-core"
 	},
+	"scripts": {
+		"generate-names": "node scripts/generate-names.js"
+	},
 	"dependencies": {
 		"@volar/language-core": "2.4.28",
 		"@vue/compiler-dom": "^3.5.0",
 		"@vue/shared": "^3.5.0",
-		"alien-signals": "^3.1.2",
+		"alien-signals": "^3.2.0",
 		"muggle-string": "^0.4.1",
 		"path-browserify": "^1.0.1",
 		"picomatch": "^4.0.4"
 	},
 	"devDependencies": {
-		"@types/node": "^22.10.4",
+		"@types/node": "^24.1.0",
 		"@types/path-browserify": "^1.0.3",
 		"@types/picomatch": "^4.0.3",
 		"@volar/typescript": "2.4.28",

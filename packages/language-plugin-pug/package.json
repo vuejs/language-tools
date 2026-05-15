@@ -1,10 +1,12 @@
 {
 	"name": "@vue/language-plugin-pug",
-	"version": "3.2.7",
+	"version": "3.2.9",
 	"license": "MIT",
 	"files": [
-		"**/*.js",
-		"**/*.d.ts"
+		"index.d.ts",
+		"index.js",
+		"lib/**/*.d.ts",
+		"lib/**/*.js"
 	],
 	"sideEffects": false,
 	"repository": {
@@ -20,7 +22,7 @@
 		"vscode-languageserver-textdocument": "^1.0.12"
 	},
 	"devDependencies": {
-		"@types/node": "^22.10.4",
+		"@types/node": "^24.1.0",
 		"@vue/compiler-dom": "^3.5.0",
 		"@vue/language-core": "workspace:*"
 	}

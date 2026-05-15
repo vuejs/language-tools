@@ -1,5 +1,39 @@
 # Changelog
 
+## 3.2.9 (2026-05-14)
+
+### language-core
+
+- **fix:** do not process inline markdown syntax in semantic-aware segments (#6038) - Thanks to @KazariEX!
+- **perf:** rewrite a subset of template node transforms (#5769) - Thanks to @KazariEX!
+
+### vscode
+
+- **fix:** trigger file rename edits when moving folders with Vue files (#6046) - Thanks to @KazariEX!
+
+### workspace
+
+- **chore:** bump volar services to 0.0.71 (#6043) - Thanks to @TRIS-H!
+
+## 3.2.8 (2026-05-04)
+
+### language-core
+
+- **fix:** replace inline code blocks after sfc blocks processing (#6024) - Thanks to @KazariEX!
+- **fix:** support navigation for kebab-case declarations in `GlobalComponents` (#6026) - Thanks to @Gehbt!
+
+### language-service
+
+- **feat:** support TS module resolution for SCSS `@import` navigation (#6033) - Thanks to @KazariEX!
+
+### typescript-plugin
+
+- **fix:** replace language service per-method overrides with a proxy (#6035) - Thanks to @KazariEX!
+
+### vscode
+
+- **chore:** upgrade `reactive-vscode` to v1.0.1 (#6019) - Thanks to @kermanx!
+
 ## 3.2.7 (2026-04-19)
 
 ### component-meta

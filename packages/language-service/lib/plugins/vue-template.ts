@@ -18,15 +18,18 @@ import {
 	type VueVirtualCode,
 } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
+import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService, resolveReference } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
-import {
-	applyCompletionEntryDetails,
-	convertCompletionInfo,
-} from 'volar-service-typescript/lib/utils/lspConverters.js';
+import { applyCompletionEntryDetails, convertCompletionInfo } from 'volar-service-typescript/lib/utils/lspConverters';
 import * as html from 'vscode-html-languageservice';
+<<<<<<< master
 import { URI, Utils } from 'vscode-uri';
 import type { ComponentMeta, PropertyMeta } from '../../../component-meta';
+=======
+import { URI } from 'vscode-uri';
+import type { PropertyMeta } from 'vue-component-meta';
+>>>>>>> master
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
@@ -50,12 +53,15 @@ const DIRECTIVE_V_FOR_NAME = 'v-for';
 // Templates
 const V_FOR_SNIPPET = '="${1:value} in ${2:source}"';
 
+<<<<<<< master
 interface TagInfo {
 	attrs: { name: string; type: string }[];
 	meta: ComponentMeta | undefined | null;
 }
 
 let htmlCustomData: html.IHTMLDataProvider[] | undefined = undefined;
+=======
+>>>>>>> master
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
 
@@ -105,12 +111,13 @@ export function create(
 					throw cached;
 				}
 				if (cached) {
-					return cached;
+					return URI.file(cached).toString();
 				}
 			}
 			return resolveReference(ref, baseUri, context.env.workspaceFolders);
 		},
 	});
+	const defaultHTMLProvider = html.getDefaultHTMLDataProvider();
 	const baseService = languageId === 'jade'
 		? createPugService({
 			useDefaultDataProvider: false,
@@ -177,33 +184,10 @@ export function create(
 							...codegen.getImportedComponents(),
 							...codegen.getSetupExposed(),
 						]);
-						// copied from https://github.com/microsoft/vscode-html-languageservice/blob/10daf45dc16b4f4228987cf7cddf3a7dbbdc7570/src/beautify/beautify-html.js#L2746-L2761
-						voidElements = [
-							'area',
-							'base',
-							'br',
-							'col',
-							'embed',
-							'hr',
-							'img',
-							'input',
-							'keygen',
-							'link',
-							'menuitem',
-							'meta',
-							'param',
-							'source',
-							'track',
-							'wbr',
-							'!doctype',
-							'?xml',
-							'basefont',
-							'isindex',
-						].filter(tag =>
-							tag
-							&& !componentNames.has(tag)
-							&& !componentNames.has(capitalize(camelize(tag)))
-						);
+						voidElements = defaultHTMLProvider.provideTags()
+							.filter(tag => tag.void)
+							.map(tag => tag.name)
+							.filter(tag => !componentNames.has(tag) && !componentNames.has(capitalize(tag)));
 					}
 					return format(document, range, options, voidElements);
 				};
@@ -219,7 +203,7 @@ export function create(
 			const transformedItems = new WeakSet<html.CompletionItem>();
 			const defaultHtmlTags = new Map<string, html.ITagData>();
 
-			for (const tag of html.getDefaultHTMLDataProvider().provideTags()) {
+			for (const tag of defaultHTMLProvider.provideTags()) {
 				defaultHtmlTags.set(tag.name, tag);
 			}
 
@@ -253,6 +237,7 @@ export function create(
 					} = await runWithVueDataProvider(
 						info.script.id,
 						info.root,
+						document.offsetAt(position),
 						hint,
 						'completion',
 						() =>
@@ -435,6 +420,7 @@ export function create(
 					} = await runWithVueDataProvider(
 						info.script.id,
 						info.root,
+						document.offsetAt(position),
 						undefined,
 						'hover',
 						() => baseServiceInstance.provideHover!(document, position, token),
@@ -607,7 +593,7 @@ export function create(
 					}
 
 					updateExtraCustomData([
-						html.getDefaultHTMLDataProvider(),
+						defaultHTMLProvider,
 					]);
 
 					return baseServiceInstance.provideDocumentSymbols?.(document, token);
@@ -617,6 +603,7 @@ export function create(
 			async function runWithVueDataProvider<T>(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
+				position: number,
 				hint: string | undefined,
 				mode: 'completion' | 'hover',
 				fn: () => T,
@@ -624,7 +611,7 @@ export function create(
 				// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
 				await fn();
 
-				const { sync } = await provideHtmlData(sourceDocumentUri, root, hint, mode);
+				const { sync } = await provideHtmlData(sourceDocumentUri, root, position, hint, mode);
 				let lastSync = await sync();
 				let result = await fn();
 				while (lastSync.version !== (lastSync = await sync()).version) {
@@ -659,6 +646,7 @@ export function create(
 			async function provideHtmlData(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
+				position: number,
 				hint: string | undefined,
 				mode: 'completion' | 'hover',
 			) {
@@ -674,8 +662,13 @@ export function create(
 				let values: string[] | undefined;
 
 				const tasks: Promise<void>[] = [];
+<<<<<<< master
 				const tagDataMap = new Map<string, TagInfo>();
 				htmlCustomData = await loadHtmlCustomData();
+=======
+				const tagToAttrs = new Map<string, { name: string; type: string }[]>();
+				const positionToProps = new Map<number, ComponentPropInfo[]>();
+>>>>>>> master
 
 				updateExtraCustomData([
 					{
@@ -726,8 +719,9 @@ export function create(
 							return tags;
 						},
 						provideAttributes: tag => {
+							const attrs = getAttrs(tag);
+							const props = getProps(position);
 							const directives = getDirectives();
-							const { attrs, meta } = getTagData(tag);
 							const attributes: html.IAttributeData[] = [];
 
 							let addPlainAttrs = false;
@@ -774,10 +768,10 @@ export function create(
 							}
 
 							for (
-								const [propName, propMeta] of [
-									...meta?.props.map(prop => [prop.name, prop] as const) ?? [],
+								const [propName, propInfo] of [
+									...props.map(prop => [prop.name, prop] as const) ?? [],
 									...attrs.map(attr => [attr.name, undefined]),
-								] as [string, PropertyMeta | undefined][]
+								] as [string, ComponentPropInfo | undefined][]
 							) {
 								if (propName.match(EVENT_PROP_REGEX)) {
 									let labelName = propName.slice(2);
@@ -789,59 +783,51 @@ export function create(
 									if (addVOnShorthands) {
 										attributes.push({
 											name: V_ON_SHORTHAND + labelName,
-											description: propMeta && createDescription(propMeta),
+											description: propInfo?.description,
 										});
 									}
 									if (addVOns) {
 										attributes.push({
 											name: DIRECTIVE_V_ON + labelName,
-											description: propMeta && createDescription(propMeta),
+											description: propInfo?.description,
 										});
 									}
 								}
 								else {
 									const labelName = attrNameCasing === AttrNameCasing.Camel ? propName : hyphenateAttr(propName);
-									const propMeta2 = meta?.props.find(prop => {
+									const propInfo = props.find(prop => {
 										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === labelName;
 									});
-									const isBoolean = propMeta2?.type === 'boolean' || propMeta2?.type.startsWith('boolean ');
 
 									if (addPlainAttrs) {
 										attributes.push({
 											name: labelName,
-											description: propMeta2 && createDescription(propMeta2),
+											description: propInfo?.description,
 										});
 									}
 									if (addVBindShorthands) {
 										attributes.push({
 											name: V_BIND_SHORTHAND + labelName,
-											description: propMeta2 && createDescription(propMeta2),
-											valueSet: isBoolean ? 'v' : undefined,
+											description: propInfo?.description,
+											valueSet: propInfo?.boolean ? 'v' : undefined,
 										});
 									}
 									if (addVBinds) {
 										attributes.push({
 											name: DIRECTIVE_V_BIND + labelName,
-											description: propMeta2 && createDescription(propMeta2),
-											valueSet: isBoolean ? 'v' : undefined,
+											description: propInfo?.description,
+											valueSet: propInfo?.boolean ? 'v' : undefined,
 										});
 									}
 								}
-							}
-							for (const event of meta?.events ?? []) {
-								const eventName = attrNameCasing === AttrNameCasing.Camel ? event.name : hyphenateAttr(event.name);
-
-								if (addVOnShorthands) {
+								if (propName.startsWith(UPDATE_PROP_PREFIX)) {
+									const model = propName.slice(UPDATE_PROP_PREFIX.length);
+									const label = DIRECTIVE_V_MODEL
+										+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
 									attributes.push({
-										name: V_ON_SHORTHAND + eventName,
-										description: event && createDescription(event),
-									});
-								}
-								if (addVOns) {
-									attributes.push({
-										name: DIRECTIVE_V_ON + eventName,
-										description: event && createDescription(event),
+										name: label,
+										description: propInfo?.description,
 									});
 								}
 							}
@@ -852,38 +838,17 @@ export function create(
 								});
 							}
 
-							for (
-								const [propName, propMeta] of [
-									...meta?.props.map(prop => [prop.name, prop] as const) ?? [],
-									...attrs.map(attr => [attr.name, undefined]),
-								] as [string, PropertyMeta | undefined][]
-							) {
-								if (propName.startsWith(UPDATE_PROP_PREFIX)) {
-									const model = propName.slice(UPDATE_PROP_PREFIX.length);
-									const label = DIRECTIVE_V_MODEL
-										+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
-									attributes.push({
-										name: label,
-										description: propMeta && createDescription(propMeta),
-									});
-								}
-							}
-							for (const event of meta?.events ?? []) {
-								if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
-									const model = event.name.slice(UPDATE_EVENT_PREFIX.length);
-									const label = DIRECTIVE_V_MODEL
-										+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
-									attributes.push({
-										name: label,
-										description: createDescription(event),
-									});
+							// dedupe from tsserver
+							if (mode === 'hover') {
+								for (const item of attributes) {
+									item.description = undefined;
 								}
 							}
 
 							return attributes;
 						},
 						provideValues: (tag, attr) => {
-							return getAttrValues(tag, attr).map(value => ({ name: value }));
+							return getValues(tag, attr).map(value => ({ name: value }));
 						},
 					},
 					{
@@ -908,51 +873,24 @@ export function create(
 					},
 				};
 
-				function createDescription(meta: Pick<PropertyMeta, 'description' | 'tags'>) {
-					if (mode === 'hover') {
-						// dedupe from TS hover
-						return;
-					}
-					let description = meta?.description ?? '';
-					for (const tag of meta.tags) {
-						description += `\n\n*@${tag.name}* ${tag.text ?? ''}`;
-					}
-					if (!description) {
-						return;
-					}
-					return {
-						kind: 'markdown' as const,
-						value: description,
-					};
+				function getAttrs(tag: string) {
+					return tagToAttrs.get(tag) ?? (
+						tasks.push((async () => {
+							const attrs = await tsserver.getElementAttrs(root.fileName, tag) ?? [];
+							tagToAttrs.set(tag, attrs);
+							version++;
+						})()), []
+					);
 				}
 
-				function getAttrValues(tag: string, attr: string) {
-					if (!values) {
-						values = [];
+				function getProps(position: number) {
+					return positionToProps.get(position) ?? (
 						tasks.push((async () => {
-							if (tag === 'slot' && attr === 'name') {
-								values = await tsserver.getComponentSlots(root.fileName) ?? [];
-							}
+							const props = await tsserver.getComponentProps(root.fileName, position);
+							positionToProps.set(position, props ?? []);
 							version++;
-						})());
-					}
-					return values;
-				}
-
-				function getTagData(tag: string) {
-					let data = tagDataMap.get(tag);
-					if (!data) {
-						data = { attrs: [], meta: undefined };
-						tagDataMap.set(tag, data);
-						tasks.push((async () => {
-							tagDataMap.set(tag, {
-								attrs: await tsserver.getElementAttrs(root.fileName, tag) ?? [],
-								meta: await tsserver.getComponentMeta(root.fileName, tag),
-							});
-							version++;
-						})());
-					}
-					return data;
+						})()), []
+					);
 				}
 
 				function getDirectives() {
@@ -984,6 +922,19 @@ export function create(
 						components,
 						elements,
 					};
+				}
+
+				function getValues(tag: string, attr: string) {
+					if (!values) {
+						values = [];
+						tasks.push((async () => {
+							if (tag === 'slot' && attr === 'name') {
+								values = await tsserver.getComponentSlots(root.fileName) ?? [];
+							}
+							version++;
+						})());
+					}
+					return values;
 				}
 			}
 

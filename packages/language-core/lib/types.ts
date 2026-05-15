@@ -23,6 +23,7 @@ export type RawPlugin =
 
 export interface VueCodeInformation extends CodeInformation {
 	__importCompletion?: boolean;
+	__propsCompletion?: boolean;
 	__shorthandExpression?: 'html' | 'js';
 	__combineToken?: symbol;
 	__linkedToken?: symbol;
@@ -120,6 +121,7 @@ export type VueLanguagePlugin<T extends Record<string, any> = {}> = (
 		modules: {
 			typescript: typeof ts;
 			'@vue/compiler-dom': typeof CompilerDOM;
+			'@vue/language-core': typeof import('../index');
 		};
 		compilerOptions: ts.CompilerOptions;
 		vueCompilerOptions: VueCompilerOptions;

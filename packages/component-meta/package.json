@@ -1,10 +1,12 @@
 {
 	"name": "vue-component-meta",
-	"version": "3.2.7",
+	"version": "3.2.9",
 	"license": "MIT",
 	"files": [
-		"**/*.js",
-		"**/*.d.ts"
+		"index.d.ts",
+		"index.js",
+		"lib/**/*.d.ts",
+		"lib/**/*.js"
 	],
 	"sideEffects": false,
 	"repository": {
@@ -18,7 +20,7 @@
 		"path-browserify": "^1.0.1"
 	},
 	"devDependencies": {
-		"@types/node": "^22.10.4",
+		"@types/node": "^24.1.0",
 		"@types/path-browserify": "^1.0.3"
 	},
 	"peerDependencies": {

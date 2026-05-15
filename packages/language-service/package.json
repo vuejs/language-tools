@@ -1,11 +1,13 @@
 {
 	"name": "@vue/language-service",
-	"version": "3.2.7",
+	"version": "3.2.9",
 	"license": "MIT",
 	"files": [
 		"data",
-		"**/*.js",
-		"**/*.d.ts"
+		"index.d.ts",
+		"index.js",
+		"lib/**/*.d.ts",
+		"lib/**/*.js"
 	],
 	"sideEffects": false,
 	"repository": {
@@ -21,23 +23,24 @@
 		"@vue/language-core": "workspace:*",
 		"@vue/shared": "^3.5.0",
 		"path-browserify": "^1.0.1",
-		"volar-service-css": "0.0.70",
-		"volar-service-emmet": "0.0.70",
-		"volar-service-html": "0.0.70",
-		"volar-service-json": "0.0.70",
-		"volar-service-pug": "0.0.70",
-		"volar-service-pug-beautify": "0.0.70",
-		"volar-service-typescript": "0.0.70",
+		"volar-service-css": "0.0.71",
+		"volar-service-emmet": "0.0.71",
+		"volar-service-html": "0.0.71",
+		"volar-service-json": "0.0.71",
+		"volar-service-pug": "0.0.71",
+		"volar-service-pug-beautify": "0.0.71",
+		"volar-service-typescript": "0.0.71",
 		"vscode-html-languageservice": "^5.6.2",
 		"vscode-uri": "^3.1.0"
 	},
 	"devDependencies": {
-		"@types/node": "^22.10.4",
+		"@types/node": "^24.1.0",
 		"@types/path-browserify": "^1.0.3",
 		"@volar/kit": "2.4.28",
 		"@volar/typescript": "2.4.28",
 		"@vue/compiler-dom": "^3.5.0",
 		"@vue/typescript-plugin": "workspace:*",
-		"vscode-css-languageservice": "^6.3.10"
+		"vscode-css-languageservice": "^6.3.10",
+		"vue-component-meta": "workspace:*"
 	}
 }

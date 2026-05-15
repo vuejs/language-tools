@@ -1,10 +1,6 @@
-import type { CompletionItem, CompletionItemKind, LanguageServicePlugin, TextDocument } from '@volar/language-service';
+import type { CompletionItem, CompletionItemKind, LanguageServicePlugin } from '@volar/language-service';
 import { type TextRange, tsCodegen } from '@vue/language-core';
-import type * as ts from 'typescript';
-import { URI } from 'vscode-uri';
 import { resolveEmbeddedCode } from '../utils';
-
-const documentToSourceFile = new WeakMap<TextDocument, ts.SourceFile>();
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
@@ -25,7 +21,6 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					if (!enabled) {
 						return;
 					}
-
 					const { sfc } = info.root;
 					const codegen = tsCodegen.get(sfc);
 					const scriptSetup = sfc.scriptSetup;
@@ -34,13 +29,26 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 						return;
 					}
 
-					const sourceFile = getSourceFile(ts, document);
-					if (shouldSkip(ts, sourceFile, document.offsetAt(position))) {
+					const map = context.language.maps.get(info.code, info.script);
+
+					let sourceOffset: number | undefined;
+					for (const [offset] of map.toSourceLocation(document.offsetAt(position))) {
+						sourceOffset = offset;
+						break;
+					}
+					if (sourceOffset === undefined) {
+						return;
+					}
+
+					const node = (ts as any).getTouchingPropertyName(
+						scriptSetup.ast,
+						sourceOffset - scriptSetup.startTagEnd,
+					);
+					if (ts.isStringLiteralLike(node)) {
 						return;
 					}
 
 					const result: CompletionItem[] = [];
-					const mappings = [...context.language.maps.forEach(info.code)];
 
 					addDefineCompletionItem(
 						scriptSetupRanges.defineProps?.statement,
@@ -72,18 +80,16 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 							return;
 						}
 
-						let offset;
-						for (const [, map] of mappings) {
-							for (const [generatedOffset] of map.toGeneratedLocation(scriptSetup!.startTagEnd + exp.start)) {
-								offset = generatedOffset;
-								break;
-							}
+						let generatedOffset;
+						for (const [offset] of map.toGeneratedLocation(scriptSetup!.startTagEnd + exp.start)) {
+							generatedOffset = offset;
+							break;
 						}
-						if (offset === undefined) {
+						if (generatedOffset === undefined) {
 							return;
 						}
 
-						const pos = document.positionAt(offset);
+						const pos = document.positionAt(generatedOffset);
 						result.push({
 							label: name,
 							kind: 6 satisfies typeof CompletionItemKind.Variable,
@@ -101,40 +107,4 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 			};
 		},
 	};
-}
-
-function shouldSkip(ts: typeof import('typescript'), node: ts.Node, pos: number) {
-	if (ts.isStringLiteral(node) && pos >= node.getFullStart() && pos <= node.getEnd()) {
-		return true;
-	}
-	else if (ts.isTemplateLiteral(node) && pos >= node.getFullStart() && pos <= node.getEnd()) {
-		return true;
-	}
-	else {
-		let _shouldSkip = false;
-		node.forEachChild(node => {
-			if (_shouldSkip) {
-				return;
-			}
-			if (pos >= node.getFullStart() && pos <= node.getEnd()) {
-				if (shouldSkip(ts, node, pos)) {
-					_shouldSkip = true;
-				}
-			}
-		});
-		return _shouldSkip;
-	}
-}
-
-function getSourceFile(ts: typeof import('typescript'), document: TextDocument): ts.SourceFile {
-	let sourceFile = documentToSourceFile.get(document);
-	if (!sourceFile) {
-		sourceFile = ts.createSourceFile(
-			URI.parse(document.uri).path,
-			document.getText(),
-			ts.ScriptTarget.Latest,
-		);
-		documentToSourceFile.set(document, sourceFile);
-	}
-	return sourceFile;
 }

@@ -1,6 +1,6 @@
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import * as names from '../names';
+import { names } from '../names';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
@@ -34,7 +34,7 @@ function* generateTemplateCtx(
 		exps.push([`globalThis`]);
 	}
 	if (selfType) {
-		exps.push([`{} as InstanceType<__VLS_PickNotAny<typeof ${selfType}, new () => {}>>`]);
+		exps.push([`{} as InstanceType<${names.PickNotAny}<typeof ${selfType}, new () => {}>>`]);
 	}
 	else {
 		exps.push([`{} as import('${vueCompilerOptions.lib}').ComponentPublicInstance`]);
@@ -44,14 +44,15 @@ function* generateTemplateCtx(
 	}
 
 	if (scriptSetupRanges?.defineEmits) {
-		const { defineEmits } = scriptSetupRanges;
-		emitTypes.push(`typeof ${defineEmits.name ?? names.emit}`);
+		emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}`);
 	}
 	if (scriptSetupRanges?.defineModel.length) {
 		emitTypes.push(`typeof ${names.modelEmit}`);
 	}
 	if (emitTypes.length) {
-		yield `type ${names.EmitProps} = __VLS_EmitsToProps<__VLS_NormalizeEmits<${emitTypes.join(` & `)}>>${endOfLine}`;
+		yield `type ${names.EmitProps} = ${names.EmitsToProps}<${names.NormalizeEmits}<${
+			emitTypes.join(` & `)
+		}>>${endOfLine}`;
 		exps.push([`{} as { $emit: ${emitTypes.join(` & `)} }`]);
 	}
 
@@ -89,7 +90,7 @@ function* generateTemplateComponents(
 	}
 	if (script && scriptRanges?.exportDefault?.options?.components) {
 		const { components } = scriptRanges.exportDefault.options;
-		yield `const __VLS_componentsOption = `;
+		yield `const ${names.componentsOption} = `;
 		yield* generateSfcBlockSection(
 			script,
 			components.start,
@@ -97,16 +98,16 @@ function* generateTemplateComponents(
 			codeFeatures.navigation,
 		);
 		yield endOfLine;
-		types.push(`typeof __VLS_componentsOption`);
+		types.push(`typeof ${names.componentsOption}`);
 	}
 
-	yield `type __VLS_LocalComponents = ${types.length ? types.join(` & `) : `{}`}${endOfLine}`;
-	yield `type __VLS_GlobalComponents = ${
+	yield `type ${names.LocalComponents} = ${types.length ? types.join(` & `) : `{}`}${endOfLine}`;
+	yield `type ${names.GlobalComponents} = ${
 		vueCompilerOptions.target >= 3.5
 			? `import('${vueCompilerOptions.lib}').GlobalComponents`
 			: `import('${vueCompilerOptions.lib}').GlobalComponents & Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>`
 	}${endOfLine}`;
-	yield `let ${names.components}!: __VLS_LocalComponents & __VLS_GlobalComponents${endOfLine}`;
+	yield `let ${names.components}!: ${names.LocalComponents} & ${names.GlobalComponents}${endOfLine}`;
 	yield `let ${names.intrinsics}!: ${
 		vueCompilerOptions.target >= 3.3
 			? `import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements`
@@ -125,7 +126,7 @@ function* generateTemplateDirectives(
 	}
 	if (script && scriptRanges?.exportDefault?.options?.directives) {
 		const { directives } = scriptRanges.exportDefault.options;
-		yield `const __VLS_directivesOption = `;
+		yield `const ${names.directivesOption} = `;
 		yield* generateSfcBlockSection(
 			script,
 			directives.start,
@@ -133,11 +134,11 @@ function* generateTemplateDirectives(
 			codeFeatures.navigation,
 		);
 		yield endOfLine;
-		types.push(`__VLS_ResolveDirectives<typeof __VLS_directivesOption>`);
+		types.push(`${names.ResolveDirectives}<typeof ${names.directivesOption}>`);
 	}
 
-	yield `type __VLS_LocalDirectives = ${types.length ? types.join(` & `) : `{}`}${endOfLine}`;
-	yield `let ${names.directives}!: __VLS_LocalDirectives & import('${vueCompilerOptions.lib}').GlobalDirectives${endOfLine}`;
+	yield `type ${names.LocalDirectives} = ${types.length ? types.join(` & `) : `{}`}${endOfLine}`;
+	yield `let ${names.directives}!: ${names.LocalDirectives} & import('${vueCompilerOptions.lib}').GlobalDirectives${endOfLine}`;
 }
 
 function* generateSetupExposed(
