@@ -24,15 +24,15 @@ export function getComponentProps(
 	sourceScript: SourceScript<string>,
 	virtualCode: VueVirtualCode,
 	position: number,
-): ComponentPropInfo[] | undefined {
+): ComponentPropInfo[] {
 	const serviceScript = sourceScript.generated!.languagePlugin.typescript?.getServiceScript(virtualCode);
 	if (!serviceScript) {
-		return;
+		return [];
 	}
 
 	const { sfc } = virtualCode;
 	if (!sfc.template?.ast) {
-		return;
+		return [];
 	}
 
 	let node: CompilerDOM.ElementNode | undefined;
@@ -41,8 +41,8 @@ export function getComponentProps(
 			node = child;
 		}
 	}
-	if (!node) {
-		return;
+	if (node?.tagType !== 1 satisfies CompilerDOM.ElementTypes.COMPONENT) {
+		return [];
 	}
 
 	let position2: number | undefined;
@@ -66,7 +66,7 @@ export function getComponentProps(
 		(data: VueCodeInformation) => !!data.__propsCompletion,
 	);
 	if (!position2) {
-		return;
+		return [];
 	}
 
 	const preferences = session['getPreferences']();
@@ -74,7 +74,7 @@ export function getComponentProps(
 
 	// skip fallback global completions
 	if (!completion?.isMemberCompletion) {
-		return;
+		return [];
 	}
 
 	return completion?.entries.map(entry => {
@@ -101,7 +101,7 @@ export function getComponentProps(
 		if (modifiers?.includes('optional')) {
 			info.optional = true;
 		}
-		if (details?.displayParts.some((part, i) => i >= 8 && part.text === 'boolean')) {
+		if (details?.displayParts.some((part, i) => i >= 7 && part.text === 'boolean')) {
 			info.boolean = true;
 		}
 		return info;
