@@ -752,20 +752,19 @@ export function create(
 										attributes.push({
 											name: labelName,
 											description: propInfo?.description,
+											valueSet: propInfo?.boolean ? 'v' : undefined,
 										});
 									}
 									if (addVBindShorthands) {
 										attributes.push({
 											name: V_BIND_SHORTHAND + labelName,
 											description: propInfo?.description,
-											valueSet: propInfo?.boolean ? 'v' : undefined,
 										});
 									}
 									if (addVBinds) {
 										attributes.push({
 											name: DIRECTIVE_V_BIND + labelName,
 											description: propInfo?.description,
-											valueSet: propInfo?.boolean ? 'v' : undefined,
 										});
 									}
 								}

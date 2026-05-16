@@ -1,15 +1,14 @@
 import { names } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { getComponentMeta as _get } from 'vue-component-meta/lib/componentMeta';
 import type { ComponentPropInfo } from './getComponentProps';
-import { getVariableType } from './utils';
+import { getVariableType, hasBooleanType } from './utils';
 
 export function getElementAttrs(
 	ts: typeof import('typescript'),
 	program: ts.Program,
 	fileName: string,
 	tag: string,
-): ComponentPropInfo[] | undefined {
+): ComponentPropInfo[] {
 	const sourceFile = program.getSourceFile(fileName);
 	if (!sourceFile) {
 		return [];
@@ -26,7 +25,13 @@ export function getElementAttrs(
 		return [];
 	}
 
-	return checker.getTypeOfSymbol(elementType).getProperties().map(c => ({
-		name: c.name,
-	}));
+	return checker.getTypeOfSymbol(elementType).getProperties().map(prop => {
+		const info: ComponentPropInfo = {
+			name: prop.name,
+		};
+		if (hasBooleanType(ts, checker.getTypeOfSymbol(prop))) {
+			info.boolean = true;
+		}
+		return info;
+	});
 }

@@ -616,20 +616,41 @@ test('Auto import', async () => {
 });
 
 test('Boolean props', async () => {
-	await requestCompletionItemToVueServer(
-		'fixture.vue',
-		'vue',
-		`
+	expect(
+		await requestCompletionItemToVueServer(
+			'fixture.vue',
+			'vue',
+			`
 		<template>
-			<Comp :f| />
+			<Comp f| />
 		</template>
 
 		<script setup lang="ts">
 		declare function Comp(props: { foo: boolean }): void;
 		</script>
 		`,
-		':foo',
-	);
+			'foo',
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "insertTextFormat": 1,
+		  "kind": 12,
+		  "label": "foo",
+		  "textEdit": {
+		    "newText": "foo",
+		    "range": {
+		      "end": {
+		        "character": 10,
+		        "line": 2,
+		      },
+		      "start": {
+		        "character": 9,
+		        "line": 2,
+		      },
+		    },
+		  },
+		}
+	`);
 });
 
 test('Directives', async () => {
