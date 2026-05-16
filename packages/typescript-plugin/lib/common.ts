@@ -114,7 +114,7 @@ export function preprocessLanguageService(
 			if (!language) {
 				return result;
 			}
-			const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
+			const [serviceScript, , sourceScript] = getServiceScript(language, fileName);
 			if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
 				return result;
 			}
@@ -225,7 +225,7 @@ export function preprocessLanguageService(
 			if (!language) {
 				return result;
 			}
-			const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
+			const [serviceScript, , sourceScript] = getServiceScript(language, fileName);
 			if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
 				return result;
 			}
@@ -279,7 +279,7 @@ export function preprocessLanguageService(
 				return result;
 			}
 
-			const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
+			const [serviceScript, , sourceScript] = getServiceScript(language, fileName);
 			if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
 				return result;
 			}

@@ -352,16 +352,17 @@ export function createSchemaResolvers(
 		const fileName = declaration.getSourceFile().fileName;
 		const sourceScript = getSourceScript(fileName);
 		if (sourceScript?.generated) {
-			const script = sourceScript.generated.languagePlugin.typescript?.getServiceScript(sourceScript.generated.root);
-			if (script) {
-				for (const [sourceScript, map] of language.maps.forEach(script.code)) {
-					for (const [start] of map.toSourceLocation(declaration.getStart())) {
-						for (const [end] of map.toSourceLocation(declaration.getEnd())) {
-							return {
-								file: String(sourceScript.id),
-								range: [start, end],
-							};
-						}
+			const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(
+				sourceScript.generated.root,
+			);
+			if (serviceScript) {
+				const map = language.maps.get(serviceScript.code, sourceScript);
+				for (const [start] of map.toSourceLocation(declaration.getStart())) {
+					for (const [end] of map.toSourceLocation(declaration.getEnd())) {
+						return {
+							file: String(sourceScript.id),
+							range: [start, end],
+						};
 					}
 				}
 			}
