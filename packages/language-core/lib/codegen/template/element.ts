@@ -14,7 +14,7 @@ import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
 import { generateElementDirectives } from './elementDirectives';
 import { generateElementEvents } from './elementEvents';
-import { type FailGeneratedExpression, generateElementProps } from './elementProps';
+import { type FailedPropExpressions, generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
@@ -173,14 +173,14 @@ export function* generateComponent(
 	const getPropsVar = () => (isPropsVarUsed = true, propsVar);
 	ctx.components.push(getCtxVar);
 
-	const failGeneratedExpressions: FailGeneratedExpression[] = [];
+	const failedPropExps: FailedPropExpressions[] = [];
 	const propCodes = [...generateElementProps(
 		options,
 		ctx,
 		node,
 		props,
 		options.vueCompilerOptions.checkUnknownProps,
-		failGeneratedExpressions,
+		failedPropExps,
 	)];
 	const functionalVar = ctx.getInternalVariable();
 	const vnodeVar = ctx.getInternalVariable();
@@ -210,7 +210,14 @@ export function* generateComponent(
 	}
 
 	yield `(`;
-	const token2 = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+	const token2 = yield* startBoundary(
+		'template',
+		startTagOffset,
+		options.vueCompilerOptions.fallthroughAttributes
+			&& options.vueCompilerOptions.checkRequiredFallthroughAttributes
+			? {}
+			: codeFeatures.verification,
+	);
 	yield `{`;
 	yield [``, 'template', node.loc.start.offset, { __propsCompletion: true }];
 	yield newLine;
@@ -219,7 +226,7 @@ export function* generateComponent(
 	yield endBoundary(token2, startTagOffset + tag.length);
 	yield `, ...${names.functionalComponentArgsRest}(${functionalVar}))${endOfLine}`;
 
-	yield* generateFailedExpressions(options, ctx, failGeneratedExpressions);
+	yield* generateFailedExpressions(options, ctx, failedPropExps);
 	yield* generateElementEvents(
 		options,
 		ctx,
@@ -279,7 +286,7 @@ export function* generateElement(
 	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
 	const [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
-	const failedPropExps: FailGeneratedExpression[] = [];
+	const failedPropExps: FailedPropExpressions[] = [];
 
 	yield `${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalElement0 : names.asFunctionalElement1
@@ -477,18 +484,18 @@ function* forEachClassName(content: string) {
 function* generateFailedExpressions(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	failGeneratedExpressions: FailGeneratedExpression[],
+	failedPropExps: FailedPropExpressions[],
 ): Generator<Code> {
-	for (const failedExp of failGeneratedExpressions) {
+	for (const { node, prefix, suffix } of failedPropExps) {
 		yield* generateInterpolation(
 			options,
 			ctx,
 			options.template,
 			codeFeatures.all,
-			failedExp.node.loc.source,
-			failedExp.node.loc.start.offset,
-			failedExp.prefix,
-			failedExp.suffix,
+			node.loc.source,
+			node.loc.start.offset,
+			prefix,
+			suffix,
 		);
 		yield endOfLine;
 	}

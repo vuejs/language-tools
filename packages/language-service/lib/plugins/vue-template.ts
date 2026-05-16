@@ -633,14 +633,7 @@ export function create(
 							const { components, elements } = getComponentsAndElements();
 							const codegen = tsCodegen.get(root.sfc);
 							const names = new Set<string>();
-							const tags: html.ITagData[] = [];
-
-							for (const tag of builtInData?.tags ?? []) {
-								tags.push({
-									...tag,
-									name: tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name,
-								});
-							}
+							const tags = new Map<string, html.ITagData>();
 
 							for (const tag of components) {
 								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag) : tag);
@@ -659,19 +652,23 @@ export function create(
 								}
 							}
 
-							const added = new Set<string>(tags.map(t => t.name));
 							for (const name of names) {
-								if (!added.has(name)) {
-									const defaultTag = defaultTags.get(name);
-									tags.push({
-										...defaultTag,
-										name,
-										attributes: [],
-									});
-								}
+								tags.set(name, {
+									...defaultTags.get(name),
+									name,
+									attributes: [],
+								});
 							}
 
-							return tags;
+							for (const tag of builtInData?.tags ?? []) {
+								const name = tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name;
+								tags.set(name, {
+									...tag,
+									name,
+								});
+							}
+
+							return [...tags.values()];
 						},
 						provideAttributes: tag => {
 							const attrs = getAttrs(tag);

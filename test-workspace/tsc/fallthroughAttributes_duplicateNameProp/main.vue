@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import basic from './basic.vue';
+import child from './child.vue';
 </script>
 
 <template>
-	<basic :bar="1" />
+	<child :bar="1" />
 	<!-- @vue-expect-error -->
-	<basic bar="1" />
+	<child bar="1" />
 </template>
