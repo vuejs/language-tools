@@ -91,6 +91,7 @@ export function* generateTemplateChild(
 function* collectSingleRootNodes(
 	options: TemplateCodegenOptions,
 	children: CompilerDOM.TemplateChildNode[],
+	isVIfChild = false,
 ): Generator<CompilerDOM.ElementNode | null> {
 	// Exclude the effect of comments on the root node
 	children = children.filter(node => node.type !== CompilerDOM.NodeTypes.COMMENT);
@@ -106,11 +107,16 @@ function* collectSingleRootNodes(
 	const child = children[0]!;
 	if (child.type === CompilerDOM.NodeTypes.IF) {
 		for (const branch of child.branches) {
-			yield* collectSingleRootNodes(options, branch.children);
+			yield* collectSingleRootNodes(options, branch.children, true);
 		}
 		return;
 	}
 	else if (child.type !== CompilerDOM.NodeTypes.ELEMENT) {
+		return;
+	}
+
+	if (child.tagType === CompilerDOM.ElementTypes.TEMPLATE && isVIfChild) {
+		yield* collectSingleRootNodes(options, child.children);
 		return;
 	}
 	yield child;
