@@ -54,7 +54,8 @@ export function create(
 	languageId: 'html' | 'jade',
 	tsserver: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
-	let htmlData: html.IHTMLDataProvider[] = [];
+	const defaultDataProvider = html.getDefaultHTMLDataProvider();
+	let htmlData: html.IHTMLDataProvider[] = [defaultDataProvider];
 	let modulePathCache:
 		| Map<string, Promise<string | null | undefined> | string | null | undefined>
 		| undefined;
@@ -108,7 +109,6 @@ export function create(
 		},
 	};
 
-	const defaultDataProvider = html.getDefaultHTMLDataProvider();
 	const baseService = languageId === 'jade'
 		? createPugService(serviceOptions)
 		: createHtmlService({
@@ -562,22 +562,6 @@ export function create(
 						}
 					}
 				},
-
-				provideDocumentSymbols(document, token) {
-					if (document.languageId !== languageId) {
-						return;
-					}
-					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'template') {
-						return;
-					}
-
-					updateHtmlData([
-						defaultDataProvider,
-					]);
-
-					return baseServiceInstance.provideDocumentSymbols?.(document, token);
-				},
 			};
 
 			async function runWithVueDataProvider<T>(
@@ -597,6 +581,9 @@ export function create(
 				while (lastSync.version !== (lastSync = await sync()).version) {
 					result = await fn();
 				}
+				updateHtmlData([
+					defaultDataProvider,
+				]);
 
 				return {
 					result,
