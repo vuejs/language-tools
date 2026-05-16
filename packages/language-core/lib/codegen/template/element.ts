@@ -209,12 +209,13 @@ export function* generateComponent(
 		yield endBoundary(token, offset + content.length);
 	}
 
+	const shouldInheritAttrs = hasVBindAttrs(options, ctx, node);
+
 	yield `(`;
 	const token2 = yield* startBoundary(
 		'template',
 		startTagOffset,
-		options.vueCompilerOptions.fallthroughAttributes
-			&& options.vueCompilerOptions.checkRequiredFallthroughAttributes
+		shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes
 			? {}
 			: codeFeatures.verification,
 	);
@@ -258,7 +259,7 @@ export function* generateComponent(
 		}
 	}
 
-	if (hasVBindAttrs(options, ctx, node)) {
+	if (shouldInheritAttrs) {
 		ctx.inheritedAttrVars.add(getPropsVar());
 	}
 
