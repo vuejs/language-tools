@@ -11,7 +11,7 @@ import type * as ts from 'typescript';
 
 export interface ComponentPropInfo {
 	name: string;
-	description: string;
+	description?: string;
 	optional?: boolean;
 	boolean?: boolean;
 }

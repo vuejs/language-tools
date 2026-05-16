@@ -618,12 +618,12 @@ export function create(
 				let version = 0;
 				let components: string[] | undefined;
 				let elements: string[] | undefined;
+				let attrs: ComponentPropInfo[] | undefined;
+				let props: ComponentPropInfo[] | undefined;
 				let directives: string[] | undefined;
 				let values: string[] | undefined;
 
 				const tasks: Promise<void>[] = [];
-				const tagToAttrs = new Map<string, { name: string; type: string }[]>();
-				const positionToProps = new Map<number, ComponentPropInfo[]>();
 
 				updateHtmlData([
 					{
@@ -633,14 +633,7 @@ export function create(
 							const { components, elements } = getComponentsAndElements();
 							const codegen = tsCodegen.get(root.sfc);
 							const names = new Set<string>();
-							const tags: html.ITagData[] = [];
-
-							for (const tag of builtInData?.tags ?? []) {
-								tags.push({
-									...tag,
-									name: tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name,
-								});
-							}
+							const tags = new Map<string, html.ITagData>();
 
 							for (const tag of components) {
 								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag) : tag);
@@ -659,19 +652,23 @@ export function create(
 								}
 							}
 
-							const added = new Set<string>(tags.map(t => t.name));
 							for (const name of names) {
-								if (!added.has(name)) {
-									const defaultTag = defaultTags.get(name);
-									tags.push({
-										...defaultTag,
-										name,
-										attributes: [],
-									});
-								}
+								tags.set(name, {
+									...defaultTags.get(name),
+									name,
+									attributes: [],
+								});
 							}
 
-							return tags;
+							for (const tag of builtInData?.tags ?? []) {
+								const name = tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name;
+								tags.set(name, {
+									...tag,
+									name,
+								});
+							}
+
+							return [...tags.values()];
 						},
 						provideAttributes: tag => {
 							const attrs = getAttrs(tag);
@@ -724,9 +721,9 @@ export function create(
 
 							for (
 								const [propName, propInfo] of [
-									...props.map(prop => [prop.name, prop] as const) ?? [],
-									...attrs.map(attr => [attr.name, undefined]),
-								] as [string, ComponentPropInfo | undefined][]
+									...props.map(prop => [prop.name, prop] as const),
+									...attrs.map(attr => [attr.name, attr] as const),
+								]
 							) {
 								if (propName.match(EVENT_PROP_REGEX)) {
 									let labelName = propName.slice(2);
@@ -825,23 +822,25 @@ export function create(
 				};
 
 				function getAttrs(tag: string) {
-					return tagToAttrs.get(tag) ?? (
+					if (!attrs) {
+						attrs = [];
 						tasks.push((async () => {
-							const attrs = await tsserver.getElementAttrs(root.fileName, tag) ?? [];
-							tagToAttrs.set(tag, attrs);
+							attrs = await tsserver.getElementAttrs(root.fileName, tag) ?? [];
 							version++;
-						})()), []
-					);
+						})());
+					}
+					return attrs;
 				}
 
 				function getProps(position: number) {
-					return positionToProps.get(position) ?? (
+					if (!props) {
+						props = [];
 						tasks.push((async () => {
-							const props = await tsserver.getComponentProps(root.fileName, position);
-							positionToProps.set(position, props ?? []);
+							props = await tsserver.getComponentProps(root.fileName, position) ?? [];
 							version++;
-						})()), []
-					);
+						})());
+					}
+					return props;
 				}
 
 				function getDirectives() {
