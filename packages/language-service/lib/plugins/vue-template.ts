@@ -16,7 +16,6 @@ import {
 	type VueVirtualCode,
 } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService, resolveReference } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import { applyCompletionEntryDetails, convertCompletionInfo } from 'volar-service-typescript/lib/utils/lspConverters';
@@ -598,7 +597,11 @@ export function create(
 				while (lastSync.version !== (lastSync = await sync()).version) {
 					result = await fn();
 				}
-				return { result, ...lastSync };
+
+				return {
+					result,
+					...lastSync,
+				};
 			}
 
 			async function provideHtmlData(
@@ -615,188 +618,220 @@ export function create(
 
 				customData ??= await getCustomData();
 
+				const tasks: Promise<void>[] = [];
 				let version = 0;
 				let components: string[] | undefined;
-				let elements: string[] | undefined;
-				let attrs: ComponentPropInfo[] | undefined;
-				let props: ComponentPropInfo[] | undefined;
-				let directives: string[] | undefined;
-				let values: string[] | undefined;
 
-				const tasks: Promise<void>[] = [];
+				const provideTags = createProvider({
+					async fetch() {
+						const res = await Promise.all([
+							tsserver.getComponentNames(root.fileName),
+							tsserver.getElementNames(root.fileName),
+						]);
+
+						components = res[0] ?? [];
+						return {
+							components,
+							elements: res[1] ?? [],
+						};
+					},
+					provide({ components, elements }) {
+						const codegen = tsCodegen.get(root.sfc);
+						const names = new Set<string>();
+						const tags = new Map<string, html.ITagData>();
+
+						for (const tag of components) {
+							names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag) : tag);
+						}
+						for (const tag of elements) {
+							names.add(tag);
+						}
+						if (codegen) {
+							for (
+								const name of [
+									...codegen.getImportedComponents(),
+									...codegen.getSetupExposed(),
+								]
+							) {
+								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name);
+							}
+						}
+
+						for (const name of names) {
+							tags.set(name, {
+								...defaultTags.get(name),
+								name,
+								attributes: [],
+							});
+						}
+
+						for (const tag of builtInData?.tags ?? []) {
+							const name = tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name;
+							tags.set(name, {
+								...tag,
+								name,
+							});
+						}
+
+						return [...tags.values()];
+					},
+				});
+
+				const provideAttributes = createProvider({
+					async fetch(tag: string) {
+						const res = await Promise.all([
+							tsserver.getElementAttrs(root.fileName, tag),
+							tsserver.getComponentProps(root.fileName, position),
+							tsserver.getComponentDirectives(root.fileName),
+						]);
+						return {
+							attrs: res[0] ?? [],
+							props: res[1] ?? [],
+							directives: res[2] ?? [],
+						};
+					},
+					provide({ attrs, props, directives }, tag) {
+						const attributes: html.IAttributeData[] = [];
+
+						let addPlainAttrs = false;
+						let addVBinds = false;
+						let addVBindShorthands = false;
+						let addVOns = false;
+						let addVOnShorthands = false;
+
+						if (!hint) {
+							addVBindShorthands = true;
+							addVOnShorthands = true;
+						}
+						else if (hint === ':') {
+							addVBindShorthands = true;
+						}
+						else if (hint === '@') {
+							addVOnShorthands = true;
+						}
+						else {
+							addPlainAttrs = true;
+							addVBinds = true;
+							addVOns = true;
+							addVBindShorthands = true;
+							addVOnShorthands = true;
+						}
+
+						for (const attr of builtInData?.globalAttributes ?? []) {
+							if (attr.name === 'is' && tag.toLowerCase() !== 'component') {
+								continue;
+							}
+							if (attr.name === 'ref' || attr.name.startsWith('v-')) {
+								attributes.push(attr);
+								continue;
+							}
+							if (addPlainAttrs) {
+								attributes.push({ ...attr, name: attr.name });
+							}
+							if (addVBindShorthands) {
+								attributes.push({ ...attr, name: V_BIND_SHORTHAND + attr.name });
+							}
+							if (addVBinds) {
+								attributes.push({ ...attr, name: DIRECTIVE_V_BIND + attr.name });
+							}
+						}
+
+						for (
+							const [propName, propInfo] of [
+								...props.map(prop => [prop.name, prop] as const),
+								...attrs.map(attr => [attr.name, attr] as const),
+							]
+						) {
+							if (propName.match(EVENT_PROP_REGEX)) {
+								let labelName = propName.slice(2);
+								labelName = labelName.charAt(0).toLowerCase() + labelName.slice(1);
+								if (attrNameCasing === AttrNameCasing.Kebab) {
+									labelName = hyphenateAttr(labelName);
+								}
+
+								if (addVOnShorthands) {
+									attributes.push({
+										name: V_ON_SHORTHAND + labelName,
+										description: propInfo?.description,
+									});
+								}
+								if (addVOns) {
+									attributes.push({
+										name: DIRECTIVE_V_ON + labelName,
+										description: propInfo?.description,
+									});
+								}
+							}
+							else {
+								const labelName = attrNameCasing === AttrNameCasing.Camel ? propName : hyphenateAttr(propName);
+
+								if (addPlainAttrs) {
+									attributes.push({
+										name: labelName,
+										description: propInfo?.description,
+										valueSet: propInfo?.boolean ? 'v' : undefined,
+									});
+								}
+								if (addVBindShorthands) {
+									attributes.push({
+										name: V_BIND_SHORTHAND + labelName,
+										description: propInfo?.description,
+									});
+								}
+								if (addVBinds) {
+									attributes.push({
+										name: DIRECTIVE_V_BIND + labelName,
+										description: propInfo?.description,
+									});
+								}
+							}
+							if (propName.startsWith(UPDATE_PROP_PREFIX)) {
+								const model = propName.slice(UPDATE_PROP_PREFIX.length);
+								const label = DIRECTIVE_V_MODEL
+									+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
+								attributes.push({
+									name: label,
+									description: propInfo?.description,
+								});
+							}
+						}
+
+						for (const directive of directives) {
+							attributes.push({
+								name: hyphenateAttr(directive),
+							});
+						}
+
+						// dedupe from tsserver
+						if (mode === 'hover') {
+							for (const item of attributes) {
+								item.description = undefined;
+							}
+						}
+
+						return attributes;
+					},
+				});
+
+				const provideValues = createProvider({
+					async fetch(tag: string, attr: string) {
+						if (tag === 'slot' && attr === 'name') {
+							return await tsserver.getComponentSlots(root.fileName) ?? [];
+						}
+						return [];
+					},
+					provide(values) {
+						return values.map(value => ({ name: value }));
+					},
+				});
 
 				updateHtmlData([
 					{
 						getId: () => 'vue-template',
 						isApplicable: () => true,
-						provideTags: () => {
-							const { components, elements } = getComponentsAndElements();
-							const codegen = tsCodegen.get(root.sfc);
-							const names = new Set<string>();
-							const tags = new Map<string, html.ITagData>();
-
-							for (const tag of components) {
-								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag) : tag);
-							}
-							for (const tag of elements) {
-								names.add(tag);
-							}
-							if (codegen) {
-								for (
-									const name of [
-										...codegen.getImportedComponents(),
-										...codegen.getSetupExposed(),
-									]
-								) {
-									names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name);
-								}
-							}
-
-							for (const name of names) {
-								tags.set(name, {
-									...defaultTags.get(name),
-									name,
-									attributes: [],
-								});
-							}
-
-							for (const tag of builtInData?.tags ?? []) {
-								const name = tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name;
-								tags.set(name, {
-									...tag,
-									name,
-								});
-							}
-
-							return [...tags.values()];
-						},
-						provideAttributes: tag => {
-							const attrs = getAttrs(tag);
-							const props = getProps(position);
-							const directives = getDirectives();
-							const attributes: html.IAttributeData[] = [];
-
-							let addPlainAttrs = false;
-							let addVBinds = false;
-							let addVBindShorthands = false;
-							let addVOns = false;
-							let addVOnShorthands = false;
-
-							if (!hint) {
-								addVBindShorthands = true;
-								addVOnShorthands = true;
-							}
-							else if (hint === ':') {
-								addVBindShorthands = true;
-							}
-							else if (hint === '@') {
-								addVOnShorthands = true;
-							}
-							else {
-								addPlainAttrs = true;
-								addVBinds = true;
-								addVOns = true;
-								addVBindShorthands = true;
-								addVOnShorthands = true;
-							}
-
-							for (const attr of builtInData?.globalAttributes ?? []) {
-								if (attr.name === 'is' && tag.toLowerCase() !== 'component') {
-									continue;
-								}
-								if (attr.name === 'ref' || attr.name.startsWith('v-')) {
-									attributes.push(attr);
-									continue;
-								}
-								if (addPlainAttrs) {
-									attributes.push({ ...attr, name: attr.name });
-								}
-								if (addVBindShorthands) {
-									attributes.push({ ...attr, name: V_BIND_SHORTHAND + attr.name });
-								}
-								if (addVBinds) {
-									attributes.push({ ...attr, name: DIRECTIVE_V_BIND + attr.name });
-								}
-							}
-
-							for (
-								const [propName, propInfo] of [
-									...props.map(prop => [prop.name, prop] as const),
-									...attrs.map(attr => [attr.name, attr] as const),
-								]
-							) {
-								if (propName.match(EVENT_PROP_REGEX)) {
-									let labelName = propName.slice(2);
-									labelName = labelName.charAt(0).toLowerCase() + labelName.slice(1);
-									if (attrNameCasing === AttrNameCasing.Kebab) {
-										labelName = hyphenateAttr(labelName);
-									}
-
-									if (addVOnShorthands) {
-										attributes.push({
-											name: V_ON_SHORTHAND + labelName,
-											description: propInfo?.description,
-										});
-									}
-									if (addVOns) {
-										attributes.push({
-											name: DIRECTIVE_V_ON + labelName,
-											description: propInfo?.description,
-										});
-									}
-								}
-								else {
-									const labelName = attrNameCasing === AttrNameCasing.Camel ? propName : hyphenateAttr(propName);
-
-									if (addPlainAttrs) {
-										attributes.push({
-											name: labelName,
-											description: propInfo?.description,
-											valueSet: propInfo?.boolean ? 'v' : undefined,
-										});
-									}
-									if (addVBindShorthands) {
-										attributes.push({
-											name: V_BIND_SHORTHAND + labelName,
-											description: propInfo?.description,
-										});
-									}
-									if (addVBinds) {
-										attributes.push({
-											name: DIRECTIVE_V_BIND + labelName,
-											description: propInfo?.description,
-										});
-									}
-								}
-								if (propName.startsWith(UPDATE_PROP_PREFIX)) {
-									const model = propName.slice(UPDATE_PROP_PREFIX.length);
-									const label = DIRECTIVE_V_MODEL
-										+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
-									attributes.push({
-										name: label,
-										description: propInfo?.description,
-									});
-								}
-							}
-
-							for (const directive of directives) {
-								attributes.push({
-									name: hyphenateAttr(directive),
-								});
-							}
-
-							// dedupe from tsserver
-							if (mode === 'hover') {
-								for (const item of attributes) {
-									item.description = undefined;
-								}
-							}
-
-							return attributes;
-						},
-						provideValues: (tag, attr) => {
-							return getValues(tag, attr).map(value => ({ name: value }));
-						},
+						provideTags,
+						provideAttributes,
+						provideValues,
 					},
 					{
 						getId: () => 'vue-auto-imports',
@@ -820,70 +855,27 @@ export function create(
 					},
 				};
 
-				function getAttrs(tag: string) {
-					if (!attrs) {
-						attrs = [];
-						tasks.push((async () => {
-							attrs = await tsserver.getElementAttrs(root.fileName, tag) ?? [];
-							version++;
-						})());
-					}
-					return attrs;
-				}
+				function createProvider<T extends any[], D, R>(options: {
+					fetch: (...args: T) => Promise<D>;
+					provide: (data: D, ...args: T) => R;
+				}) {
+					let status: 'idle' | 'pending' | 'done' = 'idle';
+					let data: D;
 
-				function getProps(position: number) {
-					if (!props) {
-						props = [];
-						tasks.push((async () => {
-							props = await tsserver.getComponentProps(root.fileName, position) ?? [];
-							version++;
-						})());
-					}
-					return props;
-				}
-
-				function getDirectives() {
-					if (!directives) {
-						directives = [];
-						tasks.push((async () => {
-							directives = await tsserver.getComponentDirectives(root.fileName) ?? [];
-							version++;
-						})());
-					}
-					return directives;
-				}
-
-				function getComponentsAndElements() {
-					if (!components || !elements) {
-						components = [];
-						elements = [];
-						tasks.push((async () => {
-							const res = await Promise.all([
-								tsserver.getComponentNames(root.fileName),
-								tsserver.getElementNames(root.fileName),
-							]);
-							components = res[0] ?? [];
-							elements = res[1] ?? [];
-							version++;
-						})());
-					}
-					return {
-						components,
-						elements,
+					return (...args: T) => {
+						if (status === 'idle') {
+							status = 'pending';
+							tasks.push((async () => {
+								data = await options.fetch(...args);
+								status = 'done';
+								version++;
+							})());
+						}
+						else if (status === 'done') {
+							return options.provide(data, ...args);
+						}
+						return [];
 					};
-				}
-
-				function getValues(tag: string, attr: string) {
-					if (!values) {
-						values = [];
-						tasks.push((async () => {
-							if (tag === 'slot' && attr === 'name') {
-								values = await tsserver.getComponentSlots(root.fileName) ?? [];
-							}
-							version++;
-						})());
-					}
-					return values;
 				}
 			}
 
