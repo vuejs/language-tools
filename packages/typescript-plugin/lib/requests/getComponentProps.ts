@@ -72,6 +72,11 @@ export function getComponentProps(
 	const preferences = session['getPreferences']();
 	const completion = tsLanguageService.getCompletionsAtPosition(virtualCode.fileName, position2, preferences);
 
+	// skip fallback global completions
+	if (!completion?.isMemberCompletion) {
+		return;
+	}
+
 	return completion?.entries.map(entry => {
 		const modifiers = entry.kindModifiers?.split(',');
 		const details = tsLanguageService.getCompletionEntryDetails(
