@@ -120,6 +120,11 @@
 					"default": false,
 					"markdownDescription": "Enable to support typed fallthrough attributes. Please note that enabling may significantly slow down type checking."
 				},
+				"checkRequiredFallthroughAttributes": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Check required fallthrough attributes."
+				},
 				"resolveStyleImports": {
 					"type": "boolean",
 					"default": false,

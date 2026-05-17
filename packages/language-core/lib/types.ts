@@ -53,6 +53,7 @@ export interface VueCompilerOptions {
 	inferTemplateDollarSlots: boolean;
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;
+	checkRequiredFallthroughAttributes: boolean;
 	resolveStyleImports: boolean;
 	resolveStyleClassNames: boolean | 'scoped';
 	fallthroughComponentNames: string[];

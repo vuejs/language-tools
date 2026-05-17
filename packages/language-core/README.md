@@ -111,6 +111,7 @@ Configure Vue compiler behavior through the `vueCompilerOptions` field in `tscon
 | `lib` | `string` | `'vue'` | Vue package name, used for generating import statements. |
 | `skipTemplateCodegen` | `boolean` | `false` | Skip virtual code generation for templates. |
 | `fallthroughAttributes` | `boolean` | `false` | Enable type inference for fallthrough attributes. |
+| `checkRequiredFallthroughAttributes` | `boolean` | `false` | Check required fallthrough attributes. |
 | `jsxSlots` | `boolean` | `false` | Use JSX-style slots types. |
 | `dataAttributes` | `string[]` | `[]` | Allowed data-* attribute patterns. |
 | `htmlAttributes` | `string[]` | `['aria-*']` | Allowed HTML attribute patterns. |

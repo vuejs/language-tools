@@ -1,9 +1,7 @@
 <script setup lang="ts">
-defineEmits<{
-	foo: [string];
-}>();
-
-defineProps<{
-	bar?: string;
-}>();
+import basic from './basic.vue';
 </script>
+
+<template>
+	<basic />
+</template>

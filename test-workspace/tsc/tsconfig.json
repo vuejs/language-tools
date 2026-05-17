@@ -581,6 +581,9 @@
 			"path": "./fallthroughAttributes/tsconfig.json"
 		},
 		{
+			"path": "./fallthroughAttributes_checkRequired/tsconfig.json"
+		},
+		{
 			"path": "./fallthroughAttributes_duplicateNameEvent/tsconfig.json"
 		},
 		{
@@ -588,9 +591,6 @@
 		},
 		{
 			"path": "./fallthroughAttributes_generic/tsconfig.json"
-		},
-		{
-			"path": "./fallthroughAttributes_requiredProp/tsconfig.json"
 		},
 		{
 			"path": "./fallthroughAttributes_unknownTag/tsconfig.json"

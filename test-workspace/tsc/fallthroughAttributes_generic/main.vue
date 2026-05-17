@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { exactType } from '../shared';
-import basic from './basic.vue';
+import child from './child.vue';
 </script>
 
 <template>
-	<basic bar="..." @foo="e => exactType(e, {} as string)" />
+	<child bar="..." @foo="e => exactType(e, {} as string)" />
 </template>

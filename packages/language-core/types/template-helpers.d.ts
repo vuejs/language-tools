@@ -143,6 +143,7 @@ declare global {
 	function __VLS_asFunctionalElement0<T>(tag: T, endTag?: T): (attrs: T) => void;
 	function __VLS_asFunctionalElement1<T>(tag: T, endTag?: T): (attrs: T & Record<string, unknown>) => void;
 	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
+	function __VLS_omit<T, K>(target: T, props: K): Omit<T, keyof K>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
 }
 

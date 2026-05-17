@@ -271,6 +271,7 @@ export function getDefaultCompilerOptions(
 		inferTemplateDollarSlots: false,
 		skipTemplateCodegen: false,
 		fallthroughAttributes: false,
+		checkRequiredFallthroughAttributes: false,
 		resolveStyleImports: false,
 		resolveStyleClassNames: 'scoped',
 		fallthroughComponentNames: [

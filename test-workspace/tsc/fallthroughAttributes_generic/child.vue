@@ -1,8 +1,11 @@
 <script setup lang="ts" generic="T">
+import basic from './basic.vue';
+
 defineProps<{
-	foo?: T;
-}>();
-defineEmits<{
-	foo: [T];
+	bar?: T;
 }>();
 </script>
+
+<template>
+	<basic :foo="bar" />
+</template>

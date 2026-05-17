@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import child from './child.vue';
+import basic from './basic.vue';
 
 defineOptions({
 	inheritAttrs: false,
@@ -7,5 +7,5 @@ defineOptions({
 </script>
 
 <template>
-  <child />
+  <basic />
 </template>

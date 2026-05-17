@@ -14,7 +14,7 @@ import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
 import { generateElementDirectives } from './elementDirectives';
 import { generateElementEvents } from './elementEvents';
-import { type FailGeneratedExpression, generateElementProps } from './elementProps';
+import { type FailedPropExpressions, generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
@@ -173,25 +173,27 @@ export function* generateComponent(
 	const getPropsVar = () => (isPropsVarUsed = true, propsVar);
 	ctx.components.push(getCtxVar);
 
-	const failGeneratedExpressions: FailGeneratedExpression[] = [];
+	const functionalVar = ctx.getInternalVariable();
+	const vnodeVar = ctx.getInternalVariable();
+	const ctxVar = ctx.getInternalVariable();
+	const propsVar = ctx.getInternalVariable();
+
+	const failedPropExps: FailedPropExpressions[] = [];
 	const propCodes = [...generateElementProps(
 		options,
 		ctx,
 		node,
 		props,
 		options.vueCompilerOptions.checkUnknownProps,
-		failGeneratedExpressions,
+		failedPropExps,
 	)];
-	const functionalVar = ctx.getInternalVariable();
-	const vnodeVar = ctx.getInternalVariable();
-	const ctxVar = ctx.getInternalVariable();
-	const propsVar = ctx.getInternalVariable();
+	const propsStr = toString(propCodes);
 
 	yield `// @ts-ignore${newLine}`;
 	yield `const ${functionalVar} = ${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
-	yield toString(propCodes);
+	yield propsStr;
 	yield `}))${endOfLine}`;
 
 	yield `const `;
@@ -209,8 +211,16 @@ export function* generateComponent(
 		yield endBoundary(token, offset + content.length);
 	}
 
+	const shouldInheritAttrs = hasVBindAttrs(options, ctx, node);
+
 	yield `(`;
-	const token2 = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+	const token2 = yield* startBoundary(
+		'template',
+		startTagOffset,
+		shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes
+			? {}
+			: codeFeatures.verification,
+	);
 	yield `{`;
 	yield [``, 'template', node.loc.start.offset, { __propsCompletion: true }];
 	yield newLine;
@@ -219,7 +229,7 @@ export function* generateComponent(
 	yield endBoundary(token2, startTagOffset + tag.length);
 	yield `, ...${names.functionalComponentArgsRest}(${functionalVar}))${endOfLine}`;
 
-	yield* generateFailedExpressions(options, ctx, failGeneratedExpressions);
+	yield* generateFailedExpressions(options, ctx, failedPropExps);
 	yield* generateElementEvents(
 		options,
 		ctx,
@@ -231,35 +241,35 @@ export function* generateComponent(
 	yield* generateElementDirectives(options, ctx, node);
 
 	const templateRef = getTemplateRef(node);
-	const isRootNode = ctx.singleRootNodes.has(node)
+	const isSingleRoot = ctx.singleRootNodes.has(node)
 		&& !options.vueCompilerOptions.fallthroughComponentNames.includes(hyphenateTag(tag));
 
-	if (templateRef || isRootNode) {
+	if (templateRef || isSingleRoot) {
 		const componentInstanceVar = ctx.getInternalVariable();
-		yield `var ${componentInstanceVar} = {} as (Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0] | null)`;
-		if (ctx.inVFor) {
-			yield `[]`;
-		}
+		yield `var ${componentInstanceVar}!: Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0]`;
 		yield endOfLine;
 
 		if (templateRef) {
-			const typeExp = `typeof ${ctx.getHoistVariable(componentInstanceVar)}`;
+			let typeExp = `typeof ${ctx.getHoistVariable(componentInstanceVar)} | null`;
+			if (ctx.inVFor) {
+				typeExp = `(${typeExp})[]`;
+			}
 			ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 		}
-		if (isRootNode) {
+		if (isSingleRoot) {
 			ctx.singleRootElTypes.add(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
 		}
 	}
 
-	if (hasVBindAttrs(options, ctx, node)) {
-		ctx.inheritedAttrVars.add(getPropsVar());
+	if (shouldInheritAttrs) {
+		const restsVar = ctx.getInternalVariable();
+		yield `var ${restsVar} = ${names.omit}(${getPropsVar()}, {\n${propsStr}})${endOfLine}`;
+		ctx.inheritedAttrVars.add(restsVar);
 	}
 
 	yield* generateStyleScopedClassReferences(options, node);
 
-	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as
-		| CompilerDOM.DirectiveNode
-		| undefined;
+	const slotDir = node.props.find(CompilerDOM.isVSlot);
 	if (slotDir || node.children.length) {
 		yield* generateVSlot(options, ctx, node, slotDir, getCtxVar());
 	}
@@ -279,7 +289,7 @@ export function* generateElement(
 	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
 	const [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
-	const failedPropExps: FailGeneratedExpression[] = [];
+	const failedPropExps: FailedPropExpressions[] = [];
 
 	yield `${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalElement0 : names.asFunctionalElement1
@@ -477,18 +487,18 @@ function* forEachClassName(content: string) {
 function* generateFailedExpressions(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	failGeneratedExpressions: FailGeneratedExpression[],
+	failedPropExps: FailedPropExpressions[],
 ): Generator<Code> {
-	for (const failedExp of failGeneratedExpressions) {
+	for (const { node, prefix, suffix } of failedPropExps) {
 		yield* generateInterpolation(
 			options,
 			ctx,
 			options.template,
 			codeFeatures.all,
-			failedExp.node.loc.source,
-			failedExp.node.loc.start.offset,
-			failedExp.prefix,
-			failedExp.suffix,
+			node.loc.source,
+			node.loc.start.offset,
+			prefix,
+			suffix,
 		);
 		yield endOfLine;
 	}

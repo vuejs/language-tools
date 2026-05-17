@@ -17,7 +17,7 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 
-export interface FailGeneratedExpression {
+export interface FailedPropExpressions {
 	node: CompilerDOM.SimpleExpressionNode;
 	prefix: string;
 	suffix: string;
@@ -28,8 +28,8 @@ export function* generateElementProps(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	props: CompilerDOM.ElementNode['props'],
-	strictPropsCheck: boolean,
-	failGeneratedExpressions?: FailGeneratedExpression[],
+	checkUnknownProps: boolean,
+	failedPropExps?: FailedPropExpressions[],
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
@@ -61,14 +61,14 @@ export function* generateElementProps(
 				&& prop.arg.loc.source.startsWith('[')
 				&& prop.arg.loc.source.endsWith(']')
 			) {
-				failGeneratedExpressions?.push({ node: prop.arg, prefix: `(`, suffix: `)` });
-				failGeneratedExpressions?.push({ node: prop.exp, prefix: `() => {`, suffix: `}` });
+				failedPropExps?.push({ node: prop.arg, prefix: `(`, suffix: `)` });
+				failedPropExps?.push({ node: prop.exp, prefix: `() => {`, suffix: `}` });
 			}
 			else if (
 				!prop.arg
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				failGeneratedExpressions?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
+				failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 			}
 		}
 	}
@@ -98,7 +98,7 @@ export function* generateElementProps(
 				|| options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(propName!, pattern))
 			) {
 				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-					failGeneratedExpressions?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
+					failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 				}
 				continue;
 			}
@@ -112,7 +112,7 @@ export function* generateElementProps(
 
 			const shouldSpread = propName === 'style' || propName === 'class';
 			const shouldCamelize = getShouldCamelize(options, node, prop, propName);
-			const features = getPropsCodeFeatures(strictPropsCheck);
+			const features = getPropsCodeFeatures(checkUnknownProps);
 
 			if (shouldSpread) {
 				yield `...{ `;
@@ -169,7 +169,7 @@ export function* generateElementProps(
 
 			const shouldSpread = prop.name === 'style' || prop.name === 'class';
 			const shouldCamelize = getShouldCamelize(options, node, prop, prop.name);
-			const features = getPropsCodeFeatures(strictPropsCheck);
+			const features = getPropsCodeFeatures(checkUnknownProps);
 
 			if (shouldSpread) {
 				yield `...{ `;
@@ -214,7 +214,7 @@ export function* generateElementProps(
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
 			if (prop.exp.loc.source === '$attrs') {
-				failGeneratedExpressions?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
+				failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 			}
 			else {
 				const token = yield* startBoundary('template', prop.exp.loc.start.offset, codeFeatures.verification);
@@ -314,10 +314,10 @@ function getShouldCamelize(
 		&& !options.vueCompilerOptions.htmlAttributes.some(pattern => isMatch(propName, pattern));
 }
 
-function getPropsCodeFeatures(strictPropsCheck: boolean): VueCodeInformation {
+function getPropsCodeFeatures(checkUnknownProps: boolean): VueCodeInformation {
 	return {
 		...codeFeatures.withoutHighlightAndCompletion,
-		...strictPropsCheck
+		...checkUnknownProps
 			? codeFeatures.verification
 			: codeFeatures.doNotReportTs2353AndTs2561,
 		__propsCompletion: true,

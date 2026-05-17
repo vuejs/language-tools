@@ -26,21 +26,21 @@ function* generateTemplateCtx(
 	ctx: ScriptCodegenContext,
 	selfType: string | undefined,
 ): Generator<Code> {
-	const exps: Iterable<Code>[] = [];
+	const exps: Code[] = [];
 	const emitTypes: string[] = [];
 	const propTypes: string[] = [];
 
 	if (vueCompilerOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {
-		exps.push([`globalThis`]);
+		exps.push(`globalThis`);
 	}
 	if (selfType) {
-		exps.push([`{} as InstanceType<${names.PickNotAny}<typeof ${selfType}, new () => {}>>`]);
+		exps.push(`{} as InstanceType<${names.PickNotAny}<typeof ${selfType}, new () => {}>>`);
 	}
 	else {
-		exps.push([`{} as import('${vueCompilerOptions.lib}').ComponentPublicInstance`]);
+		exps.push(`{} as import('${vueCompilerOptions.lib}').ComponentPublicInstance`);
 	}
 	if (templateAndStyleTypes.has(names.StyleModules)) {
-		exps.push([`{} as ${names.StyleModules}`]);
+		exps.push(`{} as ${names.StyleModules}`);
 	}
 
 	if (scriptSetupRanges?.defineEmits) {
@@ -53,7 +53,7 @@ function* generateTemplateCtx(
 		yield `type ${names.EmitProps} = ${names.EmitsToProps}<${names.NormalizeEmits}<${
 			emitTypes.join(` & `)
 		}>>${endOfLine}`;
-		exps.push([`{} as { $emit: ${emitTypes.join(` & `)} }`]);
+		exps.push(`{} as { $emit: ${emitTypes.join(` & `)} }`);
 	}
 
 	if (scriptSetupRanges?.defineProps) {
@@ -66,16 +66,16 @@ function* generateTemplateCtx(
 		propTypes.push(names.EmitProps);
 	}
 	if (propTypes.length) {
-		exps.push([`{} as { $props: ${propTypes.join(` & `)} }`]);
-		exps.push([`{} as ${propTypes.join(` & `)}`]);
+		exps.push(`{} as { $props: ${propTypes.join(` & `)} }`);
+		exps.push(`{} as ${propTypes.join(` & `)}`);
 	}
 
 	if (ctx.generatedTypes.has(names.SetupExposed)) {
-		exps.push([`{} as ${names.SetupExposed}`]);
+		exps.push(`{} as ${names.SetupExposed}`);
 	}
 
 	yield `const ${names.ctx} = `;
-	yield* generateSpreadMerge(exps);
+	yield* generateSpreadMerge(...exps);
 	yield endOfLine;
 }
 
