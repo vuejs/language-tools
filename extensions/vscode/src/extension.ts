@@ -332,6 +332,11 @@ function patchTypeScriptExtension() {
 				new RegExp(String.raw`\.languages\.match\(\[(${id},${id})\]`),
 				(_, ids) => `.languages.match([${ids}].concat("vue")`,
 			);
+			// patch standardFileExtensions
+			text = text.replace(
+				new RegExp(String.raw`registerExtensionLanguageProvider\((${id}),${id}\)\{`),
+				(match, id) => `${match}if(${id}.languages.includes("vue"))${id}.standardFileExtensions.push("vue");`,
+			);
 			// patch configureOptions
 			text = text.replace(
 				new RegExp(String.raw`this.executeWithoutWaitingForResponse\("configure",(${id})`),
@@ -340,8 +345,8 @@ function patchTypeScriptExtension() {
 			);
 			// patch getJsTsFileBeingMoved
 			text = text.replace(
-				new RegExp(String.raw`.RelativePattern\((${id}),"\*\*\/\*\.\{(ts,tsx,js,jsx)`),
-				(_, resource, ids) => `.RelativePattern(${resource},"**/*.{${ids},vue`,
+				new RegExp(String.raw`.RelativePattern\(${id},"\*\*\/\*\.\{ts,tsx,js,jsx`),
+				match => `${match},vue`,
 			);
 
 			// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
