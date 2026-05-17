@@ -21,7 +21,7 @@ import { restrictFormattingEditsToRange } from './rangeFormatting';
 import * as reactivityVisualization from './reactivityVisualization';
 import * as welcome from './welcome';
 
-let serverPath = resolveServerPath();
+const serverPath = resolveServerPath();
 const neededRestart = !patchTypeScriptExtension();
 
 for (
@@ -111,15 +111,6 @@ export = defineExtension(() => {
 		if (tsdk === undefined) {
 			vscode.window.showErrorMessage('Cannot find TypeScript SDK.');
 			return;
-		}
-
-		if (!serverPath) {
-			try {
-				serverPath = require.resolve('../node_modules/@vue/language-server');
-			}
-			catch {
-				serverPath = require.resolve('../dist/language-server.js');
-			}
 		}
 
 		client = launch(serverPath, tsdk.replace(/\\/g, '/'));
@@ -249,29 +240,30 @@ function resolveTsdkPath() {
 function resolveServerPath() {
 	const tsPluginEntry = path.join(__dirname, '..', 'node_modules', 'vue-typescript-plugin-pack', 'index.js');
 
-	if (!config.server.path) {
-		return;
+	if (config.server.path) {
+		for (
+			const serverPath of path.isAbsolute(config.server.path)
+				? [config.server.path]
+				: vscode.workspace.workspaceFolders
+					?.filter(({ uri }) => uri.scheme === 'file')
+					.map(({ uri }) => path.join(uri.fsPath, config.server.path!)) ?? []
+		) {
+			try {
+				const entryFile = require.resolve('./index.js', { paths: [serverPath] });
+				const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [serverPath] });
+				// FIXME: cannot work on read-only file system
+				fs.writeFileSync(tsPluginEntry, `module.exports = require(${JSON.stringify(tsPluginPath)});\n`);
+				return entryFile;
+			}
+			catch {}
+		}
 	}
 
-	if (path.isAbsolute(config.server.path)) {
-		const entryFile = require.resolve('./index.js', { paths: [config.server.path] });
-		const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-		fs.writeFileSync(tsPluginEntry, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
-		return entryFile;
+	try {
+		return require.resolve('../node_modules/@vue/language-server');
 	}
-
-	for (const { uri } of vscode.workspace.workspaceFolders ?? []) {
-		if (uri.scheme !== 'file') {
-			continue;
-		}
-		try {
-			const serverPath = path.join(uri.fsPath, config.server.path);
-			const entryFile = require.resolve('./index.js', { paths: [serverPath] });
-			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-			fs.writeFileSync(tsPluginEntry, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
-			return entryFile;
-		}
-		catch {}
+	catch {
+		return require.resolve('../dist/language-server.js');
 	}
 }
 
