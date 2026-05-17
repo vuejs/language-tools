@@ -337,7 +337,7 @@ function patchTypeScriptExtension() {
 				new RegExp(String.raw`registerExtensionLanguageProvider\((${id}),${id}\)\{`),
 				(match, id) => `${match}if(${id}.languageIds.includes("vue"))${id}.standardFileExtensions.push("vue");`,
 			);
-			// patch configureOptions
+			// patch extraFileExtensions
 			text = text.replace(
 				new RegExp(String.raw`this.executeWithoutWaitingForResponse\("configure",(${id})`),
 				(match, id) =>
