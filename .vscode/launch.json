@@ -18,21 +18,6 @@
 			"preLaunchTask": "watch"
 		},
 		{
-			"name": "Launch Web Client",
-			"type": "pwa-extensionHost",
-			"debugWebWorkerHost": true,
-			"request": "launch",
-			"args": [
-				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode",
-				"--extensionDevelopmentKind=web"
-			],
-			"outFiles": [
-				"${workspaceRoot}/**/*.js"
-			],
-			"preLaunchTask": "watch"
-		},
-		{
 			"name": "Attach to Language Server",
 			"type": "node",
 			"request": "attach",

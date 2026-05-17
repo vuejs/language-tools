@@ -1,6 +1,6 @@
-node_modules
 src
 out
+scripts
 tests
 tsconfig.json
 tsconfig.tsbuildinfo
