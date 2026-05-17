@@ -3,6 +3,5 @@ import child from './child.vue';
 </script>
 
 <template>
-	<!-- @vue-expect-error -->
-	<child />
+	<child bar="..." />
 </template>

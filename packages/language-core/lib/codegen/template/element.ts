@@ -173,6 +173,11 @@ export function* generateComponent(
 	const getPropsVar = () => (isPropsVarUsed = true, propsVar);
 	ctx.components.push(getCtxVar);
 
+	const functionalVar = ctx.getInternalVariable();
+	const vnodeVar = ctx.getInternalVariable();
+	const ctxVar = ctx.getInternalVariable();
+	const propsVar = ctx.getInternalVariable();
+
 	const failedPropExps: FailedPropExpressions[] = [];
 	const propCodes = [...generateElementProps(
 		options,
@@ -182,16 +187,13 @@ export function* generateComponent(
 		options.vueCompilerOptions.checkUnknownProps,
 		failedPropExps,
 	)];
-	const functionalVar = ctx.getInternalVariable();
-	const vnodeVar = ctx.getInternalVariable();
-	const ctxVar = ctx.getInternalVariable();
-	const propsVar = ctx.getInternalVariable();
+	const propsStr = toString(propCodes);
 
 	yield `// @ts-ignore${newLine}`;
 	yield `const ${functionalVar} = ${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
-	yield toString(propCodes);
+	yield propsStr;
 	yield `}))${endOfLine}`;
 
 	yield `const `;
@@ -239,35 +241,35 @@ export function* generateComponent(
 	yield* generateElementDirectives(options, ctx, node);
 
 	const templateRef = getTemplateRef(node);
-	const isRootNode = ctx.singleRootNodes.has(node)
+	const isSingleRoot = ctx.singleRootNodes.has(node)
 		&& !options.vueCompilerOptions.fallthroughComponentNames.includes(hyphenateTag(tag));
 
-	if (templateRef || isRootNode) {
+	if (templateRef || isSingleRoot) {
 		const componentInstanceVar = ctx.getInternalVariable();
-		yield `var ${componentInstanceVar} = {} as (Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0] | null)`;
-		if (ctx.inVFor) {
-			yield `[]`;
-		}
+		yield `var ${componentInstanceVar}!: Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0]`;
 		yield endOfLine;
 
 		if (templateRef) {
-			const typeExp = `typeof ${ctx.getHoistVariable(componentInstanceVar)}`;
+			let typeExp = `typeof ${ctx.getHoistVariable(componentInstanceVar)} | null`;
+			if (ctx.inVFor) {
+				typeExp = `(${typeExp})[]`;
+			}
 			ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 		}
-		if (isRootNode) {
+		if (isSingleRoot) {
 			ctx.singleRootElTypes.add(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
 		}
 	}
 
 	if (shouldInheritAttrs) {
-		ctx.inheritedAttrVars.add(getPropsVar());
+		const restsVar = ctx.getInternalVariable();
+		yield `var ${restsVar} = ${names.omit}(${getPropsVar()}, {\n${propsStr}})${endOfLine}`;
+		ctx.inheritedAttrVars.add(restsVar);
 	}
 
 	yield* generateStyleScopedClassReferences(options, node);
 
-	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as
-		| CompilerDOM.DirectiveNode
-		| undefined;
+	const slotDir = node.props.find(CompilerDOM.isVSlot);
 	if (slotDir || node.children.length) {
 		yield* generateVSlot(options, ctx, node, slotDir, getCtxVar());
 	}
