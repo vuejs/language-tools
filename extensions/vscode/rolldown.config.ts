@@ -41,7 +41,7 @@ export default defineConfig({
 		{
 			name: 'redirect',
 			buildEnd() {
-				require('./scripts/write-plugin');
+				require('./scripts/write-plugins');
 			},
 		},
 		{
