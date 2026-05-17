@@ -247,18 +247,9 @@ function resolveTsdkPath() {
 }
 
 function resolveServerPath() {
-	const tsPluginDir = path.join(__dirname, '..', 'node_modules', 'vue-typescript-plugin-pack');
-	const tsPluginEntry = path.join(tsPluginDir, 'index.js');
-
-	if (!fs.existsSync(tsPluginDir)) {
-		fs.mkdirSync(tsPluginDir, { recursive: true });
-	}
+	const tsPluginEntry = path.join(__dirname, '..', 'node_modules', 'vue-typescript-plugin-pack', 'index.js');
 
 	if (!config.server.path) {
-		fs.writeFileSync(
-			tsPluginEntry,
-			`try { module.exports = require("../@vue/typescript-plugin"); } catch { module.exports = require("../../dist/typescript-plugin.js"); }`,
-		);
 		return;
 	}
 
@@ -296,21 +287,6 @@ function patchTypeScriptExtension() {
 	const { publisher, name } = require('../package.json');
 	const vueExtension = vscode.extensions.getExtension(`${publisher}.${name}`)!;
 	const tsPluginName = 'vue-typescript-plugin-pack';
-	const reactiveAnalysisPluginEntry = path.join(
-		__dirname,
-		'..',
-		'node_modules',
-		'vue-reactivity-analysis-plugin-pack',
-		'index.js',
-	);
-
-	if (!fs.existsSync(reactiveAnalysisPluginEntry)) {
-		fs.mkdirSync(path.dirname(reactiveAnalysisPluginEntry), { recursive: true });
-		fs.writeFileSync(
-			reactiveAnalysisPluginEntry,
-			`try { module.exports = require("../../out/reactivityAnalysisPlugin.js"); } catch { module.exports = require("../../dist/reactivity-analysis-plugin.js"); }`,
-		);
-	}
 
 	vueExtension.packageJSON.contributes.typescriptServerPlugins = [
 		{

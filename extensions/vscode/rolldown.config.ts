@@ -39,6 +39,12 @@ export default defineConfig({
 			},
 		},
 		{
+			name: 'redirect',
+			buildEnd() {
+				require('./scripts/write-plugin');
+			},
+		},
+		{
 			name: 'umd2esm',
 			resolveId: {
 				filter: {
