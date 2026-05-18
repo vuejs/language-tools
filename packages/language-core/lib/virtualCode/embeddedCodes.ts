@@ -2,7 +2,7 @@ import type { Mapping, VirtualCode } from '@volar/language-core';
 import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
-import type { Code, Sfc, SfcBlock, VueCodeInformation, VueLanguagePluginReturn } from '../types';
+import type { Code, IR, IRBlock, VueCodeInformation, VueLanguagePluginReturn } from '../types';
 import { buildMappings } from '../utils/buildMappings';
 
 export class VueEmbeddedCode {
@@ -20,23 +20,23 @@ export class VueEmbeddedCode {
 export function useEmbeddedCodes(
 	plugins: VueLanguagePluginReturn[],
 	fileName: string,
-	sfc: Sfc,
+	ir: IR,
 ) {
 	const getNameToBlockMap = computed(() => {
-		const blocks: Record<string, SfcBlock> = {};
-		if (sfc.template) {
-			blocks[sfc.template.name] = sfc.template;
+		const blocks: Record<string, IRBlock> = {};
+		if (ir.template) {
+			blocks[ir.template.name] = ir.template;
 		}
-		if (sfc.script) {
-			blocks[sfc.script.name] = sfc.script;
+		if (ir.script) {
+			blocks[ir.script.name] = ir.script;
 		}
-		if (sfc.scriptSetup) {
-			blocks[sfc.scriptSetup.name] = sfc.scriptSetup;
+		if (ir.scriptSetup) {
+			blocks[ir.scriptSetup.name] = ir.scriptSetup;
 		}
-		for (const block of sfc.styles) {
+		for (const block of ir.styles) {
 			blocks[block.name] = block;
 		}
-		for (const block of sfc.customBlocks) {
+		for (const block of ir.customBlocks) {
 			blocks[block.name] = block;
 		}
 		return blocks;
@@ -91,7 +91,7 @@ export function useEmbeddedCodes(
 					return new Map();
 				}
 
-				const newCodeList = plugin.getEmbeddedCodes(fileName, sfc);
+				const newCodeList = plugin.getEmbeddedCodes(fileName, ir);
 				const map = new Map<string, () => { code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot }>();
 
 				for (const { id, lang } of newCodeList) {
@@ -137,7 +137,7 @@ export function useEmbeddedCodes(
 					continue;
 				}
 				try {
-					plugin.resolveEmbeddedCode(fileName, sfc, code);
+					plugin.resolveEmbeddedCode(fileName, ir, code);
 				}
 				catch (e) {
 					console.error(e);

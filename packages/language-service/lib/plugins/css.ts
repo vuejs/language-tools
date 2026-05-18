@@ -120,7 +120,7 @@ export function create(
 				if (!info?.code.id.startsWith('style_')) {
 					return false;
 				}
-				const block = info.root.sfc.styles.find(style => style.name === info.code.id);
+				const block = info.root.ir.styles.find(style => style.name === info.code.id);
 				if (!block) {
 					return false;
 				}

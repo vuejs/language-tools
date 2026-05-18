@@ -1,7 +1,7 @@
 import * as path from 'path-browserify';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
-import type { Code, Sfc, SfcBlock, VueCompilerOptions } from '../../types';
+import type { Code, IRBlock, IRScript, IRScriptSetup, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
@@ -14,8 +14,8 @@ const exportExpression = `{} as typeof ${names.export}`;
 
 export interface ScriptCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
-	script: Sfc['script'];
-	scriptSetup: Sfc['scriptSetup'];
+	script: IRScript | undefined;
+	scriptSetup: IRScriptSetup | undefined;
 	fileName: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
@@ -180,7 +180,7 @@ function* generateWorker(
 
 function* generateScriptWithExportDefault(
 	ctx: ScriptCodegenContext,
-	script: NonNullable<Sfc['script']>,
+	script: IRScript,
 	scriptRanges: ScriptRanges,
 	exportDefault: NonNullable<ScriptRanges['exportDefault']>,
 	vueCompilerOptions: VueCompilerOptions,
@@ -262,7 +262,7 @@ function* generateGlobalTypesReference(
 	}
 }
 
-function* generateExportDeclareEqual(block: SfcBlock, name: string): Generator<Code> {
+function* generateExportDeclareEqual(block: IRBlock, name: string): Generator<Code> {
 	yield `const `;
 	const token = yield* startBoundary(block.name, 0, codeFeatures.doNotReportTs6133);
 	yield name;

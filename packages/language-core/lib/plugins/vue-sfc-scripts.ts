@@ -4,25 +4,25 @@ const plugin: VueLanguagePlugin = () => {
 	return {
 		version: 2.2,
 
-		getEmbeddedCodes(_fileName, sfc) {
+		getEmbeddedCodes(_fileName, ir) {
 			const names: {
 				id: string;
 				lang: string;
 			}[] = [];
-			if (sfc.script) {
-				names.push({ id: 'script_raw', lang: sfc.script.lang });
+			if (ir.script) {
+				names.push({ id: 'script_raw', lang: ir.script.lang });
 			}
-			if (sfc.scriptSetup) {
-				names.push({ id: 'scriptsetup_raw', lang: sfc.scriptSetup.lang });
+			if (ir.scriptSetup) {
+				names.push({ id: 'scriptsetup_raw', lang: ir.scriptSetup.lang });
 			}
 			return names;
 		},
 
-		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
+		resolveEmbeddedCode(_fileName, ir, embeddedFile) {
 			const script = embeddedFile.id === 'script_raw'
-				? sfc.script
+				? ir.script
 				: embeddedFile.id === 'scriptsetup_raw'
-				? sfc.scriptSetup
+				? ir.scriptSetup
 				: undefined;
 			if (script) {
 				embeddedFile.content.push([

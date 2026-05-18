@@ -7,7 +7,7 @@ export function getComponentSlots(
 	program: ts.Program,
 	virtualCode: VueVirtualCode,
 ): string[] {
-	const codegen = tsCodegen.get(virtualCode.sfc);
+	const codegen = tsCodegen.get(virtualCode.ir);
 	if (!codegen) {
 		return [];
 	}

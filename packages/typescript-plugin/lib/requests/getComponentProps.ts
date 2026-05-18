@@ -30,13 +30,13 @@ export function getComponentProps(
 		return [];
 	}
 
-	const { sfc } = virtualCode;
-	if (!sfc.template?.ast) {
+	const { ir } = virtualCode;
+	if (!ir.template?.ast) {
 		return [];
 	}
 
 	let node: CompilerDOM.ElementNode | undefined;
-	for (const child of forEachElementNode(sfc.template.ast)) {
+	for (const child of forEachElementNode(ir.template.ast)) {
 		if (position >= child.loc.start.offset) {
 			node = child;
 		}
@@ -51,9 +51,9 @@ export function getComponentProps(
 			language,
 			serviceScript,
 			sourceScript,
-			sfc.template.startTagEnd + position - (
+			ir.template.startTagEnd + position - (
 				// <Comp :foo-| /> -> { "foo"|: ... }
-				sfc.template.content[position - 1] === '-' ? 1 : 0
+				ir.template.content[position - 1] === '-' ? 1 : 0
 			),
 			(data: VueCodeInformation) => !!data.__propsCompletion,
 		);
@@ -62,7 +62,7 @@ export function getComponentProps(
 		language,
 		serviceScript,
 		sourceScript,
-		sfc.template.startTagEnd + node.loc.start.offset,
+		ir.template.startTagEnd + node.loc.start.offset,
 		(data: VueCodeInformation) => !!data.__propsCompletion,
 	);
 	if (!position2) {

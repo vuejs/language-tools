@@ -10,7 +10,7 @@ export function getDefaultsFromScriptSetup(
 	if (!virtualCode) {
 		return;
 	}
-	const sourceFile = virtualCode.sfc.scriptSetup?.ast;
+	const sourceFile = virtualCode.ir.scriptSetup?.ast;
 	if (!sourceFile) {
 		return;
 	}

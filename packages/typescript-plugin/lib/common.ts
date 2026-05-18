@@ -67,7 +67,7 @@ export function preprocessLanguageService(
 			if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
 				return result;
 			}
-			const codegen = tsCodegen.get(sourceScript.generated.root.sfc);
+			const codegen = tsCodegen.get(sourceScript.generated.root.ir);
 			const leadingOffset = sourceScript.snapshot.getLength();
 			for (
 				const sourceRange of toSourceRanges(
@@ -174,7 +174,7 @@ export function preprocessLanguageService(
 			if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
 				return result;
 			}
-			const codegen = tsCodegen.get(sourceScript.generated.root.sfc);
+			const codegen = tsCodegen.get(sourceScript.generated.root.ir);
 			const leadingOffset = sourceScript.snapshot.getLength();
 			for (const diagnostic of result) {
 				for (
@@ -433,7 +433,7 @@ export function postprocessLanguageService<T>(
 					if (!sourceScript || !(root instanceof VueVirtualCode)) {
 						continue;
 					}
-					const styles = root.sfc.styles;
+					const styles = root.ir.styles;
 					if (!styles.length) {
 						return result;
 					}
@@ -516,9 +516,9 @@ export function postprocessLanguageService<T>(
 			}
 
 			if (
-				!root.sfc.template
-				|| position < root.sfc.template.startTagEnd
-				|| position > root.sfc.template.endTagStart
+				!root.ir.template
+				|| position < root.ir.template.startTagEnd
+				|| position > root.ir.template.endTagStart
 			) {
 				return result;
 			}
@@ -529,8 +529,8 @@ export function postprocessLanguageService<T>(
 			if (result.definitions.length >= 2) {
 				for (const definition of result.definitions) {
 					if (
-						root.sfc.content[definition.textSpan.start - 1] === '@'
-						|| root.sfc.content.slice(definition.textSpan.start - 5, definition.textSpan.start) === 'v-on:'
+						root.ir.content[definition.textSpan.start - 1] === '@'
+						|| root.ir.content.slice(definition.textSpan.start - 5, definition.textSpan.start) === 'v-on:'
 					) {
 						definitions.delete(definition);
 					}
@@ -622,8 +622,8 @@ export function resolveCompletionResult<T>(
 	const root = sourceScript?.generated?.root;
 	if (root instanceof VueVirtualCode) {
 		const blocks = [
-			root.sfc.template,
-			...root.sfc.styles,
+			root.ir.template,
+			...root.ir.styles,
 		];
 		const ranges = blocks.filter(Boolean).map(block =>
 			[

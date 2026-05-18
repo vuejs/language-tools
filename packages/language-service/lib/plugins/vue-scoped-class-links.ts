@@ -15,18 +15,18 @@ export function create(): LanguageServicePlugin {
 					if (info?.code.id !== 'template') {
 						return;
 					}
-					const { sfc } = info.root;
-					if (!sfc.template) {
+					const { ir } = info.root;
+					if (!ir.template) {
 						return;
 					}
 					const { resolveStyleClassNames } = info.root.vueCompilerOptions;
 					if (!resolveStyleClassNames) {
 						return;
 					}
-					const scopedClasses = references.get(sfc.template)?.[1] ?? [];
+					const scopedClasses = references.get(ir.template)?.[1] ?? [];
 					const styleClasses = new Map<string, string[]>();
 
-					for (const style of sfc.styles) {
+					for (const style of ir.styles) {
 						if (!(resolveStyleClassNames === true || style.scoped)) {
 							continue;
 						}

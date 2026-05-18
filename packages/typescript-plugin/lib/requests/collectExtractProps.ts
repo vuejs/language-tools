@@ -31,7 +31,7 @@ export function collectExtractProps(
 	const sourceFile = program.getSourceFile(virtualCode.fileName)!;
 	const checker = program.getTypeChecker();
 	const map = language.maps.get(serviceScript.code, sourceScript);
-	const { sfc } = virtualCode;
+	const { ir } = virtualCode;
 
 	sourceFile.forEachChild(function visit(node) {
 		if (
@@ -43,8 +43,8 @@ export function collectExtractProps(
 			const { name } = node;
 			for (const [offset] of map.toSourceLocation(name.getEnd() - leadingOffset, isSemanticTokensEnabled)) {
 				if (
-					offset >= sfc.template!.startTagEnd + templateCodeRange[0]
-					&& offset <= sfc.template!.startTagEnd + templateCodeRange[1]
+					offset >= ir.template!.startTagEnd + templateCodeRange[0]
+					&& offset <= ir.template!.startTagEnd + templateCodeRange[1]
 				) {
 					if (!result.has(name.text)) {
 						const type = checker.getTypeAtLocation(node);

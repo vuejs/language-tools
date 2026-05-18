@@ -1,6 +1,6 @@
 import type { CreateFile, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
-import { type Sfc, tsCodegen } from '@vue/language-core';
+import { type IR, type IRTemplate, tsCodegen } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 import { resolveEmbeddedCode } from '../utils';
@@ -43,13 +43,13 @@ export function create(
 						return;
 					}
 
-					const { sfc } = info.root;
-					const script = sfc.scriptSetup ?? sfc.script;
-					if (!sfc.template || !script) {
+					const { ir } = info.root;
+					const script = ir.scriptSetup ?? ir.script;
+					if (!ir.template || !script) {
 						return;
 					}
 
-					const templateCodeRange = selectTemplateCode(startOffset, endOffset, sfc.template);
+					const templateCodeRange = selectTemplateCode(startOffset, endOffset, ir.template);
 					if (!templateCodeRange) {
 						return;
 					}
@@ -76,13 +76,13 @@ export function create(
 						return codeAction;
 					}
 
-					const { sfc } = info.root;
-					const script = sfc.scriptSetup ?? sfc.script;
-					if (!sfc.template || !script) {
+					const { ir } = info.root;
+					const script = ir.scriptSetup ?? ir.script;
+					if (!ir.template || !script) {
 						return codeAction;
 					}
 
-					const templateCodeRange = selectTemplateCode(startOffset, endOffset, sfc.template);
+					const templateCodeRange = selectTemplateCode(startOffset, endOffset, ir.template);
 					if (!templateCodeRange) {
 						return codeAction;
 					}
@@ -106,7 +106,7 @@ export function create(
 							'template',
 							[],
 							templateInitialIndent,
-							sfc.template.content.slice(templateCodeRange[0], templateCodeRange[1]),
+							ir.template.content.slice(templateCodeRange[0], templateCodeRange[1]),
 						),
 					);
 
@@ -115,7 +115,7 @@ export function create(
 							constructTag('script', ['setup', 'lang="ts"'], scriptInitialIndent, generateNewScriptContents()),
 						);
 					}
-					if (sfc.template.startTagEnd > script.startTagEnd) {
+					if (ir.template.startTagEnd > script.startTagEnd) {
 						newFileTags = newFileTags.reverse();
 					}
 
@@ -144,13 +144,13 @@ export function create(
 						},
 					];
 
-					if (sfc.script) {
-						const edit = createAddComponentToOptionEdit(ts, sfc, sfc.script.ast, newName);
+					if (ir.script) {
+						const edit = createAddComponentToOptionEdit(ts, ir, ir.script.ast, newName);
 						if (edit) {
 							sfcEdits.push({
 								range: {
-									start: sfcDocument.positionAt(sfc.script.startTagEnd + edit.range.start),
-									end: sfcDocument.positionAt(sfc.script.startTagEnd + edit.range.end),
+									start: sfcDocument.positionAt(ir.script.startTagEnd + edit.range.start),
+									end: sfcDocument.positionAt(ir.script.startTagEnd + edit.range.end),
 								},
 								newText: edit.newText,
 							});
@@ -235,7 +235,7 @@ export function create(
 function selectTemplateCode(
 	startOffset: number,
 	endOffset: number,
-	templateBlock: NonNullable<Sfc['template']>,
+	templateBlock: IRTemplate,
 ): [number, number] | undefined {
 	const insideNodes: (TemplateChildNode | ExpressionNode)[] = [];
 
@@ -295,11 +295,11 @@ export function getLastImportNode(ts: typeof import('typescript'), sourceFile: t
 
 export function createAddComponentToOptionEdit(
 	ts: typeof import('typescript'),
-	sfc: Sfc,
+	ir: IR,
 	ast: ts.SourceFile,
 	componentName: string,
 ) {
-	const componentOptions = tsCodegen.get(sfc)?.getScriptRanges()?.exportDefault?.options;
+	const componentOptions = tsCodegen.get(ir)?.getScriptRanges()?.exportDefault?.options;
 	if (!componentOptions) {
 		return;
 	}

@@ -107,14 +107,14 @@ export interface VueLanguagePluginReturn {
 		options: CompilerDOM.CompilerOptions,
 	): CompilerDOM.CodegenResult | undefined;
 	compileSFCStyle?(lang: string, style: string):
-		| Pick<Sfc['styles'][number], 'imports' | 'bindings' | 'classNames'>
+		| Pick<IRStyle, 'imports' | 'bindings' | 'classNames'>
 		| undefined;
 	updateSFCTemplate?(
 		oldResult: CompilerDOM.CodegenResult,
 		textChange: { start: number; end: number; newText: string },
 	): CompilerDOM.CodegenResult | undefined;
-	getEmbeddedCodes?(fileName: string, sfc: Sfc): { id: string; lang: string }[];
-	resolveEmbeddedCode?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedCode): void;
+	getEmbeddedCodes?(fileName: string, ir: IR): { id: string; lang: string }[];
+	resolveEmbeddedCode?(fileName: string, ir: IR, embeddedFile: VueEmbeddedCode): void;
 }
 
 export type VueLanguagePlugin<T extends Record<string, any> = {}> = (
@@ -130,7 +130,22 @@ export type VueLanguagePlugin<T extends Record<string, any> = {}> = (
 	},
 ) => VueLanguagePluginReturn | VueLanguagePluginReturn[];
 
-export interface SfcBlock {
+export interface IR {
+	content: string;
+	comments: string[];
+	template: IRTemplate | undefined;
+	script: IRScript | undefined;
+	scriptSetup: IRScriptSetup | undefined;
+	styles: readonly IRStyle[];
+	customBlocks: readonly IRCustomBlock[];
+}
+
+export type IRAttr = true | {
+	text: string;
+	offset: number;
+};
+
+export interface IRBlock {
 	name: string;
 	start: number;
 	end: number;
@@ -141,68 +156,55 @@ export interface SfcBlock {
 	attrs: Record<string, string | true>;
 }
 
-export type SfcBlockAttr = true | {
-	text: string;
-	offset: number;
-	quotes: boolean;
-};
+export interface IRTemplate extends IRBlock {
+	ast: CompilerDOM.RootNode | undefined;
+	errors: CompilerDOM.CompilerError[];
+	warnings: CompilerDOM.CompilerError[];
+}
 
-export interface Sfc {
-	content: string;
-	comments: string[];
-	template:
-		| SfcBlock & {
-			ast: CompilerDOM.RootNode | undefined;
-			errors: CompilerDOM.CompilerError[];
-			warnings: CompilerDOM.CompilerError[];
-		}
-		| undefined;
-	script:
-		| (SfcBlock & {
-			src: SfcBlockAttr | undefined;
-			ast: ts.SourceFile;
-		})
-		| undefined;
-	scriptSetup:
-		| SfcBlock & {
-			// https://github.com/vuejs/rfcs/discussions/436
-			generic: SfcBlockAttr | undefined;
-			ast: ts.SourceFile;
-		}
-		| undefined;
-	styles: readonly (SfcBlock & {
-		src: SfcBlockAttr | undefined;
-		module: SfcBlockAttr | undefined;
-		scoped: boolean;
-		imports: {
-			text: string;
-			offset: number;
-		}[];
-		bindings: {
-			text: string;
-			offset: number;
-		}[];
-		classNames: {
-			text: string;
-			offset: number;
-		}[];
-	})[];
-	customBlocks: readonly (SfcBlock & {
-		type: string;
-	})[];
+export interface IRScript extends IRBlock {
+	src: IRAttr | undefined;
+	ast: ts.SourceFile;
+}
+
+export interface IRScriptSetup extends IRBlock {
+	generic: IRAttr | undefined;
+	ast: ts.SourceFile;
+}
+
+export interface IRStyle extends IRBlock {
+	src: IRAttr | undefined;
+	module: IRAttr | undefined;
+	scoped: boolean;
+	imports: {
+		text: string;
+		offset: number;
+	}[];
+	bindings: {
+		text: string;
+		offset: number;
+	}[];
+	classNames: {
+		text: string;
+		offset: number;
+	}[];
+}
+
+export interface IRCustomBlock extends IRBlock {
+	type: string;
 }
 
 declare module '@vue/compiler-sfc' {
 	interface SFCBlock {
-		__src?: SfcBlockAttr;
+		__src?: IRAttr;
 	}
 
 	interface SFCScriptBlock {
-		__generic?: SfcBlockAttr;
+		__generic?: IRAttr;
 	}
 
 	interface SFCStyleBlock {
-		__module?: SfcBlockAttr;
+		__module?: IRAttr;
 	}
 }
 

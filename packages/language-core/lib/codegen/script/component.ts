@@ -1,5 +1,5 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
-import type { Code, Sfc } from '../../types';
+import type { Code, IRScriptSetup } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { generateSfcBlockSection, newLine } from '../utils';
@@ -10,7 +10,7 @@ import type { ScriptCodegenOptions } from './index';
 export function* generateComponent(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
@@ -85,7 +85,7 @@ function* generateRuntimeEmitsOption(scriptSetupRanges: ScriptSetupRanges): Gene
 function* generatePropsOption(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 	hasEmitsOption: boolean,
 ): Generator<Code> {
@@ -131,7 +131,7 @@ function* generateTypePropsOption(
 function* generateRuntimePropsOption(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 	hasEmitsOption: boolean,
 ): Generator<Code> {

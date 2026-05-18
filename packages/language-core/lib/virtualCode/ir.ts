@@ -2,7 +2,17 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { computed, setActiveSub } from 'alien-signals';
 import type * as ts from 'typescript';
-import type { Sfc, SfcBlock, SfcBlockAttr, VueLanguagePluginReturn } from '../types';
+import type {
+	IR,
+	IRAttr,
+	IRBlock,
+	IRCustomBlock,
+	IRScript,
+	IRScriptSetup,
+	IRStyle,
+	IRTemplate,
+	VueLanguagePluginReturn,
+} from '../types';
 import { computedArray, reactiveArray } from '../utils/signals';
 
 export function useIR(
@@ -11,7 +21,7 @@ export function useIR(
 	fileName: string,
 	getSnapshot: () => ts.IScriptSnapshot,
 	getParseSfcResult: () => SFCParseResult | undefined,
-): Sfc {
+): IR {
 	const getUntrackedSnapshot = () => {
 		const pausedSub = setActiveSub(undefined);
 		const res = getSnapshot();
@@ -28,7 +38,7 @@ export function useIR(
 		'template',
 		'html',
 		computed(() => getParseSfcResult()?.descriptor.template ?? undefined),
-		(_block, base): NonNullable<Sfc['template']> => {
+		(_block, base): IRTemplate => {
 			const getParseTemplateResult = useParseTemplateResult(base);
 			return mergeObject(base, {
 				get ast() {
@@ -47,7 +57,7 @@ export function useIR(
 		'script',
 		'js',
 		computed(() => getParseSfcResult()?.descriptor.script ?? undefined),
-		(block, base): NonNullable<Sfc['script']> => {
+		(block, base): IRScript => {
 			const getSrc = useAttrValue('__src', base, block);
 			const getAst = computed(() => {
 				for (const plugin of plugins) {
@@ -72,7 +82,7 @@ export function useIR(
 		'scriptSetup',
 		'js',
 		computed(() => getParseSfcResult()?.descriptor.scriptSetup ?? undefined),
-		(block, base): NonNullable<Sfc['scriptSetup']> => {
+		(block, base): IRScriptSetup => {
 			const getGeneric = useAttrValue('__generic', base, block);
 			const getAst = computed(() => {
 				for (const plugin of plugins) {
@@ -141,7 +151,7 @@ export function useIR(
 				() => getIr()?.classNames ?? [],
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
 			);
-			return () =>
+			return (): IRStyle =>
 				mergeObject(base, {
 					get src() {
 						return getSrc();
@@ -161,7 +171,7 @@ export function useIR(
 					get classNames() {
 						return getClassNames();
 					},
-				}) satisfies Sfc['styles'][number];
+				});
 		},
 	);
 	const customBlocks = reactiveArray(
@@ -169,12 +179,12 @@ export function useIR(
 		(getBlock, i) => {
 			const base = useSfcBlock('custom_block_' + i, 'txt', getBlock);
 			const getType = computed(() => getBlock().type);
-			return () =>
+			return (): IRCustomBlock =>
 				mergeObject(base, {
 					get type() {
 						return getType();
 					},
-				}) satisfies Sfc['customBlocks'][number];
+				});
 		},
 	);
 
@@ -202,7 +212,7 @@ export function useIR(
 		},
 	};
 
-	function useParseTemplateResult(base: SfcBlock) {
+	function useParseTemplateResult(base: IRBlock) {
 		return computed<{
 			snapshot: ts.IScriptSnapshot;
 			template: string;
@@ -294,11 +304,11 @@ export function useIR(
 		});
 	}
 
-	function useNullableSfcBlock<T extends SFCBlock, K extends SfcBlock>(
+	function useNullableSfcBlock<T extends SFCBlock, K extends IRBlock>(
 		name: string,
 		defaultLang: string,
 		getBlock: () => T | undefined,
-		resolve: (block: () => T, base: SfcBlock) => K,
+		resolve: (block: () => T, base: IRBlock) => K,
 	) {
 		const hasBlock = computed(() => !!getBlock());
 		return computed<K | undefined>(() => {
@@ -359,7 +369,7 @@ export function useIR(
 		getBlock: () => T,
 	) {
 		return computed(() => {
-			const val = getBlock()[key] as SfcBlockAttr | undefined;
+			const val = getBlock()[key] as IRAttr | undefined;
 			if (typeof val === 'object') {
 				return {
 					...val,

@@ -1,7 +1,7 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import { hyphenate } from '@vue/shared';
 import type * as ts from 'typescript';
-import type { Sfc, TextRange } from '../types';
+import type { IRTemplate, TextRange } from '../types';
 
 export { hyphenate as hyphenateTag } from '@vue/shared';
 
@@ -27,7 +27,7 @@ export function normalizeAttributeValue(node: CompilerDOM.TextNode) {
 
 export function getElementTagOffsets(
 	node: CompilerDOM.ElementNode,
-	template: NonNullable<Sfc['template']>,
+	template: IRTemplate,
 ) {
 	const tagOffsets = [
 		template.content.indexOf(node.tag, node.loc.start.offset),

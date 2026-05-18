@@ -1,4 +1,4 @@
-import type { Code, Sfc, VueCompilerOptions } from '../../types';
+import type { Code, IRStyle, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
@@ -9,7 +9,7 @@ import { endOfLine } from '../utils';
 export interface StyleCodegenOptions {
 	typescript: typeof import('typescript');
 	vueCompilerOptions: VueCompilerOptions;
-	styles: Sfc['styles'];
+	styles: readonly IRStyle[];
 	setupRefs: Set<string>;
 	setupConsts: Set<string>;
 }

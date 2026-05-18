@@ -1,4 +1,4 @@
-import type { Code, Sfc, VueCodeInformation } from '../../types';
+import type { Code, IRStyle, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
@@ -19,7 +19,7 @@ export function* generateClassProperty(
 	yield ` }`;
 }
 
-export function* generateStyleImports(style: Sfc['styles'][number]): Generator<Code> {
+export function* generateStyleImports(style: IRStyle): Generator<Code> {
 	const features: VueCodeInformation = {
 		navigation: true,
 		verification: true,

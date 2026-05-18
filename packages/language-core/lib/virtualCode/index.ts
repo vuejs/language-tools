@@ -3,7 +3,7 @@ import type { SFCParseResult } from '@vue/compiler-sfc';
 import { computed, signal } from 'alien-signals';
 import type * as ts from 'typescript';
 import { allCodeFeatures } from '../plugins';
-import type { Sfc, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
+import type { IR, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
 import { useEmbeddedCodes } from './embeddedCodes';
 import { useIR } from './ir';
 
@@ -15,7 +15,7 @@ export class VueVirtualCode implements VirtualCode {
 		(newSnapshot: ts.IScriptSnapshot): void;
 	};
 	private _parsedSfcResult: () => ReturnType<typeof this.parseSfc>;
-	private _ir: Sfc;
+	private _ir: IR;
 	private _embeddedCodes: () => VirtualCode[];
 	private _mappings: () => CodeMapping[];
 
@@ -25,6 +25,10 @@ export class VueVirtualCode implements VirtualCode {
 	get vueSfc() {
 		return this._parsedSfcResult()?.result;
 	}
+	get ir() {
+		return this._ir;
+	}
+	/** @deprecated use `ir` instead */
 	get sfc() {
 		return this._ir;
 	}

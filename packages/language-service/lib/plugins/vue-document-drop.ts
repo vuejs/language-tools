@@ -38,8 +38,8 @@ export function create(
 						return;
 					}
 
-					const { sfc } = info.root;
-					const script = sfc.scriptSetup ?? sfc.script;
+					const { ir } = info.root;
+					const script = ir.scriptSetup ?? ir.script;
 					if (!script) {
 						return;
 					}
@@ -50,7 +50,7 @@ export function create(
 
 					const additionalEdit: WorkspaceEdit = {};
 					const code = [...forEachEmbeddedCode(info.root)].find(code =>
-						code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw')
+						code.id === (ir.scriptSetup ? 'scriptsetup_raw' : 'script_raw')
 					)!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
 					const incomingFileName = URI.parse(importUri).fsPath.replace(/\\/g, '/');
@@ -100,8 +100,8 @@ export function create(
 							+ (lastImportNode ? '' : '\n'),
 					});
 
-					if (sfc.script) {
-						const edit = createAddComponentToOptionEdit(ts, sfc, sfc.script.ast, newName);
+					if (ir.script) {
+						const edit = createAddComponentToOptionEdit(ts, ir, ir.script.ast, newName);
 						if (edit) {
 							additionalEdit.changes[embeddedDocumentUriStr].push({
 								range: {

@@ -1,14 +1,14 @@
 import type * as ts from 'typescript';
-import type { Code, Sfc, SfcBlock, VueCodeInformation } from '../../types';
+import type { Code, IRBlock, IRScript, IRScriptSetup, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
 export const identifierRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
-const cacheMaps = new Map<SfcBlock, [content: string, Map<string, [ts.SourceFile, usages: number]>]>();
+const cacheMaps = new Map<IRBlock, [content: string, Map<string, [ts.SourceFile, usages: number]>]>();
 
-export function getTypeScriptAST(ts: typeof import('typescript'), block: SfcBlock, text: string): ts.SourceFile {
+export function getTypeScriptAST(ts: typeof import('typescript'), block: IRBlock, text: string): ts.SourceFile {
 	if (!cacheMaps.has(block)) {
 		cacheMaps.set(block, [block.content, new Map()]);
 	}
@@ -35,7 +35,7 @@ export function getTypeScriptAST(ts: typeof import('typescript'), block: SfcBloc
 }
 
 export function* generateSfcBlockSection(
-	block: NonNullable<Sfc['script' | 'scriptSetup']>,
+	block: IRScript | IRScriptSetup,
 	start: number,
 	end: number,
 	features: VueCodeInformation,

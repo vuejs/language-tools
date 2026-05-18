@@ -21,9 +21,9 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					if (!enabled) {
 						return;
 					}
-					const { sfc } = info.root;
-					const codegen = tsCodegen.get(sfc);
-					const scriptSetup = sfc.scriptSetup;
+					const { ir } = info.root;
+					const codegen = tsCodegen.get(ir);
+					const scriptSetup = ir.scriptSetup;
 					const scriptSetupRanges = codegen?.getScriptSetupRanges();
 					if (!scriptSetup || !scriptSetupRanges) {
 						return;

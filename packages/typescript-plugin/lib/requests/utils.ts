@@ -7,7 +7,7 @@ export function getComponentType(
 	ts: typeof import('typescript'),
 	checker: ts.TypeChecker,
 	sourceFile: ts.SourceFile,
-	{ fileName, sfc }: VueVirtualCode,
+	{ fileName, ir }: VueVirtualCode,
 	tag: string,
 ): {
 	node: ts.Node;
@@ -18,7 +18,7 @@ export function getComponentType(
 		camelize(tag),
 		capitalize(camelize(tag)),
 	]);
-	const codegen = tsCodegen.get(sfc);
+	const codegen = tsCodegen.get(ir);
 
 	for (const importedName of codegen?.getImportedComponents() ?? []) {
 		if (testNames.has(importedName)) {

@@ -34,8 +34,8 @@ export function create(
 
 					let sourceOffset: number | undefined;
 
-					const { sfc } = info.root;
-					const scriptBlocks = [sfc.script, sfc.scriptSetup].filter(block => !!block);
+					const { ir } = info.root;
+					const scriptBlocks = [ir.script, ir.scriptSetup].filter(block => !!block);
 					const map = context.language.maps.get(info.code, info.script);
 
 					if (!scriptBlocks.length) {

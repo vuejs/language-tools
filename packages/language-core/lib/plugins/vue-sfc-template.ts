@@ -5,21 +5,21 @@ const plugin: VueLanguagePlugin = () => {
 	return {
 		version: 2.2,
 
-		getEmbeddedCodes(_fileName, sfc) {
-			if (sfc.template?.lang === 'html') {
+		getEmbeddedCodes(_fileName, ir) {
+			if (ir.template?.lang === 'html') {
 				return [{
 					id: 'template',
-					lang: sfc.template.lang,
+					lang: ir.template.lang,
 				}];
 			}
 			return [];
 		},
 
-		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
-			if (embeddedFile.id === 'template' && sfc.template?.lang === 'html') {
+		resolveEmbeddedCode(_fileName, ir, embeddedFile) {
+			if (embeddedFile.id === 'template' && ir.template?.lang === 'html') {
 				embeddedFile.content.push([
-					sfc.template.content,
-					sfc.template.name,
+					ir.template.content,
+					ir.template.name,
 					0,
 					allCodeFeatures,
 				]);

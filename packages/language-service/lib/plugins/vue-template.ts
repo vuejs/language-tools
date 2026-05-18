@@ -138,7 +138,7 @@ export function create(
 				htmlService.parseHTMLDocument = document => {
 					const info = resolveEmbeddedCode(context, document.uri);
 					if (info?.code.id === 'template') {
-						const templateAst = info.root.sfc.template?.ast;
+						const templateAst = info.root.ir.template?.ast;
 						if (templateAst) {
 							let text = document.getText();
 							for (const node of forEachInterpolationNode(templateAst)) {
@@ -157,7 +157,7 @@ export function create(
 				htmlService.format = (document, range, options) => {
 					let voidElements: string[] | undefined;
 					const info = resolveEmbeddedCode(context, document.uri);
-					const codegen = info && tsCodegen.get(info.root.sfc);
+					const codegen = info && tsCodegen.get(info.root.ir);
 					if (codegen) {
 						const componentNames = new Set([
 							...codegen.getImportedComponents(),
@@ -405,7 +405,7 @@ export function create(
 						'hover',
 						() => baseServiceInstance.provideHover!(document, position, token),
 					);
-					const templateAst = info.root.sfc.template?.ast;
+					const templateAst = info.root.ir.template?.ast;
 					const enabledRichMessage = await context.env.getConfiguration?.('vue.hover.rich');
 
 					if (!templateAst || !enabledRichMessage || (htmlHover && hasContents(htmlHover.contents))) {
@@ -623,7 +623,7 @@ export function create(
 						};
 					},
 					provide({ components, elements }) {
-						const codegen = tsCodegen.get(root.sfc);
+						const codegen = tsCodegen.get(root.ir);
 						const names = new Set<string>();
 						const tags = new Map<string, html.ITagData>();
 

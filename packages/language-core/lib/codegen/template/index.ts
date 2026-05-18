@@ -1,5 +1,5 @@
 import type * as ts from 'typescript';
-import type { Code, Sfc, VueCompilerOptions } from '../../types';
+import type { Code, IRTemplate, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, newLine } from '../utils';
@@ -11,7 +11,7 @@ import { generateTemplateChild } from './templateChild';
 export interface TemplateCodegenOptions {
 	typescript: typeof ts;
 	vueCompilerOptions: VueCompilerOptions;
-	template: NonNullable<Sfc['template']>;
+	template: IRTemplate;
 	setupRefs: Set<string>;
 	setupConsts: Set<string>;
 	hasDefineSlots?: boolean;

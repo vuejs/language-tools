@@ -1,6 +1,6 @@
 import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
-import type { Code, Sfc, TextRange } from '../../types';
+import type { Code, IRScriptSetup, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, generateSfcBlockSection, identifierRegex, newLine } from '../utils';
@@ -12,7 +12,7 @@ import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 
 export function* generateScriptSetupImports(
-	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	yield [
@@ -29,9 +29,9 @@ export function* generateScriptSetupImports(
 export function* generateGeneric(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
-	generic: NonNullable<NonNullable<Sfc['scriptSetup']>['generic']>,
+	generic: NonNullable<IRScriptSetup['generic']>,
 	body: Iterable<Code>,
 ): Generator<Code> {
 	yield `(`;
@@ -127,7 +127,7 @@ export function* generateGeneric(
 export function* generateSetupFunction(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 	body: Iterable<Code>,
 	output?: Iterable<Code>,
@@ -313,7 +313,7 @@ function* generateMacros(options: ScriptCodegenOptions): Generator<Code> {
 }
 
 function* generateDefineWithTypeTransforms(
-	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetup: IRScriptSetup,
 	statement: TextRange,
 	callExp: TextRange,
 	typeArg: TextRange | undefined,
@@ -374,7 +374,7 @@ function* generateDefineWithTypeTransforms(
 function* generatePublicProps(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	if (scriptSetupRanges.defineProps?.typeArg && scriptSetupRanges.withDefaults?.arg) {
@@ -412,7 +412,7 @@ function hasSlotsType(options: ScriptCodegenOptions): boolean {
 }
 
 function* generateModels(
-	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	if (!scriptSetupRanges.defineModel.length) {
@@ -478,7 +478,7 @@ function* generateModels(
 }
 
 function* generateModelProp(
-	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetup: IRScriptSetup,
 	defineModel: ScriptSetupRanges['defineModel'][number],
 	propName: string,
 	modelType: string,
@@ -525,7 +525,7 @@ function* generateModelEmit(
 }
 
 function getRangeText(
-	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetup: IRScriptSetup,
 	range: TextRange,
 ) {
 	return scriptSetup.content.slice(range.start, range.end);

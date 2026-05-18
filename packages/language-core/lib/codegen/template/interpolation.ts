@@ -1,6 +1,6 @@
 import { isGloballyAllowed, makeMap } from '@vue/shared';
 import type * as ts from 'typescript';
-import type { Code, SfcBlock, VueCodeInformation } from '../../types';
+import type { Code, IRBlock, VueCodeInformation } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
@@ -17,7 +17,7 @@ export function* generateInterpolation(
 		setupRefs: Set<string>;
 	},
 	ctx: TemplateCodegenContext,
-	block: SfcBlock,
+	block: IRBlock,
 	data: VueCodeInformation,
 	code: string,
 	start: number,
@@ -74,7 +74,7 @@ function* forEachInterpolationSegment(
 	ts: typeof import('typescript'),
 	setupRefs: Set<string>,
 	ctx: TemplateCodegenContext,
-	block: SfcBlock,
+	block: IRBlock,
 	originalCode: string,
 	start: number,
 	prefix: string,
@@ -136,7 +136,7 @@ function* forEachInterpolationSegment(
 function* forEachIdentifiers(
 	ts: typeof import('typescript'),
 	ctx: TemplateCodegenContext,
-	block: SfcBlock,
+	block: IRBlock,
 	originalCode: string,
 	code: string,
 	prefix: string,

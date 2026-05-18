@@ -1,4 +1,4 @@
-import type { Code, SfcBlock } from '../../types';
+import type { Code, IRBlock } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine } from '../utils';
@@ -8,10 +8,10 @@ import { generateEscaped } from '../utils/escaped';
 const classNameEscapeRegex = /([\\'])/;
 
 // For language-service/lib/plugins/vue-scoped-class-links.ts usage
-export const references: WeakMap<SfcBlock, [version: string, [className: string, offset: number][]]> = new WeakMap();
+export const references: WeakMap<IRBlock, [version: string, [className: string, offset: number][]]> = new WeakMap();
 
 export function* generateStyleScopedClassReference(
-	block: SfcBlock,
+	block: IRBlock,
 	className: string,
 	offset: number,
 	fullStart = offset,

@@ -117,7 +117,7 @@ function detectTagCasing(code: VueVirtualCode): TagNameCasing[] {
 function collectTagsWithCache(code: VueVirtualCode) {
 	let cache = collectCache.get(code);
 	if (!cache) {
-		const ast = code.sfc.template?.ast;
+		const ast = code.ir.template?.ast;
 		cache = ast ? collectTags(ast) : new Map();
 		collectCache.set(code, cache);
 	}
