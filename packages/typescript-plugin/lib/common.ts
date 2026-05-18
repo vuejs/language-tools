@@ -14,6 +14,7 @@ import {
 } from '@vue/language-core';
 import { camelize, capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
+import { forEachTouchingNode } from './requests/utils';
 
 const windowsPathReg = /\\/g;
 
@@ -503,16 +504,15 @@ export function postprocessLanguageService<T>(
 	): ts.LanguageService['getDefinitionAndBoundSpan'] {
 		return (fileName, position, ...rests) => {
 			const result = getDefinitionAndBoundSpan(fileName, position, ...rests);
+			if (!result?.definitions?.length) {
+				return result;
+			}
 
 			const program = languageService.getProgram()!;
 			const sourceScript = language.scripts.get(asScriptId(fileName));
 			const root = sourceScript?.generated?.root;
 			if (!(root instanceof VueVirtualCode)) {
 				return result;
-			}
-
-			if (!result?.definitions?.length) {
-				return;
 			}
 
 			if (
@@ -524,7 +524,6 @@ export function postprocessLanguageService<T>(
 			}
 
 			const definitions = new Set<ts.DefinitionInfo>(result.definitions);
-			const skippedDefinitions: ts.DefinitionInfo[] = [];
 
 			// #5275
 			if (result.definitions.length >= 2) {
@@ -548,11 +547,19 @@ export function postprocessLanguageService<T>(
 					continue;
 				}
 
-				visit(sourceFile, definition, sourceFile);
-			}
+				const node = visit(sourceFile, definition);
+				if (!node) {
+					continue;
+				}
 
-			for (const definition of skippedDefinitions) {
-				definitions.delete(definition);
+				const position = node.getStart(sourceFile);
+				const res = getDefinitionAndBoundSpan(definition.fileName, position);
+				if (res?.definitions?.length) {
+					definitions.delete(definition);
+					for (const definition of res.definitions) {
+						definitions.add(definition);
+					}
+				}
 			}
 
 			return {
@@ -561,53 +568,32 @@ export function postprocessLanguageService<T>(
 			};
 
 			function visit(
-				node: ts.Node,
-				definition: ts.DefinitionInfo,
 				sourceFile: ts.SourceFile,
-			) {
-				if (ts.isPropertySignature(node) && node.type) {
-					proxy(node.name, node.type, definition, sourceFile);
-				}
-				else if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.type && !node.initializer) {
-					proxy(node.name, node.type, definition, sourceFile);
-				}
-				else {
-					ts.forEachChild(node, child => visit(child, definition, sourceFile));
-				}
-			}
-
-			function proxy(
-				name: ts.PropertyName,
-				type: ts.TypeNode,
 				definition: ts.DefinitionInfo,
-				sourceFile: ts.SourceFile,
 			) {
-				const { textSpan, fileName } = definition;
-				const start = name.getStart(sourceFile);
-				const end = name.getEnd();
-
-				if (start !== textSpan.start || end - start !== textSpan.length) {
-					return;
-				}
-
-				if (ts.isIndexedAccessTypeNode(type)) {
-					const pos = type.indexType.getStart(sourceFile);
-					const res = getDefinitionAndBoundSpan(fileName, pos, ...rests);
-					if (res?.definitions?.length) {
-						for (const definition of res.definitions) {
-							definitions.add(definition);
+				for (const node of forEachTouchingNode(ts, sourceFile, definition.textSpan.start)) {
+					if (
+						ts.isPropertySignature(node) && node.type
+						|| ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.type
+					) {
+						if (
+							definition.textSpan.start + definition.textSpan.length > node.name.end
+							|| definition.textSpan.start < node.name.getStart(sourceFile)
+						) {
+							continue;
 						}
-						skippedDefinitions.push(definition);
-					}
-				}
-				else if (ts.isImportTypeNode(type)) {
-					const pos = type.argument.getStart(sourceFile);
-					const res = getDefinitionAndBoundSpan(fileName, pos, ...rests);
-					if (res?.definitions?.length) {
-						for (const definition of res.definitions) {
-							definitions.add(definition);
+
+						let type = node.type;
+						while (ts.isTypeReferenceNode(type) && type.typeArguments?.length) {
+							type = type.typeArguments[0]!;
 						}
-						skippedDefinitions.push(definition);
+
+						if (ts.isIndexedAccessTypeNode(type)) {
+							return type.indexType;
+						}
+						else if (ts.isImportTypeNode(type)) {
+							return type.qualifier ?? type.argument;
+						}
 					}
 				}
 			}
