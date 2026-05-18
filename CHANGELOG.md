@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.3.0 (2026-05-18)
+
+### language-core
+
+- **feat:** check required fallthrough attributes (#6049) - Thanks to @KazariEX!
+- **fix:** penetrate `v-if` branch fragments when collecting single root nodes - Thanks to @KazariEX!
+- **refactor:** rename `Sfc` APIs to `IR` - Thanks to @KazariEX!
+
+### language-service
+
+- **fix:** reuse ASTs for define assignment suggestions - Thanks to @KazariEX!
+- **fix:** re-support `html.customData` (#5910) - Thanks to @Bomberus!
+- **fix:** strip `=""` only for plain boolean props completion edits - Thanks to @KazariEX!
+- **fix:** reset to default data provider after running with vue data provider - Thanks to @KazariEX!
+
+### typescript-plugin
+
+- **feat:** refine props completion logic to follow TS behavior (#5709) - Thanks to @KazariEX!
+
+### vscode
+
+- **fix:** include `extraFileExtensions` in tsserver `configure` request payload (#6048) - Thanks to @KazariEX!
+- **fix:** write typescript plugins at build time (#6050) - Thanks to @KazariEX!
+- **fix:** avoid infinite diagnostics on Vue files when project diagnostics is enabled (#6051) - Thanks to @KazariEX!
+
 ## 3.2.9 (2026-05-14)
 
 ### language-core
