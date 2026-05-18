@@ -327,7 +327,7 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 	</div>
 
 	<div style="position: relative; width: 100%; padding-bottom: 52%; height: 0; overflow: hidden;">
-		<iframe id="blog" src="https://vue-language-tools.pages.dev/v3-2/" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"></iframe>
+		<iframe id="blog" src="https://vue-language-tools.pages.dev/v3-3/" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"></iframe>
 	</div>
 	<script>
 		const iframe = document.getElementById('blog');
