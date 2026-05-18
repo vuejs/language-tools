@@ -23,9 +23,6 @@ jobs:
         with:
           node-version: 24
 
-      - name: Install Lerna Lite
-        run: pnpm add -g @lerna-lite/cli @lerna-lite/version
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -33,6 +30,7 @@ jobs:
         run: |
           VERSION="${{ github.event.pull_request.title }}"
           if [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            pnpm dlx --package @lerna-lite/cli --package @lerna-lite/version \
             lerna version "$VERSION" --yes --no-push --no-git-tag-version --force-publish
           else
             echo "PR title is not a valid version."
