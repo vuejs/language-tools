@@ -8,6 +8,7 @@ import {
 	type VueVirtualCode,
 } from '@vue/language-core';
 import type * as ts from 'typescript';
+import { hasBooleanType } from './utils';
 
 export interface ComponentPropInfo {
 	name: string;
@@ -19,7 +20,7 @@ export interface ComponentPropInfo {
 export function getComponentProps(
 	ts: typeof import('typescript'),
 	tsLanguageService: ts.LanguageService,
-	session: ts.server.Session,
+	program: ts.Program,
 	language: Language,
 	sourceScript: SourceScript<string>,
 	virtualCode: VueVirtualCode,
@@ -69,39 +70,36 @@ export function getComponentProps(
 		return [];
 	}
 
-	const preferences = session['getPreferences']();
-	const completion = tsLanguageService.getCompletionsAtPosition(virtualCode.fileName, position2, preferences);
+	const checker = program.getTypeChecker();
+	const completion = tsLanguageService.getCompletionsAtPosition(virtualCode.fileName, position2, {
+		includeSymbol: true,
+	});
 
 	// skip fallback global completions
 	if (!completion?.isMemberCompletion) {
 		return [];
 	}
 
-	return completion?.entries.map(entry => {
+	return completion.entries.map(entry => {
 		const modifiers = entry.kindModifiers?.split(',');
-		const details = tsLanguageService.getCompletionEntryDetails(
-			virtualCode.fileName,
-			position2,
-			entry.name,
-			session['getFormatOptions'](),
-			entry.source,
-			preferences,
-			entry.data,
-		);
+		const type = entry.symbol && checker.getTypeOfSymbol(entry.symbol);
+
 		const info: ComponentPropInfo = {
 			name: entry.name.startsWith('"') && entry.name.endsWith('"')
 				? entry.name.slice(1, -1)
 				: entry.name,
-			description: ts.displayPartsToString(details?.documentation) + (
-				details?.tags
-					? '\n\n' + details.tags.map(tag => `*@${tag.name}* — ${ts.displayPartsToString(tag.text)}`).join('\n')
-					: ''
-			),
+			description: entry.symbol && (
+				ts.displayPartsToString(entry.symbol.getDocumentationComment(checker))
+				+ '\n\n'
+				+ entry.symbol.getJsDocTags(checker).map(tag =>
+					`*@${tag.name}*${tag.text?.length ? ` — ${ts.displayPartsToString(tag.text)}` : ''}`
+				).join('\n\n')
+			).trimEnd(),
 		};
 		if (modifiers?.includes('optional')) {
 			info.optional = true;
 		}
-		if (details?.displayParts.some((part, i) => i >= 7 && part.text === 'boolean')) {
+		if (type && hasBooleanType(ts, type)) {
 			info.boolean = true;
 		}
 		return info;

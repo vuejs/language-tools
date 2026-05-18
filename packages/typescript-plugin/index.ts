@@ -280,7 +280,7 @@ export = createLanguageServicePlugin(
 			});
 			session.addProtocolHandler('_vue:getComponentProps', request => {
 				const [fileName, position]: Parameters<Requests['getComponentProps']> = request.arguments;
-				const { project, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
+				const { project, program, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
 				const tsLanguageService = projectToOriginalLanguageService.get(project);
 				if (!tsLanguageService) {
 					return createResponse(undefined);
@@ -289,7 +289,7 @@ export = createLanguageServicePlugin(
 					getComponentProps(
 						ts,
 						tsLanguageService,
-						session,
+						program,
 						language,
 						sourceScript,
 						virtualCode,
