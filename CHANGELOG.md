@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.3.1 (2026-05-20)
+
+### language-core
+
+- **fix:** avoid extraneous children error for conditional slots (#6056) - Thanks to @KazariEX!
+
+### language-service
+
+- **refactor:** replace scanner-based missing props hints detection with AST traversal - Thanks to @KazariEX!
+
+### typescript-plugin
+
+- **fix:** get component prop details from symbols - Thanks to @KazariEX!
+- **fix:** skip unchecked JS identifiers in component props (#6055) - Thanks to @KazariEX!
+
+### vscode
+
+- **fix:** resolve typescript plugin path from resolved server path (#6058) - Thanks to @KazariEX!
+
 ## 3.3.0 (2026-05-18)
 
 ### language-core
