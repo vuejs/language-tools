@@ -80,7 +80,14 @@ export function getComponentProps(
 		return [];
 	}
 
-	return completion.entries.map(entry => {
+	const props: ComponentPropInfo[] = [];
+
+	for (const entry of completion.entries) {
+		// skip unchecked JS identifiers
+		if (entry.isFromUncheckedFile) {
+			continue;
+		}
+
 		const modifiers = entry.kindModifiers?.split(',');
 		const type = entry.symbol && checker.getTypeOfSymbol(entry.symbol);
 
@@ -102,6 +109,9 @@ export function getComponentProps(
 		if (type && hasBooleanType(ts, type)) {
 			info.boolean = true;
 		}
-		return info;
-	});
+
+		props.push(info);
+	}
+
+	return props;
 }
