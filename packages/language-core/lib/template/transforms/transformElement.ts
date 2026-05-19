@@ -78,9 +78,11 @@ export const transformElement: NodeTransform = (node, context) => {
 			const onComponentSlot = findDir(node, 'slot', true);
 
 			for (let child of node.children) {
+				// <template v-for> -> for > template
 				if (child.type === NodeTypes.FOR) {
 					child = child.children[0]!;
 				}
+				// <template v-if> -> if > branch > template
 				else if (child.type === NodeTypes.IF) {
 					child = child.branches[0]!.children[0]!;
 				}
