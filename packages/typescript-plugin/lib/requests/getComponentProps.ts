@@ -70,7 +70,6 @@ export function getComponentProps(
 		return [];
 	}
 
-	const checker = program.getTypeChecker();
 	const completion = tsLanguageService.getCompletionsAtPosition(virtualCode.fileName, position2, {
 		includeSymbol: true,
 	});
@@ -81,6 +80,7 @@ export function getComponentProps(
 	}
 
 	const props: ComponentPropInfo[] = [];
+	const checker = program.getTypeChecker();
 
 	for (const entry of completion.entries) {
 		// skip unchecked JS identifiers
