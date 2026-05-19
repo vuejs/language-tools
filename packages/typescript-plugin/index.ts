@@ -121,8 +121,7 @@ export = createLanguageServicePlugin(
 				},
 			);
 			session.addProtocolHandler('_vue:getImportPathForFile', request => {
-				const [fileName, incomingFileName, preferences]: Parameters<Requests['getImportPathForFile']> =
-					request.arguments;
+				const [fileName, incomingFileName]: Parameters<Requests['getImportPathForFile']> = request.arguments;
 				const { project, program } = getProject(fileName);
 				return createResponse(
 					getImportPathForFile(
@@ -131,7 +130,7 @@ export = createLanguageServicePlugin(
 						program,
 						fileName,
 						incomingFileName,
-						preferences,
+						session['getPreferences'](fileName),
 					),
 				);
 			});

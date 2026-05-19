@@ -11,7 +11,6 @@ export interface Requests {
 	getImportPathForFile(
 		fileName: string,
 		incomingFileName: string,
-		preferences: ts.UserPreferences,
 	): Response<ReturnType<typeof import('./getImportPathForFile.js')['getImportPathForFile']>>;
 	isRefAtPosition(
 		fileName: string,

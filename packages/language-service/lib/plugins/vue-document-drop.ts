@@ -2,7 +2,6 @@ import type { InsertTextFormat, LanguageServicePlugin, WorkspaceEdit } from '@vo
 import { forEachEmbeddedCode } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { posix as path } from 'path-browserify';
-import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
 import { URI } from 'vscode-uri';
 import { getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
@@ -55,23 +54,7 @@ export function create(
 					const lastImportNode = getLastImportNode(ts, script.ast);
 					const incomingFileName = URI.parse(importUri).fsPath.replace(/\\/g, '/');
 
-					let importPath: string | null | undefined;
-
-					const serviceScript = info.script.generated.languagePlugin.typescript?.getServiceScript(info.root);
-					if (serviceScript) {
-						const tsDocumentUri = context.encodeEmbeddedDocumentUri(info.script.id, serviceScript.code.id);
-						const tsDocument = context.documents.get(
-							tsDocumentUri,
-							serviceScript.code.languageId,
-							serviceScript.code.snapshot,
-						);
-						const preferences = await getUserPreferences(context, tsDocument);
-						importPath = await getImportPathForFile(
-							info.root.fileName,
-							incomingFileName,
-							preferences,
-						);
-					}
+					let importPath = await getImportPathForFile(info.root.fileName, incomingFileName);
 
 					if (!importPath) {
 						importPath = path.relative(path.dirname(info.root.fileName), incomingFileName)
