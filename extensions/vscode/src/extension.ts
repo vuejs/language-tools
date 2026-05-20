@@ -375,16 +375,17 @@ function patchTypeScriptExtension() {
 	};
 
 	function isTsserverFile(file: string) {
-		return path.isAbsolute(file) && file.endsWith('/tsserver.js');
+		return path.isAbsolute(file) && path.basename(file) === 'tsserver.js';
 	}
 
 	function transformTsserver(serverPath: string) {
-		serverPath = require.resolve(serverPath, { paths: [path.dirname(serverPath)] });
+		const resolvedServerPath = require.resolve(serverPath, { paths: [path.dirname(serverPath)] });
+		const typescriptPath = path.join(path.dirname(resolvedServerPath), 'typescript.js');
 		const text = `
 			const fs = require('node:fs');
 			const readFileSync = fs.readFileSync;
 			fs.readFileSync = (...args) => {
-			  if (args[0] === ${JSON.stringify(serverPath.replace('/tsserver.js', '/typescript.js'))}) {
+			  if (args[0] === ${JSON.stringify(typescriptPath)}) {
 					let content = readFileSync(...args);
 					content = content.replace(
 						/supportedTSExtensions = \\[/,
@@ -410,7 +411,7 @@ function patchTypeScriptExtension() {
 				}
 				return readFileSync(...args);
 			};
-			require(${JSON.stringify(serverPath)});
+			require(${JSON.stringify(resolvedServerPath)});
 		`;
 		const proxyPath = path.join(__dirname, 'tsserver.js');
 		fs.writeFileSync(proxyPath, text);
