@@ -278,7 +278,7 @@ function patchTypeScriptExtension() {
 	}
 
 	const fs = require('node:fs');
-	const readFileSync = fs.readFileSync;
+	const child_process = require('node:child_process');
 	const extensionJsPath = require.resolve('./dist/extension.js', { paths: [tsExtension.extensionPath] });
 	const { publisher, name } = require('../package.json');
 	const vueExtension = vscode.extensions.getExtension(`${publisher}.${name}`)!;
@@ -297,6 +297,7 @@ function patchTypeScriptExtension() {
 		},
 	];
 
+	const readFileSync = fs.readFileSync;
 	fs.readFileSync = (...args: any[]) => {
 		if (args[0] === extensionJsPath) {
 			let text = readFileSync(...args) as string;
@@ -337,12 +338,6 @@ function patchTypeScriptExtension() {
 				new RegExp(String.raw`registerExtensionLanguageProvider\((${id}),${id}\)\{`),
 				(match, id) => `${match}if(${id}.languageIds.includes("vue"))${id}.standardFileExtensions.push("vue");`,
 			);
-			// patch extraFileExtensions
-			text = text.replace(
-				new RegExp(String.raw`this.executeWithoutWaitingForResponse\("configure",(${id})`),
-				(match, id) =>
-					`${id}.extraFileExtensions??=[];${id}.extraFileExtensions.push({scriptKind:7,extension:"vue"});${match}`,
-			);
 			// patch getJsTsFileBeingMoved
 			text = text.replace(
 				new RegExp(String.raw`.RelativePattern\(${id},"\*\*\/\*\.\{ts,tsx,js,jsx`),
@@ -361,6 +356,66 @@ function patchTypeScriptExtension() {
 		}
 		return readFileSync(...args);
 	};
+
+	const spawn = child_process.spawn;
+	child_process.spawn = (...args: any[]) => {
+		const index = args[1].indexOf((arg: unknown) => typeof arg === 'string' && isTsserverFile(arg));
+		if (index !== -1) {
+			args[1][index] = transformTsserver(args[1][index]);
+		}
+		return spawn(...args);
+	};
+
+	const fork = child_process.fork;
+	child_process.fork = (...args: any[]) => {
+		if (typeof args[0] === 'string' && isTsserverFile(args[0])) {
+			args[0] = transformTsserver(args[0]);
+		}
+		return fork(...args);
+	};
+
+	function isTsserverFile(file: string) {
+		return path.isAbsolute(file) && file.endsWith('/tsserver.js');
+	}
+
+	function transformTsserver(serverPath: string) {
+		serverPath = require.resolve(serverPath, { paths: [path.dirname(serverPath)] });
+		const text = `
+			const fs = require('node:fs');
+			const readFileSync = fs.readFileSync;
+			fs.readFileSync = (...args) => {
+			  if (args[0] === ${JSON.stringify(serverPath.replace('/tsserver.js', '/typescript.js'))}) {
+					let content = readFileSync(...args);
+					content = content.replace(
+						/supportedTSExtensions = \\[/,
+						s => s + \`[".vue"], \`,
+					);
+					content = content.replace(
+						/supportedJSExtensions = \\[/,
+						s => s + \`[".vue"], \`,
+					);
+					content = content.replace(
+						/allSupportedExtensions = \\[/,
+						s => s + \`[".vue"], \`,
+					);
+					content = content.replace(
+						/function changeExtension\\(/,
+						s => \`function changeExtension(path, newExtension) {
+							return [".vue"].some(ext => path.endsWith(ext))
+							? path + newExtension
+							: _changeExtension(path, newExtension);
+						}\n\` + s.replace("changeExtension", "_changeExtension"),
+					);
+					return content;
+				}
+				return readFileSync(...args);
+			};
+			require(${JSON.stringify(serverPath)});
+		`;
+		const proxyPath = path.join(__dirname, 'tsserver.js');
+		fs.writeFileSync(proxyPath, text);
+		return proxyPath;
+	}
 
 	const loadedModule = require.cache[extensionJsPath];
 	if (loadedModule) {
