@@ -391,15 +391,15 @@ function patchTypeScriptExtension() {
 					let content = readFileSync(...args);
 					content = content.replace(
 						/supportedTSExtensions = .*(?=;)/,
-						s => s + \`.push([".vue"])\`,
+						s => s + \`.concat([".vue"])\`,
 					);
 					content = content.replace(
 						/supportedJSExtensions = .*(?=;)/,
-						s => s + \`.push([".vue"])\`,
+						s => s + \`.concat([".vue"])\`,
 					);
 					content = content.replace(
 						/allSupportedExtensions = .*(?=;)/,
-						s => s + \`.push([".vue"])\`,
+						s => s + \`.concat([".vue"])\`,
 					);
 					content = content.replace(
 						/function changeExtension\\(/,
