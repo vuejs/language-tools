@@ -390,16 +390,16 @@ function patchTypeScriptExtension() {
 			  if (args[0] === ${JSON.stringify(typescriptPath)}) {
 					let content = readFileSync(...args);
 					content = content.replace(
-						/supportedTSExtensions = \\[/,
-						s => s + \`[".vue"], \`,
+						/supportedTSExtensions = .*(?=;)/,
+						s => s + \`.push([".vue"])\`,
 					);
 					content = content.replace(
-						/supportedJSExtensions = \\[/,
-						s => s + \`[".vue"], \`,
+						/supportedJSExtensions = .*(?=;)/,
+						s => s + \`.push([".vue"])\`,
 					);
 					content = content.replace(
-						/allSupportedExtensions = \\[/,
-						s => s + \`[".vue"], \`,
+						/allSupportedExtensions = .*(?=;)/,
+						s => s + \`.push([".vue"])\`,
 					);
 					content = content.replace(
 						/function changeExtension\\(/,
