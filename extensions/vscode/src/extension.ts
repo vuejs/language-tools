@@ -360,7 +360,7 @@ function patchTypeScriptExtension() {
 	const spawn = child_process.spawn;
 	child_process.spawn = (...args: any[]) => {
 		if (Array.isArray(args[1])) {
-			const index = args[1].findIndex((arg: unknown) => typeof arg === 'string' && isTsserverFile(arg));
+			const index = args[1].findIndex(arg => typeof arg === 'string' && isTsserverFile(arg));
 			if (index !== -1) {
 				args[1][index] = transformTsserver(args[1][index]);
 			}
