@@ -415,9 +415,15 @@ function patchTypeScriptExtension() {
 			};
 			require(${JSON.stringify(resolvedServerPath)});
 		`;
-		const proxyPath = path.join(__dirname, 'tsserver.js');
-		fs.writeFileSync(proxyPath, text);
-		return proxyPath;
+		try {
+			const proxyPath = path.join(__dirname, 'tsserver.js');
+			// FIXME: cannot work on read-only file system
+			fs.writeFileSync(proxyPath, text);
+			return proxyPath;
+		}
+		catch {
+			return serverPath;
+		}
 	}
 
 	const loadedModule = require.cache[extensionJsPath];
