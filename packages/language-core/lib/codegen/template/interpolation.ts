@@ -260,7 +260,7 @@ function* forEachDeclarationsInTypeNode(
 	}
 }
 
-function shouldIdentifierSkipped(
+export function shouldIdentifierSkipped(
 	ctx: TemplateCodegenContext,
 	text: string,
 ) {
