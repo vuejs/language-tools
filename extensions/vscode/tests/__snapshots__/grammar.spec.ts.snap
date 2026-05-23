@@ -832,12 +832,14 @@ exports[`grammar > capitalized-tag.vue 1`] = `
 #          ^ text.html.vue text.html.derivative meta.tag-stuff meta.attribute.directive.vue
 #           ^^^^^^ text.html.vue text.html.derivative meta.tag-stuff
 #                 ^ text.html.vue text.html.derivative meta.tag-stuff punctuation.definition.tag.end.html.vue
->		<Div />
+>		<Div foo=">" />
 #^^ text.html.vue text.html.derivative
 #  ^ text.html.vue text.html.derivative punctuation.definition.tag.begin.html.vue
 #   ^^^ text.html.vue text.html.derivative entity.name.tag.html.vue
-#      ^ text.html.vue text.html.derivative meta.tag-stuff
-#       ^^ text.html.vue text.html.derivative punctuation.definition.tag.end.html.vue
+#      ^^^^^^ text.html.vue text.html.derivative meta.tag-stuff
+#            ^ text.html.vue text.html.derivative meta.tag-stuff punctuation.definition.tag.end.html.vue
+#             ^^ text.html.vue text.html.derivative
+#               ^^ text.html.vue text.html.derivative punctuation.definition.tag.end.html.vue
 >		<div />
 #^^^^^^^ text.html.vue text.html.derivative
 #       ^^ text.html.vue text.html.derivative punctuation.definition.tag.end.html.vue

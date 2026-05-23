@@ -1,7 +1,7 @@
 <template>
 	<Div />
 	<Div v-if="true">
-		<Div />
+		<Div foo=">" />
 		<div />
 	</Div>
 </template>
