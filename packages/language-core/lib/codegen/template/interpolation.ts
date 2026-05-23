@@ -6,6 +6,7 @@ import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { forEachNode, getTypeScriptAST, identifierRegex } from '../utils';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 
 // https://github.com/vuejs/core/blob/fb0c3ca519f1fccf52049cd6b8db3a67a669afe9/packages/compiler-core/src/transforms/transformExpression.ts#L47
@@ -24,112 +25,88 @@ export function* generateInterpolation(
 	prefix: string = '',
 	suffix: string = '',
 ): Generator<Code> {
+	if (prefix) {
+		yield prefix;
+	}
+
+	let prevEnd = 0;
 	for (
-		const segment of forEachInterpolationSegment(
+		const [name, offset, isShorthand] of forEachIdentifiers(
 			typescript,
-			setupRefs,
 			ctx,
 			block,
 			code,
-			start,
 			prefix,
 			suffix,
 		)
 	) {
-		if (typeof segment === 'string') {
-			yield segment;
-			continue;
-		}
-		let [section, offset, type] = segment;
-		offset -= prefix.length;
-		let addSuffix = '';
-		const overLength = offset + section.length - code.length;
-		if (overLength > 0) {
-			addSuffix = section.slice(section.length - overLength);
-			section = section.slice(0, -overLength);
-		}
-		if (offset < 0) {
-			yield section.slice(0, -offset);
-			section = section.slice(-offset);
-			offset = 0;
-		}
-		const shouldSkip = section.length === 0 && type === 'startEnd';
-		if (!shouldSkip) {
-			yield [
-				section,
-				block.name,
-				start + offset,
-				type === 'errorMappingOnly'
-					? codeFeatures.verification
-					: type === 'shorthand'
-					? { ...data, __shorthandExpression: 'js' }
-					: data,
-			];
-		}
-		yield addSuffix;
-	}
-}
-
-function* forEachInterpolationSegment(
-	ts: typeof import('typescript'),
-	setupRefs: Set<string>,
-	ctx: TemplateCodegenContext,
-	block: IRBlock,
-	originalCode: string,
-	start: number,
-	prefix: string,
-	suffix: string,
-): Generator<
-	[
-		code: string,
-		offset: number,
-		type?: 'errorMappingOnly' | 'shorthand' | 'startEnd',
-	] | string
-> {
-	const code = prefix + originalCode + suffix;
-
-	let prevEnd = 0;
-
-	for (
-		const [name, offset, isShorthand] of forEachIdentifiers(
-			ts,
-			ctx,
-			block,
-			originalCode,
-			code,
-			prefix,
-		)
-	) {
 		if (isShorthand) {
-			yield [code.slice(prevEnd, offset + name.length), prevEnd];
+			yield [
+				code.slice(prevEnd, offset + name.length),
+				block.name,
+				start + prevEnd,
+				data,
+			];
 			yield `: `;
 		}
-		else {
-			yield [code.slice(prevEnd, offset), prevEnd, prevEnd > 0 ? undefined : 'startEnd'];
+		else if (prevEnd < offset) {
+			yield [
+				code.slice(prevEnd, offset),
+				block.name,
+				start + prevEnd,
+				data,
+			];
 		}
 
 		if (setupRefs.has(name)) {
-			yield [name, offset];
+			yield [
+				name,
+				block.name,
+				start + offset,
+				data,
+			];
 			yield `.value`;
 		}
 		else {
-			yield ['', offset, 'errorMappingOnly']; // #1205, #1264
+			// #1205, #1264
+			const token = yield* startBoundary(
+				block.name,
+				start + offset,
+				codeFeatures.verification,
+			);
 			if (ctx.dollarVars.has(name)) {
 				yield names.dollars;
 			}
 			else {
-				ctx.recordComponentAccess(block.name, name, start - prefix.length + offset);
+				ctx.recordComponentAccess(block.name, name, start + offset);
 				yield names.ctx;
 			}
 			yield `.`;
-			yield [name, offset, isShorthand ? 'shorthand' : undefined];
+			yield [
+				name,
+				block.name,
+				start + offset,
+				isShorthand
+					? { ...data, __shorthandExpression: 'js' }
+					: data,
+			];
+			yield endBoundary(token, start + offset + name.length);
 		}
 
 		prevEnd = offset + name.length;
 	}
 
 	if (prevEnd < code.length) {
-		yield [code.slice(prevEnd), prevEnd, 'startEnd'];
+		yield [
+			code.slice(prevEnd),
+			block.name,
+			start + prevEnd,
+			data,
+		];
+	}
+
+	if (suffix) {
+		yield suffix;
 	}
 }
 
@@ -137,25 +114,25 @@ function* forEachIdentifiers(
 	ts: typeof import('typescript'),
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
-	originalCode: string,
 	code: string,
 	prefix: string,
+	suffix: string,
 ): Generator<[string, number, boolean]> {
 	if (
-		identifierRegex.test(originalCode) && !shouldIdentifierSkipped(ctx, originalCode)
+		identifierRegex.test(code) && !shouldIdentifierSkipped(ctx, code)
 	) {
-		yield [originalCode, prefix.length, false];
+		yield [code, 0, false];
 		return;
 	}
 
 	const endScope = ctx.startScope();
-	const ast = getTypeScriptAST(ts, block, code);
+	const ast = getTypeScriptAST(ts, block, prefix + code + suffix);
 	for (const [id, isShorthand] of forEachDeclarations(ts, ast, ast, ctx)) {
 		const text = getNodeText(ts, id, ast);
 		if (shouldIdentifierSkipped(ctx, text)) {
 			continue;
 		}
-		yield [text, getStartEnd(ts, id, ast).start, isShorthand];
+		yield [text, getStartEnd(ts, id, ast).start - prefix.length, isShorthand];
 	}
 	endScope();
 }
