@@ -1177,6 +1177,28 @@
 					"include": "#template-tag"
 				},
 				{
+					"begin": "(<)([A-Z][a-zA-Z0-9:.-]*)(?=([^>]+/>))",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.definition.tag.begin.html.vue"
+						},
+						"2": {
+							"name": "entity.name.tag.$2.html.vue"
+						}
+					},
+					"end": "(/>)",
+					"endCaptures": {
+						"1": {
+							"name": "punctuation.definition.tag.end.html.vue"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#tag-stuff"
+						}
+					]
+				},
+				{
 					"include": "text.html.derivative"
 				},
 				{
