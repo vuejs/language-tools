@@ -430,29 +430,6 @@ exports[`embedded grammar > #6063-self-closing-component.vue 1`] = `
 #    ^ text.html.vue text.html.derivative punctuation.definition.tag.begin.html.vue
 #     ^^^ text.html.vue text.html.derivative entity.name.tag.Foo.html.vue
 #        ^^ text.html.vue text.html.derivative punctuation.definition.tag.end.html.vue
->    <A.B />
-#^^^^ text.html.vue text.html.derivative
-#    ^ text.html.vue text.html.derivative punctuation.definition.tag.begin.html.vue
-#     ^^^ text.html.vue text.html.derivative entity.name.tag.A.B.html.vue
-#        ^ text.html.vue text.html.derivative meta.tag-stuff
-#         ^^ text.html.vue text.html.derivative punctuation.definition.tag.end.html.vue
->    <C.D attr="val" />
-#^^^^ text.html.vue text.html.derivative
-#    ^ text.html.vue text.html.derivative punctuation.definition.tag.begin.html.vue
-#     ^^^ text.html.vue text.html.derivative entity.name.tag.C.D.html.vue
-#        ^ text.html.vue text.html.derivative meta.tag-stuff
-#         ^^^^ text.html.vue text.html.derivative meta.tag-stuff meta.attribute.unrecognized.attr.html entity.other.attribute-name.html
-#             ^ text.html.vue text.html.derivative meta.tag-stuff meta.attribute.unrecognized.attr.html punctuation.separator.key-value.html
-#              ^ text.html.vue text.html.derivative meta.tag-stuff meta.attribute.unrecognized.attr.html string.quoted.double.html punctuation.definition.string.begin.html
-#               ^^^ text.html.vue text.html.derivative meta.tag-stuff meta.attribute.unrecognized.attr.html string.quoted.double.html
-#                  ^ text.html.vue text.html.derivative meta.tag-stuff meta.attribute.unrecognized.attr.html string.quoted.double.html punctuation.definition.string.end.html
-#                   ^ text.html.vue text.html.derivative meta.tag-stuff
-#                    ^^ text.html.vue text.html.derivative punctuation.definition.tag.end.html.vue
->    <A.B/>
-#^^^^ text.html.vue text.html.derivative
-#    ^ text.html.vue text.html.derivative punctuation.definition.tag.begin.html.vue
-#     ^^^ text.html.vue text.html.derivative entity.name.tag.A.B.html.vue
-#        ^^ text.html.vue text.html.derivative punctuation.definition.tag.end.html.vue
 >    <Component a="1" b="2" />
 #^^^^ text.html.vue text.html.derivative
 #    ^ text.html.vue text.html.derivative punctuation.definition.tag.begin.html.vue
@@ -485,11 +462,10 @@ exports[`embedded grammar > #6063-self-closing-component.vue 1`] = `
 #                         ^^ text.html.vue text.html.derivative punctuation.definition.tag.end.html.vue
 >    <My-Component />
 #^^^^ text.html.vue text.html.derivative
-#    ^ text.html.vue text.html.derivative punctuation.definition.tag.begin.html.vue
-#     ^^ text.html.vue text.html.derivative entity.name.tag.My.html.vue
-#       ^^^^^^^^^^ text.html.vue text.html.derivative meta.tag-stuff meta.attribute.unrecognized.-Component.html entity.other.attribute-name.html
-#                 ^ text.html.vue text.html.derivative meta.tag-stuff
-#                  ^^ text.html.vue text.html.derivative punctuation.definition.tag.end.html.vue
+#    ^ text.html.vue text.html.derivative meta.tag.custom.start.html punctuation.definition.tag.begin.html
+#     ^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.custom.start.html entity.name.tag.html
+#                 ^ text.html.vue text.html.derivative meta.tag.custom.start.html
+#                  ^^ text.html.vue text.html.derivative meta.tag.custom.start.html punctuation.definition.tag.end.html
 >    <my-component />
 #^^^^ text.html.vue text.html.derivative
 #    ^ text.html.vue text.html.derivative meta.tag.custom.start.html punctuation.definition.tag.begin.html
@@ -1344,21 +1320,13 @@ exports[`grammar > namespaced.vue 1`] = `
 >  <A.B.C> {{ A.B.C }} </A.B.C>
 #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative
 >  <A.B.C />
-#^^ text.html.vue text.html.derivative
-#  ^ text.html.vue text.html.derivative punctuation.definition.tag.begin.html.vue
-#   ^^^^^ text.html.vue text.html.derivative entity.name.tag.A.B.C.html.vue
-#        ^ text.html.vue text.html.derivative meta.tag-stuff
-#         ^^ text.html.vue text.html.derivative punctuation.definition.tag.end.html.vue
+#^^^^^^^^^^^^ text.html.vue text.html.derivative
 >  <C>
 #^^^^^^ text.html.vue text.html.derivative
 >    <C.D> 222 </C.D>
 #^^^^^^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative
 >    <C.D />
-#^^^^ text.html.vue text.html.derivative
-#    ^ text.html.vue text.html.derivative punctuation.definition.tag.begin.html.vue
-#     ^^^ text.html.vue text.html.derivative entity.name.tag.C.D.html.vue
-#        ^ text.html.vue text.html.derivative meta.tag-stuff
-#         ^^ text.html.vue text.html.derivative punctuation.definition.tag.end.html.vue
+#^^^^^^^^^^^^ text.html.vue text.html.derivative
 >  </C>
 #^^^^^^^ text.html.vue text.html.derivative
 ></template>
