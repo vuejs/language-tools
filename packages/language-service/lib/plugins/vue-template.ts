@@ -7,7 +7,6 @@ import {
 	transformCompletionItem,
 } from '@volar/language-service';
 import { getSourceRange } from '@volar/language-service/lib/utils/featureWorkers';
-import type { ElementNode } from '@vue/compiler-dom';
 import {
 	forEachElementNode,
 	forEachInterpolationNode,
@@ -405,57 +404,36 @@ export function create(
 						'hover',
 						() => baseServiceInstance.provideHover!(document, position, token),
 					);
-					const templateAst = info.root.ir.template?.ast;
+					const { template } = info.root.ir;
 					const hoverDocsSetting = await getHoverDocsSetting(context);
 
-					if (
-						!templateAst || !hoverDocsSetting || (htmlHover && hasContents(htmlHover.contents))
-					) {
+					if (!template?.ast || !hoverDocsSetting || htmlHover && hasContents(htmlHover.contents)) {
 						return htmlHover;
 					}
 
-					// replace with `forEachElementNode(templateAst).find(...)` once available
-					const element = (() => {
-						for (const element of forEachElementNode(templateAst)) {
-							const { start, end } = getElementOffset(element);
-							const offset = document.offsetAt(position);
-
-							if (offset >= start && offset <= end) {
-								return element;
-							}
-						}
-					})();
-
-					if (!element) {
-						return htmlHover;
-					}
-
-					const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
-
-					if (!meta) {
-						return htmlHover;
-					}
-
-					const { start, end } = getElementOffset(element);
-
-					return {
-						range: {
-							start: document.positionAt(start),
-							end: document.positionAt(end),
-						},
-						contents: {
-							kind: 'markdown',
-							value: formatComponentMeta(meta, hoverDocsSetting),
-						},
-					};
-
-					function getElementOffset(element: ElementNode) {
+					for (const element of forEachElementNode(template.ast)) {
 						const start = element.loc.start.offset + element.loc.source.indexOf(element.tag);
 						const end = start + element.tag.length;
+						const offset = document.offsetAt(position);
+
+						if (offset < start || offset > end) {
+							continue;
+						}
+
+						const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
+						if (!meta) {
+							continue;
+						}
 
 						return {
-							start,
-							end,
+							range: {
+								start: document.positionAt(start),
+								end: document.positionAt(end),
+							},
+							contents: {
+								kind: 'markdown',
+								value: formatComponentMeta(meta, hoverDocsSetting),
+							},
 						};
 					}
 
