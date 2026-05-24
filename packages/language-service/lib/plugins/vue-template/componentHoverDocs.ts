@@ -1,5 +1,5 @@
 import type { LanguageServiceContext } from '@volar/language-service';
-import type { ComponentMeta, EventMeta, ExposeMeta, PropertyMeta, SlotMeta } from '../../../../component-meta';
+import type { ComponentMeta, EventMeta, ExposeMeta, PropertyMeta, SlotMeta } from 'vue-component-meta';
 
 const UPDATE_EVENT_PREFIX = 'update:';
 const UPDATE_PROP_PREFIX = 'onUpdate:';
