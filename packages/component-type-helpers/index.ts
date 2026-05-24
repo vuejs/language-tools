@@ -1,7 +1,3 @@
-export type ComponentType<T> = T extends new(...args: any) => {} ? 1
-	: T extends (...args: any) => any ? 2
-	: 0;
-
 export type ComponentProps<T> = T extends new(...args: any) => { $props: infer P } ? NonNullable<P>
 	: T extends (props: infer P, ...args: any) => any ? P
 	: {};

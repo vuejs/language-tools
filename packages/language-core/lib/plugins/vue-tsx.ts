@@ -2,174 +2,152 @@ import { camelize, capitalize } from '@vue/shared';
 import { computed } from 'alien-signals';
 import * as path from 'path-browserify';
 import { generateScript } from '../codegen/script';
+import { generateStyle } from '../codegen/style';
 import { generateTemplate } from '../codegen/template';
 import { CompilerOptionsResolver } from '../compilerOptions';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
-import type { Sfc, VueLanguagePlugin } from '../types';
+import type { IR, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { computedSet } from '../utils/signals';
 
-export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
+export const tsCodegen = new WeakMap<IR, ReturnType<typeof useCodegen>>();
 
 const validLangs = new Set(['js', 'jsx', 'ts', 'tsx']);
 
-const plugin: VueLanguagePlugin = ctx => {
+const plugin: VueLanguagePlugin = ({
+	modules: { typescript: ts },
+	vueCompilerOptions,
+}) => {
 	return {
 		version: 2.2,
 
-		requiredCompilerOptions: [
-			'noPropertyAccessFromIndexSignature',
-			'exactOptionalPropertyTypes',
-		],
-
-		getEmbeddedCodes(fileName, sfc) {
-			const codegen = useCodegen(fileName, sfc);
-			return [{
-				id: 'script_' + codegen.getLang(),
-				lang: codegen.getLang(),
-			}];
+		getEmbeddedCodes(_fileName, ir) {
+			const lang = computeLang(ir);
+			return [{ lang, id: 'script_' + lang }];
 		},
 
-		resolveEmbeddedCode(fileName, sfc, embeddedFile) {
+		resolveEmbeddedCode(fileName, ir, embeddedFile) {
 			if (/script_(js|jsx|ts|tsx)/.test(embeddedFile.id)) {
-				const codegen = useCodegen(fileName, sfc);
-				const tsx = codegen.getGeneratedScript();
-				embeddedFile.content = [...tsx.codes];
+				let codegen = tsCodegen.get(ir);
+				if (!codegen) {
+					tsCodegen.set(ir, codegen = useCodegen(ts, vueCompilerOptions, fileName, ir));
+				}
+				const generatedScript = codegen.getGeneratedScript();
+				embeddedFile.content = [...generatedScript.codes];
 			}
 		},
 	};
 
-	function useCodegen(fileName: string, sfc: Sfc) {
-		if (!tsCodegen.has(sfc)) {
-			tsCodegen.set(sfc, createTsx(fileName, sfc, ctx));
+	function computeLang(ir: IR) {
+		let lang = ir.scriptSetup?.lang ?? ir.script?.lang;
+		if (ir.script && ir.scriptSetup) {
+			if (ir.scriptSetup.lang !== 'js') {
+				lang = ir.scriptSetup.lang;
+			}
+			else {
+				lang = ir.script.lang;
+			}
 		}
-		return tsCodegen.get(sfc)!;
+		if (lang && validLangs.has(lang)) {
+			return lang;
+		}
+		return 'ts';
 	}
 };
 
 export default plugin;
 
-function createTsx(
+function useCodegen(
+	ts: typeof import('typescript'),
+	vueCompilerOptions: VueCompilerOptions,
 	fileName: string,
-	sfc: Sfc,
-	ctx: Parameters<VueLanguagePlugin>[0],
+	ir: IR,
 ) {
-	const ts = ctx.modules.typescript;
-
-	const getRawLang = computed(() => {
-		if (sfc.script && sfc.scriptSetup) {
-			if (sfc.scriptSetup.lang !== 'js') {
-				return sfc.scriptSetup.lang;
-			}
-			else {
-				return sfc.script.lang;
-			}
-		}
-		return sfc.scriptSetup?.lang ?? sfc.script?.lang;
-	});
-
-	const getLang = computed(() => {
-		const rawLang = getRawLang();
-		if (rawLang && validLangs.has(rawLang)) {
-			return rawLang;
-		}
-		return 'ts';
-	});
-
 	const getResolvedOptions = computed(() => {
-		const options = parseVueCompilerOptions(sfc.comments);
+		const options = parseVueCompilerOptions(ir.comments);
 		if (options) {
-			const resolver = new CompilerOptionsResolver();
+			const resolver = new CompilerOptionsResolver(ts, () => undefined /* does not support resolving target="auto" */);
 			resolver.addConfig(options, path.dirname(fileName));
-			return resolver.build(ctx.vueCompilerOptions);
+			return resolver.build(vueCompilerOptions);
 		}
-		return ctx.vueCompilerOptions;
+		return vueCompilerOptions;
 	});
 
 	const getScriptRanges = computed(() =>
-		sfc.script && validLangs.has(sfc.script.lang)
-			? parseScriptRanges(ts, sfc.script.ast, !!sfc.scriptSetup)
+		ir.script && validLangs.has(ir.script.lang)
+			? parseScriptRanges(ts, ir.script.ast, getResolvedOptions())
 			: undefined
 	);
 
 	const getScriptSetupRanges = computed(() =>
-		sfc.scriptSetup && validLangs.has(sfc.scriptSetup.lang)
-			? parseScriptSetupRanges(ts, sfc.scriptSetup.ast, getResolvedOptions())
+		ir.scriptSetup && validLangs.has(ir.scriptSetup.lang)
+			? parseScriptSetupRanges(ts, ir.scriptSetup.ast, getResolvedOptions())
 			: undefined
 	);
 
-	const getSetupBindingNames = computedSet(() => {
-		const newNames = new Set<string>();
-		const bindings = getScriptSetupRanges()?.bindings;
-		if (sfc.scriptSetup && bindings) {
-			for (const { range } of bindings) {
-				newNames.add(sfc.scriptSetup.content.slice(range.start, range.end));
+	const getImportedComponents = computedSet(() => {
+		const names = new Set<string>();
+		const scriptSetupRanges = getScriptSetupRanges();
+		if (ir.scriptSetup && scriptSetupRanges) {
+			for (const range of scriptSetupRanges.components) {
+				names.add(ir.scriptSetup.content.slice(range.start, range.end));
 			}
-		}
-		return newNames;
-	});
-
-	const getSetupImportComponentNames = computedSet(() => {
-		const newNames = new Set<string>();
-		const bindings = getScriptSetupRanges()?.bindings;
-		if (sfc.scriptSetup && bindings) {
-			for (const { range, moduleName, isDefaultImport, isNamespace } of bindings) {
-				if (
-					moduleName
-					&& isDefaultImport
-					&& !isNamespace
-					&& ctx.vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))
-				) {
-					newNames.add(sfc.scriptSetup.content.slice(range.start, range.end));
+			const scriptRange = getScriptRanges();
+			if (ir.script && scriptRange) {
+				for (const range of scriptRange.components) {
+					names.add(ir.script.content.slice(range.start, range.end));
 				}
 			}
 		}
-		return newNames;
+		return names;
 	});
 
-	const getSetupDestructuredPropNames = computedSet(() => {
-		const newNames = new Set(getScriptSetupRanges()?.defineProps?.destructured?.keys());
-		const rest = getScriptSetupRanges()?.defineProps?.destructuredRest;
+	const getSetupConsts = computedSet(() => {
+		const scriptSetupRanges = getScriptSetupRanges();
+		const names = new Set([
+			...scriptSetupRanges?.defineProps?.destructured?.keys() ?? [],
+			...getImportedComponents(),
+		]);
+		const rest = scriptSetupRanges?.defineProps?.destructuredRest;
 		if (rest) {
-			newNames.add(rest);
+			names.add(rest);
 		}
-		return newNames;
+		return names;
 	});
 
-	const getSetupTemplateRefNames = computedSet(() => {
-		const newNames = new Set(
+	const getSetupRefs = computedSet(() => {
+		return new Set(
 			getScriptSetupRanges()?.useTemplateRef
 				.map(({ name }) => name)
 				.filter(name => name !== undefined),
 		);
-		return newNames;
 	});
 
-	const setupHasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
+	const hasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
 	const getSetupPropsAssignName = computed(() => getScriptSetupRanges()?.defineProps?.name);
 
 	const getSetupSlotsAssignName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
 
-	const getSetupInheritAttrs = computed(() => {
+	const getInheritAttrs = computed(() => {
 		const value = getScriptSetupRanges()?.defineOptions?.inheritAttrs
-			?? getScriptRanges()?.componentOptions?.inheritAttrs;
+			?? getScriptRanges()?.exportDefault?.options?.inheritAttrs;
 		return value !== 'false';
 	});
 
-	const getComponentSelfName = computed(() => {
+	const getComponentName = computed(() => {
 		let name: string;
-		const { componentOptions } = getScriptRanges() ?? {};
-		if (sfc.script && componentOptions?.name) {
-			name = sfc.script.content.slice(
+		const componentOptions = getScriptRanges()?.exportDefault?.options;
+		if (ir.script && componentOptions?.name) {
+			name = ir.script.content.slice(
 				componentOptions.name.start + 1,
 				componentOptions.name.end - 1,
 			);
 		}
 		else {
 			const { defineOptions } = getScriptSetupRanges() ?? {};
-			if (sfc.scriptSetup && defineOptions?.name) {
+			if (ir.scriptSetup && defineOptions?.name) {
 				name = defineOptions.name;
 			}
 			else {
@@ -181,48 +159,89 @@ function createTsx(
 	});
 
 	const getGeneratedTemplate = computed(() => {
-		if (getResolvedOptions().skipTemplateCodegen || !sfc.template) {
+		if (getResolvedOptions().skipTemplateCodegen || !ir.template) {
 			return;
 		}
 		return generateTemplate({
-			ts,
-			compilerOptions: ctx.compilerOptions,
+			typescript: ts,
 			vueCompilerOptions: getResolvedOptions(),
-			template: sfc.template,
-			scriptSetupBindingNames: getSetupBindingNames(),
-			scriptSetupImportComponentNames: getSetupImportComponentNames(),
-			destructuredPropNames: getSetupDestructuredPropNames(),
-			templateRefNames: getSetupTemplateRefNames(),
-			hasDefineSlots: setupHasDefineSlots(),
+			template: ir.template,
+			componentName: getComponentName(),
+			setupConsts: getSetupConsts(),
+			setupRefs: getSetupRefs(),
+			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
-			inheritAttrs: getSetupInheritAttrs(),
-			selfComponentName: getComponentSelfName(),
+			inheritAttrs: getInheritAttrs(),
 		});
+	});
+
+	const getGeneratedStyle = computed(() => {
+		if (!ir.styles.length) {
+			return;
+		}
+		return generateStyle({
+			typescript: ts,
+			vueCompilerOptions: getResolvedOptions(),
+			styles: ir.styles,
+			setupConsts: getSetupConsts(),
+			setupRefs: getSetupRefs(),
+		});
+	});
+
+	const getSetupExposed = computedSet(() => {
+		const allVars = new Set<string>();
+		const scriptSetupRanges = getScriptSetupRanges();
+		if (!ir.scriptSetup || !scriptSetupRanges) {
+			return allVars;
+		}
+		for (const range of scriptSetupRanges.bindings) {
+			const name = ir.scriptSetup.content.slice(range.start, range.end);
+			allVars.add(name);
+		}
+		const scriptRanges = getScriptRanges();
+		if (ir.script && scriptRanges) {
+			for (const range of scriptRanges.bindings) {
+				const name = ir.script.content.slice(range.start, range.end);
+				allVars.add(name);
+			}
+		}
+		if (!allVars.size) {
+			return allVars;
+		}
+		return new Set([
+			...getGeneratedTemplate()?.componentAccessMap.keys() ?? [],
+			...getGeneratedStyle()?.componentAccessMap.keys() ?? [],
+			...ir.template?.ast?.components.flatMap(name => [camelize(name), capitalize(camelize(name))]) ?? [],
+		].filter(name => allVars.has(name)));
 	});
 
 	const getGeneratedScript = computed(() => {
 		return generateScript({
-			ts,
-			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
-			sfc,
 			fileName,
-			lang: getLang(),
+			script: ir.script,
+			scriptSetup: ir.scriptSetup,
+			exposed: getSetupExposed(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
-			templateCodegen: getGeneratedTemplate(),
-			destructuredPropNames: getSetupDestructuredPropNames(),
-			templateRefNames: getSetupTemplateRefNames(),
+			templateAndStyleTypes: new Set([
+				...getGeneratedTemplate()?.generatedTypes ?? [],
+				...getGeneratedStyle()?.generatedTypes ?? [],
+			]),
+			templateAndStyleCodes: [
+				...getGeneratedStyle()?.codes ?? [],
+				...getGeneratedTemplate()?.codes ?? [],
+			],
 		});
 	});
 
 	return {
-		getLang,
 		getScriptRanges,
 		getScriptSetupRanges,
-		getSetupSlotsAssignName,
 		getGeneratedScript,
 		getGeneratedTemplate,
+		getImportedComponents,
+		getSetupExposed,
 	};
 }

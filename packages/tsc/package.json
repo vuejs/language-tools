@@ -1,11 +1,11 @@
 {
 	"name": "vue-tsc",
-	"version": "3.1.4",
+	"version": "3.3.1",
 	"license": "MIT",
 	"files": [
 		"bin",
-		"**/*.js",
-		"**/*.d.ts"
+		"index.d.ts",
+		"index.js"
 	],
 	"sideEffects": false,
 	"repository": {
@@ -20,10 +20,10 @@
 		"typescript": ">=5.0.0"
 	},
 	"dependencies": {
-		"@volar/typescript": "2.4.23",
-		"@vue/language-core": "3.1.4"
+		"@volar/typescript": "2.4.28",
+		"@vue/language-core": "workspace:*"
 	},
 	"devDependencies": {
-		"@types/node": "^22.10.4"
+		"@types/node": "^24.1.0"
 	}
 }

@@ -69,40 +69,44 @@ export async function getLanguageServer(): Promise<{
 		vueserver: serverHandle,
 		tsserver: tsserver,
 		nextSeq: () => seq++,
-		open: async (uri: string, languageId: string, content: string) => {
-			const res = await tsserver.message({
-				seq: seq++,
-				type: 'request',
-				command: 'updateOpen',
-				arguments: {
-					changedFiles: [],
-					closedFiles: [],
-					openFiles: [
-						{
-							file: URI.parse(uri).fsPath,
-							fileContent: content,
-						},
-					],
-				},
-			});
-			if (!res.success) {
-				throw new Error(res.body);
+		open: async (uri, languageId, content) => {
+			if (uri.startsWith('file://')) {
+				const res = await tsserver.message({
+					seq: seq++,
+					type: 'request',
+					command: 'updateOpen',
+					arguments: {
+						changedFiles: [],
+						closedFiles: [],
+						openFiles: [
+							{
+								file: URI.parse(uri).fsPath,
+								fileContent: content,
+							},
+						],
+					},
+				});
+				if (!res.success) {
+					throw new Error(res.body);
+				}
 			}
 			return await serverHandle!.openInMemoryDocument(uri, languageId, content);
 		},
-		close: async (uri: string) => {
-			const res = await tsserver.message({
-				seq: seq++,
-				type: 'request',
-				command: 'updateOpen',
-				arguments: {
-					changedFiles: [],
-					closedFiles: [URI.parse(uri).fsPath],
-					openFiles: [],
-				},
-			});
-			if (!res.success) {
-				throw new Error(res.body);
+		close: async uri => {
+			if (uri.startsWith('file://')) {
+				const res = await tsserver.message({
+					seq: seq++,
+					type: 'request',
+					command: 'updateOpen',
+					arguments: {
+						changedFiles: [],
+						closedFiles: [URI.parse(uri).fsPath],
+						openFiles: [],
+					},
+				});
+				if (!res.success) {
+					throw new Error(res.body);
+				}
 			}
 			await serverHandle!.closeTextDocument(uri);
 		},

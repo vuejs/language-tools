@@ -22,6 +22,7 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 		useMdFilePlugin,
 		useHtmlFilePlugin,
 		vueRootTagsPlugin,
+		vueTsx,
 		vueScriptJsPlugin,
 		vueStyleCss,
 		vueTemplateHtmlPlugin,
@@ -31,22 +32,21 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 		vueSfcCustomBlocks,
 		vueSfcScriptsFormat,
 		vueSfcTemplate,
-		vueTsx,
 		...pluginContext.vueCompilerOptions.plugins,
 	];
 
 	const pluginInstances = plugins
 		.flatMap(plugin => {
 			try {
-				const instance = plugin(pluginContext);
-				const moduleName = (plugin as any).__moduleName;
+				const moduleConfig = (plugin as any).__moduleConfig ?? {};
+				const instance = plugin({ ...pluginContext, config: moduleConfig });
 				if (Array.isArray(instance)) {
 					for (let i = 0; i < instance.length; i++) {
-						instance[i]!.name ??= `${moduleName} (${i})`;
+						instance[i]!.name ??= `${moduleConfig.name} (${i})`;
 					}
 				}
 				else {
-					instance.name ??= moduleName;
+					instance.name ??= moduleConfig.name;
 				}
 				return instance;
 			}

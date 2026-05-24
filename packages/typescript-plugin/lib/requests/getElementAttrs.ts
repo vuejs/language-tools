@@ -1,20 +1,37 @@
+import { names } from '@vue/language-core';
 import type * as ts from 'typescript';
+import type { ComponentPropInfo } from './getComponentProps';
+import { getVariableType, hasBooleanType } from './utils';
 
 export function getElementAttrs(
 	ts: typeof import('typescript'),
 	program: ts.Program,
+	fileName: string,
 	tag: string,
-): string[] {
+): ComponentPropInfo[] {
+	const sourceFile = program.getSourceFile(fileName);
+	if (!sourceFile) {
+		return [];
+	}
+
 	const checker = program.getTypeChecker();
-	const elements = checker.resolveName('__VLS_intrinsics', undefined, ts.SymbolFlags.Variable, false);
+	const elements = getVariableType(ts, checker, sourceFile, names.intrinsics);
 	if (!elements) {
 		return [];
 	}
 
-	const elementType = checker.getTypeOfSymbol(elements).getProperty(tag);
+	const elementType = elements.type.getProperty(tag);
 	if (!elementType) {
 		return [];
 	}
 
-	return checker.getTypeOfSymbol(elementType).getProperties().map(c => c.name);
+	return checker.getTypeOfSymbol(elementType).getProperties().map(prop => {
+		const info: ComponentPropInfo = {
+			name: prop.name,
+		};
+		if (hasBooleanType(ts, checker.getTypeOfSymbol(prop))) {
+			info.boolean = true;
+		}
+		return info;
+	});
 }

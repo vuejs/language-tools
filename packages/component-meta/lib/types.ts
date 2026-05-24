@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
 
-export type ComponentMetaChecker = ReturnType<typeof import('./base')['createCheckerBase']>;
+export type ComponentMetaChecker = ReturnType<typeof import('./checker')['createCheckerBase']>;
 
 export interface Declaration {
 	file: string;
@@ -8,6 +8,8 @@ export interface Declaration {
 }
 
 export interface ComponentMeta {
+	name?: string;
+	description?: string;
 	type: TypeMeta;
 	props: PropertyMeta[];
 	events: EventMeta[];
@@ -23,44 +25,78 @@ export enum TypeMeta {
 
 export interface PropertyMeta {
 	name: string;
-	default?: string;
 	description: string;
+	type: string;
+	default?: string;
 	global: boolean;
 	required: boolean;
-	type: string;
-	rawType?: ts.Type;
 	tags: { name: string; text?: string }[];
-	declarations: Declaration[];
 	schema: PropertyMetaSchema;
+	/**
+	 * @deprecated use `getDeclarations()` instead
+	 */
+	declarations: Declaration[];
+	/**
+	 * @deprecated use `getTypeObject()` instead
+	 */
+	rawType?: ts.Type;
+	getDeclarations(): Declaration[];
+	getTypeObject(): ts.Type;
 }
 
 export interface EventMeta {
 	name: string;
 	description: string;
 	type: string;
-	rawType?: ts.Type;
 	signature: string;
 	tags: { name: string; text?: string }[];
-	declarations: Declaration[];
 	schema: PropertyMetaSchema[];
+	/**
+	 * @deprecated use `getDeclarations()` instead
+	 */
+	declarations: Declaration[];
+	/**
+	 * @deprecated use `getTypeObject()` instead
+	 */
+	rawType?: ts.Type;
+	getDeclarations(): Declaration[];
+	getTypeObject(): ts.Type | undefined;
 }
 
 export interface SlotMeta {
 	name: string;
-	type: string;
-	rawType?: ts.Type;
 	description: string;
-	declarations: Declaration[];
+	type: string;
+	tags: { name: string; text?: string }[];
 	schema: PropertyMetaSchema;
+	/**
+	 * @deprecated use `getDeclarations()` instead
+	 */
+	declarations: Declaration[];
+	/**
+	 * @deprecated use `getTypeObject()` instead
+	 */
+	rawType?: ts.Type;
+	getDeclarations(): Declaration[];
+	getTypeObject(): ts.Type;
 }
 
 export interface ExposeMeta {
 	name: string;
 	description: string;
 	type: string;
-	rawType?: ts.Type;
-	declarations: Declaration[];
+	tags: { name: string; text?: string }[];
 	schema: PropertyMetaSchema;
+	/**
+	 * @deprecated use `getDeclarations()` instead
+	 */
+	declarations: Declaration[];
+	/**
+	 * @deprecated use `getTypeObject()` instead
+	 */
+	rawType?: ts.Type;
+	getDeclarations(): Declaration[];
+	getTypeObject(): ts.Type;
 }
 
 export type PropertyMetaSchema =
@@ -81,8 +117,17 @@ export type MetaCheckerSchemaOptions = boolean | {
 
 export interface MetaCheckerOptions {
 	schema?: MetaCheckerSchemaOptions;
-	forceUseTs?: boolean;
 	printer?: ts.PrinterOptions;
-	rawType?: boolean;
+	/**
+	 * @deprecated No longer needed, this is default behavior now
+	 */
 	noDeclarations?: boolean;
+	/**
+	 * @deprecated No longer needed, this is default behavior now
+	 */
+	forceUseTs?: boolean;
+	/**
+	 * @deprecated No longer needed, use `getTypeObject()` instead
+	 */
+	rawType?: boolean;
 }

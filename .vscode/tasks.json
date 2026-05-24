@@ -2,39 +2,14 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"type": "npm",
-			"script": "compile",
-			"group": "build",
-			"presentation": {
-				"panel": "dedicated",
-				"reveal": "never"
-			},
-			"problemMatcher": [
-				"$tsc"
-			]
-		},
-		{
-			"type": "npm",
-			"script": "watch",
+			"label": "watch",
+			"type": "shell",
+			"command": "npm run watch:ext",
 			"isBackground": true,
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"presentation": {
-				"panel": "dedicated",
-				"reveal": "never"
-			},
-			"problemMatcher": {
-				"pattern": {
-					"regexp": "__________"
-				},
-				"background": {
-					"activeOnStart": true,
-					"beginsPattern": "> rolldown",
-					"endsPattern": "Waiting for changes..."
-				}
-			}
+			"group": "build",
+			"problemMatcher": [
+				"$tsc-watch"
+			]
 		}
 	]
 }

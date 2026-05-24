@@ -1,3 +1,7 @@
-**/*.ts
+src
+out
+scripts
 tests
 tsconfig.json
+tsconfig.tsbuildinfo
+rolldown.config.ts

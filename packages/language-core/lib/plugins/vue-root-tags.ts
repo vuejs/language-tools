@@ -13,16 +13,16 @@ const plugin: VueLanguagePlugin = () => {
 			}];
 		},
 
-		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
+		resolveEmbeddedCode(_fileName, ir, embeddedFile) {
 			if (embeddedFile.id === 'root_tags') {
-				embeddedFile.content.push([sfc.content, undefined, 0, allCodeFeatures]);
+				embeddedFile.content.push([ir.content, undefined, 0, allCodeFeatures]);
 				for (
 					const block of [
-						sfc.template,
-						sfc.script,
-						sfc.scriptSetup,
-						...sfc.styles,
-						...sfc.customBlocks,
+						ir.template,
+						ir.script,
+						ir.scriptSetup,
+						...ir.styles,
+						...ir.customBlocks,
 					]
 				) {
 					if (!block) {
@@ -35,7 +35,7 @@ const plugin: VueLanguagePlugin = () => {
 						undefined,
 						block.startTagEnd,
 						block.endTagStart,
-						sfc.content.slice(
+						ir.content.slice(
 							block.startTagEnd,
 							block.startTagEnd + offset,
 						),
@@ -45,7 +45,7 @@ const plugin: VueLanguagePlugin = () => {
 							block.startTagEnd + offset,
 							{ structure: true },
 						],
-						sfc.content.slice(
+						ir.content.slice(
 							block.startTagEnd + offset,
 							block.endTagStart,
 						),

@@ -10,33 +10,12 @@
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode",
-				"--folder-uri=${workspaceRoot}/test-workspace"
+				"--folder-uri=${workspaceRoot}/test-workspace/tsc"
 			],
 			"outFiles": [
 				"${workspaceRoot}/**/*.js"
 			],
-			"preLaunchTask": {
-				"type": "npm",
-				"script": "watch"
-			}
-		},
-		{
-			"name": "Launch Web Client",
-			"type": "pwa-extensionHost",
-			"debugWebWorkerHost": true,
-			"request": "launch",
-			"args": [
-				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode",
-				"--extensionDevelopmentKind=web"
-			],
-			"outFiles": [
-				"${workspaceRoot}/**/*.js"
-			],
-			"preLaunchTask": {
-				"type": "npm",
-				"script": "watch"
-			}
+			"preLaunchTask": "watch"
 		},
 		{
 			"name": "Attach to Language Server",

@@ -8,7 +8,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 		compileSFCScript(lang, script) {
 			if (lang === 'js' || lang === 'ts' || lang === 'jsx' || lang === 'tsx') {
 				const ts = modules.typescript;
-				return ts.createSourceFile('test.' + lang, script, 99 satisfies ts.ScriptTarget.Latest);
+				return ts.createSourceFile('.' + lang, script, 99 satisfies ts.ScriptTarget.Latest);
 			}
 		},
 	};

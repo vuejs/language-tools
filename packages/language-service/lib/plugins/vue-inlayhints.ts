@@ -23,16 +23,16 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					}
 
 					const result: InlayHint[] = [];
-					const { sfc } = info.root;
+					const { ir } = info.root;
 
-					const codegen = tsCodegen.get(sfc);
+					const codegen = tsCodegen.get(ir);
 					const inlayHints = [
 						...codegen?.getGeneratedTemplate()?.inlayHints ?? [],
 						...codegen?.getGeneratedScript().inlayHints ?? [],
 					];
 					const scriptSetupRanges = codegen?.getScriptSetupRanges();
 
-					if (scriptSetupRanges?.defineProps?.destructured && sfc.scriptSetup?.ast) {
+					if (scriptSetupRanges?.defineProps?.destructured && ir.scriptSetup?.ast) {
 						const setting = 'vue.inlayHints.destructuredProps';
 						const enabled = await getSettingEnabled(setting);
 
@@ -40,7 +40,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 							for (
 								const [prop, isShorthand] of findDestructuredProps(
 									ts,
-									sfc.scriptSetup.ast,
+									ir.scriptSetup.ast,
 									scriptSetupRanges.defineProps.destructured.keys(),
 								)
 							) {
@@ -59,9 +59,9 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					}
 
 					const blocks = [
-						sfc.template,
-						sfc.script,
-						sfc.scriptSetup,
+						ir.template,
+						ir.script,
+						ir.scriptSetup,
 					];
 					const start = document.offsetAt(range.start);
 					const end = document.offsetAt(range.end);
@@ -313,6 +313,16 @@ export function findDestructuredProps(
 			|| ts.isPropertyDeclaration(parent)
 		) {
 			if (parent.name === id) {
+				return false;
+			}
+		}
+
+		if (
+			ts.isBindingElement(parent)
+			|| ts.isImportSpecifier(parent)
+			|| ts.isExportSpecifier(parent)
+		) {
+			if (parent.propertyName === id) {
 				return false;
 			}
 		}

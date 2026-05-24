@@ -24,7 +24,7 @@ export function create(
 						return;
 					}
 
-					const { template } = info.root.sfc;
+					const { template } = info.root.ir;
 					if (!template?.ast) {
 						return;
 					}

@@ -20,9 +20,10 @@
 					"default": "vue",
 					"markdownDescription": "Specify module name for import regular types."
 				},
-				"globalTypesPath": {
+				"typesRoot": {
 					"type": "string",
-					"markdownDescription": "Path to the global types file. Manual configuration is required when `node_modules` does not exist in the environment."
+					"default": "@vue/language-core/types",
+					"markdownDescription": "Root path for helper type definitions. See: https://github.com/vuejs/language-tools/pull/5872"
 				},
 				"extensions": {
 					"type": "array",
@@ -119,6 +120,11 @@
 					"default": false,
 					"markdownDescription": "Enable to support typed fallthrough attributes. Please note that enabling may significantly slow down type checking."
 				},
+				"checkRequiredFallthroughAttributes": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Check required fallthrough attributes."
+				},
 				"resolveStyleImports": {
 					"type": "boolean",
 					"default": false,
@@ -189,6 +195,22 @@
 				"plugins": {
 					"type": "array",
 					"default": [],
+					"items": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string",
+										"markdownDescription": "Name of the plugin module to be required."
+									}
+								}
+							}
+						]
+					},
 					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
 				"experimentalModelPropName": {

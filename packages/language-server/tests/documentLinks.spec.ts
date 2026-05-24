@@ -1,7 +1,7 @@
 import type { TextDocument } from '@volar/language-server';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
-import { getLanguageServer, testWorkspacePath } from './server.js';
+import { getLanguageServer, testWorkspacePath } from './server';
 
 test('Document links', async () => {
 	expect(
@@ -34,19 +34,6 @@ test('Document links', async () => {
 		),
 	).toMatchInlineSnapshot(`
 		[
-		  {
-		    "range": {
-		      "end": {
-		        "character": 23,
-		        "line": 10,
-		      },
-		      "start": {
-		        "character": 16,
-		        "line": 10,
-		      },
-		    },
-		    "target": "file://\${testWorkspacePath}/fixture.vue#L19%2C4-L19%2C12",
-		  },
 		  {
 		    "range": {
 		      "end": {
@@ -98,6 +85,19 @@ test('Document links', async () => {
 		      },
 		    },
 		    "target": "file://\${testWorkspacePath}/fixture.vue#L15%2C38-L15%2C45",
+		  },
+		  {
+		    "range": {
+		      "end": {
+		        "character": 23,
+		        "line": 10,
+		      },
+		      "start": {
+		        "character": 16,
+		        "line": 10,
+		      },
+		    },
+		    "target": "file://\${testWorkspacePath}/fixture.vue#L19%2C4-L19%2C12",
 		  },
 		]
 	`);

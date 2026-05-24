@@ -4,7 +4,6 @@
 			"esnext",
 			"dom"
 		],
-		"strict": true,
 		"noUncheckedIndexedAccess": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
@@ -12,8 +11,7 @@
 		"allowJs": true,
 		"declaration": true,
 		"noEmit": true,
-		"jsx": "preserve",
-		"baseUrl": "."
+		"jsx": "preserve"
 	},
 	"vueCompilerOptions": {
 		"target": 99

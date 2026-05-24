@@ -1,4 +1,5 @@
-import type * as CompilerDOM from '@vue/compiler-dom';
+import * as CompilerDOM from '@vue/compiler-dom';
+import { compileTemplate } from '../template/compile';
 import type { VueLanguagePlugin } from '../types';
 
 interface Loc {
@@ -15,14 +16,12 @@ type Node =
 
 const shouldAddSuffix = /(?<=<[^>/]+)$/;
 
-const plugin: VueLanguagePlugin = ({ modules }) => {
+const plugin: VueLanguagePlugin = () => {
 	return {
 		version: 2.2,
 
 		compileSFCTemplate(lang, template, options) {
 			if (lang === 'html' || lang === 'md') {
-				const compiler = modules['@vue/compiler-dom'];
-
 				let addedSuffix = false;
 
 				// #4583
@@ -31,30 +30,29 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					addedSuffix = true;
 				}
 
-				const result = compiler.compile(template, {
-					...options,
-					comments: true,
-				});
-				// @ts-expect-error
-				result.__addedSuffix = addedSuffix;
-				return result;
+				const ast = compileTemplate(template, options);
+
+				return {
+					ast,
+					code: '',
+					preamble: '',
+					__addedSuffix: addedSuffix,
+				};
 			}
 		},
 
 		updateSFCTemplate(oldResult, change) {
-			oldResult.code = oldResult.code.slice(0, change.start)
+			const newSource = oldResult.ast.source.slice(0, change.start)
 				+ change.newText
-				+ oldResult.code.slice(change.end);
+				+ oldResult.ast.source.slice(change.end);
 
 			// @ts-expect-error
 			if (oldResult.__addedSuffix) {
-				const originalTemplate = oldResult.code.slice(0, -1); // remove added '>'
+				const originalTemplate = newSource.slice(0, -1); // remove added '>'
 				if (!shouldAddSuffix.test(originalTemplate)) {
 					return undefined;
 				}
 			}
-
-			const CompilerDOM = modules['@vue/compiler-dom'];
 
 			const lengthDiff = change.newText.length - (change.end - change.start);
 			let hitNodes: Node[] = [];
@@ -119,11 +117,6 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 							return false;
 						}
 					}
-					else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
-						if (!tryUpdateNode(node.content)) {
-							return false;
-						}
-					}
 					else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 						for (const childNode of node.children) {
 							if (typeof childNode === 'object') {
@@ -175,6 +168,12 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 						if (!tryUpdateNode(node.content)) {
 							return false;
+						}
+						if (node.content.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+							const { content } = node.content;
+							if (content.includes('{{') || content.includes('}}')) {
+								return false;
+							}
 						}
 					}
 					else if (node.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {

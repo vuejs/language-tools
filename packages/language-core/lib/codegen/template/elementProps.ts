@@ -1,23 +1,23 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
-import { toString } from 'muggle-string';
 import { isMatch } from 'picomatch';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
-import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
+import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
+import { names } from '../names';
 import { identifierRegex, newLine } from '../utils';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
-import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import { generateModifiers } from './elementDirectives';
 import { generateEventArg, generateEventExpression } from './elementEvents';
 import type { TemplateCodegenOptions } from './index';
-import { generateInterpolation } from './interpolation';
+import { generateInterpolation, shouldIdentifierSkipped } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 
-export interface FailedPropExpression {
+export interface FailedPropExpressions {
 	node: CompilerDOM.SimpleExpressionNode;
 	prefix: string;
 	suffix: string;
@@ -28,9 +28,8 @@ export function* generateElementProps(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	props: CompilerDOM.ElementNode['props'],
-	strictPropsCheck: boolean,
-	enableCodeFeatures: boolean,
-	failedPropExps?: FailedPropExpression[],
+	checkUnknownProps: boolean,
+	failedPropExps?: FailedPropExpressions[],
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
@@ -112,53 +111,42 @@ export function* generateElementProps(
 			}
 
 			const shouldSpread = propName === 'style' || propName === 'class';
-			const shouldCamelize = isComponent && getShouldCamelize(options, prop, propName);
-			const features = getPropsCodeFeatures(strictPropsCheck);
+			const shouldCamelize = getShouldCamelize(options, node, prop, propName);
+			const features = getPropsCodeFeatures(checkUnknownProps);
 
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			const codes = [...wrapWith(
+			const token = yield* startBoundary(
+				'template',
 				prop.loc.start.offset,
-				prop.loc.end.offset,
 				codeFeatures.verification,
-				...(
-					prop.arg
-						? generateObjectProperty(
-							options,
-							ctx,
-							propName,
-							prop.arg.loc.start.offset,
-							features,
-							shouldCamelize,
-						)
-						: wrapWith(
-							prop.loc.start.offset,
-							prop.loc.start.offset + 'v-model'.length,
-							codeFeatures.withoutHighlightAndCompletion,
-							propName,
-						)
-				),
-				`: `,
-				...wrapWith(
-					prop.arg?.loc.start.offset ?? prop.loc.start.offset,
-					prop.arg?.loc.end.offset ?? prop.loc.end.offset,
-					codeFeatures.verification,
-					...generatePropExp(
-						options,
-						ctx,
-						prop,
-						prop.exp,
-						enableCodeFeatures,
-					),
-				),
-			)];
-			if (enableCodeFeatures) {
-				yield* codes;
+			);
+			if (prop.arg) {
+				yield* generateObjectProperty(
+					options,
+					ctx,
+					propName,
+					prop.arg.loc.start.offset,
+					features,
+					shouldCamelize,
+				);
 			}
 			else {
-				yield toString(codes);
+				const token2 = yield* startBoundary(
+					'template',
+					prop.loc.start.offset,
+					codeFeatures.withoutHighlightAndCompletion,
+				);
+				yield propName;
+				yield endBoundary(token2, prop.loc.start.offset + 'v-model'.length);
 			}
+			yield `: `;
+			const argLoc = prop.arg?.loc ?? prop.loc;
+			const token3 = yield* startBoundary('template', argLoc.start.offset, codeFeatures.verification);
+			yield* generatePropExp(options, ctx, prop, prop.exp);
+			yield endBoundary(token3, argLoc.end.offset);
+			yield endBoundary(token, prop.loc.end.offset);
 			if (shouldSpread) {
 				yield ` }`;
 			}
@@ -167,21 +155,10 @@ export function* generateElementProps(
 			if (isComponent && prop.name === 'model' && prop.modifiers.length) {
 				const propertyName = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 					? !prop.arg.isStatic
-						? `[__VLS_tryAsConstant(\`\${${prop.arg.content}}Modifiers\`)]`
+						? `[${names.tryAsConstant}(\`\${${prop.arg.content}}Modifiers\`)]`
 						: camelize(propName) + `Modifiers`
 					: `modelModifiers`;
-				const codes = [...generateModifiers(
-					options,
-					ctx,
-					prop,
-					propertyName,
-				)];
-				if (enableCodeFeatures) {
-					yield* codes;
-				}
-				else {
-					yield toString(codes);
-				}
+				yield* generateModifiers(options, ctx, prop, propertyName);
 				yield newLine;
 			}
 		}
@@ -191,37 +168,41 @@ export function* generateElementProps(
 			}
 
 			const shouldSpread = prop.name === 'style' || prop.name === 'class';
-			const shouldCamelize = isComponent && getShouldCamelize(options, prop, prop.name);
-			const features = getPropsCodeFeatures(strictPropsCheck);
+			const shouldCamelize = getShouldCamelize(options, node, prop, prop.name);
+			const features = getPropsCodeFeatures(checkUnknownProps);
 
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			const codes = [...wrapWith(
-				prop.loc.start.offset,
-				prop.loc.end.offset,
-				codeFeatures.verification,
-				...generateObjectProperty(
+			const token = yield* startBoundary('template', prop.loc.start.offset, codeFeatures.verification);
+			const prefix = options.template.content.slice(prop.loc.start.offset, prop.loc.start.offset + 1);
+			if (prefix === '.' || prefix === '#') {
+				// Pug shorthand syntax
+				for (const char of prop.name) {
+					yield [char, 'template', prop.loc.start.offset, features];
+				}
+			}
+			else {
+				yield* generateObjectProperty(
 					options,
 					ctx,
 					prop.name,
 					prop.loc.start.offset,
 					features,
 					shouldCamelize,
-				),
-				`: `,
-				...(
-					prop.value
-						? generateAttrValue(prop.value, codeFeatures.withoutNavigation)
-						: [`true`]
-				),
-			)];
-			if (enableCodeFeatures) {
-				yield* codes;
+				);
+			}
+			yield `: `;
+			if (prop.name === 'style') {
+				yield `{}`;
+			}
+			else if (prop.value) {
+				yield* generateAttrValue(prop.value, codeFeatures.withoutNavigation);
 			}
 			else {
-				yield toString(codes);
+				yield `true`;
 			}
+			yield endBoundary(token, prop.loc.end.offset);
 			if (shouldSpread) {
 				yield ` }`;
 			}
@@ -233,30 +214,18 @@ export function* generateElementProps(
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
 			if (prop.exp.loc.source === '$attrs') {
-				if (enableCodeFeatures) {
-					ctx.bindingAttrLocs.push(prop.exp.loc);
-				}
+				failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 			}
 			else {
-				const codes = [...wrapWith(
-					prop.exp.loc.start.offset,
-					prop.exp.loc.end.offset,
-					codeFeatures.verification,
-					`...`,
-					...generatePropExp(
-						options,
-						ctx,
-						prop,
-						prop.exp,
-						enableCodeFeatures,
-					),
-				)];
-				if (enableCodeFeatures) {
-					yield* codes;
-				}
-				else {
-					yield toString(codes);
-				}
+				const token = yield* startBoundary('template', prop.exp.loc.start.offset, codeFeatures.verification);
+				yield `...`;
+				yield* generatePropExp(
+					options,
+					ctx,
+					prop,
+					prop.exp,
+				);
+				yield endBoundary(token, prop.exp.loc.end.offset);
 				yield `,${newLine}`;
 			}
 		}
@@ -268,107 +237,90 @@ export function* generatePropExp(
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
-	enableCodeFeatures: boolean = true,
 ): Generator<Code> {
-	const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset;
-	const features = isShorthand
-		? codeFeatures.withoutHighlightAndCompletion
-		: codeFeatures.all;
-
-	if (exp && exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
-		if (!isShorthand) { // vue 3.4+
-			yield* generateInterpolation(
-				options,
-				ctx,
-				'template',
-				features,
-				exp.loc.source,
-				exp.loc.start.offset,
-				`(`,
-				`)`,
-			);
-		}
-		else {
-			const propVariableName = camelize(exp.loc.source);
-
-			if (identifierRegex.test(propVariableName)) {
-				const isDestructuredProp = options.destructuredPropNames.has(propVariableName);
-				const isTemplateRef = options.templateRefNames.has(propVariableName);
-
-				const codes = generateCamelized(
-					exp.loc.source,
-					'template',
-					exp.loc.start.offset,
-					features,
-				);
-
-				if (ctx.hasLocalVariable(propVariableName) || isDestructuredProp) {
-					yield* codes;
-				}
-				else {
-					ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
-
-					if (isTemplateRef) {
-						yield `__VLS_unref(`;
-						yield* codes;
-						yield `)`;
-					}
-					else {
-						yield `__VLS_ctx.`;
-						yield* codes;
-					}
-				}
-
-				if (enableCodeFeatures) {
-					ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
-				}
-			}
-		}
+	if (!exp) {
+		yield `{}`;
+	}
+	else if (prop.arg?.loc.start.offset !== prop.exp?.loc.start.offset) {
+		yield* generateInterpolation(
+			options,
+			ctx,
+			options.template,
+			codeFeatures.all,
+			exp.loc.source,
+			exp.loc.start.offset,
+			`(`,
+			`)`,
+		);
 	}
 	else {
-		yield `{}`;
+		const propVariableName = camelize(exp.loc.source);
+
+		if (identifierRegex.test(propVariableName)) {
+			const codes = generateCamelized(
+				exp.loc.source,
+				'template',
+				exp.loc.start.offset,
+				{
+					...codeFeatures.withoutHighlightAndCompletion,
+					__shorthandExpression: 'html',
+				},
+			);
+
+			if (shouldIdentifierSkipped(ctx, propVariableName)) {
+				yield* codes;
+			}
+			else if (options.setupRefs.has(propVariableName)) {
+				yield* codes;
+				yield `.value`;
+			}
+			else {
+				ctx.recordComponentAccess('template', propVariableName, exp.loc.start.offset);
+				yield names.ctx;
+				yield `.`;
+				yield* codes;
+			}
+
+			ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
+		}
 	}
 }
 
 function* generateAttrValue(
-	attrNode: CompilerDOM.TextNode,
+	node: CompilerDOM.TextNode,
 	features: VueCodeInformation,
 ): Generator<Code> {
-	const quote = attrNode.loc.source.startsWith("'") ? "'" : '"';
+	const quote = node.loc.source.startsWith("'") ? "'" : '"';
+	const [content, offset] = normalizeAttributeValue(node);
 	yield quote;
-	let start = attrNode.loc.start.offset;
-	let content = attrNode.loc.source;
-	if (
-		(content.startsWith('"') && content.endsWith('"'))
-		|| (content.startsWith("'") && content.endsWith("'"))
-	) {
-		start++;
-		content = content.slice(1, -1);
-	}
-	yield* generateUnicode(content, start, features);
+	yield* generateUnicode(content, offset, features);
 	yield quote;
 }
 
 function getShouldCamelize(
 	options: TemplateCodegenOptions,
+	node: CompilerDOM.ElementNode,
 	prop: CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode,
 	propName: string,
 ) {
 	return (
+		node.tagType === CompilerDOM.ElementTypes.COMPONENT
+		|| node.tagType === CompilerDOM.ElementTypes.SLOT
+	) && (
 		prop.type !== CompilerDOM.NodeTypes.DIRECTIVE
-		|| !prop.arg
-		|| (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
+		|| prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic
 	)
 		&& hyphenateAttr(propName) === propName
 		&& !options.vueCompilerOptions.htmlAttributes.some(pattern => isMatch(propName, pattern));
 }
 
-function getPropsCodeFeatures(strictPropsCheck: boolean): VueCodeInformation {
+function getPropsCodeFeatures(checkUnknownProps: boolean): VueCodeInformation {
 	return {
 		...codeFeatures.withoutHighlightAndCompletion,
-		...strictPropsCheck
+		...checkUnknownProps
 			? codeFeatures.verification
 			: codeFeatures.doNotReportTs2353AndTs2561,
+		__propsCompletion: true,
 	};
 }
 

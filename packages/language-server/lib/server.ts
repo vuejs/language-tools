@@ -47,7 +47,7 @@ export function startServer(ts: typeof import('typescript')) {
 
 		let simpleLanguageService: LanguageService | undefined;
 
-		return server.initialize(
+		const result = server.initialize(
 			params,
 			{
 				setup() {},
@@ -79,10 +79,11 @@ export function startServer(ts: typeof import('typescript')) {
 					return simpleLanguageService ??= createProjectLanguageService(server, undefined);
 				},
 				getExistingLanguageServices() {
-					return Promise.all([
-						...tsconfigProjects.values(),
-						simpleLanguageService,
-					].filter(promise => !!promise));
+					const projects = [...tsconfigProjects.values()];
+					if (simpleLanguageService) {
+						projects.push(simpleLanguageService);
+					}
+					return projects;
 				},
 				reload() {
 					for (const languageService of tsconfigProjects.values()) {
@@ -102,8 +103,8 @@ export function startServer(ts: typeof import('typescript')) {
 				getComponentDirectives(...args) {
 					return sendTsServerRequest('_vue:getComponentDirectives', args);
 				},
-				getComponentEvents(...args) {
-					return sendTsServerRequest('_vue:getComponentEvents', args);
+				getComponentMeta(...args) {
+					return sendTsServerRequest('_vue:getComponentMeta', args);
 				},
 				getComponentNames(...args) {
 					return sendTsServerRequest('_vue:getComponentNames', args);
@@ -123,8 +124,17 @@ export function startServer(ts: typeof import('typescript')) {
 				getImportPathForFile(...args) {
 					return sendTsServerRequest('_vue:getImportPathForFile', args);
 				},
+				getAutoImportSuggestions(...args) {
+					return sendTsServerRequest('_vue:getAutoImportSuggestions', args);
+				},
+				resolveAutoImportCompletionEntry(...args) {
+					return sendTsServerRequest('_vue:resolveAutoImportCompletionEntry', args);
+				},
 				isRefAtPosition(...args) {
 					return sendTsServerRequest('_vue:isRefAtPosition', args);
+				},
+				resolveModuleName(...args) {
+					return sendTsServerRequest('_vue:resolveModuleName', args);
 				},
 				getDocumentHighlights(fileName, position) {
 					return sendTsServerRequest(
@@ -159,6 +169,14 @@ export function startServer(ts: typeof import('typescript')) {
 				},
 			}),
 		);
+
+		const packageJson = require('../package.json');
+		result.serverInfo = {
+			name: packageJson.name,
+			version: packageJson.version,
+		};
+
+		return result;
 
 		async function sendTsServerRequest<T>(command: string, args: any): Promise<T | null> {
 			return await new Promise<T | null>(resolve => {

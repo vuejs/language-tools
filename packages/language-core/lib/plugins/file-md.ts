@@ -6,14 +6,13 @@ import { buildMappings } from '../utils/buildMappings';
 import { parse } from '../utils/parseSfc';
 
 const frontmatterReg = /^---[\s\S]*?\n---(?:\r?\n|$)/;
-const codeblockReg = /(`{3,})[\s\S]+?\1/g;
-const inlineCodeblockReg = /`[^\n`]+?`/g;
-const latexBlockReg = /(\${2,})[\s\S]+?\1/g;
-const scriptSetupReg = /\\<[\s\S]+?>\n?/g;
+const codeblockReg = /(`{3}|\${2})[\s\S]+?\1/g;
 const codeSnippetImportReg = /^\s*<<<\s*.+/gm;
-const sfcBlockReg = /<(script|style)\b[\s\S]*?>([\s\S]*?)<\/\1>/g;
-const angleBracketReg = /<\S*:\S*>/g;
-const linkReg = /\[[\s\S]*?\]\([\s\S]*?\)/g;
+const sfcBlockReg = /<(script|style)\b[^>]*>([\s\S]*?)<\/\1>/g;
+const htmlTagReg = /(?<=<\/?)([a-z][a-z0-9-]*)\b[^>]*(?=>)/gi;
+const interpolationReg = /(?<=\{\{)[\s\S]*?(?=\}\})/g;
+const inlineCodeReg = /(`{1,2})[^`]+\1/g;
+const angleBracketReg = /<[^\s:]*:\S*>/g;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
@@ -34,35 +33,33 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				return;
 			}
 
-			content = content
-				// frontmatter
-				.replace(frontmatterReg, match => ' '.repeat(match.length))
-				// code block
-				.replace(codeblockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
-				// inline code block
-				.replace(inlineCodeblockReg, match => `\`${' '.repeat(match.length - 2)}\``)
-				// latex block
-				.replace(latexBlockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
-				// # \<script setup>
-				.replace(scriptSetupReg, match => ' '.repeat(match.length))
-				// <<< https://vitepress.dev/guide/markdown#import-code-snippets
-				.replace(codeSnippetImportReg, match => ' '.repeat(match.length));
+			for (const reg of [frontmatterReg, codeblockReg, codeSnippetImportReg]) {
+				content = content.replace(reg, match => ' '.repeat(match.length));
+			}
 
 			const codes: Segment[] = [];
 
-			for (const match of content.matchAll(sfcBlockReg)) {
-				const matchText = match[0];
-				codes.push([matchText, undefined, match.index]);
+			for (const { 0: text, index } of content.matchAll(sfcBlockReg)) {
+				codes.push([text, undefined, index]);
 				codes.push('\n\n');
-				content = content.slice(0, match.index) + ' '.repeat(matchText.length)
-					+ content.slice(match.index + matchText.length);
+				content = content.slice(0, index) + ' '.repeat(text.length) + content.slice(index + text.length);
 			}
 
-			content = content
-				// angle bracket: <http://foo.com>
-				.replace(angleBracketReg, match => ' '.repeat(match.length))
-				// [foo](http://foo.com)
-				.replace(linkReg, match => ' '.repeat(match.length));
+			const ranges: [number, number][] = [];
+			for (const reg of [htmlTagReg, interpolationReg]) {
+				for (const { 0: text, index } of content.matchAll(reg)) {
+					ranges.push([index, index + text.length]);
+				}
+			}
+
+			for (const reg of [inlineCodeReg, angleBracketReg]) {
+				for (const { 0: text, index } of content.matchAll(reg)) {
+					if (ranges.some(([start, end]) => index >= start && index < end)) {
+						continue;
+					}
+					content = content.slice(0, index) + ' '.repeat(text.length) + content.slice(index + text.length);
+				}
+			}
 
 			codes.push('<template>\n');
 			codes.push([content, undefined, 0]);

@@ -6,14 +6,15 @@ import { getClosestMultiLineCommentRange, parseBindingRanges } from './utils';
 
 const tsCheckReg = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
 
-type CallExpressionRange = {
+export interface CallExpressionRange {
 	callExp: TextRange;
 	exp: TextRange;
 	arg?: TextRange;
 	typeArg?: TextRange;
-};
+}
 
-type DefineModel = {
+export interface DefineModel {
+	arg?: TextRange;
 	localName?: TextRange;
 	name?: TextRange;
 	type?: TextRange;
@@ -22,82 +23,65 @@ type DefineModel = {
 	defaultValue?: TextRange;
 	required?: boolean;
 	comments?: TextRange;
-	// used by component-meta
-	argNode?: ts.Expression;
-};
+}
 
-type DefineProps = CallExpressionRange & {
+export interface DefineProps extends CallExpressionRange {
 	name?: string;
 	destructured?: Map<string, ts.Expression | undefined>;
 	destructuredRest?: string;
 	statement: TextRange;
-	// used by component-meta
-	argNode?: ts.Expression;
-};
+}
 
-type WithDefaults = Omit<CallExpressionRange, 'typeArg'> & {
-	// used by component-meta
-	argNode?: ts.Expression;
-};
-
-type DefineEmits = CallExpressionRange & {
+export interface DefineEmits extends CallExpressionRange {
 	name?: string;
 	hasUnionTypeArg?: boolean;
 	statement: TextRange;
-};
+}
 
-type DefineSlots = CallExpressionRange & {
+export interface DefineSlots extends CallExpressionRange {
 	name?: string;
 	statement: TextRange;
-};
+}
 
-type DefineExpose = CallExpressionRange;
-
-type DefineOptions = {
+export interface DefineOptions {
 	name?: string;
 	inheritAttrs?: string;
-};
+}
 
-type UseAttrs = CallExpressionRange;
-
-type UseCssModule = CallExpressionRange;
-
-type UseSlots = CallExpressionRange;
-
-type UseTemplateRef = CallExpressionRange & {
+export interface UseTemplateRef extends CallExpressionRange {
 	name?: string;
-};
+}
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> {}
 
 export function parseScriptSetupRanges(
 	ts: typeof import('typescript'),
-	ast: ts.SourceFile,
+	sourceFile: ts.SourceFile,
 	vueCompilerOptions: VueCompilerOptions,
 ) {
 	const defineModel: DefineModel[] = [];
 	let defineProps: DefineProps | undefined;
-	let withDefaults: WithDefaults | undefined;
+	let withDefaults: CallExpressionRange | undefined;
 	let defineEmits: DefineEmits | undefined;
 	let defineSlots: DefineSlots | undefined;
-	let defineExpose: DefineExpose | undefined;
+	let defineExpose: CallExpressionRange | undefined;
 	let defineOptions: DefineOptions | undefined;
-	const useAttrs: UseAttrs[] = [];
-	const useCssModule: UseCssModule[] = [];
-	const useSlots: UseSlots[] = [];
+	const useAttrs: CallExpressionRange[] = [];
+	const useCssModule: CallExpressionRange[] = [];
+	const useSlots: CallExpressionRange[] = [];
 	const useTemplateRef: UseTemplateRef[] = [];
-	const text = ast.text;
+	const text = sourceFile.text;
 
 	const leadingCommentRanges = ts.getLeadingCommentRanges(text, 0)?.reverse() ?? [];
 	const leadingCommentEndOffset = leadingCommentRanges.find(
 		range => tsCheckReg.test(text.slice(range.pos, range.end)),
 	)?.end ?? 0;
 
-	let bindings = parseBindingRanges(ts, ast);
+	let { bindings, components } = parseBindingRanges(ts, sourceFile, vueCompilerOptions.extensions);
 	let foundNonImportExportNode = false;
 	let importSectionEndOffset = 0;
 
-	ts.forEachChild(ast, node => {
+	ts.forEachChild(sourceFile, node => {
 		if (
 			foundNonImportExportNode
 			|| ts.isImportDeclaration(node)
@@ -122,14 +106,14 @@ export function parseScriptSetupRanges(
 			importSectionEndOffset = commentRange.pos;
 		}
 		else {
-			importSectionEndOffset = getStartEnd(ts, node, ast).start;
+			importSectionEndOffset = getStartEnd(ts, node, sourceFile).start;
 		}
 		foundNonImportExportNode = true;
 	});
-	ts.forEachChild(ast, node => visitNode(node, [ast]));
+	ts.forEachChild(sourceFile, node => visitNode(node, [sourceFile]));
 
 	const templateRefNames = new Set(useTemplateRef.map(ref => ref.name));
-	bindings = bindings.filter(({ range }) => {
+	bindings = bindings.filter(range => {
 		const name = text.slice(range.start, range.end);
 		return !templateRefNames.has(name);
 	});
@@ -138,6 +122,7 @@ export function parseScriptSetupRanges(
 		leadingCommentEndOffset,
 		importSectionEndOffset,
 		bindings,
+		components,
 		defineModel,
 		defineProps,
 		withDefaults,
@@ -225,15 +210,14 @@ export function parseScriptSetupRanges(
 					runtimeType,
 					defaultValue,
 					required,
-					comments: getClosestMultiLineCommentRange(ts, node, parents, ast),
-					argNode: options,
+					comments: getClosestMultiLineCommentRange(ts, node, parents, sourceFile),
+					arg: _getStartEnd(node),
 				});
 			}
 			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
 				defineProps = {
 					...parseCallExpressionAssignment(node, parent),
-					statement: getStatementRange(ts, parents, node, ast),
-					argNode: node.arguments[0],
+					statement: getStatementRange(ts, parents, node, sourceFile),
 				};
 				if (ts.isVariableDeclaration(parent) && ts.isObjectBindingPattern(parent.name)) {
 					defineProps.destructured = new Map();
@@ -264,13 +248,12 @@ export function parseScriptSetupRanges(
 					callExp: _getStartEnd(node),
 					exp: _getStartEnd(node.expression),
 					arg: arg ? _getStartEnd(arg) : undefined,
-					argNode: arg,
 				};
 			}
 			else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
 				defineEmits = {
 					...parseCallExpressionAssignment(node, parent),
-					statement: getStatementRange(ts, parents, node, ast),
+					statement: getStatementRange(ts, parents, node, sourceFile),
 				};
 				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0]!)) {
 					for (const member of node.typeArguments[0].members) {
@@ -287,7 +270,7 @@ export function parseScriptSetupRanges(
 			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
 				defineSlots = {
 					...parseCallExpressionAssignment(node, parent),
-					statement: getStatementRange(ts, parents, node, ast),
+					statement: getStatementRange(ts, parents, node, sourceFile),
 				};
 			}
 			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
@@ -358,11 +341,11 @@ export function parseScriptSetupRanges(
 	}
 
 	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(ts, node, ast);
+		return getStartEnd(ts, node, sourceFile);
 	}
 
 	function _getNodeText(node: ts.Node) {
-		return getNodeText(ts, node, ast);
+		return getNodeText(ts, node, sourceFile);
 	}
 }
 

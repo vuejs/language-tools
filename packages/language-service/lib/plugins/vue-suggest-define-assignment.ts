@@ -2,7 +2,7 @@ import type { CompletionItem, CompletionItemKind, LanguageServicePlugin } from '
 import { type TextRange, tsCodegen } from '@vue/language-core';
 import { resolveEmbeddedCode } from '../utils';
 
-export function create(): LanguageServicePlugin {
+export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
 		name: 'vue-suggest-define-assignment',
 		capabilities: {
@@ -11,7 +11,7 @@ export function create(): LanguageServicePlugin {
 		create(context) {
 			return {
 				isAdditionalCompletion: true,
-				async provideCompletionItems(document) {
+				async provideCompletionItems(document, position) {
 					const info = resolveEmbeddedCode(context, document.uri);
 					if (!info?.code.id.startsWith('script_')) {
 						return;
@@ -21,17 +21,34 @@ export function create(): LanguageServicePlugin {
 					if (!enabled) {
 						return;
 					}
-
-					const { sfc } = info.root;
-					const codegen = tsCodegen.get(sfc);
-					const scriptSetup = sfc.scriptSetup;
+					const { ir } = info.root;
+					const codegen = tsCodegen.get(ir);
+					const scriptSetup = ir.scriptSetup;
 					const scriptSetupRanges = codegen?.getScriptSetupRanges();
 					if (!scriptSetup || !scriptSetupRanges) {
 						return;
 					}
 
+					const map = context.language.maps.get(info.code, info.script);
+
+					let sourceOffset: number | undefined;
+					for (const [offset] of map.toSourceLocation(document.offsetAt(position))) {
+						sourceOffset = offset;
+						break;
+					}
+					if (sourceOffset === undefined) {
+						return;
+					}
+
+					const node = (ts as any).getTouchingPropertyName(
+						scriptSetup.ast,
+						sourceOffset - scriptSetup.startTagEnd,
+					);
+					if (ts.isStringLiteralLike(node)) {
+						return;
+					}
+
 					const result: CompletionItem[] = [];
-					const mappings = [...context.language.maps.forEach(info.code)];
 
 					addDefineCompletionItem(
 						scriptSetupRanges.defineProps?.statement,
@@ -63,18 +80,16 @@ export function create(): LanguageServicePlugin {
 							return;
 						}
 
-						let offset;
-						for (const [, map] of mappings) {
-							for (const [generatedOffset] of map.toGeneratedLocation(scriptSetup!.startTagEnd + exp.start)) {
-								offset = generatedOffset;
-								break;
-							}
+						let generatedOffset;
+						for (const [offset] of map.toGeneratedLocation(scriptSetup!.startTagEnd + exp.start)) {
+							generatedOffset = offset;
+							break;
 						}
-						if (offset === undefined) {
+						if (generatedOffset === undefined) {
 							return;
 						}
 
-						const pos = document.positionAt(offset);
+						const pos = document.positionAt(generatedOffset);
 						result.push({
 							label: name,
 							kind: 6 satisfies typeof CompletionItemKind.Variable,

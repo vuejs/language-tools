@@ -18,7 +18,7 @@ export function create(
 						return;
 					}
 
-					const { template } = info.root.sfc;
+					const { template } = info.root.ir;
 					const offset = document.offsetAt(position);
 
 					if (template?.ast && offset >= template.startTagEnd && offset <= template.endTagStart) {

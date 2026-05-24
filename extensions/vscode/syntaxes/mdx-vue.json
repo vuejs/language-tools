@@ -30,7 +30,7 @@
 					"name": "markup.code.vue.mdx",
 					"patterns": [
 						{
-							"include": "source.vue"
+							"include": "text.html.vue"
 						}
 					]
 				},
@@ -54,7 +54,7 @@
 					"name": "markup.code.vue.mdx",
 					"patterns": [
 						{
-							"include": "source.vue"
+							"include": "text.html.vue"
 						}
 					]
 				}

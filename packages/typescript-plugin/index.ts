@@ -1,11 +1,18 @@
+import { transformFileTextChanges } from '@volar/typescript/lib/node/transform';
 import { createLanguageServicePlugin } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
 import * as core from '@vue/language-core';
 import type * as ts from 'typescript';
-import { createVueLanguageServiceProxy } from './lib/common';
+import {
+	postprocessLanguageService,
+	preprocessLanguageService,
+	resolveCompletionEntryDetails,
+	resolveCompletionResult,
+	type VueCompletionData,
+} from './lib/common';
 import type { Requests } from './lib/requests';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
 import { getComponentDirectives } from './lib/requests/getComponentDirectives';
-import { getComponentEvents } from './lib/requests/getComponentEvents';
+import { getComponentMeta } from './lib/requests/getComponentMeta';
 import { getComponentNames } from './lib/requests/getComponentNames';
 import { getComponentProps } from './lib/requests/getComponentProps';
 import { getComponentSlots } from './lib/requests/getComponentSlots';
@@ -13,9 +20,14 @@ import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
 import { isRefAtPosition } from './lib/requests/isRefAtPosition';
+import { resolveModuleName } from './lib/requests/resolveModuleName';
+
+const projectToOriginalLanguageService = new WeakMap<ts.server.Project, ts.LanguageService>();
 
 export = createLanguageServicePlugin(
 	(ts, info) => {
+		projectToOriginalLanguageService.set(info.project, info.languageService);
+
 		const vueOptions = getVueCompilerOptions();
 		const languagePlugin = core.createVueLanguagePlugin<string>(
 			ts,
@@ -23,13 +35,16 @@ export = createLanguageServicePlugin(
 			vueOptions,
 			id => id,
 		);
-		vueOptions.globalTypesPath = core.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
 		addVueCommands();
+
+		let _language: core.Language<string> | undefined;
+		info.languageService = preprocessLanguageService(info.languageService, () => _language);
 
 		return {
 			languagePlugins: [languagePlugin],
 			setup: language => {
-				info.languageService = createVueLanguageServiceProxy(
+				_language = language;
+				info.languageService = postprocessLanguageService(
 					ts,
 					language,
 					info.languageService,
@@ -91,12 +106,12 @@ export = createLanguageServicePlugin(
 				'_vue:collectExtractProps',
 				request => {
 					const [fileName, templateCodeRange]: Parameters<Requests['collectExtractProps']> = request.arguments;
-					const { project, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
+					const { program, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
 					return createResponse(
 						collectExtractProps(
 							ts,
 							language,
-							project.getLanguageService().getProgram()!,
+							program,
 							sourceScript,
 							virtualCode,
 							templateCodeRange,
@@ -106,69 +121,213 @@ export = createLanguageServicePlugin(
 				},
 			);
 			session.addProtocolHandler('_vue:getImportPathForFile', request => {
-				const [fileName, incomingFileName, preferences]: Parameters<Requests['getImportPathForFile']> =
-					request.arguments;
-				const { project } = getProject(fileName);
+				const [fileName, incomingFileName]: Parameters<Requests['getImportPathForFile']> = request.arguments;
+				const { project, program } = getProject(fileName);
 				return createResponse(
 					getImportPathForFile(
 						ts,
 						project,
-						project.getLanguageService().getProgram()!,
+						program,
 						fileName,
 						incomingFileName,
-						preferences,
+						session['getPreferences'](fileName),
 					),
 				);
 			});
+			session.addProtocolHandler('_vue:getAutoImportSuggestions', request => {
+				const [fileName, position]: Parameters<Requests['getAutoImportSuggestions']> = request.arguments;
+				const { project, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
+				const tsLanguageService = projectToOriginalLanguageService.get(project);
+				if (!tsLanguageService) {
+					return createResponse(undefined);
+				}
+				for (const code of core.forEachEmbeddedCode(virtualCode)) {
+					if (!code.id.startsWith('script_')) {
+						continue;
+					}
+					const map = language.maps.get(code, sourceScript);
+					for (const [tsPosition, mapping] of map.toGeneratedLocation(position)) {
+						if (!(mapping.data as core.VueCodeInformation).__importCompletion) {
+							continue;
+						}
+						const tsPosition2 = tsPosition + sourceScript.snapshot.getLength();
+						const result = tsLanguageService.getCompletionsAtPosition(
+							fileName,
+							tsPosition2,
+							session['getPreferences'](fileName),
+							session['getFormatOptions'](fileName),
+						);
+						if (result) {
+							resolveCompletionResult(
+								ts,
+								language,
+								fileName => fileName,
+								vueOptions,
+								fileName,
+								position,
+								result,
+							);
+							result.entries = result.entries
+								.filter(entry => {
+									const data = entry.data as VueCompletionData;
+									return data?.__vue__componentAutoImport || data?.__vue__autoImport;
+								});
+							for (const entry of result.entries) {
+								const data = (entry.data as VueCompletionData)!;
+								data.__vue__autoImportSuggestions = {
+									fileName,
+									position: tsPosition + sourceScript.snapshot.getLength(),
+									entryName: data.__vue__componentAutoImport?.oldName ?? entry.name,
+									source: entry.source,
+								};
+							}
+						}
+						return createResponse(result);
+					}
+					const result = tsLanguageService.getCompletionsAtPosition(
+						fileName,
+						0,
+						session['getPreferences'](fileName),
+						session['getFormatOptions'](fileName),
+					);
+					if (result) {
+						resolveCompletionResult(
+							ts,
+							language,
+							fileName => fileName,
+							vueOptions,
+							fileName,
+							position,
+							result,
+						);
+						result.entries = result.entries
+							.filter(entry => {
+								const data = entry.data as VueCompletionData;
+								return data?.__vue__componentAutoImport || data?.__vue__autoImport;
+							});
+						for (const entry of result.entries) {
+							const data = (entry.data as VueCompletionData)!;
+							data.__vue__autoImportSuggestions = {
+								fileName,
+								position: 0,
+								entryName: data.__vue__componentAutoImport?.oldName ?? entry.name,
+								source: entry.source,
+							};
+						}
+						return createResponse(result);
+					}
+				}
+				return createResponse(undefined);
+			});
+			session.addProtocolHandler('_vue:resolveAutoImportCompletionEntry', request => {
+				const [data]: Parameters<Requests['resolveAutoImportCompletionEntry']> = request.arguments;
+				if (!data?.__vue__autoImportSuggestions) {
+					return createResponse(undefined);
+				}
+				const { fileName, position, entryName, source } = data.__vue__autoImportSuggestions;
+				const { project, language } = getProject(fileName);
+				const tsLanguageService = projectToOriginalLanguageService.get(project);
+				if (!tsLanguageService) {
+					return createResponse(undefined);
+				}
+				const details = tsLanguageService.getCompletionEntryDetails(
+					fileName,
+					position,
+					entryName,
+					session['getFormatOptions'](fileName),
+					source,
+					session['getPreferences'](fileName),
+					data,
+				);
+				if (details) {
+					for (const codeAction of details.codeActions ?? []) {
+						codeAction.changes = transformFileTextChanges(
+							language,
+							codeAction.changes,
+							false,
+							core.isCompletionEnabled,
+						);
+					}
+					resolveCompletionEntryDetails(language, details, data);
+				}
+				return createResponse(details);
+			});
+			session.addProtocolHandler('_vue:getComponentDirectives', request => {
+				const [fileName]: Parameters<Requests['getComponentDirectives']> = request.arguments;
+				const { program } = getProject(fileName);
+				return createResponse(getComponentDirectives(ts, program, fileName));
+			});
+			session.addProtocolHandler('_vue:getComponentMeta', request => {
+				const [fileName, tag]: Parameters<Requests['getComponentMeta']> = request.arguments;
+				const { program, virtualCode, language } = getProjectAndVirtualCode(fileName);
+				return createResponse(
+					getComponentMeta(
+						ts,
+						program,
+						language,
+						fileName => language.scripts.get(fileName),
+						program.getSourceFile(virtualCode.fileName)!,
+						virtualCode,
+						tag,
+					),
+				);
+			});
+			session.addProtocolHandler('_vue:getComponentNames', request => {
+				const [fileName]: Parameters<Requests['getComponentNames']> = request.arguments;
+				const { program, virtualCode } = getProjectAndVirtualCode(fileName);
+				return createResponse(getComponentNames(ts, program, virtualCode));
+			});
+			session.addProtocolHandler('_vue:getComponentProps', request => {
+				const [fileName, position]: Parameters<Requests['getComponentProps']> = request.arguments;
+				const { project, program, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
+				const tsLanguageService = projectToOriginalLanguageService.get(project);
+				if (!tsLanguageService) {
+					return createResponse(undefined);
+				}
+				return createResponse(
+					getComponentProps(
+						ts,
+						tsLanguageService,
+						program,
+						language,
+						sourceScript,
+						virtualCode,
+						position,
+					),
+				);
+			});
+			session.addProtocolHandler('_vue:getComponentSlots', request => {
+				const [fileName]: Parameters<Requests['getComponentSlots']> = request.arguments;
+				const { program, virtualCode } = getProjectAndVirtualCode(fileName);
+				return createResponse(getComponentSlots(ts, program, virtualCode));
+			});
+			session.addProtocolHandler('_vue:getElementAttrs', request => {
+				const [fileName, ...args]: Parameters<Requests['getElementAttrs']> = request.arguments;
+				const { program } = getProject(fileName);
+				return createResponse(getElementAttrs(ts, program, fileName, ...args));
+			});
+			session.addProtocolHandler('_vue:getElementNames', request => {
+				const [fileName]: Parameters<Requests['getElementNames']> = request.arguments;
+				const { program } = getProject(fileName);
+				return createResponse(getElementNames(ts, program, fileName));
+			});
 			session.addProtocolHandler('_vue:isRefAtPosition', request => {
 				const [fileName, position]: Parameters<Requests['isRefAtPosition']> = request.arguments;
-				const { project, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
+				const { program, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
 				return createResponse(
 					isRefAtPosition(
 						ts,
 						language,
-						project.getLanguageService().getProgram()!,
+						program,
 						sourceScript,
 						virtualCode,
 						position,
-						sourceScript.generated ? sourceScript.snapshot.getLength() : 0,
 					),
 				);
 			});
-			session.addProtocolHandler('_vue:getComponentDirectives', request => {
-				const [fileName]: Parameters<Requests['getComponentDirectives']> = request.arguments;
-				const { project } = getProject(fileName);
-				return createResponse(getComponentDirectives(ts, project.getLanguageService().getProgram()!, fileName));
-			});
-			session.addProtocolHandler('_vue:getComponentEvents', request => {
-				const [fileName, tag]: Parameters<Requests['getComponentEvents']> = request.arguments;
-				const { project } = getProject(fileName);
-				return createResponse(getComponentEvents(ts, project.getLanguageService().getProgram()!, fileName, tag));
-			});
-			session.addProtocolHandler('_vue:getComponentNames', request => {
-				const [fileName]: Parameters<Requests['getComponentNames']> = request.arguments;
-				const { project } = getProject(fileName);
-				return createResponse(getComponentNames(ts, project.getLanguageService().getProgram()!, fileName));
-			});
-			session.addProtocolHandler('_vue:getComponentProps', request => {
-				const [fileName, tag]: Parameters<Requests['getComponentProps']> = request.arguments;
-				const { project } = getProject(fileName);
-				return createResponse(getComponentProps(ts, project.getLanguageService().getProgram()!, fileName, tag));
-			});
-			session.addProtocolHandler('_vue:getComponentSlots', request => {
-				const [fileName]: Parameters<Requests['getComponentSlots']> = request.arguments;
-				const { project, virtualCode } = getProjectAndVirtualCode(fileName);
-				return createResponse(getComponentSlots(ts, project.getLanguageService().getProgram()!, virtualCode));
-			});
-			session.addProtocolHandler('_vue:getElementAttrs', request => {
-				const [fileName, tag]: Parameters<Requests['getElementAttrs']> = request.arguments;
-				const { project } = getProject(fileName);
-				return createResponse(getElementAttrs(ts, project.getLanguageService().getProgram()!, tag));
-			});
-			session.addProtocolHandler('_vue:getElementNames', request => {
-				const [fileName]: Parameters<Requests['getElementNames']> = request.arguments;
-				const { project } = getProject(fileName);
-				return createResponse(getElementNames(ts, project.getLanguageService().getProgram()!));
+			session.addProtocolHandler('_vue:resolveModuleName', request => {
+				const [fileName, ...args]: Parameters<Requests['resolveModuleName']> = request.arguments;
+				return createResponse(resolveModuleName(ts, info.languageServiceHost, fileName, ...args));
 			});
 
 			projectService.logger.info('Vue specific commands are successfully added.');
@@ -181,8 +340,8 @@ export = createLanguageServicePlugin(
 			}
 
 			function getProjectAndVirtualCode(fileName: string) {
-				const service = getProject(fileName);
-				const sourceScript = service.language.scripts.get(fileName);
+				const project = getProject(fileName);
+				const sourceScript = project.language.scripts.get(fileName);
 				if (!sourceScript) {
 					throw new Error('No source script found for file: ' + fileName);
 				}
@@ -191,7 +350,7 @@ export = createLanguageServicePlugin(
 					throw new Error('No virtual code found for file: ' + fileName);
 				}
 				return {
-					...service,
+					...project,
 					sourceScript,
 					virtualCode,
 				};
@@ -210,7 +369,8 @@ export = createLanguageServicePlugin(
 				}
 				return {
 					project,
-					language: (project as any).__vue__.language,
+					program: project.getLanguageService().getProgram()!,
+					language: (project as any).__vue__.language as core.Language<string>,
 				};
 			}
 		}

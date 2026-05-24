@@ -8,7 +8,7 @@ export function* generateCamelized(
 	features: VueCodeInformation,
 ): Generator<Code> {
 	const parts = code.split('-');
-	const startCombineOffset = features.__combineOffset ?? 0;
+	const combineToken = features.__combineToken ?? Symbol();
 
 	for (let i = 0; i < parts.length; i++) {
 		const part = parts[i]!;
@@ -18,7 +18,7 @@ export function* generateCamelized(
 					part,
 					source,
 					offset,
-					features,
+					{ ...features, __combineToken: combineToken },
 				];
 			}
 			else {
@@ -26,7 +26,7 @@ export function* generateCamelized(
 					capitalize(part),
 					source,
 					offset,
-					{ __combineOffset: startCombineOffset + i },
+					{ __combineToken: combineToken },
 				];
 			}
 		}

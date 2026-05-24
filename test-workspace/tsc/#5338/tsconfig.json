@@ -1,0 +1,10 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"exactOptionalPropertyTypes": true
+	},
+	"vueCompilerOptions": {
+		"target": 3.5
+	},
+	"include": ["**/*"]
+}

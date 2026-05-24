@@ -9,24 +9,22 @@ export function* generatePropertyAccess(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	code: string,
-	offset?: number,
-	features?: VueCodeInformation,
+	offset: number,
+	features: VueCodeInformation,
 ): Generator<Code> {
-	if (!options.compilerOptions.noPropertyAccessFromIndexSignature && identifierRegex.test(code)) {
-		yield `.`;
-		yield offset !== undefined && features
-			? [code, 'template', offset, features]
-			: code;
-	}
-	else if (code.startsWith('[') && code.endsWith(']')) {
+	if (code.startsWith('[') && code.endsWith(']')) {
 		yield* generateInterpolation(
 			options,
 			ctx,
-			'template',
+			options.template,
 			features,
 			code,
 			offset,
 		);
+	}
+	else if (identifierRegex.test(code)) {
+		yield `.`;
+		yield [code, 'template', offset, features];
 	}
 	else {
 		yield `[`;

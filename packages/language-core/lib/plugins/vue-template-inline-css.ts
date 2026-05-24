@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueLanguagePlugin } from '../types';
 import { forEachElementNode } from '../utils/forEachTemplateNode';
+import { normalizeAttributeValue } from '../utils/shared';
 import { allCodeFeatures } from './shared';
 
 const codeFeatures = {
@@ -13,19 +14,19 @@ const plugin: VueLanguagePlugin = () => {
 	return {
 		version: 2.2,
 
-		getEmbeddedCodes(_fileName, sfc) {
-			if (!sfc.template?.ast) {
+		getEmbeddedCodes(_fileName, ir) {
+			if (!ir.template?.ast) {
 				return [];
 			}
 			return [{ id: 'template_inline_css', lang: 'css' }];
 		},
 
-		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
-			if (embeddedFile.id !== 'template_inline_css' || !sfc.template?.ast) {
+		resolveEmbeddedCode(_fileName, ir, embeddedFile) {
+			if (embeddedFile.id !== 'template_inline_css' || !ir.template?.ast) {
 				return;
 			}
-			embeddedFile.parentCodeId = sfc.template.lang === 'md' ? 'root_tags' : 'template';
-			embeddedFile.content.push(...generate(sfc.template.ast));
+			embeddedFile.parentCodeId = ir.template.lang === 'md' ? 'root_tags' : 'template';
+			embeddedFile.content.push(...generate(ir.template.ast));
 		},
 	};
 };
@@ -36,25 +37,13 @@ function* generate(templateAst: NonNullable<CompilerDOM.RootNode>): Generator<Co
 	for (const node of forEachElementNode(templateAst)) {
 		for (const prop of node.props) {
 			if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'bind'
-				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-				&& prop.arg.content === 'style'
-				&& prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
+				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
+				&& prop.name === 'style'
+				&& prop.value
 			) {
-				const endCrt = prop.arg.loc.source[prop.arg.loc.source.length - 1]!; // " | '
-				const start = prop.arg.loc.source.indexOf(endCrt) + 1;
-				const end = prop.arg.loc.source.lastIndexOf(endCrt);
-				const content = prop.arg.loc.source.slice(start, end);
-
 				yield `x { `;
-				yield [
-					content,
-					'template',
-					prop.arg.loc.start.offset + start,
-					codeFeatures,
-				];
+				const [content, offset] = normalizeAttributeValue(prop.value);
+				yield [content, 'template', offset, codeFeatures];
 				yield ` }\n`;
 			}
 		}
