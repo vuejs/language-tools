@@ -4,7 +4,7 @@ import { mockComponentMeta } from './mock-component-meta';
 
 describe('componentHoverDocs.ts', () => {
 	describe('snapshots', () => {
-		it.each(['Table', 'Markdown', 'JSDoc'] as const)('%s', format => {
+		it.each(['table', 'markdown', 'jsdoc'] as const)('%s', format => {
 			const result = formatComponentMeta(mockComponentMeta, format);
 
 			expect(result).toMatchSnapshot();

@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`componentHoverDocs.ts > snapshots > JSDoc 1`] = `
+exports[`componentHoverDocs.ts > snapshots > jsdoc 1`] = `
 "## Models
 
 ~~~ts
@@ -158,7 +158,7 @@ exposedProperty: string
 ~~~"
 `;
 
-exports[`componentHoverDocs.ts > snapshots > Markdown 1`] = `
+exports[`componentHoverDocs.ts > snapshots > markdown 1`] = `
 "## Models
 
 \`modelValue?: string | undefined\`
@@ -284,7 +284,7 @@ exports[`componentHoverDocs.ts > snapshots > Markdown 1`] = `
 > This is a property that can be accessed from the parent component"
 `;
 
-exports[`componentHoverDocs.ts > snapshots > Table 1`] = `
+exports[`componentHoverDocs.ts > snapshots > table 1`] = `
 "<table>
 <tr><th align="left">Prop</th><th align="left">Description</th><th align="left">Default</th></tr>
 <tr>

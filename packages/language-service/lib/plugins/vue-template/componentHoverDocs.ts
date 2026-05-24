@@ -4,7 +4,7 @@ import type { ComponentMeta, EventMeta, ExposeMeta, PropertyMeta, SlotMeta } fro
 const UPDATE_EVENT_PREFIX = 'update:';
 const UPDATE_PROP_PREFIX = 'onUpdate:';
 
-const formatterSettings = ['Markdown', 'Table', 'JSDoc'] as const;
+const formatterSettings = ['markdown', 'table', 'jsdoc'] as const;
 /**
  * The possible settings for the component hover documentation.
  *
@@ -23,7 +23,7 @@ export async function getHoverDocsSetting(context: LanguageServiceContext): Prom
 
 	if (configuredValue === true) {
 		// default to `Table` for backwards compatibility
-		return 'Table';
+		return 'table';
 	}
 
 	return null;
@@ -36,11 +36,11 @@ export function formatComponentMeta(meta: ComponentMeta, setting: FormatterSetti
 
 function getFormatter(setting: FormatterSetting): (meta: ComponentMeta) => string | undefined {
 	switch (setting) {
-		case 'Markdown':
+		case 'markdown':
 			return formatMarkdown;
-		case 'Table':
+		case 'table':
 			return formatTable;
-		case 'JSDoc':
+		case 'jsdoc':
 			return formatJSDoc;
 	}
 }

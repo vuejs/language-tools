@@ -302,9 +302,9 @@
 					"type": "string",
 					"enum": [
 						"off",
-						"Table",
-						"JSDoc",
-						"Markdown"
+						"table",
+						"jsdoc",
+						"markdown"
 					],
 					"default": "off",
 					"markdownDescription": "%configuration.hover.rich%"
