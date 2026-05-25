@@ -3,6 +3,7 @@ shellEmulator: true
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - semver@5.7.2
+  - tinyexec@1.2.2
 
 packages:
   - extensions/*
