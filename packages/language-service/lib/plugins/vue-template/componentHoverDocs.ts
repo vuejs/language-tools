@@ -245,15 +245,17 @@ function formatJSDoc(meta: ComponentMeta) {
 		}
 
 		return `## ${title}\n\n`
-			+ '~~~ts'
+			+ '~~~ts\n'
+			+ `interface ${title} {`
 			+ metaList.map(meta => {
 				let element = formatter(meta);
 
 				return [
 					formatDescription(meta),
-					element,
+					`\t${element}`,
 				].join('\n');
 			}).join('\n')
+			+ '\n}'
 			+ '\n~~~';
 	}
 
@@ -309,9 +311,9 @@ function formatJSDoc(meta: ComponentMeta) {
 			return '';
 		}
 
-		description = '/**\n * ' + description.replace(/\n/g, '\n * ');
+		description = '\t/**\n\t * ' + description.replace(/\n/g, '\n\t * ');
 
-		return '\n' + description + '\n */';
+		return '\n' + description + '\n\t */';
 	}
 }
 
