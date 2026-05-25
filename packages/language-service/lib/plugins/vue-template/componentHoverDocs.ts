@@ -266,19 +266,19 @@ function formatJSDoc(meta: ComponentMeta) {
 
 		propString += `: ${prop.type}`;
 
-		if (prop.default) {
-			propString += ` = ${prop.default}`;
-		}
+		// if (prop.default) {
+		// 	propString += ` = ${prop.default}`;
+		// }
 
 		return propString;
 	}
 
 	function formatEvent(event: EventMeta | PropertyMeta): string {
-		return `@${event.name}: ${formatEventType(event)}`;
+		return `${event.name}: ${formatEventType(event)}`;
 	}
 
 	function formatSlot(slot: SlotMeta): string {
-		const slotString = `#${slot.name}`;
+		const slotString = `${slot.name}`;
 
 		const hasSlotProps = slot.type !== '{}' && slot.type !== 'any';
 		if (hasSlotProps) {
@@ -303,6 +303,14 @@ function formatJSDoc(meta: ComponentMeta) {
 			}
 
 			description += meta.tags.map(tag => `@${tag.name} ${tag.text ?? ''}`).join('\n\n');
+		}
+
+		if ('default' in meta && meta.default) {
+			if (description) {
+				description += '\n\n';
+			}
+
+			description += `@default ${meta.default}`;
 		}
 
 		if (!description) {
