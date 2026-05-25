@@ -109,7 +109,7 @@ declare global {
 	};
 	type __VLS_PrettifyGlobal<T> = (T extends any ? { [K in keyof T]: T[K] } : { [K in keyof T as K]: T[K] }) & {};
 
-	function __VLS_vFor<T>(source: T): T extends number ? [number, number][]
+	function __VLS_vFor<const T>(source: T): T extends number ? [number, number][]
 		: T extends string ? [string, number][]
 		: T extends readonly (infer U)[] ? [U, number][]
 		: T extends Iterable<infer V> ? [V, number][]
