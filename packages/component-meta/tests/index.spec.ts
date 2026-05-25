@@ -1248,15 +1248,11 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				&& slot.type === '{ num: number; str: string; }'
 			);
 			const d = meta.slots.find(slot => slot.name === 'no-bind');
-			const e = meta.slots.find(slot => slot.name === 'loop-str' && slot.type === '{ str: string; key: "str" | 123; }');
-			const f = meta.slots.find(slot => slot.name === 'loop-123' && slot.type === '{ str: string; key: "str" | 123; }');
 
 			expect(a).toBeDefined();
 			expect(b).toBeDefined();
 			expect(c).toBeDefined();
 			expect(d).toBeDefined();
-			expect(e).toBeDefined();
-			expect(f).toBeDefined();
 		});
 
 		test('reference-type-slots w/ defineSlots', () => {

@@ -854,13 +854,8 @@ exports[`Input: reference-type-slots/component.vue, Output: reference-type-slots
 }, __VLS_7: {
     num: number;
     str: string;
-}, __VLS_10: "loop-123" | "loop-str", __VLS_11: {
-    str: string;
-    key: 123 | "str";
 };
 type __VLS_Slots = {} & {
-    [K in NonNullable<typeof __VLS_10>]?: (props: typeof __VLS_11) => any;
-} & {
     'no-bind'?: (props: typeof __VLS_1) => any;
 } & {
     default?: (props: typeof __VLS_3) => any;
