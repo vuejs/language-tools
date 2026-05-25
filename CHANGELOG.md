@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.3.2 (2026-05-25)
+
+### language-core
+
+- **feat:** preserve literal types for inline `v-for` sources (#6067) - Thanks to @kkesidis!
+- **fix:** align `v-bind` shorthand identifier skipping with interpolation - Thanks to @KazariEX!
+
+### vscode
+
+- **feat:** transform tsserver content (#6062) - Thanks to @KazariEX!
+- **fix:** do not mark trailing slash in capitalized self-closing tags as invalid (#6065) - Thanks to @suisanka!
+
 ## 3.3.1 (2026-05-19)
 
 ### language-core
