@@ -227,13 +227,14 @@ function formatMarkdown(meta: ComponentMeta) {
 function formatJSDoc(meta: ComponentMeta) {
 	const { models, props, events } = extractMetaLists(meta);
 
-	return [
+	return `~~~ts\n` + [
 		formatSection('Models', models, formatProp),
 		formatSection('Props', props, formatProp),
 		formatSection('Events', events, formatEvent),
 		formatSection('Slots', meta?.slots, formatSlot),
 		formatSection('Exposed', meta?.exposed, formatExposed),
-	].filter(el => el !== undefined).join('\n\n\n');
+		`~~~\n`,
+	].filter(el => el !== undefined).join('\n\n');
 
 	function formatSection<T extends AnyMeta>(
 		title: string,
@@ -244,9 +245,7 @@ function formatJSDoc(meta: ComponentMeta) {
 			return;
 		}
 
-		return `## ${title}\n\n`
-			+ '~~~ts\n'
-			+ `interface ${title} {`
+		return `interface ${title} {`
 			+ metaList.map(meta => {
 				let element = formatter(meta);
 
@@ -255,8 +254,7 @@ function formatJSDoc(meta: ComponentMeta) {
 					`\t${element}`,
 				].join('\n');
 			}).join('\n')
-			+ '\n}'
-			+ '\n~~~';
+			+ '\n}';
 	}
 
 	function formatProp(prop: PropertyMeta): string {
