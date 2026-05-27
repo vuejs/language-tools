@@ -1083,24 +1083,31 @@
 			"begin": "(<)([A-Z][a-zA-Z0-9:-]*)(?=\\s|/?>)",
 			"beginCaptures": {
 				"1": {
-					"name": "punctuation.definition.tag.begin.html.vue"
+					"name": "punctuation.definition.tag.begin.html"
 				},
 				"2": {
-					"name": "entity.name.tag.html.vue"
+					"name": "entity.name.tag.html"
 				}
 			},
-			"end": "/>|(?=>)",
+			"end": "/?>",
 			"endCaptures": {
 				"0": {
-					"name": "punctuation.definition.tag.end.html.vue"
+					"name": "punctuation.definition.tag.end.html"
 				}
 			},
+			"name": "meta.tag.structure.$2.start.html",
 			"patterns": [
 				{
-					"include": "#tag-stuff"
-				},
-				{
-					"include": "#html-stuff"
+					"begin": "\\G",
+					"end": "(?=/?>)",
+					"patterns": [
+						{
+							"include": "#vue-directives"
+						},
+						{
+							"include": "text.html.basic#attribute"
+						}
+					]
 				}
 			]
 		},
