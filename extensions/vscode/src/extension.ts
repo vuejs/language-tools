@@ -409,6 +409,10 @@ function patchTypeScriptExtension() {
 							: _changeExtension(path, newExtension);
 						}\n\` + s.replace("changeExtension", "_changeExtension"),
 					);
+					content = content.replace(
+						/const isJs = hasJSFileExtension\\((.*?)\\.fileName\\)/,
+						(s, file) => \`const isJs = isSourceFileJS(\${file})\`,
+					);
 					return content;
 				}
 				return readFileSync(...args);
