@@ -1083,19 +1083,19 @@
 			"begin": "(<)([A-Z][a-zA-Z0-9:-]*)(?=\\s|/?>)",
 			"beginCaptures": {
 				"1": {
-					"name": "punctuation.definition.tag.begin.html"
+					"name": "punctuation.definition.tag.begin.html.vue"
 				},
 				"2": {
-					"name": "entity.name.tag.html"
+					"name": "entity.name.tag.html.vue"
 				}
 			},
 			"end": "/?>",
 			"endCaptures": {
 				"0": {
-					"name": "punctuation.definition.tag.end.html"
+					"name": "punctuation.definition.tag.end.html.vue"
 				}
 			},
-			"name": "meta.tag.structure.$2.start.html",
+			"name": "meta.tag.structure.$2.start.html.vue",
 			"patterns": [
 				{
 					"begin": "\\G",
