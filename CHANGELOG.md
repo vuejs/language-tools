@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.3.3 (2026-05-30)
+
+### vscode
+
+- **fix:** prevent grammar scopes leakage in capitalized tags (#6073) - Thanks to @KazariEX!
+- **fix:** preserve TS auto imports behavior in Vue files (#6072) - Thanks to @KazariEX!
+
+### workspace
+
+- **fix:** read PR title from env in `auto-version` workflow to prevent injection (#6074) - Thanks to @arpitjain099!
+
 ## 3.3.2 (2026-05-25)
 
 ### language-core
