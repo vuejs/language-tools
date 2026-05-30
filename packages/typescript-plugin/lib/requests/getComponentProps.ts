@@ -8,7 +8,7 @@ import {
 	type VueVirtualCode,
 } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { hasBooleanType } from './utils';
+import { booleanExceptionProps, hasBooleanType } from './utils';
 
 export interface ComponentPropInfo {
 	name: string;
@@ -106,7 +106,7 @@ export function getComponentProps(
 		if (modifiers?.includes('optional')) {
 			info.optional = true;
 		}
-		if (entry.name !== 'class' && type && hasBooleanType(ts, type)) {
+		if (!booleanExceptionProps.has(entry.name) && type && hasBooleanType(ts, type)) {
 			info.boolean = true;
 		}
 

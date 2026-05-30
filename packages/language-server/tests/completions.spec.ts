@@ -651,6 +651,42 @@ test('Boolean props', async () => {
 		  },
 		}
 	`);
+
+	expect(
+		await requestCompletionItemToVueServer(
+			'fixture.vue',
+			'vue',
+			`
+		<template>
+			<div sty| />
+		</template>
+		`,
+			'style',
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "command": {
+		    "command": "editor.action.triggerSuggest",
+		    "title": "Suggest",
+		  },
+		  "insertTextFormat": 1,
+		  "kind": 12,
+		  "label": "style",
+		  "textEdit": {
+		    "newText": "style="$1"",
+		    "range": {
+		      "end": {
+		        "character": 11,
+		        "line": 2,
+		      },
+		      "start": {
+		        "character": 8,
+		        "line": 2,
+		      },
+		    },
+		  },
+		}
+	`);
 });
 
 test('Directives', async () => {
