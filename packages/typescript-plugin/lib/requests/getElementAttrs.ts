@@ -29,7 +29,7 @@ export function getElementAttrs(
 		const info: ComponentPropInfo = {
 			name: prop.name,
 		};
-		if (hasBooleanType(ts, checker.getTypeOfSymbol(prop))) {
+		if (prop.name !== 'class' && hasBooleanType(ts, checker.getTypeOfSymbol(prop))) {
 			info.boolean = true;
 		}
 		return info;

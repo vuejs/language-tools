@@ -106,7 +106,7 @@ export function getComponentProps(
 		if (modifiers?.includes('optional')) {
 			info.optional = true;
 		}
-		if (type && hasBooleanType(ts, type)) {
+		if (entry.name !== 'class' && type && hasBooleanType(ts, type)) {
 			info.boolean = true;
 		}
 
