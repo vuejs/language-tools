@@ -1,7 +1,7 @@
 import { names } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type { ComponentPropInfo } from './getComponentProps';
-import { getVariableType, hasBooleanType } from './utils';
+import { booleanExceptionProps, getVariableType, hasBooleanType } from './utils';
 
 export function getElementAttrs(
 	ts: typeof import('typescript'),
@@ -29,7 +29,7 @@ export function getElementAttrs(
 		const info: ComponentPropInfo = {
 			name: prop.name,
 		};
-		if (hasBooleanType(ts, checker.getTypeOfSymbol(prop))) {
+		if (!booleanExceptionProps.has(prop.name) && hasBooleanType(ts, checker.getTypeOfSymbol(prop))) {
 			info.boolean = true;
 		}
 		return info;
