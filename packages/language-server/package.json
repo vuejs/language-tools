@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-server",
-	"version": "3.3.2",
+	"version": "3.3.3",
 	"license": "MIT",
 	"files": [
 		"bin",

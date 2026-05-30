@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-plugin-pug",
-	"version": "3.3.2",
+	"version": "3.3.3",
 	"license": "MIT",
 	"files": [
 		"index.d.ts",
