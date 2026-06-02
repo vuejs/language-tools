@@ -182,7 +182,7 @@
 			},
 			{
 				"scopeName": "vue.directives",
-				"path": "./syntaxes/vue-directives.json",
+				"path": "./syntaxes/vue.directives.tmLanguage.json",
 				"injectTo": [
 					"text.html.vue",
 					"text.html.markdown",
@@ -192,7 +192,7 @@
 			},
 			{
 				"scopeName": "vue.interpolations",
-				"path": "./syntaxes/vue-interpolations.json",
+				"path": "./syntaxes/vue.interpolations.tmLanguage.json",
 				"injectTo": [
 					"text.html.vue",
 					"text.html.markdown",
