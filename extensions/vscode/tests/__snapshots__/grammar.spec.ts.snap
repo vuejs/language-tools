@@ -294,29 +294,29 @@ exports[`embedded grammar > #4741-leading-operator.vue 1`] = `
 #                 ^ text.html.vue meta.script.vue string.quoted.double.vue punctuation.definition.string.end.vue
 #                  ^ text.html.vue meta.script.vue punctuation.definition.tag.end.vue
 >if (false
-#^^ text.html.vue meta.script.vue source.js keyword.control.conditional.js
-#  ^ text.html.vue meta.script.vue source.js
-#   ^ text.html.vue meta.script.vue source.js meta.brace.round.js
-#    ^^^^^ text.html.vue meta.script.vue source.js constant.language.boolean.false.js
+#^^ text.html.vue meta.script.vue source.js.jsx keyword.control.conditional.js.jsx
+#  ^ text.html.vue meta.script.vue source.js.jsx
+#   ^ text.html.vue meta.script.vue source.js.jsx meta.brace.round.js.jsx
+#    ^^^^^ text.html.vue meta.script.vue source.js.jsx constant.language.boolean.false.js.jsx
 >< true
-#^ text.html.vue meta.script.vue source.js keyword.operator.relational.js
-# ^ text.html.vue meta.script.vue source.js
-#  ^^^^ text.html.vue meta.script.vue source.js constant.language.boolean.true.js
+#^ text.html.vue meta.script.vue source.js.jsx keyword.operator.relational.js
+# ^ text.html.vue meta.script.vue source.js.jsx
+#  ^^^^ text.html.vue meta.script.vue source.js.jsx constant.language.boolean.true.js.jsx
 >) {}
-#^ text.html.vue meta.script.vue source.js meta.brace.round.js
-# ^ text.html.vue meta.script.vue source.js
-#  ^ text.html.vue meta.script.vue source.js meta.block.js punctuation.definition.block.js
-#   ^ text.html.vue meta.script.vue source.js meta.block.js punctuation.definition.block.js
+#^ text.html.vue meta.script.vue source.js.jsx meta.brace.round.js.jsx
+# ^ text.html.vue meta.script.vue source.js.jsx
+#  ^ text.html.vue meta.script.vue source.js.jsx meta.block.js.jsx punctuation.definition.block.js.jsx
+#   ^ text.html.vue meta.script.vue source.js.jsx meta.block.js.jsx punctuation.definition.block.js.jsx
 >(
-#^ text.html.vue meta.script.vue source.js meta.brace.round.js
+#^ text.html.vue meta.script.vue source.js.jsx meta.brace.round.js.jsx
 ><br />
-#^ text.html.vue meta.script.vue source.js meta.tag.js punctuation.definition.tag.begin.js
-# ^^ text.html.vue meta.script.vue source.js meta.tag.js entity.name.tag.js
-#   ^ text.html.vue meta.script.vue source.js meta.tag.js meta.tag.attributes.js
-#    ^^ text.html.vue meta.script.vue source.js meta.tag.js punctuation.definition.tag.end.js
+#^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx punctuation.definition.tag.begin.js.jsx
+# ^^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx entity.name.tag.js.jsx
+#   ^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx
+#    ^^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx punctuation.definition.tag.end.js.jsx
 >);
-#^ text.html.vue meta.script.vue source.js meta.brace.round.js
-# ^ text.html.vue meta.script.vue source.js punctuation.terminator.statement.js
+#^ text.html.vue meta.script.vue source.js.jsx meta.brace.round.js.jsx
+# ^ text.html.vue meta.script.vue source.js.jsx punctuation.terminator.statement.js.jsx
 ></script>
 #^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
 # ^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
@@ -384,47 +384,47 @@ exports[`embedded grammar > #4741-leading-operator.vue 1`] = `
 #                 ^ text.html.vue meta.script.vue string.quoted.double.vue punctuation.definition.string.end.vue
 #                  ^ text.html.vue meta.script.vue punctuation.definition.tag.end.vue
 >if (false
-#^^ text.html.vue meta.script.vue source.js keyword.control.conditional.js
-#  ^ text.html.vue meta.script.vue source.js
-#   ^ text.html.vue meta.script.vue source.js meta.brace.round.js
-#    ^^^^^ text.html.vue meta.script.vue source.js constant.language.boolean.false.js
+#^^ text.html.vue meta.script.vue source.tsx keyword.control.conditional.tsx
+#  ^ text.html.vue meta.script.vue source.tsx
+#   ^ text.html.vue meta.script.vue source.tsx meta.brace.round.tsx
+#    ^^^^^ text.html.vue meta.script.vue source.tsx constant.language.boolean.false.tsx
 >< true
-#^ text.html.vue meta.script.vue source.js keyword.operator.relational.js
-# ^ text.html.vue meta.script.vue source.js
-#  ^^^^ text.html.vue meta.script.vue source.js constant.language.boolean.true.js
+#^ text.html.vue meta.script.vue source.tsx keyword.operator.relational.js
+# ^ text.html.vue meta.script.vue source.tsx
+#  ^^^^ text.html.vue meta.script.vue source.tsx constant.language.boolean.true.tsx
 >) {}
-#^ text.html.vue meta.script.vue source.js meta.brace.round.js
-# ^ text.html.vue meta.script.vue source.js
-#  ^ text.html.vue meta.script.vue source.js meta.block.js punctuation.definition.block.js
-#   ^ text.html.vue meta.script.vue source.js meta.block.js punctuation.definition.block.js
+#^ text.html.vue meta.script.vue source.tsx meta.brace.round.tsx
+# ^ text.html.vue meta.script.vue source.tsx
+#  ^ text.html.vue meta.script.vue source.tsx meta.block.tsx punctuation.definition.block.tsx
+#   ^ text.html.vue meta.script.vue source.tsx meta.block.tsx punctuation.definition.block.tsx
 >interface Foo
-#^^^^^^^^^ text.html.vue meta.script.vue source.js meta.interface.js storage.type.interface.js
-#         ^ text.html.vue meta.script.vue source.js meta.interface.js
-#          ^^^ text.html.vue meta.script.vue source.js meta.interface.js entity.name.type.interface.js
+#^^^^^^^^^ text.html.vue meta.script.vue source.tsx meta.interface.tsx storage.type.interface.tsx
+#         ^ text.html.vue meta.script.vue source.tsx meta.interface.tsx
+#          ^^^ text.html.vue meta.script.vue source.tsx meta.interface.tsx entity.name.type.interface.tsx
 ><T> { value: T; }
-#^ text.html.vue meta.script.vue source.js meta.interface.js meta.type.parameters.js punctuation.definition.typeparameters.begin.js
-# ^ text.html.vue meta.script.vue source.js meta.interface.js meta.type.parameters.js entity.name.type.js
-#  ^ text.html.vue meta.script.vue source.js meta.interface.js meta.type.parameters.js punctuation.definition.typeparameters.end.js
-#   ^ text.html.vue meta.script.vue source.js meta.interface.js
-#    ^ text.html.vue meta.script.vue source.js meta.interface.js punctuation.definition.block.js
-#     ^ text.html.vue meta.script.vue source.js meta.interface.js meta.field.declaration.js
-#      ^^^^^ text.html.vue meta.script.vue source.js meta.interface.js meta.field.declaration.js meta.definition.property.js variable.object.property.js
-#           ^ text.html.vue meta.script.vue source.js meta.interface.js meta.field.declaration.js meta.type.annotation.js keyword.operator.type.annotation.js
-#            ^ text.html.vue meta.script.vue source.js meta.interface.js meta.field.declaration.js meta.type.annotation.js
-#             ^ text.html.vue meta.script.vue source.js meta.interface.js meta.field.declaration.js meta.type.annotation.js entity.name.type.js
-#              ^ text.html.vue meta.script.vue source.js meta.interface.js punctuation.terminator.statement.js
-#               ^ text.html.vue meta.script.vue source.js meta.interface.js
-#                ^ text.html.vue meta.script.vue source.js meta.interface.js punctuation.definition.block.js
+#^ text.html.vue meta.script.vue source.tsx meta.interface.tsx meta.type.parameters.tsx punctuation.definition.typeparameters.begin.tsx
+# ^ text.html.vue meta.script.vue source.tsx meta.interface.tsx meta.type.parameters.tsx entity.name.type.tsx
+#  ^ text.html.vue meta.script.vue source.tsx meta.interface.tsx meta.type.parameters.tsx punctuation.definition.typeparameters.end.tsx
+#   ^ text.html.vue meta.script.vue source.tsx meta.interface.tsx
+#    ^ text.html.vue meta.script.vue source.tsx meta.interface.tsx punctuation.definition.block.tsx
+#     ^ text.html.vue meta.script.vue source.tsx meta.interface.tsx meta.field.declaration.tsx
+#      ^^^^^ text.html.vue meta.script.vue source.tsx meta.interface.tsx meta.field.declaration.tsx meta.definition.property.tsx variable.object.property.tsx
+#           ^ text.html.vue meta.script.vue source.tsx meta.interface.tsx meta.field.declaration.tsx meta.type.annotation.tsx keyword.operator.type.annotation.tsx
+#            ^ text.html.vue meta.script.vue source.tsx meta.interface.tsx meta.field.declaration.tsx meta.type.annotation.tsx
+#             ^ text.html.vue meta.script.vue source.tsx meta.interface.tsx meta.field.declaration.tsx meta.type.annotation.tsx entity.name.type.tsx
+#              ^ text.html.vue meta.script.vue source.tsx meta.interface.tsx punctuation.terminator.statement.tsx
+#               ^ text.html.vue meta.script.vue source.tsx meta.interface.tsx
+#                ^ text.html.vue meta.script.vue source.tsx meta.interface.tsx punctuation.definition.block.tsx
 >(
-#^ text.html.vue meta.script.vue source.js meta.brace.round.js
+#^ text.html.vue meta.script.vue source.tsx meta.brace.round.tsx
 ><br />
-#^ text.html.vue meta.script.vue source.js meta.tag.js punctuation.definition.tag.begin.js
-# ^^ text.html.vue meta.script.vue source.js meta.tag.js entity.name.tag.js
-#   ^ text.html.vue meta.script.vue source.js meta.tag.js meta.tag.attributes.js
-#    ^^ text.html.vue meta.script.vue source.js meta.tag.js punctuation.definition.tag.end.js
+#^ text.html.vue meta.script.vue source.tsx meta.tag.tsx punctuation.definition.tag.begin.tsx
+# ^^ text.html.vue meta.script.vue source.tsx meta.tag.tsx entity.name.tag.tsx
+#   ^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx
+#    ^^ text.html.vue meta.script.vue source.tsx meta.tag.tsx punctuation.definition.tag.end.tsx
 >);
-#^ text.html.vue meta.script.vue source.js meta.brace.round.js
-# ^ text.html.vue meta.script.vue source.js punctuation.terminator.statement.js
+#^ text.html.vue meta.script.vue source.tsx meta.brace.round.tsx
+# ^ text.html.vue meta.script.vue source.tsx punctuation.terminator.statement.tsx
 ></script>
 #^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
 # ^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
@@ -486,16 +486,16 @@ exports[`embedded grammar > basic.vue 1`] = `
 >
 #^ text.html.vue
 ><template>
-#^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
-# ^^^^^^^^ text.html.vue meta.tag.vue entity.name.tag.vue
-#         ^ text.html.vue meta.tag.vue punctuation.definition.tag.end.vue
+#^ text.html.vue meta.template.vue punctuation.definition.tag.begin.vue
+# ^^^^^^^^ text.html.vue meta.template.vue entity.name.tag.vue
+#         ^ text.html.vue meta.template.vue punctuation.definition.tag.end.vue
 >    <div />
-#^^^^ text.html.vue
-#    ^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
-#     ^^^ text.html.vue meta.tag.vue entity.name.tag.vue
-#        ^ text.html.vue meta.tag.vue
-#         ^ text.html.vue meta.tag.vue punctuation.definition.tag.end.vue
-#          ^ text.html.vue meta.tag.vue punctuation.definition.tag.end.vue
+#^^^^ text.html.vue meta.template.vue text.html.derivative
+#    ^ text.html.vue meta.template.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#     ^^^ text.html.vue meta.template.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#        ^ text.html.vue meta.template.vue text.html.derivative meta.tag.structure.div.start.html
+#         ^ text.html.vue meta.template.vue text.html.derivative meta.tag.structure.div.start.html invalid.illegal.character-not-allowed-here.html
+#          ^ text.html.vue meta.template.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
 ></template>
 #^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
 # ^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
@@ -553,6 +553,54 @@ exports[`embedded grammar > basic.vue 1`] = `
 # ^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
 #  ^^^^^ text.html.vue meta.tag.vue entity.name.tag.vue
 #       ^ text.html.vue meta.tag.vue punctuation.definition.tag.end.vue
+>
+#^ text.html.vue"
+`;
+
+exports[`embedded grammar > interpolation-in-element.vue 1`] = `
+"><template>
+#^ text.html.vue meta.template.vue punctuation.definition.tag.begin.vue
+# ^^^^^^^^ text.html.vue meta.template.vue entity.name.tag.vue
+#         ^ text.html.vue meta.template.vue punctuation.definition.tag.end.vue
+>	<p>{{ msg }}</p>
+#^ text.html.vue meta.template.vue text.html.derivative
+# ^ text.html.vue meta.template.vue text.html.derivative meta.tag.structure.p.start.html punctuation.definition.tag.begin.html
+#  ^ text.html.vue meta.template.vue text.html.derivative meta.tag.structure.p.start.html entity.name.tag.html
+#   ^ text.html.vue meta.template.vue text.html.derivative meta.tag.structure.p.start.html punctuation.definition.tag.end.html
+#    ^^ text.html.vue meta.template.vue text.html.derivative punctuation.definition.interpolation.begin.html.vue
+#      ^ text.html.vue meta.template.vue text.html.derivative source.ts.embedded.html.vue
+#       ^^^ text.html.vue meta.template.vue text.html.derivative source.ts.embedded.html.vue variable.other.readwrite.ts
+#          ^ text.html.vue meta.template.vue text.html.derivative source.ts.embedded.html.vue
+#           ^^ text.html.vue meta.template.vue text.html.derivative punctuation.definition.interpolation.end.html.vue
+#             ^^ text.html.vue meta.template.vue text.html.derivative meta.tag.structure.p.end.html punctuation.definition.tag.begin.html
+#               ^ text.html.vue meta.template.vue text.html.derivative meta.tag.structure.p.end.html entity.name.tag.html
+#                ^ text.html.vue meta.template.vue text.html.derivative meta.tag.structure.p.end.html punctuation.definition.tag.end.html
+></template>
+#^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
+# ^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
+#  ^^^^^^^^ text.html.vue meta.tag.vue entity.name.tag.vue
+#          ^ text.html.vue meta.tag.vue punctuation.definition.tag.end.vue
+>
+#^ text.html.vue"
+`;
+
+exports[`embedded grammar > interpolation-text-only.vue 1`] = `
+"><template>
+#^ text.html.vue meta.template.vue punctuation.definition.tag.begin.vue
+# ^^^^^^^^ text.html.vue meta.template.vue entity.name.tag.vue
+#         ^ text.html.vue meta.template.vue punctuation.definition.tag.end.vue
+>	{{ msg }}
+#^ text.html.vue meta.template.vue text.html.derivative
+# ^^ text.html.vue meta.template.vue text.html.derivative punctuation.definition.interpolation.begin.html.vue
+#   ^ text.html.vue meta.template.vue text.html.derivative source.ts.embedded.html.vue
+#    ^^^ text.html.vue meta.template.vue text.html.derivative source.ts.embedded.html.vue variable.other.readwrite.ts
+#       ^ text.html.vue meta.template.vue text.html.derivative source.ts.embedded.html.vue
+#        ^^ text.html.vue meta.template.vue text.html.derivative punctuation.definition.interpolation.end.html.vue
+></template>
+#^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
+# ^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
+#  ^^^^^^^^ text.html.vue meta.tag.vue entity.name.tag.vue
+#          ^ text.html.vue meta.tag.vue punctuation.definition.tag.end.vue
 >
 #^ text.html.vue"
 `;
@@ -820,6 +868,90 @@ exports[`embedded grammar > multi-line-setup.vue 1`] = `
 #^^ text.html.vue punctuation.definition.tag.begin.html.vue
 #  ^^^^^ text.html.vue entity.name.tag.style.html.vue
 #       ^ text.html.vue punctuation.definition.tag.end.html.vue
+>
+#^ text.html.vue"
+`;
+
+exports[`embedded grammar > script-jsx.vue 1`] = `
+"><script lang="tsx">
+#^ text.html.vue meta.script.vue punctuation.definition.tag.begin.vue
+# ^^^^^^ text.html.vue meta.script.vue entity.name.tag.vue
+#       ^ text.html.vue meta.script.vue
+#        ^^^^ text.html.vue meta.script.vue entity.other.attribute-name.vue
+#            ^ text.html.vue meta.script.vue punctuation.separator.key-value.vue
+#             ^ text.html.vue meta.script.vue string.quoted.double.vue punctuation.definition.string.begin.vue
+#              ^^^ text.html.vue meta.script.vue string.quoted.double.vue
+#                 ^ text.html.vue meta.script.vue string.quoted.double.vue punctuation.definition.string.end.vue
+#                  ^ text.html.vue meta.script.vue punctuation.definition.tag.end.vue
+>(<Foo
+#^ text.html.vue meta.script.vue source.tsx meta.brace.round.tsx
+# ^ text.html.vue meta.script.vue source.tsx meta.tag.tsx punctuation.definition.tag.begin.tsx
+#  ^^^ text.html.vue meta.script.vue source.tsx meta.tag.tsx entity.name.tag.tsx support.class.component.tsx
+>	class={{ 'foo': 123 }}
+#^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx
+# ^^^^^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx entity.other.attribute-name.tsx
+#      ^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx keyword.operator.assignment.tsx
+#       ^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx punctuation.section.embedded.begin.tsx
+#        ^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx meta.embedded.expression.tsx meta.objectliteral.tsx punctuation.definition.block.tsx
+#         ^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx meta.embedded.expression.tsx meta.objectliteral.tsx
+#          ^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx meta.embedded.expression.tsx meta.objectliteral.tsx meta.object.member.tsx meta.object-literal.key.tsx string.quoted.single.tsx punctuation.definition.string.begin.tsx
+#           ^^^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx meta.embedded.expression.tsx meta.objectliteral.tsx meta.object.member.tsx meta.object-literal.key.tsx string.quoted.single.tsx
+#              ^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx meta.embedded.expression.tsx meta.objectliteral.tsx meta.object.member.tsx meta.object-literal.key.tsx string.quoted.single.tsx punctuation.definition.string.end.tsx
+#               ^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx meta.embedded.expression.tsx meta.objectliteral.tsx meta.object.member.tsx meta.object-literal.key.tsx punctuation.separator.key-value.tsx
+#                ^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx meta.embedded.expression.tsx meta.objectliteral.tsx meta.object.member.tsx
+#                 ^^^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx meta.embedded.expression.tsx meta.objectliteral.tsx meta.object.member.tsx constant.numeric.decimal.tsx
+#                    ^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx meta.embedded.expression.tsx meta.objectliteral.tsx meta.object.member.tsx
+#                     ^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx meta.embedded.expression.tsx meta.objectliteral.tsx punctuation.definition.block.tsx
+#                      ^ text.html.vue meta.script.vue source.tsx meta.tag.tsx meta.tag.attributes.tsx punctuation.section.embedded.end.tsx
+>/>);
+#^^ text.html.vue meta.script.vue source.tsx meta.tag.tsx punctuation.definition.tag.end.tsx
+#  ^ text.html.vue meta.script.vue source.tsx meta.brace.round.tsx
+#   ^ text.html.vue meta.script.vue source.tsx punctuation.terminator.statement.tsx
+></script>
+#^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
+# ^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
+#  ^^^^^^ text.html.vue meta.tag.vue entity.name.tag.vue
+#        ^ text.html.vue meta.tag.vue punctuation.definition.tag.end.vue
+>
+#^ text.html.vue
+><script lang="jsx">
+#^ text.html.vue meta.script.vue punctuation.definition.tag.begin.vue
+# ^^^^^^ text.html.vue meta.script.vue entity.name.tag.vue
+#       ^ text.html.vue meta.script.vue
+#        ^^^^ text.html.vue meta.script.vue entity.other.attribute-name.vue
+#            ^ text.html.vue meta.script.vue punctuation.separator.key-value.vue
+#             ^ text.html.vue meta.script.vue string.quoted.double.vue punctuation.definition.string.begin.vue
+#              ^^^ text.html.vue meta.script.vue string.quoted.double.vue
+#                 ^ text.html.vue meta.script.vue string.quoted.double.vue punctuation.definition.string.end.vue
+#                  ^ text.html.vue meta.script.vue punctuation.definition.tag.end.vue
+>(<Foo
+#^ text.html.vue meta.script.vue source.js.jsx meta.brace.round.js.jsx
+# ^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx punctuation.definition.tag.begin.js.jsx
+#  ^^^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx entity.name.tag.js.jsx support.class.component.js.jsx
+>	class={{ 'foo': 123 }}
+#^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx
+# ^^^^^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx entity.other.attribute-name.js.jsx
+#      ^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx keyword.operator.assignment.js.jsx
+#       ^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx punctuation.section.embedded.begin.js.jsx
+#        ^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx meta.embedded.expression.js.jsx meta.objectliteral.js.jsx punctuation.definition.block.js.jsx
+#         ^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx meta.embedded.expression.js.jsx meta.objectliteral.js.jsx
+#          ^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx meta.embedded.expression.js.jsx meta.objectliteral.js.jsx meta.object.member.js.jsx meta.object-literal.key.js.jsx string.quoted.single.js.jsx punctuation.definition.string.begin.js.jsx
+#           ^^^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx meta.embedded.expression.js.jsx meta.objectliteral.js.jsx meta.object.member.js.jsx meta.object-literal.key.js.jsx string.quoted.single.js.jsx
+#              ^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx meta.embedded.expression.js.jsx meta.objectliteral.js.jsx meta.object.member.js.jsx meta.object-literal.key.js.jsx string.quoted.single.js.jsx punctuation.definition.string.end.js.jsx
+#               ^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx meta.embedded.expression.js.jsx meta.objectliteral.js.jsx meta.object.member.js.jsx meta.object-literal.key.js.jsx punctuation.separator.key-value.js.jsx
+#                ^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx meta.embedded.expression.js.jsx meta.objectliteral.js.jsx meta.object.member.js.jsx
+#                 ^^^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx meta.embedded.expression.js.jsx meta.objectliteral.js.jsx meta.object.member.js.jsx constant.numeric.decimal.js.jsx
+#                    ^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx meta.embedded.expression.js.jsx meta.objectliteral.js.jsx meta.object.member.js.jsx
+#                     ^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx meta.embedded.expression.js.jsx meta.objectliteral.js.jsx punctuation.definition.block.js.jsx
+#                      ^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx meta.tag.attributes.js.jsx punctuation.section.embedded.end.js.jsx
+>/>)
+#^^ text.html.vue meta.script.vue source.js.jsx meta.tag.js.jsx punctuation.definition.tag.end.js.jsx
+#  ^ text.html.vue meta.script.vue source.js.jsx meta.brace.round.js.jsx
+></script>
+#^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
+# ^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
+#  ^^^^^^ text.html.vue meta.tag.vue entity.name.tag.vue
+#        ^ text.html.vue meta.tag.vue punctuation.definition.tag.end.vue
 >
 #^ text.html.vue"
 `;

@@ -28,10 +28,13 @@ describe('embedded grammar', async () => {
 	const snapshot = await createGrammarSnapshot(packageJsonPath, {
 		extraGrammarPaths: [
 			path.resolve(embeddedGrammarsDir, './typescript.tmLanguage.json'),
+			path.resolve(embeddedGrammarsDir, './typescriptreact.tmLanguage.json'),
+			path.resolve(embeddedGrammarsDir, './javascriptreact.tmLanguage.json'),
 			path.resolve(embeddedGrammarsDir, './javascript.tmLanguage.json'),
 			path.resolve(embeddedGrammarsDir, './css.tmLanguage.json'),
 			path.resolve(embeddedGrammarsDir, './scss.tmLanguage.json'),
 			path.resolve(embeddedGrammarsDir, './html.tmLanguage.json'),
+			path.resolve(embeddedGrammarsDir, './html-derivative.tmLanguage.json'),
 		],
 	});
 	const fixtures = fs.readdirSync(embeddedFixturesDir);
