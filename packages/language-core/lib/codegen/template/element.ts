@@ -262,9 +262,14 @@ export function* generateComponent(
 	}
 
 	if (shouldInheritAttrs) {
-		const restsVar = ctx.getInternalVariable();
-		yield `var ${restsVar} = ${names.omit}(${getPropsVar()}, {\n${propsStr}})${endOfLine}`;
-		ctx.inheritedAttrVars.add(restsVar);
+		if (options.vueCompilerOptions.checkRequiredFallthroughAttributes) {
+			const restsVar = ctx.getInternalVariable();
+			yield `var ${restsVar} = ${names.omit}(${getPropsVar()}, {\n${propsStr}})${endOfLine}`;
+			ctx.inheritedAttrVars.add(restsVar);
+		}
+		else {
+			ctx.inheritedAttrVars.add(getPropsVar());
+		}
 	}
 
 	yield* generateStyleScopedClassReferences(options, node);
