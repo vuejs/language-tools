@@ -274,7 +274,7 @@ export function findDestructuredProps(
 				walkFunctionDeclaration(node);
 				if ('body' in node && node.body) {
 					walkFunctionScopeVarDeclarations(node.body);
-					walkScope(node.body!);
+					walkScope(node.body);
 				}
 				return;
 			}
