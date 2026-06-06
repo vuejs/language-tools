@@ -228,7 +228,7 @@ export function findDestructuredProps(
 
 				if (
 					ts.isVariableDeclarationList(node)
-					&& isVarDeclarationList(node)
+					&& !(node.flags & ts.NodeFlags.BlockScoped)
 				) {
 					for (const decl of node.declarations) {
 						walkVariableDeclaration(decl, isRoot && node.parent.parent === scopeNode, scope);
@@ -327,15 +327,6 @@ export function findDestructuredProps(
 				popScope();
 			}
 		}
-	}
-
-	function isVarDeclarationList(node: ts.VariableDeclarationList) {
-		return !(node.flags & (
-			ts.NodeFlags.Let
-			| ts.NodeFlags.Const
-			| ts.NodeFlags.Using
-			| ts.NodeFlags.AwaitUsing
-		));
 	}
 
 	// TODO: more conditions
