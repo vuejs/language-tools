@@ -120,6 +120,7 @@ export function findDestructuredProps(
 ) {
 	const rootScope: Scope = Object.create(null);
 	const scopeStack: Scope[] = [rootScope];
+	const functionScopeStack: Scope[] = [rootScope];
 	let currentScope: Scope | null = rootScope;
 	const excludedIds = new WeakSet<ts.Identifier>();
 
@@ -127,24 +128,32 @@ export function findDestructuredProps(
 		rootScope[prop] = true;
 	}
 
-	function pushScope() {
-		scopeStack.push(currentScope = Object.create(currentScope));
+	function pushScope(isFunctionScope = false) {
+		const scope = currentScope = Object.create(currentScope);
+		scopeStack.push(scope);
+		if (isFunctionScope) {
+			functionScopeStack.push(scope);
+		}
 	}
 
-	function popScope() {
+	function popScope(isFunctionScope = false) {
 		scopeStack.pop();
-		currentScope = scopeStack[scopeStack.length - 1] || null;
+		if (isFunctionScope) {
+			functionScopeStack.pop();
+		}
+		currentScope = scopeStack.at(-1) || null;
 	}
 
-	function registerLocalBinding(id: ts.Identifier) {
+	function registerLocalBinding(id: ts.Identifier, scope = currentScope) {
 		excludedIds.add(id);
-		if (currentScope) {
-			currentScope[id.text] = false;
+		if (scope) {
+			scope[id.text] = false;
 		}
 	}
 
 	const references: [ts.Identifier, boolean][] = [];
 
+	walkFunctionScopeVarDeclarations(ast, true);
 	walkScope(ast, true);
 	walk(ast);
 
@@ -182,7 +191,11 @@ export function findDestructuredProps(
 		});
 	}
 
-	function walkVariableDeclaration(decl: ts.VariableDeclaration, isRoot = false) {
+	function walkVariableDeclaration(
+		decl: ts.VariableDeclaration,
+		isRoot = false,
+		scope = currentScope,
+	) {
 		const { initializer, name } = decl;
 		const isDefineProps = isRoot
 			&& initializer
@@ -194,8 +207,36 @@ export function findDestructuredProps(
 				excludedIds.add(id);
 			}
 			else {
-				registerLocalBinding(id);
+				registerLocalBinding(id, scope);
 			}
+		}
+	}
+
+	function walkFunctionScopeVarDeclarations(scopeNode: ts.Node, isRoot = false) {
+		const scope = functionScopeStack.at(-1)!;
+		walk(scopeNode);
+
+		function walk(parent: ts.Node) {
+			ts.forEachChild(parent, node => {
+				if (
+					ts.isFunctionLike(node)
+					|| ts.isClassDeclaration(node)
+					|| ts.isClassExpression(node)
+				) {
+					return;
+				}
+
+				if (
+					ts.isVariableDeclarationList(node)
+					&& !(node.flags & ts.NodeFlags.BlockScoped)
+				) {
+					for (const decl of node.declarations) {
+						walkVariableDeclaration(decl, isRoot && node.parent.parent === scopeNode, scope);
+					}
+				}
+
+				walk(node);
+			});
 		}
 	}
 
@@ -229,10 +270,11 @@ export function findDestructuredProps(
 			}
 
 			if (ts.isFunctionLike(node)) {
-				pushScope();
+				pushScope(true);
 				walkFunctionDeclaration(node);
-				if ('body' in node) {
-					walkScope(node.body!);
+				if ('body' in node && node.body) {
+					walkFunctionScopeVarDeclarations(node.body);
+					walkScope(node.body);
 				}
 				return;
 			}
@@ -271,9 +313,11 @@ export function findDestructuredProps(
 		}
 
 		function leave(node: ts.Node) {
-			if (
-				ts.isFunctionLike(node)
-				|| ts.isCatchClause(node)
+			if (ts.isFunctionLike(node)) {
+				popScope(true);
+			}
+			else if (
+				ts.isCatchClause(node)
 				|| (
 					ts.isBlock(node)
 					&& !ts.isFunctionLike(parent)
