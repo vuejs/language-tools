@@ -141,7 +141,7 @@ export function findDestructuredProps(
 		if (isFunctionScope) {
 			functionScopeStack.pop();
 		}
-		currentScope = scopeStack[scopeStack.length - 1] || null;
+		currentScope = scopeStack.at(-1) || null;
 	}
 
 	function registerLocalBinding(id: ts.Identifier, scope = currentScope) {
@@ -213,7 +213,7 @@ export function findDestructuredProps(
 	}
 
 	function walkFunctionScopeVarDeclarations(scopeNode: ts.Node, isRoot = false) {
-		const scope = functionScopeStack[functionScopeStack.length - 1]!;
+		const scope = functionScopeStack.at(-1)!;
 		walk(scopeNode);
 
 		function walk(parent: ts.Node) {
