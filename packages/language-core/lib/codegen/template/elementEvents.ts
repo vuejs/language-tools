@@ -165,10 +165,9 @@ export function* generateEventArg(
 		yield* generateCamelized(name, 'template', start, { __combineToken: token });
 		if (modifiers) {
 			yield modifiers;
-			yield endBoundary(token, start + name.length + modifiers.length);
 		}
 		yield `'`;
-		yield endBoundary(token, start + name.length + modifiers.length);
+		yield endBoundary(token, start + name.length);
 	}
 }
 
