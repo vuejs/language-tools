@@ -22,12 +22,11 @@ export function* generateElementEvents(
 	const definitions: {
 		prop: CompilerDOM.DirectiveNode;
 		source: string;
-		offset: number;
+		offset: number | undefined;
 		emitPrefix: string;
 		propPrefix: string;
 		propName: string;
 		emitName: string;
-		camelizedEmitName: string;
 	}[] = [];
 
 	for (const prop of node.props) {
@@ -42,7 +41,7 @@ export function* generateElementEvents(
 			)
 		) {
 			let source = prop.arg?.loc.source ?? 'model-value';
-			let start = prop.arg?.loc.start.offset;
+			let offset = prop.arg?.loc.start.offset;
 			let propPrefix = 'on-';
 			let emitPrefix = '';
 			if (prop.name === 'model') {
@@ -51,23 +50,21 @@ export function* generateElementEvents(
 			}
 			else if (source.startsWith('vue:')) {
 				source = source.slice('vue:'.length);
-				start = start! + 'vue:'.length;
+				offset = offset! + 'vue:'.length;
 				propPrefix = 'onVnode-';
 				emitPrefix = 'vnode-';
 			}
 			const propName = camelize(propPrefix + source);
 			const emitName = emitPrefix + source;
-			const camelizedEmitName = camelize(emitName);
 
 			definitions.push({
 				prop,
 				source,
-				offset: start!,
+				offset,
 				emitPrefix,
 				propPrefix,
 				propName,
 				emitName,
-				camelizedEmitName,
 			});
 		}
 	}
@@ -81,21 +78,23 @@ export function* generateElementEvents(
 
 	yield `const ${ctx.getInternalVariable()}: `;
 	for (let i = 0; i < definitions.length; i++) {
-		const { propName, emitName, camelizedEmitName } = definitions[i]!;
+		const { propName, emitName } = definitions[i]!;
 		if (i > 0) {
 			yield ` & `;
 		}
-		yield `${names.NormalizeComponentEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'>`;
+		yield `${names.NormalizeComponentEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
+			camelize(emitName)
+		}'>`;
 	}
 	yield ` = {${newLine}`;
 	for (const { prop, source, offset, emitPrefix, propPrefix, propName } of definitions) {
 		if (prop.name === 'on') {
 			yield `...{ `;
-			yield* generateEventArg(options, source, offset, emitPrefix.slice(0, -1), codeFeatures.navigation);
+			yield* generateEventArg(options, source, offset!, emitPrefix.slice(0, -1), codeFeatures.navigation);
 			yield `: {} as any } as typeof ${emitsVar},${newLine}`;
 		}
 		if (prop.name === 'on') {
-			yield* generateEventArg(options, source, offset, propPrefix.slice(0, -1));
+			yield* generateEventArg(options, source, offset!, propPrefix.slice(0, -1));
 			yield `: `;
 			yield* generateEventExpression(options, ctx, prop);
 		}
