@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.3.4 (2026-06-08)
+
+### language-core
+
+- **fix:** only exclude already-set props from inherited attrs when `checkRequiredFallthroughAttributes` is enabled (#6088) - Thanks to @KazariEX!
+- **fix:** camelize slot props regardless of `htmlAttributes` option (#6089) - Thanks to @KazariEX!
+- **fix:** detect duplicate event listeners across name formats (#6094) - Thanks to @whysopaul!
+
+### language-service
+
+- **fix:** respect var hoisting for destructured props hints (#6092) - Thanks to @KazariEX!
+
+### typescript-plugin
+
+- **fix:** do not treat `class` and `style` as a boolean property (#6081) - Thanks to @KazariEX!
+
 ## 3.3.3 (2026-05-30)
 
 ### vscode
