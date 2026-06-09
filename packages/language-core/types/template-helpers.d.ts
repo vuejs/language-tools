@@ -54,7 +54,7 @@ declare global {
 			: true
 		: false
 		: false;
-	type __VLS_NormalizeComponentEvent<
+	type __VLS_ResolveEvent<
 		Props,
 		Emits,
 		onEvent extends keyof Props,

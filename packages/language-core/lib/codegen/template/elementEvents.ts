@@ -19,15 +19,17 @@ export function* generateElementEvents(
 	getCtxVar: () => string,
 	getPropsVar: () => string,
 ): Generator<Code> {
-	const definitions: {
-		prop: CompilerDOM.DirectiveNode;
-		source: string;
-		offset: number | undefined;
-		emitPrefix: string;
+	const definitions: Record<string, {
 		propPrefix: string;
+		emitPrefix: string;
 		propName: string;
 		emitName: string;
-	}[] = [];
+		items: {
+			prop: CompilerDOM.DirectiveNode;
+			source: string;
+			offset: number | undefined;
+		}[];
+	}> = {};
 
 	for (const prop of node.props) {
 		if (
@@ -56,55 +58,57 @@ export function* generateElementEvents(
 			}
 			const propName = camelize(propPrefix + source);
 			const emitName = emitPrefix + source;
+			const key = propName + (
+				prop.modifiers.length
+					? `.${prop.modifiers.map(modifier => modifier.content).join('.')}`
+					: ''
+			);
 
-			definitions.push({
+			definitions[key] ??= {
+				propPrefix,
+				emitPrefix,
+				propName,
+				emitName,
+				items: [],
+			};
+			definitions[key].items.push({
 				prop,
 				source,
 				offset,
-				emitPrefix,
-				propPrefix,
-				propName,
-				emitName,
 			});
 		}
 	}
 
-	if (!definitions.length) {
+	if (!Object.keys(definitions).length) {
 		return;
 	}
 
 	const emitsVar = ctx.getInternalVariable();
 	yield `let ${emitsVar}!: ${names.ResolveEmits}<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>${endOfLine}`;
 
-	yield `const ${ctx.getInternalVariable()}: `;
-	for (let i = 0; i < definitions.length; i++) {
-		const { propName, emitName } = definitions[i]!;
-		if (i > 0) {
-			yield ` & `;
-		}
-		yield `${names.NormalizeComponentEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
+	for (const { propPrefix, emitPrefix, propName, emitName, items } of Object.values(definitions)) {
+		yield `const ${ctx.getInternalVariable()}: ${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
 			camelize(emitName)
-		}'>`;
+		}'> = {${newLine}`;
+		for (const { prop, source, offset } of items) {
+			if (prop.name === 'on') {
+				yield `/** @type {typeof ${emitsVar}.`;
+				yield* generateEventArg(options, source, offset!, emitPrefix.slice(0, -1), codeFeatures.navigation);
+				yield `} */${newLine}`;
+			}
+			if (prop.name === 'on') {
+				yield* generateEventArg(options, source, offset!, propPrefix.slice(0, -1));
+				yield `: `;
+				yield* generateEventExpression(options, ctx, prop);
+			}
+			else {
+				yield `'${propName}': `;
+				yield* generateModelEventExpression(options, ctx, prop);
+			}
+			yield `,${newLine}`;
+		}
+		yield `}${endOfLine}`;
 	}
-	yield ` = {${newLine}`;
-	for (const { prop, source, offset, emitPrefix, propPrefix, propName } of definitions) {
-		if (prop.name === 'on') {
-			yield `...{ `;
-			yield* generateEventArg(options, source, offset!, emitPrefix.slice(0, -1), codeFeatures.navigation);
-			yield `: {} as any } as typeof ${emitsVar},${newLine}`;
-		}
-		if (prop.name === 'on') {
-			yield* generateEventArg(options, source, offset!, propPrefix.slice(0, -1));
-			yield `: `;
-			yield* generateEventExpression(options, ctx, prop);
-		}
-		else {
-			yield `'${propName}': `;
-			yield* generateModelEventExpression(options, ctx, prop);
-		}
-		yield `,${newLine}`;
-	}
-	yield `}${endOfLine}`;
 }
 
 export function* generateEventArg(
