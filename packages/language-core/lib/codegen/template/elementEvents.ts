@@ -93,21 +93,9 @@ export function* generateElementEvents(
 		for (const { prop, source, offset } of items) {
 			if (prop.name === 'on') {
 				yield `/** @type {[typeof ${getPropsVar()}.`;
-				yield* generateEventArg(
-					options,
-					source,
-					offset!,
-					propPrefix.slice(0, -1),
-					codeFeatures.navigation,
-				);
+				yield* generateEventArg(options, source, offset!, propPrefix.slice(0, -1), codeFeatures.navigation);
 				yield `, typeof ${emitsVar}.`;
-				yield* generateEventArg(
-					options,
-					source,
-					offset!,
-					emitPrefix.slice(0, -1),
-					codeFeatures.navigation,
-				);
+				yield* generateEventArg(options, source, offset!, emitPrefix.slice(0, -1), codeFeatures.navigation);
 				yield `]} */${newLine}`;
 			}
 			if (prop.name === 'on') {
