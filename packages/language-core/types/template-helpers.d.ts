@@ -60,7 +60,7 @@ declare global {
 		onEvent extends keyof Props,
 		Event extends keyof Emits,
 		CamelizedEvent extends keyof Emits,
-	> = __VLS_IsFunction<Props, onEvent> extends true ? { [K in onEvent]?: Props[onEvent] }
+	> = __VLS_IsFunction<Props, onEvent> extends true ? Props
 		: __VLS_IsFunction<Emits, Event> extends true ? { [K in onEvent]?: Emits[Event] }
 		: __VLS_IsFunction<Emits, CamelizedEvent> extends true ? { [K in onEvent]?: Emits[CamelizedEvent] }
 		: Props;
