@@ -58,11 +58,11 @@ export function* generateElementEvents(
 			}
 			const propName = camelize(propPrefix + source);
 			const emitName = emitPrefix + source;
-			const key = propName + (
-				prop.modifiers.length
-					? `.${prop.modifiers.map(modifier => modifier.content).join('.')}`
-					: ''
-			);
+			const key = [
+				prop.name,
+				propName,
+				...prop.modifiers.map(modifier => modifier.content),
+			].join('+');
 
 			definitions[key] ??= {
 				propPrefix,
