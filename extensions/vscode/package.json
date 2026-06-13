@@ -299,8 +299,14 @@
 					"markdownDescription": "%configuration.codeActions.askNewComponentName%"
 				},
 				"vue.hover.rich": {
-					"type": "boolean",
-					"default": false,
+					"type": "string",
+					"enum": [
+						"off",
+						"table",
+						"jsdoc",
+						"markdown"
+					],
+					"default": "off",
 					"markdownDescription": "%configuration.hover.rich%"
 				},
 				"vue.suggest.componentNameCasing": {

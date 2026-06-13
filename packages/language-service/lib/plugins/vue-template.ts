@@ -21,17 +21,16 @@ import { create as createPugService } from 'volar-service-pug';
 import { applyCompletionEntryDetails, convertCompletionInfo } from 'volar-service-typescript/lib/utils/lspConverters';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
-import type { PropertyMeta } from 'vue-component-meta';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
+import { formatComponentMeta, getHoverDocsSetting } from './vue-template/componentHoverDocs';
 
 const EVENT_PROP_REGEX = /^on[A-Z]/;
 
 // String constants
 const AUTO_IMPORT_PLACEHOLDER = 'AutoImportsPlaceholder';
-const UPDATE_EVENT_PREFIX = 'update:';
 const UPDATE_PROP_PREFIX = 'onUpdate:';
 
 // Directive prefixes
@@ -405,132 +404,37 @@ export function create(
 						'hover',
 						() => baseServiceInstance.provideHover!(document, position, token),
 					);
-					const templateAst = info.root.ir.template?.ast;
-					const enabledRichMessage = await context.env.getConfiguration?.('vue.hover.rich');
+					const { template } = info.root.ir;
+					const hoverDocsSetting = await getHoverDocsSetting(context);
 
-					if (!templateAst || !enabledRichMessage || (htmlHover && hasContents(htmlHover.contents))) {
+					if (!template?.ast || !hoverDocsSetting || htmlHover && hasContents(htmlHover.contents)) {
 						return htmlHover;
 					}
 
-					for (const element of forEachElementNode(templateAst)) {
-						const tagStart = element.loc.start.offset + element.loc.source.indexOf(element.tag);
-						const tagEnd = tagStart + element.tag.length;
+					for (const element of forEachElementNode(template.ast)) {
+						const start = element.loc.start.offset + element.loc.source.indexOf(element.tag);
+						const end = start + element.tag.length;
 						const offset = document.offsetAt(position);
 
-						if (offset >= tagStart && offset <= tagEnd) {
-							const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
-							const props = meta?.props.filter(p => !p.global);
-							const modelProps = new Set<PropertyMeta>();
-							let tableContents: string[] = [];
+						if (offset < start || offset > end) {
+							continue;
+						}
 
-							for (const event of meta?.events ?? []) {
-								if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
-									const modelName = event.name.slice(UPDATE_EVENT_PREFIX.length);
-									const modelProp = props?.find(p => p.name === modelName);
-									if (modelProp) {
-										modelProps.add(modelProp);
-									}
-								}
-							}
-							for (const prop of props ?? []) {
-								if (prop.name.startsWith(UPDATE_PROP_PREFIX)) {
-									const modelName = prop.name.slice(UPDATE_PROP_PREFIX.length);
-									const modelProp = props?.find(p => p.name === modelName);
-									if (modelProp) {
-										modelProps.add(modelProp);
-									}
-								}
-							}
+						const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
+						if (!meta) {
+							continue;
+						}
 
-							if (props?.length) {
-								let table =
-									`<tr><th align="left">Prop</th><th align="left">Description</th><th align="left">Default</th></tr>\n`;
-								for (const p of props) {
-									table += `<tr>
-											<td>${printName(p, modelProps.has(p))}</td>
-											<td>${printDescription(p)}</td>
-											<td>${p.default ? `<code>${p.default}</code>` : ''}</td>
-										</tr>\n`;
-								}
-								tableContents.push(table);
-							}
-
-							if (meta?.events?.length) {
-								let table = `<tr><th align="left">Event</th><th align="left">Description</th><th></th></tr>\n`;
-								for (const e of meta.events) {
-									table += `<tr>
-											<td>${printName(e)}</td>
-											<td colspan="2">${printDescription(e)}</td>
-										</tr>\n`;
-								}
-								tableContents.push(table);
-							}
-
-							if (meta?.slots?.length) {
-								let table = `<tr><th align="left">Slot</th><th align="left">Description</th><th></th></tr>\n`;
-								for (const s of meta.slots) {
-									table += `<tr>
-											<td>${printName(s)}</td>
-											<td colspan="2">${printDescription(s)}</td>
-										</tr>\n`;
-								}
-								tableContents.push(table);
-							}
-
-							if (meta?.exposed.length) {
-								let table = `<tr><th align="left">Exposed</th><th align="left">Description</th><th></th></tr>\n`;
-								for (const e of meta.exposed) {
-									table += `<tr>
-											<td>${printName(e)}</td>
-											<td colspan="2">${printDescription(e)}</td>
-										</tr>\n`;
-								}
-								tableContents.push(table);
-							}
-
-							htmlHover ??= {
-								range: {
-									start: document.positionAt(tagStart),
-									end: document.positionAt(tagEnd),
-								},
-								contents: '',
-							};
-
-							// 2px height per <tr>
-							const tableGap = `<tr></tr>`.repeat(4);
-							htmlHover.contents = {
+						return {
+							range: {
+								start: document.positionAt(start),
+								end: document.positionAt(end),
+							},
+							contents: {
 								kind: 'markdown',
-								value: tableContents
-									? `<table>\n${tableContents.join(`\n${tableGap}\n`)}\n</table>`
-									: `No type information available.`,
-							};
-						}
-					}
-
-					return htmlHover;
-
-					function printName(meta: { name: string; tags: { name: string }[]; required?: boolean }, model?: boolean) {
-						let name = meta.name;
-						if (meta.tags.some(tag => tag.name === 'deprecated')) {
-							name = `<del>${name}</del>`;
-						}
-						if (meta.required) {
-							name += ' <sup><em>required</em></sup>';
-						}
-						if (model) {
-							name += ' <sup><em>model</em></sup>';
-						}
-						return name;
-					}
-
-					function printDescription(meta: { description?: string; type: string }) {
-						let desc = `<code>${meta.type}</code>`;
-						if (meta.description) {
-							// blank line for terminate HTML to support markdown
-							// see: https://github.github.com/gfm/#example-118
-							desc = `\n\n${meta.description}<br>${desc}`;
-						}
-						return desc;
+								value: formatComponentMeta(meta, hoverDocsSetting),
+							},
+						};
 					}
 
 					function hasContents(contents: html.MarkupContent | html.MarkedString | html.MarkedString[]) {
