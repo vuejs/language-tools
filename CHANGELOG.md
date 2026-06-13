@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.5 (2026-06-13)
+
+### language-core
+
+- **fix:** include event modifiers in duplicate listener checks (#6097) - Thanks to @KazariEX!
+
 ## 3.3.4 (2026-06-08)
 
 ### language-core
