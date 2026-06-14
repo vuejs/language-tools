@@ -9,7 +9,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 	return {
 		name: require('./package.json').name,
 
-		version: 2.2,
+		version: 3,
 
 		getEmbeddedCodes(_fileName, ir) {
 			if (ir.template?.lang === 'pug') {

@@ -3,7 +3,7 @@ import { allCodeFeatures } from './shared';
 
 const plugin: VueLanguagePlugin = () => {
 	return {
-		version: 2.2,
+		version: 3,
 
 		getEmbeddedCodes(_fileName, ir) {
 			if (ir.template?.lang === 'html') {

@@ -52,7 +52,7 @@ export function getComponentProps(
 			language,
 			serviceScript,
 			sourceScript,
-			ir.template.startTagEnd + position - (
+			ir.template.innerStart + position - (
 				// <Comp :foo-| /> -> { "foo"|: ... }
 				ir.template.content[position - 1] === '-' ? 1 : 0
 			),
@@ -63,7 +63,7 @@ export function getComponentProps(
 		language,
 		serviceScript,
 		sourceScript,
-		ir.template.startTagEnd + node.loc.start.offset,
+		ir.template.innerStart + node.loc.start.offset,
 		(data: VueCodeInformation) => !!data.__propsCompletion,
 	);
 	if (!position2) {

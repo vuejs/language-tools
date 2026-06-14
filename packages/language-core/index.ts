@@ -8,9 +8,9 @@ export * from './lib/template/compile';
 export * from './lib/types';
 export * from './lib/utils/collectBindings';
 export * from './lib/utils/forEachTemplateNode';
-export * from './lib/utils/parseSfc';
 export * from './lib/utils/shared';
 export * from './lib/virtualCode';
+export * from './lib/virtualCode/rawIr';
 
 export { names } from './lib/codegen/names';
 export { tsCodegen } from './lib/plugins/vue-tsx';

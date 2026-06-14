@@ -1,9 +1,8 @@
 import { SourceMap } from '@volar/language-core';
-import type { SFCBlock } from '@vue/compiler-sfc';
 import { type Segment, toString } from 'muggle-string';
 import type { VueLanguagePlugin } from '../types';
 import { buildMappings } from '../utils/buildMappings';
-import { parse } from '../utils/parseSfc';
+import { parseRawIR, type RawIRBlock } from '../virtualCode/rawIr';
 
 const frontmatterReg = /^---[\s\S]*?\n---(?:\r?\n|$)/;
 const codeblockReg = /(`{3}|\${2})[\s\S]+?\1/g;
@@ -16,7 +15,7 @@ const angleBracketReg = /<[^\s:]*:\S*>/g;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
-		version: 2.2,
+		version: 3,
 
 		getLanguageId(fileName) {
 			if (vueCompilerOptions.vitePressExtensions.some(ext => fileName.endsWith(ext))) {
@@ -28,7 +27,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 			return languageId === 'markdown';
 		},
 
-		parseSFC2(_fileName, languageId, content) {
+		parseSFC(_fileName, languageId, content) {
 			if (languageId !== 'markdown') {
 				return;
 			}
@@ -67,37 +66,33 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 			const mappings = buildMappings(codes);
 			const mapper = new SourceMap(mappings);
-			const sfc = parse(toString(codes));
+			const { rawIr, errors, warnings } = parseRawIR(toString(codes));
 
 			for (
 				const block of [
-					sfc.descriptor.template,
-					sfc.descriptor.script,
-					sfc.descriptor.scriptSetup,
-					...sfc.descriptor.styles,
-					...sfc.descriptor.customBlocks,
+					...rawIr.templates,
+					...rawIr.scripts,
+					...rawIr.styles,
+					...rawIr.customBlocks,
 				]
 			) {
-				if (block) {
-					transformRange(block);
-				}
+				transformRange(block);
 			}
 
-			return sfc;
+			return {
+				rawIr,
+				errors,
+				warnings,
+			};
 
-			function transformRange(block: SFCBlock) {
-				const { start, end } = block.loc;
-				const startOffset = start.offset;
-				const endOffset = end.offset;
-				start.offset = -1;
-				end.offset = -1;
-				for (const [offset] of mapper.toSourceLocation(startOffset)) {
-					start.offset = offset;
-					break;
-				}
-				for (const [offset] of mapper.toSourceLocation(endOffset)) {
-					end.offset = offset;
-					break;
+			function transformRange(block: RawIRBlock) {
+				for (const key of ['start', 'end', 'innerStart', 'innerEnd'] as const) {
+					const originalValue = block[key];
+					block[key] = -1;
+					for (const [offset] of mapper.toSourceLocation(originalValue)) {
+						block[key] = offset;
+						break;
+					}
 				}
 			}
 		},

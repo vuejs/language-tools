@@ -42,7 +42,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 
 					const node = (ts as any).getTouchingPropertyName(
 						scriptSetup.ast,
-						sourceOffset - scriptSetup.startTagEnd,
+						sourceOffset - scriptSetup.innerStart,
 					);
 					if (ts.isStringLiteralLike(node)) {
 						return;
@@ -81,7 +81,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 						}
 
 						let generatedOffset;
-						for (const [offset] of map.toGeneratedLocation(scriptSetup!.startTagEnd + exp.start)) {
+						for (const [offset] of map.toGeneratedLocation(scriptSetup!.innerStart + exp.start)) {
 							generatedOffset = offset;
 							break;
 						}

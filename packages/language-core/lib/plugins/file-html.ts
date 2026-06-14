@@ -1,12 +1,12 @@
-import type { SFCParseResult } from '@vue/compiler-sfc';
 import type { VueLanguagePlugin } from '../types';
+import type { RawIR } from '../virtualCode/rawIr';
 
 const sfcBlockReg = /<(script|style)\b([\s\S]*?)>([\s\S]*?)<\/\1>/g;
 const langReg = /\blang\s*=\s*(['"]?)(\S*)\b\1/;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
-		version: 2.2,
+		version: 3,
 
 		getLanguageId(fileName) {
 			if (vueCompilerOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {
@@ -18,26 +18,17 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 			return languageId === 'html';
 		},
 
-		parseSFC2(fileName, languageId, content) {
+		parseSFC(_fileName, languageId, content) {
 			if (languageId !== 'html') {
 				return;
 			}
 
-			let sfc: SFCParseResult = {
-				descriptor: {
-					filename: fileName,
-					source: content,
-					comments: [],
-					template: null,
-					script: null,
-					scriptSetup: null,
-					styles: [],
-					customBlocks: [],
-					cssVars: [],
-					shouldForceReload: () => false,
-					slotted: false,
-				},
-				errors: [],
+			const rawIr: RawIR = {
+				templates: [],
+				scripts: [],
+				styles: [],
+				customBlocks: [],
+				comments: [],
 			};
 
 			let templateContent = content;
@@ -51,51 +42,50 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				const contentStart = match.index + matchText.indexOf(content);
 
 				if (tag === 'style') {
-					sfc.descriptor.styles.push({
-						attrs: {},
-						content,
-						loc: {
-							start: { column: -1, line: -1, offset: contentStart },
-							end: { column: -1, line: -1, offset: contentStart + content.length },
-							source: content,
-						},
-						type: 'style',
+					rawIr.styles.push({
+						name: 'style',
+						start: match.index,
+						end: match.index + matchText.length,
+						innerStart: contentStart,
+						innerEnd: contentStart + content.length,
 						lang,
+						content,
+						attrs: {},
 					});
 				}
 				// ignore `<script src="...">`
 				else if (tag === 'script' && !attrs.includes('src=')) {
-					let type: 'script' | 'scriptSetup' = attrs.includes('type=') ? 'scriptSetup' : 'script';
-					sfc.descriptor[type] = {
-						attrs: {},
-						content,
-						loc: {
-							start: { column: -1, line: -1, offset: contentStart },
-							end: { column: -1, line: -1, offset: contentStart + content.length },
-							source: content,
-						},
-						type: 'script',
+					rawIr.scripts.push({
+						name: 'script',
+						start: match.index,
+						end: match.index + matchText.length,
+						innerStart: contentStart,
+						innerEnd: contentStart + content.length,
 						lang,
-					};
+						content,
+						attrs: {},
+					});
 				}
 
 				templateContent = templateContent.slice(0, match.index) + ' '.repeat(matchText.length)
 					+ templateContent.slice(match.index + matchText.length);
 			}
 
-			sfc.descriptor.template = {
-				attrs: {},
+			rawIr.templates.push({
+				name: 'template',
+				start: 0,
+				end: content.length,
+				innerStart: 0,
+				innerEnd: content.length,
 				content: templateContent,
-				loc: {
-					start: { column: -1, line: -1, offset: 0 },
-					end: { column: -1, line: -1, offset: templateContent.length },
-					source: templateContent,
-				},
-				type: 'template',
-				ast: {} as any,
-			};
+				attrs: {},
+			});
 
-			return sfc;
+			return {
+				rawIr,
+				errors: [],
+				warnings: [],
+			};
 		},
 	};
 };

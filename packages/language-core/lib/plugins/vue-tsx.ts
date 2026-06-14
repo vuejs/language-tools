@@ -20,7 +20,7 @@ const plugin: VueLanguagePlugin = ({
 	vueCompilerOptions,
 }) => {
 	return {
-		version: 2.2,
+		version: 3,
 
 		getEmbeddedCodes(_fileName, ir) {
 			const lang = computeLang(ir);

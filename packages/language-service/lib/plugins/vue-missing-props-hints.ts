@@ -47,7 +47,7 @@ export function create(
 						const sourceOffset = startTagOffset + node.tag.length;
 
 						let generatedOffset: number | undefined;
-						for (const [offset] of map.toGeneratedLocation(template.startTagEnd + sourceOffset)) {
+						for (const [offset] of map.toGeneratedLocation(template.innerStart + sourceOffset)) {
 							generatedOffset = offset;
 							break;
 						}

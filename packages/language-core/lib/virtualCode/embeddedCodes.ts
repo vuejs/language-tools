@@ -24,19 +24,19 @@ export function useEmbeddedCodes(
 ) {
 	const getNameToBlockMap = computed(() => {
 		const blocks: Record<string, IRBlock> = {};
-		if (ir.template) {
-			blocks[ir.template.name] = ir.template;
-		}
 		if (ir.script) {
-			blocks[ir.script.name] = ir.script;
+			blocks.script = ir.script;
 		}
 		if (ir.scriptSetup) {
-			blocks[ir.scriptSetup.name] = ir.scriptSetup;
+			blocks.scriptSetup = ir.scriptSetup;
 		}
-		for (const block of ir.styles) {
-			blocks[block.name] = block;
-		}
-		for (const block of ir.customBlocks) {
+		for (
+			const block of [
+				...ir.templates,
+				...ir.styles,
+				...ir.customBlocks,
+			]
+		) {
 			blocks[block.name] = block;
 		}
 		return blocks;
@@ -183,7 +183,7 @@ export function useEmbeddedCodes(
 			return [
 				segment[0],
 				undefined,
-				segment[2] + block.startTagEnd,
+				segment[2] + block.innerStart,
 				segment[3],
 			];
 		}));

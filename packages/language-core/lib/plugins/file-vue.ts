@@ -1,9 +1,9 @@
 import type { VueLanguagePlugin } from '../types';
-import { parse } from '../utils/parseSfc';
+import { parseRawIR } from '../virtualCode/rawIr';
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
-		version: 2.2,
+		version: 3,
 
 		getLanguageId(fileName) {
 			if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
@@ -15,70 +15,54 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 			return languageId === 'vue';
 		},
 
-		parseSFC2(_fileName, languageId, content) {
+		parseSFC(_fileName, languageId, content) {
 			if (languageId !== 'vue') {
 				return;
 			}
-			const sfc = parse(content);
-			for (const error of sfc.errors) {
-				// Handle 'Element is missing end tag.' error, see #4893
-				if (
-					'code' in error && error.code === 24 && sfc.descriptor.template
-					&& error.loc?.start.line === sfc.descriptor.template.loc.start.line
-				) {
-					const template = sfc.descriptor.template;
-					const templateText = template.content;
-					const endTagOffset = templateText.lastIndexOf('<');
-					const endTagText = templateText.slice(endTagOffset).trimEnd();
-					if ('</template>'.startsWith(endTagText)) {
-						sfc.descriptor.template.loc.end.offset = template.loc.start.offset + endTagOffset;
-						template.content = templateText.slice(0, endTagOffset);
-					}
-				}
-			}
-			return sfc;
+			return parseRawIR(content);
 		},
 
-		updateSFC(sfc, change) {
+		updateSFC(result, change) {
 			const blocks = [
-				sfc.descriptor.template,
-				sfc.descriptor.script,
-				sfc.descriptor.scriptSetup,
-				...sfc.descriptor.styles,
-				...sfc.descriptor.customBlocks,
-			].filter(block => !!block);
+				...result.rawIr.templates,
+				...result.rawIr.scripts,
+				...result.rawIr.styles,
+				...result.rawIr.customBlocks,
+			];
 
-			const hitBlock = blocks.find(block =>
-				change.start >= block.loc.start.offset && change.end <= block.loc.end.offset
-			);
+			const hitBlock = blocks.find(block => change.start >= block.innerStart && change.end <= block.innerEnd);
 			if (!hitBlock) {
 				return;
 			}
 
 			const oldContent = hitBlock.content;
-			const newContent = hitBlock.content = hitBlock.content.slice(0, change.start - hitBlock.loc.start.offset)
+			const newContent = hitBlock.content = hitBlock.content.slice(0, change.start - hitBlock.innerStart)
 				+ change.newText
-				+ hitBlock.content.slice(change.end - hitBlock.loc.start.offset);
+				+ hitBlock.content.slice(change.end - hitBlock.innerStart);
 
 			// #3449
-			const endTagRegex = new RegExp(`</\\s*${hitBlock.type}\\s*>`);
+			const endTagRegex = new RegExp(`</\\s*${hitBlock.name}\\s*>`);
 			const insertedEndTag = endTagRegex.test(oldContent) !== endTagRegex.test(newContent);
 			if (insertedEndTag) {
 				return;
 			}
 
 			const lengthDiff = change.newText.length - (change.end - change.start);
+			hitBlock.innerEnd += lengthDiff;
+			hitBlock.end += lengthDiff;
 
 			for (const block of blocks) {
-				if (block.loc.start.offset > change.end) {
-					block.loc.start.offset += lengthDiff;
+				if (block === hitBlock) {
+					continue;
 				}
-				if (block.loc.end.offset >= change.end) {
-					block.loc.end.offset += lengthDiff;
+				for (const key of ['start', 'end', 'innerStart', 'innerEnd'] as const) {
+					if (block[key] >= change.end) {
+						block[key] += lengthDiff;
+					}
 				}
 			}
 
-			return sfc;
+			return result;
 		},
 	};
 };

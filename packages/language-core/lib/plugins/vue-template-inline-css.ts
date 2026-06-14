@@ -12,7 +12,7 @@ const codeFeatures = {
 
 const plugin: VueLanguagePlugin = () => {
 	return {
-		version: 2.2,
+		version: 3,
 
 		getEmbeddedCodes(_fileName, ir) {
 			if (!ir.template?.ast) {
@@ -33,7 +33,7 @@ const plugin: VueLanguagePlugin = () => {
 
 export default plugin;
 
-function* generate(templateAst: NonNullable<CompilerDOM.RootNode>): Generator<Code> {
+function* generate(templateAst: CompilerDOM.RootNode): Generator<Code> {
 	for (const node of forEachElementNode(templateAst)) {
 		for (const prop of node.props) {
 			if (

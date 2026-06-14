@@ -438,8 +438,8 @@ export function postprocessLanguageService<T>(
 						return result;
 					}
 					const isInStyle = styles.some(style =>
-						reference.textSpan.start >= style.startTagEnd
-						&& reference.textSpan.start + reference.textSpan.length <= style.endTagStart
+						reference.textSpan.start >= style.innerStart
+						&& reference.textSpan.start + reference.textSpan.length <= style.innerEnd
 					);
 					if (!isInStyle) {
 						continue;
@@ -517,8 +517,8 @@ export function postprocessLanguageService<T>(
 
 			if (
 				!root.ir.template
-				|| position < root.ir.template.startTagEnd
-				|| position > root.ir.template.endTagStart
+				|| position < root.ir.template.innerStart
+				|| position > root.ir.template.innerEnd
 			) {
 				return result;
 			}
@@ -627,8 +627,8 @@ export function resolveCompletionResult<T>(
 		];
 		const ranges = blocks.filter(Boolean).map(block =>
 			[
-				block!.startTagEnd,
-				block!.endTagStart,
+				block!.innerStart,
+				block!.innerEnd,
 			] as const
 		);
 
@@ -744,8 +744,8 @@ export function resolveCompletionEntryDetails(
 		const { fileName } = data.__vue__autoImport;
 		const sourceScript = language.scripts.get(fileName);
 		if (sourceScript?.generated?.root instanceof VueVirtualCode) {
-			const { vueSfc } = sourceScript.generated.root;
-			if (!vueSfc?.descriptor.script && !vueSfc?.descriptor.scriptSetup) {
+			const { ir } = sourceScript.generated.root;
+			if (!ir?.script && !ir?.scriptSetup) {
 				for (const codeAction of details?.codeActions ?? []) {
 					for (const change of codeAction.changes) {
 						for (const textChange of change.textChanges) {
