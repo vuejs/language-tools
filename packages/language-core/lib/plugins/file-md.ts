@@ -27,7 +27,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 			return languageId === 'markdown';
 		},
 
-		parseSFC(_fileName, languageId, content) {
+		parseSFC(_fileName, languageId, content, options) {
 			if (languageId !== 'markdown') {
 				return;
 			}
@@ -66,7 +66,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 			const mappings = buildMappings(codes);
 			const mapper = new SourceMap(mappings);
-			const { rawIr, errors, warnings } = parseRawIR(toString(codes));
+			const { rawIr, errors, warnings } = parseRawIR(toString(codes), options);
 
 			for (
 				const block of [

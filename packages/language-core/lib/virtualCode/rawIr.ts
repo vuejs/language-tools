@@ -1,4 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
+import { transformTemplate } from '../template/compile';
 import { normalizeAttributeValue } from '../utils/shared';
 
 export interface RawIR {
@@ -26,7 +27,11 @@ export type RawIRAttr = true | {
 };
 
 export interface RawIRTemplate extends RawIRBlock {
-	ast?: CompilerDOM.RootNode;
+	initialValue?: {
+		ast: CompilerDOM.RootNode;
+		errors: CompilerDOM.CompilerError[];
+		warnings: CompilerDOM.CompilerError[];
+	};
 }
 
 export interface RawIRParseResult {
@@ -35,19 +40,18 @@ export interface RawIRParseResult {
 	warnings: CompilerDOM.CompilerError[];
 }
 
-export function parseRawIR(source: string): RawIRParseResult {
+export function parseRawIR(source: string, options: CompilerDOM.CompilerOptions): RawIRParseResult {
 	const errors: CompilerDOM.CompilerError[] = [];
 	const warnings: CompilerDOM.CompilerError[] = [];
-	const ast = CompilerDOM.parse(source, {
-		comments: true,
-		parseMode: 'sfc',
-		onError: e => {
-			errors.push(e);
+	const ast = CompilerDOM.parse(
+		source,
+		options = {
+			...options,
+			parseMode: 'sfc',
+			onError: err => errors.push(err),
+			onWarn: err => warnings.push(err),
 		},
-		onWarn: e => {
-			warnings.push(e);
-		},
-	});
+	);
 
 	const rawIr: RawIR = {
 		templates: [],
@@ -68,19 +72,39 @@ export function parseRawIR(source: string): RawIRParseResult {
 		switch (node.tag) {
 			case 'template': {
 				const block = createBlock(node, source) as RawIRTemplate;
-				block.ast = {
-					type: CompilerDOM.NodeTypes.ROOT,
-					loc: node.loc,
-					source: block.content,
-					children: node.children,
-					helpers: new Set(),
-					components: [],
-					directives: [],
-					hoists: [],
-					imports: [],
-					cached: [],
-					temps: 0,
+				block.initialValue = {
+					ast: {
+						type: CompilerDOM.NodeTypes.ROOT,
+						loc: node.loc,
+						source: block.content,
+						children: node.children,
+						helpers: new Set(),
+						components: [],
+						directives: [],
+						hoists: [],
+						imports: [],
+						cached: [],
+						temps: 0,
+					},
+					errors: [],
+					warnings: [],
 				};
+				for (const loc of traverseLoc(block.initialValue.ast)) {
+					loc.start.offset -= block.innerStart;
+					loc.end.offset -= block.innerStart;
+				}
+				for (const [key, list] of [['errors', errors], ['warnings', warnings]] as const) {
+					for (const item of list) {
+						if (item.loc && item.loc.start.offset >= block.innerStart && item.loc.end.offset <= block.innerEnd) {
+							item.loc.start.offset -= block.innerStart;
+							item.loc.end.offset -= block.innerStart;
+							block.initialValue[key].push(
+								...list.splice(list.indexOf(item), 1)!,
+							);
+						}
+					}
+				}
+				transformTemplate(block.initialValue.ast, options);
 				rawIr.templates.push(block);
 				break;
 			}
@@ -158,4 +182,16 @@ function createBlock(node: CompilerDOM.ElementNode, source: string): RawIRBlock 
 		content: source.slice(innerStart, innerEnd),
 		attrs,
 	};
+}
+
+function* traverseLoc(obj: Record<string, any>): Generator<CompilerDOM.SourceLocation> {
+	for (const key in obj) {
+		const value = obj[key];
+		if (value && typeof value === 'object') {
+			if ('loc' in value) {
+				yield value.loc;
+			}
+			yield* traverseLoc(value);
+		}
+	}
 }

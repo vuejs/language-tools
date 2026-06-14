@@ -1,4 +1,5 @@
 import type { CodeMapping, VirtualCode } from '@volar/language-core';
+import type * as CompilerDOM from '@vue/compiler-dom';
 import { computed, signal } from 'alien-signals';
 import type * as ts from 'typescript';
 import { allCodeFeatures } from '../plugins';
@@ -97,8 +98,24 @@ export class VueVirtualCode implements VirtualCode {
 			}
 		}
 
+		let options: CompilerDOM.CompilerOptions = {
+			comments: true,
+			expressionPlugins: ['typescript'],
+		};
+
 		for (const plugin of plugins) {
-			const result = plugin.parseSFC?.(this.fileName, this.languageId, snapshot.getText(0, snapshot.getLength()));
+			if (plugin.resolveTemplateCompilerOptions) {
+				options = plugin.resolveTemplateCompilerOptions(options);
+			}
+		}
+
+		for (const plugin of plugins) {
+			const result = plugin.parseSFC?.(
+				this.fileName,
+				this.languageId,
+				snapshot.getText(0, snapshot.getLength()),
+				options,
+			);
 			if (result) {
 				return {
 					snapshot,

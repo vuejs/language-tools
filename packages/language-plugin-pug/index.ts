@@ -90,11 +90,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 				const visited = new Set<object>();
 				visit(ast);
 
-				return {
-					ast,
-					code: '',
-					preamble: '',
-				};
+				return ast;
 
 				function visit(obj: object) {
 					for (const key in obj) {

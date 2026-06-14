@@ -15,11 +15,11 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 			return languageId === 'vue';
 		},
 
-		parseSFC(_fileName, languageId, content) {
+		parseSFC(_fileName, languageId, content, options) {
 			if (languageId !== 'vue') {
 				return;
 			}
-			return parseRawIR(content);
+			return parseRawIR(content, options);
 		},
 
 		updateSFC(result, change) {

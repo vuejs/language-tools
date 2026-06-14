@@ -31,23 +31,18 @@ const plugin: VueLanguagePlugin = () => {
 				}
 
 				const ast = compileTemplate(template, options);
+				(ast as any).__addedSuffix = addedSuffix;
 
-				return {
-					ast,
-					code: '',
-					preamble: '',
-					__addedSuffix: addedSuffix,
-				};
+				return ast;
 			}
 		},
 
-		updateSFCTemplate(oldResult, change) {
-			const newSource = oldResult.ast.source.slice(0, change.start)
+		updateSFCTemplate(oldAst, change) {
+			const newSource = oldAst.source.slice(0, change.start)
 				+ change.newText
-				+ oldResult.ast.source.slice(change.end);
+				+ oldAst.source.slice(change.end);
 
-			// @ts-expect-error
-			if (oldResult.__addedSuffix) {
+			if ((oldAst as any).__addedSuffix) {
 				const originalTemplate = newSource.slice(0, -1); // remove added '>'
 				if (!shouldAddSuffix.test(originalTemplate)) {
 					return undefined;
@@ -57,11 +52,11 @@ const plugin: VueLanguagePlugin = () => {
 			const lengthDiff = change.newText.length - (change.end - change.start);
 			let hitNodes: Node[] = [];
 
-			if (tryUpdateNode(oldResult.ast) && hitNodes.length) {
+			if (tryUpdateNode(oldAst) && hitNodes.length) {
 				hitNodes = hitNodes.sort((a, b) => a.loc.source.length - b.loc.source.length);
 				const hitNode = hitNodes[0]!;
 				if (hitNode.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					return oldResult;
+					return oldAst;
 				}
 			}
 

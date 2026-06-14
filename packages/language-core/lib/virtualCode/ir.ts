@@ -12,7 +12,7 @@ import type {
 	VueLanguagePluginReturn,
 } from '../types';
 import { computedArray, reactiveArray } from '../utils/signals';
-import type { RawIR, RawIRBlock } from './rawIr';
+import type { RawIR, RawIRBlock, RawIRTemplate } from './rawIr';
 
 export function useIR(
 	ts: typeof import('typescript'),
@@ -104,11 +104,11 @@ export function useIR(
 		() => getRawIr()?.templates ?? [],
 		(getBlock, i) => {
 			const base = useIRBlock(i ? 'template_' + i : 'template', 'html', getBlock);
-			const getParseTemplateResult = useParseTemplateResult(base);
+			const getParseTemplateResult = useParseTemplateResult(base, getBlock);
 			return (): IRTemplate =>
 				mergeObject(base, {
 					get ast() {
-						return getParseTemplateResult().result?.ast;
+						return getParseTemplateResult().ast;
 					},
 					get errors() {
 						return getParseTemplateResult().errors;
@@ -210,22 +210,44 @@ export function useIR(
 		},
 	};
 
-	function useParseTemplateResult(base: IRBlock) {
-		return computed<{
-			snapshot: ts.IScriptSnapshot;
-			template: string;
-			errors: CompilerDOM.CompilerError[];
-			warnings: CompilerDOM.CompilerError[];
-			result?: CompilerDOM.CodegenResult;
-			plugin?: VueLanguagePluginReturn;
-		}>(lastResult => {
+	interface ParsedTemplateResult {
+		snapshot: ts.IScriptSnapshot;
+		template: string;
+		errors: CompilerDOM.CompilerError[];
+		warnings: CompilerDOM.CompilerError[];
+		ast?: CompilerDOM.RootNode;
+		plugin?: VueLanguagePluginReturn;
+	}
+
+	function useParseTemplateResult(base: IRBlock, getBlock: () => RawIRTemplate) {
+		let rerunned = false;
+
+		return computed<ParsedTemplateResult>(lastResult => {
 			if (lastResult?.template === base.content) {
 				return lastResult;
 			}
 
+			if (!rerunned) {
+				rerunned = true;
+				const pausedSub = setActiveSub(undefined);
+				const { lang, initialValue } = getBlock();
+				setActiveSub(pausedSub);
+				if (lang === 'html' && initialValue) {
+					const { ast, errors, warnings } = initialValue;
+					return {
+						snapshot: getUntrackedSnapshot(),
+						template: base.content,
+						ast,
+						errors,
+						warnings,
+						plugin: plugins.find(p => p.compileSFCTemplate && p.updateSFCTemplate),
+					};
+				}
+			}
+
 			// incremental update
 			if (
-				lastResult?.result && lastResult.plugin?.updateSFCTemplate
+				lastResult?.ast && lastResult.plugin?.updateSFCTemplate
 				&& !lastResult.errors.length
 				&& !lastResult.warnings.length
 			) {
@@ -236,16 +258,16 @@ export function useIR(
 					setActiveSub(pausedSub);
 
 					const newText = getUntrackedSnapshot().getText(change.span.start, change.span.start + change.newLength);
-					const newResult = lastResult.plugin.updateSFCTemplate(lastResult.result, {
+					const newAst = lastResult.plugin.updateSFCTemplate(lastResult.ast, {
 						start: change.span.start - templateOffset,
 						end: change.span.start - templateOffset + change.span.length,
 						newText,
 					});
-					if (newResult) {
+					if (newAst) {
 						return {
 							snapshot: getUntrackedSnapshot(),
 							template: base.content,
-							result: newResult,
+							ast: newAst,
 							plugin: lastResult.plugin,
 							errors: [],
 							warnings: [],
@@ -257,9 +279,10 @@ export function useIR(
 			const errors: CompilerDOM.CompilerError[] = [];
 			const warnings: CompilerDOM.CompilerError[] = [];
 			let options: CompilerDOM.CompilerOptions = {
+				comments: true,
+				expressionPlugins: ['typescript'],
 				onError: err => errors.push(err),
 				onWarn: err => warnings.push(err),
-				expressionPlugins: ['typescript'],
 			};
 
 			for (const plugin of plugins) {
@@ -275,7 +298,7 @@ export function useIR(
 						return {
 							snapshot: getUntrackedSnapshot(),
 							template: base.content,
-							result,
+							ast: result,
 							plugin,
 							errors,
 							warnings,

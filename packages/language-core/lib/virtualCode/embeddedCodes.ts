@@ -47,8 +47,7 @@ export function useEmbeddedCodes(
 		const result: VirtualCode[] = [];
 		const idToCodeMap = new Map<string, VirtualCode>();
 		const virtualCodes = pluginsResult
-			.map(getPluginResult => getPluginResult())
-			.flat()
+			.flatMap(getPluginResult => getPluginResult())
 			.map(
 				({ code, snapshot, mappings }) => {
 					const virtualCode: VirtualCode = {
@@ -256,19 +255,14 @@ function fullDiffTextChangeRange(oldText: string, newText: string): ts.TextChang
 function resolveCommonLanguageId(lang: string) {
 	switch (lang) {
 		case 'js':
-			return 'javascript';
 		case 'cjs':
-			return 'javascript';
 		case 'mjs':
 			return 'javascript';
 		case 'ts':
-			return 'typescript';
 		case 'cts':
-			return 'typescript';
 		case 'mts':
 			return 'typescript';
 		case 'jsx':
-			return 'javascriptreact';
 		case 'tsx':
 			return 'typescriptreact';
 		case 'pug':

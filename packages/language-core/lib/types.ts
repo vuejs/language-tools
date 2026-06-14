@@ -93,7 +93,12 @@ export interface VueLanguagePluginReturn {
 	requiredCompilerOptions?: string[];
 	getLanguageId?(fileName: string): string | undefined;
 	isValidFile?(fileName: string, languageId: string): boolean;
-	parseSFC?(fileName: string, languageId: string, content: string): RawIRParseResult | undefined;
+	parseSFC?(
+		fileName: string,
+		languageId: string,
+		content: string,
+		options: CompilerDOM.CompilerOptions,
+	): RawIRParseResult | undefined;
 	updateSFC?(
 		oldResult: RawIRParseResult,
 		textChange: { start: number; end: number; newText: string },
@@ -104,14 +109,14 @@ export interface VueLanguagePluginReturn {
 		lang: string,
 		template: string,
 		options: CompilerDOM.CompilerOptions,
-	): CompilerDOM.CodegenResult | undefined;
+	): CompilerDOM.RootNode | undefined;
 	compileSFCStyle?(lang: string, style: string):
 		| Pick<IRStyle, 'imports' | 'bindings' | 'classNames'>
 		| undefined;
 	updateSFCTemplate?(
-		oldResult: CompilerDOM.CodegenResult,
+		oldAst: CompilerDOM.RootNode,
 		textChange: { start: number; end: number; newText: string },
-	): CompilerDOM.CodegenResult | undefined;
+	): CompilerDOM.RootNode | undefined;
 	getEmbeddedCodes?(fileName: string, ir: IR): { id: string; lang: string }[];
 	resolveEmbeddedCode?(fileName: string, ir: IR, embeddedFile: VueEmbeddedCode): void;
 }
