@@ -21,19 +21,23 @@ const stub = (scopeName: string) => {
 	return file;
 };
 
-const snapshotPromise = createGrammarSnapshot(packageJsonPath, {
-	extraGrammarPaths: [
-		path.resolve(embeddedGrammarsDir, './typescript.tmLanguage.json'),
-		path.resolve(embeddedGrammarsDir, './typescriptreact.tmLanguage.json'),
-		path.resolve(embeddedGrammarsDir, './javascriptreact.tmLanguage.json'),
-		path.resolve(embeddedGrammarsDir, './javascript.tmLanguage.json'),
-		path.resolve(embeddedGrammarsDir, './css.tmLanguage.json'),
-		path.resolve(embeddedGrammarsDir, './scss.tmLanguage.json'),
-		path.resolve(embeddedGrammarsDir, './html.tmLanguage.json'),
-		path.resolve(embeddedGrammarsDir, './html-derivative.tmLanguage.json'),
-		...['source.css.less', 'source.sass', 'source.stylus', 'source.postcss'].map(stub),
-	],
-});
+// The embedded grammars are downloaded (not committed) by scripts/grammars-sync — await it first,
+// like grammar.spec.ts, so this harness doesn't read them before they exist (a CI race otherwise).
+const snapshotPromise = import('../scripts/grammars-sync').then(() =>
+	createGrammarSnapshot(packageJsonPath, {
+		extraGrammarPaths: [
+			path.resolve(embeddedGrammarsDir, './typescript.tmLanguage.json'),
+			path.resolve(embeddedGrammarsDir, './typescriptreact.tmLanguage.json'),
+			path.resolve(embeddedGrammarsDir, './javascriptreact.tmLanguage.json'),
+			path.resolve(embeddedGrammarsDir, './javascript.tmLanguage.json'),
+			path.resolve(embeddedGrammarsDir, './css.tmLanguage.json'),
+			path.resolve(embeddedGrammarsDir, './scss.tmLanguage.json'),
+			path.resolve(embeddedGrammarsDir, './html.tmLanguage.json'),
+			path.resolve(embeddedGrammarsDir, './html-derivative.tmLanguage.json'),
+			...['source.css.less', 'source.sass', 'source.stylus', 'source.postcss'].map(stub),
+		],
+	})
+);
 
 interface Tok {
 	startIndex: number;
