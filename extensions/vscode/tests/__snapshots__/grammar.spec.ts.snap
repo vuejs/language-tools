@@ -2446,10 +2446,11 @@ exports[`grammar > template-in-template.vue 1`] = `
 #              ^^^^^^^^ text.html.vue meta.template.vue entity.name.tag.vue
 #                      ^ text.html.vue meta.template.vue punctuation.definition.tag.end.vue
 >	</template>
-#^ text.html.vue meta.template.vue text.pug
-# ^^ text.html.vue meta.template.vue punctuation.definition.tag.begin.vue
-#   ^^^^^^^^ text.html.vue meta.template.vue entity.name.tag.vue
-#           ^ text.html.vue meta.template.vue punctuation.definition.tag.end.vue
+#^ text.html.vue
+# ^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
+#  ^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
+#   ^^^^^^^^ text.html.vue meta.tag.vue entity.name.tag.vue
+#           ^ text.html.vue meta.tag.vue punctuation.definition.tag.end.vue
 ></template>
 #^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue
 # ^ text.html.vue meta.tag.vue punctuation.definition.tag.begin.vue

@@ -2,6 +2,8 @@ src
 out
 scripts
 tests
+monogram
+vue.monogram.ts
 tsconfig.json
 tsconfig.tsbuildinfo
 rolldown.config.ts

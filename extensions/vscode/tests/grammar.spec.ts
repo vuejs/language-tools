@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { createGrammarSnapshot } from 'vscode-tmlanguage-snapshot';
+import { generateArtifacts } from '../scripts/generate-grammar';
 
 const grammarsSync = import('../scripts/grammars-sync');
 const fixturesDir = path.resolve(__dirname, './grammarFixtures');
@@ -44,6 +45,22 @@ describe('embedded grammar', async () => {
 			const result = await snapshot(`tests/embeddedGrammarFixtures/${fixture}`);
 
 			expect(result).toMatchSnapshot();
+		});
+	}
+});
+
+// The committed grammars + language configuration are generated output of `vue.monogram.ts` +
+// the Monogram submodule. This guards against drift: editing the source or bumping the submodule
+// without re-running `npm run gen:grammar` fails here. Structural compare ignores `dprint`
+// formatting (and the language config's `// …` JSONC comments, dropped by generation).
+describe('generated artifacts are in sync with source', () => {
+	const extensionRoot = path.resolve(__dirname, '..');
+	const stripJsonComments = (text: string) => text.replace(/^\s*\/\/.*$/gm, '');
+
+	for (const [relPath, artifact] of Object.entries(generateArtifacts())) {
+		it(relPath, () => {
+			const committed = JSON.parse(stripJsonComments(fs.readFileSync(path.resolve(extensionRoot, relPath), 'utf8')));
+			expect(committed).toEqual(artifact);
 		});
 	}
 });

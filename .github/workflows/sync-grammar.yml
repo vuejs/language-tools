@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          submodules: true
 
       - uses: pnpm/action-setup@v6
 
@@ -23,14 +25,11 @@ jobs:
 
       - run: pnpm install
 
-      - name: Pull generated grammars from Monogram
-        run: |
-          base="https://raw.githubusercontent.com/johnsoncodehk/monogram/master"
-          for f in vue.tmLanguage.json vue.directives.tmLanguage.json vue.interpolations.tmLanguage.json; do
-            curl -fsSL "$base/$f" -o "extensions/vscode/syntaxes/$f"
-          done
+      - name: Bump Monogram submodule to latest master
+        run: git submodule update --remote extensions/vscode/monogram
 
-      - run: npm run format
+      - name: Generate grammars from Monogram
+        run: npm run gen:grammar
 
       - name: Regenerate grammar snapshots
         run: npm run test:grammar -- -u
@@ -40,6 +39,7 @@ jobs:
         with:
           message: "ci(vscode): sync vue grammars from monogram"
           add: |
+            extensions/vscode/monogram
             extensions/vscode/syntaxes
             extensions/vscode/tests/__snapshots__/grammar.spec.ts.snap
           default_author: github_actions

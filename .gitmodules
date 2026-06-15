@@ -1,0 +1,4 @@
+[submodule "extensions/vscode/monogram"]
+	path = extensions/vscode/monogram
+	url = https://github.com/johnsoncodehk/monogram.git
+	branch = master
