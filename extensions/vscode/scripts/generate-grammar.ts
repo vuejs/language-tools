@@ -1,9 +1,12 @@
 // Generates the Vue TextMate grammars + the VS Code language configuration from
-// `vue.monogram.ts` using the Monogram engine vendored as a git submodule at
-// `extensions/vscode/monogram`. The grammar DEFINITION (vue.monogram.ts) is maintained in
-// this repo; the engine (gen-tm / gen-vscode-config) and the reused HTML base (html.ts) come
-// from the pinned submodule. Bumping the submodule + re-running this keeps us in sync with
-// Monogram — see `.github/workflows/sync-grammar.yml`.
+// `vue.monogram.ts` using the Monogram engine, installed as a github devDependency (`monogram`
+// in extensions/vscode/package.json, pinned to a commit). The grammar DEFINITION (vue.monogram.ts)
+// is maintained in this repo; the engine (gen-tm / gen-vscode-config) and the reused HTML base
+// (html.ts) come from the pinned dependency. Bumping the pin + re-running this keeps us in sync
+// with Monogram — see `.github/workflows/sync-grammar.yml`.
+//
+// Run via `npm run gen:grammar`, which uses `node --import scripts/strip-node-modules-types.mjs`
+// so Node strips Monogram's `.ts` sources from node_modules (which it refuses to do by default).
 //
 // Emits the artifacts the extension references in `package.json` (paths relative to the
 // extension root):
@@ -11,12 +14,11 @@
 //   - syntaxes/vue.directives.tmLanguage.json      (injection, scopeName vue.directives)
 //   - syntaxes/vue.interpolations.tmLanguage.json  (injection, scopeName vue.interpolations)
 //   - languages/vue-language-configuration.json    (editor behavior: indent / folding / brackets)
-// The generation path has no external dependencies, so no `monogram` install is needed.
+import { generateMarkupInjection, generateTmLanguage } from 'monogram/src/gen-tm.ts';
+import { generateLanguageConfig } from 'monogram/src/gen-vscode-config.ts';
 import { writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { generateMarkupInjection, generateTmLanguage } from '../monogram/src/gen-tm.ts';
-import { generateLanguageConfig } from '../monogram/src/gen-vscode-config.ts';
 import grammar from '../vue.monogram.ts';
 
 // The grammar declares its own name (`defineGrammar({ name: 'vue' })`) — the single source of

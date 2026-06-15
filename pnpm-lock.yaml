@@ -59,6 +59,9 @@ importers:
       laplacenoma:
         specifier: latest
         version: 0.0.3
+      monogram:
+        specifier: github:johnsoncodehk/monogram#479ff7a72d169a5ef0417c79b4f0925b12b3b871
+        version: https://codeload.github.com/johnsoncodehk/monogram/tar.gz/479ff7a72d169a5ef0417c79b4f0925b12b3b871
       reactive-vscode:
         specifier: ^1.0.2
         version: 1.0.2(@types/vscode@1.88.0)
@@ -1309,6 +1312,10 @@ packages:
   minimatch@5.1.9:
     resolution: {integrity: sha512-7o1wEA2RyMP7Iu7GNba9vc0RWWGACJOCZBJX2GJWip0ikV+wcOsgVuY9uE8CPiyQhkGFSlhuSkZPavN7u1c2Fw==}
     engines: {node: '>=10'}
+
+  monogram@https://codeload.github.com/johnsoncodehk/monogram/tar.gz/479ff7a72d169a5ef0417c79b4f0925b12b3b871:
+    resolution: {gitHosted: true, integrity: sha512-/c/TmeYocZCh1TNJdxPTC9bC2vMLGQflACy51bGSbsI4ZmkwOra/dDdGytT9aw+Dm2J95Db2wKI3FMDyS4PThA==, tarball: https://codeload.github.com/johnsoncodehk/monogram/tar.gz/479ff7a72d169a5ef0417c79b4f0925b12b3b871}
+    version: 0.1.0
 
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
@@ -2671,6 +2678,8 @@ snapshots:
   minimatch@5.1.9:
     dependencies:
       brace-expansion: 2.1.0
+
+  monogram@https://codeload.github.com/johnsoncodehk/monogram/tar.gz/479ff7a72d169a5ef0417c79b4f0925b12b3b871: {}
 
   ms@2.1.3: {}
 

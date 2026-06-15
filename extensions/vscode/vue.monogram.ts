@@ -14,8 +14,8 @@
 // is HTML's raw-text mechanism with a per-block embed map) and only swaps the markup config
 // + scope name. We import those reusable pieces and build through `defineGrammar` — the same
 // API every other grammar uses — instead of spreading html's already-built grammar object.
-import { markup as htmlMarkup, rules, scopes, tokens } from './monogram/html.ts';
-import { altPattern, defineGrammar } from './monogram/src/api.ts';
+import { markup as htmlMarkup, rules, scopes, tokens } from 'monogram/html.ts';
+import { altPattern, defineGrammar } from 'monogram/src/api.ts';
 
 export default defineGrammar({
 	name: 'vue',
