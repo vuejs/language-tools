@@ -6,7 +6,7 @@
 		"watch": "tsgo -b -w",
 		"watch:ext": "node extensions/vscode/scripts/write-plugins.ts --dev && npm run watch",
 		"test": "npm run build && vitest run",
-		"test:grammar": "vitest run extensions/vscode/tests/grammar.spec.ts",
+		"test:grammar": "vitest run extensions/vscode/tests/grammar.spec.ts extensions/vscode/tests/vue-highlight.spec.ts",
 		"gen:grammar": "node extensions/vscode/scripts/generate-grammar.ts && dprint fmt \"extensions/vscode/syntaxes/vue*.tmLanguage.json\" \"extensions/vscode/languages/vue-language-configuration.json\"",
 		"format": "dprint fmt",
 		"lint": "tsslint --project {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
