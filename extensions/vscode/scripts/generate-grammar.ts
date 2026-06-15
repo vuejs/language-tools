@@ -27,10 +27,10 @@ const { name } = grammar;
 // scopeNames (`vue.directives` / `vue.interpolations`) map straight to their filenames.
 export function generateArtifacts(): Record<string, unknown> {
 	const artifacts: Record<string, unknown> = {
-		[`syntaxes/${name}.tmLanguage.json`]: generateTmLanguage(grammar, name),
+		[`syntaxes/${name}.tmLanguage.json`]: generateTmLanguage(grammar),
 		[`languages/${name}-language-configuration.json`]: generateLanguageConfig(grammar),
 	};
-	for (const injection of generateMarkupInjection(grammar, name)) {
+	for (const injection of generateMarkupInjection(grammar)) {
 		artifacts[`syntaxes/${injection.scopeName}.tmLanguage.json`] = injection;
 	}
 	return artifacts;
