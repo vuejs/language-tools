@@ -13,8 +13,8 @@
 //   - languages/vue-language-configuration.json    (editor behavior: indent / folding / brackets)
 // The generation path has no external dependencies, so no `monogram` install is needed.
 import { writeFileSync } from 'node:fs';
-import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { generateMarkupInjection, generateTmLanguage } from '../monogram/src/gen-tm.ts';
 import { generateLanguageConfig } from '../monogram/src/gen-vscode-config.ts';
 import grammar from '../vue.monogram.ts';
