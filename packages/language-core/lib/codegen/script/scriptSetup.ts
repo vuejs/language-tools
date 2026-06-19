@@ -121,7 +121,7 @@ export function* generateGeneric(
 	yield `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`}${endOfLine}`;
 	yield `}${endOfLine}`;
 	yield `})(),${newLine}`; // __VLS_setup = (async () => {
-	yield `) => ({} as import('${vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof ${names.setup}> }))${endOfLine}`;
+	yield `) => ({} as import('${vueCompilerOptions.lib}').VNode & { __ctx?: NonNullable<Awaited<typeof ${names.setup}>> }))${endOfLine}`;
 }
 
 export function* generateSetupFunction(
