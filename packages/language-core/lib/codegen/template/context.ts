@@ -222,7 +222,7 @@ export function createTemplateCodegenContext() {
 		},
 		*generateConditionGuards() {
 			for (const condition of blockConditions) {
-				yield `if (!${condition}) return${endOfLine}`;
+				yield `if (!${condition}) throw 0${endOfLine}`;
 			}
 		},
 		enter(node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode) {

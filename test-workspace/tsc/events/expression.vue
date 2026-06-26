@@ -1,6 +1,6 @@
 <script setup lang="ts">
 interface Props {
-	onClick?: (num: number) => number;
+	onClick?: () => number;
 }
 
 declare function Comp(props: Props): void;
@@ -13,5 +13,8 @@ declare const foo: unknown;
 	<Comp @click="(<Foo>foo! as Foo)" />
 	<Comp @click="({} as Props).onClick" />
 	<!-- @vue-expect-error -->
-	<Comp @click="() => 1;" />
+	<Comp @click="(() => 1);" />
+	<template v-if="true">
+		<Comp @click="(() => 1)()" />
+	</template>
 </template>

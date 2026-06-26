@@ -168,6 +168,9 @@ export function* generateEventExpression(
 			const endScope = ctx.startScope();
 			ctx.declare('$event');
 			yield* ctx.generateConditionGuards();
+			if (isSingleExpression(options.typescript, ast)) {
+				yield `return `;
+			}
 			yield* interpolation;
 			yield endOfLine;
 			yield* endScope();
@@ -248,4 +251,14 @@ export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.So
 		}
 	}
 	return true;
+}
+
+function isSingleExpression(ts: typeof import('typescript'), ast: ts.SourceFile) {
+	if (ast.statements.length === 1 && ast.text[ast.endOfFileToken.pos - 1] !== ';') {
+		const statement = ast.statements[0]!;
+		if (ts.isExpressionStatement(statement)) {
+			return true;
+		}
+	}
+	return false;
 }
