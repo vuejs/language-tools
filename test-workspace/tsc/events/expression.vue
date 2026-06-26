@@ -12,4 +12,6 @@ declare const foo: unknown;
 <template>
 	<Comp @click="(<Foo>foo! as Foo)" />
 	<Comp @click="({} as Props).onClick" />
+	<!-- @vue-expect-error -->
+	<Comp @click="() => 1;" />
 </template>

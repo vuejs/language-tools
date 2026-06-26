@@ -223,7 +223,7 @@ export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.So
 	if (ast.statements.length === 0) {
 		return false;
 	}
-	if (ast.statements.length === 1) {
+	if (ast.statements.length === 1 && ast.text[ast.endOfFileToken.pos - 1] !== ';') {
 		const statement = ast.statements[0]!;
 		if (ts.isExpressionStatement(statement)) {
 			let node = statement.expression;
