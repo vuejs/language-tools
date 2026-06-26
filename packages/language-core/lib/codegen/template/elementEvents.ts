@@ -220,36 +220,32 @@ export function* generateModelEventExpression(
 }
 
 export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.SourceFile) {
-	let result = true;
 	if (ast.statements.length === 0) {
-		result = false;
+		return false;
 	}
-	else if (ast.statements.length === 1) {
-		ts.forEachChild(ast, child_1 => {
-			if (ts.isExpressionStatement(child_1)) {
-				ts.forEachChild(child_1, child_2 => {
-					if (ts.isArrowFunction(child_2)) {
-						result = false;
-					}
-					else if (isPropertyAccessOrId(ts, child_2)) {
-						result = false;
-					}
-				});
+	if (ast.statements.length === 1) {
+		const statement = ast.statements[0]!;
+		if (ts.isExpressionStatement(statement)) {
+			let node = statement.expression;
+			while (
+				ts.isParenthesizedExpression(node)
+				|| ts.isNonNullExpression(node)
+				|| ts.isAssertionExpression(node)
+			) {
+				node = node.expression;
 			}
-			else if (ts.isFunctionDeclaration(child_1)) {
-				result = false;
+			if (
+				ts.isArrowFunction(node)
+				|| ts.isIdentifier(node)
+				|| ts.isElementAccessExpression(node)
+				|| ts.isPropertyAccessExpression(node)
+			) {
+				return false;
 			}
-		});
+		}
+		else if (ts.isFunctionDeclaration(statement)) {
+			return false;
+		}
 	}
-	return result;
-}
-
-function isPropertyAccessOrId(ts: typeof import('typescript'), node: ts.Node) {
-	if (ts.isIdentifier(node)) {
-		return true;
-	}
-	if (ts.isPropertyAccessExpression(node)) {
-		return isPropertyAccessOrId(ts, node.expression);
-	}
-	return false;
+	return true;
 }
