@@ -6,7 +6,7 @@ export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
 export const identifierRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
-const cacheMaps = new Map<IRBlock, [content: string, Map<string, [ts.SourceFile, usages: number]>]>();
+const cacheMaps = new WeakMap<IRBlock, [content: string, Map<string, [ts.SourceFile, usages: number]>]>();
 
 export function getTypeScriptAST(ts: typeof import('typescript'), block: IRBlock, text: string): ts.SourceFile {
 	if (!cacheMaps.has(block)) {
