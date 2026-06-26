@@ -10,7 +10,7 @@ declare const foo: unknown;
 </script>
 
 <template>
-	<Comp @click="(<Foo>foo! as Foo)" />
+	<Comp @click="(<Foo>foo! as Foo satisfies Foo)" />
 	<Comp @click="({} as Props).onClick" />
 	<!-- @vue-expect-error -->
 	<Comp @click="(() => 1);" />

@@ -1,7 +1,7 @@
 import type * as ts from 'typescript';
 import type { TextRange, VueCompilerOptions } from '../types';
 import { getNodeText, getStartEnd } from '../utils/shared';
-import { getClosestMultiLineCommentRange, parseBindingRanges } from './utils';
+import { getClosestMultiLineCommentRange, getUnwrappedExpression, parseBindingRanges } from './utils';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> {}
 
@@ -57,9 +57,8 @@ export function parseOptionsFromExtression(
 ) {
 	let obj: ts.ObjectLiteralExpression | undefined;
 
-	while (isAsExpression(ts, exp) || ts.isParenthesizedExpression(exp)) { // fix https://github.com/vuejs/language-tools/issues/1882
-		exp = exp.expression;
-	}
+	// #1882
+	exp = getUnwrappedExpression(ts, exp);
 
 	if (ts.isObjectLiteralExpression(exp)) {
 		obj = exp;
@@ -114,9 +113,4 @@ export function parseOptionsFromExtression(
 	function _getNodeText(node: ts.Node) {
 		return getNodeText(ts, node, sourceFile);
 	}
-}
-
-// isAsExpression is missing in tsc
-function isAsExpression(ts: typeof import('typescript'), node: ts.Node): node is ts.AsExpression {
-	return node.kind === ts.SyntaxKind.AsExpression;
 }

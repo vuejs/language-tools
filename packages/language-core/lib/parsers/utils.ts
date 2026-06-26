@@ -110,3 +110,15 @@ export function getClosestMultiLineCommentRange(
 		};
 	}
 }
+
+export function getUnwrappedExpression(ts: typeof import('typescript'), node: ts.Node) {
+	while (
+		ts.isParenthesizedExpression(node)
+		|| ts.isAssertionExpression(node)
+		|| ts.isNonNullExpression(node)
+		|| ts.isSatisfiesExpression(node)
+	) {
+		node = node.expression;
+	}
+	return node;
+}

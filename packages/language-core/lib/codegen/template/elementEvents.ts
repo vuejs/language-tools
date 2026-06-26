@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
+import { getUnwrappedExpression } from '../../parsers/utils';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
@@ -229,14 +230,7 @@ export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.So
 	if (ast.statements.length === 1 && ast.text[ast.endOfFileToken.pos - 1] !== ';') {
 		const statement = ast.statements[0]!;
 		if (ts.isExpressionStatement(statement)) {
-			let node = statement.expression;
-			while (
-				ts.isParenthesizedExpression(node)
-				|| ts.isNonNullExpression(node)
-				|| ts.isAssertionExpression(node)
-			) {
-				node = node.expression;
-			}
+			const node = getUnwrappedExpression(ts, statement.expression);
 			if (
 				ts.isArrowFunction(node)
 				|| ts.isIdentifier(node)
