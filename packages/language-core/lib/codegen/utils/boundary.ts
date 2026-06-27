@@ -1,15 +1,18 @@
 import type { Code, VueCodeInformation } from '../../types';
 
-export function* startBoundary(
-	source: string,
-	startOffset: number,
-	features: VueCodeInformation,
-) {
-	const token = Symbol(source);
-	yield ['', source, startOffset, { ...features, __combineToken: token }] as Code;
-	return token;
-}
+export class Boundary {
+	private constructor(
+		public source: string,
+		public features: VueCodeInformation,
+	) {}
 
-export function endBoundary(token: symbol, endOffset: number) {
-	return ['', token.description, endOffset, { __combineToken: token }] as Code;
+	static *start(source: string, offset: number, features: VueCodeInformation): Generator<Code, Boundary> {
+		features = { ...features, __combineToken: Symbol() };
+		yield [``, source, offset, features];
+		return new Boundary(source, features);
+	}
+
+	end(offset: number): Code {
+		return [``, this.source, offset, this.features];
+	}
 }

@@ -5,7 +5,7 @@ import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { endOfLine, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 import { generateElementProps, generatePropExp } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
@@ -60,22 +60,22 @@ export function* generateSlotOutlet(
 				codes = [`['default']`];
 			}
 
-			const token = yield* startBoundary('template', nameProp.loc.start.offset, codeFeatures.verification);
+			const boundary = yield* Boundary.start('template', nameProp.loc.start.offset, codeFeatures.verification);
 			yield options.slotsAssignName ?? names.slots;
 			yield* codes;
-			yield endBoundary(token, nameProp.loc.end.offset);
+			yield boundary.end(nameProp.loc.end.offset);
 		}
 		else {
-			const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+			const boundary = yield* Boundary.start('template', startTagOffset, codeFeatures.verification);
 			yield `${options.slotsAssignName ?? names.slots}[`;
-			const token2 = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+			const boundary2 = yield* Boundary.start('template', startTagOffset, codeFeatures.verification);
 			yield `'default'`;
-			yield endBoundary(token2, startTagEndOffset);
+			yield boundary2.end(startTagEndOffset);
 			yield `]`;
-			yield endBoundary(token, startTagEndOffset);
+			yield boundary.end(startTagEndOffset);
 		}
 		yield `)(`;
-		const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+		const boundary = yield* Boundary.start('template', startTagOffset, codeFeatures.verification);
 		yield `{${newLine}`;
 		yield* generateElementProps(
 			options,
@@ -85,7 +85,7 @@ export function* generateSlotOutlet(
 			true,
 		);
 		yield `}`;
-		yield endBoundary(token, startTagEndOffset);
+		yield boundary.end(startTagEndOffset);
 		yield `)${endOfLine}`;
 	}
 	else {

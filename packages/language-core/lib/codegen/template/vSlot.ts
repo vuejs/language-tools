@@ -6,7 +6,7 @@ import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, getTypeScriptAST, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -36,21 +36,21 @@ export function* generateVSlot(
 			);
 		}
 		else {
-			const token = yield* startBoundary(
+			const boundary = yield* Boundary.start(
 				'template',
 				slotDir.loc.start.offset,
 				codeFeatures.withoutHighlightAndCompletion,
 			);
 			yield `default`;
-			yield endBoundary(token, slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0));
+			yield boundary.end(slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0));
 		}
 	}
 	else {
 		yield `const { `;
 		// #932: reference for implicit default slot
-		const token = yield* startBoundary('template', node.loc.start.offset, codeFeatures.navigation);
+		const boundary = yield* Boundary.start('template', node.loc.start.offset, codeFeatures.navigation);
 		yield `default`;
-		yield endBoundary(token, node.loc.end.offset);
+		yield boundary.end(node.loc.end.offset);
 	}
 	yield `: ${slotVar} } = ${ctxVar}.slots!${endOfLine}`;
 
@@ -144,11 +144,11 @@ function* generateSlotParameters(
 
 	if (types.some(t => t)) {
 		yield `, `;
-		const token = yield* startBoundary('template', exp.loc.start.offset, codeFeatures.verification);
+		const boundary = yield* Boundary.start('template', exp.loc.start.offset, codeFeatures.verification);
 		yield `(`;
 		yield* types.flatMap(type => type ? [`_`, type, `, `] : `_, `);
 		yield `) => [] as any`;
-		yield endBoundary(token, exp.loc.end.offset);
+		yield boundary.end(exp.loc.end.offset);
 	}
 	yield `)${endOfLine}`;
 }

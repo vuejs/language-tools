@@ -1,7 +1,7 @@
 import type { Code, IRStyle, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 
 export function* generateClassProperty(
 	source: string,
@@ -10,11 +10,11 @@ export function* generateClassProperty(
 	propertyType: string,
 ): Generator<Code> {
 	yield `${newLine} & { `;
-	const token = yield* startBoundary(source, offset, codeFeatures.navigation);
+	const boundary = yield* Boundary.start(source, offset, codeFeatures.navigation);
 	yield `'`;
-	yield [classNameWithDot.slice(1), source, offset + 1, { __combineToken: token }];
+	yield [classNameWithDot.slice(1), source, offset + 1, boundary.features];
 	yield `'`;
-	yield endBoundary(token, offset + classNameWithDot.length);
+	yield boundary.end(offset + classNameWithDot.length);
 	yield `: ${propertyType}`;
 	yield ` }`;
 }
@@ -26,11 +26,11 @@ export function* generateStyleImports(style: IRStyle): Generator<Code> {
 	};
 	if (typeof style.src === 'object') {
 		yield `${newLine} & typeof import(`;
-		const token = yield* startBoundary('main', style.src.offset, features);
+		const boundary = yield* Boundary.start('main', style.src.offset, features);
 		yield `'`;
-		yield [style.src.text, 'main', style.src.offset, { __combineToken: token }];
+		yield [style.src.text, 'main', style.src.offset, boundary.features];
 		yield `'`;
-		yield endBoundary(token, style.src.offset + style.src.text.length);
+		yield boundary.end(style.src.offset + style.src.text.length);
 		yield `).default`;
 	}
 	for (const { text, offset } of style.imports) {

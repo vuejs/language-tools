@@ -4,7 +4,7 @@ import type { Code, IRScriptSetup, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, generateSfcBlockSection, identifierRegex, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { type CodeTransform, generateCodeWithTransforms, insert, replace } from '../utils/transform';
 import { generateComponent } from './component';
@@ -224,9 +224,9 @@ export function* generateSetupFunction(
 			transforms.push(
 				insert(callExp.end, function*() {
 					yield ` as ${type}[`;
-					const token = yield* startBoundary(scriptSetup.name, exp.start, codeFeatures.verification);
+					const boundary = yield* Boundary.start(scriptSetup.name, exp.start, codeFeatures.verification);
 					yield `'$style'`;
-					yield endBoundary(token, exp.end);
+					yield boundary.end(exp.end);
 					yield `])`;
 				}),
 			);

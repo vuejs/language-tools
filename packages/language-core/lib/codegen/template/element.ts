@@ -8,7 +8,7 @@ import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { endOfLine, forEachNode, getTypeScriptAST, identifierRegex, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
@@ -197,25 +197,25 @@ export function* generateComponent(
 	yield `}))${endOfLine}`;
 
 	yield `const `;
-	const token = yield* startBoundary('template', node.loc.start.offset, codeFeatures.doNotReportTs6133);
+	const boundary = yield* Boundary.start('template', node.loc.start.offset, codeFeatures.doNotReportTs6133);
 	yield vnodeVar;
-	yield endBoundary(token, node.loc.end.offset);
+	yield boundary.end(node.loc.end.offset);
 	yield ` = ${functionalVar}`;
 
 	const commentInfo = ctx.getCommentInfo();
 	if (commentInfo.generic) {
 		const { content, offset } = commentInfo.generic;
-		const token = yield* startBoundary('template', offset, codeFeatures.verification);
+		const boundary = yield* Boundary.start('template', offset, codeFeatures.verification);
 		yield `<`;
 		yield [content, 'template', offset, codeFeatures.all];
 		yield `>`;
-		yield endBoundary(token, offset + content.length);
+		yield boundary.end(offset + content.length);
 	}
 
 	const shouldInheritAttrs = hasVBindAttrs(options, ctx, node);
 
 	yield `(`;
-	const token2 = yield* startBoundary(
+	const boundary2 = yield* Boundary.start(
 		'template',
 		startTagOffset,
 		shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes
@@ -227,7 +227,7 @@ export function* generateComponent(
 	yield newLine;
 	yield* propCodes;
 	yield `}`;
-	yield endBoundary(token2, startTagOffset + tag.length);
+	yield boundary2.end(startTagOffset + tag.length);
 	yield `, ...${names.functionalComponentArgsRest}(${functionalVar}))${endOfLine}`;
 
 	yield* generateFailedExpressions(options, ctx, failedPropExps);
@@ -319,7 +319,7 @@ export function* generateElement(
 		);
 	}
 	yield `)(`;
-	const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+	const boundary = yield* Boundary.start('template', startTagOffset, codeFeatures.verification);
 	yield `{${newLine}`;
 	yield* generateElementProps(
 		options,
@@ -330,7 +330,7 @@ export function* generateElement(
 		failedPropExps,
 	);
 	yield `}`;
-	yield endBoundary(token, startTagOffset + node.tag.length);
+	yield boundary.end(startTagOffset + node.tag.length);
 	yield `)${endOfLine}`;
 
 	yield* generateFailedExpressions(options, ctx, failedPropExps);
@@ -369,7 +369,7 @@ export function* generateFragment(
 	// special case for <template v-for="..." :key="..." />
 	if (node.props.length) {
 		yield `__VLS_asFunctionalElement(__VLS_intrinsics.template)(`;
-		const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+		const boundary = yield* Boundary.start('template', startTagOffset, codeFeatures.verification);
 		yield `{${newLine}`;
 		yield* generateElementProps(
 			options,
@@ -379,7 +379,7 @@ export function* generateFragment(
 			options.vueCompilerOptions.checkUnknownProps,
 		);
 		yield `}`;
-		yield endBoundary(token, startTagOffset + node.tag.length);
+		yield boundary.end(startTagOffset + node.tag.length);
 		yield `)${endOfLine}`;
 	}
 

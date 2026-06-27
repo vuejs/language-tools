@@ -6,7 +6,7 @@ import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, getTypeScriptAST, identifierRegex, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -131,17 +131,17 @@ export function* generateEventArg(
 		name = capitalize(name);
 	}
 	if (identifierRegex.test(camelize(name))) {
-		const token = yield* startBoundary('template', start, features);
+		const boundary = yield* Boundary.start('template', start, features);
 		yield directive;
-		yield* generateCamelized(name, 'template', start, { __combineToken: token });
+		yield* generateCamelized(name, 'template', start, boundary.features);
 	}
 	else {
-		const token = yield* startBoundary('template', start, features);
+		const boundary = yield* Boundary.start('template', start, features);
 		yield `'`;
 		yield directive;
-		yield* generateCamelized(name, 'template', start, { __combineToken: token });
+		yield* generateCamelized(name, 'template', start, boundary.features);
 		yield `'`;
-		yield endBoundary(token, start + name.length);
+		yield boundary.end(start + name.length);
 	}
 }
 

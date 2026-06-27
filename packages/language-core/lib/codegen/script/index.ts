@@ -5,7 +5,7 @@ import type { Code, IRBlock, IRScript, IRScriptSetup, VueCompilerOptions } from 
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateGeneric, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
 import { generateTemplate } from './template';
@@ -51,15 +51,15 @@ function* generateWorker(
 		}
 
 		yield `import ${names.src} from `;
-		const token = yield* startBoundary('main', script.src.offset, {
+		const boundary = yield* Boundary.start('main', script.src.offset, {
 			...codeFeatures.all,
 			...src !== script.src.text ? codeFeatures.navigationWithoutRename : {},
 		});
 		yield `'`;
-		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, { __combineToken: token }];
+		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, boundary.features];
 		yield src.slice(script.src.text.length);
 		yield `'`;
-		yield endBoundary(token, script.src.offset + script.src.text.length);
+		yield boundary.end(script.src.offset + script.src.text.length);
 		yield endOfLine;
 		yield `export default ${names.src}${endOfLine}`;
 
@@ -264,8 +264,8 @@ function* generateGlobalTypesReference(
 
 function* generateExportDeclareEqual(block: IRBlock, name: string): Generator<Code> {
 	yield `const `;
-	const token = yield* startBoundary(block.name, 0, codeFeatures.doNotReportTs6133);
+	const boundary = yield* Boundary.start(block.name, 0, codeFeatures.doNotReportTs6133);
 	yield name;
-	yield endBoundary(token, block.content.length);
+	yield boundary.end(block.content.length);
 	yield ` = `;
 }

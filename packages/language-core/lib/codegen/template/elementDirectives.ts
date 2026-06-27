@@ -4,7 +4,7 @@ import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
@@ -28,7 +28,7 @@ export function* generateElementDirectives(
 		) {
 			continue;
 		}
-		const token = yield* startBoundary('template', prop.loc.start.offset, codeFeatures.verification);
+		const boundary = yield* Boundary.start('template', prop.loc.start.offset, codeFeatures.verification);
 		yield `${names.asFunctionalDirective}(`;
 		yield* generateIdentifier(options, ctx, prop);
 		yield `, {} as import('${options.vueCompilerOptions.lib}').ObjectDirective)(null!, { ...${names.directiveBindingRestFields}, `;
@@ -36,7 +36,7 @@ export function* generateElementDirectives(
 		yield* generateModifiers(options, ctx, prop);
 		yield* generateValue(options, ctx, prop);
 		yield ` }, null!, null!)`;
-		yield endBoundary(token, prop.loc.end.offset);
+		yield boundary.end(prop.loc.end.offset);
 		yield endOfLine;
 	}
 }
@@ -48,7 +48,7 @@ function* generateIdentifier(
 ): Generator<Code> {
 	const rawName = 'v-' + prop.name;
 	const startOffset = prop.loc.start.offset;
-	const token = yield* startBoundary('template', startOffset, codeFeatures.verification);
+	const boundary = yield* Boundary.start('template', startOffset, codeFeatures.verification);
 	yield names.directives;
 	yield `.`;
 	yield* generateCamelized(
@@ -63,7 +63,7 @@ function* generateIdentifier(
 	if (!isBuiltInDirective(prop.name)) {
 		ctx.accessVariable('template', camelize(rawName), prop.loc.start.offset);
 	}
-	yield endBoundary(token, startOffset + rawName.length);
+	yield boundary.end(startOffset + rawName.length);
 }
 
 function* generateArg(
@@ -77,9 +77,9 @@ function* generateArg(
 	}
 
 	const startOffset = arg.loc.start.offset + arg.loc.source.indexOf(arg.content);
-	const token = yield* startBoundary('template', startOffset, codeFeatures.verification);
+	const boundary = yield* Boundary.start('template', startOffset, codeFeatures.verification);
 	yield `arg`;
-	yield endBoundary(token, startOffset + arg.content.length);
+	yield boundary.end(startOffset + arg.content.length);
 	yield `: `;
 	if (arg.isStatic) {
 		yield* generateStringLiteralKey(
@@ -115,9 +115,9 @@ export function* generateModifiers(
 	}
 	const startOffset = modifiers[0]!.loc.start.offset - 1;
 	const endOffset = modifiers.at(-1)!.loc.end.offset;
-	const token = yield* startBoundary('template', startOffset, codeFeatures.verification);
+	const boundary = yield* Boundary.start('template', startOffset, codeFeatures.verification);
 	yield propertyName;
-	yield endBoundary(token, endOffset);
+	yield boundary.end(endOffset);
 	yield `: { `;
 	for (const mod of modifiers) {
 		yield* generateObjectProperty(
@@ -141,9 +141,9 @@ function* generateValue(
 	if (exp?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		return;
 	}
-	const token = yield* startBoundary('template', exp.loc.start.offset, codeFeatures.verification);
+	const boundary = yield* Boundary.start('template', exp.loc.start.offset, codeFeatures.verification);
 	yield `value`;
-	yield endBoundary(token, exp.loc.end.offset);
+	yield boundary.end(exp.loc.end.offset);
 	yield `: `;
 	yield* generatePropExp(
 		options,

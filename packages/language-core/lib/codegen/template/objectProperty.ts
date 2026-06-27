@@ -2,7 +2,7 @@ import { camelize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
 import { names } from '../names';
 import { identifierRegex } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
@@ -47,11 +47,11 @@ export function* generateObjectProperty(
 			yield* generateCamelized(code, 'template', offset, features);
 		}
 		else {
-			const token = yield* startBoundary('template', offset, features);
+			const boundary = yield* Boundary.start('template', offset, features);
 			yield `'`;
-			yield* generateCamelized(code, 'template', offset, { __combineToken: token });
+			yield* generateCamelized(code, 'template', offset, boundary.features);
 			yield `'`;
-			yield endBoundary(token, offset + code.length);
+			yield boundary.end(offset + code.length);
 		}
 	}
 	else {

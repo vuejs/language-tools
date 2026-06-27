@@ -3,7 +3,7 @@ import type { Code, IRTemplate, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
 import { generateTemplateChild } from './templateChild';
@@ -132,9 +132,9 @@ function* generateSlotsType(
 			);
 		}
 		else {
-			const token = yield* startBoundary('template', slot.tagRange[0], codeFeatures.navigation);
+			const boundary = yield* Boundary.start('template', slot.tagRange[0], codeFeatures.navigation);
 			yield `default`;
-			yield endBoundary(token, slot.tagRange[1]);
+			yield boundary.end(slot.tagRange[1]);
 		}
 		yield `?: (props: typeof ${slot.propsVar}) => any }`;
 	}

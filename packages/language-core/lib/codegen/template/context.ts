@@ -4,7 +4,7 @@ import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
@@ -85,7 +85,7 @@ export function createTemplateCodegenContext() {
 		const info = stack.pop()!;
 		commentBuffer.length = 0;
 		if (info.expectError !== undefined) {
-			const token = yield* startBoundary(
+			const boundary = yield* Boundary.start(
 				'template',
 				info.expectError.node.loc.start.offset,
 				{
@@ -95,7 +95,7 @@ export function createTemplateCodegenContext() {
 				},
 			);
 			yield `// @ts-expect-error`;
-			yield endBoundary(token, info.expectError.node.loc.end.offset);
+			yield boundary.end(info.expectError.node.loc.end.offset);
 			yield `${newLine}${endOfLine}`;
 		}
 	}

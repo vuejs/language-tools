@@ -6,7 +6,7 @@ import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { forEachNode, getTypeScriptAST, identifierRegex } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 
 // https://github.com/vuejs/core/blob/fb0c3ca519f1fccf52049cd6b8db3a67a669afe9/packages/compiler-core/src/transforms/transformExpression.ts#L47
@@ -69,7 +69,7 @@ export function* generateInterpolation(
 		}
 		else {
 			// #1205, #1264
-			const token = yield* startBoundary(
+			const boundary = yield* Boundary.start(
 				block.name,
 				start + offset,
 				codeFeatures.verification,
@@ -90,7 +90,7 @@ export function* generateInterpolation(
 					? { ...data, __shorthandExpression: 'js' }
 					: data,
 			];
-			yield endBoundary(token, start + offset + name.length);
+			yield boundary.end(start + offset + name.length);
 		}
 
 		prevEnd = offset + name.length;

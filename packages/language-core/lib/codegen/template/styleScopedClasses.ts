@@ -2,7 +2,7 @@ import type { Code, IRBlock } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 import { generateEscaped } from '../utils/escaped';
 
 const classNameEscapeRegex = /([\\'])/;
@@ -34,16 +34,16 @@ export function* generateStyleScopedClassReference(
 	}
 
 	yield `/** @type {${names.StyleScopedClasses}[`;
-	const token = yield* startBoundary(block.name, fullStart, codeFeatures.navigation);
+	const boundary = yield* Boundary.start(block.name, fullStart, codeFeatures.navigationAndCompletion);
 	yield `'`;
 	yield* generateEscaped(
 		className,
 		block.name,
 		offset,
-		codeFeatures.navigationAndCompletion,
+		boundary.features,
 		classNameEscapeRegex,
 	);
 	yield `'`;
-	yield endBoundary(token, offset + className.length);
+	yield boundary.end(offset + className.length);
 	yield `]} */${endOfLine}`;
 }
