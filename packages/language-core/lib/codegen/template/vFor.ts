@@ -16,12 +16,12 @@ export function* generateVFor(
 ): Generator<Code> {
 	const { source } = node.parseResult;
 	const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
-	const endScope = ctx.startScope();
+	const scope = ctx.scope();
 
 	yield `for (const [`;
 	if (leftExpressionRange && leftExpressionText) {
 		const collectAst = getTypeScriptAST(options.typescript, options.template, `const [${leftExpressionText}]`);
-		ctx.declare(...collectBindingNames(options.typescript, collectAst, collectAst));
+		scope.declare(...collectBindingNames(options.typescript, collectAst, collectAst));
 		yield [
 			leftExpressionText,
 			'template',
@@ -56,7 +56,7 @@ export function* generateVFor(
 	}
 	ctx.inVFor = inVFor;
 
-	yield* endScope();
+	yield* scope.end();
 	yield `}${newLine}`;
 }
 

@@ -202,8 +202,9 @@ export function* generateComponent(
 	yield endBoundary(token, node.loc.end.offset);
 	yield ` = ${functionalVar}`;
 
-	if (ctx.currentInfo.generic) {
-		const { content, offset } = ctx.currentInfo.generic;
+	const commentInfo = ctx.getCommentInfo();
+	if (commentInfo.generic) {
+		const { content, offset } = commentInfo.generic;
 		const token = yield* startBoundary('template', offset, codeFeatures.verification);
 		yield `<`;
 		yield [content, 'template', offset, codeFeatures.all];

@@ -275,7 +275,7 @@ export function* generatePropExp(
 				yield `.value`;
 			}
 			else {
-				ctx.recordComponentAccess('template', propVariableName, exp.loc.start.offset);
+				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
 				yield names.ctx;
 				yield `.`;
 				yield* codes;

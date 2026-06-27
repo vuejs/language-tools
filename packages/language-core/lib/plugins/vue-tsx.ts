@@ -210,8 +210,8 @@ function useCodegen(
 			return allVars;
 		}
 		return new Set([
-			...getGeneratedTemplate()?.componentAccessMap.keys() ?? [],
-			...getGeneratedStyle()?.componentAccessMap.keys() ?? [],
+			...getGeneratedTemplate()?.contextAccesses.keys() ?? [],
+			...getGeneratedStyle()?.contextAccesses.keys() ?? [],
 			...ir.template?.ast?.components.flatMap(name => [camelize(name), capitalize(camelize(name))]) ?? [],
 		].filter(name => allVars.has(name)));
 	});

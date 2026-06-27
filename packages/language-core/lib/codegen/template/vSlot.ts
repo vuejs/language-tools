@@ -54,16 +54,16 @@ export function* generateVSlot(
 	}
 	yield `: ${slotVar} } = ${ctxVar}.slots!${endOfLine}`;
 
-	const endScope = ctx.startScope();
+	const scope = ctx.scope();
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = getTypeScriptAST(options.typescript, options.template, `(${slotDir.exp.content}) => {}`);
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
-		ctx.declare(...collectBindingNames(options.typescript, slotAst, slotAst));
+		scope.declare(...collectBindingNames(options.typescript, slotAst, slotAst));
 	}
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}
-	yield* endScope();
+	yield* scope.end();
 
 	if (slotDir) {
 		let isStatic = true;

@@ -33,12 +33,12 @@ function* generateWorker(
 	options: StyleCodegenOptions,
 	ctx: TemplateCodegenContext,
 ) {
-	const endScope = ctx.startScope();
-	ctx.declare(...options.setupConsts);
+	const scope = ctx.scope();
+	scope.declare(...options.setupConsts);
 	yield* generateStyleScopedClasses(options);
 	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);
-	yield* endScope();
+	yield* scope.end();
 }
 
 function* generateCssVars(

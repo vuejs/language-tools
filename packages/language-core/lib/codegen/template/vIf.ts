@@ -13,7 +13,7 @@ export function* generateVIf(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.IfNode,
 ): Generator<Code> {
-	const originalBlockConditionsLength = ctx.blockConditions.length;
+	const originalBlockConditionsLength = ctx.conditions.length;
 
 	for (let i = 0; i < node.branches.length; i++) {
 		const branch = node.branches[i]!;
@@ -42,7 +42,7 @@ export function* generateVIf(
 				`)`,
 			)];
 			yield* codes;
-			ctx.blockConditions.push(toString(codes));
+			ctx.conditions.push(toString(codes));
 			addedBlockCondition = true;
 			yield ` `;
 		}
@@ -54,9 +54,9 @@ export function* generateVIf(
 		yield `}${newLine}`;
 
 		if (addedBlockCondition) {
-			ctx.blockConditions[ctx.blockConditions.length - 1] = `!${ctx.blockConditions[ctx.blockConditions.length - 1]}`;
+			ctx.conditions[ctx.conditions.length - 1] = `!${ctx.conditions[ctx.conditions.length - 1]}`;
 		}
 	}
 
-	ctx.blockConditions.length = originalBlockConditionsLength;
+	ctx.conditions.length = originalBlockConditionsLength;
 }

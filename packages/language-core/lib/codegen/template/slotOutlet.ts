@@ -107,7 +107,6 @@ export function* generateSlotOutlet(
 				name: nameProp.value.content,
 				offset: nameProp.loc.start.offset + nameProp.loc.source.indexOf(nameProp.value.content, nameProp.name.length),
 				tagRange: [startTagOffset, startTagOffset + node.tag.length],
-				nodeLoc: node.loc,
 				propsVar: ctx.getHoistVariable(propsVar),
 			});
 		}
@@ -141,7 +140,6 @@ export function* generateSlotOutlet(
 			ctx.slots.push({
 				name: 'default',
 				tagRange: [startTagOffset, startTagEndOffset],
-				nodeLoc: node.loc,
 				propsVar: ctx.getHoistVariable(propsVar),
 			});
 		}

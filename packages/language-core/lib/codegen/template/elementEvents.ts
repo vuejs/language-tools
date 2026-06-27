@@ -166,15 +166,15 @@ export function* generateEventExpression(
 
 		if (isCompound) {
 			yield `(...[$event]) => {${newLine}`;
-			const endScope = ctx.startScope();
-			ctx.declare('$event');
+			const scope = ctx.scope();
+			scope.declare('$event');
 			yield* ctx.generateConditionGuards();
 			if (isSingleExpression(options.typescript, ast)) {
 				yield `return `;
 			}
 			yield* interpolation;
 			yield endOfLine;
-			yield* endScope();
+			yield* scope.end();
 			yield `}`;
 
 			ctx.inlayHints.push({

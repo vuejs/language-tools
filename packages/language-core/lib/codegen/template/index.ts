@@ -40,8 +40,8 @@ function* generateWorker(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
-	const endScope = ctx.startScope();
-	ctx.declare(...options.setupConsts);
+	const scope = ctx.scope();
+	scope.declare(...options.setupConsts);
 	const {
 		slotsAssignName,
 		propsAssignName,
@@ -50,10 +50,10 @@ function* generateWorker(
 	} = options;
 
 	if (slotsAssignName) {
-		ctx.declare(slotsAssignName);
+		scope.declare(slotsAssignName);
 	}
 	if (propsAssignName) {
-		ctx.declare(propsAssignName);
+		scope.declare(propsAssignName);
 	}
 	if (vueCompilerOptions.inferTemplateDollarSlots) {
 		ctx.dollarVars.add('$slots');
@@ -100,7 +100,7 @@ function* generateWorker(
 		yield `} & { [K in keyof import('${vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
 	}
 
-	yield* endScope();
+	yield* scope.end();
 }
 
 function* generateSlotsType(
