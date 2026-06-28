@@ -123,16 +123,16 @@ declare global {
 		>
 		: T extends (...args: any) => any ? T
 		: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
-	function __VLS_asFunctionalComponent0<T, K = T extends new(...args: any) => any ? InstanceType<T> : unknown>(
+	function __VLS_asFunctionalComponent0<T, K>(
 		t: T,
-		instance?: K,
+		instance: K,
 	): T extends new(...args: any) => any ? __VLS_FunctionalComponent0<K>
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
 		: __VLS_FunctionalComponent0<{}>;
-	function __VLS_asFunctionalComponent1<T, K = T extends new(...args: any) => any ? InstanceType<T> : unknown>(
+	function __VLS_asFunctionalComponent1<T, K>(
 		t: T,
-		instance?: K,
+		instance: K,
 	): T extends new(...args: any) => any ? __VLS_FunctionalComponent1<K>
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
