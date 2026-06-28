@@ -1,18 +1,18 @@
 import type { VueLanguagePlugin } from '../types';
 import { allCodeFeatures } from './shared';
 
-const plugin: VueLanguagePlugin = () => {
+const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
 		version: 2.2,
 
 		getEmbeddedCodes(_fileName, ir) {
-			if (ir.template?.lang === 'html') {
-				return [{
-					id: 'template',
-					lang: ir.template.lang,
-				}];
+			if (ir.template?.lang !== 'html' || vueCompilerOptions.environment !== 'languageservice') {
+				return [];
 			}
-			return [];
+			return [{
+				id: 'template',
+				lang: ir.template.lang,
+			}];
 		},
 
 		resolveEmbeddedCode(_fileName, ir, embeddedFile) {

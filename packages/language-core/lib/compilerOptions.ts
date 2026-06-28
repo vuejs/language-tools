@@ -250,6 +250,7 @@ export function getDefaultCompilerOptions(
 		: '@vue/language-core/types',
 ): VueCompilerOptions {
 	return {
+		environment: 'typecheck',
 		target,
 		lib,
 		typesRoot,

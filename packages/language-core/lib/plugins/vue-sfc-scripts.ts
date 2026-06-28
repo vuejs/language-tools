@@ -1,21 +1,21 @@
-import type { VueLanguagePlugin } from '../types';
+import type { EmbeddedCodeInfo, VueLanguagePlugin } from '../types';
 
-const plugin: VueLanguagePlugin = () => {
+const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
 		version: 2.2,
 
 		getEmbeddedCodes(_fileName, ir) {
-			const names: {
-				id: string;
-				lang: string;
-			}[] = [];
+			if (vueCompilerOptions.environment !== 'languageservice') {
+				return [];
+			}
+			const result: EmbeddedCodeInfo[] = [];
 			if (ir.script) {
-				names.push({ id: 'script_raw', lang: ir.script.lang });
+				result.push({ id: 'script_raw', lang: ir.script.lang });
 			}
 			if (ir.scriptSetup) {
-				names.push({ id: 'scriptsetup_raw', lang: ir.scriptSetup.lang });
+				result.push({ id: 'scriptsetup_raw', lang: ir.scriptSetup.lang });
 			}
-			return names;
+			return result;
 		},
 
 		resolveEmbeddedCode(_fileName, ir, embeddedFile) {

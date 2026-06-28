@@ -10,12 +10,12 @@ const codeFeatures = {
 	structure: false,
 };
 
-const plugin: VueLanguagePlugin = () => {
+const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
 		version: 2.2,
 
 		getEmbeddedCodes(_fileName, ir) {
-			if (!ir.template?.ast) {
+			if (!ir.template?.ast || vueCompilerOptions.environment !== 'languageservice') {
 				return [];
 			}
 			return [{ id: 'template_inline_css', lang: 'css' }];

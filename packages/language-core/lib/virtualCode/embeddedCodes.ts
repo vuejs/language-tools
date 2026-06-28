@@ -2,7 +2,7 @@ import type { Mapping, VirtualCode } from '@volar/language-core';
 import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
-import type { Code, IR, IRBlock, VueCodeInformation, VueLanguagePluginReturn } from '../types';
+import type { Code, IR, IRBlock, VueCodeInformation, VueLanguagePluginInstance } from '../types';
 import { buildMappings } from '../utils/buildMappings';
 
 export class VueEmbeddedCode {
@@ -18,7 +18,7 @@ export class VueEmbeddedCode {
 }
 
 export function useEmbeddedCodes(
-	plugins: VueLanguagePluginReturn[],
+	plugins: VueLanguagePluginInstance[],
 	fileName: string,
 	ir: IR,
 ) {
@@ -82,7 +82,7 @@ export function useEmbeddedCodes(
 		return result;
 	});
 
-	function useEmbeddedCodesForPlugin(plugin: VueLanguagePluginReturn) {
+	function useEmbeddedCodesForPlugin(plugin: VueLanguagePluginInstance) {
 		const getMap = computed<
 			Map<string, () => { code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot }>
 		>(

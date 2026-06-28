@@ -3,7 +3,7 @@ import type { SFCParseResult } from '@vue/compiler-sfc';
 import { computed, signal } from 'alien-signals';
 import type * as ts from 'typescript';
 import { allCodeFeatures } from '../plugins';
-import type { IR, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
+import type { IR, VueCompilerOptions, VueLanguagePluginInstance } from '../types';
 import { useEmbeddedCodes } from './embeddedCodes';
 import { useIR } from './ir';
 
@@ -44,7 +44,7 @@ export class VueVirtualCode implements VirtualCode {
 		public languageId: string,
 		public initSnapshot: ts.IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
-		plugins: VueLanguagePluginReturn[],
+		plugins: VueLanguagePluginInstance[],
 		ts: typeof import('typescript'),
 	) {
 		this._snapshot = signal(initSnapshot);
@@ -72,11 +72,11 @@ export class VueVirtualCode implements VirtualCode {
 	}
 
 	private parseSfc(
-		plugins: VueLanguagePluginReturn[],
+		plugins: VueLanguagePluginInstance[],
 		lastResult?: {
 			snapshot: ts.IScriptSnapshot;
 			result: SFCParseResult;
-			plugin: VueLanguagePluginReturn;
+			plugin: VueLanguagePluginInstance;
 		},
 	) {
 		const snapshot = this.snapshot;

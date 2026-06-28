@@ -1,15 +1,15 @@
-import type { VueLanguagePlugin } from '../types';
+import type { EmbeddedCodeInfo, VueLanguagePlugin } from '../types';
 import { allCodeFeatures } from './shared';
 
-const plugin: VueLanguagePlugin = () => {
+const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
 		version: 2.2,
 
 		getEmbeddedCodes(_fileName, ir) {
-			const result: {
-				id: string;
-				lang: string;
-			}[] = [];
+			if (vueCompilerOptions.environment !== 'languageservice') {
+				return [];
+			}
+			const result: EmbeddedCodeInfo[] = [];
 			for (let i = 0; i < ir.styles.length; i++) {
 				const style = ir.styles[i];
 				if (style) {
