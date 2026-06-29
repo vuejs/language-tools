@@ -190,6 +190,7 @@ export function startServer(ts: typeof import('typescript')) {
 			const commonLine = tsconfig && !ts.server.isInferredProjectName(tsconfig)
 				? createParsedCommandLine(ts, ts.sys, tsconfig)
 				: createParsedCommandLineByJson(ts, ts.sys, ts.sys.getCurrentDirectory(), {});
+			commonLine.vueOptions.environment = 'languageservice';
 			const language = createLanguage<URI>(
 				[
 					{

@@ -5,7 +5,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import * as LanguageCore from '../index';
 import { createPlugins } from './plugins';
-import type { VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
+import type { VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginInstance } from './types';
 import { VueVirtualCode } from './virtualCode';
 
 const fileRegistries: Record<string, Map<string, VueVirtualCode>> = {};
@@ -13,7 +13,7 @@ const fileRegistries: Record<string, Map<string, VueVirtualCode>> = {};
 function getVueFileRegistry(
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
-	plugins: VueLanguagePluginReturn[],
+	plugins: VueLanguagePluginInstance[],
 ) {
 	const key = JSON.stringify([
 		...plugins.map(plugin => plugin.name)

@@ -32,6 +32,7 @@ export interface VueCodeInformation extends CodeInformation {
 export type Code = Segment<VueCodeInformation>;
 
 export interface VueCompilerOptions {
+	environment: 'languageservice' | 'typecheck';
 	target: number;
 	lib: string;
 	typesRoot: string;
@@ -86,7 +87,15 @@ export interface VueCompilerOptions {
 
 export const validVersions = [2, 2.1, 2.2] as const;
 
-export interface VueLanguagePluginReturn {
+export interface EmbeddedCodeInfo {
+	id: string;
+	lang: string;
+}
+
+/** @deprecated use `VueLanguagePluginInstance` instead */
+export type VueLanguagePluginReturn = VueLanguagePluginInstance;
+
+export interface VueLanguagePluginInstance {
 	version: typeof validVersions[number];
 	name?: string;
 	order?: number;
@@ -113,7 +122,7 @@ export interface VueLanguagePluginReturn {
 		oldResult: CompilerDOM.CodegenResult,
 		textChange: { start: number; end: number; newText: string },
 	): CompilerDOM.CodegenResult | undefined;
-	getEmbeddedCodes?(fileName: string, ir: IR): { id: string; lang: string }[];
+	getEmbeddedCodes?(fileName: string, ir: IR): EmbeddedCodeInfo[];
 	resolveEmbeddedCode?(fileName: string, ir: IR, embeddedFile: VueEmbeddedCode): void;
 }
 
@@ -128,7 +137,7 @@ export type VueLanguagePlugin<T extends Record<string, any> = {}> = (
 		vueCompilerOptions: VueCompilerOptions;
 		config: T;
 	},
-) => VueLanguagePluginReturn | VueLanguagePluginReturn[];
+) => VueLanguagePluginInstance | VueLanguagePluginInstance[];
 
 export interface IR {
 	content: string;

@@ -5,11 +5,12 @@ import { describe, expect, it } from 'vitest';
 import type { URI } from 'vscode-uri';
 import { createVueLanguageServicePlugins } from '../..';
 
-const resolvedVueOptions = getDefaultCompilerOptions();
+const vueCompilerOptions = getDefaultCompilerOptions();
+vueCompilerOptions.environment = 'languageservice';
 const vueLanguagePlugin = createVueLanguagePlugin<URI>(
 	ts,
 	{},
-	resolvedVueOptions,
+	vueCompilerOptions,
 	() => '',
 );
 const vueServicePLugins = createVueLanguageServicePlugins(ts);

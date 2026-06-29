@@ -1,11 +1,14 @@
 import type { VueLanguagePlugin } from '../types';
 import { allCodeFeatures } from './shared';
 
-const plugin: VueLanguagePlugin = () => {
+const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
 		version: 2.2,
 
 		getEmbeddedCodes(_fileName, ir) {
+			if (vueCompilerOptions.environment !== 'languageservice') {
+				return [];
+			}
 			return ir.customBlocks.map((customBlock, i) => ({
 				id: 'custom_block_' + i,
 				lang: customBlock.lang,
