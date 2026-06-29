@@ -6,7 +6,7 @@ import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../util
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { identifierRegex, newLine } from '../utils';
+import { identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
@@ -256,7 +256,7 @@ export function* generatePropExp(
 	else {
 		const propVariableName = camelize(exp.loc.source);
 
-		if (identifierRegex.test(propVariableName)) {
+		if (identifierRE.test(propVariableName)) {
 			const codes = generateCamelized(
 				exp.loc.source,
 				'template',

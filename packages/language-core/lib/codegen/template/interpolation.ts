@@ -5,7 +5,7 @@ import { collectBindingNames } from '../../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { forEachNode, getTypeScriptAST, identifierRegex } from '../utils';
+import { forEachNode, getTypeScriptAST, identifierRE } from '../utils';
 import { Boundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 
@@ -118,7 +118,7 @@ function* forEachIdentifiers(
 	prefix: string,
 	suffix: string,
 ): Generator<[string, number, boolean]> {
-	if (identifierRegex.test(code) && !shouldIdentifierSkipped(ctx, code)) {
+	if (identifierRE.test(code) && !shouldIdentifierSkipped(ctx, code)) {
 		yield [code, 0, false];
 		return;
 	}

@@ -14,7 +14,7 @@ type Node =
 	| CompilerDOM.AttributeNode
 	| CompilerDOM.DirectiveNode;
 
-const shouldAddSuffix = /(?<=<[^>/]+)$/;
+const shouldAddSuffixRE = /(?<=<[^>/]+)$/;
 
 const plugin: VueLanguagePlugin = () => {
 	return {
@@ -25,7 +25,7 @@ const plugin: VueLanguagePlugin = () => {
 				let addedSuffix = false;
 
 				// #4583
-				if (shouldAddSuffix.test(template)) {
+				if (shouldAddSuffixRE.test(template)) {
 					template += '>';
 					addedSuffix = true;
 				}
@@ -49,7 +49,7 @@ const plugin: VueLanguagePlugin = () => {
 			// @ts-expect-error
 			if (oldResult.__addedSuffix) {
 				const originalTemplate = newSource.slice(0, -1); // remove added '>'
-				if (!shouldAddSuffix.test(originalTemplate)) {
+				if (!shouldAddSuffixRE.test(originalTemplate)) {
 					return undefined;
 				}
 			}

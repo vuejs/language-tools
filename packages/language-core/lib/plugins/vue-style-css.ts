@@ -16,21 +16,21 @@ const plugin: VueLanguagePlugin = () => {
 
 export default plugin;
 
-const cssImportReg = /(?<=@import\s+url\()(["']?).*?\1(?=\))|(?<=@import\b\s*)(["']).*?\2/g;
-const cssBindingReg = /\bv-bind\s*\(/g;
-const cssClassNameReg = /\.[a-z_][-\w]*(?=[\s.,+~>:#)[{])/gi;
-const commentReg = /(?<=\/\*)[\s\S]*?(?=\*\/)|(?<=\/\/)[\s\S]*?(?=\n)/g;
-const fragmentReg = /(?<={)[^{]*(?=(?<!\\);)/g;
+const cssImportRE = /(?<=@import\s+url\()(["']?).*?\1(?=\))|(?<=@import\b\s*)(["']).*?\2/g;
+const cssBindingRE = /\bv-bind\s*\(/g;
+const cssClassNameRE = /\.[a-z_][-\w]*(?=[\s.,+~>:#)[{])/gi;
+const commentRE = /(?<=\/\*)[\s\S]*?(?=\*\/)|(?<=\/\/)[\s\S]*?(?=\n)/g;
+const fragmentRE = /(?<={)[^{]*(?=(?<!\\);)/g;
 
 function* parseCssImports(css: string) {
-	for (const match of css.matchAll(cssImportReg)) {
+	for (const match of css.matchAll(cssImportRE)) {
 		yield trimQuotes(match[0], match.index);
 	}
 }
 
 function* parseCssBindings(css: string) {
-	css = fillBlank(css, commentReg);
-	for (const match of css.matchAll(cssBindingReg)) {
+	css = fillBlank(css, commentRE);
+	for (const match of css.matchAll(cssBindingRE)) {
 		const start = match.index + match[0].length;
 		const end = lexBinding(css, start);
 		if (end !== null) {
@@ -88,15 +88,15 @@ function lexBinding(content: string, start: number) {
 }
 
 function* parseCssClassNames(css: string) {
-	css = fillBlank(css, commentReg, fragmentReg);
-	for (const match of css.matchAll(cssClassNameReg)) {
+	css = fillBlank(css, commentRE, fragmentRE);
+	for (const match of css.matchAll(cssClassNameRE)) {
 		yield { text: match[0], offset: match.index };
 	}
 }
 
-function fillBlank(css: string, ...regs: RegExp[]) {
-	for (const reg of regs) {
-		css = css.replace(reg, match => ' '.repeat(match.length));
+function fillBlank(css: string, ...patterns: RegExp[]) {
+	for (const pattern of patterns) {
+		css = css.replace(pattern, match => ' '.repeat(match.length));
 	}
 	return css;
 }

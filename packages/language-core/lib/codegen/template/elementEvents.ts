@@ -5,7 +5,7 @@ import { getUnwrappedExpression } from '../../parsers/utils';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, getTypeScriptAST, identifierRegex, newLine } from '../utils';
+import { endOfLine, getTypeScriptAST, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
@@ -130,7 +130,7 @@ export function* generateEventArg(
 	if (directive.length) {
 		name = capitalize(name);
 	}
-	if (identifierRegex.test(camelize(name))) {
+	if (identifierRE.test(camelize(name))) {
 		const boundary = yield* Boundary.start('template', start, features);
 		yield directive;
 		yield* generateCamelized(name, 'template', start, boundary.features);

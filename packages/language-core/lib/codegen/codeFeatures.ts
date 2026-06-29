@@ -59,6 +59,9 @@ const raw = {
 		navigation: true,
 		completion: true,
 	},
+	format: {
+		format: true,
+	},
 	doNotReportTs2339AndTs2551: {
 		verification: {
 			// https://typescript.tv/errors/#ts2339

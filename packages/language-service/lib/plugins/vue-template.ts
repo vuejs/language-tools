@@ -729,7 +729,7 @@ export function create(
 								...attrs.map(attr => [attr.name, attr] as const),
 							]
 						) {
-							if (propName.match(EVENT_PROP_REGEX)) {
+							if (EVENT_PROP_REGEX.test(propName)) {
 								let labelName = propName.slice(2);
 								labelName = labelName.charAt(0).toLowerCase() + labelName.slice(1);
 								if (attrNameCasing === AttrNameCasing.Kebab) {

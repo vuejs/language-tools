@@ -7,7 +7,7 @@ import { getElementTagOffsets, getNodeText, hyphenateTag, normalizeAttributeValu
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { endOfLine, forEachNode, getTypeScriptAST, identifierRegex, newLine } from '../utils';
+import { endOfLine, forEachNode, getTypeScriptAST, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
@@ -139,7 +139,7 @@ export function* generateComponent(
 			);
 			yield `]${endOfLine}`;
 
-			if (identifierRegex.test(camelize(tag))) {
+			if (identifierRE.test(camelize(tag))) {
 				// navigation support
 				yield `/** @ts-ignore @type {`;
 				for (const offset of [startTagOffset, endTagOffset]) {

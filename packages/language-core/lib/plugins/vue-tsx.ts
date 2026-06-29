@@ -11,6 +11,7 @@ import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
 import type { IR, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { computedSet } from '../utils/signals';
 
+export const serviceScriptRE = /^script_(?:js|jsx|ts|tsx)$/;
 export const tsCodegen = new WeakMap<IR, ReturnType<typeof useCodegen>>();
 
 const validLangs = new Set(['js', 'jsx', 'ts', 'tsx']);
@@ -28,7 +29,7 @@ const plugin: VueLanguagePlugin = ({
 		},
 
 		resolveEmbeddedCode(fileName, ir, embeddedFile) {
-			if (/script_(js|jsx|ts|tsx)/.test(embeddedFile.id)) {
+			if (serviceScriptRE.test(embeddedFile.id)) {
 				let codegen = tsCodegen.get(ir);
 				if (!codegen) {
 					tsCodegen.set(ir, codegen = useCodegen(ts, vueCompilerOptions, fileName, ir));

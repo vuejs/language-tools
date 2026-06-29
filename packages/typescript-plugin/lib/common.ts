@@ -16,7 +16,7 @@ import { camelize, capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
 import { forEachTouchingNode } from './requests/utils';
 
-const windowsPathReg = /\\/g;
+const windowsPathRE = /\\/g;
 
 export function preprocessLanguageService(
 	languageService: ts.LanguageService,
@@ -459,7 +459,7 @@ export function postprocessLanguageService<T>(
 		getCompletionsAtPosition: ts.LanguageService['getCompletionsAtPosition'],
 	): ts.LanguageService['getCompletionsAtPosition'] {
 		return (filePath, position, ...rests) => {
-			const fileName = filePath.replace(windowsPathReg, '/');
+			const fileName = filePath.replace(windowsPathRE, '/');
 			const result = getCompletionsAtPosition(fileName, position, ...rests);
 			if (result) {
 				resolveCompletionResult(

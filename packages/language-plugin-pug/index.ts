@@ -3,7 +3,7 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { VueLanguagePlugin } from '@vue/language-core';
 import { baseParse } from './lib/baseParse';
 
-const classRegex = /^class\s*=/;
+const classRE = /^class\s*=/;
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
 	return {
@@ -75,7 +75,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						// #5099
 						if (
 							error.code === 2 satisfies CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE
-							&& classRegex.test(parsed.htmlCode.slice(error.loc?.start.offset))
+							&& classRE.test(parsed.htmlCode.slice(error.loc?.start.offset))
 						) {
 							return;
 						}

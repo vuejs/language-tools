@@ -5,7 +5,7 @@ import { endOfLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateEscaped } from '../utils/escaped';
 
-const classNameEscapeRegex = /([\\'])/;
+const classNameEscapeRE = /([\\'])/;
 
 // For language-service/lib/plugins/vue-scoped-class-links.ts usage
 export const references: WeakMap<IRBlock, [version: string, [className: string, offset: number][]]> = new WeakMap();
@@ -41,7 +41,7 @@ export function* generateStyleScopedClassReference(
 		block.name,
 		offset,
 		boundary.features,
-		classNameEscapeRegex,
+		classNameEscapeRE,
 	);
 	yield `'`;
 	yield boundary.end(offset + className.length);

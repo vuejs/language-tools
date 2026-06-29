@@ -11,6 +11,8 @@ import { createSchemaResolvers } from './schemaResolvers';
 import { getDefaultsFromScriptSetup } from './scriptSetup';
 import type { ComponentMeta, MetaCheckerSchemaOptions, PropertyMeta } from './types';
 
+const vnodeEventRE = /^onVnode[A-Z]/;
+
 export function getComponentMeta(
 	ts: typeof import('typescript'),
 	typeChecker: ts.TypeChecker,
@@ -101,7 +103,7 @@ export function getComponentMeta(
 		const defaults = getDefaultsFromScriptSetup(ts, printer, getSourceScript(componentFile.fileName));
 
 		for (const prop of result) {
-			if (prop.name.match(/^onVnode[A-Z]/)) {
+			if (vnodeEventRE.test(prop.name)) {
 				prop.name = 'onVue:' + prop.name['onVnode'.length]?.toLowerCase() + prop.name.slice('onVnode'.length + 1);
 			}
 			prop.default ??= defaults?.get(prop.name);

@@ -3,7 +3,7 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRScriptSetup, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, generateSfcBlockSection, identifierRegex, newLine } from '../utils';
+import { endOfLine, generateSfcBlockSection, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { type CodeTransform, generateCodeWithTransforms, insert, replace } from '../utils/transform';
@@ -359,7 +359,7 @@ function* generateDefineWithTypeTransforms(
 			});
 		}
 	}
-	else if (!identifierRegex.test(name)) {
+	else if (!identifierRE.test(name)) {
 		yield replace(statement.start, callExp.start, function*() {
 			yield `const ${defaultName} = `;
 		});

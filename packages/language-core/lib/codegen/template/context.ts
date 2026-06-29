@@ -8,7 +8,7 @@ import { Boundary } from '../utils/boundary';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
-const directiveCommentRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)-->$/;
+const directiveCommentRE = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)-->$/;
 
 export function createTemplateCodegenContext() {
 	// directive comments ---------------------------------------------------------
@@ -46,7 +46,7 @@ export function createTemplateCodegenContext() {
 		commentBuffer.length = 0;
 
 		for (const comment of comments) {
-			const match = comment.loc.source.match(directiveCommentRegex);
+			const match = comment.loc.source.match(directiveCommentRE);
 			if (match) {
 				const { name, content } = match.groups!;
 				switch (name) {

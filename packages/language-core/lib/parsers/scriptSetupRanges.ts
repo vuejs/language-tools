@@ -4,7 +4,7 @@ import { collectBindingIdentifiers } from '../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../utils/shared';
 import { getClosestMultiLineCommentRange, parseBindingRanges } from './utils';
 
-const tsCheckReg = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
+const tsCheckRE = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
 
 export interface CallExpressionRange {
 	callExp: TextRange;
@@ -74,7 +74,7 @@ export function parseScriptSetupRanges(
 
 	const leadingCommentRanges = ts.getLeadingCommentRanges(text, 0)?.reverse() ?? [];
 	const leadingCommentEndOffset = leadingCommentRanges.find(
-		range => tsCheckReg.test(text.slice(range.pos, range.end)),
+		range => tsCheckRE.test(text.slice(range.pos, range.end)),
 	)?.end ?? 0;
 
 	let foundNonImportExportNode = false;

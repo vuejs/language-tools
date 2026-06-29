@@ -1,8 +1,8 @@
 import type { InlayHint, LanguageServicePlugin, Position } from '@volar/language-service';
 import { resolveEmbeddedCode } from '../utils';
 
-const twoslashTemplateReg = /<!--\s*\^\?\s*-->/g;
-const twoslashScriptReg = /(?<=^|\n)\s*\/\/\s*\^\?/g;
+const twoslashTemplateRE = /<!--\s*\^\?\s*-->/g;
+const twoslashScriptRE = /(?<=^|\n)\s*\/\/\s*\^\?/g;
 
 export function create(
 	{ getQuickInfoAtPosition }: import('@vue/typescript-plugin/lib/requests').Requests,
@@ -22,10 +22,10 @@ export function create(
 
 					const hoverOffsets: [Position, number][] = [];
 					const inlayHints: InlayHint[] = [];
-					const twoslashReg = info.code.id === 'template' ? twoslashTemplateReg : twoslashScriptReg;
+					const twoslashRE = info.code.id === 'template' ? twoslashTemplateRE : twoslashScriptRE;
 					const sourceDocument = context.documents.get(info.script.id, info.script.languageId, info.script.snapshot);
 
-					for (const pointer of document.getText(range).matchAll(twoslashReg)) {
+					for (const pointer of document.getText(range).matchAll(twoslashRE)) {
 						const offset = pointer.index + pointer[0].indexOf('^?') + document.offsetAt(range.start);
 						const position = document.positionAt(offset);
 						hoverOffsets.push([
