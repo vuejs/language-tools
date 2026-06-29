@@ -1094,6 +1094,23 @@ test('#5847', async () => {
 	`);
 });
 
+test('#6110', async () => {
+	await requestCompletionItemToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<script setup lang="ts">
+		import { Comp } from './comp';
+		</script>
+
+		<template>
+			<C|
+		</template>
+	`,
+		'Comp',
+	);
+});
+
 const openedDocuments: TextDocument[] = [];
 
 afterEach(async () => {
