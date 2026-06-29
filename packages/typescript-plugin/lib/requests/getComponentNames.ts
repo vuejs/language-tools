@@ -21,7 +21,7 @@ export function getComponentNames(
 		?? [];
 
 	componentNames.push(getSelfComponentName(virtualCode.fileName));
-	componentNames.push(...tsCodegen.get(virtualCode.ir)?.getImportedComponents() ?? []);
+	componentNames.push(...tsCodegen.get(virtualCode.ir)?.getSetupBindings() ?? []);
 
 	return [...new Set(componentNames)];
 }

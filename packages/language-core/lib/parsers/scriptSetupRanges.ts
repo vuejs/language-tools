@@ -77,7 +77,6 @@ export function parseScriptSetupRanges(
 		range => tsCheckReg.test(text.slice(range.pos, range.end)),
 	)?.end ?? 0;
 
-	let { bindings, components } = parseBindingRanges(ts, sourceFile, vueCompilerOptions.extensions);
 	let foundNonImportExportNode = false;
 	let importSectionEndOffset = 0;
 
@@ -112,17 +111,10 @@ export function parseScriptSetupRanges(
 	});
 	ts.forEachChild(sourceFile, node => visitNode(node, [sourceFile]));
 
-	const templateRefNames = new Set(useTemplateRef.map(ref => ref.name));
-	bindings = bindings.filter(range => {
-		const name = text.slice(range.start, range.end);
-		return !templateRefNames.has(name);
-	});
-
 	return {
+		...parseBindingRanges(ts, sourceFile, vueCompilerOptions.extensions),
 		leadingCommentEndOffset,
 		importSectionEndOffset,
-		bindings,
-		components,
 		defineModel,
 		defineProps,
 		withDefaults,

@@ -103,6 +103,20 @@ function useCodegen(
 		return names;
 	});
 
+	const getSetupBindings = computedSet(() => {
+		const names = new Set<string>();
+		const scriptSetupRanges = getScriptSetupRanges();
+		if (ir.scriptSetup && scriptSetupRanges) {
+			for (const range of scriptSetupRanges.bindings) {
+				names.add(ir.scriptSetup.content.slice(range.start, range.end));
+			}
+			for (const range of scriptSetupRanges.components) {
+				names.add(ir.scriptSetup.content.slice(range.start, range.end));
+			}
+		}
+		return names;
+	});
+
 	const getSetupConsts = computedSet(() => {
 		const scriptSetupRanges = getScriptSetupRanges();
 		const names = new Set([
@@ -242,6 +256,7 @@ function useCodegen(
 		getGeneratedScript,
 		getGeneratedTemplate,
 		getImportedComponents,
+		getSetupBindings,
 		getSetupExposed,
 	};
 }
