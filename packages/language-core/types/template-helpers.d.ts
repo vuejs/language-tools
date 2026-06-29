@@ -21,25 +21,16 @@ declare global {
 		: N2 extends keyof GlobalComponents ? { [K in N0]: GlobalComponents[N2] }
 		: N3 extends keyof GlobalComponents ? { [K in N0]: GlobalComponents[N3] }
 		: {};
-	type __VLS_FunctionalComponentCtx<T, K> = __VLS_PickNotAny<
+	type __VLS_ExtractComponentContext<T, K> = __VLS_PickNotAny<
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? NonNullable<Ctx> : never : any,
 		T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
 	>;
-	type __VLS_FunctionalComponentProps<T, K> = '__ctx' extends keyof __VLS_PickNotAny<K, {}>
+	type __VLS_ExtractComponentProps<T, K> = '__ctx' extends keyof __VLS_PickNotAny<K, {}>
 		? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
 		: T extends (props: infer P, ...args: any) => any ? P
 		: {};
-	type __VLS_FunctionalComponent0<T> = (props: T extends { $props: infer Props } ? Props : {}, ctx?: any) => {
-		__ctx?: {
-			attrs?: any;
-			slots?: T extends { $slots: infer Slots } ? Slots : Record<string, any>;
-			emit?: T extends { $emit: infer Emit } ? Emit : {};
-			props?: typeof props;
-			expose?: (exposed: T) => void;
-		};
-	};
-	type __VLS_FunctionalComponent1<T> = (
-		props: (T extends { $props: infer Props } ? Props : {}) & Record<string, unknown>,
+	type __VLS_FunctionalComponent<T, P = {}> = (
+		props: (T extends { $props: infer Props } ? Props : {}) & P,
 		ctx?: any,
 	) => {
 		__ctx?: {
@@ -50,9 +41,8 @@ declare global {
 			expose?: (exposed: T) => void;
 		};
 	};
-	type __VLS_IsFunction<T, K> = K extends keyof T ? __VLS_IsAny<T[K]> extends false ? unknown extends T[K] ? false
-			: true
-		: false
+	type __VLS_IsFunction<T, K> = K extends keyof T ? unknown extends T[K] ? false
+		: true
 		: false;
 	type __VLS_ResolveEvent<
 		Props,
@@ -126,17 +116,17 @@ declare global {
 	function __VLS_asFunctionalComponent0<T, K>(
 		t: T,
 		instance: K,
-	): T extends new(...args: any) => any ? __VLS_FunctionalComponent0<K>
+	): T extends new(...args: any) => any ? __VLS_FunctionalComponent<K>
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
-		: __VLS_FunctionalComponent0<{}>;
+		: __VLS_FunctionalComponent<{}>;
 	function __VLS_asFunctionalComponent1<T, K>(
 		t: T,
 		instance: K,
-	): T extends new(...args: any) => any ? __VLS_FunctionalComponent1<K>
+	): T extends new(...args: any) => any ? __VLS_FunctionalComponent<K, Record<string, unknown>>
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
-		: __VLS_FunctionalComponent1<{}>;
+		: __VLS_FunctionalComponent<{}, Record<string, unknown>>;
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(
 		t: T,
 	): 2 extends Parameters<T>['length'] ? [any] : [];
