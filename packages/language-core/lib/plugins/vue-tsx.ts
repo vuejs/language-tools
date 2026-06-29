@@ -103,6 +103,23 @@ function useCodegen(
 		return names;
 	});
 
+	const getSetupBindings = computedSet(() => {
+		const names = new Set<string>();
+		const scriptSetupRanges = getScriptSetupRanges();
+		if (ir.scriptSetup && scriptSetupRanges) {
+			for (const range of scriptSetupRanges.bindings) {
+				names.add(ir.scriptSetup.content.slice(range.start, range.end));
+			}
+			const scriptRanges = getScriptRanges();
+			if (ir.script && scriptRanges) {
+				for (const range of scriptRanges.bindings) {
+					names.add(ir.script.content.slice(range.start, range.end));
+				}
+			}
+		}
+		return names;
+	});
+
 	const getSetupConsts = computedSet(() => {
 		const scriptSetupRanges = getScriptSetupRanges();
 		const names = new Set([
@@ -190,30 +207,15 @@ function useCodegen(
 	});
 
 	const getSetupExposed = computedSet(() => {
-		const allVars = new Set<string>();
-		const scriptSetupRanges = getScriptSetupRanges();
-		if (!ir.scriptSetup || !scriptSetupRanges) {
-			return allVars;
-		}
-		for (const range of scriptSetupRanges.bindings) {
-			const name = ir.scriptSetup.content.slice(range.start, range.end);
-			allVars.add(name);
-		}
-		const scriptRanges = getScriptRanges();
-		if (ir.script && scriptRanges) {
-			for (const range of scriptRanges.bindings) {
-				const name = ir.script.content.slice(range.start, range.end);
-				allVars.add(name);
-			}
-		}
-		if (!allVars.size) {
-			return allVars;
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
 		}
 		return new Set([
 			...getGeneratedTemplate()?.contextAccesses.keys() ?? [],
 			...getGeneratedStyle()?.contextAccesses.keys() ?? [],
 			...ir.template?.ast?.components.flatMap(name => [camelize(name), capitalize(camelize(name))]) ?? [],
-		].filter(name => allVars.has(name)));
+		].filter(name => bindings.has(name)));
 	});
 
 	const getGeneratedScript = computed(() => {
@@ -242,6 +244,7 @@ function useCodegen(
 		getGeneratedScript,
 		getGeneratedTemplate,
 		getImportedComponents,
+		getSetupBindings,
 		getSetupExposed,
 	};
 }

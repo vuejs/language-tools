@@ -26,8 +26,6 @@ export function parseScriptRanges(
 		}
 		| undefined;
 
-	const { bindings, components } = parseBindingRanges(ts, sourceFile, vueCompilerOptions.extensions);
-
 	ts.forEachChild(sourceFile, child => {
 		if (ts.isExportAssignment(child)) {
 			exportDefault = {
@@ -44,9 +42,8 @@ export function parseScriptRanges(
 	});
 
 	return {
+		...parseBindingRanges(ts, sourceFile, vueCompilerOptions.extensions),
 		exportDefault,
-		bindings,
-		components,
 	};
 }
 
