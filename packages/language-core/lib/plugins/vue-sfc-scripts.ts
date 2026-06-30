@@ -1,3 +1,4 @@
+import { codeFeatures } from '../codegen/codeFeatures';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
@@ -29,10 +30,7 @@ const plugin: VueLanguagePlugin = () => {
 					script.content,
 					script.name,
 					0,
-					{
-						structure: true,
-						format: true,
-					},
+					codeFeatures.structureAndFormat,
 				]);
 			}
 		},

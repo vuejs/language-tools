@@ -1,4 +1,4 @@
-import type { Code, IRStyle, VueCodeInformation } from '../../types';
+import type { Code, IRStyle } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -20,13 +20,9 @@ export function* generateClassProperty(
 }
 
 export function* generateStyleImports(style: IRStyle): Generator<Code> {
-	const features: VueCodeInformation = {
-		navigation: true,
-		verification: true,
-	};
 	if (typeof style.src === 'object') {
 		yield `${newLine} & typeof import(`;
-		const boundary = yield* Boundary.start('main', style.src.offset, features);
+		const boundary = yield* Boundary.start('main', style.src.offset, codeFeatures.navigationAndVerification);
 		yield `'`;
 		yield [style.src.text, 'main', style.src.offset, boundary.features];
 		yield `'`;
@@ -39,7 +35,7 @@ export function* generateStyleImports(style: IRStyle): Generator<Code> {
 			text,
 			style.name,
 			offset,
-			features,
+			codeFeatures.navigationAndVerification,
 		];
 		yield `').default`;
 	}

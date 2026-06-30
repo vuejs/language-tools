@@ -14,8 +14,6 @@ import vueTemplateInlineTsPlugin from './plugins/vue-template-inline-ts';
 import vueTsx from './plugins/vue-tsx';
 import { validVersions, type VueLanguagePlugin } from './types';
 
-export * from './plugins/shared';
-
 export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 	const plugins: VueLanguagePlugin[] = [
 		useVueFilePlugin,

@@ -6,6 +6,8 @@ import { baseParse } from './lib/baseParse';
 const classRE = /^class\s*=/;
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
+	const { allCodeFeatures, codeFeatures, compileTemplate } = modules['@vue/language-core'];
+
 	return {
 		name: require('./package.json').name,
 
@@ -31,21 +33,13 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					ir.template.content,
 					ir.template.name,
 					0,
-					{
-						verification: true,
-						completion: true,
-						semantic: true,
-						navigation: true,
-						structure: true,
-						format: true,
-					},
+					codeFeatures?.full ?? allCodeFeatures,
 				]);
 			}
 		},
 
 		compileSFCTemplate(lang, template, options) {
 			if (lang === 'pug') {
-				const { compileTemplate } = modules['@vue/language-core'];
 				let parsed: ReturnType<typeof baseParse>;
 				let baseOffset = 0;
 

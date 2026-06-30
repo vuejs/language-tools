@@ -1,5 +1,5 @@
+import { codeFeatures } from '../codegen/codeFeatures';
 import type { VueLanguagePlugin } from '../types';
-import { allCodeFeatures } from './shared';
 
 const plugin: VueLanguagePlugin = () => {
 	return {
@@ -21,7 +21,7 @@ const plugin: VueLanguagePlugin = () => {
 					ir.template.content,
 					ir.template.name,
 					0,
-					allCodeFeatures,
+					codeFeatures.full,
 				]);
 			}
 		},
