@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.3.6 (2026-06-30)
+
+### language-core
+
+- **fix:** make generic component internal context inference type-safe across `.d.ts` boundary (#6104) - Thanks to @Holiden!
+- **fix:** do not treat non-trivial property accesses as compound - Thanks to @KazariEX!
+- **fix:** treat semicolon-terminated expressions as compound - Thanks to @KazariEX!
+- **fix:** preserve return types for compound event handlers - Thanks to @KazariEX!
+- **fix:** use `WeakMap` to cache inline TS ASTs - Thanks to @KazariEX!
+- **fix:** match upstream CSS `v-bind` parsing behavior - Thanks to @KazariEX!
+- **fix:** include setup bindings as potential component names (#6111) - Thanks to @KazariEX!
+- **perf:** reduce boundary code feature allocations - Thanks to @KazariEX!
+- **refactor:** centralize code features and deprecate `allCodeFeatures` - Thanks to @KazariEX!
+
 ## 3.3.5 (2026-06-13)
 
 ### language-core
