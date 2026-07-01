@@ -654,6 +654,7 @@ export function resolveCompletionResult<T>(
 	// modify label
 	for (const item of result.entries) {
 		if (item.source) {
+			// tsslint-ignore @typescript-eslint/no-unnecessary-type-assertion
 			const data = item.data as VueCompletionData;
 			const oldName = item.name;
 			for (const vueExt of vueOptions.extensions) {

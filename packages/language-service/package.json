@@ -34,7 +34,7 @@
 		"vscode-uri": "^3.1.0"
 	},
 	"devDependencies": {
-		"@types/node": "^24.1.0",
+		"@types/node": "^26.0.1",
 		"@types/path-browserify": "^1.0.3",
 		"@volar/kit": "2.4.28",
 		"@volar/typescript": "2.4.28",

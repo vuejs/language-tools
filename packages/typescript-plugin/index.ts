@@ -169,10 +169,12 @@ export = createLanguageServicePlugin(
 							);
 							result.entries = result.entries
 								.filter(entry => {
+									// tsslint-ignore @typescript-eslint/no-unnecessary-type-assertion
 									const data = entry.data as VueCompletionData;
 									return data?.__vue__componentAutoImport || data?.__vue__autoImport;
 								});
 							for (const entry of result.entries) {
+								// tsslint-ignore @typescript-eslint/no-unnecessary-type-assertion
 								const data = (entry.data as VueCompletionData)!;
 								data.__vue__autoImportSuggestions = {
 									fileName,
@@ -202,10 +204,12 @@ export = createLanguageServicePlugin(
 						);
 						result.entries = result.entries
 							.filter(entry => {
+								// tsslint-ignore @typescript-eslint/no-unnecessary-type-assertion
 								const data = entry.data as VueCompletionData;
 								return data?.__vue__componentAutoImport || data?.__vue__autoImport;
 							});
 						for (const entry of result.entries) {
+							// tsslint-ignore @typescript-eslint/no-unnecessary-type-assertion
 							const data = (entry.data as VueCompletionData)!;
 							data.__vue__autoImportSuggestions = {
 								fileName,

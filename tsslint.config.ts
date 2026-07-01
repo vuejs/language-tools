@@ -1,6 +1,9 @@
-import { defineConfig, importESLintRules } from '@tsslint/config';
+import { createIgnorePlugin, defineConfig, importESLintRules } from '@tsslint/config';
 
 export default defineConfig([{
+	plugins: [
+		createIgnorePlugin('tsslint-ignore', true),
+	],
 	rules: {
 		...await importESLintRules({
 			// oxlint's default rules, but without unicorn. See https://oxc.rs/docs/guide/usage/linter/rules.html

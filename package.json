@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"packageManager": "pnpm@11.1.1",
+	"packageManager": "pnpm@11.9.0",
 	"scripts": {
 		"build": "tsgo -b",
 		"watch": "tsgo -b -w",
@@ -15,7 +15,7 @@
 		"@tsslint/cli": "latest",
 		"@tsslint/compat-eslint": "latest",
 		"@tsslint/config": "latest",
-		"@typescript-eslint/eslint-plugin": "~8.58.2",
+		"@typescript-eslint/eslint-plugin": "latest",
 		"@typescript/native-preview": "latest",
 		"dprint": "latest",
 		"typescript": "latest",

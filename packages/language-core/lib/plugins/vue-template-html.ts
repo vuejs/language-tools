@@ -120,7 +120,7 @@ const plugin: VueLanguagePlugin = () => {
 					else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 						for (const childNode of node.children) {
 							if (typeof childNode === 'object') {
-								if (!tryUpdateNode(childNode as CompilerDOM.TemplateChildNode)) {
+								if (!tryUpdateNode(childNode)) {
 									return false;
 								}
 							}
