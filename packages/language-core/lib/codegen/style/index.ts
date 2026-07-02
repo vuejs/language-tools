@@ -35,7 +35,7 @@ function* generateWorker(
 ) {
 	const scope = ctx.scope();
 	scope.declare(...options.setupConsts);
-	yield* generateStyleScopedClasses(options);
+	yield* generateStyleScopedClasses(options, ctx);
 	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);
 	yield* scope.end();

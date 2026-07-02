@@ -7,7 +7,7 @@ import type { StyleCodegenOptions } from '.';
 import { generateClassProperty, generateStyleImports } from './common';
 
 export function* generateStyleModules(
-	{ styles, vueCompilerOptions }: StyleCodegenOptions,
+	{ vueCompilerOptions, styles }: StyleCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	const styleModules = styles.filter(style => style.module);

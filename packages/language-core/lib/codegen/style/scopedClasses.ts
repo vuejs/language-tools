@@ -1,5 +1,6 @@
 import type { Code } from '../../types';
 import { names } from '../names';
+import type { TemplateCodegenContext } from '../template/context';
 import { generateStyleScopedClassReference } from '../template/styleScopedClasses';
 import { endOfLine } from '../utils';
 import type { StyleCodegenOptions } from '.';
@@ -7,6 +8,7 @@ import { generateClassProperty, generateStyleImports } from './common';
 
 export function* generateStyleScopedClasses(
 	{ vueCompilerOptions, styles }: StyleCodegenOptions,
+	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	const { resolveStyleClassNames, resolveStyleImports } = vueCompilerOptions;
 	if (!resolveStyleClassNames) {
@@ -16,8 +18,10 @@ export function* generateStyleScopedClasses(
 	if (!scopedStyles.length) {
 		return;
 	}
+	ctx.generatedTypes.add(names.StyleScopedClasses);
+
 	const visited = new Set<string>();
-	const deferredGenerations: Generator<Code>[] = [];
+	const deferredGenerates: Generator<Code>[] = [];
 	yield `type ${names.StyleScopedClasses} = {}`;
 	for (const style of scopedStyles) {
 		if (resolveStyleImports) {
@@ -29,14 +33,15 @@ export function* generateStyleScopedClasses(
 				yield* generateClassProperty(style.name, className.text, className.offset, 'boolean');
 			}
 			else {
-				deferredGenerations.push(
+				deferredGenerates.push(
 					generateStyleScopedClassReference(style, className.text.slice(1), className.offset + 1),
 				);
 			}
 		}
 	}
 	yield endOfLine;
-	for (const generate of deferredGenerations) {
+
+	for (const generate of deferredGenerates) {
 		yield* generate;
 	}
 }
