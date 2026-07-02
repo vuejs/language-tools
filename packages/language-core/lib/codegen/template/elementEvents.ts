@@ -170,9 +170,13 @@ export function* generateEventExpression(
 			scope.declare('$event');
 			yield* ctx.generateConditionGuards();
 			if (isSingleExpression(options.typescript, ast)) {
-				yield `return `;
+				yield `return (`;
+				yield* interpolation;
+				yield `)`;
 			}
-			yield* interpolation;
+			else {
+				yield* interpolation;
+			}
 			yield endOfLine;
 			yield* scope.end();
 			yield `}`;
