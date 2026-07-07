@@ -64,7 +64,7 @@ test('#4670', async () => {
 
 test('HTML tags and built-in components', async () => {
 	expect(
-		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><| /></template>`)).items.map(item =>
+		(await requestCompletionListToVueServer('tsconfigProject/empty.vue', 'vue', `<template><| /></template>`)).items.map(item =>
 			item.label
 		),
 	).toMatchInlineSnapshot(`
@@ -76,7 +76,7 @@ test('HTML tags and built-in components', async () => {
 		  "BaseTransition",
 		  "Transition",
 		  "TransitionGroup",
-		  "Fixture",
+		  "Empty",
 		  "a",
 		  "abbr",
 		  "address",
@@ -268,7 +268,7 @@ test('Auto import', async () => {
 		} satisfies import('typescript').server.protocol.ConfigureRequestArguments,
 	});
 	expect(
-		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><| /></template>`)).items
+		(await requestCompletionListToVueServer('tsconfigProject/empty.vue', 'vue', `<template><| /></template>`)).items
 			.map(item => item.label),
 	).toMatchInlineSnapshot(`
 		[
@@ -279,7 +279,7 @@ test('Auto import', async () => {
 		  "BaseTransition",
 		  "Transition",
 		  "TransitionGroup",
-		  "Fixture",
+		  "Empty",
 		  "a",
 		  "abbr",
 		  "address",
@@ -489,6 +489,7 @@ test('Auto import', async () => {
 		  "effectScope",
 		  "EffectScope",
 		  "ErrorCodes",
+		  "Fixture",
 		  "Fragment",
 		  "getCurrentInstance",
 		  "getCurrentScope",

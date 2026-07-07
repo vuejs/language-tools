@@ -633,7 +633,7 @@ export function resolveCompletionResult<T>(
 		);
 
 		if (ranges.some(([start, end]) => position >= start && position <= end)) {
-			const globalKinds = new Set(['var', 'function', 'module']);
+			const globalKinds = new Set(['var', 'function', 'module', 'const']);
 			const globalsOrKeywords = (ts as any).Completions.SortText.GlobalsOrKeywords;
 			const sortTexts = new Set([
 				globalsOrKeywords,
