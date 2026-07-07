@@ -64,9 +64,8 @@ test('#4670', async () => {
 
 test('HTML tags and built-in components', async () => {
 	expect(
-		(await requestCompletionListToVueServer('tsconfigProject/empty.vue', 'vue', `<template><| /></template>`)).items.map(item =>
-			item.label
-		),
+		(await requestCompletionListToVueServer('tsconfigProject/empty.vue', 'vue', `<template><| /></template>`)).items
+			.map(item => item.label),
 	).toMatchInlineSnapshot(`
 		[
 		  "!DOCTYPE",
