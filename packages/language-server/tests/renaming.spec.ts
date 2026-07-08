@@ -400,6 +400,31 @@ test('Component props', async () => {
 		  },
 		  "locs": [
 		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 4,
+		            "offset": 17,
+		          },
+		          "start": {
+		            "line": 4,
+		            "offset": 11,
+		          },
+		        },
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 18,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 11,
+		          },
+		        },
+		      ],
+		    },
+		    {
 		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
 		      "locs": [
 		        {
@@ -428,31 +453,6 @@ test('Component props', async () => {
 		          "start": {
 		            "line": 3,
 		            "offset": 8,
-		          },
-		        },
-		      ],
-		    },
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 4,
-		            "offset": 17,
-		          },
-		          "start": {
-		            "line": 4,
-		            "offset": 11,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 18,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 11,
 		          },
 		        },
 		      ],
@@ -512,6 +512,31 @@ test('Component type props', async () => {
 		  },
 		  "locs": [
 		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 4,
+		            "offset": 17,
+		          },
+		          "start": {
+		            "line": 4,
+		            "offset": 11,
+		          },
+		        },
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 18,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 11,
+		          },
+		        },
+		      ],
+		    },
+		    {
 		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
 		      "locs": [
 		        {
@@ -540,31 +565,6 @@ test('Component type props', async () => {
 		          "start": {
 		            "line": 7,
 		            "offset": 18,
-		          },
-		        },
-		      ],
-		    },
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 4,
-		            "offset": 17,
-		          },
-		          "start": {
-		            "line": 4,
-		            "offset": 11,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 18,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 11,
 		          },
 		        },
 		      ],
