@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.3.7 (2026-07-08)
+
+### language-core
+
+- **fix:** wrap single expression event handlers to avoid ASI after `return` (#6115) - Thanks to @KazariEX!
+
+### typescript-plugin
+
+- **fix:** filter const globals from template completions
+
 ## 3.3.6 (2026-06-30)
 
 ### language-core
