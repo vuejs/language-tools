@@ -13,12 +13,22 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - uses: actions/checkout@v6
+        with:
+          repository: johnsoncodehk/typescript-native-bridge
+          path: typescript-native-bridge
+          submodules: recursive
+
       - uses: pnpm/action-setup@v6
 
       - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
+
+      - name: Build typescript-native-bridge
+        run: npm run setup
+        working-directory: typescript-native-bridge
 
       - run: pnpm install --frozen-lockfile
 

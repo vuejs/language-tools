@@ -2,26 +2,22 @@
 	"private": true,
 	"packageManager": "pnpm@11.9.0",
 	"scripts": {
-		"build": "tsgo -b",
-		"watch": "tsgo -b -w",
+		"build": "tsc -b",
+		"watch": "tsc -b -w",
 		"watch:ext": "node extensions/vscode/scripts/write-plugins.ts --dev && npm run watch",
-		"test": "npm run build && vitest run",
+		"test": "npm run build && node -r typescript/lib/tnb-godebug.js ./node_modules/vitest/vitest.mjs run",
 		"test:grammar": "vitest run extensions/vscode/tests/grammar.spec.ts",
 		"format": "dprint fmt",
 		"lint": "tsslint --project {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
-		"lint:fix": "npm run lint -- --fix",
-		"link:tnb": "node scripts/link-tnb.mjs",
-		"unlink:tnb": "node scripts/unlink-tnb.mjs",
-		"test:tnb": "GODEBUG=asyncpreemptoff=1 vitest run"
+		"lint:fix": "npm run lint -- --fix"
 	},
 	"devDependencies": {
 		"@tsslint/cli": "latest",
 		"@tsslint/compat-eslint": "latest",
 		"@tsslint/config": "latest",
 		"@typescript-eslint/eslint-plugin": "latest",
-		"@typescript/native-preview": "latest",
 		"dprint": "latest",
-		"typescript": "6.0.3",
+		"typescript": "link:./typescript-native-bridge",
 		"vitest": "latest"
 	}
 }

@@ -13,3 +13,7 @@ allowBuilds:
   '@vscode/vsce-sign': true
   dprint: true
   keytar: true
+  koffi: true
+
+overrides:
+  typescript: link:./typescript-native-bridge
