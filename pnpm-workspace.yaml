@@ -2,6 +2,7 @@ blockExoticSubdeps: false
 shellEmulator: true
 trustPolicy: no-downgrade
 trustPolicyExclude:
+  - semver@5.7.2
   - volar-service-pug@0.0.71
 
 packages:
