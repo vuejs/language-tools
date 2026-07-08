@@ -83,6 +83,10 @@ export default defineConfig([{
 			'@typescript-eslint/require-array-sort-compare': true,
 			'@typescript-eslint/restrict-template-expressions': true,
 			'@typescript-eslint/triple-slash-reference': true,
+			// Disabled under TNB: tsgo checker types CompletionEntryData loosely enough
+			// that eslint flags vue plugin assertions as unnecessary while tsc still
+			// requires them (CompletionEntryData is a closed union in lib.d.ts).
+			// '@typescript-eslint/no-unnecessary-type-assertion': true,
 			// '@typescript-eslint/unbound-method': true,
 
 			// Project-specific rules
@@ -94,7 +98,6 @@ export default defineConfig([{
 				disallowTypeAnnotations: false,
 				fixStyle: 'inline-type-imports',
 			}],
-			'@typescript-eslint/no-unnecessary-type-assertion': true,
 		}),
 		'missing-dependency': (await import('./lint/missing-dependency-rule.ts')).default,
 		'type-imports': (await import('./lint/type-imports-rule.ts')).default,

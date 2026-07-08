@@ -169,13 +169,14 @@ export = createLanguageServicePlugin(
 							);
 							result.entries = result.entries
 								.filter(entry => {
-									// tsslint-ignore @typescript-eslint/no-unnecessary-type-assertion
 									const data = entry.data as VueCompletionData;
 									return data?.__vue__componentAutoImport || data?.__vue__autoImport;
 								});
 							for (const entry of result.entries) {
-								// tsslint-ignore @typescript-eslint/no-unnecessary-type-assertion
-								const data = (entry.data as VueCompletionData)!;
+								const data = entry.data as VueCompletionData;
+								if (!data) {
+									continue;
+								}
 								data.__vue__autoImportSuggestions = {
 									fileName,
 									position: tsPosition + sourceScript.snapshot.getLength(),
@@ -204,13 +205,14 @@ export = createLanguageServicePlugin(
 						);
 						result.entries = result.entries
 							.filter(entry => {
-								// tsslint-ignore @typescript-eslint/no-unnecessary-type-assertion
 								const data = entry.data as VueCompletionData;
 								return data?.__vue__componentAutoImport || data?.__vue__autoImport;
 							});
 						for (const entry of result.entries) {
-							// tsslint-ignore @typescript-eslint/no-unnecessary-type-assertion
-							const data = (entry.data as VueCompletionData)!;
+							const data = entry.data as VueCompletionData;
+							if (!data) {
+								continue;
+							}
 							data.__vue__autoImportSuggestions = {
 								fileName,
 								position: 0,

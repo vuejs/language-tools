@@ -46,12 +46,12 @@ afterEach(async () => {
 	for (const document of openedDocuments) {
 		await server.close(document.uri);
 	}
+	openedDocuments.length = 0;
 	for (const file of createdFiles) {
 		if (fs.existsSync(file)) {
 			fs.rmSync(file);
 		}
 	}
-	openedDocuments.length = 0;
 	createdFiles.length = 0;
 });
 
