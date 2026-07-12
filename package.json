@@ -16,9 +16,9 @@
 		"@tsslint/compat-eslint": "latest",
 		"@tsslint/config": "latest",
 		"@typescript-eslint/eslint-plugin": "latest",
-		"@typescript/native": "npm:typescript@^7.0.2",
 		"dprint": "latest",
 		"typescript": "npm:@typescript/typescript6@^6.0.2",
+		"typescript7": "npm:typescript@^7.0.2",
 		"vitest": "latest"
 	}
 }

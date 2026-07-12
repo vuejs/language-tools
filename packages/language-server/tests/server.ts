@@ -11,19 +11,6 @@ let seq = 1;
 
 export const testWorkspacePath = path.resolve(__dirname, '../../../test-workspace');
 
-function resolveTsserverPath() {
-	try {
-		return require.resolve('typescript/lib/tsserver.js');
-	}
-	catch {
-		// `typescript` may be aliased to `@typescript/typescript6`, which keeps
-		// tsserver in its full TypeScript 6 dependency (`@typescript/old`)
-		return require.resolve('@typescript/old/lib/tsserver.js', {
-			paths: [path.dirname(require.resolve('typescript/package.json'))],
-		});
-	}
-}
-
 export async function getLanguageServer(): Promise<{
 	vueserver: LanguageServerHandle;
 	tsserver: import('@typescript/server-harness').Server;
@@ -126,4 +113,17 @@ export async function getLanguageServer(): Promise<{
 			await serverHandle!.closeTextDocument(uri);
 		},
 	};
+}
+
+function resolveTsserverPath() {
+	try {
+		return require.resolve('typescript/lib/tsserver');
+	}
+	catch {
+		// `typescript` may be aliased to `@typescript/typescript6`, which keeps
+		// tsserver in its full TypeScript 6 dependency (`@typescript/old`)
+		return require.resolve('@typescript/old/lib/tsserver', {
+			paths: [path.dirname(require.resolve('typescript/package.json'))],
+		});
+	}
 }
