@@ -53,15 +53,13 @@ export function run(tscPath?: string) {
 
 function resolveTscPath(tscPath = require.resolve('typescript/lib/tsc')) {
 	try {
-		// `tsserver.js` is only present in the original `typescript` package
-		require.resolve(path.join(tscPath, '..', 'tsserver'));
-		return tscPath;
+		const { name } = require(path.join(tscPath, '..', '..', 'package.json'));
+		if (name === '@typescript/typescript6') {
+			// `typescript` may be aliased to `@typescript/typescript6`,
+			// which keeps tsc in its full TypeScript 6 dependency (`@typescript/old`)
+			return require.resolve('@typescript/old/lib/tsc', { paths: [path.dirname(tscPath)] });
+		}
 	}
-	catch {
-		// `typescript` may be aliased to `@typescript/typescript6`,
-		// which keeps tsc in its full TypeScript 6 dependency (`@typescript/old`)
-		return require.resolve('@typescript/old/lib/tsc', {
-			paths: [path.dirname(tscPath)],
-		});
-	}
+	catch {}
+	return tscPath;
 }
