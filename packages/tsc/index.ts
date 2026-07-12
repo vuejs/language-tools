@@ -1,15 +1,16 @@
 import { runTsc } from '@volar/typescript/lib/quickstart/runTsc';
 import * as core from '@vue/language-core';
+import * as path from 'node:path';
 
 const windowsPathRE = /\\/g;
 
-export function run(tscPath = require.resolve('typescript/lib/tsc')) {
+export function run(tscPath?: string) {
 	let runExtensions = ['.vue'];
 	let extensionsChangedException: Error | undefined;
 
 	const main = () =>
 		runTsc(
-			tscPath,
+			resolveTscPath(tscPath),
 			runExtensions,
 			(ts, options) => {
 				const { configFilePath } = options.options;
@@ -48,4 +49,17 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 			throw err;
 		}
 	}
+}
+
+function resolveTscPath(tscPath = require.resolve('typescript/lib/tsc')) {
+	try {
+		const { name } = require(path.join(tscPath, '..', '..', 'package.json'));
+		if (name === '@typescript/typescript6') {
+			// `typescript` may be aliased to `@typescript/typescript6`,
+			// which keeps tsc in its full TypeScript 6 dependency (`@typescript/old`)
+			return require.resolve('@typescript/old/lib/tsc', { paths: [path.dirname(tscPath)] });
+		}
+	}
+	catch {}
+	return tscPath;
 }
