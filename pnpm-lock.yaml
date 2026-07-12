@@ -4,6 +4,15 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    typescript:
+      specifier: npm:@typescript/typescript6@^6.0.2
+      version: 6.0.2
+    typescript7:
+      specifier: npm:typescript@^7.0.2
+      version: 7.0.2
+
 importers:
 
   .:
@@ -24,10 +33,10 @@ importers:
         specifier: latest
         version: 0.55.1
       typescript:
-        specifier: npm:@typescript/typescript6@^6.0.2
+        specifier: 'catalog:'
         version: '@typescript/typescript6@6.0.2'
       typescript7:
-        specifier: npm:typescript@^7.0.2
+        specifier: 'catalog:'
         version: typescript@7.0.2
       vitest:
         specifier: latest
@@ -83,9 +92,6 @@ importers:
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
-      typescript:
-        specifier: '*'
-        version: 6.0.3
     devDependencies:
       '@types/node':
         specifier: ^26.0.1
@@ -93,6 +99,9 @@ importers:
       '@types/path-browserify':
         specifier: ^1.0.3
         version: 1.0.3
+      typescript:
+        specifier: 'catalog:'
+        version: '@typescript/typescript6@6.0.2'
 
   packages/component-type-helpers: {}
 
@@ -178,9 +187,6 @@ importers:
       '@vue/typescript-plugin':
         specifier: workspace:*
         version: link:../typescript-plugin
-      typescript:
-        specifier: '*'
-        version: 7.0.2
       vscode-uri:
         specifier: ^3.1.0
         version: 3.1.0
@@ -191,6 +197,9 @@ importers:
       '@volar/test-utils':
         specifier: 2.4.28
         version: 2.4.28
+      typescript:
+        specifier: 'catalog:'
+        version: '@typescript/typescript6@6.0.2'
 
   packages/language-service:
     dependencies:
@@ -242,7 +251,7 @@ importers:
         version: 1.0.3
       '@volar/kit':
         specifier: 2.4.28
-        version: 2.4.28(typescript@6.0.3)
+        version: 2.4.28(@typescript/typescript6@6.0.2)
       '@volar/typescript':
         specifier: 2.4.28
         version: 2.4.28
@@ -267,13 +276,13 @@ importers:
       '@vue/language-core':
         specifier: workspace:*
         version: link:../language-core
-      typescript:
-        specifier: '>=5.0.0'
-        version: 7.0.2
     devDependencies:
       '@types/node':
         specifier: ^26.0.1
         version: 26.0.1
+      typescript:
+        specifier: 'catalog:'
+        version: '@typescript/typescript6@6.0.2'
 
   packages/typescript-plugin:
     dependencies:
@@ -306,7 +315,7 @@ importers:
   test-workspace:
     devDependencies:
       typescript:
-        specifier: npm:@typescript/typescript6@^6.0.2
+        specifier: 'catalog:'
         version: '@typescript/typescript6@6.0.2'
       vue:
         specifier: https://pkg.pr.new/vue@e1bc0eb02e22bc0c236e1471c11d96a368764b72
@@ -2304,12 +2313,12 @@ snapshots:
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.0
 
-  '@volar/kit@2.4.28(typescript@6.0.3)':
+  '@volar/kit@2.4.28(@typescript/typescript6@6.0.2)':
     dependencies:
       '@volar/language-service': 2.4.28
       '@volar/typescript': 2.4.28
       typesafe-path: 0.2.2
-      typescript: 6.0.3
+      typescript: '@typescript/typescript6@6.0.2'
       vscode-languageserver-textdocument: 1.0.12
       vscode-uri: 3.1.0
 
