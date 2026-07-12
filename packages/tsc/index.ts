@@ -51,15 +51,17 @@ export function run(tscPath?: string) {
 	}
 }
 
-// `@typescript/typescript6` (the TypeScript 7 era JS API package) only
-// re-exports the real compiler from its `@typescript/old` dependency
 function resolveTscPath(tscPath = require.resolve('typescript/lib/tsc')) {
 	try {
-		const { name } = require(path.join(tscPath, '..', '..', 'package.json'));
-		if (name === '@typescript/typescript6') {
-			return require.resolve('@typescript/old/lib/tsc', { paths: [path.dirname(tscPath)] });
-		}
+		// `tsserver.js` is only present in the original `typescript` package
+		require.resolve(path.join(tscPath, '..', 'tsserver'));
+		return tscPath;
 	}
-	catch {}
-	return tscPath;
+	catch {
+		// `typescript` may be aliased to `@typescript/typescript6`,
+		// which keeps tsc in its full TypeScript 6 dependency (`@typescript/old`)
+		return require.resolve('@typescript/old/lib/tsc', {
+			paths: [path.dirname(tscPath)],
+		});
+	}
 }

@@ -120,8 +120,8 @@ function resolveTsserverPath() {
 		return require.resolve('typescript/lib/tsserver');
 	}
 	catch {
-		// `typescript` may be aliased to `@typescript/typescript6`, which keeps
-		// tsserver in its full TypeScript 6 dependency (`@typescript/old`)
+		// `typescript` may be aliased to `@typescript/typescript6`,
+		// which keeps tsserver in its full TypeScript 6 dependency (`@typescript/old`)
 		return require.resolve('@typescript/old/lib/tsserver', {
 			paths: [path.dirname(require.resolve('typescript/package.json'))],
 		});
