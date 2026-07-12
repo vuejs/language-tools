@@ -20,7 +20,9 @@ export async function getLanguageServer(): Promise<{
 }> {
 	if (!serverHandle) {
 		tsserver = launchServer(
-			resolveTsserverPath(),
+			require.resolve('@typescript/old/lib/tsserver', {
+				paths: [path.dirname(require.resolve('typescript/package.json'))],
+			}),
 			[
 				'--disableAutomaticTypingAcquisition',
 				'--globalPlugins',
@@ -113,17 +115,4 @@ export async function getLanguageServer(): Promise<{
 			await serverHandle!.closeTextDocument(uri);
 		},
 	};
-}
-
-function resolveTsserverPath() {
-	try {
-		return require.resolve('typescript/lib/tsserver');
-	}
-	catch {
-		// `typescript` may be aliased to `@typescript/typescript6`,
-		// which keeps tsserver in its full TypeScript 6 dependency (`@typescript/old`)
-		return require.resolve('@typescript/old/lib/tsserver', {
-			paths: [path.dirname(require.resolve('typescript/package.json'))],
-		});
-	}
 }
