@@ -185,6 +185,7 @@ function useCodegen(
 			vueCompilerOptions: getResolvedOptions(),
 			template: ir.template,
 			componentName: getComponentName(),
+			isVapor: !!(ir.scriptSetup?.attrs.vapor || ir.template.attrs.vapor),
 			setupConsts: getSetupConsts(),
 			setupRefs: getSetupRefs(),
 			hasDefineSlots: hasDefineSlots(),

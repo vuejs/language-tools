@@ -19,6 +19,7 @@ export interface TemplateCodegenOptions {
 	slotsAssignName?: string;
 	inheritAttrs: boolean;
 	componentName: string;
+	isVapor: boolean;
 }
 
 export { generate as generateTemplate };
