@@ -1,4 +1,5 @@
-<script vapor lang="ts">
+<!-- @vapor true -->
+<script setup lang="ts">
 // Mirrors the custom directive contract from Vue's minor branch.
 type VaporDirective = (
 	node: Element,
