@@ -176,6 +176,11 @@ function useCodegen(
 		return capitalize(camelize(name));
 	});
 
+	const getIsVapor = computed(() =>
+		getResolvedOptions().vapor
+		|| !!(ir.scriptSetup?.attrs.vapor || ir.template?.attrs.vapor)
+	);
+
 	const getGeneratedTemplate = computed(() => {
 		if (getResolvedOptions().skipTemplateCodegen || !ir.template) {
 			return;
@@ -185,7 +190,7 @@ function useCodegen(
 			vueCompilerOptions: getResolvedOptions(),
 			template: ir.template,
 			componentName: getComponentName(),
-			isVapor: !!(ir.scriptSetup?.attrs.vapor || ir.template.attrs.vapor),
+			isVapor: getIsVapor(),
 			setupConsts: getSetupConsts(),
 			setupRefs: getSetupRefs(),
 			hasDefineSlots: hasDefineSlots(),
