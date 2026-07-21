@@ -34,7 +34,6 @@ export function* generateElementDirectives(
 			yield* generateIdentifier(options, ctx, prop);
 			yield `(null!, `;
 			yield* generateValue(options, ctx, prop, false);
-			yield `, `;
 			yield* generateArg(options, ctx, prop, false);
 			yield* generateModifiers(options, ctx, prop, 'modifiers', false);
 			yield `)`;
@@ -46,7 +45,7 @@ export function* generateElementDirectives(
 			yield* generateArg(options, ctx, prop);
 			yield* generateModifiers(options, ctx, prop);
 			yield* generateValue(options, ctx, prop);
-			yield ` }, null!, null!)`;
+			yield `}, null!, null!)`;
 		}
 		yield boundary.end(prop.loc.end.offset);
 		yield endOfLine;
@@ -85,40 +84,38 @@ function* generateArg(
 	asBindingProperty = true,
 ): Generator<Code> {
 	const { arg } = prop;
-	if (arg?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		if (!asBindingProperty) {
-			yield `undefined, `;
+	if (arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+		const startOffset = arg.loc.start.offset + arg.loc.source.indexOf(arg.content);
+		if (asBindingProperty) {
+			const boundary = yield* Boundary.start('template', startOffset, codeFeatures.verification);
+			yield `arg`;
+			yield boundary.end(startOffset + arg.content.length);
+			yield `: `;
 		}
-		return;
+		if (arg.isStatic) {
+			yield* generateStringLiteralKey(
+				arg.content,
+				startOffset,
+				codeFeatures.all,
+			);
+		}
+		else {
+			yield* generateInterpolation(
+				options,
+				ctx,
+				options.template,
+				codeFeatures.all,
+				arg.content,
+				startOffset,
+				`(`,
+				`)`,
+			);
+		}
+		yield `, `;
 	}
-
-	const startOffset = arg.loc.start.offset + arg.loc.source.indexOf(arg.content);
-	if (asBindingProperty) {
-		const boundary = yield* Boundary.start('template', startOffset, codeFeatures.verification);
-		yield `arg`;
-		yield boundary.end(startOffset + arg.content.length);
-		yield `: `;
+	else if (!asBindingProperty) {
+		yield `undefined, `;
 	}
-	if (arg.isStatic) {
-		yield* generateStringLiteralKey(
-			arg.content,
-			startOffset,
-			codeFeatures.all,
-		);
-	}
-	else {
-		yield* generateInterpolation(
-			options,
-			ctx,
-			options.template,
-			codeFeatures.all,
-			arg.content,
-			startOffset,
-			`(`,
-			`)`,
-		);
-	}
-	yield `, `;
 }
 
 export function* generateModifiers(
@@ -129,34 +126,30 @@ export function* generateModifiers(
 	asBindingProperty = true,
 ): Generator<Code> {
 	const { modifiers } = prop;
-	if (!modifiers.length) {
-		if (!asBindingProperty) {
-			yield `undefined`;
+	if (modifiers.length) {
+		if (asBindingProperty) {
+			const startOffset = modifiers[0]!.loc.start.offset - 1;
+			const endOffset = modifiers.at(-1)!.loc.end.offset;
+			const boundary = yield* Boundary.start('template', startOffset, codeFeatures.verification);
+			yield propertyName;
+			yield boundary.end(endOffset);
+			yield `: `;
 		}
-		return;
+		yield `{ `;
+		for (const mod of modifiers) {
+			yield* generateObjectProperty(
+				options,
+				ctx,
+				mod.content,
+				mod.loc.start.offset,
+				codeFeatures.withoutHighlight,
+			);
+			yield `: true, `;
+		}
+		yield `}, `;
 	}
-	if (asBindingProperty) {
-		const startOffset = modifiers[0]!.loc.start.offset - 1;
-		const endOffset = modifiers.at(-1)!.loc.end.offset;
-		const boundary = yield* Boundary.start('template', startOffset, codeFeatures.verification);
-		yield propertyName;
-		yield boundary.end(endOffset);
-		yield `: `;
-	}
-	yield `{ `;
-	for (const mod of modifiers) {
-		yield* generateObjectProperty(
-			options,
-			ctx,
-			mod.content,
-			mod.loc.start.offset,
-			codeFeatures.withoutHighlight,
-		);
-		yield `: true, `;
-	}
-	yield `}`;
-	if (asBindingProperty) {
-		yield `, `;
+	else if (!asBindingProperty) {
+		yield `undefined, `;
 	}
 }
 
@@ -167,22 +160,22 @@ function* generateValue(
 	asBindingProperty = true,
 ): Generator<Code> {
 	const { exp } = prop;
-	if (exp?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		if (!asBindingProperty) {
-			yield `undefined`;
+	if (exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+		const boundary = yield* Boundary.start('template', exp.loc.start.offset, codeFeatures.verification);
+		if (asBindingProperty) {
+			yield `value`;
+			yield boundary.end(exp.loc.end.offset);
+			yield `: `;
+			yield* generatePropExp(options, ctx, prop, exp);
 		}
-		return;
+		else {
+			yield `() => `;
+			yield* generatePropExp(options, ctx, prop, exp);
+			yield boundary.end(exp.loc.end.offset);
+		}
+		yield `, `;
 	}
-	const boundary = yield* Boundary.start('template', exp.loc.start.offset, codeFeatures.verification);
-	if (asBindingProperty) {
-		yield `value`;
-		yield boundary.end(exp.loc.end.offset);
-		yield `: `;
-		yield* generatePropExp(options, ctx, prop, exp);
-	}
-	else {
-		yield `() => `;
-		yield* generatePropExp(options, ctx, prop, exp);
-		yield boundary.end(exp.loc.end.offset);
+	else if (!asBindingProperty) {
+		yield `undefined, `;
 	}
 }
