@@ -270,6 +270,7 @@ export function getDefaultCompilerOptions(
 		inferTemplateDollarRefs: false,
 		inferTemplateDollarSlots: false,
 		skipTemplateCodegen: false,
+		vapor: false,
 		fallthroughAttributes: false,
 		checkRequiredFallthroughAttributes: false,
 		resolveStyleImports: false,

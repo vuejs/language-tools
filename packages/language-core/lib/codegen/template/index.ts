@@ -12,6 +12,7 @@ export interface TemplateCodegenOptions {
 	typescript: typeof ts;
 	vueCompilerOptions: VueCompilerOptions;
 	template: IRTemplate;
+	isVapor: boolean;
 	setupRefs: Set<string>;
 	setupConsts: Set<string>;
 	hasDefineSlots?: boolean;
