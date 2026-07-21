@@ -36,7 +36,6 @@ export function* generateElementDirectives(
 			yield* generateValue(options, ctx, prop, false);
 			yield `, `;
 			yield* generateArg(options, ctx, prop, false);
-			yield `, `;
 			yield* generateModifiers(options, ctx, prop, 'modifiers', false);
 			yield `)`;
 		}
@@ -88,7 +87,7 @@ function* generateArg(
 	const { arg } = prop;
 	if (arg?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		if (!asBindingProperty) {
-			yield `undefined`;
+			yield `undefined, `;
 		}
 		return;
 	}
@@ -119,9 +118,7 @@ function* generateArg(
 			`)`,
 		);
 	}
-	if (asBindingProperty) {
-		yield `, `;
-	}
+	yield `, `;
 }
 
 export function* generateModifiers(
