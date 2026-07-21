@@ -1,18 +1,22 @@
 <!-- @vapor true -->
+ 
 <script setup lang="ts">
-// Mirrors the custom directive contract from Vue's minor branch.
-type VaporDirective = (
-	node: Element,
-	value?: () => unknown,
-	argument?: string,
-	modifiers?: Record<string, boolean>,
-) => void;
+import { exactType } from '../shared';
 
-const value = 1;
-const vCustom: VaporDirective = () => { };
+let vCustom!: (
+	node: Element,
+	value?: () => (_: boolean) => void,
+	argument?: 'foo',
+	modifiers?: Record<'attr' | 'prop', boolean>,
+) => void;
 </script>
 
 <template>
-	<div v-custom:foo.bar="value"></div>
-	<div v-show="true"></div>
+	<div v-custom:foo="v => exactType(v, {} as boolean)"></div>
+	<!-- @vue-expect-error -->
+	<div v-custom:bar="v => exactType(v, {} as boolean)"></div>
+
+	<div v-custom.attr.prop="v => exactType(v, {} as boolean)"></div>
+	<!-- @vue-expect-error -->
+	<div v-custom.unknown="v => exactType(v, {} as boolean)"></div>
 </template>

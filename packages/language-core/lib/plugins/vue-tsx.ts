@@ -75,6 +75,10 @@ function useCodegen(
 		return vueCompilerOptions;
 	});
 
+	const getIsVapor = computed(() =>
+		getResolvedOptions().vapor || !!(ir.scriptSetup?.attrs.vapor || ir.template?.attrs.vapor)
+	);
+
 	const getScriptRanges = computed(() =>
 		ir.script && validLangs.has(ir.script.lang)
 			? parseScriptRanges(ts, ir.script.ast, getResolvedOptions())
@@ -175,11 +179,6 @@ function useCodegen(
 		}
 		return capitalize(camelize(name));
 	});
-
-	const getIsVapor = computed(() =>
-		getResolvedOptions().vapor
-		|| !!(ir.scriptSetup?.attrs.vapor || ir.template?.attrs.vapor)
-	);
 
 	const getGeneratedTemplate = computed(() => {
 		if (getResolvedOptions().skipTemplateCodegen || !ir.template) {

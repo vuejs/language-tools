@@ -30,7 +30,7 @@ export function* generateElementDirectives(
 		}
 		const boundary = yield* Boundary.start('template', prop.loc.start.offset, codeFeatures.verification);
 		if (options.isVapor && !isBuiltInDirective(prop.name)) {
-			// Vapor custom directives receive a value getter instead of a VDOM binding object.
+			// vapor custom directives receive a value getter instead of a vdom binding object
 			yield* generateIdentifier(options, ctx, prop);
 			yield `(null!, `;
 			yield* generateValue(options, ctx, prop, false);
@@ -83,7 +83,7 @@ function* generateArg(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
-	asBindingProperty: boolean = true,
+	asBindingProperty = true,
 ): Generator<Code> {
 	const { arg } = prop;
 	if (arg?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -129,7 +129,7 @@ export function* generateModifiers(
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
 	propertyName: string = 'modifiers',
-	asBindingProperty: boolean = true,
+	asBindingProperty = true,
 ): Generator<Code> {
 	const { modifiers } = prop;
 	if (!modifiers.length) {
@@ -167,7 +167,7 @@ function* generateValue(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
-	asBindingProperty: boolean = true,
+	asBindingProperty = true,
 ): Generator<Code> {
 	const { exp } = prop;
 	if (exp?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -176,19 +176,16 @@ function* generateValue(
 		}
 		return;
 	}
+	const boundary = yield* Boundary.start('template', exp.loc.start.offset, codeFeatures.verification);
 	if (asBindingProperty) {
-		const boundary = yield* Boundary.start('template', exp.loc.start.offset, codeFeatures.verification);
 		yield `value`;
 		yield boundary.end(exp.loc.end.offset);
 		yield `: `;
+		yield* generatePropExp(options, ctx, prop, exp);
 	}
 	else {
 		yield `() => `;
+		yield* generatePropExp(options, ctx, prop, exp);
+		yield boundary.end(exp.loc.end.offset);
 	}
-	yield* generatePropExp(
-		options,
-		ctx,
-		prop,
-		exp,
-	);
 }
