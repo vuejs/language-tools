@@ -28,7 +28,12 @@ export function* generateElementDirectives(
 		) {
 			continue;
 		}
-		const boundary = yield* Boundary.start('template', prop.loc.start.offset, codeFeatures.verification);
+		const boundary = yield* Boundary.start(
+			'template',
+			prop.loc.start.offset,
+			prop.loc.end.offset,
+			codeFeatures.verification,
+		);
 		if (options.isVapor && !isBuiltInDirective(prop.name)) {
 			// vapor custom directives receive a value getter instead of a vdom binding object
 			yield* generateIdentifier(options, ctx, prop);
@@ -47,7 +52,7 @@ export function* generateElementDirectives(
 			yield* generateValue(options, ctx, prop);
 			yield `}, null!, null!)`;
 		}
-		yield boundary.end(prop.loc.end.offset);
+		yield boundary.end();
 		yield endOfLine;
 	}
 }
@@ -59,7 +64,12 @@ function* generateIdentifier(
 ): Generator<Code> {
 	const rawName = 'v-' + prop.name;
 	const startOffset = prop.loc.start.offset;
-	const boundary = yield* Boundary.start('template', startOffset, codeFeatures.verification);
+	const boundary = yield* Boundary.start(
+		'template',
+		startOffset,
+		startOffset + rawName.length,
+		codeFeatures.verification,
+	);
 	yield names.directives;
 	yield `.`;
 	yield* generateCamelized(
@@ -74,7 +84,7 @@ function* generateIdentifier(
 	if (!isBuiltInDirective(prop.name)) {
 		ctx.accessVariable('template', camelize(rawName), prop.loc.start.offset);
 	}
-	yield boundary.end(startOffset + rawName.length);
+	yield boundary.end();
 }
 
 function* generateArg(
@@ -87,9 +97,14 @@ function* generateArg(
 	if (arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const startOffset = arg.loc.start.offset + arg.loc.source.indexOf(arg.content);
 		if (asBindingProperty) {
-			const boundary = yield* Boundary.start('template', startOffset, codeFeatures.verification);
+			const boundary = yield* Boundary.start(
+				'template',
+				startOffset,
+				startOffset + arg.content.length,
+				codeFeatures.verification,
+			);
 			yield `arg`;
-			yield boundary.end(startOffset + arg.content.length);
+			yield boundary.end();
 			yield `: `;
 		}
 		if (arg.isStatic) {
@@ -128,11 +143,14 @@ export function* generateModifiers(
 	const { modifiers } = prop;
 	if (modifiers.length) {
 		if (asBindingProperty) {
-			const startOffset = modifiers[0]!.loc.start.offset - 1;
-			const endOffset = modifiers.at(-1)!.loc.end.offset;
-			const boundary = yield* Boundary.start('template', startOffset, codeFeatures.verification);
+			const boundary = yield* Boundary.start(
+				'template',
+				modifiers[0]!.loc.start.offset - 1,
+				modifiers.at(-1)!.loc.end.offset,
+				codeFeatures.verification,
+			);
 			yield propertyName;
-			yield boundary.end(endOffset);
+			yield boundary.end();
 			yield `: `;
 		}
 		yield `{ `;
@@ -161,17 +179,22 @@ function* generateValue(
 ): Generator<Code> {
 	const { exp } = prop;
 	if (exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		const boundary = yield* Boundary.start('template', exp.loc.start.offset, codeFeatures.verification);
+		const boundary = yield* Boundary.start(
+			'template',
+			exp.loc.start.offset,
+			exp.loc.end.offset,
+			codeFeatures.verification,
+		);
 		if (asBindingProperty) {
 			yield `value`;
-			yield boundary.end(exp.loc.end.offset);
+			yield boundary.end();
 			yield `: `;
 			yield* generatePropExp(options, ctx, prop, exp);
 		}
 		else {
 			yield `() => `;
 			yield* generatePropExp(options, ctx, prop, exp);
-			yield boundary.end(exp.loc.end.offset);
+			yield boundary.end();
 		}
 		yield `, `;
 	}

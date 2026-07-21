@@ -120,6 +120,7 @@ export function* generateElementProps(
 			const boundary = yield* Boundary.start(
 				'template',
 				prop.loc.start.offset,
+				prop.loc.end.offset,
 				codeFeatures.verification,
 			);
 			if (prop.arg) {
@@ -136,17 +137,23 @@ export function* generateElementProps(
 				const boundary2 = yield* Boundary.start(
 					'template',
 					prop.loc.start.offset,
+					prop.loc.start.offset + 'v-model'.length,
 					codeFeatures.withoutHighlightAndCompletion,
 				);
 				yield propName;
-				yield boundary2.end(prop.loc.start.offset + 'v-model'.length);
+				yield boundary2.end();
 			}
 			yield `: `;
 			const argLoc = prop.arg?.loc ?? prop.loc;
-			const boundary3 = yield* Boundary.start('template', argLoc.start.offset, codeFeatures.verification);
+			const boundary3 = yield* Boundary.start(
+				'template',
+				argLoc.start.offset,
+				argLoc.end.offset,
+				codeFeatures.verification,
+			);
 			yield* generatePropExp(options, ctx, prop, prop.exp);
-			yield boundary3.end(argLoc.end.offset);
-			yield boundary.end(prop.loc.end.offset);
+			yield boundary3.end();
+			yield boundary.end();
 			if (shouldSpread) {
 				yield ` }`;
 			}
@@ -174,7 +181,12 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			const boundary = yield* Boundary.start('template', prop.loc.start.offset, codeFeatures.verification);
+			const boundary = yield* Boundary.start(
+				'template',
+				prop.loc.start.offset,
+				prop.loc.end.offset,
+				codeFeatures.verification,
+			);
 			const prefix = options.template.content.slice(prop.loc.start.offset, prop.loc.start.offset + 1);
 			if (prefix === '.' || prefix === '#') {
 				// Pug shorthand syntax
@@ -202,7 +214,7 @@ export function* generateElementProps(
 			else {
 				yield `true`;
 			}
-			yield boundary.end(prop.loc.end.offset);
+			yield boundary.end();
 			if (shouldSpread) {
 				yield ` }`;
 			}
@@ -217,7 +229,12 @@ export function* generateElementProps(
 				failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 			}
 			else {
-				const boundary = yield* Boundary.start('template', prop.exp.loc.start.offset, codeFeatures.verification);
+				const boundary = yield* Boundary.start(
+					'template',
+					prop.exp.loc.start.offset,
+					prop.exp.loc.end.offset,
+					codeFeatures.verification,
+				);
 				yield `...`;
 				yield* generatePropExp(
 					options,
@@ -225,7 +242,7 @@ export function* generateElementProps(
 					prop,
 					prop.exp,
 				);
-				yield boundary.end(prop.exp.loc.end.offset);
+				yield boundary.end();
 				yield `,${newLine}`;
 			}
 		}

@@ -47,11 +47,11 @@ export function* generateObjectProperty(
 			yield* generateCamelized(code, 'template', offset, features);
 		}
 		else {
-			const boundary = yield* Boundary.start('template', offset, features);
+			const boundary = yield* Boundary.start('template', offset, offset + code.length, features);
 			yield `'`;
 			yield* generateCamelized(code, 'template', offset, boundary.features);
 			yield `'`;
-			yield boundary.end(offset + code.length);
+			yield boundary.end();
 		}
 	}
 	else {

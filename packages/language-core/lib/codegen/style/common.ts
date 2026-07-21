@@ -10,11 +10,16 @@ export function* generateClassProperty(
 	propertyType: string,
 ): Generator<Code> {
 	yield `${newLine} & { `;
-	const boundary = yield* Boundary.start(source, offset, codeFeatures.navigation);
+	const boundary = yield* Boundary.start(
+		source,
+		offset,
+		offset + classNameWithDot.length,
+		codeFeatures.navigation,
+	);
 	yield `'`;
 	yield [classNameWithDot.slice(1), source, offset + 1, boundary.features];
 	yield `'`;
-	yield boundary.end(offset + classNameWithDot.length);
+	yield boundary.end();
 	yield `: ${propertyType}`;
 	yield ` }`;
 }
@@ -22,11 +27,16 @@ export function* generateClassProperty(
 export function* generateStyleImports(style: IRStyle): Generator<Code> {
 	if (typeof style.src === 'object') {
 		yield `${newLine} & typeof import(`;
-		const boundary = yield* Boundary.start('main', style.src.offset, codeFeatures.navigationAndVerification);
+		const boundary = yield* Boundary.start(
+			'main',
+			style.src.offset,
+			style.src.offset + style.src.text.length,
+			codeFeatures.navigationAndVerification,
+		);
 		yield `'`;
 		yield [style.src.text, 'main', style.src.offset, boundary.features];
 		yield `'`;
-		yield boundary.end(style.src.offset + style.src.text.length);
+		yield boundary.end();
 		yield `).default`;
 	}
 	for (const { text, offset } of style.imports) {

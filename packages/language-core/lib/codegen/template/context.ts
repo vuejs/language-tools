@@ -88,6 +88,7 @@ export function createTemplateCodegenContext() {
 			const boundary = yield* Boundary.start(
 				'template',
 				info.expectError.node.loc.start.offset,
+				info.expectError.node.loc.end.offset,
 				{
 					verification: {
 						shouldReport: () => info.expectError!.token === 0,
@@ -95,7 +96,7 @@ export function createTemplateCodegenContext() {
 				},
 			);
 			yield `// @ts-expect-error`;
-			yield boundary.end(info.expectError.node.loc.end.offset);
+			yield boundary.end();
 			yield `${newLine}${endOfLine}`;
 		}
 	}

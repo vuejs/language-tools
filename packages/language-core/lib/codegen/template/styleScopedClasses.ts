@@ -140,7 +140,12 @@ export function* generateStyleScopedClassReference(
 	}
 
 	yield `/** @type {${names.StyleScopedClasses}[`;
-	const boundary = yield* Boundary.start(block.name, fullStart, codeFeatures.navigationAndCompletion);
+	const boundary = yield* Boundary.start(
+		block.name,
+		fullStart,
+		offset + className.length,
+		codeFeatures.navigationAndCompletion,
+	);
 	yield `'`;
 	yield* generateEscaped(
 		className,
@@ -150,6 +155,6 @@ export function* generateStyleScopedClassReference(
 		classNameEscapeRE,
 	);
 	yield `'`;
-	yield boundary.end(offset + className.length);
+	yield boundary.end();
 	yield `]} */${endOfLine}`;
 }

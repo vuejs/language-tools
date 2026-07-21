@@ -6,10 +6,10 @@ export function* generateStringLiteralKey(code: string, offset?: number, info?: 
 		yield `'${code}'`;
 	}
 	else {
-		const boundary = yield* Boundary.start('template', offset, info);
+		const boundary = yield* Boundary.start('template', offset, offset + code.length, info);
 		yield `'`;
 		yield [code, 'template', offset, boundary.features];
 		yield `'`;
-		yield boundary.end(offset + code.length);
+		yield boundary.end();
 	}
 }
