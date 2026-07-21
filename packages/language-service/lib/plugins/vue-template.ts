@@ -867,7 +867,8 @@ export function create(
 			}
 
 			async function getCustomData() {
-				const paths: string[] = await context.env.getConfiguration?.('html.customData') ?? [];
+			  const rawPaths = await context.env.getConfiguration?.('html.customData');
+			  const paths: string[] = Array.isArray(rawPaths) ? rawPaths.filter(Boolean) : [];
 				const customData: html.IHTMLDataProvider[] = [];
 				for (const path of paths) {
 					for (const workspaceFolder of context.env.workspaceFolders) {
