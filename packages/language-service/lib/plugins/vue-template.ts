@@ -867,7 +867,7 @@ export function create(
 			}
 
 			async function getCustomData() {
-				// Some LSP clients represent unset configuration as `[null]`
+				// some LSP clients represent unset configuration as `[null]`
 				const raw = await context.env.getConfiguration?.('html.customData');
 				const paths: string[] = Array.isArray(raw) ? raw.filter(Boolean) : [];
 				const customData: html.IHTMLDataProvider[] = [];
