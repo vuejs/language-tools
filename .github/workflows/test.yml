@@ -31,14 +31,14 @@ jobs:
         shell: bash
         run: |
           git config --global core.longpaths true
-          git clone --depth 1 https://github.com/johnsoncodehk/typescript-native-bridge.git "$RUNNER_TEMP/tnb"
-          cd "$RUNNER_TEMP/tnb"
+          git clone --depth 1 https://github.com/johnsoncodehk/typescript-native-bridge.git typescript-native-bridge
+          cd typescript-native-bridge
           git submodule update --init --depth 1 typescript typescript-go
 
       - name: Build TNB lib
         shell: bash
         run: |
-          cd "$RUNNER_TEMP/tnb"
+          cd typescript-native-bridge
           npm ci
           npm ci --prefix typescript
           npm ci --prefix typescript-go
@@ -49,7 +49,7 @@ jobs:
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          cd "$RUNNER_TEMP/tnb"
+          cd typescript-native-bridge
           node tools/patch-tsgo.js
           npm run build:bridge
 
@@ -57,7 +57,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          cd "$RUNNER_TEMP/tnb"
+          cd typescript-native-bridge
           curl -fsSL https://github.com/mstorsjo/llvm-mingw/releases/download/20250417/llvm-mingw-20250417-ucrt-x86_64.zip -o "$RUNNER_TEMP/llvm-mingw.zip"
           unzip -q "$RUNNER_TEMP/llvm-mingw.zip" -d "$RUNNER_TEMP"
           curl -fsSL https://nodejs.org/dist/v24.18.0/win-x64/node.lib -o "$RUNNER_TEMP/node.lib"
@@ -70,7 +70,7 @@ jobs:
       - name: Point the typescript override at the TNB build
         shell: bash
         run: |
-          node -e "const fs=require('fs');const p='pnpm-workspace.yaml';let s=fs.readFileSync(p,'utf8');s=s.replace(/typescript: npm:typescript-native-bridge@.*/,'typescript: link:'+process.env.RUNNER_TEMP.replace(/\\\\/g,'/')+'/tnb');fs.writeFileSync(p,s);console.log(s.match(/overrides:[\s\S]*/)[0])"
+          node -e "const fs=require('fs');const p='pnpm-workspace.yaml';let s=fs.readFileSync(p,'utf8');s=s.replace(/typescript: npm:typescript-native-bridge@.*/,'typescript: link:./typescript-native-bridge');fs.writeFileSync(p,s);console.log(s.match(/overrides:[\s\S]*/)[0])"
 
       - run: pnpm install --no-frozen-lockfile
 
