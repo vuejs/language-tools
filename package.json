@@ -17,7 +17,7 @@
 		"@tsslint/config": "latest",
 		"@typescript-eslint/eslint-plugin": "latest",
 		"dprint": "latest",
-		"typescript": "link:./typescript-native-bridge",
+		"typescript": "latest",
 		"vitest": "latest"
 	}
 }

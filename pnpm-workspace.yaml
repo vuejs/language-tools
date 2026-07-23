@@ -10,10 +10,11 @@ packages:
   - test-workspace
 
 allowBuilds:
-  '@vscode/vsce-sign': true
+  "@vscode/vsce-sign": true
   dprint: true
+  # Not in the workspace tree; CI gets keytar transitively via
+  # `pnpm dlx @vscode/vsce publish` (vsce depends on keytar ^7.7.0).
   keytar: true
-  koffi: true
 
 overrides:
-  typescript: link:./typescript-native-bridge
+  typescript: npm:typescript-native-bridge@6.0.3-bridge.2.tsgo.7.0.2
