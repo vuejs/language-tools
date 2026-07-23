@@ -224,9 +224,9 @@ export function* generateSetupFunction(
 			transforms.push(
 				insert(callExp.end, function*() {
 					yield ` as ${type}[`;
-					const boundary = yield* Boundary.start(scriptSetup.name, exp.start, codeFeatures.verification);
+					const boundary = yield* Boundary.start(scriptSetup.name, exp.start, exp.end, codeFeatures.verification);
 					yield `'$style'`;
-					yield boundary.end(exp.end);
+					yield boundary.end();
 					yield `])`;
 				}),
 			);

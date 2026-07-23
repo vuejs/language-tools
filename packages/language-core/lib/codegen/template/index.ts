@@ -12,6 +12,7 @@ export interface TemplateCodegenOptions {
 	typescript: typeof ts;
 	vueCompilerOptions: VueCompilerOptions;
 	template: IRTemplate;
+	isVapor: boolean;
 	setupRefs: Set<string>;
 	setupConsts: Set<string>;
 	hasDefineSlots?: boolean;
@@ -132,9 +133,9 @@ function* generateSlotsType(
 			);
 		}
 		else {
-			const boundary = yield* Boundary.start('template', slot.tagRange[0], codeFeatures.navigation);
+			const boundary = yield* Boundary.start('template', ...slot.tagRange, codeFeatures.navigation);
 			yield `default`;
-			yield boundary.end(slot.tagRange[1]);
+			yield boundary.end();
 		}
 		yield `?: (props: typeof ${slot.propsVar}) => any }`;
 	}

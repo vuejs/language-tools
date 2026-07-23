@@ -115,6 +115,11 @@
 					"default": false,
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/577"
 				},
+				"vapor": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Enable Vapor mode for all Vue SFCs."
+				},
 				"fallthroughAttributes": {
 					"type": "boolean",
 					"default": false,

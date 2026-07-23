@@ -75,6 +75,10 @@ function useCodegen(
 		return vueCompilerOptions;
 	});
 
+	const getIsVapor = computed(() =>
+		getResolvedOptions().vapor || !!(ir.scriptSetup?.attrs.vapor || ir.template?.attrs.vapor)
+	);
+
 	const getScriptRanges = computed(() =>
 		ir.script && validLangs.has(ir.script.lang)
 			? parseScriptRanges(ts, ir.script.ast, getResolvedOptions())
@@ -184,6 +188,7 @@ function useCodegen(
 			typescript: ts,
 			vueCompilerOptions: getResolvedOptions(),
 			template: ir.template,
+			isVapor: getIsVapor(),
 			componentName: getComponentName(),
 			setupConsts: getSetupConsts(),
 			setupRefs: getSetupRefs(),

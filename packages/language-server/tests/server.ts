@@ -20,7 +20,9 @@ export async function getLanguageServer(): Promise<{
 }> {
 	if (!serverHandle) {
 		tsserver = launchServer(
-			path.join(__dirname, '..', '..', '..', 'node_modules', 'typescript', 'lib', 'tsserver.js'),
+			require.resolve('@typescript/old/lib/tsserver', {
+				paths: [path.dirname(require.resolve('typescript/package.json'))],
+			}),
 			[
 				'--disableAutomaticTypingAcquisition',
 				'--globalPlugins',

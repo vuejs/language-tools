@@ -130,18 +130,17 @@ export function* generateEventArg(
 	if (directive.length) {
 		name = capitalize(name);
 	}
+	const boundary = yield* Boundary.start('template', start, start + name.length, features);
 	if (identifierRE.test(camelize(name))) {
-		const boundary = yield* Boundary.start('template', start, features);
 		yield directive;
 		yield* generateCamelized(name, 'template', start, boundary.features);
 	}
 	else {
-		const boundary = yield* Boundary.start('template', start, features);
 		yield `'`;
 		yield directive;
 		yield* generateCamelized(name, 'template', start, boundary.features);
 		yield `'`;
-		yield boundary.end(start + name.length);
+		yield boundary.end();
 	}
 }
 

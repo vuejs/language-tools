@@ -1,6 +1,6 @@
 {
 	"name": "vue-tsc",
-	"version": "3.3.6",
+	"version": "3.3.8",
 	"license": "MIT",
 	"files": [
 		"bin",
@@ -24,6 +24,7 @@
 		"@vue/language-core": "workspace:*"
 	},
 	"devDependencies": {
-		"@types/node": "^26.0.1"
+		"@types/node": "^26.0.1",
+		"typescript": "catalog:"
 	}
 }

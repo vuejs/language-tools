@@ -51,15 +51,20 @@ function* generateWorker(
 		}
 
 		yield `import ${names.src} from `;
-		const boundary = yield* Boundary.start('main', script.src.offset, {
-			...codeFeatures.all,
-			...src !== script.src.text ? codeFeatures.navigationWithoutRename : {},
-		});
+		const boundary = yield* Boundary.start(
+			'main',
+			script.src.offset,
+			script.src.offset + script.src.text.length,
+			{
+				...codeFeatures.all,
+				...src !== script.src.text ? codeFeatures.navigationWithoutRename : {},
+			},
+		);
 		yield `'`;
 		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, boundary.features];
 		yield src.slice(script.src.text.length);
 		yield `'`;
-		yield boundary.end(script.src.offset + script.src.text.length);
+		yield boundary.end();
 		yield endOfLine;
 		yield `export default ${names.src}${endOfLine}`;
 
@@ -264,8 +269,8 @@ function* generateGlobalTypesReference(
 
 function* generateExportDeclareEqual(block: IRBlock, name: string): Generator<Code> {
 	yield `const `;
-	const boundary = yield* Boundary.start(block.name, 0, codeFeatures.doNotReportTs6133);
+	const boundary = yield* Boundary.start(block.name, 0, block.content.length, codeFeatures.doNotReportTs6133);
 	yield name;
-	yield boundary.end(block.content.length);
+	yield boundary.end();
 	yield ` = `;
 }

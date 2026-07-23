@@ -39,18 +39,24 @@ export function* generateVSlot(
 			const boundary = yield* Boundary.start(
 				'template',
 				slotDir.loc.start.offset,
+				slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
 				codeFeatures.withoutHighlightAndCompletion,
 			);
 			yield `default`;
-			yield boundary.end(slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0));
+			yield boundary.end();
 		}
 	}
 	else {
 		yield `const { `;
 		// #932: reference for implicit default slot
-		const boundary = yield* Boundary.start('template', node.loc.start.offset, codeFeatures.navigation);
+		const boundary = yield* Boundary.start(
+			'template',
+			node.loc.start.offset,
+			node.loc.end.offset,
+			codeFeatures.navigation,
+		);
 		yield `default`;
-		yield boundary.end(node.loc.end.offset);
+		yield boundary.end();
 	}
 	yield `: ${slotVar} } = ${ctxVar}.slots!${endOfLine}`;
 
@@ -144,11 +150,16 @@ function* generateSlotParameters(
 
 	if (types.some(t => t)) {
 		yield `, `;
-		const boundary = yield* Boundary.start('template', exp.loc.start.offset, codeFeatures.verification);
+		const boundary = yield* Boundary.start(
+			'template',
+			exp.loc.start.offset,
+			exp.loc.end.offset,
+			codeFeatures.verification,
+		);
 		yield `(`;
 		yield* types.flatMap(type => type ? [`_`, type, `, `] : `_, `);
 		yield `) => [] as any`;
-		yield boundary.end(exp.loc.end.offset);
+		yield boundary.end();
 	}
 	yield `)${endOfLine}`;
 }

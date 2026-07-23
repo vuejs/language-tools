@@ -72,6 +72,7 @@ export function* generateInterpolation(
 			const boundary = yield* Boundary.start(
 				block.name,
 				start + offset,
+				start + offset + name.length,
 				codeFeatures.verification,
 			);
 			if (ctx.dollarVars.has(name)) {
@@ -90,7 +91,7 @@ export function* generateInterpolation(
 					? { ...data, __shorthandExpression: 'js' }
 					: data,
 			];
-			yield boundary.end(start + offset + name.length);
+			yield boundary.end();
 		}
 
 		prevEnd = offset + name.length;
