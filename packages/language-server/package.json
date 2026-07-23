@@ -31,6 +31,6 @@
 	"devDependencies": {
 		"@typescript/server-harness": "latest",
 		"@volar/test-utils": "2.4.28",
-		"typescript": "catalog:"
+		"typescript": "latest"
 	}
 }
