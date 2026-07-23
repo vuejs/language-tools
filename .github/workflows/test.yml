@@ -65,7 +65,7 @@ jobs:
           (cd "$RUNNER_TEMP" && curl -fsSL https://nodejs.org/dist/v24.18.0/node-v24.18.0-headers.tar.gz | tar -xz)
           export PATH="$RUNNER_TEMP/llvm-mingw-20250417-ucrt-x86_64/bin:$PATH"
           node tools/patch-tsgo.js
-          NODE_INCLUDE="$RUNNER_TEMP/node-v24.18.0/include/node" CC=x86_64-w64-mingw32-gcc TNB_NODE_LIB="$RUNNER_TEMP/node.lib" npm run build:bridge
+          NODE_INCLUDE="$RUNNER_TEMP/node-v24.18.0/include/node" CC=x86_64-w64-mingw32-gcc TNB_NODE_LIB="${RUNNER_TEMP//\\//}/node.lib" npm run build:bridge
 
       - name: Point the typescript override at the TNB build
         shell: bash
