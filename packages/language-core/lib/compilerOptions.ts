@@ -115,7 +115,7 @@ export class CompilerOptionsResolver {
 	options: Omit<RawVueCompilerOptions, 'target' | 'strictTemplates' | 'typesRoot' | 'plugins'> = {};
 	target: number | undefined;
 	typesRoot: string | undefined;
-	plugins: VueLanguagePlugin[] = [];
+	pluginModules = new Map<string, VueLanguagePlugin>();
 
 	constructor(
 		public ts: typeof import('typescript'),
@@ -162,7 +162,7 @@ export class CompilerOptionsResolver {
 								const plugins = Array.isArray(plugin) ? plugin : [plugin];
 								for (const plugin of plugins) {
 									plugin.__moduleConfig = raw;
-									this.plugins.push(plugin);
+									this.pluginModules.set(raw.name, plugin);
 								}
 							}
 							else {
@@ -196,7 +196,7 @@ export class CompilerOptionsResolver {
 		const resolvedOptions: VueCompilerOptions = {
 			...defaults,
 			...this.options,
-			plugins: this.plugins,
+			plugins: [...this.pluginModules.values()],
 			macros: {
 				...defaults.macros,
 				...this.options.macros,
