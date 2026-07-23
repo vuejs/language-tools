@@ -61,8 +61,8 @@ jobs:
           curl -fsSL https://github.com/mstorsjo/llvm-mingw/releases/download/20250417/llvm-mingw-20250417-ucrt-x86_64.zip -o "$RUNNER_TEMP/llvm-mingw.zip"
           unzip -q "$RUNNER_TEMP/llvm-mingw.zip" -d "$RUNNER_TEMP"
           curl -fsSL https://nodejs.org/dist/v24.18.0/win-x64/node.lib -o "$RUNNER_TEMP/node.lib"
-          # Git-Bash tar misparses the drive-letter colon in -C; extract in cwd.
-          cd "$RUNNER_TEMP" && curl -fsSL https://nodejs.org/dist/v24.18.0/node-v24.18.0-headers.tar.gz | tar -xz
+          # Git-Bash tar misparses the drive-letter colon in -C; extract in a subshell cwd.
+          (cd "$RUNNER_TEMP" && curl -fsSL https://nodejs.org/dist/v24.18.0/node-v24.18.0-headers.tar.gz | tar -xz)
           export PATH="$RUNNER_TEMP/llvm-mingw-20250417-ucrt-x86_64/bin:$PATH"
           node tools/patch-tsgo.js
           NODE_INCLUDE="$RUNNER_TEMP/node-v24.18.0/include/node" CC=x86_64-w64-mingw32-gcc TNB_NODE_LIB="$RUNNER_TEMP/node.lib" npm run build:bridge
