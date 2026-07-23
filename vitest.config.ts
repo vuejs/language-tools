@@ -5,9 +5,5 @@ export default defineConfig({
 		testTimeout: 60_000,
 		fileParallelism: false,
 		isolate: false,
-		include: [
-			'packages/**/tests/**/*.spec.ts',
-			'extensions/**/tests/**/*.spec.ts',
-		],
 	},
 });
