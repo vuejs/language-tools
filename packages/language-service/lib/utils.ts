@@ -11,11 +11,17 @@ export function resolveEmbeddedCode(
 	if (!decoded) {
 		return;
 	}
-	const sourceScript = context.language.scripts.get(decoded[0])!;
-	const code = sourceScript.generated!.embeddedCodes.get(decoded[1])!;
+	const sourceScript = context.language.scripts.get(decoded[0]);
+	if (!sourceScript?.generated) {
+		return;
+	}
+	const code = sourceScript.generated.embeddedCodes.get(decoded[1]);
+	if (!code) {
+		return;
+	}
 	return {
 		script: sourceScript as Required<SourceScript<URI>>,
 		code,
-		root: sourceScript.generated!.root as VueVirtualCode,
+		root: sourceScript.generated.root as VueVirtualCode,
 	};
 }

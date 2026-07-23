@@ -116,29 +116,56 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "type": "string | undefined",
 				}
 			`);
-			expect(barModifiers).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "barModifiers",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "Partial<Record<"trim" | "lazy", true>>",
-				    ],
-				    "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
-				  },
-				  "tags": [],
-				  "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
-				}
-			`);
+			if (withTsconfig) {
+				expect(barModifiers).toMatchInlineSnapshot(`
+					{
+					  "declarations": [],
+					  "default": undefined,
+					  "description": "",
+					  "getDeclarations": [Function],
+					  "getTypeObject": [Function],
+					  "global": false,
+					  "name": "barModifiers",
+					  "rawType": undefined,
+					  "required": false,
+					  "schema": {
+					    "kind": "enum",
+					    "schema": [
+					      "undefined",
+					      "Partial<Record<"lazy" | "trim", true>>",
+					    ],
+					    "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
+					  },
+					  "tags": [],
+					  "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
+					}
+				`);
+			}
+			else {
+				expect(barModifiers).toMatchInlineSnapshot(`
+					{
+					  "declarations": [],
+					  "default": undefined,
+					  "description": "",
+					  "getDeclarations": [Function],
+					  "getTypeObject": [Function],
+					  "global": false,
+					  "name": "barModifiers",
+					  "rawType": undefined,
+					  "required": false,
+					  "schema": {
+					    "kind": "enum",
+					    "schema": [
+					      "undefined",
+					      "Partial<Record<"trim" | "lazy", true>>",
+					    ],
+					    "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
+					  },
+					  "tags": [],
+					  "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
+					}
+				`);
+			}
 			expect(onUpdateBaz).toBeDefined();
 		});
 
@@ -386,49 +413,96 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			`);
 
 			const nestedOptional = meta.props.find(prop => prop.name === 'nestedOptional');
-			expect(nestedOptional).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "optional nested object",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "nestedOptional",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      {
-				        "kind": "object",
-				        "schema": {
-				          "nestedProp": {
-				            "declarations": [],
-				            "default": undefined,
-				            "description": "nested prop documentation",
-				            "getDeclarations": [Function],
-				            "getTypeObject": [Function],
-				            "global": false,
-				            "name": "nestedProp",
-				            "rawType": undefined,
-				            "required": true,
-				            "schema": "string",
-				            "tags": [],
-				            "type": "string",
-				          },
-				        },
-				        "type": "MyNestedProps",
-				      },
-				      "MyIgnoredNestedProps",
-				    ],
-				    "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
-				  },
-				  "tags": [],
-				  "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
-				}
-			`);
+			if (withTsconfig) {
+				expect(nestedOptional).toMatchInlineSnapshot(`
+					{
+					  "declarations": [],
+					  "default": undefined,
+					  "description": "optional nested object",
+					  "getDeclarations": [Function],
+					  "getTypeObject": [Function],
+					  "global": false,
+					  "name": "nestedOptional",
+					  "rawType": undefined,
+					  "required": false,
+					  "schema": {
+					    "kind": "enum",
+					    "schema": [
+					      "undefined",
+					      "MyIgnoredNestedProps",
+					      {
+					        "kind": "object",
+					        "schema": {
+					          "nestedProp": {
+					            "declarations": [],
+					            "default": undefined,
+					            "description": "nested prop documentation",
+					            "getDeclarations": [Function],
+					            "getTypeObject": [Function],
+					            "global": false,
+					            "name": "nestedProp",
+					            "rawType": undefined,
+					            "required": true,
+					            "schema": "string",
+					            "tags": [],
+					            "type": "string",
+					          },
+					        },
+					        "type": "MyNestedProps",
+					      },
+					    ],
+					    "type": "MyIgnoredNestedProps | MyNestedProps | undefined",
+					  },
+					  "tags": [],
+					  "type": "MyIgnoredNestedProps | MyNestedProps | undefined",
+					}
+				`);
+			}
+			else {
+				expect(nestedOptional).toMatchInlineSnapshot(`
+					{
+					  "declarations": [],
+					  "default": undefined,
+					  "description": "optional nested object",
+					  "getDeclarations": [Function],
+					  "getTypeObject": [Function],
+					  "global": false,
+					  "name": "nestedOptional",
+					  "rawType": undefined,
+					  "required": false,
+					  "schema": {
+					    "kind": "enum",
+					    "schema": [
+					      "undefined",
+					      {
+					        "kind": "object",
+					        "schema": {
+					          "nestedProp": {
+					            "declarations": [],
+					            "default": undefined,
+					            "description": "nested prop documentation",
+					            "getDeclarations": [Function],
+					            "getTypeObject": [Function],
+					            "global": false,
+					            "name": "nestedProp",
+					            "rawType": undefined,
+					            "required": true,
+					            "schema": "string",
+					            "tags": [],
+					            "type": "string",
+					          },
+					        },
+					        "type": "MyNestedProps",
+					      },
+					      "MyIgnoredNestedProps",
+					    ],
+					    "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
+					  },
+					  "tags": [],
+					  "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
+					}
+				`);
+			}
 
 			const array = meta.props.find(prop => prop.name === 'array');
 			expect(array).toMatchInlineSnapshot(`
@@ -572,33 +646,64 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			`);
 
 			const literalFromContext = meta.props.find(prop => prop.name === 'literalFromContext');
-			expect(literalFromContext).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "literal type alias that require context",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "literalFromContext",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      ""Uncategorized"",
-				      ""Content"",
-				      ""Interaction"",
-				      ""Display"",
-				      ""Forms"",
-				      ""Addons"",
-				    ],
-				    "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
-				  },
-				  "tags": [],
-				  "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
-				}
-			`);
+			if (withTsconfig) {
+				expect(literalFromContext).toMatchInlineSnapshot(`
+					{
+					  "declarations": [],
+					  "default": undefined,
+					  "description": "literal type alias that require context",
+					  "getDeclarations": [Function],
+					  "getTypeObject": [Function],
+					  "global": false,
+					  "name": "literalFromContext",
+					  "rawType": undefined,
+					  "required": true,
+					  "schema": {
+					    "kind": "enum",
+					    "schema": [
+					      ""Addons"",
+					      ""Content"",
+					      ""Display"",
+					      ""Forms"",
+					      ""Interaction"",
+					      ""Uncategorized"",
+					    ],
+					    "type": ""Addons" | "Content" | "Display" | "Forms" | "Interaction" | "Uncategorized"",
+					  },
+					  "tags": [],
+					  "type": ""Addons" | "Content" | "Display" | "Forms" | "Interaction" | "Uncategorized"",
+					}
+				`);
+			}
+			else {
+				expect(literalFromContext).toMatchInlineSnapshot(`
+					{
+					  "declarations": [],
+					  "default": undefined,
+					  "description": "literal type alias that require context",
+					  "getDeclarations": [Function],
+					  "getTypeObject": [Function],
+					  "global": false,
+					  "name": "literalFromContext",
+					  "rawType": undefined,
+					  "required": true,
+					  "schema": {
+					    "kind": "enum",
+					    "schema": [
+					      ""Uncategorized"",
+					      ""Content"",
+					      ""Interaction"",
+					      ""Display"",
+					      ""Forms"",
+					      ""Addons"",
+					    ],
+					    "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
+					  },
+					  "tags": [],
+					  "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
+					}
+				`);
+			}
 
 			const inlined = meta.props.find(prop => prop.name === 'inlined');
 			expect(inlined).toMatchInlineSnapshot(`

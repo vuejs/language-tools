@@ -4,17 +4,21 @@ trustPolicy: no-downgrade
 trustPolicyExclude:
   - semver@5.7.2
   - volar-service-pug@0.0.71
+# This repo dogfoods typescript-native-bridge releases on publish day;
+# pnpm 11's default 24h minimumReleaseAge gate would reject them.
+minimumReleaseAge: 0
 
 packages:
   - extensions/*
   - packages/*
   - test-workspace
 
-catalog:
-  typescript: npm:@typescript/typescript6@^6.0.2
-  typescript7: npm:typescript@^7.0.2
-
 allowBuilds:
-  '@vscode/vsce-sign': true
+  "@vscode/vsce-sign": true
   dprint: true
+  # Not in the workspace tree; CI gets keytar transitively via
+  # `pnpm dlx @vscode/vsce publish` (vsce depends on keytar ^7.7.0).
   keytar: true
+
+overrides:
+  typescript: npm:typescript-native-bridge@6.0.3-bridge.6.tsgo.7.0.2
