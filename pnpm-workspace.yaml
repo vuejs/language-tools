@@ -10,10 +10,6 @@ packages:
   - packages/*
   - test-workspace
 
-catalog:
-  typescript: npm:@typescript/typescript6@^6.0.2
-  typescript7: npm:typescript@^7.0.2
-
 allowBuilds:
   "@vscode/vsce-sign": true
   dprint: true
@@ -21,15 +17,5 @@ allowBuilds:
   # `pnpm dlx @vscode/vsce publish` (vsce depends on keytar ^7.7.0).
   keytar: true
 
-# This repo dogfoods typescript-native-bridge releases on publish day;
-# pnpm 11's default 24h minimumReleaseAge gate would reject them.
-minimumReleaseAge: 0
-
 overrides:
   typescript: npm:typescript-native-bridge@6.0.3-bridge.2.tsgo.7.0.2
-  # Single protocol/types copy: vscode-languageserver@9.0.1 pins 3.17.5 while
-  # @volar/* float to 3.18.x — two copies make ConfigurationRequest.type and
-  # connection.onRequest mutually unassignable (tsc -b errors in
-  # packages/language-server/tests/server.ts).
-  vscode-languageserver-protocol: 3.17.5
-  vscode-languageserver-types: 3.17.5
