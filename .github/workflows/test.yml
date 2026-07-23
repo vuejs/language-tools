@@ -20,6 +20,56 @@ jobs:
           node-version: 24
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      # Build TNB from source instead of consuming an npm release: the
+      # typescript override is pointed at the local build below, so the suite
+      # tests the latest TNB master without waiting for a publish cycle.
+      - name: Clone typescript-native-bridge
+        shell: bash
+        run: |
+          git config --global core.longpaths true
+          git clone --depth 1 https://github.com/johnsoncodehk/typescript-native-bridge.git "$RUNNER_TEMP/tnb"
+          cd "$RUNNER_TEMP/tnb"
+          git submodule update --init --depth 1 typescript typescript-go
+
+      - name: Build TNB lib
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP/tnb"
+          npm ci
+          npm ci --prefix typescript
+          npm ci --prefix typescript-go
+          npm run build:js
+          npm run build:lib
+
+      - name: Build TNB bridge (unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP/tnb"
+          node tools/patch-tsgo.js
+          npm run build:bridge
+
+      - name: Build TNB bridge (windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP/tnb"
+          curl -sSL https://github.com/mstorsjo/llvm-mingw/releases/download/20250417/llvm-mingw-20250417-ucrt-windows-x86_64.zip -o "$RUNNER_TEMP/llvm-mingw.zip"
+          unzip -q "$RUNNER_TEMP/llvm-mingw.zip" -d "$RUNNER_TEMP"
+          curl -sSL https://nodejs.org/dist/v24.18.0/win-x64/node.lib -o "$RUNNER_TEMP/node.lib"
+          export PATH="$RUNNER_TEMP/llvm-mingw-20250417-ucrt-windows-x86_64/bin:$PATH"
+          node tools/patch-tsgo.js
+          CC=x86_64-w64-mingw32-gcc TNB_NODE_LIB="$RUNNER_TEMP/node.lib" npm run build:bridge
+
+      - name: Point the typescript override at the TNB build
+        shell: bash
+        run: |
+          node -e "const fs=require('fs');const p='pnpm-workspace.yaml';let s=fs.readFileSync(p,'utf8');s=s.replace(/typescript: npm:typescript-native-bridge@.*/,'typescript: link:'+process.env.RUNNER_TEMP.replace(/\\\\/g,'/')+'/tnb');fs.writeFileSync(p,s);console.log(s.match(/overrides:[\s\S]*/)[0])"
+
+      - run: pnpm install
 
       - run: npm run test
