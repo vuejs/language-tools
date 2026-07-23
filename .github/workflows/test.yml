@@ -72,6 +72,6 @@ jobs:
         run: |
           node -e "const fs=require('fs');const p='pnpm-workspace.yaml';let s=fs.readFileSync(p,'utf8');s=s.replace(/typescript: npm:typescript-native-bridge@.*/,'typescript: link:'+process.env.RUNNER_TEMP.replace(/\\\\/g,'/')+'/tnb');fs.writeFileSync(p,s);console.log(s.match(/overrides:[\s\S]*/)[0])"
 
-      - run: pnpm install
+      - run: pnpm install --no-frozen-lockfile
 
       - run: npm run test
