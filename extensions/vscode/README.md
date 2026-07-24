@@ -1,9 +1,11 @@
 # Vue (Official)
 
+<!-- https://github.com/badges/shields/pull/11792
 <p>
   <a href="https://marketplace.visualstudio.com/items?itemName=Vue.volar"><img src="https://img.shields.io/visual-studio-marketplace/v/Vue.volar?labelColor=18181B&color=1584FC" alt="Version"></a>
   <a href="https://marketplace.visualstudio.com/items?itemName=Vue.volar"><img src="https://img.shields.io/visual-studio-marketplace/i/Vue.volar?labelColor=18181B&color=1584FC" alt="Downloads"></a>
 </p>
+-->
 
 Vue language support extension for VSCode, providing a full development experience for Vue Single File Components (SFCs).
 
