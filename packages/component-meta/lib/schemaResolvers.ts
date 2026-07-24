@@ -335,11 +335,14 @@ export function createSchemaResolvers(
 			// enum members stringify to their qualified name (e.g. "MyEnum.Small"), which
 			// hides the runtime value from consumers such as docs generators; expose the
 			// value alongside, printed like any other literal
-			return {
-				kind: 'literal',
-				type,
-				value: typeof subtype.value === 'string' ? `"${subtype.value}"` : String(subtype.value),
-			};
+			const { value } = subtype;
+			if (typeof value === 'string' || typeof value === 'number') {
+				return {
+					kind: 'literal',
+					type,
+					value: typeof value === 'string' ? `"${value}"` : String(value),
+				};
+			}
 		}
 
 		return type;
