@@ -101,6 +101,7 @@ export interface ExposeMeta {
 
 export type PropertyMetaSchema =
 	| string
+	| { kind: 'literal'; type: string; value: string }
 	| { kind: 'enum'; type: string; schema?: PropertyMetaSchema[] }
 	| { kind: 'array'; type: string; schema?: PropertyMetaSchema[] }
 	| { kind: 'event'; type: string; schema?: PropertyMetaSchema[] }

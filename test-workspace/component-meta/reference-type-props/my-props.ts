@@ -19,6 +19,12 @@ enum MyEnum {
 	Large,
 }
 
+enum MyStringEnum {
+	Small = 'small',
+	Medium = 'medium',
+	Large = 'large',
+}
+
 namespace MyNamespace {
 	export type MyType = {};
 }
@@ -94,6 +100,10 @@ export interface MyProps {
 	 * enum value
 	 */
 	enumValue: MyEnum;
+	/**
+	 * string enum value
+	 */
+	stringEnumValue: MyStringEnum;
 	/**
 	 * namespace type
 	 */
