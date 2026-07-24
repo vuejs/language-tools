@@ -753,6 +753,11 @@ declare enum MyEnum {
     Medium = 1,
     Large = 2
 }
+declare enum MyStringEnum {
+    Small = "small",
+    Medium = "medium",
+    Large = "large"
+}
 declare namespace MyNamespace {
     type MyType = {};
 }
@@ -818,6 +823,10 @@ export interface MyProps {
      * enum value
      */
     enumValue: MyEnum;
+    /**
+     * string enum value
+     */
+    stringEnumValue: MyStringEnum;
     /**
      * namespace type
      */

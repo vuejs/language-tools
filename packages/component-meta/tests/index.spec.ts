@@ -612,14 +612,64 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "schema": {
 				    "kind": "enum",
 				    "schema": [
-				      "MyEnum.Small",
-				      "MyEnum.Medium",
-				      "MyEnum.Large",
+				      {
+				        "kind": "literal",
+				        "type": "MyEnum.Small",
+				        "value": "0",
+				      },
+				      {
+				        "kind": "literal",
+				        "type": "MyEnum.Medium",
+				        "value": "1",
+				      },
+				      {
+				        "kind": "literal",
+				        "type": "MyEnum.Large",
+				        "value": "2",
+				      },
 				    ],
 				    "type": "MyEnum",
 				  },
 				  "tags": [],
 				  "type": "MyEnum",
+				}
+			`);
+
+			const stringEnumValue = meta.props.find(prop => prop.name === 'stringEnumValue');
+			expect(stringEnumValue).toMatchInlineSnapshot(`
+				{
+				  "declarations": [],
+				  "default": undefined,
+				  "description": "string enum value",
+				  "getDeclarations": [Function],
+				  "getTypeObject": [Function],
+				  "global": false,
+				  "name": "stringEnumValue",
+				  "rawType": undefined,
+				  "required": true,
+				  "schema": {
+				    "kind": "enum",
+				    "schema": [
+				      {
+				        "kind": "literal",
+				        "type": "MyStringEnum.Small",
+				        "value": ""small"",
+				      },
+				      {
+				        "kind": "literal",
+				        "type": "MyStringEnum.Medium",
+				        "value": ""medium"",
+				      },
+				      {
+				        "kind": "literal",
+				        "type": "MyStringEnum.Large",
+				        "value": ""large"",
+				      },
+				    ],
+				    "type": "MyStringEnum",
+				  },
+				  "tags": [],
+				  "type": "MyStringEnum",
 				}
 			`);
 
