@@ -340,7 +340,7 @@ export function createSchemaResolvers(
 				return {
 					kind: 'literal',
 					type,
-					value: typeof value === 'string' ? `"${value}"` : String(value),
+					value: JSON.stringify(value),
 				};
 			}
 		}
