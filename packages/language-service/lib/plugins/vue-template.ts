@@ -897,12 +897,21 @@ export function create(
 					return;
 				}
 
+				const replacementStart = document.offsetAt(replacement.textEdit.range.start);
+				const start = replacement.text.lastIndexOf('.', document.offsetAt(position) - replacementStart - 1) + 1;
+				if (start === 0) {
+					return;
+				}
+
+				const nextModifierStart = replacement.text.indexOf('.', start);
+				const end = nextModifierStart !== -1 ? nextModifierStart : replacement.text.length;
+				const range = {
+					start: document.positionAt(replacementStart + start),
+					end: document.positionAt(replacementStart + end),
+				};
+
 				const [text, ...modifiers] = replacement.text.split('.') as [string, ...string[]];
-				const beforeCursor = replacement.text.slice(
-					0,
-					document.offsetAt(position) - document.offsetAt(replacement.textEdit.range.start),
-				);
-				const editIndex = Math.max(0, Math.min(beforeCursor.split('.').length - 2, modifiers.length - 1));
+
 				const isVOn = text.startsWith(DIRECTIVE_V_ON) || text.startsWith(V_ON_SHORTHAND) && text.length > 1;
 				const isVBind = text.startsWith(DIRECTIVE_V_BIND) || text.startsWith(V_BIND_SHORTHAND) && text.length > 1;
 				const isVModel = text.startsWith(DIRECTIVE_V_MODEL) || text === 'v-model';
@@ -924,19 +933,16 @@ export function create(
 					}
 
 					const description = currentModifiers[modifier]!;
-					const newModifiers = modifiers.slice();
-					newModifiers[editIndex] = modifier;
-					const insertText = text + newModifiers.map(m => '.' + m).join('');
 					const newItem: html.CompletionItem = {
 						label: modifier,
-						filterText: insertText,
+						filterText: modifier,
 						documentation: {
 							kind: 'markdown',
 							value: description,
 						},
 						textEdit: {
-							range: replacement.textEdit.range,
-							newText: insertText,
+							range,
+							newText: modifier,
 						},
 						kind: 20 satisfies typeof CompletionItemKind.EnumMember,
 					};

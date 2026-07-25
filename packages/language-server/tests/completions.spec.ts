@@ -862,7 +862,21 @@ test('#6132', async () => {
 	`,
 		'capture',
 	);
-	expect((item.textEdit as any).newText).toBe('@click.capture.stop');
+	expect(item.textEdit).toMatchInlineSnapshot(`
+		{
+		  "newText": "capture",
+		  "range": {
+		    "end": {
+		      "character": 15,
+		      "line": 2,
+		    },
+		    "start": {
+		      "character": 15,
+		      "line": 2,
+		    },
+		  },
+		}
+	`);
 });
 
 test('Alias path', async () => {
