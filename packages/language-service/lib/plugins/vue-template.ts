@@ -893,7 +893,7 @@ export function create(
 				position: Position,
 			) {
 				const replacement = getReplacement(item, document);
-				if (!replacement?.text.includes('.')) {
+				if (!replacement?.text) {
 					return;
 				}
 
@@ -903,51 +903,47 @@ export function create(
 					return;
 				}
 
-				const nextModifierStart = replacement.text.indexOf('.', start);
-				const end = nextModifierStart !== -1 ? nextModifierStart : replacement.text.length;
-				const range = {
-					start: document.positionAt(replacementStart + start),
-					end: document.positionAt(replacementStart + end),
-				};
+				const [text, ...existingModifiers] = replacement.text.split('.') as [string, ...string[]];
 
-				const [text, ...modifiers] = replacement.text.split('.') as [string, ...string[]];
-
-				const isVOn = text.startsWith(DIRECTIVE_V_ON) || text.startsWith(V_ON_SHORTHAND) && text.length > 1;
-				const isVBind = text.startsWith(DIRECTIVE_V_BIND) || text.startsWith(V_BIND_SHORTHAND) && text.length > 1;
-				const isVModel = text.startsWith(DIRECTIVE_V_MODEL) || text === 'v-model';
-				const currentModifiers = isVOn
-					? vOnModifiers
-					: isVBind
-					? vBindModifiers
-					: isVModel
-					? vModelModifiers
-					: undefined;
-
-				if (!currentModifiers) {
-					return;
+				let matchedModifiers: Record<string, string> | undefined;
+				if (text.startsWith(DIRECTIVE_V_ON) || text.startsWith(V_ON_SHORTHAND) && text.length > 1) {
+					matchedModifiers = vOnModifiers;
+				}
+				else if (text.startsWith(DIRECTIVE_V_BIND) || text.startsWith(V_BIND_SHORTHAND) && text.length > 1) {
+					matchedModifiers = vBindModifiers;
+				}
+				else if (text.startsWith(DIRECTIVE_V_MODEL) || text === 'v-model') {
+					matchedModifiers = vModelModifiers;
 				}
 
-				for (const modifier in currentModifiers) {
-					if (modifiers.includes(modifier)) {
-						continue;
-					}
-
-					const description = currentModifiers[modifier]!;
-					const newItem: html.CompletionItem = {
-						label: modifier,
-						filterText: modifier,
-						documentation: {
-							kind: 'markdown',
-							value: description,
-						},
-						textEdit: {
-							range,
-							newText: modifier,
-						},
-						kind: 20 satisfies typeof CompletionItemKind.EnumMember,
+				if (matchedModifiers) {
+					const nextModifierStart = replacement.text.indexOf('.', start);
+					const end = nextModifierStart !== -1 ? nextModifierStart : replacement.text.length;
+					const range = {
+						start: document.positionAt(replacementStart + start),
+						end: document.positionAt(replacementStart + end),
 					};
+					const currentModifier = replacement.text.slice(start, end);
 
-					list.items.push(newItem);
+					for (const modifier in matchedModifiers) {
+						if (existingModifiers.includes(modifier) && modifier !== currentModifier) {
+							continue;
+						}
+
+						list.items.push({
+							label: modifier,
+							filterText: modifier,
+							documentation: {
+								kind: 'markdown',
+								value: matchedModifiers[modifier]!,
+							},
+							textEdit: {
+								range,
+								newText: modifier,
+							},
+							kind: 20 satisfies typeof CompletionItemKind.EnumMember,
+						});
+					}
 				}
 			}
 		},
