@@ -3,6 +3,7 @@ import {
 	type CompletionItemTag,
 	type CompletionList,
 	type LanguageServicePlugin,
+	type Position,
 	type TextDocument,
 	transformCompletionItem,
 } from '@volar/language-service';
@@ -238,7 +239,7 @@ export function create(
 					}
 
 					if (htmlCompletion.items[0]?.kind === 12 satisfies typeof CompletionItemKind.Value) {
-						addDirectiveModifiers(htmlCompletion, htmlCompletion.items[0], document);
+						addDirectiveModifiers(htmlCompletion, htmlCompletion.items[0], document, position);
 					}
 
 					await resolveAutoImportPlaceholder(htmlCompletion, info);
@@ -889,6 +890,7 @@ export function create(
 				list: CompletionList,
 				item: html.CompletionItem,
 				document: TextDocument,
+				position: Position,
 			) {
 				const replacement = getReplacement(item, document);
 				if (!replacement?.text.includes('.')) {
@@ -896,6 +898,11 @@ export function create(
 				}
 
 				const [text, ...modifiers] = replacement.text.split('.') as [string, ...string[]];
+				const beforeCursor = replacement.text.slice(
+					0,
+					document.offsetAt(position) - document.offsetAt(replacement.textEdit.range.start),
+				);
+				const editIndex = Math.max(0, Math.min(beforeCursor.split('.').length - 2, modifiers.length - 1));
 				const isVOn = text.startsWith(DIRECTIVE_V_ON) || text.startsWith(V_ON_SHORTHAND) && text.length > 1;
 				const isVBind = text.startsWith(DIRECTIVE_V_BIND) || text.startsWith(V_BIND_SHORTHAND) && text.length > 1;
 				const isVModel = text.startsWith(DIRECTIVE_V_MODEL) || text === 'v-model';
@@ -917,7 +924,9 @@ export function create(
 					}
 
 					const description = currentModifiers[modifier]!;
-					const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
+					const newModifiers = modifiers.slice();
+					newModifiers[editIndex] = modifier;
+					const insertText = text + newModifiers.map(m => '.' + m).join('');
 					const newItem: html.CompletionItem = {
 						label: modifier,
 						filterText: insertText,

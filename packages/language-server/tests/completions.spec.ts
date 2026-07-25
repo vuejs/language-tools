@@ -851,6 +851,20 @@ test('#4639', async () => {
 	);
 });
 
+test('#6132', async () => {
+	const item = await requestCompletionItemToVueServer(
+		'fixture.vue',
+		'vue',
+		`
+		<template>
+			<div @click.|.stop />
+		</template>
+	`,
+		'capture',
+	);
+	expect((item.textEdit as any).newText).toBe('@click.capture.stop');
+});
+
 test('Alias path', async () => {
 	await requestCompletionItemToTsServer(
 		'tsconfigProject/fixture.vue',
