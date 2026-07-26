@@ -114,7 +114,9 @@ export const codeFeatures = defineCodeFeatures({
 	doNotReportTs6133: {
 		verification: {
 			// https://typescript.tv/errors/#ts6133
-			shouldReport: (_source, code) => String(code) !== '6133',
+			// 6196 is tsgo's code for unused type parameters — the tsgo-backed
+			// engine's counterpart of 6133, same SFC false-positive class.
+			shouldReport: (_source, code) => String(code) !== '6133' && String(code) !== '6196',
 		},
 	},
 });
