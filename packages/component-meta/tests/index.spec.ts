@@ -1586,7 +1586,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 		test('ts-component.tsx', () => {
 			const componentPath = path.resolve(
 				__dirname,
-				'../../../test-workspace/component-meta/ts-component/component.tsx',
+				'../../../test-workspace/component-meta/ts-component/component-tsx.tsx',
 			);
 			const meta = checker.getComponentMeta(componentPath);
 
@@ -1829,11 +1829,6 @@ const noTsConfigChecker = createCheckerByJson(
 		'extends': '../tsconfig.base.json',
 		'include': [
 			'**/*',
-		],
-		// `files` because a wildcard drops this in favour of its sibling `component.ts`,
-		// as `.ts` outranks `.tsx`
-		'files': [
-			'ts-component/component.tsx',
 		],
 	},
 	checkerOptions,

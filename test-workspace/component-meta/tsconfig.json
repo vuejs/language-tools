@@ -2,10 +2,5 @@
 	"extends": "../tsconfig.base.json",
 	"include": [
 		"**/*"
-	],
-	// `files` because a wildcard drops this in favour of its sibling `component.ts`,
-	// as `.ts` outranks `.tsx`
-	"files": [
-		"ts-component/component.tsx"
 	]
 }
