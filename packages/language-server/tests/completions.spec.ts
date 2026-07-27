@@ -1060,11 +1060,32 @@ test('Auto insert defines', async () => {
 });
 
 test('#5847', async () => {
-	await prepareDocument(
-		'tsconfigProject/fixture.ts',
-		'typescript',
-		`export function testFn() { console.log('testFn'); }`,
-	);
+	// The fixture must exist on disk with real content for the duration of
+	// this test: the ScriptInfo can be discarded and rebuilt from disk
+	// mid-test, and an empty file there loses the auto-import export. Restore
+	// it to empty afterwards — the workspace shares the file across tests.
+	// The module-exports preference must also be set by this test itself — it
+	// previously leaked from the Auto import test.
+	const fixturePath = path.join(testWorkspacePath, 'tsconfigProject/fixture.ts');
+	const { writeFileSync } = await import('node:fs');
+	writeFileSync(fixturePath, `export function testFn() { console.log('testFn'); }\n`);
+	try {
+		const server = await getLanguageServer();
+		server.tsserver.message({
+			seq: server.nextSeq(),
+			command: 'configure',
+			arguments: {
+				preferences: {
+					includeCompletionsForModuleExports: true,
+					includeCompletionsWithInsertText: true,
+				},
+			},
+		});
+		await prepareDocument(
+			'tsconfigProject/fixture.ts',
+			'typescript',
+			`export function testFn() { console.log('testFn'); }`,
+		);
 	expect(
 		await requestCompletionItemToTsServer(
 			'tsconfigProject/fixture.vue',
@@ -1092,6 +1113,9 @@ test('#5847', async () => {
 		  ],
 		}
 	`);
+	} finally {
+		writeFileSync(fixturePath, '');
+	}
 });
 
 test('#6110', async () => {
