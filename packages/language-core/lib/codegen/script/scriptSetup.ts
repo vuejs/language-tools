@@ -40,7 +40,10 @@ export function* generateGeneric(
 		// The generated generic function's type parameter exists for the type
 		// machinery (stock never reports it unused); suppress the unused-param
 		// codes (6133, and tsgo's 6196) on this generated declaration.
-		yield [generic.text, 'main', generic.offset, { ...codeFeatures.all, verification: { shouldReport: (_source, code) => String(code) !== '6133' && String(code) !== '6196' } }];
+		yield [generic.text, 'main', generic.offset, {
+			...codeFeatures.all,
+			verification: { shouldReport: (_source, code) => String(code) !== '6133' && String(code) !== '6196' },
+		}];
 		if (!generic.text.endsWith(`,`)) {
 			yield `,`;
 		}

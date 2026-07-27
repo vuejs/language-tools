@@ -1086,18 +1086,18 @@ test('#5847', async () => {
 			'typescript',
 			`export function testFn() { console.log('testFn'); }`,
 		);
-	expect(
-		await requestCompletionItemToTsServer(
-			'tsconfigProject/fixture.vue',
-			'vue',
-			`
+		expect(
+			await requestCompletionItemToTsServer(
+				'tsconfigProject/fixture.vue',
+				'vue',
+				`
 			<script setup></script>
 
 			<template>{{ testFn| }}</template>
 			`,
-			'testFn',
-		),
-	).toMatchInlineSnapshot(`
+				'testFn',
+			),
+		).toMatchInlineSnapshot(`
 		{
 		  "hasAction": true,
 		  "kind": "function",
@@ -1113,7 +1113,8 @@ test('#5847', async () => {
 		  ],
 		}
 	`);
-	} finally {
+	}
+	finally {
 		writeFileSync(fixturePath, '');
 	}
 });
