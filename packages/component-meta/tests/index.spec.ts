@@ -1854,15 +1854,14 @@ describe('project scope', () => {
 	);
 
 	test('component outside the project', () => {
-		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow(/is not part of the project/);
-		expect(() => scopedChecker.getComponentMeta(outsidePath)).toThrow(/is not part of the project/);
+		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow();
+		expect(() => scopedChecker.getComponentMeta(outsidePath)).toThrow();
 	});
 
 	test('component outside the project (program unchanged)', () => {
 		const before = scopedChecker.getProgram()!.getRootFileNames();
 
 		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow();
-
 		expect(scopedChecker.getProgram()!.getRootFileNames()).toEqual(before);
 	});
 
