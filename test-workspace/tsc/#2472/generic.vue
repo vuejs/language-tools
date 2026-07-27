@@ -2,6 +2,7 @@
 defineSlots<{
   activator?: (props: { isActive: boolean }) => void
 }>();
+null as unknown as T;
 </script>
 
 <template>

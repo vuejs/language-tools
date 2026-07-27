@@ -2,4 +2,5 @@
 defineEmits<{
 	(name: 'foo', value: string): void
 }>();
+null as unknown as T;
 </script>

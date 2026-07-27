@@ -1,6 +1,6 @@
 <script lang="ts" setup generic="TItem">
 interface Props {
-	item: any;
+	item: TItem;
 }
 
 defineProps<Props>();

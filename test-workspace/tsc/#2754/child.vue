@@ -3,7 +3,7 @@ defineProps({
     selectAll: {
         type: Boolean,
         required: false,
-        default: false,
+        default: false as unknown as Row,
     },
 });
 </script>

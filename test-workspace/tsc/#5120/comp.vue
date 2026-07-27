@@ -2,7 +2,7 @@
 
 <script lang="ts" setup generic="T">
 const doSomething = () => {
-	console.log('Something!');
+	console.log('Something!' as unknown as T);
 };
 
 defineExpose({ doSomething });

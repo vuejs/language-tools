@@ -1,3 +1,3 @@
 <script setup lang="ts" generic="T">
-defineModel('hello-world');
+defineModel<T>('hello-world');
 </script>

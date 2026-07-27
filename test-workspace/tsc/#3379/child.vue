@@ -8,4 +8,5 @@ type Emits = {
 };
 
 defineEmits<Emits>();
+null as unknown as T;
 </script>
