@@ -1,7 +1,7 @@
 import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRScriptSetup, TextRange } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import { codeFeatures, shouldReportNonUnusedParam } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, generateSfcBlockSection, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -42,7 +42,7 @@ export function* generateGeneric(
 		// codes (6133, and tsgo's 6196) on this generated declaration.
 		yield [generic.text, 'main', generic.offset, {
 			...codeFeatures.all,
-			verification: { shouldReport: (_source, code) => String(code) !== '6133' && String(code) !== '6196' },
+			verification: { shouldReport: shouldReportNonUnusedParam },
 		}];
 		if (!generic.text.endsWith(`,`)) {
 			yield `,`;

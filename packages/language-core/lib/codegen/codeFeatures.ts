@@ -1,5 +1,12 @@
 import type { VueCodeInformation } from '../types';
 
+// Unused-variable/parameter diagnostics suppressed on generated declarations:
+// 6133 (stock's unused variable) and 6196 (tsgo's unused type parameter —
+// same SFC false-positive class). Single source for both filter sites.
+export function shouldReportNonUnusedParam(_source: unknown, code: unknown) {
+	return String(code) !== '6133' && String(code) !== '6196';
+}
+
 export const codeFeatures = defineCodeFeatures({
 	full: {
 		verification: true,
@@ -114,9 +121,7 @@ export const codeFeatures = defineCodeFeatures({
 	doNotReportTs6133: {
 		verification: {
 			// https://typescript.tv/errors/#ts6133
-			// 6196 is tsgo's code for unused type parameters — the tsgo-backed
-			// engine's counterpart of 6133, same SFC false-positive class.
-			shouldReport: (_source, code) => String(code) !== '6133' && String(code) !== '6196',
+			shouldReport: shouldReportNonUnusedParam,
 		},
 	},
 });
