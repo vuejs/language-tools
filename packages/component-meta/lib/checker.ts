@@ -143,13 +143,13 @@ export function createCheckerBase(
 	};
 
 	function getProgramAndFile(componentPath: string) {
-		let program = tsLs.getProgram()!;
-		let sourceFile = program.getSourceFile(componentPath);
+		const program = tsLs.getProgram()!;
+		const sourceFile = program.getSourceFile(componentPath);
 		if (!sourceFile) {
-			fileNamesSet.add(componentPath);
-			projectVersion++;
-			program = tsLs.getProgram()!;
-			sourceFile = program.getSourceFile(componentPath)!;
+			throw new Error(
+				`'${componentPath}' is not part of the project. `
+					+ `Use a tsconfig that includes it, or call \`updateFile()\` to add it.`,
+			);
 		}
 		return [program, sourceFile] as const;
 	}

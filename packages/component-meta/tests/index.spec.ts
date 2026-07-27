@@ -1,3 +1,4 @@
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { type ComponentMetaChecker, createChecker, createCheckerByJson, type MetaCheckerOptions, TypeMeta } from '..';
@@ -1829,9 +1830,50 @@ const noTsConfigChecker = createCheckerByJson(
 		'include': [
 			'**/*',
 		],
+		// `files` because a wildcard drops this in favour of its sibling `component.ts`,
+		// as `.ts` outranks `.tsx`
+		'files': [
+			'ts-component/component.tsx',
+		],
 	},
 	checkerOptions,
 );
 
 worker(tsconfigChecker, true);
 worker(noTsConfigChecker, false);
+
+describe('project scope', () => {
+	const scopedChecker = createCheckerByJson(
+		path.resolve(__dirname, '../../../test-workspace/component-meta'),
+		{
+			'extends': '../tsconfig.base.json',
+			'include': [
+				'empty-component/**/*',
+			],
+		},
+		checkerOptions,
+	);
+	const outsidePath = path.resolve(
+		__dirname,
+		'../../../test-workspace/component-meta/reference-type-props/component.vue',
+	);
+
+	test('throws for a component the project does not include', () => {
+		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow(/is not part of the project/);
+		expect(() => scopedChecker.getComponentMeta(outsidePath)).toThrow(/is not part of the project/);
+	});
+
+	test('leaves the program untouched when a component is not found', () => {
+		const before = scopedChecker.getProgram()!.getRootFileNames();
+
+		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow();
+
+		expect(scopedChecker.getProgram()!.getRootFileNames()).toEqual(before);
+	});
+
+	test('updateFile brings a component into the project explicitly', () => {
+		scopedChecker.updateFile(outsidePath, fs.readFileSync(outsidePath, 'utf8'));
+
+		expect(scopedChecker.getExportNames(outsidePath)).toContain('default');
+	});
+});
