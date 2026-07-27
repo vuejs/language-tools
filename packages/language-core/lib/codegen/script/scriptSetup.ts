@@ -1,7 +1,7 @@
 import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRScriptSetup, TextRange } from '../../types';
-import { codeFeatures, shouldReportNonUnusedParam } from '../codeFeatures';
+import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, generateSfcBlockSection, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -37,13 +37,7 @@ export function* generateGeneric(
 	yield `(`;
 	if (typeof generic === 'object') {
 		yield `<`;
-		// The generated generic function's type parameter exists for the type
-		// machinery (stock never reports it unused); suppress the unused-param
-		// codes (6133, and tsgo's 6196) on this generated declaration.
-		yield [generic.text, 'main', generic.offset, {
-			...codeFeatures.all,
-			verification: { shouldReport: shouldReportNonUnusedParam },
-		}];
+		yield [generic.text, 'main', generic.offset, codeFeatures.all];
 		if (!generic.text.endsWith(`,`)) {
 			yield `,`;
 		}
