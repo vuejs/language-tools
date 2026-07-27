@@ -1,3 +1,4 @@
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { type ComponentMetaChecker, createChecker, createCheckerByJson, type MetaCheckerOptions, TypeMeta } from '..';
@@ -1585,7 +1586,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 		test('ts-component.tsx', () => {
 			const componentPath = path.resolve(
 				__dirname,
-				'../../../test-workspace/component-meta/ts-component/component.tsx',
+				'../../../test-workspace/component-meta/ts-component/component-tsx.tsx',
 			);
 			const meta = checker.getComponentMeta(componentPath);
 
@@ -1835,3 +1836,38 @@ const noTsConfigChecker = createCheckerByJson(
 
 worker(tsconfigChecker, true);
 worker(noTsConfigChecker, false);
+
+describe('project scope', () => {
+	const scopedChecker = createCheckerByJson(
+		path.resolve(__dirname, '../../../test-workspace/component-meta'),
+		{
+			'extends': '../tsconfig.base.json',
+			'include': [
+				'empty-component/**/*',
+			],
+		},
+		checkerOptions,
+	);
+	const outsidePath = path.resolve(
+		__dirname,
+		'../../../test-workspace/component-meta/reference-type-props/component.vue',
+	);
+
+	test('component outside the project', () => {
+		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow();
+		expect(() => scopedChecker.getComponentMeta(outsidePath)).toThrow();
+	});
+
+	test('component outside the project (program unchanged)', () => {
+		const before = scopedChecker.getProgram()!.getRootFileNames();
+
+		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow();
+		expect(scopedChecker.getProgram()!.getRootFileNames()).toEqual(before);
+	});
+
+	test('component outside the project w/ updateFile', () => {
+		scopedChecker.updateFile(outsidePath, fs.readFileSync(outsidePath, 'utf8'));
+
+		expect(scopedChecker.getExportNames(outsidePath)).toContain('default');
+	});
+});
