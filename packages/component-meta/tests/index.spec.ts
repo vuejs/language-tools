@@ -1853,12 +1853,12 @@ describe('project scope', () => {
 		'../../../test-workspace/component-meta/reference-type-props/component.vue',
 	);
 
-	test('throws for a component the project does not include', () => {
+	test('component outside the project', () => {
 		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow(/is not part of the project/);
 		expect(() => scopedChecker.getComponentMeta(outsidePath)).toThrow(/is not part of the project/);
 	});
 
-	test('leaves the program untouched when a component is not found', () => {
+	test('component outside the project (program unchanged)', () => {
 		const before = scopedChecker.getProgram()!.getRootFileNames();
 
 		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow();
@@ -1866,7 +1866,7 @@ describe('project scope', () => {
 		expect(scopedChecker.getProgram()!.getRootFileNames()).toEqual(before);
 	});
 
-	test('updateFile brings a component into the project explicitly', () => {
+	test('component outside the project w/ updateFile', () => {
 		scopedChecker.updateFile(outsidePath, fs.readFileSync(outsidePath, 'utf8'));
 
 		expect(scopedChecker.getExportNames(outsidePath)).toContain('default');
