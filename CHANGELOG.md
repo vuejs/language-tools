@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.3.9 (2026-07-31)
+
+### component-meta
+
+- **feat:** expose runtime values of enum members in schema (#6131) - Thanks to @valentinpalkovic!
+- **fix:** keep `getProgramAndFile` free of side effects (#6136) - Thanks to @seanogdev!
+
+### language-core
+
+- **feat:** check unused generic type parameters (#6137) - Thanks to @KazariEX!
+
+### language-service
+
+- **fix:** preserve trailing modifiers when completing in the middle of a directive (#6133) - Thanks to @lazerg!
+- **fix:** only replace current directive modifier on completion - Thanks to @KazariEX!
+- **fix:** preserve current modifier when filtering completion duplicates - Thanks to @KazariEX!
+
+### workspace
+
+- **feat:** migrate build and tests to `typescript-native-bridge` (#6129)
+
 ## 3.3.8 (2026-07-22)
 
 ### language-core
