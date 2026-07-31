@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T">
+<script setup lang="ts" generic>
 defineProps<{ foo: number }>();
 defineEmits<{ (e: 'bar', data: number): void }>();
 defineExpose({ baz: {} as number });

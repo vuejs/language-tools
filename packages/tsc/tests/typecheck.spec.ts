@@ -28,7 +28,7 @@ test(`vue-tsc`, () => {
 		  "test-workspace/tsc/_failed_#3632/both.vue(7,1): error TS1109: Expression expected.",
 		  "test-workspace/tsc/_failed_#3632/script.vue(3,1): error TS1109: Expression expected.",
 		  "test-workspace/tsc/_failed_#3632/scriptSetup.vue(3,1): error TS1109: Expression expected.",
-		  "test-workspace/tsc/_failed_#4569/main.vue(1,41): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.",
+		  "test-workspace/tsc/_failed_#4569/main.vue(1,33): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.",
 		  "test-workspace/tsc/_failed_#5071/withScript.vue(1,19): error TS1005: ';' expected.",
 		  "test-workspace/tsc/_failed_#5071/withoutScript.vue(2,26): error TS1005: ';' expected.",
 		  "test-workspace/tsc/_failed_#5823/main.vue(6,13): error TS1109: Expression expected.",

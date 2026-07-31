@@ -1,4 +1,4 @@
-<script lang="ts" setup generic="T">
+<script lang="ts" setup generic>
 
 type ISlots = {
   "last-columns": (props: string) => void
