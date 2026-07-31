@@ -10,7 +10,7 @@
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode",
-				"--folder-uri=${workspaceRoot}/test-workspace/tsc"
+				"--folder-uri=${workspaceRoot}/test-workspace"
 			],
 			"outFiles": [
 				"${workspaceRoot}/**/*.js"
