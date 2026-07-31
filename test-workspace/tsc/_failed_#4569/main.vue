@@ -1,4 +1,4 @@
-<script lang="ts" setup generic="TItem">
+<script lang="ts" setup generic>
 interface Props {
 	item: any;
 }

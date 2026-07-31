@@ -36,12 +36,19 @@ export function* generateGeneric(
 ): Generator<Code> {
 	yield `(`;
 	if (typeof generic === 'object') {
+		const boundary = yield* Boundary.start(
+			'main',
+			generic.offset,
+			generic.offset + generic.text.length,
+			codeFeatures.verification,
+		);
 		yield `<`;
 		yield [generic.text, 'main', generic.offset, codeFeatures.all];
 		if (!generic.text.endsWith(`,`)) {
 			yield `,`;
 		}
 		yield `>`;
+		yield boundary.end();
 	}
 	yield `(${newLine}`
 		+ `	${names.props}: NonNullable<Awaited<typeof ${names.setup}>>['props'],${newLine}`

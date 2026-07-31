@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T">
+<script setup lang="ts" generic>
 type Emits = {
 	(name: 'update:modelValue', modelValue: string): void
 	(name: 'removeOptions', options: number): void
