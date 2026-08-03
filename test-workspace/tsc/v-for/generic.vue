@@ -13,6 +13,14 @@
 	</div>
 </template>
 
-<script lang="ts" setup generic="T extends Record<string, string> | boolean[], TArr extends number[], TIter extends Iterable<string>">
+<script
+	setup
+	lang="ts"
+	generic="
+		T extends Record<string, string> | boolean[],
+		TArr extends number[],
+		TIter extends Iterable<string>,
+	"
+>
 import { exactType } from '../shared';
 </script>
