@@ -44,7 +44,7 @@ export function* generateGeneric(
 		);
 		yield `<`;
 		yield [generic.text, 'main', generic.offset, codeFeatures.all];
-		if (!generic.text.endsWith(`,`)) {
+		if (!generic.text.trimEnd().endsWith(`,`)) {
 			yield `,`;
 		}
 		yield `>`;
