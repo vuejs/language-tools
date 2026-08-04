@@ -1,14 +1,14 @@
 {
-	"include": [],
 	"references": [
 		{
-			"path": "./vue/tsconfig.json"
+			"path": "./petiteVue/tsconfig.json"
 		},
 		{
 			"path": "./vitepress/tsconfig.json"
 		},
 		{
-			"path": "./petiteVue/tsconfig.json"
+			"path": "./vue/tsconfig.json"
 		}
-	]
+	],
+	"files": []
 }
