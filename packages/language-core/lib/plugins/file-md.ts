@@ -37,35 +37,36 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				content = content.replace(pattern, match => ' '.repeat(match.length));
 			}
 
-			let maskedContent = content;
-			for (const { 0: text, index } of content.matchAll(inlineCodeRE)) {
-				maskedContent = maskedContent.slice(0, index) + ' '.repeat(text.length)
-					+ maskedContent.slice(index + text.length);
+			const ambiguousRanges: [number, number][] = [];
+			for (const pattern of [inlineCodeRE, angleBracketRE]) {
+				for (const { 0: text, index } of content.matchAll(pattern)) {
+					ambiguousRanges.push([index, index + text.length]);
+				}
+			}
+
+			const semanticRanges: [number, number][] = [];
+			for (const pattern of [htmlTagRE, interpolationRE]) {
+				for (const { 0: text, index } of content.matchAll(pattern)) {
+					semanticRanges.push([index, index + text.length]);
+				}
 			}
 
 			const codes: Segment[] = [];
 
-			for (const { 0: masked, index } of maskedContent.matchAll(sfcBlockRE)) {
-				const text = content.slice(index, index + masked.length);
+			for (const { 0: text, index } of content.matchAll(sfcBlockRE)) {
+				if (ambiguousRanges.some(([start, end]) => index >= start && index < end)) {
+					continue;
+				}
 				codes.push([text, undefined, index]);
 				codes.push('\n\n');
 				content = content.slice(0, index) + ' '.repeat(text.length) + content.slice(index + text.length);
 			}
 
-			const ranges: [number, number][] = [];
-			for (const pattern of [htmlTagRE, interpolationRE]) {
-				for (const { 0: text, index } of content.matchAll(pattern)) {
-					ranges.push([index, index + text.length]);
+			for (const [start, end] of ambiguousRanges) {
+				if (semanticRanges.some(range => start >= range[0] && end <= range[1])) {
+					continue;
 				}
-			}
-
-			for (const pattern of [inlineCodeRE, angleBracketRE]) {
-				for (const { 0: text, index } of content.matchAll(pattern)) {
-					if (ranges.some(([start, end]) => index >= start && index < end)) {
-						continue;
-					}
-					content = content.slice(0, index) + ' '.repeat(text.length) + content.slice(index + text.length);
-				}
+				content = content.slice(0, start) + ' '.repeat(end - start) + content.slice(end);
 			}
 
 			codes.push('<template>\n');
