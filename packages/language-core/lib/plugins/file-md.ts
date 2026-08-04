@@ -11,7 +11,7 @@ const codeSnippetImportRE = /^\s*<<<\s*.+/gm;
 const sfcBlockRE = /<(script|style)\b[^>]*>([\s\S]*?)<\/\1>/g;
 const htmlTagRE = /(?<=<\/?)([a-z][a-z0-9-]*)\b[^>]*(?=>)/gi;
 const interpolationRE = /(?<=\{\{)[\s\S]*?(?=\}\})/g;
-const inlineCodeRE = /(`{1,2})[^`]+\1/g;
+const inlineCodeRE = /(`{1,2})[^`\n]+\1/g;
 const angleBracketRE = /<[^\s:]*:\S*>/g;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
