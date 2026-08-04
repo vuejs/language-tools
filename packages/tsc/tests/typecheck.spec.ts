@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { run } from '..';
+import { runTsc } from './utils';
 
 test(`vue-tsc`, () => {
 	const dirPath = path.resolve(__dirname, '..', '..', '..', 'test-workspace', 'tsc');
@@ -21,7 +21,7 @@ test(`vue-tsc`, () => {
 	);
 
 	expect(
-		getTscOutput().sort(),
+		runTsc('tsc').sort(),
 	).toMatchInlineSnapshot(`
 		[
 		  "test-workspace/tsc/_failed_#3632/both.vue(3,1): error TS1109: Expression expected.",
@@ -39,31 +39,3 @@ test(`vue-tsc`, () => {
 		]
 	`);
 });
-
-function getTscOutput() {
-	const consoleOutput: string[] = [];
-	const originalConsoleLog = process.stdout.write;
-	const originalArgv = process.argv;
-	process.stdout.write = output => {
-		consoleOutput.push(String(output).trim());
-		return true;
-	};
-	process.argv = [
-		...originalArgv,
-		'--build',
-		path.resolve(__dirname, '../../../test-workspace/tsc'),
-		'--pretty',
-		'false',
-	];
-	try {
-		const tscPath = require.resolve(
-			`typescript/lib/tsc`,
-			{ paths: [path.resolve(__dirname, '../../../test-workspace')] },
-		);
-		run(tscPath);
-	}
-	catch {}
-	process.stdout.write = originalConsoleLog;
-	process.argv = originalArgv;
-	return consoleOutput;
-}
