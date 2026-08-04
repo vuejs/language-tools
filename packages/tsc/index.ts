@@ -69,10 +69,7 @@ function enableSfcParseErrorReporting() {
 	};
 }
 
-function getSfcParseErrors(
-	language: core.Language<string>,
-	file: ts.SourceFile,
-): ts.DiagnosticWithLocation[] {
+function getSfcParseErrors(language: core.Language<string>, file: ts.SourceFile): ts.DiagnosticWithLocation[] {
 	const sourceScript = language.scripts.get(file.fileName);
 	const root = sourceScript?.generated?.root;
 	if (
