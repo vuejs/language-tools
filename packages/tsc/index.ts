@@ -3,15 +3,15 @@ import * as core from '@vue/language-core';
 import * as path from 'node:path';
 
 const windowsPathRE = /\\/g;
+const retryToken = Symbol();
 
 export function run(tscPath?: string) {
-	let runExtensions = ['.vue'];
-	let extensionsChangedException: Error | undefined;
+	const runExtensions = new Set(['vue']);
 
 	const main = () =>
 		runTsc(
 			resolveTscPath(tscPath),
-			runExtensions,
+			[...runExtensions],
 			(ts, options) => {
 				const { configFilePath } = options.options;
 				const vueOptions = typeof configFilePath === 'string'
@@ -19,7 +19,7 @@ export function run(tscPath?: string) {
 					: core.createParsedCommandLineByJson(ts, ts.sys, (options.host ?? ts.sys).getCurrentDirectory(), {})
 						.vueOptions;
 				const allExtensions = core.getAllExtensions(vueOptions);
-				if (allExtensions.every(ext => runExtensions.includes(ext))) {
+				if (allExtensions.every(ext => runExtensions.has(ext))) {
 					const vueLanguagePlugin = core.createVueLanguagePlugin<string>(
 						ts,
 						options.options,
@@ -29,8 +29,10 @@ export function run(tscPath?: string) {
 					return { languagePlugins: [vueLanguagePlugin] };
 				}
 				else {
-					runExtensions = [...new Set([...runExtensions, ...allExtensions])];
-					throw extensionsChangedException = new Error('extensions changed');
+					for (const ext of allExtensions) {
+						runExtensions.add(ext);
+					}
+					throw retryToken;
 				}
 			},
 		);
@@ -40,7 +42,7 @@ export function run(tscPath?: string) {
 			return main();
 		}
 		catch (err) {
-			if (err !== extensionsChangedException) {
+			if (err !== retryToken) {
 				throw err;
 			}
 		}
