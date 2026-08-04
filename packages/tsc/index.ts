@@ -86,7 +86,7 @@ function getSfcParseErrors(language: core.Language<string>, file: ts.SourceFile)
 	fillSourceFileText(language, file);
 
 	// clamp EOF error offsets to the last source character so they never point into the generated code
-	const bound = Math.max(sourceScript.snapshot.getLength() - 1, 0);
+	const bound = sourceScript.snapshot.getText(0, sourceScript.snapshot.getLength()).trimEnd().length;
 	const result: ts.DiagnosticWithLocation[] = [];
 	for (const error of root.vueSfc.errors) {
 		if (!('code' in error)) {
