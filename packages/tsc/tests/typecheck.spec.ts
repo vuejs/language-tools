@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { run } from '..';
 import { runTsc } from './utils';
 
 test(`vue-tsc`, () => {
