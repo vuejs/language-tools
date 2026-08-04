@@ -19,10 +19,7 @@ export function run(tscPath?: string) {
 					: core.createParsedCommandLineByJson(ts, ts.sys, (options.host ?? ts.sys).getCurrentDirectory(), {})
 						.vueOptions;
 				const allExtensions = core.getAllExtensions(vueOptions);
-				if (
-					runExtensions.length === allExtensions.length
-					&& runExtensions.every(ext => allExtensions.includes(ext))
-				) {
+				if (allExtensions.every(ext => runExtensions.includes(ext))) {
 					const vueLanguagePlugin = core.createVueLanguagePlugin<string>(
 						ts,
 						options.options,
@@ -32,21 +29,20 @@ export function run(tscPath?: string) {
 					return { languagePlugins: [vueLanguagePlugin] };
 				}
 				else {
-					runExtensions = allExtensions;
+					runExtensions = [...new Set([...runExtensions, ...allExtensions])];
 					throw extensionsChangedException = new Error('extensions changed');
 				}
 			},
 		);
 
-	try {
-		return main();
-	}
-	catch (err) {
-		if (err === extensionsChangedException) {
+	while (true) {
+		try {
 			return main();
 		}
-		else {
-			throw err;
+		catch (err) {
+			if (err !== extensionsChangedException) {
+				throw err;
+			}
 		}
 	}
 }
