@@ -1,4 +1,5 @@
 import * as decorateProgramLib from '@volar/typescript/lib/node/decorateProgram';
+import { fillSourceFileText } from '@volar/typescript/lib/node/transform';
 import { runTsc } from '@volar/typescript/lib/quickstart/runTsc';
 import * as core from '@vue/language-core';
 import * as path from 'node:path';
@@ -83,6 +84,9 @@ function getSfcParseErrors(
 	) {
 		return [];
 	}
+
+	// fill in the source text so `--pretty` code frames can render it
+	fillSourceFileText(language, file);
 
 	// clamp EOF error offsets to the last source character so they never point into the generated code
 	const bound = Math.max(sourceScript.snapshot.getLength() - 1, 0);
