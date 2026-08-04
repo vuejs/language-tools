@@ -1,12 +1,16 @@
+import * as decorateProgramLib from '@volar/typescript/lib/node/decorateProgram';
 import { runTsc } from '@volar/typescript/lib/quickstart/runTsc';
 import * as core from '@vue/language-core';
 import * as path from 'node:path';
+import type * as ts from 'typescript';
 
 const windowsPathRE = /\\/g;
 
 export function run(tscPath?: string) {
 	let runExtensions = ['.vue'];
 	let extensionsChangedException: Error | undefined;
+
+	enableSfcParseErrorReporting();
 
 	const main = () =>
 		runTsc(
@@ -49,6 +53,56 @@ export function run(tscPath?: string) {
 			throw err;
 		}
 	}
+}
+
+function enableSfcParseErrorReporting() {
+	const decorateProgram = decorateProgramLib.decorateProgram;
+	(decorateProgramLib as { decorateProgram: typeof decorateProgram }).decorateProgram = (language, program) => {
+		decorateProgram(language, program);
+		const getSyntacticDiagnostics = program.getSyntacticDiagnostics;
+		program.getSyntacticDiagnostics = (sourceFile, cancellationToken) => [
+			...getSyntacticDiagnostics(sourceFile, cancellationToken),
+			...(sourceFile ? [sourceFile] : program.getSourceFiles())
+				.flatMap(file => getSfcParseErrors(language, file)),
+		];
+	};
+}
+
+function getSfcParseErrors(
+	language: core.Language<string>,
+	file: ts.SourceFile,
+): ts.DiagnosticWithLocation[] {
+	const sourceScript = language.scripts.get(file.fileName);
+	const root = sourceScript?.generated?.root;
+	if (
+		!sourceScript
+		|| !(root instanceof core.VueVirtualCode)
+		// markdown error locations don't map back to the source
+		|| root.languageId !== 'vue'
+		|| !root.vueSfc?.errors.length
+	) {
+		return [];
+	}
+
+	// clamp EOF error offsets to the last source character so they never point into the generated code
+	const bound = Math.max(sourceScript.snapshot.getLength() - 1, 0);
+	const result: ts.DiagnosticWithLocation[] = [];
+	for (const error of root.vueSfc.errors) {
+		if (!('code' in error)) {
+			continue;
+		}
+		const start = Math.min(error.loc?.start.offset ?? 0, bound);
+		const end = Math.min(error.loc?.end.offset ?? start, bound);
+		result.push({
+			file,
+			start,
+			length: end - start,
+			category: 1 satisfies ts.DiagnosticCategory.Error,
+			code: typeof error.code === 'number' ? error.code : 0,
+			messageText: error.message,
+		});
+	}
+	return result;
 }
 
 function resolveTscPath(tscPath = require.resolve('typescript/lib/tsc')) {
