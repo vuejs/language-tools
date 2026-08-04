@@ -11,7 +11,7 @@ const codeSnippetImportRE = /^\s*<<<\s*.+/gm;
 const sfcBlockRE = /<(script|style)\b[^>]*>([\s\S]*?)<\/\1>/g;
 const htmlTagRE = /(?<=<\/?)([a-z][a-z0-9-]*)\b[^>]*(?=>)/gi;
 const interpolationRE = /(?<=\{\{)[\s\S]*?(?=\}\})/g;
-const inlineCodeRE = /(`{1,2})[^`]+\1/g;
+const inlineCodeRE = /(`{1,2})[^`\n]+\1/g;
 const angleBracketRE = /<[^\s:]*:\S*>/g;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
@@ -37,9 +37,16 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				content = content.replace(pattern, match => ' '.repeat(match.length));
 			}
 
+			let maskedContent = content;
+			for (const { 0: text, index } of content.matchAll(inlineCodeRE)) {
+				maskedContent = maskedContent.slice(0, index) + ' '.repeat(text.length)
+					+ maskedContent.slice(index + text.length);
+			}
+
 			const codes: Segment[] = [];
 
-			for (const { 0: text, index } of content.matchAll(sfcBlockRE)) {
+			for (const { 0: masked, index } of maskedContent.matchAll(sfcBlockRE)) {
+				const text = content.slice(index, index + masked.length);
 				codes.push([text, undefined, index]);
 				codes.push('\n\n');
 				content = content.slice(0, index) + ' '.repeat(text.length) + content.slice(index + text.length);
