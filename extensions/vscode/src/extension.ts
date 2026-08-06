@@ -247,8 +247,6 @@ function resolveTsdkPath() {
 }
 
 function resolveServerPath() {
-	const tsPluginEntry = path.join(__dirname, '..', 'node_modules', 'vue-typescript-plugin-pack', 'index.js');
-
 	if (!config.server.path) {
 		return;
 	}
@@ -263,8 +261,8 @@ function resolveServerPath() {
 		try {
 			const entryFile = require.resolve('./index.js', { paths: [serverPath] });
 			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-			// FIXME: cannot work on read-only file system
-			fs.writeFileSync(tsPluginEntry, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
+			// allow tsserver inherit the per-window path without mutating the shared plugin shim
+			process.env.VUE_TYPESCRIPT_PLUGIN_PATH = tsPluginPath;
 			return entryFile;
 		}
 		catch {}
