@@ -16,6 +16,6 @@ write(
 function write(name: string, specifier: string, pathEnvName?: string) {
 	const dir = path.join(import.meta.dirname, `../node_modules/vue-${name}-pack`);
 	fs.mkdirSync(dir, { recursive: true });
-	const requirePath = pathEnvName ? `process.env.${pathEnvName} || '${specifier}'` : `'${specifier}'`;
-	fs.writeFileSync(path.join(dir, `index.js`), `module.exports = require(${requirePath});\n`);
+	const requireId = pathEnvName ? `process.env.${pathEnvName} || '${specifier}'` : `'${specifier}'`;
+	fs.writeFileSync(path.join(dir, `index.js`), `module.exports = require(${requireId});\n`);
 }
