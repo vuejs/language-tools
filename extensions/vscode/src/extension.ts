@@ -261,6 +261,7 @@ function resolveServerPath() {
 		try {
 			const entryFile = require.resolve('./index.js', { paths: [serverPath] });
 			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
+			// allow tsserver inherit the per-window path without mutating the shared plugin shim
 			process.env.VUE_TYPESCRIPT_PLUGIN_PATH = tsPluginPath;
 			return entryFile;
 		}
