@@ -4,6 +4,8 @@ const path = require('node:path') as typeof import('node:path');
 
 try {
 	const entry = process.argv[1];
+	// child processes forked by tsserver inherit
+	// execArgv and re-run this file; only patch the tsserver entry itself
 	if (entry && path.basename(entry) === 'tsserver.js') {
 		const resolvedEntry = fs.realpathSync(entry);
 		const typescriptPath = path.join(path.dirname(resolvedEntry), 'typescript.js');
