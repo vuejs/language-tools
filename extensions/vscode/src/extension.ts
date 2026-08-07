@@ -355,12 +355,14 @@ function patchTypeScriptExtension() {
 		return readFileSync(...args);
 	};
 
+	const tsserverPatchPath = path.join(__dirname, 'tsserverPatch.js');
+
 	const spawn = child_process.spawn;
 	child_process.spawn = (...args: any[]) => {
 		if (Array.isArray(args[1])) {
 			const index = args[1].findIndex(arg => typeof arg === 'string' && isTsserverFile(arg));
 			if (index !== -1) {
-				args[1][index] = transformTsserver(args[1][index]);
+				args[1].splice(index, 0, '--require', tsserverPatchPath);
 			}
 		}
 		return spawn(...args);
@@ -369,63 +371,15 @@ function patchTypeScriptExtension() {
 	const fork = child_process.fork;
 	child_process.fork = (...args: any[]) => {
 		if (typeof args[0] === 'string' && isTsserverFile(args[0])) {
-			args[0] = transformTsserver(args[0]);
+			const optionsIndex = Array.isArray(args[1]) ? 2 : 1;
+			const options = args[optionsIndex] ??= {};
+			options.execArgv = [...options.execArgv ?? process.execArgv, '--require', tsserverPatchPath];
 		}
 		return fork(...args);
 	};
 
 	function isTsserverFile(file: string) {
 		return path.isAbsolute(file) && path.basename(file) === 'tsserver.js';
-	}
-
-	function transformTsserver(serverPath: string) {
-		const resolvedServerPath = require.resolve(serverPath, { paths: [path.dirname(serverPath)] });
-		const typescriptPath = path.join(path.dirname(resolvedServerPath), 'typescript.js');
-		const text = `
-			const fs = require('node:fs');
-			const readFileSync = fs.readFileSync;
-			fs.readFileSync = (...args) => {
-			  if (args[0] === ${JSON.stringify(typescriptPath)}) {
-					let content = readFileSync(...args);
-					content = content.replace(
-						/supportedTSExtensions = .*(?=;)/,
-						s => s + \`.concat([".vue"])\`,
-					);
-					content = content.replace(
-						/supportedJSExtensions = .*(?=;)/,
-						s => s + \`.concat([".vue"])\`,
-					);
-					content = content.replace(
-						/allSupportedExtensions = .*(?=;)/,
-						s => s + \`.concat([".vue"])\`,
-					);
-					content = content.replace(
-						/function changeExtension\\(/,
-						s => \`function changeExtension(path, newExtension) {
-							return [".vue"].some(ext => path.endsWith(ext))
-							? path + newExtension
-							: _changeExtension(path, newExtension);
-						}\n\` + s.replace("changeExtension", "_changeExtension"),
-					);
-					content = content.replace(
-						/const isJs = hasJSFileExtension\\((.*?)\\.fileName\\)/,
-						(s, file) => \`const isJs = isSourceFileJS(\${file})\`,
-					);
-					return content;
-				}
-				return readFileSync(...args);
-			};
-			require(${JSON.stringify(resolvedServerPath)});
-		`;
-		try {
-			const proxyPath = path.join(__dirname, 'tsserver.js');
-			// FIXME: cannot work on read-only file system
-			fs.writeFileSync(proxyPath, text);
-			return proxyPath;
-		}
-		catch {
-			return serverPath;
-		}
 	}
 
 	const loadedModule = require.cache[extensionJsPath];
