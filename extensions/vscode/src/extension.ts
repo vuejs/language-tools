@@ -355,14 +355,14 @@ function patchTypeScriptExtension() {
 		return readFileSync(...args);
 	};
 
-	const tsserverPatchPath = path.join(__dirname, 'tsserverPatch.js');
+	const patchTsserverPath = path.join(__dirname, 'patchTsserver.js');
 
 	const spawn = child_process.spawn;
 	child_process.spawn = (...args: any[]) => {
 		if (Array.isArray(args[1])) {
 			const index = args[1].findIndex(arg => typeof arg === 'string' && isTsserverFile(arg));
 			if (index !== -1) {
-				args[1].splice(index, 0, '--require', tsserverPatchPath);
+				args[1].splice(index, 0, '--require', patchTsserverPath);
 			}
 		}
 		return spawn(...args);
@@ -373,7 +373,7 @@ function patchTypeScriptExtension() {
 		if (typeof args[0] === 'string' && isTsserverFile(args[0])) {
 			const optionsIndex = Array.isArray(args[1]) ? 2 : 1;
 			const options = args[optionsIndex] ??= {};
-			options.execArgv = [...options.execArgv ?? process.execArgv, '--require', tsserverPatchPath];
+			options.execArgv = [...options.execArgv ?? process.execArgv, '--require', patchTsserverPath];
 		}
 		return fork(...args);
 	};
