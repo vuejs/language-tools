@@ -60,8 +60,9 @@ test('resolves module names with the owning project in a multi-project session',
 		arguments: [secondProjectFile, '@2/fixture'],
 	});
 	expect(res.success).toBe(true);
-	expect(res.body?.replace(/\\/g, '/')).toBe(
-		path.join(testWorkspacePath, 'tsconfigProject2', 'fixture.ts').replace(/\\/g, '/'),
+	// to lower case for fixing windows path
+	expect(res.body?.replace(/\\/g, '/').toLowerCase()).toBe(
+		path.join(testWorkspacePath, 'tsconfigProject2', 'fixture.ts').replace(/\\/g, '/').toLowerCase(),
 	);
 });
 
