@@ -545,6 +545,9 @@
 			"path": "./_failed_directives/tsconfig.json"
 		},
 		{
+			"path": "./_failed_fragment_props/tsconfig.json"
+		},
+		{
 			"path": "./attrs/tsconfig.json"
 		},
 		{
