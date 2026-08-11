@@ -383,7 +383,9 @@ export function* generateFragment(
 
 	// special case for <template v-for="..." :key="..." />
 	if (node.props.length) {
-		yield `__VLS_asFunctionalElement(__VLS_intrinsics.template)(`;
+		yield `${
+			options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalElement0 : names.asFunctionalElement1
+		}(${names.intrinsics}.template)(`;
 		const boundary = yield* Boundary.start(
 			'template',
 			startTagOffset,
