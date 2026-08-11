@@ -380,6 +380,7 @@ export function* generateFragment(
 	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
 	const [startTagOffset] = getElementTagOffsets(node, options.template);
+	const failedPropExps: FailedPropExpressions[] = [];
 
 	// special case for <template v-for="..." :key="..." />
 	if (node.props.length) {
@@ -399,10 +400,13 @@ export function* generateFragment(
 			node,
 			node.props,
 			options.vueCompilerOptions.checkUnknownProps,
+			failedPropExps,
 		);
 		yield `}`;
 		yield boundary.end();
 		yield `)${endOfLine}`;
+
+		yield* generateFailedExpressions(options, ctx, failedPropExps);
 	}
 
 	for (const child of node.children) {
