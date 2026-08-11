@@ -9,4 +9,7 @@ const list = [{ id: 1 }];
 	<template v-if="list.length" :foo="1">
 		<div>{{ list.length }}</div>
 	</template>
+	<template v-for="x of list" :key="x.id" @[x.bar]="x.baz()">
+		<div>{{ x.id }}</div>
+	</template>
 </template>
