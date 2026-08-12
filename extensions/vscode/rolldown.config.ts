@@ -6,7 +6,7 @@ export default defineConfig({
 	input: {
 		'extension': './src/extension.ts',
 		'reactivity-analysis-plugin': './src/reactivityAnalysisPlugin.ts',
-		'patch-tsserver': './src/patchTsserver.ts',
+		'patch-tsserver': './src/patch-tsserver.ts',
 		'language-server': './node_modules/@vue/language-server/index.ts',
 		'typescript-plugin': './node_modules/@vue/typescript-plugin/index.ts',
 	},
