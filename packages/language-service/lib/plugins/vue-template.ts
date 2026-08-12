@@ -57,6 +57,9 @@ export function create(
 ): LanguageServicePlugin {
 	const defaultDataProvider = html.getDefaultHTMLDataProvider();
 	let htmlData: html.IHTMLDataProvider[] = [defaultDataProvider];
+	// htmlData is shared by every project's service instance
+	// lock for avoid concurrent requests from different projects
+	let htmlDataLock = Promise.resolve();
 	let modulePathCache:
 		| Map<string, Promise<string | null | undefined> | string | null | undefined>
 		| undefined;
@@ -573,23 +576,33 @@ export function create(
 				mode: 'completion' | 'hover',
 				fn: () => T,
 			) {
-				// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
-				await fn();
+				const { install, sync } = await provideHtmlData(sourceDocumentUri, root, position, hint, mode);
 
-				const { sync } = await provideHtmlData(sourceDocumentUri, root, position, hint, mode);
-				let lastSync = await sync();
-				let result = await fn();
-				while (lastSync.version !== (lastSync = await sync()).version) {
-					result = await fn();
+				const previousLock = htmlDataLock;
+				let unlock!: () => void;
+				htmlDataLock = new Promise<void>(resolve => unlock = resolve);
+				await previousLock;
+				try {
+					// #4298: Precompute HTMLDocument before installing providers to avoid parseHTMLDocument requesting component names from tsserver
+					await fn();
+
+					install();
+					let lastSync = await sync();
+					let result = await fn();
+					while (lastSync.version !== (lastSync = await sync()).version) {
+						result = await fn();
+					}
+					return {
+						result,
+						...lastSync,
+					};
 				}
-				updateHtmlData([
-					defaultDataProvider,
-				]);
-
-				return {
-					result,
-					...lastSync,
-				};
+				finally {
+					updateHtmlData([
+						defaultDataProvider,
+					]);
+					unlock();
+				}
 			}
 
 			async function provideHtmlData(
@@ -813,24 +826,25 @@ export function create(
 					},
 				});
 
-				updateHtmlData([
-					{
-						getId: () => 'vue-template',
-						isApplicable: () => true,
-						provideTags,
-						provideAttributes,
-						provideValues,
-					},
-					{
-						getId: () => 'vue-auto-imports',
-						isApplicable: () => true,
-						provideTags: () => [{ name: AUTO_IMPORT_PLACEHOLDER, attributes: [] }],
-						provideAttributes: () => [],
-						provideValues: () => [],
-					},
-				]);
-
 				return {
+					install() {
+						updateHtmlData([
+							{
+								getId: () => 'vue-template',
+								isApplicable: () => true,
+								provideTags,
+								provideAttributes,
+								provideValues,
+							},
+							{
+								getId: () => 'vue-auto-imports',
+								isApplicable: () => true,
+								provideTags: () => [{ name: AUTO_IMPORT_PLACEHOLDER, attributes: [] }],
+								provideAttributes: () => [],
+								provideValues: () => [],
+							},
+						]);
+					},
 					async sync() {
 						await Promise.all(tasks);
 						return {
