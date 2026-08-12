@@ -355,7 +355,7 @@ function patchTypeScriptExtension() {
 		return readFileSync(...args);
 	};
 
-	const patchTsserverPath = path.join(__dirname, 'patchTsserver.js');
+	const patchTsserverPath = path.join(__dirname, 'patch-tsserver.js');
 
 	const spawn = child_process.spawn;
 	child_process.spawn = (...args: any[]) => {
