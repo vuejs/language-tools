@@ -96,6 +96,19 @@ importers:
 
   packages/component-type-helpers: {}
 
+  packages/content-mapper:
+    dependencies:
+      '@vue/language-core':
+        specifier: workspace:*
+        version: link:../language-core
+      typescript:
+        specifier: npm:typescript-native-bridge@6.0.3-bridge.9.tsgo.7.0.2
+        version: typescript-native-bridge@6.0.3-bridge.9.tsgo.7.0.2
+    devDependencies:
+      '@types/node':
+        specifier: ^26.0.1
+        version: 26.1.1
+
   packages/language-core:
     dependencies:
       '@volar/language-core':
@@ -305,6 +318,9 @@ importers:
 
   test-workspace:
     devDependencies:
+      '@vue/typescript-content-mapper':
+        specifier: workspace:*
+        version: link:../packages/content-mapper
       typescript:
         specifier: npm:typescript-native-bridge@6.0.3-bridge.9.tsgo.7.0.2
         version: typescript-native-bridge@6.0.3-bridge.9.tsgo.7.0.2

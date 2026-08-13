@@ -369,6 +369,7 @@ export function* generateElement(
 
 	yield* generateStyleScopedClassReferences(options, node);
 
+	yield* ctx.generateDiagnosticDirectiveEnd();
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}
@@ -403,6 +404,7 @@ export function* generateFragment(
 		yield `)${endOfLine}`;
 	}
 
+	yield* ctx.generateDiagnosticDirectiveEnd();
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}

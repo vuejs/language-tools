@@ -27,6 +27,13 @@ export interface VueCodeInformation extends CodeInformation {
 	__shorthandExpression?: 'html' | 'js';
 	__combineToken?: symbol;
 	__linkedToken?: symbol;
+	__diagnosticDirective?: {
+		directive: {
+			policy: 'ignore' | 'expect';
+			originalLength: number;
+		};
+		phase: 'anchor' | 'content' | 'end' | 'legacyStart' | 'legacyEnd';
+	};
 }
 
 export type Code = Segment<VueCodeInformation>;

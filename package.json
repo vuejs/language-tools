@@ -3,9 +3,11 @@
 	"packageManager": "pnpm@11.9.0",
 	"scripts": {
 		"build": "tsc -b",
+		"build:ext": "pnpm --dir extensions/vscode exec rolldown --config",
 		"watch": "tsc -b -w",
-		"watch:ext": "node extensions/vscode/scripts/write-plugins.ts --dev && npm run watch",
+		"watch:ext": "npm run build:ext && node extensions/vscode/scripts/write-plugins.ts --dev && npm run watch",
 		"test": "npm run build && vitest run",
+		"test:content-mapper-parity": "node packages/content-mapper/tests/fullCorpusParity.mjs",
 		"test:grammar": "vitest run extensions/vscode/tests/grammar.spec.ts",
 		"format": "dprint fmt",
 		"lint": "tsslint --project {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
