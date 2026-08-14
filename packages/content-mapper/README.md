@@ -23,7 +23,7 @@ Install the mapper beside TypeScript, then add it to `tsconfig.json`:
 Run TypeScript with external plugins enabled:
 
 ```sh
-tsc --loadExternalPlugins --noEmit
+tsc --runExternalCode --noEmit
 ```
 
 Set `VUE_CONTENT_MAPPER_WORKERS` to a positive integer to override the worker

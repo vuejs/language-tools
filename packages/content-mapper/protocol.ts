@@ -38,7 +38,7 @@ export interface TransformResult {
 	text: string;
 	extension: VirtualExtension;
 	mappings: SpanMapping[];
-	diagnosticDirectives?: DiagnosticDirectiveMapping[];
+	diagnosticDirectives?: DiagnosticDirectives;
 }
 
 export interface MapperOptions {
@@ -46,17 +46,29 @@ export interface MapperOptions {
 	vueCompilerOptions?: Record<string, unknown>;
 }
 
-export interface DiagnosticDirectiveMapping {
-	originalStart: number;
-	originalLength: number;
-	virtualStart: number;
-	virtualLength: number;
-	policy: 'ignore' | 'expect';
-	unusedDiagnostic?: {
-		code: number;
-		messageText: string;
-	};
+export interface DiagnosticDirectives {
+	unusedExpectDirectiveDiagnostics: UnusedExpectDirectiveDiagnostic[];
+	directives: DiagnosticDirectiveMapping[];
 }
+
+export interface UnusedExpectDirectiveDiagnostic {
+	code: number;
+	messageText: string;
+}
+
+export enum DiagnosticDirectivePolicy {
+	Ignore,
+	Expect,
+}
+
+export type DiagnosticDirectiveMapping = [
+	originalStart: number,
+	originalLength: number,
+	virtualStart: number,
+	virtualEnd: number,
+	policy: DiagnosticDirectivePolicy,
+	unusedExpectDirectiveIndex?: number,
+];
 
 export type PositionEncoding = 'utf-8' | 'utf-16';
 export type VirtualExtension =

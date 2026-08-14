@@ -1,13 +1,13 @@
+import { getUnusedExpectErrorMessage } from './localization';
 import type {
 	CloseProjectParams,
 	InitializeParams,
 	InitializeResult,
 	OpenProjectParams,
 	PositionEncoding,
-	TransformResult,
 	TransformParams,
+	TransformResult,
 } from './protocol';
-import { getUnusedExpectErrorMessage } from './localization';
 import { TransformPool } from './workerPool';
 
 interface RequestMessage {
@@ -26,7 +26,11 @@ if (typescriptPath) {
 const transformPool = new TransformPool(undefined, workerPath);
 let unusedExpectErrorMessage = "Unused '@ts-expect-error' directive.";
 
-console.log = console.info = console.warn = console.debug = (...args: unknown[]) => console.error(...args);
+console.log =
+	console.info =
+	console.warn =
+	console.debug =
+		(...args: unknown[]) => console.error(...args);
 
 process.stdin.on('data', chunk => {
 	input = Buffer.concat([input, typeof chunk === 'string' ? Buffer.from(chunk) : chunk]);
@@ -112,10 +116,8 @@ function initialize(params: InitializeParams): InitializeResult {
 }
 
 function localizeDiagnosticDirectives(result: TransformResult) {
-	for (const directive of result.diagnosticDirectives ?? []) {
-		if (directive.unusedDiagnostic) {
-			directive.unusedDiagnostic.messageText = unusedExpectErrorMessage;
-		}
+	for (const diagnostic of result.diagnosticDirectives?.unusedExpectDirectiveDiagnostics ?? []) {
+		diagnostic.messageText = unusedExpectErrorMessage;
 	}
 	return result;
 }

@@ -104,11 +104,17 @@ export function transformVue(params: TransformParams): TransformResult {
 	return {
 		text,
 		extension,
-		diagnosticDirectives: withSynthesizedDiagnosticIgnores(
-			text.length,
-			mappings,
-			diagnosticDirectives,
-		),
+		diagnosticDirectives: {
+			unusedExpectDirectiveDiagnostics: [{
+				code: 2578,
+				messageText: "Unused '@ts-expect-error' directive.",
+			}],
+			directives: withSynthesizedDiagnosticIgnores(
+				text.length,
+				mappings,
+				diagnosticDirectives,
+			),
+		},
 		mappings,
 	};
 }

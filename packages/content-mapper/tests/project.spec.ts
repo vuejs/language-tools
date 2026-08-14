@@ -105,19 +105,20 @@ test('maps Vue diagnostic directives to virtual regions', () => {
 	});
 	closeProject(projectHandle);
 
-	expect(result.diagnosticDirectives?.filter(directive => directive.policy === 'expect')).toHaveLength(2);
-	expect(result.diagnosticDirectives?.filter(directive => directive.policy === 'ignore').length).toBeGreaterThan(2);
-	for (const directive of result.diagnosticDirectives!) {
-		expect(directive.virtualLength).toBeGreaterThan(0);
-		if (directive.policy === 'expect') {
+	const diagnosticDirectives = result.diagnosticDirectives!;
+	expect(diagnosticDirectives.unusedExpectDirectiveDiagnostics).toEqual([{
+		code: 2578,
+		messageText: "Unused '@ts-expect-error' directive.",
+	}]);
+	expect(diagnosticDirectives.directives.filter(directive => directive[4] === 1)).toHaveLength(2);
+	expect(diagnosticDirectives.directives.filter(directive => directive[4] === 0).length).toBeGreaterThan(2);
+	for (const directive of diagnosticDirectives.directives) {
+		expect(directive[3] - directive[2]).toBeGreaterThan(0);
+		if (directive[4] === 1) {
 			expect(content.slice(
-				directive.originalStart,
-				directive.originalStart + directive.originalLength,
+				directive[0],
+				directive[0] + directive[1],
 			)).toContain('@vue-expect-error');
-			expect(directive.unusedDiagnostic).toEqual({
-				code: 2578,
-				messageText: "Unused '@ts-expect-error' directive.",
-			});
 		}
 	}
 });

@@ -1,5 +1,5 @@
 import type { Mapping, VueCodeInformation } from '@vue/language-core';
-import type { DiagnosticDirectiveMapping, SpanMapping } from './protocol';
+import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type SpanMapping } from './protocol';
 
 interface DirectiveState {
 	directive: NonNullable<VueCodeInformation['__diagnosticDirective']>['directive'];
@@ -68,27 +68,23 @@ export function toDiagnosticDirectives(
 			const last = contentRanges.at(-1);
 			const virtualStart = state.anchor;
 			const virtualEnd = state.end ?? last?.[1] ?? virtualStart;
-			result.push({
-				originalStart: state.originalStart,
-				originalLength: state.directive.originalLength,
+			result.push([
+				state.originalStart,
+				state.directive.originalLength,
 				virtualStart,
-				virtualLength: virtualEnd - virtualStart,
-				policy: 'expect',
-				unusedDiagnostic: {
-					code: 2578,
-					messageText: "Unused '@ts-expect-error' directive.",
-				},
-			});
+				virtualEnd,
+				DiagnosticDirectivePolicy.Expect,
+			]);
 		}
 		else {
 			for (const [virtualStart, virtualEnd] of contentRanges) {
-				result.push({
-					originalStart: state.originalStart,
-					originalLength: state.directive.originalLength,
+				result.push([
+					state.originalStart,
+					state.directive.originalLength,
 					virtualStart,
-					virtualLength: virtualEnd - virtualStart,
-					policy: 'ignore',
-				});
+					virtualEnd,
+					DiagnosticDirectivePolicy.Ignore,
+				]);
 			}
 		}
 		if (
@@ -96,13 +92,13 @@ export function toDiagnosticDirectives(
 			&& state.legacyEnd !== undefined
 			&& state.legacyEnd > state.legacyStart
 		) {
-			result.push({
-				originalStart: state.originalStart,
-				originalLength: state.directive.originalLength,
-				virtualStart: state.legacyStart,
-				virtualLength: state.legacyEnd - state.legacyStart,
-				policy: 'ignore',
-			});
+			result.push([
+				state.originalStart,
+				state.directive.originalLength,
+				state.legacyStart,
+				state.legacyEnd,
+				DiagnosticDirectivePolicy.Ignore,
+			]);
 		}
 	}
 
@@ -121,15 +117,15 @@ export function toDiagnosticDirectives(
 		return result;
 	}
 
-	result.sort((left, right) => left.virtualStart - right.virtualStart);
+	result.sort((left, right) => left[2] - right[2]);
 	for (let index = 1; index < result.length; index++) {
 		const previous = result[index - 1]!;
 		const current = result[index]!;
-		if (current.virtualStart < previous.virtualStart + previous.virtualLength) {
+		if (current[2] < previous[3]) {
 			throw new Error(
 				`Vue diagnostic directive virtual ranges overlap: `
-					+ `${previous.virtualStart}:${previous.virtualLength} and `
-					+ `${current.virtualStart}:${current.virtualLength}`,
+					+ `${previous[2]}:${previous[3]} and `
+					+ `${current[2]}:${current[3]}`,
 			);
 		}
 	}
@@ -143,7 +139,7 @@ export function withSynthesizedDiagnosticIgnores(
 ) {
 	const result = [...directives];
 	const blocked = [...directives].sort(
-		(left, right) => left.virtualStart - right.virtualStart,
+		(left, right) => left[2] - right[2],
 	);
 	let virtualStart = 0;
 	let blockedIndex = 0;
@@ -154,7 +150,7 @@ export function withSynthesizedDiagnosticIgnores(
 	}
 	addIgnoreRanges(virtualStart, virtualLength);
 
-	result.sort((left, right) => left.virtualStart - right.virtualStart);
+	result.sort((left, right) => left[2] - right[2]);
 	return result;
 
 	function addIgnoreRanges(start: number, end: number) {
@@ -163,21 +159,20 @@ export function withSynthesizedDiagnosticIgnores(
 		}
 		while (
 			blockedIndex < blocked.length
-			&& blocked[blockedIndex]!.virtualStart
-						+ blocked[blockedIndex]!.virtualLength <= start
+			&& blocked[blockedIndex]![3] <= start
 		) {
 			blockedIndex++;
 		}
 		let cursor = start;
 		for (let index = blockedIndex; index < blocked.length; index++) {
 			const directive = blocked[index]!;
-			if (directive.virtualStart >= end) {
+			if (directive[2] >= end) {
 				break;
 			}
-			addIgnore(cursor, Math.min(directive.virtualStart, end));
+			addIgnore(cursor, Math.min(directive[2], end));
 			cursor = Math.max(
 				cursor,
-				directive.virtualStart + directive.virtualLength,
+				directive[3],
 			);
 			if (cursor >= end) {
 				return;
@@ -188,13 +183,7 @@ export function withSynthesizedDiagnosticIgnores(
 
 	function addIgnore(start: number, end: number) {
 		if (start < end) {
-			result.push({
-				originalStart: 0,
-				originalLength: 0,
-				virtualStart: start,
-				virtualLength: end - start,
-				policy: 'ignore',
-			});
+			result.push([0, 0, start, end, DiagnosticDirectivePolicy.Ignore]);
 		}
 	}
 }

@@ -19,7 +19,7 @@ test.skipIf(!tsgoPath || !fs.existsSync(tsgoPath))(
 			const tsgo = run(tsgoPath!, [
 				'-p',
 				configFileName,
-				'--loadExternalPlugins',
+				'--runExternalCode',
 				'--pretty',
 				'false',
 			]);

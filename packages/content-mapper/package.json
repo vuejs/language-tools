@@ -14,12 +14,14 @@
 		"url": "https://github.com/vuejs/language-tools.git",
 		"directory": "packages/content-mapper"
 	},
-	"tsContentMapper": {
-		"exec": [
-			"node",
-			"server.js"
-		],
-		"dynamicConfig": true
+	"typescript": {
+		"contentMapper": {
+			"exec": [
+				"node",
+				"server.js"
+			],
+			"dynamicConfig": true
+		}
 	},
 	"peerDependencies": {
 		"typescript": ">=5.0.0"

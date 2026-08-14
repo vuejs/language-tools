@@ -71,7 +71,7 @@ try {
 	const mapper = run(tsgoPath, [
 		'-b',
 		rootSidecar,
-		'--loadExternalPlugins',
+		'--runExternalCode',
 		'--pretty',
 		'false',
 		'--force',
