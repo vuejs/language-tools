@@ -33,7 +33,9 @@ count. The default is the smaller of four and the host's available parallelism.
 For CLI-only projects, `"options": { "languageFeatures": false }` skips
 language-feature flags while preserving source spans used for diagnostics.
 Inferred-project registrations can provide `vueCompilerOptions` in the same
-options object.
+options object. The Vue VS Code extension contributes a conditional JSON schema
+for these options when the mapper package is
+`@vue/typescript-content-mapper`.
 
 The mapper uses dynamic project configuration so `vueCompilerOptions`, extended
 tsconfig files, the installed Vue version, and Vue language plugins participate
