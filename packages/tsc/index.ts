@@ -3,7 +3,7 @@ import * as core from '@vue/language-core';
 import * as path from 'node:path';
 
 const windowsPathRE = /\\/g;
-const retryToken = Symbol();
+const retryToken = new Error('vue-tsc: extensions changed, retrying');
 
 export function run(tscPath?: string) {
 	const runExtensions = new Set(['vue']);
