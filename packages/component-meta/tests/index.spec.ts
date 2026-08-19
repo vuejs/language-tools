@@ -1871,3 +1871,43 @@ describe('project scope', () => {
 		expect(scopedChecker.getExportNames(outsidePath)).toContain('default');
 	});
 });
+
+describe('checker deleteFile', () => {
+	const rootDir = path.resolve(__dirname, '../../../test-workspace/component-meta');
+	const checker = createCheckerByJson(
+		rootDir,
+		{
+			'extends': '../tsconfig.base.json',
+			'include': [
+				'empty-component/**/*',
+			],
+		},
+		checkerOptions,
+	);
+
+	// in-memory files
+	const consumerPath = path.join(rootDir, 'empty-component/delete-file-consumer.vue');
+	const depPath = path.join(rootDir, 'empty-component/delete-file-dep.ts');
+
+	test('deleted in-memory file no longer resolves', () => {
+		checker.updateFile(depPath, `export interface DepProps { foo: string }`);
+		checker.updateFile(
+			consumerPath,
+			`<script setup lang="ts">
+import type { DepProps } from './delete-file-dep';
+defineProps<DepProps>();
+</script>`,
+		);
+
+		const propNames = (p: string) => checker.getComponentMeta(p).props.map(prop => prop.name);
+		expect(propNames(consumerPath)).toContain('foo');
+
+		checker.deleteFile(depPath);
+
+		expect(propNames(consumerPath)).not.toContain('foo');
+
+		checker.deleteFile(consumerPath);
+
+		expect(() => checker.getComponentMeta(consumerPath)).toThrow();
+	});
+});
