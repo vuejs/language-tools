@@ -5,6 +5,7 @@
   <a href="https://marketplace.visualstudio.com/items?itemName=Vue.volar"><img src="https://img.shields.io/visual-studio-marketplace/v/Vue.volar?labelColor=18181B&color=1584FC" alt="Version"></a>
   <a href="https://marketplace.visualstudio.com/items?itemName=Vue.volar"><img src="https://img.shields.io/visual-studio-marketplace/i/Vue.volar?labelColor=18181B&color=1584FC" alt="Downloads"></a>
   -->
+<a href="https://inspect.software/software/vuejs/language-tools"><img src="https://raw.githubusercontent.com/inspect-software/badges/main/v1/v/vuejs/language-tools.svg" alt="inspect.software score badge for vuejs/language-tools" /></a>
   <a href="https://github.com/vuejs/language-tools/blob/master/LICENSE"><img src="https://img.shields.io/github/license/vuejs/language-tools.svg?labelColor=18181B&color=1584FC" alt="License"></a>
 </p>
 
