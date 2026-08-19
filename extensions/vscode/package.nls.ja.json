@@ -1,4 +1,5 @@
 {
+	"configuration.showWelcome": "Vue のウェルカムページを表示します。",
 	"configuration.trace.server": "VS Code と Vue 言語サーバー間の通信をトレースします。",
 	"configuration.server.path": "`@vue/language-server` モジュールへのパス。設定しない場合、拡張機能にバンドルされたサーバーが読み込まれます。",
 	"configuration.server.includeLanguages": "拡張機能を有効にする言語を指定します。",
