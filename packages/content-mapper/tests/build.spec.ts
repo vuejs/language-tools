@@ -1,8 +1,8 @@
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { repositoryRoot, runTsc } from './utils';
+import { repositoryRoot, runTsc, supportsRunExternalCode } from './utils';
 
-test('content mapper --build', () => {
+test.skipIf(!supportsRunExternalCode())('content mapper --build', () => {
 	const result = runTsc([
 		'-b',
 		path.join(repositoryRoot, 'test-workspace/tscBuild'),

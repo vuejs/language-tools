@@ -16,6 +16,11 @@ export function runTsc(args: string[]) {
 	});
 }
 
+export function supportsRunExternalCode() {
+	const result = spawnSync(process.execPath, [tscScript, '--help'], { encoding: 'utf8' });
+	return (result.stdout + result.stderr).includes('runExternalCode');
+}
+
 export function normalizeCompilerOutput(output: { stdout: string; stderr: string }) {
 	return (output.stdout + output.stderr)
 		.replace(/^.*TNB ACTIVE.*\n/gm, '')

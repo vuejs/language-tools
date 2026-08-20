@@ -2,9 +2,9 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { repositoryRoot, runTsc } from './utils';
+import { repositoryRoot, runTsc, supportsRunExternalCode } from './utils';
 
-test('content mapper declaration emit', () => {
+test.skipIf(!supportsRunExternalCode())('content mapper declaration emit', () => {
 	const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-content-mapper-dts-'));
 	try {
 		const result = runTsc([

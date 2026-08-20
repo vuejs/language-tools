@@ -2,11 +2,11 @@ import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { repositoryRoot, runTsc } from './utils';
+import { repositoryRoot, runTsc, supportsRunExternalCode } from './utils';
 
 const corpusRoot = path.join(repositoryRoot, 'test-workspace/tsc');
 
-test('content mapper full corpus', () => {
+test.skipIf(!supportsRunExternalCode())('content mapper full corpus', () => {
 	const sidecarName = `tsconfig.content-mapper-${process.pid}-${randomUUID()}.json`;
 	const projects = fs.readdirSync(corpusRoot, { withFileTypes: true })
 		.filter(entry =>

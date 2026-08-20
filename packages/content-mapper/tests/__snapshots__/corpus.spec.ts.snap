@@ -1,7 +1,0 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-exports[`content mapper full corpus 1`] = `
-[
-  "error TS5072: Unknown build option '--runExternalCode'.",
-]
-`;
