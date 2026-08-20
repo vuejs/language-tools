@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { config } from './config';
 
 const popVersion = '3.3.0';
 
@@ -6,7 +7,7 @@ let panel: vscode.WebviewPanel | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
 	if (
-		vscode.workspace.getConfiguration('vue').get<boolean>('showWelcome')
+		config.welcome.show
 		&& context.globalState.get<boolean>('vue.showUpdates', true)
 		&& context.globalState.get('vue.welcome') !== popVersion
 	) {
