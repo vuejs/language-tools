@@ -253,10 +253,10 @@
 			"type": "object",
 			"title": "Vue",
 			"properties": {
-				"vue.showWelcome": {
+				"vue.welcome.show": {
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "%configuration.showWelcome%"
+					"markdownDescription": "%configuration.welcome.show%"
 				},
 				"vue.trace.server": {
 					"scope": "window",
