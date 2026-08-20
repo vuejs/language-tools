@@ -1,0 +1,18 @@
+{
+	"extends": "../tsconfig.base.json",
+	"compilerOptions": {
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"strict": true
+	},
+	"contentMappers": [
+		{
+			"package": "@vue/typescript-content-mapper",
+			"extensions": [".vue"],
+			"options": {
+				"languageFeatures": false
+			}
+		}
+	],
+	"include": ["App.vue"]
+}

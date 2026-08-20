@@ -8,6 +8,6 @@
 	"references": [
 		{ "path": "../language-core/tsconfig.json" }
 	],
-	"include": ["*", "lib/**/*"],
-	"exclude": ["tests"]
+	"include": ["*.ts"],
+	"exclude": ["*.spec.ts"]
 }

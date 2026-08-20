@@ -1,0 +1,21 @@
+{
+	"extends": "../tsconfig.base.json",
+	"compilerOptions": {
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"strict": true
+	},
+	"vueCompilerOptions": {
+		"plugins": ["../../packages/language-plugin-pug"]
+	},
+	"contentMappers": [
+		{
+			"package": "@vue/typescript-content-mapper",
+			"extensions": [".vue"],
+			"options": {
+				"languageFeatures": false
+			}
+		}
+	],
+	"include": ["App.vue"]
+}
