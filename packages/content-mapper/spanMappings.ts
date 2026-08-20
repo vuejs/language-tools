@@ -1,20 +1,13 @@
 import type { Mapping } from '@vue/language-core';
-import {
-	SpanMapFeature,
-	SpanMapKind,
-	type SpanMapping,
-} from './protocol';
+import { SpanMapFeature, SpanMapKind, type SpanMapping } from './protocol';
 
-const semanticFeatures =
-	SpanMapFeature.Hover
+const semanticFeatures = SpanMapFeature.Hover
 	| SpanMapFeature.SignatureHelp
 	| SpanMapFeature.InlayHints
 	| SpanMapFeature.SemanticTokens;
-const completionFeatures =
-	SpanMapFeature.Completion
+const completionFeatures = SpanMapFeature.Completion
 	| SpanMapFeature.AutoInsert;
-const navigationFeatures =
-	SpanMapFeature.Definition
+const navigationFeatures = SpanMapFeature.Definition
 	| SpanMapFeature.TypeDefinition
 	| SpanMapFeature.Implementation
 	| SpanMapFeature.SourceDefinition
@@ -24,8 +17,7 @@ const navigationFeatures =
 	| SpanMapFeature.CallHierarchy
 	| SpanMapFeature.CodeActions
 	| SpanMapFeature.LinkedEditing;
-const structureFeatures =
-	SpanMapFeature.FoldingRanges
+const structureFeatures = SpanMapFeature.FoldingRanges
 	| SpanMapFeature.SelectionRanges
 	| SpanMapFeature.DocumentSymbols
 	| SpanMapFeature.CodeLens;

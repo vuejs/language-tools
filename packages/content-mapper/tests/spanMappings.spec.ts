@@ -1,8 +1,5 @@
 import { expect, test } from 'vitest';
-import {
-	SpanMapFeature,
-	SpanMapKind,
-} from '../protocol';
+import { SpanMapFeature, SpanMapKind } from '../protocol';
 import { toSpanMappings } from '../spanMappings';
 
 test('preserves Vue mapping feature intent', () => {
@@ -35,19 +32,19 @@ test('preserves Vue mapping feature intent', () => {
 			1,
 			SpanMapKind.Verbatim,
 			SpanMapFeature.Hover
-				| SpanMapFeature.SignatureHelp
-				| SpanMapFeature.Definition
-				| SpanMapFeature.TypeDefinition
-				| SpanMapFeature.Implementation
-				| SpanMapFeature.SourceDefinition
-				| SpanMapFeature.References
-				| SpanMapFeature.DocumentHighlights
-				| SpanMapFeature.Rename
-				| SpanMapFeature.CallHierarchy
-				| SpanMapFeature.CodeActions
-				| SpanMapFeature.InlayHints
-				| SpanMapFeature.SemanticTokens
-				| SpanMapFeature.LinkedEditing,
+			| SpanMapFeature.SignatureHelp
+			| SpanMapFeature.Definition
+			| SpanMapFeature.TypeDefinition
+			| SpanMapFeature.Implementation
+			| SpanMapFeature.SourceDefinition
+			| SpanMapFeature.References
+			| SpanMapFeature.DocumentHighlights
+			| SpanMapFeature.Rename
+			| SpanMapFeature.CallHierarchy
+			| SpanMapFeature.CodeActions
+			| SpanMapFeature.InlayHints
+			| SpanMapFeature.SemanticTokens
+			| SpanMapFeature.LinkedEditing,
 		],
 	]);
 });

@@ -19,8 +19,7 @@ test('transforms files concurrently with project state in every worker', async (
 				fileName: path.resolve(__dirname, `Worker${index}.vue`),
 				content: `<script setup lang="ts">const value${index} = ${index};</script>
 <template>{{ value${index}.toFixed() }}</template>`,
-			})
-		),
+			})),
 	);
 
 	await pool.closeProject({ projectHandle });
