@@ -6,7 +6,7 @@ let panel: vscode.WebviewPanel | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
 	if (
-		vscode.workspace.getConfiguration('vue').get<boolean>('showWelcome')
+		vscode.workspace.getConfiguration('vue').get<boolean>('welcome.show')
 		&& context.globalState.get<boolean>('vue.showUpdates', true)
 		&& context.globalState.get('vue.welcome') !== popVersion
 	) {
