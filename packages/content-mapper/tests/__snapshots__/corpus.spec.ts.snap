@@ -1,0 +1,41 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`content mapper full corpus 1`] = `
+[
+  "test-workspace/tsc/#2588/main.vue(2,10): error TS2339: Property 'vTrack' does not exist on type 'ShallowUnwrapRef<{ trackName: "MyButton"; }> & GlobalDirectives'.",
+  "test-workspace/tsc/#2678/main.vue(2,7): error TS2339: Property 'vTouch' does not exist on type 'GlobalDirectives'.",
+  "test-workspace/tsc/#3121/main.vue(4,21): error TS2339: Property 'slotFilters' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, string[], {}, {}, false, any, {}, {}, "", {}, any, {}, false>'.",
+  "test-workspace/tsc/#3121/main.vue(6,34): error TS6133: 'column' is declared but its value is never read.",
+  "test-workspace/tsc/#3123/main.vue(13,40): error TS2561: Object literal may only specify known properties, but 'fillOpacity' does not exist in type 'SVGAttributes & {}'. Did you mean to write 'fill-opacity'?",
+  "test-workspace/tsc/#3152/main.vue(5,7): error TS6133: 'msg' is declared but its value is never read.",
+  "test-workspace/tsc/#3152/main.vue(9,11): error TS2353: Object literal may only specify known properties, and 'disabled' does not exist in type 'Partial<{}> & Omit<{} & VNodeProps & AllowedComponentProps & ComponentCustomProps, never>'.",
+  "test-workspace/tsc/#3353/main.vue(2,7): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.",
+  "test-workspace/tsc/#3688/main.vue(24,2): error TS1128: Declaration or statement expected.
+  This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
+  "test-workspace/tsc/#3688/main.vue(30,1): error TS1005: '}' expected.
+  This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
+  "test-workspace/tsc/#4827/child.vue(2,23): error TS2551: Property 'vOnce' does not exist on type 'GlobalDirectives'. Did you mean 'VOnce'?",
+  "test-workspace/tsc/#5267/main.vue(18,7): error TS1005: '{' expected.
+  This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
+  "test-workspace/tsc/_failed_#3632/both.vue(10,1): error TS1109: Expression expected.
+  This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
+  "test-workspace/tsc/_failed_#3632/both.vue(6,1): error TS1109: Expression expected.
+  This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
+  "test-workspace/tsc/_failed_#3632/script.vue(5,1): error TS1109: Expression expected.
+  This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
+  "test-workspace/tsc/_failed_#3632/scriptSetup.vue(5,1): error TS1109: Expression expected.
+  This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
+  "test-workspace/tsc/_failed_#4569/main.vue(4,7): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.
+  This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
+  "test-workspace/tsc/_failed_#5071/withScript.vue(1,19): error TS1005: ';' expected.",
+  "test-workspace/tsc/_failed_#5071/withoutScript.vue(2,26): error TS1005: ';' expected.",
+  "test-workspace/tsc/_failed_#5823/main.vue(6,13): error TS1109: Expression expected.",
+  "test-workspace/tsc/_failed_directives/main.vue(14,6): error TS2339: Property 'notExist' does not exist on type '{ $: ComponentInternalInstance; $data: {}; $props: {}; $attrs: Data; $refs: Data; $slots: Readonly<InternalSlots>; $root: ComponentPublicInstance<...> | null; ... 9 more ...; Comp: () => void; }'.",
+  "test-workspace/tsc/_failed_directives/main.vue(17,2): error TS2578: Unused '@ts-expect-error' directive.",
+  "test-workspace/tsc/_failed_directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type '{ $: ComponentInternalInstance; $data: {}; $props: {}; $attrs: Data; $refs: Data; $slots: Readonly<InternalSlots>; $root: ComponentPublicInstance<...> | null; ... 9 more ...; Comp: () => void; }'.",
+  "test-workspace/tsc/_failed_fragment_props/main.vue(12,46): error TS2339: Property 'bar' does not exist on type '{ id: number; }'.",
+  "test-workspace/tsc/_failed_fragment_props/main.vue(12,54): error TS2339: Property 'baz' does not exist on type '{ id: number; }'.",
+  "test-workspace/tsc/_failed_fragment_props/main.vue(6,31): error TS2322: Type '{ id: number; }' is not assignable to type 'PropertyKey | undefined'.",
+  "test-workspace/tsc/_failed_fragment_props/main.vue(9,32): error TS2353: Object literal may only specify known properties, and 'foo' does not exist in type 'HTMLAttributes & ReservedProps'.",
+]
+`;

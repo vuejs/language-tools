@@ -6,10 +6,24 @@ import { repositoryRoot, runTsc, supportsRunExternalCode } from './utils';
 
 test.skipIf(!supportsRunExternalCode())('content mapper declaration emit', () => {
 	const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-content-mapper-dts-'));
+	const componentMetaRoot = path.join(repositoryRoot, 'test-workspace/component-meta');
+	const sidecar = path.join(componentMetaRoot, 'tsconfig.dts.json');
 	try {
+		fs.writeFileSync(
+			sidecar,
+			JSON.stringify(
+				{
+					extends: './tsconfig.json',
+					include: ['**/*'],
+					exclude: ['**/*.tsx'],
+				},
+				undefined,
+				'\t',
+			) + '\n',
+		);
 		const result = runTsc([
 			'-p',
-			path.join(repositoryRoot, 'test-workspace/component-meta/tsconfig.json'),
+			sidecar,
 			'--runExternalCode',
 			'--pretty',
 			'false',
@@ -32,6 +46,7 @@ test.skipIf(!supportsRunExternalCode())('content mapper declaration emit', () =>
 	}
 	finally {
 		fs.rmSync(outDir, { recursive: true, force: true });
+		fs.rmSync(sidecar, { force: true });
 	}
 });
 

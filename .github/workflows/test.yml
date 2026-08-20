@@ -22,4 +22,25 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Clone and build the native TypeScript compiler (tsgo) used by the
+      # content-mapper tests. This is temporary until content mappers ship in a
+      # published TypeScript 7 build.
+      - uses: actions/checkout@v6
+        with:
+          repository: microsoft/typescript-go
+          path: .tsgo
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: .tsgo/go.mod
+          cache-dependency-path: .tsgo/go.sum
+
+      - run: npm install
+        working-directory: .tsgo
+
+      - run: npm run build
+        working-directory: .tsgo
+
       - run: npm run test
+        env:
+          TSGO_PATH: ${{ github.workspace }}/.tsgo/built/local/tsgo${{ runner.os == 'Windows' && '.exe' || '' }}

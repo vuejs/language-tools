@@ -3,10 +3,20 @@ import * as path from 'node:path';
 
 export const repositoryRoot = path.resolve(__dirname, '../../..');
 
-const tscScript = path.join(repositoryRoot, 'node_modules/typescript-7/bin/tsc');
+function compilerCommand() {
+	const tsgoPath = process.env.TSGO_PATH;
+	if (tsgoPath) {
+		return { command: tsgoPath, prefixArgs: [] as string[] };
+	}
+	return {
+		command: process.execPath,
+		prefixArgs: [path.join(repositoryRoot, 'node_modules/typescript-7/bin/tsc')],
+	};
+}
 
-export function runTsc(args: string[]) {
-	return spawnSync(process.execPath, [tscScript, ...args], {
+function spawnCompiler(args: string[]) {
+	const { command, prefixArgs } = compilerCommand();
+	return spawnSync(command, [...prefixArgs, ...args], {
 		cwd: repositoryRoot,
 		encoding: 'utf8',
 		env: {
@@ -16,9 +26,13 @@ export function runTsc(args: string[]) {
 	});
 }
 
+export function runTsc(args: string[]) {
+	return spawnCompiler(args);
+}
+
 export function supportsRunExternalCode() {
-	const result = spawnSync(process.execPath, [tscScript, '--help'], { encoding: 'utf8' });
-	return (result.stdout + result.stderr).includes('runExternalCode');
+	const result = spawnCompiler(['--runExternalCode', '--version']);
+	return result.status === 0;
 }
 
 export function normalizeCompilerOutput(output: { stdout: string; stderr: string }) {
