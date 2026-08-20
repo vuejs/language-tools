@@ -381,10 +381,13 @@ export function* generateFragment(
 	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
 	const [startTagOffset] = getElementTagOffsets(node, options.template);
+	const failedPropExps: FailedPropExpressions[] = [];
 
 	// special case for <template v-for="..." :key="..." />
 	if (node.props.length) {
-		yield `__VLS_asFunctionalElement(__VLS_intrinsics.template)(`;
+		yield `${
+			options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalElement0 : names.asFunctionalElement1
+		}(${names.intrinsics}.template)(`;
 		const boundary = yield* Boundary.start(
 			'template',
 			startTagOffset,
@@ -398,10 +401,13 @@ export function* generateFragment(
 			node,
 			node.props,
 			options.vueCompilerOptions.checkUnknownProps,
+			failedPropExps,
 		);
 		yield `}`;
 		yield boundary.end();
 		yield `)${endOfLine}`;
+
+		yield* generateFailedExpressions(options, ctx, failedPropExps);
 	}
 
 	yield* ctx.generateDiagnosticDirectiveEnd();

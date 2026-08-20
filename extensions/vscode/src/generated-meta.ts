@@ -4,7 +4,7 @@
 // Meta info
 export const publisher = 'Vue';
 export const name = 'volar';
-export const version = '3.3.9';
+export const version = '3.3.10';
 export const displayName = 'Vue (Official)';
 export const description = 'Language Support for Vue';
 export const extensionId = `${publisher}.${name}`;
@@ -55,6 +55,7 @@ export const languages = {
  * Type union of all configs
  */
 export type ConfigKey =
+	| 'vue.welcome.show'
 	| 'vue.trace.server'
 	| 'vue.editor.focusMode'
 	| 'vue.editor.reactivityVisualization'
@@ -82,6 +83,7 @@ export type ConfigKey =
 	| 'vue.format.wrapAttributes';
 
 export interface ConfigKeyTypeMap {
+	'vue.welcome.show': boolean;
 	'vue.trace.server': 'off' | 'messages' | 'verbose';
 	'vue.editor.focusMode': boolean;
 	'vue.editor.reactivityVisualization': boolean;
@@ -117,6 +119,7 @@ export interface ConfigKeyTypeMap {
 }
 
 export interface ConfigShorthandMap {
+	welcomeShow: 'vue.welcome.show';
 	traceServer: 'vue.trace.server';
 	editorFocusMode: 'vue.editor.focusMode';
 	editorReactivityVisualization: 'vue.editor.reactivityVisualization';
@@ -145,6 +148,7 @@ export interface ConfigShorthandMap {
 }
 
 export interface ConfigShorthandTypeMap {
+	welcomeShow: boolean;
 	traceServer: 'off' | 'messages' | 'verbose';
 	editorFocusMode: boolean;
 	editorReactivityVisualization: boolean;
@@ -188,6 +192,15 @@ export interface ConfigItem<T extends keyof ConfigKeyTypeMap> {
  * Configs map registered by `Vue.volar`
  */
 export const configs = {
+	/**
+	 * @key `vue.welcome.show`
+	 * @default `true`
+	 * @type `boolean`
+	 */
+	welcomeShow: {
+		key: 'vue.welcome.show',
+		default: true,
+	} as ConfigItem<'vue.welcome.show'>,
 	/**
 	 * @key `vue.trace.server`
 	 * @default `"off"`
@@ -416,6 +429,7 @@ export const configs = {
 };
 
 export interface ScopedConfigKeyTypeMap {
+	'welcome.show': boolean;
 	'trace.server': 'off' | 'messages' | 'verbose';
 	'editor.focusMode': boolean;
 	'editor.reactivityVisualization': boolean;
@@ -453,6 +467,7 @@ export interface ScopedConfigKeyTypeMap {
 export const scopedConfigs = {
 	scope: 'vue',
 	defaults: {
+		'welcome.show': true,
 		'trace.server': 'off',
 		'editor.focusMode': false,
 		'editor.reactivityVisualization': true,
@@ -483,6 +498,9 @@ export const scopedConfigs = {
 
 export interface NestedConfigs {
 	'vue': {
+		'welcome': {
+			'show': boolean;
+		};
 		'trace': {
 			'server': 'off' | 'messages' | 'verbose';
 		};
@@ -543,6 +561,9 @@ export interface NestedConfigs {
 }
 
 export interface NestedScopedConfigs {
+	'welcome': {
+		'show': boolean;
+	};
 	'trace': {
 		'server': 'off' | 'messages' | 'verbose';
 	};

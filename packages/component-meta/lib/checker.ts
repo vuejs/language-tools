@@ -126,6 +126,8 @@ export function createCheckerBase(
 		deleteFile(fileName: string) {
 			fileName = fileName.replace(/\\/g, '/');
 			fileNamesSet.delete(fileName);
+			scriptSnapshots.delete(fileName);
+			language.scripts.delete(fileName);
 			projectVersion++;
 		},
 		reload() {

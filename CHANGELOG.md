@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.3.10 (2026-08-15)
+
+### language-core
+
+- **fix:** ignore trailing whitespace after generic parameter commas - Thanks to @KazariEX!
+- **fix:** resolve `v-for` item type over generic sources (#6141) - Thanks to @serkodev!
+- **fix:** do not extract SFC blocks across inline Markdown code (#6145) - Thanks to @lazerg!
+
+### language-service
+
+- **fix:** serialize template data provider access across concurrent requests (#6154) - Thanks to @serkodev!
+
+### tsc
+
+- **fix:** support different extension sets across project references (#6146) - Thanks to @lazerg!
+
+### typescript-plugin
+
+- **fix:** resolve requests against the owning project (#6152) - Thanks to @serkodev!
+
+### vscode
+
+- **feat:** patch `typescript.js` via `--require` to support read-only file systems (#6149) - Thanks to @serkodev!
+- **fix:** isolate custom TypeScript plugin paths between profiles (#6148) - Thanks to @serkodev!
+
 ## 3.3.9 (2026-07-31)
 
 ### component-meta
