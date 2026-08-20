@@ -24,23 +24,21 @@ jobs:
 
       # Clone and build the native TypeScript compiler (tsgo) used by the
       # content-mapper tests. This is temporary until content mappers ship in a
-      # published TypeScript 7 build.
-      - uses: actions/checkout@v6
-        with:
-          repository: microsoft/typescript-go
-          path: .tsgo
+      # published TypeScript 7 build. Clone outside the workspace so vitest does
+      # not pick up tsgo's own tests.
+      - name: Clone tsgo
+        run: git clone --depth 1 https://github.com/microsoft/typescript-go.git "${{ runner.temp }}/tsgo"
 
       - uses: actions/setup-go@v5
         with:
-          go-version-file: .tsgo/go.mod
-          cache-dependency-path: .tsgo/go.sum
+          go-version: '1.26'
 
       - run: npm install
-        working-directory: .tsgo
+        working-directory: ${{ runner.temp }}/tsgo
 
       - run: npm run build
-        working-directory: .tsgo
+        working-directory: ${{ runner.temp }}/tsgo
 
       - run: npm run test
         env:
-          TSGO_PATH: ${{ github.workspace }}/.tsgo/built/local/tsgo${{ runner.os == 'Windows' && '.exe' || '' }}
+          TSGO_PATH: ${{ runner.temp }}/tsgo/built/local/tsgo${{ runner.os == 'Windows' && '.exe' || '' }}

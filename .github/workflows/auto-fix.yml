@@ -35,5 +35,6 @@ jobs:
         with:
           message: "ci(lint): auto-fix"
           default_author: github_actions
+          branch: ${{ github.head_ref || github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
