@@ -2,9 +2,9 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { repositoryRoot, runTsc, supportsRunExternalCode } from './utils';
+import { repositoryRoot, runTsc } from './utils';
 
-test.skipIf(!supportsRunExternalCode())('content mapper declaration emit', () => {
+test('content mapper declaration emit', () => {
 	const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-content-mapper-dts-'));
 	const componentMetaRoot = path.join(repositoryRoot, 'test-workspace/component-meta');
 	const sidecar = path.join(componentMetaRoot, 'tsconfig.dts.json');

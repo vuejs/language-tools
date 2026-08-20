@@ -1,6 +1,6 @@
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { normalizeCompilerOutput, repositoryRoot, runTsc, supportsRunExternalCode } from './utils';
+import { normalizeCompilerOutput, repositoryRoot, runTsc } from './utils';
 
 const configFileNames = [
 	'test-workspace/content-mapper/tsconfig.json',
@@ -8,7 +8,7 @@ const configFileNames = [
 	'test-workspace/content-mapper-directives/tsconfig.json',
 ];
 
-test.skipIf(!supportsRunExternalCode())('content mapper fixtures', () => {
+test('content mapper fixtures', () => {
 	for (const configFileName of configFileNames) {
 		const result = runTsc([
 			'-p',

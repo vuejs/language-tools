@@ -30,11 +30,6 @@ export function runTsc(args: string[]) {
 	return spawnCompiler(args);
 }
 
-export function supportsRunExternalCode() {
-	const result = spawnCompiler(['--runExternalCode', '--version']);
-	return result.status === 0;
-}
-
 export function normalizeCompilerOutput(output: { stdout: string; stderr: string }) {
 	return (output.stdout + output.stderr)
 		.replace(/^.*TNB ACTIVE.*\n/gm, '')
