@@ -19,7 +19,7 @@
 		"@tsslint/config": "latest",
 		"@typescript-eslint/eslint-plugin": "latest",
 		"dprint": "latest",
-		"typescript": "latest",
+		"typescript": "next",
 		"vitest": "latest"
 	}
 }
