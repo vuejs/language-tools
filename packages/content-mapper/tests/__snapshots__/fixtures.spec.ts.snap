@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`content mapper fixtures > test-workspace/content-mapper/tsconfig.json 1`] = `"error TS5023: Unknown compiler option '--runExternalCode'."`;
+
+exports[`content mapper fixtures > test-workspace/content-mapper-directives/tsconfig.json 1`] = `"error TS5023: Unknown compiler option '--runExternalCode'."`;
+
+exports[`content mapper fixtures > test-workspace/content-mapper-pug/tsconfig.json 1`] = `"error TS5023: Unknown compiler option '--runExternalCode'."`;

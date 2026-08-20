@@ -3,7 +3,7 @@ import * as path from 'node:path';
 
 export const repositoryRoot = path.resolve(__dirname, '../../..');
 
-const tscScript = path.join(repositoryRoot, 'node_modules/typescript/bin/tsc');
+const tscScript = path.join(repositoryRoot, 'node_modules/typescript-7/bin/tsc');
 
 export function runTsc(args: string[]) {
 	return spawnSync(process.execPath, [tscScript, ...args], {
