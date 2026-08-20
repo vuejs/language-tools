@@ -83,7 +83,6 @@ function normalizeDiagnostics(output: string) {
 	const repositoryPrefix = repositoryRoot.replaceAll('\\', '/') + '/';
 	const lines = output
 		.replaceAll('\r\n', '\n')
-		.replace(/\u001B\[[0-9;]*m/g, '')
 		.split('\n')
 		.filter(line => !line.includes('TNB ACTIVE'))
 		.map(line => line.replaceAll('\\', '/'))
