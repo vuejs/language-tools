@@ -152,10 +152,7 @@ function* generateSetupExposed(
 
 	yield `type ${names.SetupExposed} = import('${vueCompilerOptions.lib}').ShallowUnwrapRef<{${newLine}`;
 	for (const bindingName of exposed) {
-		const token = Symbol(bindingName.length);
-		yield ['', undefined, 0, { __linkedToken: token }];
 		yield `${bindingName}: typeof `;
-		yield ['', undefined, 0, { __linkedToken: token }];
 		yield bindingName;
 		yield endOfLine;
 	}
