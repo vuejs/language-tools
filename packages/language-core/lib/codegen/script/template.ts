@@ -136,7 +136,5 @@ function* generateTemplateDirectives(
 }
 
 function generateExposedType(lib: string, bindings: Set<string>): string {
-	return `import('${lib}').ShallowUnwrapRef<{\n${
-		[...bindings].map(name => `${name}: typeof ${name};`).join(`\n`)
-	}\n}>`;
+	return `import('${lib}').ShallowUnwrapRef<{\n${[...bindings].map(name => `${name}: typeof ${name};`).join(`\n`)}\n}>`;
 }
