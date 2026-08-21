@@ -69,21 +69,18 @@ export function activate(selector: vscode.DocumentSelector) {
 		}
 	});
 
-	watch(activeSelection, () => {
-		if (activeTextEditor.value) {
-			updateDecorations(activeTextEditor.value);
-		}
-	});
-
 	let timeout: NodeJS.Timeout | undefined;
-	watch(activeText, () => {
+	function scheduleUpdateDecorations() {
 		clearTimeout(timeout);
 		timeout = setTimeout(() => {
 			if (activeTextEditor.value) {
 				updateDecorations(activeTextEditor.value);
 			}
 		}, 100);
-	});
+	}
+
+	watch(activeSelection, scheduleUpdateDecorations);
+	watch(activeText, scheduleUpdateDecorations);
 
 	watch(() => config.editor.focusMode, () => {
 		for (const editor of visibleTextEditors.value) {
