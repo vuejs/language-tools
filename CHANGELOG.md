@@ -17,7 +17,7 @@
 
 ### tsc
 
-- **fix:** make extension retry errors serializable across IPC (#6162)
+- **fix:** make extension retry errors serializable across IPC (#6162) - Thanks to @KazariEX!
 
 ### vscode
 
