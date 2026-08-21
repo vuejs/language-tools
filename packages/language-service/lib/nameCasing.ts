@@ -1,12 +1,13 @@
-import type { LanguageServiceContext, VirtualCode } from '@volar/language-service';
+import type { LanguageServiceContext } from '@volar/language-service';
 import type { NodeTypes } from '@vue/compiler-dom';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import { forEachElementNode, hyphenateTag, VueVirtualCode } from '@vue/language-core';
 import type { URI } from 'vscode-uri';
 
 type CollectResult = Map<string, [tagType: CompilerDOM.ElementTypes, attrs: string[]]>;
+type TemplateBlock = NonNullable<VueVirtualCode['ir']['template']>;
 
-const collectCache = new WeakMap<VirtualCode, CollectResult>();
+const collectCache = new WeakMap<TemplateBlock, [version: string, CollectResult]>();
 
 export const enum TagNameCasing {
 	Kebab,
@@ -114,14 +115,17 @@ function detectTagCasing(code: VueVirtualCode): TagNameCasing[] {
 	return [...result];
 }
 
-function collectTagsWithCache(code: VueVirtualCode) {
-	let cache = collectCache.get(code);
-	if (!cache) {
-		const ast = code.ir.template?.ast;
-		cache = ast ? collectTags(ast) : new Map();
-		collectCache.set(code, cache);
+function collectTagsWithCache(code: VueVirtualCode): CollectResult {
+	const { template } = code.ir;
+	if (!template) {
+		return new Map();
 	}
-	return cache;
+	let cache = collectCache.get(template);
+	if (!cache || cache[0] !== template.content) {
+		const ast = template.ast;
+		collectCache.set(template, cache = [template.content, ast ? collectTags(ast) : new Map()]);
+	}
+	return cache[1];
 }
 
 function collectTags(ast: CompilerDOM.RootNode) {
