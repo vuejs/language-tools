@@ -55,12 +55,20 @@ describe('nameCasing detection', () => {
 
 		language.scripts.set(uri, ts.ScriptSnapshot.fromString(`<script setup lang="ts">const a = 1;</script>`), 'vue');
 		expect(await getTagNameCasing(context, uri)).toBe(1 satisfies TagNameCasing.Pascal);
+		expect(await getAttrNameCasing(context, uri)).toBe(1 satisfies AttrNameCasing.Camel);
 
 		language.scripts.set(
 			uri,
-			ts.ScriptSnapshot.fromString(`<template><my-comp /></template><script setup lang="ts">const a = 1;</script>`),
+			ts.ScriptSnapshot.fromString(
+				`<template><my-comp foo-bar /></template><script setup lang="ts">const a = 1;</script>`,
+			),
 			'vue',
 		);
 		expect(await getTagNameCasing(context, uri)).toBe(0 satisfies TagNameCasing.Kebab);
+		expect(await getAttrNameCasing(context, uri)).toBe(0 satisfies AttrNameCasing.Kebab);
+
+		language.scripts.set(uri, ts.ScriptSnapshot.fromString(`<script setup lang="ts">const a = 1;</script>`), 'vue');
+		expect(await getTagNameCasing(context, uri)).toBe(1 satisfies TagNameCasing.Pascal);
+		expect(await getAttrNameCasing(context, uri)).toBe(1 satisfies AttrNameCasing.Camel);
 	});
 });

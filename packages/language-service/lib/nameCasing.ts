@@ -2,12 +2,13 @@ import type { LanguageServiceContext } from '@volar/language-service';
 import type { NodeTypes } from '@vue/compiler-dom';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import { forEachElementNode, hyphenateTag, VueVirtualCode } from '@vue/language-core';
+import { computedSet } from '@vue/language-core/lib/utils/signals';
 import type { URI } from 'vscode-uri';
 
-type CollectResult = Map<string, [tagType: CompilerDOM.ElementTypes, attrs: string[]]>;
-type TemplateBlock = NonNullable<VueVirtualCode['ir']['template']>;
-
-const collectCache = new WeakMap<TemplateBlock, [version: string, CollectResult]>();
+const nameCasingGraphs = new WeakMap<VueVirtualCode, {
+	tag: () => Set<TagNameCasing>;
+	attr: () => Set<AttrNameCasing>;
+}>();
 
 export const enum TagNameCasing {
 	Kebab,
@@ -32,11 +33,10 @@ export async function getTagNameCasing(context: LanguageServiceContext, uri: URI
 	}
 
 	const root = context.language.scripts.get(uri)?.generated?.root;
-
 	if (root instanceof VueVirtualCode) {
-		const detectedCasings = detectTagCasing(root);
-		if (detectedCasings.length === 1) {
-			return detectedCasings[0];
+		const detectedCasings = getNameCasingGraph(root).tag();
+		if (detectedCasings.size === 1) {
+			return detectedCasings.values().next().value!;
 		}
 	}
 	if (config === 'preferKebabCase') {
@@ -59,11 +59,10 @@ export async function getAttrNameCasing(context: LanguageServiceContext, uri: UR
 	}
 
 	const root = context.language.scripts.get(uri)?.generated?.root;
-
 	if (root instanceof VueVirtualCode) {
-		const detectedCasings = detectAttrCasing(root);
-		if (detectedCasings.length === 1) {
-			return detectedCasings[0];
+		const detectedCasings = getNameCasingGraph(root).attr();
+		if (detectedCasings.size === 1) {
+			return detectedCasings.values().next().value!;
 		}
 	}
 	if (config === 'preferKebabCase') {
@@ -73,32 +72,60 @@ export async function getAttrNameCasing(context: LanguageServiceContext, uri: UR
 	return AttrNameCasing.Camel;
 }
 
-function detectAttrCasing(code: VueVirtualCode) {
-	const tags = collectTagsWithCache(code);
-	const result = new Set<AttrNameCasing>();
+function getNameCasingGraph(code: VueVirtualCode) {
+	let graph = nameCasingGraphs.get(code);
+	if (!graph) {
+		nameCasingGraphs.set(
+			code,
+			graph = {
+				tag: computedSet(() => detectTagCasing(code.ir.template?.ast)),
+				attr: computedSet(() => detectAttrCasing(code.ir.template?.ast)),
+			},
+		);
+	}
+	return graph;
+}
 
-	for (const [, [_, attrs]] of tags) {
-		for (const attr of attrs) {
-			if (attr !== hyphenateTag(attr)) {
-				result.add(AttrNameCasing.Camel);
-				break;
+function detectAttrCasing(ast: CompilerDOM.RootNode | undefined) {
+	const result = new Set<AttrNameCasing>();
+	if (!ast) {
+		return result;
+	}
+
+	for (const node of forEachElementNode(ast)) {
+		for (const prop of node.props) {
+			let name: string;
+			if (
+				prop.type === 7 satisfies NodeTypes.DIRECTIVE
+				&& prop.arg?.type === 4 satisfies NodeTypes.SIMPLE_EXPRESSION
+				&& prop.arg.isStatic
+			) {
+				name = prop.arg.content;
 			}
-		}
-		for (const attr of attrs) {
-			if (attr.includes('-')) {
+			else if (prop.type === 6 satisfies NodeTypes.ATTRIBUTE) {
+				name = prop.name;
+			}
+			else {
+				continue;
+			}
+			if (name !== hyphenateTag(name)) {
+				result.add(AttrNameCasing.Camel);
+			}
+			if (name.includes('-')) {
 				result.add(AttrNameCasing.Kebab);
-				break;
 			}
 		}
 	}
-	return [...result];
+	return result;
 }
 
-function detectTagCasing(code: VueVirtualCode): TagNameCasing[] {
-	const tags = collectTagsWithCache(code);
+function detectTagCasing(ast: CompilerDOM.RootNode | undefined) {
 	const result = new Set<TagNameCasing>();
+	if (!ast) {
+		return result;
+	}
 
-	for (const [tag, [tagType]] of tags) {
+	for (const { tag, tagType } of forEachElementNode(ast)) {
 		if (
 			tagType === 0 satisfies CompilerDOM.ElementTypes.ELEMENT
 			|| tagType === 3 satisfies CompilerDOM.ElementTypes.TEMPLATE
@@ -112,49 +139,5 @@ function detectTagCasing(code: VueVirtualCode): TagNameCasing[] {
 			result.add(TagNameCasing.Kebab);
 		}
 	}
-	return [...result];
-}
-
-function collectTagsWithCache(code: VueVirtualCode): CollectResult {
-	const { template } = code.ir;
-	if (!template) {
-		return new Map();
-	}
-	let cache = collectCache.get(template);
-	if (!cache || cache[0] !== template.content) {
-		const ast = template.ast;
-		collectCache.set(template, cache = [template.content, ast ? collectTags(ast) : new Map()]);
-	}
-	return cache[1];
-}
-
-function collectTags(ast: CompilerDOM.RootNode) {
-	const tags: CollectResult = new Map();
-
-	for (const node of forEachElementNode(ast)) {
-		let tag = tags.get(node.tag);
-		if (!tag) {
-			tags.set(node.tag, tag = [node.tagType, []]);
-		}
-		for (const prop of node.props) {
-			let name: string | undefined;
-			if (
-				prop.type === 7 satisfies NodeTypes.DIRECTIVE
-				&& prop.arg?.type === 4 satisfies NodeTypes.SIMPLE_EXPRESSION
-				&& prop.arg.isStatic
-			) {
-				name = prop.arg.content;
-			}
-			else if (
-				prop.type === 6 satisfies NodeTypes.ATTRIBUTE
-			) {
-				name = prop.name;
-			}
-			if (name !== undefined) {
-				tag[1].push(name);
-			}
-		}
-	}
-
-	return tags;
+	return result;
 }
