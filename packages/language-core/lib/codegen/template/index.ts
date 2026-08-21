@@ -13,8 +13,9 @@ export interface TemplateCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	template: IRTemplate;
 	isVapor: boolean;
-	setupRefs: Set<string>;
 	setupConsts: Set<string>;
+	setupRefs: Set<string>;
+	setupBindings: Set<string>;
 	hasDefineSlots?: boolean;
 	propsAssignName?: string;
 	slotsAssignName?: string;

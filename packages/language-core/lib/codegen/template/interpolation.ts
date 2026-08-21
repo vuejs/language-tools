@@ -13,9 +13,10 @@ import type { TemplateCodegenContext } from './context';
 const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export function* generateInterpolation(
-	{ typescript, setupRefs }: {
+	{ typescript, setupRefs, setupBindings }: {
 		typescript: typeof import('typescript');
 		setupRefs: Set<string>;
+		setupBindings: Set<string>;
 	},
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
@@ -64,6 +65,18 @@ export function* generateInterpolation(
 				block.name,
 				start + offset,
 				data,
+			];
+			yield `.value`;
+		}
+		else if (setupBindings.has(name)) {
+			ctx.accessVariable(block.name, name, start + offset);
+			yield [
+				name,
+				block.name,
+				start + offset,
+				isShorthand
+					? { ...data, __shorthandExpression: 'js' }
+					: data,
 			];
 			yield `.value`;
 		}

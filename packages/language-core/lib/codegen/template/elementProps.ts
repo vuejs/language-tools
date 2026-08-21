@@ -291,6 +291,11 @@ export function* generatePropExp(
 				yield* codes;
 				yield `.value`;
 			}
+			else if (options.setupBindings.has(propVariableName)) {
+				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
+				yield* codes;
+				yield `.value`;
+			}
 			else {
 				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
 				yield names.ctx;

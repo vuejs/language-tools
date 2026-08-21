@@ -1,20 +1,21 @@
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { endOfLine, generateSfcBlockSection } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
-import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext,
 	selfType?: string,
 ): Generator<Code> {
-	yield* generateSetupExposed(options, ctx);
-	yield* generateTemplateCtx(options, ctx, selfType);
-	yield* generateTemplateComponents(options, ctx);
-	yield* generateTemplateDirectives(options, ctx);
+	yield* generateTemplateCtx(options, selfType);
+	yield* generateTemplateComponents(options);
+	yield* generateTemplateDirectives(options);
+
+	for (const name of options.withDotValueBindings) {
+		yield `${names.withDotValue}(${name})${endOfLine}`;
+	}
 
 	if (options.templateAndStyleCodes.length) {
 		yield* options.templateAndStyleCodes;
@@ -23,7 +24,6 @@ export function* generateTemplate(
 
 function* generateTemplateCtx(
 	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, fileName }: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext,
 	selfType: string | undefined,
 ): Generator<Code> {
 	const exps: Code[] = [];
@@ -70,23 +70,18 @@ function* generateTemplateCtx(
 		exps.push(`{} as ${propTypes.join(` & `)}`);
 	}
 
-	if (ctx.generatedTypes.has(names.SetupExposed)) {
-		exps.push(`{} as ${names.SetupExposed}`);
-	}
-
 	yield `const ${names.ctx} = `;
 	yield* generateSpreadMerge(...exps);
 	yield endOfLine;
 }
 
 function* generateTemplateComponents(
-	{ vueCompilerOptions, script, scriptRanges }: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext,
+	{ vueCompilerOptions, script, scriptRanges, localComponents }: ScriptCodegenOptions,
 ): Generator<Code> {
 	const types: string[] = [];
 
-	if (ctx.generatedTypes.has(names.SetupExposed)) {
-		types.push(names.SetupExposed);
+	if (localComponents.size) {
+		types.push(generateExposedType(vueCompilerOptions.lib, localComponents));
 	}
 	if (script && scriptRanges?.exportDefault?.options?.components) {
 		const { components } = scriptRanges.exportDefault.options;
@@ -116,13 +111,12 @@ function* generateTemplateComponents(
 }
 
 function* generateTemplateDirectives(
-	{ vueCompilerOptions, script, scriptRanges }: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext,
+	{ vueCompilerOptions, script, scriptRanges, localDirectives }: ScriptCodegenOptions,
 ): Generator<Code> {
 	const types: string[] = [];
 
-	if (ctx.generatedTypes.has(names.SetupExposed)) {
-		types.push(names.SetupExposed);
+	if (localDirectives.size) {
+		types.push(generateExposedType(vueCompilerOptions.lib, localDirectives));
 	}
 	if (script && scriptRanges?.exportDefault?.options?.directives) {
 		const { directives } = scriptRanges.exportDefault.options;
@@ -141,20 +135,8 @@ function* generateTemplateDirectives(
 	yield `let ${names.directives}!: ${names.LocalDirectives} & import('${vueCompilerOptions.lib}').GlobalDirectives${endOfLine}`;
 }
 
-function* generateSetupExposed(
-	{ vueCompilerOptions, exposed }: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext,
-): Generator<Code> {
-	if (!exposed.size) {
-		return;
-	}
-	ctx.generatedTypes.add(names.SetupExposed);
-
-	yield `type ${names.SetupExposed} = import('${vueCompilerOptions.lib}').ShallowUnwrapRef<{${newLine}`;
-	for (const bindingName of exposed) {
-		yield `${bindingName}: typeof `;
-		yield bindingName;
-		yield endOfLine;
-	}
-	yield `}>${endOfLine}`;
+function generateExposedType(lib: string, bindings: Set<string>): string {
+	return `import('${lib}').ShallowUnwrapRef<{\n${
+		[...bindings].map(name => `${name}: typeof ${name};`).join(`\n`)
+	}\n}>`;
 }

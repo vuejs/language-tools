@@ -192,6 +192,7 @@ function useCodegen(
 			componentName: getComponentName(),
 			setupConsts: getSetupConsts(),
 			setupRefs: getSetupRefs(),
+			setupBindings: getSetupBindings(),
 			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
@@ -209,6 +210,7 @@ function useCodegen(
 			styles: ir.styles,
 			setupConsts: getSetupConsts(),
 			setupRefs: getSetupRefs(),
+			setupBindings: getSetupBindings(),
 		});
 	});
 
@@ -224,6 +226,40 @@ function useCodegen(
 		].filter(name => bindings.has(name)));
 	});
 
+	const getLocalComponents = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
+		}
+		return new Set(
+			(ir.template?.ast?.components ?? [])
+				.flatMap(name => [camelize(name), capitalize(camelize(name))])
+				.filter(name => bindings.has(name)),
+		);
+	});
+
+	const getLocalDirectives = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
+		}
+		return new Set([
+			...getGeneratedTemplate()?.contextAccesses.keys() ?? [],
+			...getGeneratedStyle()?.contextAccesses.keys() ?? [],
+		].filter(name => bindings.has(name) && /^v[A-Z]/.test(name)));
+	});
+
+	const getWithDotValueBindings = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
+		}
+		return new Set([
+			...getGeneratedTemplate()?.contextAccesses.keys() ?? [],
+			...getGeneratedStyle()?.contextAccesses.keys() ?? [],
+		].filter(name => bindings.has(name)));
+	});
+
 	const getGeneratedScript = computed(() => {
 		return generateScript({
 			vueCompilerOptions: getResolvedOptions(),
@@ -231,6 +267,9 @@ function useCodegen(
 			script: ir.script,
 			scriptSetup: ir.scriptSetup,
 			exposed: getSetupExposed(),
+			localComponents: getLocalComponents(),
+			localDirectives: getLocalDirectives(),
+			withDotValueBindings: getWithDotValueBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateAndStyleTypes: new Set([
