@@ -92,6 +92,14 @@ export function activate(selector: vscode.DocumentSelector) {
 	});
 
 	async function updateDecorations(editor: vscode.TextEditor) {
+		if (!config.editor.focusMode) {
+			const info = editor2Decorations.get(editor);
+			if (info) {
+				info.targetTagDecIndex = 0;
+			}
+			return;
+		}
+
 		if (!vscode.languages.match(selector, editor.document)) {
 			return;
 		}
