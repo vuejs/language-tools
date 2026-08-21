@@ -653,6 +653,9 @@
 			"path": "./unknownTag/tsconfig.json"
 		},
 		{
+			"path": "./useTemplateRef-dynamic-arg/tsconfig.json"
+		},
+		{
 			"path": "./v-bind-require-object/tsconfig.json"
 		},
 		{
