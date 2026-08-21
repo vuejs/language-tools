@@ -22,6 +22,12 @@ export function activate(selector: vscode.DocumentSelector) {
 		tagRanges: [number, number][];
 	}>();
 
+	// folding ranges only depend on the document text, not the selection
+	const foldingCache = new WeakMap<vscode.TextDocument, {
+		version: number;
+		rootRanges: vscode.FoldingRange[];
+	}>();
+
 	setInterval(() => {
 		for (const [editor, info] of Array.from(editor2Decorations)) {
 			if (info.currentTagDecIndex !== info.targetTagDecIndex) {
@@ -90,29 +96,24 @@ export function activate(selector: vscode.DocumentSelector) {
 			return;
 		}
 
-		const foldingRanges = await vscode.commands.executeCommand<vscode.FoldingRange[] | undefined>(
-			'vscode.executeFoldingRangeProvider',
-			editor.document.uri,
-		);
-		if (!foldingRanges) {
-			return;
+		let cache = foldingCache.get(editor.document);
+		if (!cache || cache.version !== editor.document.version) {
+			// capture the version before the request
+			const version = editor.document.version;
+			const foldingRanges = await vscode.commands.executeCommand<vscode.FoldingRange[] | undefined>(
+				'vscode.executeFoldingRangeProvider',
+				editor.document.uri,
+			);
+			if (!foldingRanges) {
+				return;
+			}
+			cache = { version, rootRanges: computeRootFoldingRanges(foldingRanges) };
+			if (foldingRanges.length) {
+				foldingCache.set(editor.document, cache);
+			}
 		}
 
-		const rootRanges: vscode.FoldingRange[] = [];
-		const stack: vscode.FoldingRange[] = [];
-
-		for (const range of foldingRanges) {
-			while (stack.length && stack[stack.length - 1]!.end < range.start) {
-				stack.pop();
-			}
-			if (stack.length === 0) {
-				rootRanges.push({
-					start: range.start,
-					end: range.end + 1,
-				});
-			}
-			stack.push(range);
-		}
+		const { tagRanges, inBlock } = computeTagRanges(cache.rootRanges, editor.selection.active.line);
 
 		const info = editor2Decorations.get(editor) ?? {
 			currentTagDecIndex: 0,
@@ -120,22 +121,7 @@ export function activate(selector: vscode.DocumentSelector) {
 			tagRanges: [],
 		};
 		editor2Decorations.set(editor, info);
-
-		info.tagRanges.length = 0;
-
-		const currentLine = editor.selection.active.line;
-		let inBlock = false;
-
-		for (const rootRange of rootRanges) {
-			if (rootRange.end - rootRange.start <= 1) {
-				info.tagRanges.push([rootRange.start, rootRange.end]);
-			}
-			else {
-				info.tagRanges.push([rootRange.start, rootRange.start]);
-				info.tagRanges.push([rootRange.end, rootRange.end]);
-				inBlock ||= currentLine >= rootRange.start + 1 && currentLine <= rootRange.end - 1;
-			}
-		}
+		info.tagRanges = tagRanges;
 
 		if (config.editor.focusMode && inBlock) {
 			info.targetTagDecIndex = tagUnfocusDecorations.length - 1;
@@ -144,4 +130,42 @@ export function activate(selector: vscode.DocumentSelector) {
 			info.targetTagDecIndex = 0;
 		}
 	}
+}
+
+function computeRootFoldingRanges(foldingRanges: readonly vscode.FoldingRange[]) {
+	const rootRanges: vscode.FoldingRange[] = [];
+	const stack: vscode.FoldingRange[] = [];
+
+	for (const range of foldingRanges) {
+		while (stack.length && stack[stack.length - 1]!.end < range.start) {
+			stack.pop();
+		}
+		if (stack.length === 0) {
+			rootRanges.push({
+				start: range.start,
+				end: range.end + 1,
+			});
+		}
+		stack.push(range);
+	}
+
+	return rootRanges;
+}
+
+function computeTagRanges(rootRanges: readonly vscode.FoldingRange[], currentLine: number) {
+	const tagRanges: [number, number][] = [];
+	let inBlock = false;
+
+	for (const rootRange of rootRanges) {
+		if (rootRange.end - rootRange.start <= 1) {
+			tagRanges.push([rootRange.start, rootRange.end]);
+		}
+		else {
+			tagRanges.push([rootRange.start, rootRange.start]);
+			tagRanges.push([rootRange.end, rootRange.end]);
+			inBlock ||= currentLine >= rootRange.start + 1 && currentLine <= rootRange.end - 1;
+		}
+	}
+
+	return { tagRanges, inBlock };
 }
