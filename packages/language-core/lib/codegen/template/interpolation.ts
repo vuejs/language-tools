@@ -13,9 +13,12 @@ import type { TemplateCodegenContext } from './context';
 const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export function* generateInterpolation(
-	{ typescript, setupRefs }: {
+	{ typescript, destructuredProps, importedComponents, setupRefs, setupBindings }: {
 		typescript: typeof import('typescript');
+		destructuredProps: Set<string>;
+		importedComponents: Set<string>;
 		setupRefs: Set<string>;
+		setupBindings: Set<string>;
 	},
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
@@ -60,12 +63,39 @@ export function* generateInterpolation(
 			);
 		}
 
-		if (setupRefs.has(name)) {
+		// Access strategy, in precedence order:
+		// - destructured props / imported components → direct reference
+		// - template refs → direct `.value`
+		// - other bindings → `.value` + `__VLS_withDotValue` assertion
+		// - otherwise → `__VLS_ctx.<name>`
+		if (destructuredProps.has(name) || importedComponents.has(name)) {
+			yield [
+				name,
+				block.name,
+				start + offset,
+				isShorthand
+					? { ...data, __shorthandExpression: 'js' }
+					: data,
+			];
+		}
+		else if (setupRefs.has(name)) {
 			yield [
 				name,
 				block.name,
 				start + offset,
 				data,
+			];
+			yield `.value`;
+		}
+		else if (setupBindings.has(name)) {
+			ctx.accessVariable(block.name, name, start + offset);
+			yield [
+				name,
+				block.name,
+				start + offset,
+				isShorthand
+					? { ...data, __shorthandExpression: 'js' }
+					: data,
 			];
 			yield `.value`;
 		}

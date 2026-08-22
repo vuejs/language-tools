@@ -31,7 +31,6 @@ const raw = {
 	Props: '',
 	PublicProps: '',
 	RootEl: '',
-	SetupExposed: '',
 	Slots: '',
 	StyleModules: '',
 	StyleScopedClasses: '',
@@ -50,6 +49,7 @@ const raw = {
 	tryAsConstant: '',
 	vFor: '',
 	vSlot: '',
+	withDotValue: '',
 
 	ConstructorOverloads: '',
 	Elements: '',

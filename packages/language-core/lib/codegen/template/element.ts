@@ -93,12 +93,12 @@ export function* generateComponent(
 			camelize(tag),
 			tag,
 		]);
-		const matchedSetupConst = [...originalNames].find(name => options.setupConsts.has(name));
-		if (matchedSetupConst) {
+		const matchedImportedComponent = [...originalNames].find(name => options.importedComponents.has(name));
+		if (matchedImportedComponent) {
 			// navigation & auto import support
 			yield `const ${componentVar} = `;
 			yield* generateCamelized(
-				matchedSetupConst[0]! + tag.slice(1),
+				matchedImportedComponent[0]! + tag.slice(1),
 				'template',
 				startTagOffset,
 				{
@@ -109,7 +109,7 @@ export function* generateComponent(
 			if (endTagOffset !== undefined) {
 				yield ` || `;
 				yield* generateCamelized(
-					matchedSetupConst[0]! + tag.slice(1),
+					matchedImportedComponent[0]! + tag.slice(1),
 					'template',
 					endTagOffset,
 					codeFeatures.withoutHighlightAndCompletion,
