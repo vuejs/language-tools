@@ -159,6 +159,11 @@ export function* generateSetupFunction(
 		transforms.push(
 			...generateDefineWithTypeTransforms(scriptSetup, statement, callExp, typeArg, name, names.slots, names.Slots),
 		);
+		if (!name) {
+			transforms.push(insert(statement.end, function*() {
+				yield `${newLine}void ${names.slots}${endOfLine}`;
+			}));
+		}
 	}
 	if (scriptSetupRanges.defineExpose) {
 		const { callExp, arg, typeArg } = scriptSetupRanges.defineExpose;
