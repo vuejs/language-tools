@@ -85,7 +85,9 @@ export function* generateElementEvents(
 	}
 
 	const emitsVar = ctx.getInternalVariable();
-	yield `let ${emitsVar}!: ${names.ResolveEmits}<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>${endOfLine}`;
+	yield `let ${emitsVar}!: ${names.ResolveEmits}<typeof ${componentOriginalVar}, typeof `;
+	yield [getCtxVar(), 'template', node.loc.start.offset, codeFeatures.verification];
+	yield `.emit>${endOfLine}`;
 
 	for (const { propPrefix, emitPrefix, propName, emitName, items } of Object.values(definitions)) {
 		const eventVar = ctx.getInternalVariable();
