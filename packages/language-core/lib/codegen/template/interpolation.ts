@@ -55,6 +55,7 @@ export function* generateInterpolation(
 				block.name,
 				start + prevEnd,
 				data,
+				true,
 			);
 		}
 
@@ -112,25 +113,34 @@ export function* generateInterpolation(
 }
 
 /**
- * Yield a code chunk, cutting the first character off as verification-only.
+ * Yield a code chunk, cutting the boundary character off as verification-only.
  *
  * Adjacent mappings share the boundary offset (closed interval), so both the
- * previous token's end and this chunk's start claim the same source offset.
- * Downgrading the first character to verification-only keeps content-sensitive
- * features (rename / navigation) from firing on the following chunk's boundary.
+ * neighbouring token's end and this chunk's start claim the same source offset.
+ * Downgrading the boundary character to verification-only keeps content-sensitive
+ * features (rename / navigation) from firing on the neighbouring chunk.
  */
 function* generateNonIdentifierCode(
 	code: string,
 	source: string,
 	offset: number,
 	data: VueCodeInformation,
+	cutLast = false,
 ): Generator<Code> {
 	if (!code.length) {
 		return;
 	}
-	yield [code.slice(0, 1), source, offset, { verification: data.verification }];
-	if (code.length > 1) {
-		yield [code.slice(1), source, offset + 1, data];
+	if (cutLast) {
+		if (code.length > 1) {
+			yield [code.slice(0, -1), source, offset, data];
+		}
+		yield [code.slice(-1), source, offset + code.length - 1, { verification: data.verification }];
+	}
+	else {
+		yield [code.slice(0, 1), source, offset, { verification: data.verification }];
+		if (code.length > 1) {
+			yield [code.slice(1), source, offset + 1, data];
+		}
 	}
 }
 
