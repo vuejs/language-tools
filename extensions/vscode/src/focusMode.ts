@@ -28,33 +28,51 @@ export function activate(selector: vscode.DocumentSelector) {
 		rootRanges: vscode.FoldingRange[];
 	}>();
 
-	setInterval(() => {
-		for (const [editor, info] of Array.from(editor2Decorations)) {
-			if (info.currentTagDecIndex !== info.targetTagDecIndex) {
-				const lastTagDecIndex = info.currentTagDecIndex;
+	// only ticks while a fade animation is in progress
+	let animationTimer: NodeJS.Timeout | undefined;
 
-				if (info.targetTagDecIndex > info.currentTagDecIndex) {
-					info.currentTagDecIndex++;
-				}
-				else {
-					info.currentTagDecIndex--;
-				}
+	function ensureAnimationTimer() {
+		animationTimer ??= setInterval(() => {
+			for (const [editor, info] of Array.from(editor2Decorations)) {
+				try {
+					if (info.currentTagDecIndex !== info.targetTagDecIndex) {
+						const lastTagDecIndex = info.currentTagDecIndex;
 
-				if (info.currentTagDecIndex > 0) {
-					editor.setDecorations(
-						tagUnfocusDecorations[info.currentTagDecIndex]!,
-						info.tagRanges.map(range =>
-							new vscode.Range(new vscode.Position(range[0], 0), new vscode.Position(range[1], 0))
-						),
-					);
+						if (info.targetTagDecIndex > info.currentTagDecIndex) {
+							info.currentTagDecIndex++;
+						}
+						else {
+							info.currentTagDecIndex--;
+						}
+
+						if (info.currentTagDecIndex > 0) {
+							editor.setDecorations(
+								tagUnfocusDecorations[info.currentTagDecIndex]!,
+								info.tagRanges.map(range =>
+									new vscode.Range(new vscode.Position(range[0], 0), new vscode.Position(range[1], 0))
+								),
+							);
+						}
+						editor.setDecorations(tagUnfocusDecorations[lastTagDecIndex]!, []);
+					}
+					if (info.currentTagDecIndex === 0 && info.targetTagDecIndex === 0) {
+						editor2Decorations.delete(editor);
+					}
 				}
-				editor.setDecorations(tagUnfocusDecorations[lastTagDecIndex]!, []);
+				catch {
+					// the editor was likely disposed; drop it so the timer can stop
+					editor2Decorations.delete(editor);
+				}
 			}
-			if (info.currentTagDecIndex === 0 && info.targetTagDecIndex === 0) {
-				editor2Decorations.delete(editor);
+			for (const info of editor2Decorations.values()) {
+				if (info.currentTagDecIndex !== info.targetTagDecIndex) {
+					return;
+				}
 			}
-		}
-	}, 24);
+			clearInterval(animationTimer);
+			animationTimer = undefined;
+		}, 24);
+	}
 
 	const visibleTextEditors = useVisibleTextEditors();
 	const activeTextEditor = useActiveTextEditor();
@@ -65,6 +83,7 @@ export function activate(selector: vscode.DocumentSelector) {
 		for (const [editor, info] of editor2Decorations) {
 			if (!editors.includes(editor)) {
 				info.targetTagDecIndex = 0;
+				ensureAnimationTimer();
 			}
 		}
 	});
@@ -93,6 +112,7 @@ export function activate(selector: vscode.DocumentSelector) {
 			const info = editor2Decorations.get(editor);
 			if (info) {
 				info.targetTagDecIndex = 0;
+				ensureAnimationTimer();
 			}
 			return;
 		}
@@ -134,6 +154,7 @@ export function activate(selector: vscode.DocumentSelector) {
 		else {
 			info.targetTagDecIndex = 0;
 		}
+		ensureAnimationTimer();
 	}
 }
 
