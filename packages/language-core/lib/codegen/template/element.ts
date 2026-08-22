@@ -239,6 +239,7 @@ export function* generateComponent(
 	yield `}`;
 	yield boundary2.end();
 	yield `, ...${names.functionalComponentArgsRest}(${functionalVar}))${endOfLine}`;
+	yield `void ${vnodeVar}${endOfLine}`;
 
 	yield* generateFailedExpressions(options, ctx, failedPropExps);
 	yield* generateElementEvents(
