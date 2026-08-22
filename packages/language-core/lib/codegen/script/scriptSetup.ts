@@ -393,6 +393,7 @@ function* generatePublicProps(
 			codeFeatures.navigation,
 		);
 		yield endOfLine;
+		yield `void ${names.defaults}${endOfLine}`;
 	}
 
 	const propTypes: string[] = [];
@@ -466,6 +467,7 @@ function* generateModels(
 		yield `const ${names.defaultModels} = {${newLine}`;
 		yield* defaultCodes;
 		yield `}${endOfLine}`;
+		yield `void ${names.defaultModels}${endOfLine}`;
 	}
 
 	yield `type ${names.ModelProps} = {${newLine}`;
