@@ -361,7 +361,7 @@ export function* generateElement(
 		}
 		ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 	}
-	if (ctx.singleRootNodes.has(node)) {
+	if (ctx.singleRootNodes.has(node) && (ctx.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl)) {
 		ctx.singleRootElTypes.add(`${names.Elements}['${node.tag}']`);
 	}
 
