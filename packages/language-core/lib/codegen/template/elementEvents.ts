@@ -91,7 +91,9 @@ export function* generateElementEvents(
 
 	for (const { propPrefix, emitPrefix, propName, emitName, items } of Object.values(definitions)) {
 		const eventVar = ctx.getInternalVariable();
-		yield `const ${eventVar}: ${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', `;
+		yield `const `;
+		yield [eventVar, 'template', items[0]?.offset ?? node.loc.start.offset, codeFeatures.verification];
+		yield `: ${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', `;
 		yield [`'${emitName}'`, 'template', items[0]?.offset ?? node.loc.start.offset, codeFeatures.verification];
 		yield `, '${camelize(emitName)}'> = {${newLine}`;
 		for (const { prop, source, offset } of items) {
