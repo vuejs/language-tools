@@ -255,8 +255,9 @@ export function* generateComponent(
 	const templateRef = getTemplateRef(node);
 	const isSingleRoot = ctx.singleRootNodes.has(node)
 		&& !options.vueCompilerOptions.fallthroughComponentNames.includes(hyphenateTag(tag));
+	const inferRootEl = ctx.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl;
 
-	if (templateRef || isSingleRoot) {
+	if (templateRef || (isSingleRoot && inferRootEl)) {
 		const componentInstanceVar = ctx.getInternalVariable();
 		yield `var ${componentInstanceVar}!: Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0]`;
 		yield endOfLine;
@@ -268,7 +269,7 @@ export function* generateComponent(
 			}
 			ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 		}
-		if (isSingleRoot) {
+		if (isSingleRoot && inferRootEl) {
 			ctx.singleRootElTypes.add(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
 		}
 	}
