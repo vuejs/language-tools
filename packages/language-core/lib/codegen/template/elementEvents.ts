@@ -88,7 +88,8 @@ export function* generateElementEvents(
 	yield `let ${emitsVar}!: ${names.ResolveEmits}<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>${endOfLine}`;
 
 	for (const { propPrefix, emitPrefix, propName, emitName, items } of Object.values(definitions)) {
-		yield `const ${ctx.getInternalVariable()}: ${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
+		const eventVar = ctx.getInternalVariable();
+		yield `const ${eventVar}: ${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
 			camelize(emitName)
 		}'> = {${newLine}`;
 		for (const { prop, source, offset } of items) {
@@ -109,6 +110,7 @@ export function* generateElementEvents(
 			yield `,${newLine}`;
 		}
 		yield `}${endOfLine}`;
+		yield `void ${eventVar}${endOfLine}`;
 	}
 }
 
@@ -167,6 +169,7 @@ export function* generateEventExpression(
 			yield `(...[$event]) => {${newLine}`;
 			const scope = ctx.scope();
 			scope.declare('$event');
+			yield `void $event${endOfLine}`;
 			yield* ctx.generateConditionGuards();
 			if (isSingleExpression(options.typescript, ast)) {
 				yield `return (`;
