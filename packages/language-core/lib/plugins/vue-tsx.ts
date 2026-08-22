@@ -136,12 +136,9 @@ function useCodegen(
 		return names;
 	});
 
-	const getSetupConsts = computedSet(() => {
+	const getDestructuredProps = computedSet(() => {
 		const scriptSetupRanges = getScriptSetupRanges();
-		const names = new Set([
-			...scriptSetupRanges?.defineProps?.destructured?.keys() ?? [],
-			...getImportedComponents(),
-		]);
+		const names = new Set(scriptSetupRanges?.defineProps?.destructured?.keys() ?? []);
 		const rest = scriptSetupRanges?.defineProps?.destructuredRest;
 		if (rest) {
 			names.add(rest);
@@ -201,7 +198,8 @@ function useCodegen(
 			template: ir.template,
 			isVapor: getIsVapor(),
 			componentName: getComponentName(),
-			setupConsts: getSetupConsts(),
+			destructuredProps: getDestructuredProps(),
+			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
 			setupBindings: getSetupBindings(),
 			hasDefineSlots: hasDefineSlots(),
@@ -219,7 +217,8 @@ function useCodegen(
 			typescript: ts,
 			vueCompilerOptions: getResolvedOptions(),
 			styles: ir.styles,
-			setupConsts: getSetupConsts(),
+			destructuredProps: getDestructuredProps(),
+			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
 			setupBindings: getSetupBindings(),
 		});

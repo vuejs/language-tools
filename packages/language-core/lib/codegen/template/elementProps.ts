@@ -284,7 +284,10 @@ export function* generatePropExp(
 				},
 			);
 
-			if (shouldIdentifierSkipped(ctx, propVariableName)) {
+			if (options.destructuredProps.has(propVariableName) || options.importedComponents.has(propVariableName)) {
+				yield* codes;
+			}
+			else if (shouldIdentifierSkipped(ctx, propVariableName)) {
 				yield* codes;
 			}
 			else if (options.setupRefs.has(propVariableName)) {
