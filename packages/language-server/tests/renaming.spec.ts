@@ -647,6 +647,72 @@ test('Component dynamic props', async () => {
 	`);
 });
 
+test('#6176', async () => {
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<div :[foo|]="123"></div>
+			</template>
+
+			<script lang="ts" setup>
+			import { useTemplateRef } from 'vue';
+			const foo = useTemplateRef('foo');
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "foo",
+		    "fullDisplayName": "foo",
+		    "kind": "const",
+		    "kindModifiers": "",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 3,
+		        "offset": 15,
+		      },
+		      "start": {
+		        "line": 3,
+		        "offset": 12,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 15,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 12,
+		          },
+		        },
+		        {
+		          "end": {
+		            "line": 8,
+		            "offset": 13,
+		          },
+		          "start": {
+		            "line": 8,
+		            "offset": 10,
+		          },
+		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+});
+
 test('Component returns', async () => {
 	expect(
 		await requestRenameToTsServer(
