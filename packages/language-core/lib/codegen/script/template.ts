@@ -13,6 +13,8 @@ export function* generateTemplate(
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 
+	yield `void ${names.ctx}, ${names.components}, ${names.intrinsics}, ${names.directives}${endOfLine}`;
+
 	for (const name of options.withDotValueBindings) {
 		yield `${names.withDotValue}(${name}, {} as import('${options.vueCompilerOptions.lib}').Ref)${endOfLine}`;
 	}
