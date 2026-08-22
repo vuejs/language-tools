@@ -42,21 +42,23 @@ export function* generateInterpolation(
 		)
 	) {
 		if (isShorthand) {
-			yield [
+			yield* generateNonIdentifierCode(
 				code.slice(prevEnd, offset + name.length),
 				block.name,
 				start + prevEnd,
 				data,
-			];
+				prevEnd > 0,
+			);
 			yield `: `;
 		}
 		else if (prevEnd < offset) {
-			yield [
+			yield* generateNonIdentifierCode(
 				code.slice(prevEnd, offset),
 				block.name,
 				start + prevEnd,
 				data,
-			];
+				prevEnd > 0,
+			);
 		}
 
 		if (setupRefs.has(name)) {
@@ -111,16 +113,45 @@ export function* generateInterpolation(
 	}
 
 	if (prevEnd < code.length) {
-		yield [
+		yield* generateNonIdentifierCode(
 			code.slice(prevEnd),
 			block.name,
 			start + prevEnd,
 			data,
-		];
+			prevEnd > 0,
+		);
 	}
 
 	if (suffix) {
 		yield suffix;
+	}
+}
+
+/**
+ * Yield a code chunk, cutting the boundary character off as verification-only.
+ *
+ * Adjacent mappings share the boundary offset (closed interval), so both the
+ * neighbouring token's end and this chunk's start claim the same source offset.
+ * Downgrading the boundary character to verification-only keeps content-sensitive
+ * features (rename / navigation) from firing on the neighbouring chunk.
+ */
+function* generateNonIdentifierCode(
+	code: string,
+	source: string,
+	offset: number,
+	data: VueCodeInformation,
+	shouldCut = true,
+): Generator<Code> {
+	if (!code.length) {
+		return;
+	}
+	if (!shouldCut) {
+		yield [code, source, offset, data];
+		return;
+	}
+	yield [code.slice(0, 1), source, offset, { verification: data.verification }];
+	if (code.length > 1) {
+		yield [code.slice(1), source, offset + 1, data];
 	}
 }
 
