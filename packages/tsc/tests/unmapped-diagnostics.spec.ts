@@ -40,7 +40,7 @@ test('no unmapped diagnostics', () => {
 						language,
 						serviceScript,
 						diagnostic.start,
-						diagnostic.length,
+						diagnostic.start + diagnostic.length,
 						true,
 						() => true,
 					)
