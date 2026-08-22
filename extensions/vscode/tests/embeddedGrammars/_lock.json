@@ -10,6 +10,11 @@
 		"checksum": "sha256-80dedf4fb27e88889ac8fb72763954a6d2660502c686f4415208d8c8d00352cd"
 	},
 	{
+		"file": "html-derivative.tmLanguage.json",
+		"url": "https://raw.githubusercontent.com/microsoft/vscode/main/extensions/html/syntaxes/html-derivative.tmLanguage.json",
+		"checksum": "sha256-0d6495edf9edfb25ae89ef43d64c4b6ee2bbb2468179001c7c9574c789a1ed77"
+	},
+	{
 		"file": "javascript.tmLanguage.json",
 		"url": "https://raw.githubusercontent.com/microsoft/vscode/main/extensions/javascript/syntaxes/JavaScript.tmLanguage.json",
 		"checksum": "sha256-db6f17f15bc4f5e860a3b8fa6055a69720a53df845c8d5121cdc4f128c16291f"
@@ -23,5 +28,15 @@
 		"file": "typescript.tmLanguage.json",
 		"url": "https://raw.githubusercontent.com/microsoft/vscode/main/extensions/typescript-basics/syntaxes/TypeScript.tmLanguage.json",
 		"checksum": "sha256-4e92e0d7de560217d6c8d3236d85e6e17a5d77825b15729a230c761743122661"
+	},
+	{
+		"file": "typescriptreact.tmLanguage.json",
+		"url": "https://raw.githubusercontent.com/microsoft/vscode/main/extensions/typescript-basics/syntaxes/TypeScriptReact.tmLanguage.json",
+		"checksum": "sha256-532fb887df3117e9f4eaf5d3ea1e850114fb6899fe3d3ddabedb153bec08b32a"
+	},
+	{
+		"file": "javascriptreact.tmLanguage.json",
+		"url": "https://raw.githubusercontent.com/microsoft/vscode/main/extensions/javascript/syntaxes/JavaScriptReact.tmLanguage.json",
+		"checksum": "sha256-dd29ed97c74d9be896c76c1e8ba51534ca29b253ab50b2abb575f321cb2ac635"
 	}
 ]

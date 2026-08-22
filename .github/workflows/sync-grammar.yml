@@ -1,0 +1,47 @@
+name: Sync Grammar
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 1 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  sync-grammar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Pin the Monogram dependency to latest master
+        run: |
+          hash=$(git ls-remote https://github.com/johnsoncodehk/monogram.git master | cut -f1)
+          sed -i "s|monogram#[0-9a-f]*|monogram#${hash}|" extensions/vscode/package.json
+
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Generate grammars from Monogram
+        run: npm run gen:grammar
+
+      - name: Regenerate grammar snapshots
+        run: npm run test:grammar -- -u
+
+      - name: Commit
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: "ci(vscode): sync vue grammars from monogram"
+          add: |
+            extensions/vscode/package.json
+            pnpm-lock.yaml
+            extensions/vscode/syntaxes
+            extensions/vscode/languages
+            extensions/vscode/tests/__snapshots__/grammar.spec.ts.snap
+          default_author: github_actions
