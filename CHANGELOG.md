@@ -1,5 +1,28 @@
 # Changelog
 
+## 3.3.11 (2026-08-21)
+
+### language-core
+
+- **fix:** generate full fragment props for type checking (#6155) - Thanks to @serkodev!
+
+### language-service
+
+- **fix:** invalidate tag and prop casing detection after template changes (#6172) - Thanks to @serkodev!
+- **refactor:** make name casing detection reactive (#6173) - Thanks to @KazariEX!
+
+### component-meta
+
+- **fix:** invalidate module resolution caches when deleting files (#6163) - Thanks to @serkodev!
+
+### tsc
+
+- **fix:** make extension retry errors serializable across IPC (#6162) - Thanks to @KazariEX!
+
+### vscode
+
+- **feat:** allow disabling the welcome page (#6165) - Thanks to @pierreedbrg!
+
 ## 3.3.10 (2026-08-15)
 
 ### language-core

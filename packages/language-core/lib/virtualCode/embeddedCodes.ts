@@ -7,7 +7,6 @@ import { buildMappings } from '../utils/buildMappings';
 
 export class VueEmbeddedCode {
 	public parentCodeId?: string;
-	public linkedCodeMappings: Mapping[] = [];
 	public embeddedCodes: VueEmbeddedCode[] = [];
 
 	constructor(
@@ -54,7 +53,6 @@ export function useEmbeddedCodes(
 					const virtualCode: VirtualCode = {
 						id: code.id,
 						languageId: resolveCommonLanguageId(code.lang),
-						linkedCodeMappings: code.linkedCodeMappings,
 						snapshot,
 						mappings,
 						embeddedCodes: [],
@@ -203,22 +201,6 @@ export function useEmbeddedCodes(
 				else {
 					tokenMappings.set(token, mapping);
 					newMappings.push(mapping);
-				}
-				continue;
-			}
-			if (mapping.data.__linkedToken !== undefined) {
-				const token = mapping.data.__linkedToken;
-				if (tokenMappings.has(token)) {
-					const prevMapping = tokenMappings.get(token)!;
-					code.linkedCodeMappings.push({
-						sourceOffsets: [prevMapping.generatedOffsets[0]!],
-						generatedOffsets: [mapping.generatedOffsets[0]!],
-						lengths: [Number(token.description)],
-						data: undefined,
-					});
-				}
-				else {
-					tokenMappings.set(token, mapping);
 				}
 				continue;
 			}

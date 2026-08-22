@@ -93,7 +93,7 @@ export function preprocessLanguageService(
 						generateRange2[0] - leadingOffset,
 						generateRange2[1] - leadingOffset,
 					);
-					if (codegen?.getSetupExposed().has(variableName)) {
+					if (codegen?.getUsedSetupBindings().has(variableName)) {
 						const extraInfo = getQuickInfoAtPosition(fileName, generateRange2[0], ...rests);
 						result.tags = extraInfo?.tags;
 					}
@@ -201,7 +201,7 @@ export function preprocessLanguageService(
 							generateRange2[0] - leadingOffset,
 							generateRange2[1] - leadingOffset,
 						);
-						if (codegen?.getSetupExposed().has(variableName)) {
+						if (codegen?.getUsedSetupBindings().has(variableName)) {
 							diagnostic.start = generateRange2[0];
 							diagnostic.length = generateRange2[1] - generateRange2[0];
 							break;

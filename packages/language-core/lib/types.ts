@@ -26,7 +26,6 @@ export interface VueCodeInformation extends CodeInformation {
 	__propsCompletion?: boolean;
 	__shorthandExpression?: 'html' | 'js';
 	__combineToken?: symbol;
-	__linkedToken?: symbol;
 	__diagnosticDirective?: {
 		directive: {
 			policy: 'ignore' | 'expect';

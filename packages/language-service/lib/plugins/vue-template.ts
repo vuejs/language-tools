@@ -165,7 +165,7 @@ export function create(
 					if (codegen) {
 						const componentNames = new Set([
 							...codegen.getImportedComponents(),
-							...codegen.getSetupExposed(),
+							...codegen.getLocalComponents(),
 						]);
 						voidElements = defaultDataProvider.provideTags()
 							.filter(tag => tag.void)
@@ -651,7 +651,7 @@ export function create(
 							for (
 								const name of [
 									...codegen.getImportedComponents(),
-									...codegen.getSetupExposed(),
+									...codegen.getLocalComponents(),
 								]
 							) {
 								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name);

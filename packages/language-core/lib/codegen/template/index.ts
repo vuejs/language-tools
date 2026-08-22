@@ -13,8 +13,10 @@ export interface TemplateCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	template: IRTemplate;
 	isVapor: boolean;
+	destructuredProps: Set<string>;
+	importedComponents: Set<string>;
 	setupRefs: Set<string>;
-	setupConsts: Set<string>;
+	setupBindings: Set<string>;
 	hasDefineSlots?: boolean;
 	propsAssignName?: string;
 	slotsAssignName?: string;
@@ -42,7 +44,6 @@ function* generateWorker(
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	const scope = ctx.scope();
-	scope.declare(...options.setupConsts);
 	const {
 		slotsAssignName,
 		propsAssignName,

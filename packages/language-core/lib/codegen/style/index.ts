@@ -10,8 +10,10 @@ export interface StyleCodegenOptions {
 	typescript: typeof import('typescript');
 	vueCompilerOptions: VueCompilerOptions;
 	styles: readonly IRStyle[];
+	destructuredProps: Set<string>;
+	importedComponents: Set<string>;
 	setupRefs: Set<string>;
-	setupConsts: Set<string>;
+	setupBindings: Set<string>;
 }
 
 export { generate as generateStyle };
@@ -34,7 +36,6 @@ function* generateWorker(
 	ctx: TemplateCodegenContext,
 ) {
 	const scope = ctx.scope();
-	scope.declare(...options.setupConsts);
 	yield* generateStyleScopedClasses(options, ctx);
 	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);
