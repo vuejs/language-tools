@@ -183,8 +183,6 @@ function* generateWorker(
 		}
 	}
 
-	yield `declare function ${names.withDotValue}<T>(t: T): asserts t is T extends import('${vueCompilerOptions.lib}').Ref<infer V, unknown> ? T : T & { value: T }${endOfLine}`;
-
 	yield* ctx.localTypes.generate();
 }
 
