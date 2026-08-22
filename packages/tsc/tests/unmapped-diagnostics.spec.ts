@@ -12,13 +12,18 @@ test('no unmapped diagnostics', () => {
 	const originalArgv = process.argv;
 	const unmapped: string[] = [];
 
-	transform.transformDiagnostic = function (language: unknown, diagnostic: {
-		file?: { fileName: string; getLineAndCharacterOfPosition(pos: number): { line: number; character: number } };
-		start?: number;
-		length?: number;
-		code: number;
-		messageText: string | { messageText: string };
-	}, program: unknown, isTsc: boolean) {
+	transform.transformDiagnostic = function(
+		language: unknown,
+		diagnostic: {
+			file?: { fileName: string; getLineAndCharacterOfPosition(pos: number): { line: number; character: number } };
+			start?: number;
+			length?: number;
+			code: number;
+			messageText: string | { messageText: string };
+		},
+		program: unknown,
+		isTsc: boolean,
+	) {
 		const result = originalTransform(language, diagnostic, program, isTsc);
 		if (
 			result === undefined
@@ -29,7 +34,17 @@ test('no unmapped diagnostics', () => {
 			const [serviceScript] = utils.getServiceScript(language, diagnostic.file.fileName);
 			if (serviceScript) {
 				let mapped = false;
-				for (const _ of transform.toSourceRanges(undefined, language, serviceScript, diagnostic.start, diagnostic.length, true, () => true)) {
+				for (
+					const _ of transform.toSourceRanges(
+						undefined,
+						language,
+						serviceScript,
+						diagnostic.start,
+						diagnostic.length,
+						true,
+						() => true,
+					)
+				) {
 					mapped = true;
 					break;
 				}
@@ -38,7 +53,11 @@ test('no unmapped diagnostics', () => {
 					const msg = typeof diagnostic.messageText === 'string'
 						? diagnostic.messageText
 						: diagnostic.messageText.messageText;
-					unmapped.push(`${diagnostic.file.fileName.replace(root + '/', '')}:${pos.line + 1}:${pos.character + 1} TS${diagnostic.code} ${msg}`);
+					unmapped.push(
+						`${diagnostic.file.fileName.replace(root + '/', '')}:${pos.line + 1}:${
+							pos.character + 1
+						} TS${diagnostic.code} ${msg}`,
+					);
 				}
 			}
 		}
