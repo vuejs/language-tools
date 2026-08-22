@@ -13,7 +13,11 @@ const foo = 1;
 	const offset = content.indexOf('Math');
 
 	const server = await getLanguageServer();
-	const document = await server.open(URI.file(`${testWorkspacePath}/tsconfigProject/fixture.vue`).toString(), 'vue', content);
+	const document = await server.open(
+		URI.file(`${testWorkspacePath}/tsconfigProject/fixture.vue`).toString(),
+		'vue',
+		content,
+	);
 
 	const res = await server.tsserver.message({
 		seq: server.nextSeq(),
