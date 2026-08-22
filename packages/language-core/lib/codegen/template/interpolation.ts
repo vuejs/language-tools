@@ -41,7 +41,7 @@ export function* generateInterpolation(
 		)
 	) {
 		if (isShorthand) {
-			yield* yieldNonIdentifierCode(
+			yield* generateNonIdentifierCode(
 				code.slice(prevEnd, offset + name.length),
 				block.name,
 				start + prevEnd,
@@ -50,7 +50,7 @@ export function* generateInterpolation(
 			yield `: `;
 		}
 		else if (prevEnd < offset) {
-			yield* yieldNonIdentifierCode(
+			yield* generateNonIdentifierCode(
 				code.slice(prevEnd, offset),
 				block.name,
 				start + prevEnd,
@@ -98,7 +98,7 @@ export function* generateInterpolation(
 	}
 
 	if (prevEnd < code.length) {
-		yield* yieldNonIdentifierCode(
+		yield* generateNonIdentifierCode(
 			code.slice(prevEnd),
 			block.name,
 			start + prevEnd,
@@ -119,7 +119,7 @@ export function* generateInterpolation(
  * Downgrading the first character to verification-only keeps content-sensitive
  * features (rename / navigation) from firing on the following chunk's boundary.
  */
-function* yieldNonIdentifierCode(
+function* generateNonIdentifierCode(
 	code: string,
 	source: string,
 	offset: number,
