@@ -656,6 +656,9 @@
 			"path": "./useTemplateRef-dynamic-arg/tsconfig.json"
 		},
 		{
+			"path": "./useTemplateRef-nullable/tsconfig.json"
+		},
+		{
 			"path": "./v-bind-require-object/tsconfig.json"
 		},
 		{
