@@ -55,7 +55,6 @@ export function* generateInterpolation(
 				block.name,
 				start + prevEnd,
 				data,
-				true,
 			);
 		}
 
@@ -125,22 +124,13 @@ function* generateNonIdentifierCode(
 	source: string,
 	offset: number,
 	data: VueCodeInformation,
-	cutLast = false,
 ): Generator<Code> {
 	if (!code.length) {
 		return;
 	}
-	if (cutLast) {
-		if (code.length > 1) {
-			yield [code.slice(0, -1), source, offset, data];
-		}
-		yield [code.slice(-1), source, offset + code.length - 1, { verification: data.verification }];
-	}
-	else {
-		yield [code.slice(0, 1), source, offset, { verification: data.verification }];
-		if (code.length > 1) {
-			yield [code.slice(1), source, offset + 1, data];
-		}
+	yield [code.slice(0, 1), source, offset, { verification: data.verification }];
+	if (code.length > 1) {
+		yield [code.slice(1), source, offset + 1, data];
 	}
 }
 
