@@ -10,8 +10,9 @@ export interface StyleCodegenOptions {
 	typescript: typeof import('typescript');
 	vueCompilerOptions: VueCompilerOptions;
 	styles: readonly IRStyle[];
-	setupRefs: Set<string>;
 	setupConsts: Set<string>;
+	setupRefs: Set<string>;
+	setupBindings: Set<string>;
 }
 
 export { generate as generateStyle };

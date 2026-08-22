@@ -24,6 +24,7 @@ test(`vue-tsc`, () => {
 		runTsc('tsc').sort(),
 	).toMatchInlineSnapshot(`
 		[
+		  "test-workspace/tsc/#5492/main.vue(10,31): error TS18048: 'bar' is possibly 'undefined'.",
 		  "test-workspace/tsc/_failed_#3632/both.vue(3,1): error TS1109: Expression expected.",
 		  "test-workspace/tsc/_failed_#3632/both.vue(7,1): error TS1109: Expression expected.",
 		  "test-workspace/tsc/_failed_#3632/script.vue(3,1): error TS1109: Expression expected.",
@@ -32,10 +33,10 @@ test(`vue-tsc`, () => {
 		  "test-workspace/tsc/_failed_#5071/withScript.vue(1,19): error TS1005: ';' expected.",
 		  "test-workspace/tsc/_failed_#5071/withoutScript.vue(2,26): error TS1005: ';' expected.",
 		  "test-workspace/tsc/_failed_#5823/main.vue(6,13): error TS1109: Expression expected.",
-		  "test-workspace/tsc/_failed_directives/main.vue(14,6): error TS2339: Property 'notExist' does not exist on type '{ $: ComponentInternalInstance; $data: {}; $props: {}; $attrs: Data; $refs: Data; $slots: Readonly<InternalSlots>; $root: ComponentPublicInstance<...> | null; ... 9 more ...; Comp: () => void; }'.",
+		  "test-workspace/tsc/_failed_directives/main.vue(14,6): error TS2339: Property 'notExist' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, string[], {}, {}, false, any, {}, {}, "", {}, any, {}, false>'.",
 		  "test-workspace/tsc/_failed_directives/main.vue(17,2): error TS2578: Unused '@ts-expect-error' directive.",
 		  "test-workspace/tsc/_failed_directives/main.vue(20,2): error TS2578: Unused '@ts-expect-error' directive.",
-		  "test-workspace/tsc/_failed_directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type '{ $: ComponentInternalInstance; $data: {}; $props: {}; $attrs: Data; $refs: Data; $slots: Readonly<InternalSlots>; $root: ComponentPublicInstance<...> | null; ... 9 more ...; Comp: () => void; }'.",
+		  "test-workspace/tsc/_failed_directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, string[], {}, {}, false, any, {}, {}, "", {}, any, {}, false>'.",
 		  "test-workspace/tsc/_failed_fragment_props/main.vue(12,46): error TS2339: Property 'bar' does not exist on type '{ id: number; }'.",
 		  "test-workspace/tsc/_failed_fragment_props/main.vue(12,54): error TS2339: Property 'baz' does not exist on type '{ id: number; }'.",
 		  "test-workspace/tsc/_failed_fragment_props/main.vue(6,31): error TS2322: Type '{ id: number; }' is not assignable to type 'PropertyKey | undefined'.",

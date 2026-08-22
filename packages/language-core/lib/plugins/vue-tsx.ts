@@ -125,6 +125,17 @@ function useCodegen(
 		return names;
 	});
 
+	const getScriptSetupBindings = computedSet(() => {
+		const names = new Set<string>();
+		const scriptSetupRanges = getScriptSetupRanges();
+		if (ir.scriptSetup && scriptSetupRanges) {
+			for (const range of scriptSetupRanges.bindings) {
+				names.add(ir.scriptSetup.content.slice(range.start, range.end));
+			}
+		}
+		return names;
+	});
+
 	const getSetupConsts = computedSet(() => {
 		const scriptSetupRanges = getScriptSetupRanges();
 		const names = new Set([
@@ -192,6 +203,7 @@ function useCodegen(
 			componentName: getComponentName(),
 			setupConsts: getSetupConsts(),
 			setupRefs: getSetupRefs(),
+			setupBindings: getSetupBindings(),
 			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
@@ -209,10 +221,35 @@ function useCodegen(
 			styles: ir.styles,
 			setupConsts: getSetupConsts(),
 			setupRefs: getSetupRefs(),
+			setupBindings: getSetupBindings(),
 		});
 	});
 
-	const getSetupExposed = computedSet(() => {
+	const getLocalComponents = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
+		}
+		return new Set(
+			(ir.template?.ast?.components ?? [])
+				.flatMap(name => [camelize(name), capitalize(camelize(name))])
+				.filter(name => bindings.has(name)),
+		);
+	});
+
+	const getLocalDirectives = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
+		}
+		// `v[A-Z]` is a naming heuristic: without type analysis there is no
+		// reliable signal to tell a directive from a same-named value binding.
+		// This feeds the local-directive type / completion, where false positives
+		// are harmless (they only surface as extra completion candidates).
+		return new Set([...bindings].filter(name => /^v[A-Z]/.test(name)));
+	});
+
+	const getReferencedBindings = computedSet(() => {
 		const bindings = getSetupBindings();
 		if (!bindings.size) {
 			return bindings;
@@ -220,8 +257,14 @@ function useCodegen(
 		return new Set([
 			...getGeneratedTemplate()?.contextAccesses.keys() ?? [],
 			...getGeneratedStyle()?.contextAccesses.keys() ?? [],
-			...ir.template?.ast?.components.flatMap(name => [camelize(name), capitalize(camelize(name))]) ?? [],
 		].filter(name => bindings.has(name)));
+	});
+
+	const getUsedSetupBindings = computedSet(() => {
+		return new Set([
+			...getReferencedBindings(),
+			...getLocalComponents(),
+		]);
 	});
 
 	const getGeneratedScript = computed(() => {
@@ -230,7 +273,10 @@ function useCodegen(
 			fileName,
 			script: ir.script,
 			scriptSetup: ir.scriptSetup,
-			exposed: getSetupExposed(),
+			setupBindings: getScriptSetupBindings(),
+			localComponents: getLocalComponents(),
+			localDirectives: getLocalDirectives(),
+			withDotValueBindings: getReferencedBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateAndStyleTypes: new Set([
@@ -251,6 +297,7 @@ function useCodegen(
 		getGeneratedTemplate,
 		getImportedComponents,
 		getSetupBindings,
-		getSetupExposed,
+		getLocalComponents,
+		getUsedSetupBindings,
 	};
 }

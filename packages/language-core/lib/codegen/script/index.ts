@@ -21,7 +21,10 @@ export interface ScriptCodegenOptions {
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateAndStyleTypes: Set<string>;
 	templateAndStyleCodes: Code[];
-	exposed: Set<string>;
+	setupBindings: Set<string>;
+	localComponents: Set<string>;
+	localDirectives: Set<string>;
+	withDotValueBindings: Set<string>;
 }
 
 export { generate as generateScript };
@@ -68,7 +71,7 @@ function* generateWorker(
 		yield endOfLine;
 		yield `export default ${names.src}${endOfLine}`;
 
-		yield* generateTemplate(options, ctx, names.src);
+		yield* generateTemplate(options, names.src);
 	}
 	// <script> + <script setup>
 	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
@@ -106,7 +109,7 @@ function* generateWorker(
 					ctx,
 					scriptSetup,
 					scriptSetupRanges,
-					generateTemplate(options, ctx, selfType),
+					generateTemplate(options, selfType),
 				),
 			);
 		}
@@ -117,7 +120,7 @@ function* generateWorker(
 				ctx,
 				scriptSetup,
 				scriptSetupRanges,
-				generateTemplate(options, ctx, selfType),
+				generateTemplate(options, selfType),
 				[`return `],
 			);
 			yield `})()${endOfLine}`;
@@ -140,7 +143,7 @@ function* generateWorker(
 					ctx,
 					scriptSetup,
 					scriptSetupRanges,
-					generateTemplate(options, ctx),
+					generateTemplate(options),
 				),
 			);
 		}
@@ -151,7 +154,7 @@ function* generateWorker(
 				ctx,
 				scriptSetup,
 				scriptSetupRanges,
-				generateTemplate(options, ctx),
+				generateTemplate(options),
 				generateExportDeclareEqual(scriptSetup, names.export),
 			);
 		}
@@ -168,14 +171,14 @@ function* generateWorker(
 				exportDefault,
 				vueCompilerOptions,
 				names.export,
-				generateTemplate(options, ctx, names.export),
+				generateTemplate(options, names.export),
 			);
 		}
 		else {
 			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
 			yield* generateExportDeclareEqual(script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
-			yield* generateTemplate(options, ctx, names.export);
+			yield* generateTemplate(options, names.export);
 			yield `export default ${exportExpression}${endOfLine}`;
 		}
 	}
