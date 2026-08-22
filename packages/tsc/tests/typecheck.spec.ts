@@ -24,7 +24,6 @@ test(`vue-tsc`, () => {
 		runTsc('tsc').sort(),
 	).toMatchInlineSnapshot(`
 		[
-		  "test-workspace/tsc/#5492/main.vue(10,31): error TS18048: 'bar' is possibly 'undefined'.",
 		  "test-workspace/tsc/_failed_#3632/both.vue(3,1): error TS1109: Expression expected.",
 		  "test-workspace/tsc/_failed_#3632/both.vue(7,1): error TS1109: Expression expected.",
 		  "test-workspace/tsc/_failed_#3632/script.vue(3,1): error TS1109: Expression expected.",
