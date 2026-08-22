@@ -21,7 +21,7 @@ export interface ScriptCodegenOptions {
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateAndStyleTypes: Set<string>;
 	templateAndStyleCodes: Code[];
-	exposed: Set<string>;
+	setupBindings: Set<string>;
 	localComponents: Set<string>;
 	localDirectives: Set<string>;
 	withDotValueBindings: Set<string>;
