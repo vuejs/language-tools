@@ -1,14 +1,11 @@
-import type { CodeInformation } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
+import { codeFeatures } from '../codegen/codeFeatures';
 import { isCompoundExpression } from '../codegen/template/elementEvents';
 import { parseInterpolationNode } from '../codegen/template/templateChild';
 import { parseVForNode } from '../codegen/template/vFor';
 import { getTypeScriptAST } from '../codegen/utils';
-import type { Code, Sfc, VueLanguagePlugin } from '../types';
+import type { Code, IR, VueLanguagePlugin } from '../types';
 
-const codeFeatures: CodeInformation = {
-	format: true,
-};
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
 	if: ['if (', ') { }'] as [string, string],
@@ -22,18 +19,20 @@ const formatBrackets = {
 	generic: ['<', '>() => {};'] as [string, string],
 };
 
+const genericCommentRE = /^<!--\s*@vue-generic\s*\{(?<content>[\s\S]*)\}\s*-->$/;
+
 const plugin: VueLanguagePlugin = ({ modules: { typescript: ts } }) => {
-	const parseds = new WeakMap<Sfc, ReturnType<typeof parse>>();
+	const parseds = new WeakMap<IR, ReturnType<typeof parse>>();
 
 	return {
 		version: 2.2,
 
-		getEmbeddedCodes(_fileName, sfc) {
-			if (!sfc.template?.ast) {
+		getEmbeddedCodes(_fileName, ir) {
+			if (!ir.template?.ast) {
 				return [];
 			}
-			const parsed = parse(sfc);
-			parseds.set(sfc, parsed);
+			const parsed = parse(ir);
+			parseds.set(ir, parsed);
 			const result: {
 				id: string;
 				lang: string;
@@ -44,37 +43,37 @@ const plugin: VueLanguagePlugin = ({ modules: { typescript: ts } }) => {
 			return result;
 		},
 
-		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
+		resolveEmbeddedCode(_fileName, ir, embeddedFile) {
 			if (!embeddedFile.id.startsWith('template_inline_ts_')) {
 				return;
 			}
 			// access template content to watch change
-			void sfc.template?.content;
+			void ir.template?.content;
 
-			const parsed = parseds.get(sfc);
+			const parsed = parseds.get(ir);
 			if (parsed) {
 				const codes = parsed.get(embeddedFile.id);
 				if (codes) {
 					embeddedFile.content.push(...codes);
-					embeddedFile.parentCodeId = sfc.template?.lang === 'md' ? 'root_tags' : 'template';
+					embeddedFile.parentCodeId = ir.template?.lang === 'md' ? 'root_tags' : 'template';
 				}
 			}
 		},
 	};
 
-	function parse(sfc: Sfc) {
+	function parse(ir: IR) {
 		const result = new Map<string, Code[]>();
-		if (!sfc.template?.ast) {
+		if (!ir.template?.ast) {
 			return result;
 		}
-		const template = sfc.template;
+		const template = ir.template;
 		let i = 0;
-		sfc.template.ast.children.forEach(visit);
+		ir.template.ast.children.forEach(visit);
 		return result;
 
 		function visit(node: CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode) {
 			if (node.type === CompilerDOM.NodeTypes.COMMENT) {
-				const match = node.loc.source.match(/^<!--\s*@vue-generic\s*\{(?<content>[\s\S]*)\}\s*-->$/);
+				const match = node.loc.source.match(genericCommentRE);
 				if (match) {
 					const { content } = match.groups!;
 					addFormatCodes(
@@ -197,10 +196,6 @@ const plugin: VueLanguagePlugin = ({ modules: { typescript: ts } }) => {
 					visit(child);
 				}
 			}
-			else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
-				// {{ var }}
-				visit(node.content);
-			}
 			else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 				// {{ ... }} {{ ... }}
 				for (const childNode of node.children) {
@@ -262,7 +257,7 @@ const plugin: VueLanguagePlugin = ({ modules: { typescript: ts } }) => {
 					code,
 					'template',
 					offset,
-					codeFeatures,
+					codeFeatures.format,
 				],
 				wrapper[1],
 			]);

@@ -1,4 +1,5 @@
-import type * as CompilerDOM from '@vue/compiler-dom';
+import * as CompilerDOM from '@vue/compiler-dom';
+import { compileTemplate } from '../template/compile';
 import type { VueLanguagePlugin } from '../types';
 
 interface Loc {
@@ -13,11 +14,9 @@ type Node =
 	| CompilerDOM.AttributeNode
 	| CompilerDOM.DirectiveNode;
 
-const shouldAddSuffix = /(?<=<[^>/]+)$/;
+const shouldAddSuffixRE = /(?<=<[^>/]+)$/;
 
-const plugin: VueLanguagePlugin = ({ modules }) => {
-	const CompilerDOM = modules['@vue/compiler-dom'];
-
+const plugin: VueLanguagePlugin = () => {
 	return {
 		version: 2.2,
 
@@ -26,16 +25,12 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 				let addedSuffix = false;
 
 				// #4583
-				if (shouldAddSuffix.test(template)) {
+				if (shouldAddSuffixRE.test(template)) {
 					template += '>';
 					addedSuffix = true;
 				}
 
-				const ast = CompilerDOM.parse(template, {
-					...options,
-					comments: true,
-				});
-				CompilerDOM.transform(ast, options);
+				const ast = compileTemplate(template, options);
 
 				return {
 					ast,
@@ -54,7 +49,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 			// @ts-expect-error
 			if (oldResult.__addedSuffix) {
 				const originalTemplate = newSource.slice(0, -1); // remove added '>'
-				if (!shouldAddSuffix.test(originalTemplate)) {
+				if (!shouldAddSuffixRE.test(originalTemplate)) {
 					return undefined;
 				}
 			}
@@ -122,15 +117,10 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 							return false;
 						}
 					}
-					else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
-						if (!tryUpdateNode(node.content)) {
-							return false;
-						}
-					}
 					else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 						for (const childNode of node.children) {
 							if (typeof childNode === 'object') {
-								if (!tryUpdateNode(childNode as CompilerDOM.TemplateChildNode)) {
+								if (!tryUpdateNode(childNode)) {
 									return false;
 								}
 							}
@@ -178,6 +168,12 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 						if (!tryUpdateNode(node.content)) {
 							return false;
+						}
+						if (node.content.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+							const { content } = node.content;
+							if (content.includes('{{') || content.includes('}}')) {
+								return false;
+							}
 						}
 					}
 					else if (node.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {

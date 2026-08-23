@@ -11,11 +11,14 @@ import { createSchemaResolvers } from './schemaResolvers';
 import { getDefaultsFromScriptSetup } from './scriptSetup';
 import type { ComponentMeta, MetaCheckerSchemaOptions, PropertyMeta } from './types';
 
+const vnodeEventRE = /^onVnode[A-Z]/;
+
 export function getComponentMeta(
 	ts: typeof import('typescript'),
 	typeChecker: ts.TypeChecker,
 	printer: ts.Printer,
-	language: core.Language<string>,
+	language: core.Language,
+	getSourceScript: (fileName: string) => core.SourceScript | undefined,
 	componentNode: ts.Node,
 	componentType: ts.Type,
 	options: MetaCheckerSchemaOptions,
@@ -91,16 +94,16 @@ export function getComponentMeta(
 			.map(prop => {
 				const {
 					resolveNestedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
 
 				return resolveNestedProperties(prop);
 			})
 			.filter((prop): prop is PropertyMeta => !!prop && !eventProps.has(prop.name));
 
-		const defaults = getDefaultsFromScriptSetup(ts, printer, language, componentFile.fileName);
+		const defaults = getDefaultsFromScriptSetup(ts, printer, getSourceScript(componentFile.fileName));
 
 		for (const prop of result) {
-			if (prop.name.match(/^onVnode[A-Z]/)) {
+			if (vnodeEventRE.test(prop.name)) {
 				prop.name = 'onVue:' + prop.name['onVnode'.length]?.toLowerCase() + prop.name.slice('onVnode'.length + 1);
 			}
 			prop.default ??= defaults?.get(prop.name);
@@ -118,7 +121,7 @@ export function getComponentMeta(
 			return calls.map(call => {
 				const {
 					resolveEventSignature,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
 
 				return resolveEventSignature(call);
 			}).filter(event => event.name);
@@ -136,7 +139,7 @@ export function getComponentMeta(
 			return properties.map(prop => {
 				const {
 					resolveSlotProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
 
 				return resolveSlotProperties(prop);
 			});
@@ -164,7 +167,7 @@ export function getComponentMeta(
 			return properties.map(prop => {
 				const {
 					resolveExposedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
 
 				return resolveExposedProperties(prop);
 			});
@@ -178,11 +181,11 @@ export function getComponentMeta(
 
 		// const __VLS_export = ...
 		const text = componentFile.text.slice(decl.pos, decl.end);
-		if (text.includes(core.names._export)) {
+		if (text.includes(core.names.export)) {
 			ts.forEachChild(componentFile, child2 => {
 				if (ts.isVariableStatement(child2)) {
 					for (const { name, initializer } of child2.declarationList.declarations) {
-						if (name.getText() === core.names._export && initializer) {
+						if (name.getText() === core.names.export && initializer) {
 							decl = initializer;
 						}
 					}

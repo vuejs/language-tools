@@ -1,194 +1,177 @@
 # vue-component-meta
 
-`vue-component-meta` allows you to extract the meta-data like props, slots, events, etc from your components via static code analysis. You can even generate description for your props from your source code. This helps document your components via automation. Please refer to the [reference](#reference) section for references.
+<p>
+  <a href="https://www.npmjs.com/package/vue-component-meta"><img src="https://img.shields.io/npm/v/vue-component-meta.svg?labelColor=18181B&color=1584FC" alt="NPM version"></a>
+  <a href="https://github.com/vuejs/language-tools/blob/master/LICENSE"><img src="https://img.shields.io/github/license/vuejs/language-tools.svg?labelColor=18181B&color=1584FC" alt="License"></a>
+</p>
 
-## Guide 📗
+Statically extract metadata such as props, events, slots, and exposed from Vue components. Useful for auto-generating component documentation or displaying component APIs in tools like Storybook.
 
-First of all, you need to create a component meta checker using `createChecker`:
+## Installation
 
-```ts
-import * as url from 'url'
-import path from 'path'
-
-import type { MetaCheckerOptions } from 'vue-component-meta'
-import { createChecker } from 'vue-component-meta'
-
-const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
-
-const checkerOptions: MetaCheckerOptions = {
-  forceUseTs: true,
-  schema: { ignore: ['MyIgnoredNestedProps'] },
-  printer: { newLine: 1 },
-}
-
-const tsconfigChecker = createChecker(
-  // Write your tsconfig path
-  path.join(__dirname, 'path-to-tsconfig'),
-  checkerOptions,
-)
+```bash
+npm install vue-component-meta typescript
 ```
 
-Now, you can extract the component meta using `getComponentMeta` method of checker:
+## Usage
 
-```ts
-import * as url from 'url'
-import path from 'path'
+### Create a Checker from tsconfig.json
 
-const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
+```typescript
+import { createChecker } from 'vue-component-meta';
 
-const componentPath = path.join(__dirname, 'path-to-component');
-const meta = checker.getComponentMeta(componentPath);
+const checker = createChecker('/path/to/tsconfig.json', {
+  schema: true, // Enable schema parsing
+});
+
+const meta = checker.getComponentMeta('/path/to/MyComponent.vue');
 ```
 
-This meta contains really useful stuff like component props, slots, events and more. You can refer to its [type definition](https://github.com/vuejs/language-tools/blob/master/packages/component-meta/lib/types.ts) for more details.
+### Create a Checker from JSON Configuration
 
-### Extracting component name and description
+```typescript
+import { createCheckerByJson } from 'vue-component-meta';
 
-The component meta also includes `name` and `description` fields at the root level:
-
-- **`name`**: Extracted from the `name` property in the component options (for Options API components)
-- **`description`**: Extracted from JSDoc comments above the component export (for TypeScript/JavaScript files)
-
-```ts
-/**
- * My awesome component description
- */
-export default defineComponent({
-  name: 'MyComponent',
-  // ... component definition
-})
+const checker = createCheckerByJson('/project/root', {
+  include: ['src/**/*.vue'],
+  compilerOptions: { /* ... */ },
+  vueCompilerOptions: { /* ... */ },
+});
 ```
 
-When you extract the component meta, you'll get:
-```ts
-meta.name // 'MyComponent'
-meta.description // 'My awesome component description'
-```
+## API
 
-### Extracting prop meta
+### `checker.getComponentMeta(filePath, exportName?)`
 
-`vue-component-meta` will automatically extract the prop details like its name, default value, is required or not, etc. Additionally, you can even write prop description in source code via [JSDoc](https://jsdoc.app/) comment for that prop.
+Get the metadata of a component. `exportName` defaults to `'default'`.
 
-```ts
-/**
- * Hide/Show alert based on v-model value
- */
-modelValue: {
-  type: Boolean,
-  default: null,
-},
-```
+The returned `ComponentMeta` object contains:
 
-When you extract the component meta and extract the `description` property of that prop it will be "Hide/Show alert based on v-model value" 😍
-
-> **Warning**
->
-> Do note that `meta.props` will be array of props so you can't access it via `meta.props.<prop-name>`. Moreover, `meta.props` will also contain some global prop which you can identify via `prop.global` property.
-
-You can use it to document your component as you build your project without writing additional documentation.
-
-## Pitfalls 👀
-
-As `vue-component-meta` uses static code analysis, it can't extract the dynamic prop definition.
-
-### default value
-
-`vue-component-meta` won't be able to extract default value for prop as props can't be analyzed.
-
-```ts
-props: {
-  // Props definition by function execution
-  ...useLayerProps({
-    color: {
-      default: 'primary',
-    },
-    variant: {
-      default: 'light',
-    },
-  }),
+```typescript
+interface ComponentMeta {
+  name?: string;
+  description?: string;
+  type: TypeMeta;
+  props: PropertyMeta[];
+  events: EventMeta[];
+  slots: SlotMeta[];
+  exposed: ExposeMeta[];
 }
 ```
 
-In this scenario, to get the correct default value you can let `vue-component-meta` know it by writing them explicitly:
+### `checker.getExportNames(filePath)`
 
-```ts
-props: {
-  // let vue-component-meta found it
-  color: { default: 'primary' },
-  variant: { default: 'light' },
+Get all export names of a file.
 
-  // Props definition by function execution
-  ...useLayerProps({
-    color: {
-      default: 'primary',
-    },
-    variant: {
-      default: 'light',
-    },
-  }),
+### `checker.updateFile(filePath, content)`
+
+Update file content (for virtual files or live editing).
+
+### `checker.deleteFile(filePath)`
+
+Remove a file from the project.
+
+### `checker.reload()`
+
+Reload the tsconfig.json configuration.
+
+### `checker.clearCache()`
+
+Clear cached file content.
+
+### `checker.getProgram()`
+
+Get the underlying TypeScript Program instance.
+
+## Metadata Structures
+
+### PropertyMeta (Props)
+
+```typescript
+interface PropertyMeta {
+  name: string;
+  description: string;      // Read from JSDoc
+  type: string;             // Type string
+  default?: string;         // Default value
+  required: boolean;
+  global: boolean;          // Whether it's a global prop
+  tags: { name: string; text?: string }[];  // JSDoc tags
+  schema: PropertyMetaSchema;
+  getDeclarations(): Declaration[];
+  getTypeObject(): ts.Type;
 }
 ```
 
-### description
+### EventMeta
 
-Same as above scenario you might have issue with description not generating when prop definition is dynamic. In this case writing prop description can be tricky.
-
-When it's function execution, write prop description in function definition:
-
-```ts
-export const useLayerProp = (...) => {
-  const props = {
-       /**
-        * Layer variant
-        */
-       variant: {
-         type: String,
-         default: 'text',
-       },
-  }
-
-  export { props }
+```typescript
+interface EventMeta {
+  name: string;
+  description: string;
+  type: string;
+  signature: string;
+  tags: { name: string; text?: string }[];
+  schema: PropertyMetaSchema[];
+  getDeclarations(): Declaration[];
+  getTypeObject(): ts.Type | undefined;
 }
 ```
 
-### required
+### SlotMeta
 
-For generating the correct `required` value for props like below:
-
-```ts
-// @/composables/useProps.ts
-export const disabled = {
-  type: Boolean,
-  default: false,
+```typescript
+interface SlotMeta {
+  name: string;
+  description: string;
+  type: string;
+  tags: { name: string; text?: string }[];
+  schema: PropertyMetaSchema;
+  getDeclarations(): Declaration[];
+  getTypeObject(): ts.Type;
 }
 ```
 
-```ts
-import { disabled } from '@/composables/useProps'
+### ExposeMeta
 
-export default defineComponent({
-  props: {
-    disabled,
+```typescript
+interface ExposeMeta {
+  name: string;
+  description: string;
+  type: string;
+  tags: { name: string; text?: string }[];
+  schema: PropertyMetaSchema;
+  getDeclarations(): Declaration[];
+  getTypeObject(): ts.Type;
+}
+```
+
+## Options
+
+```typescript
+interface MetaCheckerOptions {
+  schema?: boolean | {
+    ignore?: (string | ((name: string, type: ts.Type, typeChecker: ts.TypeChecker) => boolean))[];
+  };
+  printer?: ts.PrinterOptions;
+}
+```
+
+### `schema`
+
+Controls whether to parse the schema structure of types. Set to `true` to enable, or pass an object to configure types to ignore.
+
+```typescript
+const checker = createChecker(tsconfig, {
+  schema: {
+    ignore: ['HTMLElement', (name) => name.startsWith('Internal')],
   },
-})
+});
 ```
 
-You need to add `as const` to variable definition:
+## Related Packages
 
-```diff
- export const disabled = {
-   type: Boolean,
-   default: false,
-- }
-+ } as const
-```
+- [`vue-component-type-helpers`](../component-type-helpers) - Type helper utilities
 
-## Used by 🎉
+## License
 
-- [Anu](https://github.com/jd-solanki/anu) UI library uses `vue-component-meta` to generate components' API via [automation](https://github.com/jd-solanki/anu/blob/main/scripts/gen-component-meta.ts).
-
-## Reference 📚
-
-- [tests](https://github.com/vuejs/language-tools/blob/master/packages/component-meta/tests/index.spec.ts)
-- [Anu's components' API automation](https://github.com/jd-solanki/anu/blob/main/scripts/gen-component-meta.ts)
-- [Discord chat for dynamic usage](https://discord.com/channels/793943652350427136/1027819645677350912)
+[MIT](https://github.com/vuejs/language-tools/blob/master/LICENSE) License

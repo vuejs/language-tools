@@ -2,9 +2,8 @@ import {
 	type CompletionItemKind,
 	type CompletionItemTag,
 	type CompletionList,
-	type Disposable,
-	type LanguageServiceContext,
 	type LanguageServicePlugin,
+	type Position,
 	type TextDocument,
 	transformCompletionItem,
 } from '@volar/language-service';
@@ -20,13 +19,10 @@ import {
 import { camelize, capitalize } from '@vue/shared';
 import { create as createHtmlService, resolveReference } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
-import {
-	applyCompletionEntryDetails,
-	convertCompletionInfo,
-} from 'volar-service-typescript/lib/utils/lspConverters.js';
+import { applyCompletionEntryDetails, convertCompletionInfo } from 'volar-service-typescript/lib/utils/lspConverters';
 import * as html from 'vscode-html-languageservice';
-import { URI } from 'vscode-uri';
-import type { ComponentMeta, PropertyMeta } from '../../../component-meta';
+import { URI, Utils } from 'vscode-uri';
+import type { PropertyMeta } from 'vue-component-meta';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
@@ -50,11 +46,7 @@ const DIRECTIVE_V_FOR_NAME = 'v-for';
 // Templates
 const V_FOR_SNIPPET = '="${1:value} in ${2:source}"';
 
-interface TagInfo {
-	attrs: { name: string; type: string }[];
-	meta: ComponentMeta | undefined | null;
-}
-
+let customData: html.IHTMLDataProvider[];
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
 
@@ -63,70 +55,69 @@ export function create(
 	languageId: 'html' | 'jade',
 	tsserver: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
-	let htmlData: html.IHTMLDataProvider[] = [];
+	const defaultDataProvider = html.getDefaultHTMLDataProvider();
+	let htmlData: html.IHTMLDataProvider[] = [defaultDataProvider];
+	// htmlData is shared by every project's service instance
+	// lock for avoid concurrent requests from different projects
+	let htmlDataLock = Promise.resolve();
 	let modulePathCache:
 		| Map<string, Promise<string | null | undefined> | string | null | undefined>
 		| undefined;
 
 	const onDidChangeCustomDataListeners = new Set<() => void>();
-	const onDidChangeCustomData = (listener: () => void): Disposable => {
-		onDidChangeCustomDataListeners.add(listener);
-		return {
-			dispose() {
-				onDidChangeCustomDataListeners.delete(listener);
-			},
-		};
-	};
-	const getDocumentContext: (context: LanguageServiceContext) => html.DocumentContext = context => ({
-		resolveReference(ref, base) {
-			let baseUri = URI.parse(base);
-			const decoded = context.decodeEmbeddedDocumentUri(baseUri);
-			if (decoded) {
-				baseUri = decoded[0];
-			}
-			if (
-				modulePathCache
-				&& baseUri.scheme === 'file'
-				&& !ref.startsWith('./')
-				&& !ref.startsWith('../')
-			) {
-				const map = modulePathCache;
-				if (!map.has(ref)) {
-					const fileName = baseUri.fsPath.replace(/\\/g, '/');
-					const promise = tsserver.resolveModuleName(fileName, ref);
-					map.set(ref, promise);
-					if (promise instanceof Promise) {
-						promise.then(res => map.set(ref, res));
+	const serviceOptions: Parameters<typeof createHtmlService>[0] = {
+		useDefaultDataProvider: false,
+		getDocumentContext: context => ({
+			resolveReference(ref, base) {
+				let baseUri = URI.parse(base);
+				const decoded = context.decodeEmbeddedDocumentUri(baseUri);
+				if (decoded) {
+					baseUri = decoded[0];
+				}
+				if (
+					modulePathCache
+					&& baseUri.scheme === 'file'
+					&& !ref.startsWith('./')
+					&& !ref.startsWith('../')
+				) {
+					const map = modulePathCache;
+					if (!map.has(ref)) {
+						const fileName = baseUri.fsPath.replace(/\\/g, '/');
+						const promise = tsserver.resolveModuleName(fileName, ref);
+						map.set(ref, promise);
+						if (promise instanceof Promise) {
+							promise.then(res => map.set(ref, res));
+						}
+					}
+					const cached = modulePathCache.get(ref);
+					if (cached instanceof Promise) {
+						throw cached;
+					}
+					if (cached) {
+						return URI.file(cached).toString();
 					}
 				}
-				const cached = modulePathCache.get(ref);
-				if (cached instanceof Promise) {
-					throw cached;
-				}
-				if (cached) {
-					return cached;
-				}
-			}
-			return resolveReference(ref, baseUri, context.env.workspaceFolders);
+				return resolveReference(ref, baseUri, context.env.workspaceFolders);
+			},
+		}),
+		getCustomData() {
+			return customData?.length ? htmlData.concat(customData) : htmlData;
 		},
-	});
+		onDidChangeCustomData(listener) {
+			onDidChangeCustomDataListeners.add(listener);
+			return {
+				dispose() {
+					onDidChangeCustomDataListeners.delete(listener);
+				},
+			};
+		},
+	};
+
 	const baseService = languageId === 'jade'
-		? createPugService({
-			useDefaultDataProvider: false,
-			getDocumentContext,
-			getCustomData() {
-				return htmlData;
-			},
-			onDidChangeCustomData,
-		})
+		? createPugService(serviceOptions)
 		: createHtmlService({
+			...serviceOptions,
 			documentSelector: ['html', 'markdown'],
-			useDefaultDataProvider: false,
-			getDocumentContext,
-			getCustomData() {
-				return htmlData;
-			},
-			onDidChangeCustomData,
 		});
 
 	return {
@@ -151,7 +142,7 @@ export function create(
 				htmlService.parseHTMLDocument = document => {
 					const info = resolveEmbeddedCode(context, document.uri);
 					if (info?.code.id === 'template') {
-						const templateAst = info.root.sfc.template?.ast;
+						const templateAst = info.root.ir.template?.ast;
 						if (templateAst) {
 							let text = document.getText();
 							for (const node of forEachInterpolationNode(templateAst)) {
@@ -170,39 +161,16 @@ export function create(
 				htmlService.format = (document, range, options) => {
 					let voidElements: string[] | undefined;
 					const info = resolveEmbeddedCode(context, document.uri);
-					const codegen = info && tsCodegen.get(info.root.sfc);
+					const codegen = info && tsCodegen.get(info.root.ir);
 					if (codegen) {
 						const componentNames = new Set([
 							...codegen.getImportedComponents(),
-							...codegen.getSetupExposed(),
+							...codegen.getLocalComponents(),
 						]);
-						// copied from https://github.com/microsoft/vscode-html-languageservice/blob/10daf45dc16b4f4228987cf7cddf3a7dbbdc7570/src/beautify/beautify-html.js#L2746-L2761
-						voidElements = [
-							'area',
-							'base',
-							'br',
-							'col',
-							'embed',
-							'hr',
-							'img',
-							'input',
-							'keygen',
-							'link',
-							'menuitem',
-							'meta',
-							'param',
-							'source',
-							'track',
-							'wbr',
-							'!doctype',
-							'?xml',
-							'basefont',
-							'isindex',
-						].filter(tag =>
-							tag
-							&& !componentNames.has(tag)
-							&& !componentNames.has(capitalize(camelize(tag)))
-						);
+						voidElements = defaultDataProvider.provideTags()
+							.filter(tag => tag.void)
+							.map(tag => tag.name)
+							.filter(tag => !componentNames.has(tag) && !componentNames.has(capitalize(tag)));
 					}
 					return format(document, range, options, voidElements);
 				};
@@ -217,10 +185,10 @@ export function create(
 			const vBindModifiers = extractDirectiveModifiers(builtInData.globalAttributes?.find(x => x.name === 'v-bind'));
 			const vModelModifiers = extractModelModifiers(modelData.globalAttributes);
 			const transformedItems = new WeakSet<html.CompletionItem>();
-			const defaultHtmlTags = new Map<string, html.ITagData>();
+			const defaultTags = new Map<string, html.ITagData>();
 
-			for (const tag of html.getDefaultHTMLDataProvider().provideTags()) {
-				defaultHtmlTags.set(tag.name, tag);
+			for (const tag of defaultDataProvider.provideTags()) {
+				defaultTags.set(tag.name, tag);
 			}
 
 			let lastCompletionDocument: TextDocument | undefined;
@@ -253,6 +221,7 @@ export function create(
 					} = await runWithVueDataProvider(
 						info.script.id,
 						info.root,
+						document.offsetAt(position),
 						hint,
 						'completion',
 						() =>
@@ -273,7 +242,7 @@ export function create(
 					}
 
 					if (htmlCompletion.items[0]?.kind === 12 satisfies typeof CompletionItemKind.Value) {
-						addDirectiveModifiers(htmlCompletion, htmlCompletion.items[0], document);
+						addDirectiveModifiers(htmlCompletion, htmlCompletion.items[0], document, position);
 					}
 
 					await resolveAutoImportPlaceholder(htmlCompletion, info);
@@ -435,11 +404,12 @@ export function create(
 					} = await runWithVueDataProvider(
 						info.script.id,
 						info.root,
+						document.offsetAt(position),
 						undefined,
 						'hover',
 						() => baseServiceInstance.provideHover!(document, position, token),
 					);
-					const templateAst = info.root.sfc.template?.ast;
+					const templateAst = info.root.ir.template?.ast;
 					const enabledRichMessage = await context.env.getConfiguration?.('vue.hover.rich');
 
 					if (!templateAst || !enabledRichMessage || (htmlHover && hasContents(htmlHover.contents))) {
@@ -601,25 +571,44 @@ export function create(
 			async function runWithVueDataProvider<T>(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
+				position: number,
 				hint: string | undefined,
 				mode: 'completion' | 'hover',
 				fn: () => T,
 			) {
-				// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
-				await fn();
+				const { install, sync } = await provideHtmlData(sourceDocumentUri, root, position, hint, mode);
 
-				const { sync } = await provideHtmlData(sourceDocumentUri, root, hint, mode);
-				let lastSync = await sync();
-				let result = await fn();
-				while (lastSync.version !== (lastSync = await sync()).version) {
-					result = await fn();
+				const previousLock = htmlDataLock;
+				let unlock!: () => void;
+				htmlDataLock = new Promise<void>(resolve => unlock = resolve);
+				await previousLock;
+				try {
+					// #4298: Precompute HTMLDocument before installing providers to avoid parseHTMLDocument requesting component names from tsserver
+					await fn();
+
+					install();
+					let lastSync = await sync();
+					let result = await fn();
+					while (lastSync.version !== (lastSync = await sync()).version) {
+						result = await fn();
+					}
+					return {
+						result,
+						...lastSync,
+					};
 				}
-				return { result, ...lastSync };
+				finally {
+					updateHtmlData([
+						defaultDataProvider,
+					]);
+					unlock();
+				}
 			}
 
 			async function provideHtmlData(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
+				position: number,
 				hint: string | undefined,
 				mode: 'completion' | 'hover',
 			) {
@@ -628,234 +617,234 @@ export function create(
 					getAttrNameCasing(context, sourceDocumentUri),
 				]);
 
-				let version = 0;
-				let components: string[] | undefined;
-				let elements: string[] | undefined;
-				let directives: string[] | undefined;
-				let values: string[] | undefined;
+				customData ??= await getCustomData();
 
 				const tasks: Promise<void>[] = [];
-				const tagDataMap = new Map<string, TagInfo>();
+				let version = 0;
+				let components: string[] | undefined;
 
-				updateExtraCustomData([
-					{
-						getId: () => 'vue-template',
-						isApplicable: () => true,
-						provideTags: () => {
-							const { components, elements } = getComponentsAndElements();
-							const codegen = tsCodegen.get(root.sfc);
-							const names = new Set<string>();
-							const tags: html.ITagData[] = [];
+				const provideTags = createProvider({
+					async fetch() {
+						const res = await Promise.all([
+							tsserver.getComponentNames(root.fileName),
+							tsserver.getElementNames(root.fileName),
+						]);
 
-							for (const tag of builtInData?.tags ?? []) {
-								tags.push({
-									...tag,
-									name: tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name,
-								});
-							}
+						components = res[0] ?? [];
+						return {
+							components,
+							elements: res[1] ?? [],
+						};
+					},
+					provide({ components, elements }) {
+						const codegen = tsCodegen.get(root.ir);
+						const names = new Set<string>();
+						const tags = new Map<string, html.ITagData>();
 
-							for (const tag of components) {
-								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag) : tag);
-							}
-							for (const tag of elements) {
-								names.add(tag);
-							}
-							if (codegen) {
-								for (
-									const name of [
-										...codegen.getImportedComponents(),
-										...codegen.getSetupExposed(),
-									]
-								) {
-									names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name);
-								}
-							}
-
-							const added = new Set<string>(tags.map(t => t.name));
-							for (const name of names) {
-								if (!added.has(name)) {
-									const defaultTag = defaultHtmlTags.get(name);
-									tags.push({
-										...defaultTag,
-										name,
-										attributes: [],
-									});
-								}
-							}
-
-							return tags;
-						},
-						provideAttributes: tag => {
-							const directives = getDirectives();
-							const { attrs, meta } = getTagData(tag);
-							const attributes: html.IAttributeData[] = [];
-
-							let addPlainAttrs = false;
-							let addVBinds = false;
-							let addVBindShorthands = false;
-							let addVOns = false;
-							let addVOnShorthands = false;
-
-							if (!hint) {
-								addVBindShorthands = true;
-								addVOnShorthands = true;
-							}
-							else if (hint === ':') {
-								addVBindShorthands = true;
-							}
-							else if (hint === '@') {
-								addVOnShorthands = true;
-							}
-							else {
-								addPlainAttrs = true;
-								addVBinds = true;
-								addVOns = true;
-								addVBindShorthands = true;
-								addVOnShorthands = true;
-							}
-
-							for (const attr of builtInData?.globalAttributes ?? []) {
-								if (attr.name === 'is' && tag.toLowerCase() !== 'component') {
-									continue;
-								}
-								if (attr.name === 'ref' || attr.name.startsWith('v-')) {
-									attributes.push(attr);
-									continue;
-								}
-								if (addPlainAttrs) {
-									attributes.push({ ...attr, name: attr.name });
-								}
-								if (addVBindShorthands) {
-									attributes.push({ ...attr, name: V_BIND_SHORTHAND + attr.name });
-								}
-								if (addVBinds) {
-									attributes.push({ ...attr, name: DIRECTIVE_V_BIND + attr.name });
-								}
-							}
-
+						for (const tag of components) {
+							names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag) : tag);
+						}
+						for (const tag of elements) {
+							names.add(tag);
+						}
+						if (codegen) {
 							for (
-								const [propName, propMeta] of [
-									...meta?.props.map(prop => [prop.name, prop] as const) ?? [],
-									...attrs.map(attr => [attr.name, undefined]),
-								] as [string, PropertyMeta | undefined][]
+								const name of [
+									...codegen.getImportedComponents(),
+									...codegen.getLocalComponents(),
+								]
 							) {
-								if (propName.match(EVENT_PROP_REGEX)) {
-									let labelName = propName.slice(2);
-									labelName = labelName.charAt(0).toLowerCase() + labelName.slice(1);
-									if (attrNameCasing === AttrNameCasing.Kebab) {
-										labelName = hyphenateAttr(labelName);
-									}
-
-									if (addVOnShorthands) {
-										attributes.push({
-											name: V_ON_SHORTHAND + labelName,
-											description: propMeta && createDescription(propMeta),
-										});
-									}
-									if (addVOns) {
-										attributes.push({
-											name: DIRECTIVE_V_ON + labelName,
-											description: propMeta && createDescription(propMeta),
-										});
-									}
-								}
-								else {
-									const labelName = attrNameCasing === AttrNameCasing.Camel ? propName : hyphenateAttr(propName);
-									const propMeta2 = meta?.props.find(prop => {
-										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
-										return name === labelName;
-									});
-									const isBoolean = propMeta2?.type === 'boolean' || propMeta2?.type.startsWith('boolean ');
-
-									if (addPlainAttrs) {
-										attributes.push({
-											name: labelName,
-											description: propMeta2 && createDescription(propMeta2),
-										});
-									}
-									if (addVBindShorthands) {
-										attributes.push({
-											name: V_BIND_SHORTHAND + labelName,
-											description: propMeta2 && createDescription(propMeta2),
-											valueSet: isBoolean ? 'v' : undefined,
-										});
-									}
-									if (addVBinds) {
-										attributes.push({
-											name: DIRECTIVE_V_BIND + labelName,
-											description: propMeta2 && createDescription(propMeta2),
-											valueSet: isBoolean ? 'v' : undefined,
-										});
-									}
-								}
+								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name);
 							}
-							for (const event of meta?.events ?? []) {
-								const eventName = attrNameCasing === AttrNameCasing.Camel ? event.name : hyphenateAttr(event.name);
+						}
+
+						for (const name of names) {
+							tags.set(name, {
+								...defaultTags.get(name),
+								name,
+								attributes: [],
+							});
+						}
+
+						for (const tag of builtInData?.tags ?? []) {
+							const name = tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name;
+							tags.set(name, {
+								...tag,
+								name,
+							});
+						}
+
+						return [...tags.values()];
+					},
+				});
+
+				const provideAttributes = createProvider({
+					async fetch(tag: string) {
+						const res = await Promise.all([
+							tsserver.getElementAttrs(root.fileName, tag),
+							tsserver.getComponentProps(root.fileName, position),
+							tsserver.getComponentDirectives(root.fileName),
+						]);
+						return {
+							attrs: res[0] ?? [],
+							props: res[1] ?? [],
+							directives: res[2] ?? [],
+						};
+					},
+					provide({ attrs, props, directives }, tag) {
+						const attributes: html.IAttributeData[] = [];
+
+						let addPlainAttrs = false;
+						let addVBinds = false;
+						let addVBindShorthands = false;
+						let addVOns = false;
+						let addVOnShorthands = false;
+
+						if (!hint) {
+							addVBindShorthands = true;
+							addVOnShorthands = true;
+						}
+						else if (hint === ':') {
+							addVBindShorthands = true;
+						}
+						else if (hint === '@') {
+							addVOnShorthands = true;
+						}
+						else {
+							addPlainAttrs = true;
+							addVBinds = true;
+							addVOns = true;
+							addVBindShorthands = true;
+							addVOnShorthands = true;
+						}
+
+						for (const attr of builtInData?.globalAttributes ?? []) {
+							if (attr.name === 'is' && tag.toLowerCase() !== 'component') {
+								continue;
+							}
+							if (attr.name === 'ref' || attr.name.startsWith('v-')) {
+								attributes.push(attr);
+								continue;
+							}
+							if (addPlainAttrs) {
+								attributes.push({ ...attr, name: attr.name });
+							}
+							if (addVBindShorthands) {
+								attributes.push({ ...attr, name: V_BIND_SHORTHAND + attr.name });
+							}
+							if (addVBinds) {
+								attributes.push({ ...attr, name: DIRECTIVE_V_BIND + attr.name });
+							}
+						}
+
+						for (
+							const [propName, propInfo] of [
+								...props.map(prop => [prop.name, prop] as const),
+								...attrs.map(attr => [attr.name, attr] as const),
+							]
+						) {
+							if (EVENT_PROP_REGEX.test(propName)) {
+								let labelName = propName.slice(2);
+								labelName = labelName.charAt(0).toLowerCase() + labelName.slice(1);
+								if (attrNameCasing === AttrNameCasing.Kebab) {
+									labelName = hyphenateAttr(labelName);
+								}
 
 								if (addVOnShorthands) {
 									attributes.push({
-										name: V_ON_SHORTHAND + eventName,
-										description: event && createDescription(event),
+										name: V_ON_SHORTHAND + labelName,
+										description: propInfo?.description,
 									});
 								}
 								if (addVOns) {
 									attributes.push({
-										name: DIRECTIVE_V_ON + eventName,
-										description: event && createDescription(event),
+										name: DIRECTIVE_V_ON + labelName,
+										description: propInfo?.description,
 									});
 								}
 							}
+							else {
+								const labelName = attrNameCasing === AttrNameCasing.Camel ? propName : hyphenateAttr(propName);
 
-							for (const directive of directives) {
+								if (addPlainAttrs) {
+									attributes.push({
+										name: labelName,
+										description: propInfo?.description,
+										valueSet: propInfo?.boolean ? 'v' : undefined,
+									});
+								}
+								if (addVBindShorthands) {
+									attributes.push({
+										name: V_BIND_SHORTHAND + labelName,
+										description: propInfo?.description,
+									});
+								}
+								if (addVBinds) {
+									attributes.push({
+										name: DIRECTIVE_V_BIND + labelName,
+										description: propInfo?.description,
+									});
+								}
+							}
+							if (propName.startsWith(UPDATE_PROP_PREFIX)) {
+								const model = propName.slice(UPDATE_PROP_PREFIX.length);
+								const label = DIRECTIVE_V_MODEL
+									+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
 								attributes.push({
-									name: hyphenateAttr(directive),
+									name: label,
+									description: propInfo?.description,
 								});
 							}
+						}
 
-							for (
-								const [propName, propMeta] of [
-									...meta?.props.map(prop => [prop.name, prop] as const) ?? [],
-									...attrs.map(attr => [attr.name, undefined]),
-								] as [string, PropertyMeta | undefined][]
-							) {
-								if (propName.startsWith(UPDATE_PROP_PREFIX)) {
-									const model = propName.slice(UPDATE_PROP_PREFIX.length);
-									const label = DIRECTIVE_V_MODEL
-										+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
-									attributes.push({
-										name: label,
-										description: propMeta && createDescription(propMeta),
-									});
-								}
-							}
-							for (const event of meta?.events ?? []) {
-								if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
-									const model = event.name.slice(UPDATE_EVENT_PREFIX.length);
-									const label = DIRECTIVE_V_MODEL
-										+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
-									attributes.push({
-										name: label,
-										description: createDescription(event),
-									});
-								}
-							}
+						for (const directive of directives) {
+							attributes.push({
+								name: hyphenateAttr(directive),
+							});
+						}
 
-							return attributes;
-						},
-						provideValues: (tag, attr) => {
-							return getAttrValues(tag, attr).map(value => ({ name: value }));
-						},
+						// dedupe from tsserver
+						if (mode === 'hover') {
+							for (const item of attributes) {
+								item.description = undefined;
+							}
+						}
+
+						return attributes;
 					},
-					{
-						getId: () => 'vue-auto-imports',
-						isApplicable: () => true,
-						provideTags: () => [{ name: AUTO_IMPORT_PLACEHOLDER, attributes: [] }],
-						provideAttributes: () => [],
-						provideValues: () => [],
+				});
+
+				const provideValues = createProvider({
+					async fetch(tag: string, attr: string) {
+						if (tag === 'slot' && attr === 'name') {
+							return await tsserver.getComponentSlots(root.fileName) ?? [];
+						}
+						return [];
 					},
-				]);
+					provide(values) {
+						return values.map(value => ({ name: value }));
+					},
+				});
 
 				return {
+					install() {
+						updateHtmlData([
+							{
+								getId: () => 'vue-template',
+								isApplicable: () => true,
+								provideTags,
+								provideAttributes,
+								provideValues,
+							},
+							{
+								getId: () => 'vue-auto-imports',
+								isApplicable: () => true,
+								provideTags: () => [{ name: AUTO_IMPORT_PLACEHOLDER, attributes: [] }],
+								provideAttributes: () => [],
+								provideValues: () => [],
+							},
+						]);
+					},
 					async sync() {
 						await Promise.all(tasks);
 						return {
@@ -868,139 +857,113 @@ export function create(
 					},
 				};
 
-				function createDescription(meta: Pick<PropertyMeta, 'description' | 'tags'>) {
-					if (mode === 'hover') {
-						// dedupe from TS hover
-						return;
-					}
-					let description = meta?.description ?? '';
-					for (const tag of meta.tags) {
-						description += `\n\n*@${tag.name}* ${tag.text ?? ''}`;
-					}
-					if (!description) {
-						return;
-					}
-					return {
-						kind: 'markdown' as const,
-						value: description,
+				function createProvider<T extends any[], D, R>(options: {
+					fetch: (...args: T) => Promise<D>;
+					provide: (data: D, ...args: T) => R;
+				}) {
+					let status: 'idle' | 'pending' | 'done' = 'idle';
+					let data: D;
+
+					return (...args: T) => {
+						if (status === 'idle') {
+							status = 'pending';
+							tasks.push((async () => {
+								data = await options.fetch(...args);
+								status = 'done';
+								version++;
+							})());
+						}
+						else if (status === 'done') {
+							return options.provide(data, ...args);
+						}
+						return [];
 					};
 				}
+			}
 
-				function getAttrValues(tag: string, attr: string) {
-					if (!values) {
-						values = [];
-						tasks.push((async () => {
-							if (tag === 'slot' && attr === 'name') {
-								values = await tsserver.getComponentSlots(root.fileName) ?? [];
-							}
-							version++;
-						})());
+			async function getCustomData() {
+				const paths: string[] = await context.env.getConfiguration?.('html.customData') ?? [];
+				const customData: html.IHTMLDataProvider[] = [];
+				for (const path of paths) {
+					for (const workspaceFolder of context.env.workspaceFolders) {
+						const uri = Utils.resolvePath(workspaceFolder, path);
+						const text = await context.env.fs?.readFile(uri) ?? '';
+						try {
+							const data = JSON.parse(text);
+							customData.push(html.newHTMLDataProvider(path, data));
+						}
+						catch (error) {
+							console.error(error);
+						}
 					}
-					return values;
 				}
-
-				function getTagData(tag: string) {
-					let data = tagDataMap.get(tag);
-					if (!data) {
-						data = { attrs: [], meta: undefined };
-						tagDataMap.set(tag, data);
-						tasks.push((async () => {
-							tagDataMap.set(tag, {
-								attrs: await tsserver.getElementAttrs(root.fileName, tag) ?? [],
-								meta: await tsserver.getComponentMeta(root.fileName, tag),
-							});
-							version++;
-						})());
-					}
-					return data;
-				}
-
-				function getDirectives() {
-					if (!directives) {
-						directives = [];
-						tasks.push((async () => {
-							directives = await tsserver.getComponentDirectives(root.fileName) ?? [];
-							version++;
-						})());
-					}
-					return directives;
-				}
-
-				function getComponentsAndElements() {
-					if (!components || !elements) {
-						components = [];
-						elements = [];
-						tasks.push((async () => {
-							const res = await Promise.all([
-								tsserver.getComponentNames(root.fileName),
-								tsserver.getElementNames(root.fileName),
-							]);
-							components = res[0] ?? [];
-							elements = res[1] ?? [];
-							version++;
-						})());
-					}
-					return {
-						components,
-						elements,
-					};
-				}
+				return customData;
 			}
 
 			function addDirectiveModifiers(
 				list: CompletionList,
 				item: html.CompletionItem,
 				document: TextDocument,
+				position: Position,
 			) {
 				const replacement = getReplacement(item, document);
-				if (!replacement?.text.includes('.')) {
+				if (!replacement?.text) {
 					return;
 				}
 
-				const [text, ...modifiers] = replacement.text.split('.') as [string, ...string[]];
-				const isVOn = text.startsWith(DIRECTIVE_V_ON) || text.startsWith(V_ON_SHORTHAND) && text.length > 1;
-				const isVBind = text.startsWith(DIRECTIVE_V_BIND) || text.startsWith(V_BIND_SHORTHAND) && text.length > 1;
-				const isVModel = text.startsWith(DIRECTIVE_V_MODEL) || text === 'v-model';
-				const currentModifiers = isVOn
-					? vOnModifiers
-					: isVBind
-					? vBindModifiers
-					: isVModel
-					? vModelModifiers
-					: undefined;
-
-				if (!currentModifiers) {
+				const replacementStart = document.offsetAt(replacement.textEdit.range.start);
+				const start = replacement.text.lastIndexOf('.', document.offsetAt(position) - replacementStart - 1) + 1;
+				if (start === 0) {
 					return;
 				}
 
-				for (const modifier in currentModifiers) {
-					if (modifiers.includes(modifier)) {
-						continue;
-					}
+				const [text, ...existingModifiers] = replacement.text.split('.') as [string, ...string[]];
 
-					const description = currentModifiers[modifier]!;
-					const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
-					const newItem: html.CompletionItem = {
-						label: modifier,
-						filterText: insertText,
-						documentation: {
-							kind: 'markdown',
-							value: description,
-						},
-						textEdit: {
-							range: replacement.textEdit.range,
-							newText: insertText,
-						},
-						kind: 20 satisfies typeof CompletionItemKind.EnumMember,
+				let matchedModifiers: Record<string, string> | undefined;
+				if (text.startsWith(DIRECTIVE_V_ON) || text.startsWith(V_ON_SHORTHAND) && text.length > 1) {
+					matchedModifiers = vOnModifiers;
+				}
+				else if (text.startsWith(DIRECTIVE_V_BIND) || text.startsWith(V_BIND_SHORTHAND) && text.length > 1) {
+					matchedModifiers = vBindModifiers;
+				}
+				else if (text.startsWith(DIRECTIVE_V_MODEL) || text === 'v-model') {
+					matchedModifiers = vModelModifiers;
+				}
+
+				if (matchedModifiers) {
+					const nextModifierStart = replacement.text.indexOf('.', start);
+					const end = nextModifierStart !== -1 ? nextModifierStart : replacement.text.length;
+					const range = {
+						start: document.positionAt(replacementStart + start),
+						end: document.positionAt(replacementStart + end),
 					};
+					const currentModifier = replacement.text.slice(start, end);
 
-					list.items.push(newItem);
+					for (const modifier in matchedModifiers) {
+						if (existingModifiers.includes(modifier) && modifier !== currentModifier) {
+							continue;
+						}
+
+						list.items.push({
+							label: modifier,
+							filterText: modifier,
+							documentation: {
+								kind: 'markdown',
+								value: matchedModifiers[modifier]!,
+							},
+							textEdit: {
+								range,
+								newText: modifier,
+							},
+							kind: 20 satisfies typeof CompletionItemKind.EnumMember,
+						});
+					}
 				}
 			}
 		},
 	};
 
-	function updateExtraCustomData(newData: html.IHTMLDataProvider[]) {
+	function updateHtmlData(newData: html.IHTMLDataProvider[]) {
 		htmlData = newData;
 		onDidChangeCustomDataListeners.forEach(l => l());
 	}

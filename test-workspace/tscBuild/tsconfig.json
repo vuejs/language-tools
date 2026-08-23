@@ -1,0 +1,14 @@
+{
+	"references": [
+		{
+			"path": "./petiteVue/tsconfig.json"
+		},
+		{
+			"path": "./vitepress/tsconfig.json"
+		},
+		{
+			"path": "./vue/tsconfig.json"
+		}
+	],
+	"files": []
+}

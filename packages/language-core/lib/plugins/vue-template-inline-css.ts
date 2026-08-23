@@ -1,32 +1,26 @@
 import * as CompilerDOM from '@vue/compiler-dom';
+import { codeFeatures } from '../codegen/codeFeatures';
 import type { Code, VueLanguagePlugin } from '../types';
 import { forEachElementNode } from '../utils/forEachTemplateNode';
 import { normalizeAttributeValue } from '../utils/shared';
-import { allCodeFeatures } from './shared';
-
-const codeFeatures = {
-	...allCodeFeatures,
-	format: false,
-	structure: false,
-};
 
 const plugin: VueLanguagePlugin = () => {
 	return {
 		version: 2.2,
 
-		getEmbeddedCodes(_fileName, sfc) {
-			if (!sfc.template?.ast) {
+		getEmbeddedCodes(_fileName, ir) {
+			if (!ir.template?.ast) {
 				return [];
 			}
 			return [{ id: 'template_inline_css', lang: 'css' }];
 		},
 
-		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
-			if (embeddedFile.id !== 'template_inline_css' || !sfc.template?.ast) {
+		resolveEmbeddedCode(_fileName, ir, embeddedFile) {
+			if (embeddedFile.id !== 'template_inline_css' || !ir.template?.ast) {
 				return;
 			}
-			embeddedFile.parentCodeId = sfc.template.lang === 'md' ? 'root_tags' : 'template';
-			embeddedFile.content.push(...generate(sfc.template.ast));
+			embeddedFile.parentCodeId = ir.template.lang === 'md' ? 'root_tags' : 'template';
+			embeddedFile.content.push(...generate(ir.template.ast));
 		},
 	};
 };
@@ -43,7 +37,7 @@ function* generate(templateAst: NonNullable<CompilerDOM.RootNode>): Generator<Co
 			) {
 				yield `x { `;
 				const [content, offset] = normalizeAttributeValue(prop.value);
-				yield [content, 'template', offset, codeFeatures];
+				yield [content, 'template', offset, codeFeatures.all];
 				yield ` }\n`;
 			}
 		}

@@ -13,26 +13,26 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
-
-      - name: Install Lerna Lite
-        run: pnpm add -g @lerna-lite/cli @lerna-lite/version
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Bump version from PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          VERSION="${{ github.event.pull_request.title }}"
+          VERSION="$PR_TITLE"
           if [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            pnpm dlx --package @lerna-lite/cli --package @lerna-lite/version \
             lerna version "$VERSION" --yes --no-push --no-git-tag-version --force-publish
           else
             echo "PR title is not a valid version."

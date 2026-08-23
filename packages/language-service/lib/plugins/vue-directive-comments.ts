@@ -7,7 +7,7 @@ const cmds: [string, string?][] = [
 	['vue-generic', 'vue-generic {$1}'],
 ];
 
-const directiveCommentReg = /<!--\s*@/;
+const directiveCommentRE = /<!--\s*@/;
 
 /**
  * A language service plugin that provides completion for Vue directive comments,
@@ -29,7 +29,7 @@ export function create(): LanguageServicePlugin {
 					}
 
 					const line = document.getText({ start: { line: position.line, character: 0 }, end: position });
-					const cmdStart = line.match(directiveCommentReg);
+					const cmdStart = line.match(directiveCommentRE);
 					if (!cmdStart) {
 						return;
 					}

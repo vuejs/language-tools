@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
-import { getLanguageServer, testWorkspacePath } from './server.js';
+import { getLanguageServer, testWorkspacePath } from './server';
 
 test('#5818 clears missing module error after renaming to an existing filename', async () => {
 	const server = await getLanguageServer();
@@ -38,6 +38,34 @@ import Comp from './module-rename-comp-renamed.vue'
 	).toBe(false);
 });
 
+test('resolves module names with the owning project in a multi-project session', async () => {
+	const server = await getLanguageServer();
+	const firstProjectFile = path.join(testWorkspacePath, 'tsconfigProject', 'fixture.vue');
+	const secondProjectFile = path.join(testWorkspacePath, 'tsconfigProject2', 'fixture.vue');
+
+	// Open a file of the first project before any file of the second project,
+	// so the session-level `_vue:` handlers are registered by the first project.
+	for (const fileName of [firstProjectFile, secondProjectFile]) {
+		const document = await server.open(URI.file(fileName).toString(), 'vue', fs.readFileSync(fileName, 'utf8'));
+		if (openedDocuments.every(doc => doc.uri !== document.uri)) {
+			openedDocuments.push(document);
+		}
+	}
+
+	// The `@2/*` path alias only exists in tsconfigProject2, so the module can
+	// only be resolved with the second project's compilerOptions.
+	const res = await server.tsserver.message({
+		seq: server.nextSeq(),
+		command: '_vue:resolveModuleName',
+		arguments: [secondProjectFile, '@2/fixture'],
+	});
+	expect(res.success).toBe(true);
+	// to lower case for fixing windows path
+	expect(res.body?.replace(/\\/g, '/').toLowerCase()).toBe(
+		path.join(testWorkspacePath, 'tsconfigProject2', 'fixture.ts').replace(/\\/g, '/').toLowerCase(),
+	);
+});
+
 const openedDocuments: TextDocument[] = [];
 const createdFiles: string[] = [];
 
@@ -46,12 +74,12 @@ afterEach(async () => {
 	for (const document of openedDocuments) {
 		await server.close(document.uri);
 	}
+	openedDocuments.length = 0;
 	for (const file of createdFiles) {
 		if (fs.existsSync(file)) {
 			fs.rmSync(file);
 		}
 	}
-	openedDocuments.length = 0;
 	createdFiles.length = 0;
 });
 

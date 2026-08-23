@@ -103,11 +103,14 @@ export function startServer(ts: typeof import('typescript')) {
 				getComponentDirectives(...args) {
 					return sendTsServerRequest('_vue:getComponentDirectives', args);
 				},
+				getComponentMeta(...args) {
+					return sendTsServerRequest('_vue:getComponentMeta', args);
+				},
 				getComponentNames(...args) {
 					return sendTsServerRequest('_vue:getComponentNames', args);
 				},
-				getComponentMeta(...args) {
-					return sendTsServerRequest('_vue:getComponentMeta', args);
+				getComponentProps(...args) {
+					return sendTsServerRequest('_vue:getComponentProps', args);
 				},
 				getComponentSlots(...args) {
 					return sendTsServerRequest('_vue:getComponentSlots', args);

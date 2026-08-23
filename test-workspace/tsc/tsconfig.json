@@ -332,9 +332,6 @@
 			"path": "./#4391/tsconfig.json"
 		},
 		{
-			"path": "./#4413/tsconfig.json"
-		},
-		{
 			"path": "./#4433/tsconfig.json"
 		},
 		{
@@ -512,7 +509,22 @@
 			"path": "./#5899/tsconfig.json"
 		},
 		{
+			"path": "./#5927/tsconfig.json"
+		},
+		{
 			"path": "./#5934/tsconfig.json"
+		},
+		{
+			"path": "./#5986/tsconfig.json"
+		},
+		{
+			"path": "./#6040/tsconfig.json"
+		},
+		{
+			"path": "./#6084/tsconfig.json"
+		},
+		{
+			"path": "./#6094/tsconfig.json"
 		},
 		{
 			"path": "./#625/tsconfig.json"
@@ -531,6 +543,9 @@
 		},
 		{
 			"path": "./_failed_directives/tsconfig.json"
+		},
+		{
+			"path": "./_failed_fragment_props/tsconfig.json"
 		},
 		{
 			"path": "./attrs/tsconfig.json"
@@ -578,6 +593,9 @@
 			"path": "./fallthroughAttributes/tsconfig.json"
 		},
 		{
+			"path": "./fallthroughAttributes_checkRequired/tsconfig.json"
+		},
+		{
 			"path": "./fallthroughAttributes_duplicateNameEvent/tsconfig.json"
 		},
 		{
@@ -585,9 +603,6 @@
 		},
 		{
 			"path": "./fallthroughAttributes_generic/tsconfig.json"
-		},
-		{
-			"path": "./fallthroughAttributes_requiredProp/tsconfig.json"
 		},
 		{
 			"path": "./fallthroughAttributes_unknownTag/tsconfig.json"
@@ -636,6 +651,12 @@
 		},
 		{
 			"path": "./unknownTag/tsconfig.json"
+		},
+		{
+			"path": "./useTemplateRef-dynamic-arg/tsconfig.json"
+		},
+		{
+			"path": "./useTemplateRef-nullable/tsconfig.json"
 		},
 		{
 			"path": "./v-bind-require-object/tsconfig.json"

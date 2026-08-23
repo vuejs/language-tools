@@ -1,7 +1,7 @@
 import type { TextDocument } from '@volar/language-server';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
-import { getLanguageServer, testWorkspacePath } from './server.js';
+import { getLanguageServer, testWorkspacePath } from './server';
 
 test('#2410', async () => {
 	expect(
@@ -238,7 +238,7 @@ test('CSS', async () => {
 		    "canRename": true,
 		    "displayName": "foo",
 		    "fullDisplayName": "foo",
-		    "kind": "property",
+		    "kind": "const",
 		    "kindModifiers": "",
 		    "triggerSpan": {
 		      "end": {
@@ -255,24 +255,6 @@ test('CSS', async () => {
 		    {
 		      "file": "\${testWorkspacePath}/fixture.vue",
 		      "locs": [
-		        {
-		          "contextEnd": {
-		            "line": 3,
-		            "offset": 18,
-		          },
-		          "contextStart": {
-		            "line": 3,
-		            "offset": 4,
-		          },
-		          "end": {
-		            "line": 3,
-		            "offset": 13,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 10,
-		          },
-		        },
 		        {
 		          "end": {
 		            "line": 12,
@@ -343,6 +325,24 @@ test('CSS', async () => {
 		            "offset": 25,
 		          },
 		        },
+		        {
+		          "contextEnd": {
+		            "line": 3,
+		            "offset": 18,
+		          },
+		          "contextStart": {
+		            "line": 3,
+		            "offset": 4,
+		          },
+		          "end": {
+		            "line": 3,
+		            "offset": 13,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 10,
+		          },
+		        },
 		      ],
 		    },
 		  ],
@@ -400,6 +400,31 @@ test('Component props', async () => {
 		  },
 		  "locs": [
 		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 4,
+		            "offset": 17,
+		          },
+		          "start": {
+		            "line": 4,
+		            "offset": 11,
+		          },
+		        },
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 18,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 11,
+		          },
+		        },
+		      ],
+		    },
+		    {
 		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
 		      "locs": [
 		        {
@@ -428,31 +453,6 @@ test('Component props', async () => {
 		          "start": {
 		            "line": 3,
 		            "offset": 8,
-		          },
-		        },
-		      ],
-		    },
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 4,
-		            "offset": 17,
-		          },
-		          "start": {
-		            "line": 4,
-		            "offset": 11,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 18,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 11,
 		          },
 		        },
 		      ],
@@ -512,6 +512,31 @@ test('Component type props', async () => {
 		  },
 		  "locs": [
 		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 4,
+		            "offset": 17,
+		          },
+		          "start": {
+		            "line": 4,
+		            "offset": 11,
+		          },
+		        },
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 18,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 11,
+		          },
+		        },
+		      ],
+		    },
+		    {
 		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
 		      "locs": [
 		        {
@@ -544,31 +569,6 @@ test('Component type props', async () => {
 		        },
 		      ],
 		    },
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 4,
-		            "offset": 17,
-		          },
-		          "start": {
-		            "line": 4,
-		            "offset": 11,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 18,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 11,
-		          },
-		        },
-		      ],
-		    },
 		  ],
 		}
 	`);
@@ -595,7 +595,7 @@ test('Component dynamic props', async () => {
 		    "canRename": true,
 		    "displayName": "foo",
 		    "fullDisplayName": "foo",
-		    "kind": "property",
+		    "kind": "const",
 		    "kindModifiers": "",
 		    "triggerSpan": {
 		      "end": {
@@ -612,6 +612,16 @@ test('Component dynamic props', async () => {
 		    {
 		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
 		      "locs": [
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 15,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 12,
+		          },
+		        },
 		        {
 		          "contextEnd": {
 		            "line": 7,
@@ -630,6 +640,52 @@ test('Component dynamic props', async () => {
 		            "offset": 10,
 		          },
 		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+});
+
+test('#6176', async () => {
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<div :[foo|]="123"></div>
+			</template>
+
+			<script lang="ts" setup>
+			import { useTemplateRef } from 'vue';
+			const foo = useTemplateRef('foo');
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "foo",
+		    "fullDisplayName": "foo",
+		    "kind": "const",
+		    "kindModifiers": "",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 3,
+		        "offset": 15,
+		      },
+		      "start": {
+		        "line": 3,
+		        "offset": 12,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
 		        {
 		          "end": {
 		            "line": 3,
@@ -638,6 +694,16 @@ test('Component dynamic props', async () => {
 		          "start": {
 		            "line": 3,
 		            "offset": 12,
+		          },
+		        },
+		        {
+		          "end": {
+		            "line": 8,
+		            "offset": 13,
+		          },
+		          "start": {
+		            "line": 8,
+		            "offset": 10,
 		          },
 		        },
 		      ],
@@ -749,7 +815,7 @@ test('<script setup>', async () => {
 		    "canRename": true,
 		    "displayName": "foo",
 		    "fullDisplayName": "foo",
-		    "kind": "property",
+		    "kind": "const",
 		    "kindModifiers": "",
 		    "triggerSpan": {
 		      "end": {
@@ -767,6 +833,16 @@ test('<script setup>', async () => {
 		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
 		      "locs": [
 		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 11,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 8,
+		          },
+		        },
+		        {
 		          "contextEnd": {
 		            "line": 7,
 		            "offset": 18,
@@ -782,16 +858,6 @@ test('<script setup>', async () => {
 		          "start": {
 		            "line": 7,
 		            "offset": 10,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 11,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 8,
 		          },
 		        },
 		      ],
@@ -1125,6 +1191,7 @@ test('Scoped Classes', async () => {
 		            "line": 5,
 		            "offset": 20,
 		          },
+		          "suffixText": ": foo",
 		        },
 		        {
 		          "end": {
@@ -1230,6 +1297,167 @@ test('Template Ref', async () => {
 		          "start": {
 		            "line": 8,
 		            "offset": 31,
+		          },
+		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+});
+
+test('Same Name Shorthand', async () => {
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<Comp :foo-bar| />
+				{{ new Comp({ fooBar }) }}
+			</template>
+
+			<script lang="ts" setup>
+			const fooBar = 1;
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "fooBar",
+		    "fullDisplayName": "__object.fooBar",
+		    "kind": "property",
+		    "kindModifiers": "",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 3,
+		        "offset": 19,
+		      },
+		      "start": {
+		        "line": 3,
+		        "offset": 12,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 4,
+		            "offset": 25,
+		          },
+		          "prefixText": "fooBar: ",
+		          "start": {
+		            "line": 4,
+		            "offset": 19,
+		          },
+		        },
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 19,
+		          },
+		          "prefixText": "foo-bar="",
+		          "start": {
+		            "line": 3,
+		            "offset": 12,
+		          },
+		          "suffixText": """,
+		        },
+		        {
+		          "contextEnd": {
+		            "line": 8,
+		            "offset": 21,
+		          },
+		          "contextStart": {
+		            "line": 8,
+		            "offset": 4,
+		          },
+		          "end": {
+		            "line": 8,
+		            "offset": 16,
+		          },
+		          "start": {
+		            "line": 8,
+		            "offset": 10,
+		          },
+		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<Comp :foo-bar />
+				{{ new Comp({ fooBar }) }}
+			</template>
+
+			<script lang="ts" setup>
+			declare function Comp(props: {
+				fooBar|: number;
+			}): void;
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "fooBar",
+		    "fullDisplayName": "__type.fooBar",
+		    "kind": "property",
+		    "kindModifiers": "declare",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 9,
+		        "offset": 11,
+		      },
+		      "start": {
+		        "line": 9,
+		        "offset": 5,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 19,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 12,
+		          },
+		          "suffixText": "="fooBar"",
+		        },
+		        {
+		          "contextEnd": {
+		            "line": 9,
+		            "offset": 20,
+		          },
+		          "contextStart": {
+		            "line": 9,
+		            "offset": 5,
+		          },
+		          "end": {
+		            "line": 9,
+		            "offset": 11,
+		          },
+		          "start": {
+		            "line": 9,
+		            "offset": 5,
 		          },
 		        },
 		      ],

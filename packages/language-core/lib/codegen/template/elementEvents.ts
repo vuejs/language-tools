@@ -1,10 +1,12 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
+import { getUnwrappedExpression } from '../../parsers/utils';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { endOfLine, getTypeScriptAST, identifierRegex, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { names } from '../names';
+import { endOfLine, getTypeScriptAST, identifierRE, newLine } from '../utils';
+import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -18,7 +20,17 @@ export function* generateElementEvents(
 	getCtxVar: () => string,
 	getPropsVar: () => string,
 ): Generator<Code> {
-	let emitsVar: string | undefined;
+	const definitions: Record<string, {
+		propPrefix: string;
+		emitPrefix: string;
+		propName: string;
+		emitName: string;
+		items: {
+			prop: CompilerDOM.DirectiveNode;
+			source: string;
+			offset: number | undefined;
+		}[];
+	}> = {};
 
 	for (const prop of node.props) {
 		if (
@@ -31,13 +43,8 @@ export function* generateElementEvents(
 					&& (!prop.arg || prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
 			)
 		) {
-			if (!emitsVar) {
-				emitsVar = ctx.getInternalVariable();
-				yield `let ${emitsVar}!: __VLS_ResolveEmits<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>${endOfLine}`;
-			}
-
 			let source = prop.arg?.loc.source ?? 'model-value';
-			let start = prop.arg?.loc.start.offset;
+			let offset = prop.arg?.loc.start.offset;
 			let propPrefix = 'on-';
 			let emitPrefix = '';
 			if (prop.name === 'model') {
@@ -46,23 +53,52 @@ export function* generateElementEvents(
 			}
 			else if (source.startsWith('vue:')) {
 				source = source.slice('vue:'.length);
-				start = start! + 'vue:'.length;
+				offset = offset! + 'vue:'.length;
 				propPrefix = 'onVnode-';
 				emitPrefix = 'vnode-';
 			}
 			const propName = camelize(propPrefix + source);
 			const emitName = emitPrefix + source;
-			const camelizedEmitName = camelize(emitName);
+			const key = [
+				prop.name,
+				propName,
+				...prop.modifiers.map(modifier => modifier.content),
+			].join('+');
 
-			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'> = (${newLine}`;
+			definitions[key] ??= {
+				propPrefix,
+				emitPrefix,
+				propName,
+				emitName,
+				items: [],
+			};
+			definitions[key].items.push({
+				prop,
+				source,
+				offset,
+			});
+		}
+	}
+
+	if (!Object.keys(definitions).length) {
+		return;
+	}
+
+	const emitsVar = ctx.getInternalVariable();
+	yield `let ${emitsVar}!: ${names.ResolveEmits}<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>${endOfLine}`;
+
+	for (const { propPrefix, emitPrefix, propName, emitName, items } of Object.values(definitions)) {
+		yield `const ${ctx.getInternalVariable()}: ${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
+			camelize(emitName)
+		}'> = {${newLine}`;
+		for (const { prop, source, offset } of items) {
 			if (prop.name === 'on') {
-				yield `{ `;
-				yield* generateEventArg(options, source, start!, emitPrefix.slice(0, -1), codeFeatures.navigation);
-				yield `: {} as any } as typeof ${emitsVar},${newLine}`;
+				yield `/** @type {typeof ${emitsVar}.`;
+				yield* generateEventArg(options, source, offset!, emitPrefix.slice(0, -1), codeFeatures.navigation);
+				yield `} */${newLine}`;
 			}
-			yield `{ `;
 			if (prop.name === 'on') {
-				yield* generateEventArg(options, source, start!, propPrefix.slice(0, -1));
+				yield* generateEventArg(options, source, offset!, propPrefix.slice(0, -1));
 				yield `: `;
 				yield* generateEventExpression(options, ctx, prop);
 			}
@@ -70,8 +106,9 @@ export function* generateElementEvents(
 				yield `'${propName}': `;
 				yield* generateModelEventExpression(options, ctx, prop);
 			}
-			yield `})${endOfLine}`;
+			yield `,${newLine}`;
 		}
+		yield `}${endOfLine}`;
 	}
 }
 
@@ -93,18 +130,17 @@ export function* generateEventArg(
 	if (directive.length) {
 		name = capitalize(name);
 	}
-	if (identifierRegex.test(camelize(name))) {
-		const token = yield* startBoundary('template', start, features);
+	const boundary = yield* Boundary.start('template', start, start + name.length, features);
+	if (identifierRE.test(camelize(name))) {
 		yield directive;
-		yield* generateCamelized(name, 'template', start, { __combineToken: token });
+		yield* generateCamelized(name, 'template', start, boundary.features);
 	}
 	else {
-		const token = yield* startBoundary('template', start, features);
 		yield `'`;
 		yield directive;
-		yield* generateCamelized(name, 'template', start, { __combineToken: token });
+		yield* generateCamelized(name, 'template', start, boundary.features);
 		yield `'`;
-		yield endBoundary(token, start + name.length);
+		yield boundary.end();
 	}
 }
 
@@ -129,12 +165,19 @@ export function* generateEventExpression(
 
 		if (isCompound) {
 			yield `(...[$event]) => {${newLine}`;
-			const endScope = ctx.startScope();
-			ctx.declare('$event');
+			const scope = ctx.scope();
+			scope.declare('$event');
 			yield* ctx.generateConditionGuards();
-			yield* interpolation;
+			if (isSingleExpression(options.typescript, ast)) {
+				yield `return (`;
+				yield* interpolation;
+				yield `)`;
+			}
+			else {
+				yield* interpolation;
+			}
 			yield endOfLine;
-			yield* endScope();
+			yield* scope.end();
 			yield `}`;
 
 			ctx.inlayHints.push({
@@ -184,36 +227,35 @@ export function* generateModelEventExpression(
 }
 
 export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.SourceFile) {
-	let result = true;
 	if (ast.statements.length === 0) {
-		result = false;
+		return false;
 	}
-	else if (ast.statements.length === 1) {
-		ts.forEachChild(ast, child_1 => {
-			if (ts.isExpressionStatement(child_1)) {
-				ts.forEachChild(child_1, child_2 => {
-					if (ts.isArrowFunction(child_2)) {
-						result = false;
-					}
-					else if (isPropertyAccessOrId(ts, child_2)) {
-						result = false;
-					}
-				});
+	if (ast.statements.length === 1 && ast.text[ast.endOfFileToken.pos - 1] !== ';') {
+		const statement = ast.statements[0]!;
+		if (ts.isExpressionStatement(statement)) {
+			const node = getUnwrappedExpression(ts, statement.expression);
+			if (
+				ts.isArrowFunction(node)
+				|| ts.isIdentifier(node)
+				|| ts.isElementAccessExpression(node)
+				|| ts.isPropertyAccessExpression(node)
+			) {
+				return false;
 			}
-			else if (ts.isFunctionDeclaration(child_1)) {
-				result = false;
-			}
-		});
+		}
+		else if (ts.isFunctionDeclaration(statement)) {
+			return false;
+		}
 	}
-	return result;
+	return true;
 }
 
-function isPropertyAccessOrId(ts: typeof import('typescript'), node: ts.Node) {
-	if (ts.isIdentifier(node)) {
-		return true;
-	}
-	if (ts.isPropertyAccessExpression(node)) {
-		return isPropertyAccessOrId(ts, node.expression);
+function isSingleExpression(ts: typeof import('typescript'), ast: ts.SourceFile) {
+	if (ast.statements.length === 1 && ast.text[ast.endOfFileToken.pos - 1] !== ';') {
+		const statement = ast.statements[0]!;
+		if (ts.isExpressionStatement(statement)) {
+			return true;
+		}
 	}
 	return false;
 }

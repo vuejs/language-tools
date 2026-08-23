@@ -18,7 +18,7 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 
-					const { template } = info.root.sfc;
+					const { template } = info.root.ir;
 					if (!template) {
 						return;
 					}

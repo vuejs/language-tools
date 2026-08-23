@@ -10,22 +10,7 @@
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode",
-				"--folder-uri=${workspaceRoot}/test-workspace/tsc"
-			],
-			"outFiles": [
-				"${workspaceRoot}/**/*.js"
-			],
-			"preLaunchTask": "watch"
-		},
-		{
-			"name": "Launch Web Client",
-			"type": "pwa-extensionHost",
-			"debugWebWorkerHost": true,
-			"request": "launch",
-			"args": [
-				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode",
-				"--extensionDevelopmentKind=web"
+				"--folder-uri=${workspaceRoot}/test-workspace"
 			],
 			"outFiles": [
 				"${workspaceRoot}/**/*.js"

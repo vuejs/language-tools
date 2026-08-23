@@ -1,10 +1,13 @@
 {
 	"name": "@vue/language-server",
-	"version": "3.2.2",
+	"version": "3.3.11",
 	"license": "MIT",
 	"files": [
-		"**/*.js",
-		"**/*.d.ts"
+		"bin",
+		"index.d.ts",
+		"index.js",
+		"lib/**/*.d.ts",
+		"lib/**/*.js"
 	],
 	"bin": {
 		"vue-language-server": "./bin/vue-language-server.js"
@@ -15,18 +18,19 @@
 		"url": "https://github.com/vuejs/language-tools.git",
 		"directory": "packages/language-server"
 	},
-	"dependencies": {
-		"@volar/language-server": "2.4.27",
-		"@vue/language-core": "workspace:*",
-		"@vue/language-service": "workspace:*",
-		"@vue/typescript-plugin": "workspace:*",
-		"vscode-uri": "^3.0.8"
-	},
 	"peerDependencies": {
 		"typescript": "*"
 	},
+	"dependencies": {
+		"@volar/language-server": "2.4.28",
+		"@vue/language-core": "workspace:*",
+		"@vue/language-service": "workspace:*",
+		"@vue/typescript-plugin": "workspace:*",
+		"vscode-uri": "^3.1.0"
+	},
 	"devDependencies": {
 		"@typescript/server-harness": "latest",
-		"@volar/test-utils": "2.4.27"
+		"@volar/test-utils": "2.4.28",
+		"typescript": "latest"
 	}
 }

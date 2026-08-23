@@ -1,3 +1,4 @@
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { type ComponentMetaChecker, createChecker, createCheckerByJson, type MetaCheckerOptions, TypeMeta } from '..';
@@ -116,29 +117,56 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "type": "string | undefined",
 				}
 			`);
-			expect(barModifiers).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "barModifiers",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "Partial<Record<"trim" | "lazy", true>>",
-				    ],
-				    "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
-				  },
-				  "tags": [],
-				  "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
-				}
-			`);
+			if (withTsconfig) {
+				expect(barModifiers).toMatchInlineSnapshot(`
+					{
+					  "declarations": [],
+					  "default": undefined,
+					  "description": "",
+					  "getDeclarations": [Function],
+					  "getTypeObject": [Function],
+					  "global": false,
+					  "name": "barModifiers",
+					  "rawType": undefined,
+					  "required": false,
+					  "schema": {
+					    "kind": "enum",
+					    "schema": [
+					      "undefined",
+					      "Partial<Record<"lazy" | "trim", true>>",
+					    ],
+					    "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
+					  },
+					  "tags": [],
+					  "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
+					}
+				`);
+			}
+			else {
+				expect(barModifiers).toMatchInlineSnapshot(`
+					{
+					  "declarations": [],
+					  "default": undefined,
+					  "description": "",
+					  "getDeclarations": [Function],
+					  "getTypeObject": [Function],
+					  "global": false,
+					  "name": "barModifiers",
+					  "rawType": undefined,
+					  "required": false,
+					  "schema": {
+					    "kind": "enum",
+					    "schema": [
+					      "undefined",
+					      "Partial<Record<"trim" | "lazy", true>>",
+					    ],
+					    "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
+					  },
+					  "tags": [],
+					  "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
+					}
+				`);
+			}
 			expect(onUpdateBaz).toBeDefined();
 		});
 
@@ -386,49 +414,96 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			`);
 
 			const nestedOptional = meta.props.find(prop => prop.name === 'nestedOptional');
-			expect(nestedOptional).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "optional nested object",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "nestedOptional",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      {
-				        "kind": "object",
-				        "schema": {
-				          "nestedProp": {
-				            "declarations": [],
-				            "default": undefined,
-				            "description": "nested prop documentation",
-				            "getDeclarations": [Function],
-				            "getTypeObject": [Function],
-				            "global": false,
-				            "name": "nestedProp",
-				            "rawType": undefined,
-				            "required": true,
-				            "schema": "string",
-				            "tags": [],
-				            "type": "string",
-				          },
-				        },
-				        "type": "MyNestedProps",
-				      },
-				      "MyIgnoredNestedProps",
-				    ],
-				    "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
-				  },
-				  "tags": [],
-				  "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
-				}
-			`);
+			if (withTsconfig) {
+				expect(nestedOptional).toMatchInlineSnapshot(`
+					{
+					  "declarations": [],
+					  "default": undefined,
+					  "description": "optional nested object",
+					  "getDeclarations": [Function],
+					  "getTypeObject": [Function],
+					  "global": false,
+					  "name": "nestedOptional",
+					  "rawType": undefined,
+					  "required": false,
+					  "schema": {
+					    "kind": "enum",
+					    "schema": [
+					      "undefined",
+					      "MyIgnoredNestedProps",
+					      {
+					        "kind": "object",
+					        "schema": {
+					          "nestedProp": {
+					            "declarations": [],
+					            "default": undefined,
+					            "description": "nested prop documentation",
+					            "getDeclarations": [Function],
+					            "getTypeObject": [Function],
+					            "global": false,
+					            "name": "nestedProp",
+					            "rawType": undefined,
+					            "required": true,
+					            "schema": "string",
+					            "tags": [],
+					            "type": "string",
+					          },
+					        },
+					        "type": "MyNestedProps",
+					      },
+					    ],
+					    "type": "MyIgnoredNestedProps | MyNestedProps | undefined",
+					  },
+					  "tags": [],
+					  "type": "MyIgnoredNestedProps | MyNestedProps | undefined",
+					}
+				`);
+			}
+			else {
+				expect(nestedOptional).toMatchInlineSnapshot(`
+					{
+					  "declarations": [],
+					  "default": undefined,
+					  "description": "optional nested object",
+					  "getDeclarations": [Function],
+					  "getTypeObject": [Function],
+					  "global": false,
+					  "name": "nestedOptional",
+					  "rawType": undefined,
+					  "required": false,
+					  "schema": {
+					    "kind": "enum",
+					    "schema": [
+					      "undefined",
+					      {
+					        "kind": "object",
+					        "schema": {
+					          "nestedProp": {
+					            "declarations": [],
+					            "default": undefined,
+					            "description": "nested prop documentation",
+					            "getDeclarations": [Function],
+					            "getTypeObject": [Function],
+					            "global": false,
+					            "name": "nestedProp",
+					            "rawType": undefined,
+					            "required": true,
+					            "schema": "string",
+					            "tags": [],
+					            "type": "string",
+					          },
+					        },
+					        "type": "MyNestedProps",
+					      },
+					      "MyIgnoredNestedProps",
+					    ],
+					    "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
+					  },
+					  "tags": [],
+					  "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
+					}
+				`);
+			}
 
 			const array = meta.props.find(prop => prop.name === 'array');
 			expect(array).toMatchInlineSnapshot(`
@@ -538,14 +613,64 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "schema": {
 				    "kind": "enum",
 				    "schema": [
-				      "MyEnum.Small",
-				      "MyEnum.Medium",
-				      "MyEnum.Large",
+				      {
+				        "kind": "literal",
+				        "type": "MyEnum.Small",
+				        "value": "0",
+				      },
+				      {
+				        "kind": "literal",
+				        "type": "MyEnum.Medium",
+				        "value": "1",
+				      },
+				      {
+				        "kind": "literal",
+				        "type": "MyEnum.Large",
+				        "value": "2",
+				      },
 				    ],
 				    "type": "MyEnum",
 				  },
 				  "tags": [],
 				  "type": "MyEnum",
+				}
+			`);
+
+			const stringEnumValue = meta.props.find(prop => prop.name === 'stringEnumValue');
+			expect(stringEnumValue).toMatchInlineSnapshot(`
+				{
+				  "declarations": [],
+				  "default": undefined,
+				  "description": "string enum value",
+				  "getDeclarations": [Function],
+				  "getTypeObject": [Function],
+				  "global": false,
+				  "name": "stringEnumValue",
+				  "rawType": undefined,
+				  "required": true,
+				  "schema": {
+				    "kind": "enum",
+				    "schema": [
+				      {
+				        "kind": "literal",
+				        "type": "MyStringEnum.Small",
+				        "value": ""small"",
+				      },
+				      {
+				        "kind": "literal",
+				        "type": "MyStringEnum.Medium",
+				        "value": ""medium"",
+				      },
+				      {
+				        "kind": "literal",
+				        "type": "MyStringEnum.Large",
+				        "value": ""large"",
+				      },
+				    ],
+				    "type": "MyStringEnum",
+				  },
+				  "tags": [],
+				  "type": "MyStringEnum",
 				}
 			`);
 
@@ -572,33 +697,64 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			`);
 
 			const literalFromContext = meta.props.find(prop => prop.name === 'literalFromContext');
-			expect(literalFromContext).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "literal type alias that require context",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "literalFromContext",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      ""Uncategorized"",
-				      ""Content"",
-				      ""Interaction"",
-				      ""Display"",
-				      ""Forms"",
-				      ""Addons"",
-				    ],
-				    "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
-				  },
-				  "tags": [],
-				  "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
-				}
-			`);
+			if (withTsconfig) {
+				expect(literalFromContext).toMatchInlineSnapshot(`
+					{
+					  "declarations": [],
+					  "default": undefined,
+					  "description": "literal type alias that require context",
+					  "getDeclarations": [Function],
+					  "getTypeObject": [Function],
+					  "global": false,
+					  "name": "literalFromContext",
+					  "rawType": undefined,
+					  "required": true,
+					  "schema": {
+					    "kind": "enum",
+					    "schema": [
+					      ""Addons"",
+					      ""Content"",
+					      ""Display"",
+					      ""Forms"",
+					      ""Interaction"",
+					      ""Uncategorized"",
+					    ],
+					    "type": ""Addons" | "Content" | "Display" | "Forms" | "Interaction" | "Uncategorized"",
+					  },
+					  "tags": [],
+					  "type": ""Addons" | "Content" | "Display" | "Forms" | "Interaction" | "Uncategorized"",
+					}
+				`);
+			}
+			else {
+				expect(literalFromContext).toMatchInlineSnapshot(`
+					{
+					  "declarations": [],
+					  "default": undefined,
+					  "description": "literal type alias that require context",
+					  "getDeclarations": [Function],
+					  "getTypeObject": [Function],
+					  "global": false,
+					  "name": "literalFromContext",
+					  "rawType": undefined,
+					  "required": true,
+					  "schema": {
+					    "kind": "enum",
+					    "schema": [
+					      ""Uncategorized"",
+					      ""Content"",
+					      ""Interaction"",
+					      ""Display"",
+					      ""Forms"",
+					      ""Addons"",
+					    ],
+					    "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
+					  },
+					  "tags": [],
+					  "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
+					}
+				`);
+			}
 
 			const inlined = meta.props.find(prop => prop.name === 'inlined');
 			expect(inlined).toMatchInlineSnapshot(`
@@ -685,8 +841,20 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(meta.type).toEqual(TypeMeta.Class);
 
 			const text = meta.props.find(prop => prop.name === 'text');
-
 			expect(text?.default).toEqual('"foobar"');
+		});
+
+		test('reference-type-props-non-ascii-default', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/reference-type-props/component-non-ascii.vue',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.type).toEqual(TypeMeta.Class);
+
+			const label = meta.props.find(prop => prop.name === 'label');
+			expect(label?.default).toEqual('"こんにちは"');
 		});
 
 		test('reference-type-props-js', () => {
@@ -1418,7 +1586,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 		test('ts-component.tsx', () => {
 			const componentPath = path.resolve(
 				__dirname,
-				'../../../test-workspace/component-meta/ts-component/component.tsx',
+				'../../../test-workspace/component-meta/ts-component/component-tsx.tsx',
 			);
 			const meta = checker.getComponentMeta(componentPath);
 
@@ -1668,3 +1836,78 @@ const noTsConfigChecker = createCheckerByJson(
 
 worker(tsconfigChecker, true);
 worker(noTsConfigChecker, false);
+
+describe('project scope', () => {
+	const scopedChecker = createCheckerByJson(
+		path.resolve(__dirname, '../../../test-workspace/component-meta'),
+		{
+			'extends': '../tsconfig.base.json',
+			'include': [
+				'empty-component/**/*',
+			],
+		},
+		checkerOptions,
+	);
+	const outsidePath = path.resolve(
+		__dirname,
+		'../../../test-workspace/component-meta/reference-type-props/component.vue',
+	);
+
+	test('component outside the project', () => {
+		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow();
+		expect(() => scopedChecker.getComponentMeta(outsidePath)).toThrow();
+	});
+
+	test('component outside the project (program unchanged)', () => {
+		const before = scopedChecker.getProgram()!.getRootFileNames();
+
+		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow();
+		expect(scopedChecker.getProgram()!.getRootFileNames()).toEqual(before);
+	});
+
+	test('component outside the project w/ updateFile', () => {
+		scopedChecker.updateFile(outsidePath, fs.readFileSync(outsidePath, 'utf8'));
+
+		expect(scopedChecker.getExportNames(outsidePath)).toContain('default');
+	});
+});
+
+describe('checker deleteFile', () => {
+	const rootDir = path.resolve(__dirname, '../../../test-workspace/component-meta');
+	const checker = createCheckerByJson(
+		rootDir,
+		{
+			'extends': '../tsconfig.base.json',
+			'include': [
+				'empty-component/**/*',
+			],
+		},
+		checkerOptions,
+	);
+
+	// in-memory files
+	const consumerPath = path.join(rootDir, 'empty-component/delete-file-consumer.vue');
+	const depPath = path.join(rootDir, 'empty-component/delete-file-dep.ts');
+
+	test('deleted in-memory file no longer resolves', () => {
+		checker.updateFile(depPath, `export interface DepProps { foo: string }`);
+		checker.updateFile(
+			consumerPath,
+			`<script setup lang="ts">
+import type { DepProps } from './delete-file-dep';
+defineProps<DepProps>();
+</script>`,
+		);
+
+		const propNames = (p: string) => checker.getComponentMeta(p).props.map(prop => prop.name);
+		expect(propNames(consumerPath)).toContain('foo');
+
+		checker.deleteFile(depPath);
+
+		expect(propNames(consumerPath)).not.toContain('foo');
+
+		checker.deleteFile(consumerPath);
+
+		expect(() => checker.getComponentMeta(consumerPath)).toThrow();
+	});
+});

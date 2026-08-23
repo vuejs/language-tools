@@ -3,7 +3,9 @@
 import { forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
+import * as LanguageCore from '../index';
 import { createPlugins } from './plugins';
+import { serviceScriptRE } from './plugins/vue-tsx';
 import type { VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
 import { VueVirtualCode } from './virtualCode';
 
@@ -39,10 +41,12 @@ export function createVueLanguagePlugin<T>(
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
 			'@vue/compiler-dom': CompilerDOM,
+			'@vue/language-core': LanguageCore,
 			typescript: ts,
 		},
 		compilerOptions,
 		vueCompilerOptions,
+		config: {},
 	};
 	const plugins = createPlugins(pluginContext);
 	const fileRegistry = getVueFileRegistry(compilerOptions, vueCompilerOptions, plugins);
@@ -95,7 +99,7 @@ export function createVueLanguagePlugin<T>(
 				})),
 			getServiceScript(root) {
 				for (const code of forEachEmbeddedCode(root)) {
-					if (/script_(js|jsx|ts|tsx)/.test(code.id)) {
+					if (serviceScriptRE.test(code.id)) {
 						const lang = code.id.slice('script_'.length);
 						return {
 							code,

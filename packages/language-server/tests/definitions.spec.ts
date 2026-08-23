@@ -1,7 +1,7 @@
 import type { TextDocument } from '@volar/language-server';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
-import { getLanguageServer, testWorkspacePath } from './server.js';
+import { getLanguageServer, testWorkspacePath } from './server';
 
 test('TS to vue', async () => {
 	expect(

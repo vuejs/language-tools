@@ -1,9 +1,11 @@
-import { defineConfig } from '@tsslint/config';
-import { defineRules } from '@tsslint/eslint';
+import { createIgnorePlugin, defineConfig, importESLintRules } from '@tsslint/config';
 
 export default defineConfig([{
+	plugins: [
+		createIgnorePlugin('tsslint-ignore', true),
+	],
 	rules: {
-		...await defineRules({
+		...await importESLintRules({
 			// oxlint's default rules, but without unicorn. See https://oxc.rs/docs/guide/usage/linter/rules.html
 			'for-direction': true,
 			'no-async-promise-executor': true,
@@ -81,6 +83,10 @@ export default defineConfig([{
 			'@typescript-eslint/require-array-sort-compare': true,
 			'@typescript-eslint/restrict-template-expressions': true,
 			'@typescript-eslint/triple-slash-reference': true,
+			// Disabled: flags the VueCompletionData assertions as unnecessary on the
+			// 6.0.3-generation checker — stock 6.0.3 reports them identically (not a
+			// TNB divergence; master's TS7 checker doesn't flag them).
+			// '@typescript-eslint/no-unnecessary-type-assertion': true,
 			// '@typescript-eslint/unbound-method': true,
 
 			// Project-specific rules
@@ -88,11 +94,10 @@ export default defineConfig([{
 			'eqeqeq': true,
 			'no-unused-expressions': true,
 			'require-await': true,
-			'@typescript-eslint/consistent-type-imports': [{
+			'@typescript-eslint/consistent-type-imports': [true, {
 				disallowTypeAnnotations: false,
 				fixStyle: 'inline-type-imports',
 			}],
-			'@typescript-eslint/no-unnecessary-type-assertion': true,
 		}),
 		'missing-dependency': (await import('./lint/missing-dependency-rule.ts')).default,
 		'type-imports': (await import('./lint/type-imports-rule.ts')).default,

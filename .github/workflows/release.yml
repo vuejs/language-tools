@@ -11,14 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'v')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check commit message and create tag
         run: |
           COMMIT_MSG=$(git log -1 --pretty=%B)
-          
+
           if [[ $COMMIT_MSG =~ ^(v[0-9]+\.[0-9]+\.[0-9]+) ]]; then
             TAG_NAME="${BASH_REMATCH[1]}"
             git config user.name "github-actions[bot]"
@@ -34,21 +34,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-npm:
+    permissions:
+      contents: read
+      id-token: write # to enable use of OIDC for npm provenance
     runs-on: ubuntu-latest
     needs: [auto-tag]
     if: github.event_name == 'workflow_dispatch' || success()
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
-
-      - name: Install Lerna Lite
-        run: pnpm add -g @lerna-lite/cli @lerna-lite/publish
+          registry-url: "https://registry.npmjs.org/"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -56,28 +57,22 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: NPM Login
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-
       - name: Publish to NPM
-        run: lerna publish from-package --yes
+        run: pnpm dlx --package @lerna-lite/cli --package @lerna-lite/publish lerna publish from-package --yes
 
   publish-vscode-marketplace:
     runs-on: ubuntu-latest
     needs: [auto-tag]
     if: github.event_name == 'workflow_dispatch' || success()
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
-
-      - name: Install global tools
-        run: pnpm install -g @vscode/vsce
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -86,24 +81,21 @@ jobs:
         working-directory: extensions/vscode
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: vsce publish
+        run: pnpm dlx @vscode/vsce publish
 
   publish-open-vsx:
     runs-on: ubuntu-latest
     needs: [auto-tag]
     if: github.event_name == 'workflow_dispatch' || success()
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
-
-      - name: Install global tools
-        run: pnpm install -g ovsx
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -112,4 +104,4 @@ jobs:
         working-directory: extensions/vscode
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        run: ovsx publish
+        run: pnpm dlx ovsx publish

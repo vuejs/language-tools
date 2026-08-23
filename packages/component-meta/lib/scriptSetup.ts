@@ -4,15 +4,13 @@ import type * as ts from 'typescript';
 export function getDefaultsFromScriptSetup(
 	ts: typeof import('typescript'),
 	printer: ts.Printer,
-	language: core.Language<string>,
-	componentPath: string,
+	sourceScript: core.SourceScript | undefined,
 ) {
-	const sourceScript = language.scripts.get(componentPath);
 	const virtualCode = sourceScript?.generated?.root as core.VueVirtualCode | undefined;
 	if (!virtualCode) {
 		return;
 	}
-	const sourceFile = virtualCode.sfc.scriptSetup?.ast;
+	const sourceFile = virtualCode.ir.scriptSetup?.ast;
 	if (!sourceFile) {
 		return;
 	}

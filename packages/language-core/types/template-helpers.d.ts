@@ -21,25 +21,16 @@ declare global {
 		: N2 extends keyof GlobalComponents ? { [K in N0]: GlobalComponents[N2] }
 		: N3 extends keyof GlobalComponents ? { [K in N0]: GlobalComponents[N3] }
 		: {};
-	type __VLS_FunctionalComponentCtx<T, K> = __VLS_PickNotAny<
+	type __VLS_ExtractComponentContext<T, K> = __VLS_PickNotAny<
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? NonNullable<Ctx> : never : any,
 		T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
 	>;
-	type __VLS_FunctionalComponentProps<T, K> = '__ctx' extends keyof __VLS_PickNotAny<K, {}>
+	type __VLS_ExtractComponentProps<T, K> = '__ctx' extends keyof __VLS_PickNotAny<K, {}>
 		? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
 		: T extends (props: infer P, ...args: any) => any ? P
 		: {};
-	type __VLS_FunctionalComponent0<T> = (props: T extends { $props: infer Props } ? Props : {}, ctx?: any) => {
-		__ctx?: {
-			attrs?: any;
-			slots?: T extends { $slots: infer Slots } ? Slots : Record<string, any>;
-			emit?: T extends { $emit: infer Emit } ? Emit : {};
-			props?: typeof props;
-			expose?: (exposed: T) => void;
-		};
-	};
-	type __VLS_FunctionalComponent1<T> = (
-		props: (T extends { $props: infer Props } ? Props : {}) & Record<string, unknown>,
+	type __VLS_FunctionalComponent<T, P = {}> = (
+		props: (T extends { $props: infer Props } ? Props : {}) & P,
 		ctx?: any,
 	) => {
 		__ctx?: {
@@ -50,11 +41,10 @@ declare global {
 			expose?: (exposed: T) => void;
 		};
 	};
-	type __VLS_IsFunction<T, K> = K extends keyof T ? __VLS_IsAny<T[K]> extends false ? unknown extends T[K] ? false
-			: true
-		: false
+	type __VLS_IsFunction<T, K> = K extends keyof T ? unknown extends T[K] ? false
+		: true
 		: false;
-	type __VLS_NormalizeComponentEvent<
+	type __VLS_ResolveEvent<
 		Props,
 		Emits,
 		onEvent extends keyof Props,
@@ -109,11 +99,11 @@ declare global {
 	};
 	type __VLS_PrettifyGlobal<T> = (T extends any ? { [K in keyof T]: T[K] } : { [K in keyof T as K]: T[K] }) & {};
 
-	function __VLS_vFor<T>(source: T): T extends number ? [number, number][]
+	function __VLS_vFor<const T>(source: T): T extends number ? [number, number][]
 		: T extends string ? [string, number][]
-		: T extends (infer U)[] ? [U, number][]
-		: T extends Iterable<infer V> ? [V, number][]
-		: [T[keyof T], `${keyof T & (string | number)}`, number][];
+		: T extends readonly any[] ? (T extends readonly (infer U)[] ? [U, number] : never)[]
+		: T extends Iterable<any> ? (T extends Iterable<infer V> ? [V, number] : never)[]
+		: [T[keyof T], keyof T extends string ? keyof T : `${keyof T & (string | number)}`, number][];
 	function __VLS_vSlot<S, D extends S>(slot: S, decl?: D): D extends (...args: infer P) => any ? P : any[];
 	function __VLS_asFunctionalDirective<T, ObjectDirective>(
 		dir: T,
@@ -123,27 +113,29 @@ declare global {
 		>
 		: T extends (...args: any) => any ? T
 		: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
-	function __VLS_asFunctionalComponent0<T, K = T extends new(...args: any) => any ? InstanceType<T> : unknown>(
+	function __VLS_asFunctionalComponent0<T, K>(
 		t: T,
-		instance?: K,
-	): T extends new(...args: any) => any ? __VLS_FunctionalComponent0<K>
+		instance: K,
+	): T extends new(...args: any) => any ? __VLS_FunctionalComponent<K>
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
-		: __VLS_FunctionalComponent0<{}>;
-	function __VLS_asFunctionalComponent1<T, K = T extends new(...args: any) => any ? InstanceType<T> : unknown>(
+		: __VLS_FunctionalComponent<{}>;
+	function __VLS_asFunctionalComponent1<T, K>(
 		t: T,
-		instance?: K,
-	): T extends new(...args: any) => any ? __VLS_FunctionalComponent1<K>
+		instance: K,
+	): T extends new(...args: any) => any ? __VLS_FunctionalComponent<K, Record<string, unknown>>
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
-		: __VLS_FunctionalComponent1<{}>;
+		: __VLS_FunctionalComponent<{}, Record<string, unknown>>;
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(
 		t: T,
 	): 2 extends Parameters<T>['length'] ? [any] : [];
 	function __VLS_asFunctionalElement0<T>(tag: T, endTag?: T): (attrs: T) => void;
 	function __VLS_asFunctionalElement1<T>(tag: T, endTag?: T): (attrs: T & Record<string, unknown>) => void;
 	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
+	function __VLS_omit<T, K>(target: T, props: K): Omit<T, keyof K>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
+	function __VLS_withDotValue<T, Ref>(t: T, ref: Ref): asserts t is T extends Ref ? T : T & { value: T };
 }
 
 export {};

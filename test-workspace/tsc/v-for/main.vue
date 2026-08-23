@@ -10,7 +10,7 @@
     {{ exactType(index, {} as number) }}
   </div>
   <!-- array -->
-  <div v-for="(val, index) in arr">
+  <div v-for="(val, index) in ['a', 'b']">
     {{ exactType(val, {} as 'a' | 'b') }}
     {{ exactType(index, {} as number) }}
   </div>
@@ -59,7 +59,6 @@
 <script setup lang="ts">
 import { exactType } from '../shared';
 
-const arr = ['a', 'b'] as const;
 const map = new Map<string, number>();
 const obj = { a: '', b: 0 };
 const objUnion = { a: '' } as { a: string } | { a: string, b: number };

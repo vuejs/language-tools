@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import type * as ts from 'typescript';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
-import { getLanguageServer, testWorkspacePath } from './server.js';
+import { getLanguageServer, testWorkspacePath } from './server';
 
 test('Vue tags', async () => {
 	expect(
@@ -64,22 +64,18 @@ test('#4670', async () => {
 
 test('HTML tags and built-in components', async () => {
 	expect(
-		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><| /></template>`)).items.map(item =>
-			item.label
-		),
+		(await requestCompletionListToVueServer('tsconfigProject/empty.vue', 'vue', `<template><| /></template>`)).items
+			.map(item => item.label),
 	).toMatchInlineSnapshot(`
 		[
 		  "!DOCTYPE",
-		  "Transition",
-		  "TransitionGroup",
-		  "KeepAlive",
 		  "Teleport",
 		  "Suspense",
-		  "component",
-		  "slot",
-		  "template",
+		  "KeepAlive",
 		  "BaseTransition",
-		  "Fixture",
+		  "Transition",
+		  "TransitionGroup",
+		  "Empty",
 		  "a",
 		  "abbr",
 		  "address",
@@ -177,6 +173,7 @@ test('HTML tags and built-in components', async () => {
 		  "summary",
 		  "sup",
 		  "table",
+		  "template",
 		  "tbody",
 		  "td",
 		  "textarea",
@@ -251,6 +248,8 @@ test('HTML tags and built-in components', async () => {
 		  "tspan",
 		  "use",
 		  "view",
+		  "component",
+		  "slot",
 		]
 	`);
 });
@@ -268,21 +267,18 @@ test('Auto import', async () => {
 		} satisfies import('typescript').server.protocol.ConfigureRequestArguments,
 	});
 	expect(
-		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><| /></template>`)).items
+		(await requestCompletionListToVueServer('tsconfigProject/empty.vue', 'vue', `<template><| /></template>`)).items
 			.map(item => item.label),
 	).toMatchInlineSnapshot(`
 		[
 		  "!DOCTYPE",
-		  "Transition",
-		  "TransitionGroup",
-		  "KeepAlive",
 		  "Teleport",
 		  "Suspense",
-		  "component",
-		  "slot",
-		  "template",
+		  "KeepAlive",
 		  "BaseTransition",
-		  "Fixture",
+		  "Transition",
+		  "TransitionGroup",
+		  "Empty",
 		  "a",
 		  "abbr",
 		  "address",
@@ -380,6 +376,7 @@ test('Auto import', async () => {
 		  "summary",
 		  "sup",
 		  "table",
+		  "template",
 		  "tbody",
 		  "td",
 		  "textarea",
@@ -454,6 +451,8 @@ test('Auto import', async () => {
 		  "tspan",
 		  "use",
 		  "view",
+		  "component",
+		  "slot",
 		  "BaseTransition",
 		  "BaseTransitionPropsValidators",
 		  "callWithAsyncErrorHandling",
@@ -489,6 +488,7 @@ test('Auto import', async () => {
 		  "effectScope",
 		  "EffectScope",
 		  "ErrorCodes",
+		  "Fixture",
 		  "Fragment",
 		  "getCurrentInstance",
 		  "getCurrentScope",
@@ -616,20 +616,77 @@ test('Auto import', async () => {
 });
 
 test('Boolean props', async () => {
-	await requestCompletionItemToVueServer(
-		'fixture.vue',
-		'vue',
-		`
+	expect(
+		await requestCompletionItemToVueServer(
+			'fixture.vue',
+			'vue',
+			`
 		<template>
-			<Comp :f| />
+			<Comp f| />
 		</template>
 
 		<script setup lang="ts">
 		declare function Comp(props: { foo: boolean }): void;
 		</script>
 		`,
-		':foo',
-	);
+			'foo',
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "insertTextFormat": 1,
+		  "kind": 12,
+		  "label": "foo",
+		  "textEdit": {
+		    "newText": "foo",
+		    "range": {
+		      "end": {
+		        "character": 10,
+		        "line": 2,
+		      },
+		      "start": {
+		        "character": 9,
+		        "line": 2,
+		      },
+		    },
+		  },
+		}
+	`);
+
+	expect(
+		await requestCompletionItemToVueServer(
+			'fixture.vue',
+			'vue',
+			`
+		<template>
+			<div sty| />
+		</template>
+		`,
+			'style',
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "command": {
+		    "command": "editor.action.triggerSuggest",
+		    "title": "Suggest",
+		  },
+		  "insertTextFormat": 1,
+		  "kind": 12,
+		  "label": "style",
+		  "textEdit": {
+		    "newText": "style="$1"",
+		    "range": {
+		      "end": {
+		        "character": 11,
+		        "line": 2,
+		      },
+		      "start": {
+		        "character": 8,
+		        "line": 2,
+		      },
+		    },
+		  },
+		}
+	`);
 });
 
 test('Directives', async () => {
@@ -792,6 +849,34 @@ test('#4639', async () => {
 	`,
 		'capture',
 	);
+});
+
+test('#6132', async () => {
+	const item = await requestCompletionItemToVueServer(
+		'fixture.vue',
+		'vue',
+		`
+		<template>
+			<div @click.|.stop />
+		</template>
+	`,
+		'capture',
+	);
+	expect(item.textEdit).toMatchInlineSnapshot(`
+		{
+		  "newText": "capture",
+		  "range": {
+		    "end": {
+		      "character": 15,
+		      "line": 2,
+		    },
+		    "start": {
+		      "character": 15,
+		      "line": 2,
+		    },
+		  },
+		}
+	`);
 });
 
 test('Alias path', async () => {
@@ -1026,9 +1111,32 @@ test('#5847', async () => {
 		  "kindModifiers": "export",
 		  "name": "testFn",
 		  "sortText": "16",
-		  "source": "tsconfigProject/fixture",
+		  "source": "../fixture",
+		  "sourceDisplay": [
+		    {
+		      "kind": "text",
+		      "text": "./fixture",
+		    },
+		  ],
 		}
 	`);
+});
+
+test('#6110', async () => {
+	await requestCompletionItemToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<script setup lang="ts">
+		import { Comp } from './comp';
+		</script>
+
+		<template>
+			<C|
+		</template>
+	`,
+		'Comp',
+	);
 });
 
 const openedDocuments: TextDocument[] = [];

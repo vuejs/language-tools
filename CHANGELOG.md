@@ -1,5 +1,299 @@
 # Changelog
 
+## 3.3.11 (2026-08-21)
+
+### language-core
+
+- **fix:** generate full fragment props for type checking (#6155) - Thanks to @serkodev!
+
+### language-service
+
+- **fix:** invalidate tag and prop casing detection after template changes (#6172) - Thanks to @serkodev!
+- **refactor:** make name casing detection reactive (#6173) - Thanks to @KazariEX!
+
+### component-meta
+
+- **fix:** invalidate module resolution caches when deleting files (#6163) - Thanks to @serkodev!
+
+### tsc
+
+- **fix:** make extension retry errors serializable across IPC (#6162) - Thanks to @KazariEX!
+
+### vscode
+
+- **feat:** allow disabling the welcome page (#6165) - Thanks to @pierreedbrg!
+
+## 3.3.10 (2026-08-15)
+
+### language-core
+
+- **fix:** ignore trailing whitespace after generic parameter commas - Thanks to @KazariEX!
+- **fix:** resolve `v-for` item type over generic sources (#6141) - Thanks to @serkodev!
+- **fix:** do not extract SFC blocks across inline Markdown code (#6145) - Thanks to @lazerg!
+
+### language-service
+
+- **fix:** serialize template data provider access across concurrent requests (#6154) - Thanks to @serkodev!
+
+### tsc
+
+- **fix:** support different extension sets across project references (#6146) - Thanks to @lazerg!
+
+### typescript-plugin
+
+- **fix:** resolve requests against the owning project (#6152) - Thanks to @serkodev!
+
+### vscode
+
+- **feat:** patch `typescript.js` via `--require` to support read-only file systems (#6149) - Thanks to @serkodev!
+- **fix:** isolate custom TypeScript plugin paths between profiles (#6148) - Thanks to @serkodev!
+
+## 3.3.9 (2026-07-31)
+
+### component-meta
+
+- **feat:** expose runtime values of enum members in schema (#6131) - Thanks to @valentinpalkovic!
+- **fix:** keep `getProgramAndFile` free of side effects (#6136) - Thanks to @seanogdev!
+
+### language-core
+
+- **feat:** check unused generic type parameters (#6137) - Thanks to @KazariEX!
+
+### language-service
+
+- **fix:** preserve trailing modifiers when completing in the middle of a directive (#6133) - Thanks to @lazerg!
+- **fix:** only replace current directive modifier on completion - Thanks to @KazariEX!
+- **fix:** preserve current modifier when filtering completion duplicates - Thanks to @KazariEX!
+
+### workspace
+
+- **feat:** migrate build and tests to `typescript-native-bridge` (#6129)
+
+## 3.3.8 (2026-07-22)
+
+### language-core
+
+- **feat:** support vapor directives (#6126) - Thanks to @liangmiQwQ!
+
+### workspace
+
+- **chore:** upgrade to TypeScript 7 and support `@typescript/typescript6` (#6123) - Thanks to @WaldemarEnns!
+
+## 3.3.7 (2026-07-08)
+
+### language-core
+
+- **fix:** wrap single expression event handlers to avoid ASI after `return` (#6115) - Thanks to @KazariEX!
+
+### typescript-plugin
+
+- **fix:** filter const globals from template completions
+
+## 3.3.6 (2026-06-30)
+
+### language-core
+
+- **fix:** make generic component internal context inference type-safe across `.d.ts` boundary (#6104) - Thanks to @Holiden!
+- **fix:** do not treat non-trivial property accesses as compound - Thanks to @KazariEX!
+- **fix:** treat semicolon-terminated expressions as compound - Thanks to @KazariEX!
+- **fix:** preserve return types for compound event handlers - Thanks to @KazariEX!
+- **fix:** use `WeakMap` to cache inline TS ASTs - Thanks to @KazariEX!
+- **fix:** match upstream CSS `v-bind` parsing behavior - Thanks to @KazariEX!
+- **fix:** include setup bindings as potential component names (#6111) - Thanks to @KazariEX!
+- **perf:** reduce boundary code feature allocations - Thanks to @KazariEX!
+- **refactor:** centralize code features and deprecate `allCodeFeatures` - Thanks to @KazariEX!
+
+## 3.3.5 (2026-06-13)
+
+### language-core
+
+- **fix:** include event modifiers in duplicate listener checks (#6097) - Thanks to @KazariEX!
+
+## 3.3.4 (2026-06-08)
+
+### language-core
+
+- **fix:** only exclude already-set props from inherited attrs when `checkRequiredFallthroughAttributes` is enabled (#6088) - Thanks to @KazariEX!
+- **fix:** camelize slot props regardless of `htmlAttributes` option (#6089) - Thanks to @KazariEX!
+- **fix:** detect duplicate event listeners across name formats (#6094) - Thanks to @whysopaul!
+
+### language-service
+
+- **fix:** respect var hoisting for destructured props hints (#6092) - Thanks to @KazariEX!
+
+### typescript-plugin
+
+- **fix:** do not treat `class` and `style` as a boolean property (#6081) - Thanks to @KazariEX!
+
+## 3.3.3 (2026-05-30)
+
+### vscode
+
+- **fix:** prevent grammar scopes leakage in capitalized tags (#6073) - Thanks to @KazariEX!
+- **fix:** preserve TS auto imports behavior in Vue files (#6072) - Thanks to @KazariEX!
+
+### workspace
+
+- **fix:** read PR title from env in `auto-version` workflow to prevent injection (#6074) - Thanks to @arpitjain099!
+
+## 3.3.2 (2026-05-25)
+
+### language-core
+
+- **feat:** preserve literal types for inline `v-for` sources (#6067) - Thanks to @kkesidis!
+- **fix:** align `v-bind` shorthand identifier skipping with interpolation - Thanks to @KazariEX!
+
+### vscode
+
+- **feat:** transform tsserver content (#6062) - Thanks to @KazariEX!
+- **fix:** do not mark trailing slash in capitalized self-closing tags as invalid (#6065) - Thanks to @suisanka!
+
+## 3.3.1 (2026-05-19)
+
+### language-core
+
+- **fix:** avoid extraneous children error for conditional slots (#6056) - Thanks to @KazariEX!
+
+### language-service
+
+- **refactor:** replace scanner-based missing props hints detection with AST traversal - Thanks to @KazariEX!
+
+### typescript-plugin
+
+- **fix:** get component prop details from symbols - Thanks to @KazariEX!
+- **fix:** skip unchecked JS identifiers in component props (#6055) - Thanks to @KazariEX!
+
+### vscode
+
+- **fix:** resolve typescript plugin path from resolved server path (#6058) - Thanks to @KazariEX!
+
+## 3.3.0 (2026-05-18)
+
+### language-core
+
+- **feat:** check required fallthrough attributes (#6049) - Thanks to @KazariEX!
+- **fix:** penetrate `v-if` branch fragments when collecting single root nodes - Thanks to @KazariEX!
+- **refactor:** rename `Sfc` APIs to `IR` - Thanks to @KazariEX!
+
+### language-service
+
+- **fix:** reuse ASTs for define assignment suggestions - Thanks to @KazariEX!
+- **fix:** re-support `html.customData` (#5910) - Thanks to @Bomberus!
+- **fix:** strip `=""` only for plain boolean props completion edits - Thanks to @KazariEX!
+- **fix:** reset to default data provider after running with vue data provider - Thanks to @KazariEX!
+
+### typescript-plugin
+
+- **feat:** refine props completion logic to follow TS behavior (#5709) - Thanks to @KazariEX!
+
+### vscode
+
+- **fix:** include `extraFileExtensions` in tsserver `configure` request payload (#6048) - Thanks to @KazariEX!
+- **fix:** write typescript plugins at build time (#6050) - Thanks to @KazariEX!
+- **fix:** avoid infinite diagnostics on Vue files when project diagnostics is enabled (#6051) - Thanks to @KazariEX!
+
+## 3.2.9 (2026-05-14)
+
+### language-core
+
+- **fix:** do not process inline markdown syntax in semantic-aware segments (#6038) - Thanks to @KazariEX!
+- **perf:** rewrite a subset of template node transforms (#5769) - Thanks to @KazariEX!
+
+### vscode
+
+- **fix:** trigger file rename edits when moving folders with Vue files (#6046) - Thanks to @KazariEX!
+
+### workspace
+
+- **chore:** bump volar services to 0.0.71 (#6043) - Thanks to @TRIS-H!
+
+## 3.2.8 (2026-05-04)
+
+### language-core
+
+- **fix:** replace inline code blocks after sfc blocks processing (#6024) - Thanks to @KazariEX!
+- **fix:** support navigation for kebab-case declarations in `GlobalComponents` (#6026) - Thanks to @Gehbt!
+
+### language-service
+
+- **feat:** support TS module resolution for SCSS `@import` navigation (#6033) - Thanks to @KazariEX!
+
+### typescript-plugin
+
+- **fix:** replace language service per-method overrides with a proxy (#6035) - Thanks to @KazariEX!
+
+### vscode
+
+- **chore:** upgrade `reactive-vscode` to v1.0.1 (#6019) - Thanks to @kermanx!
+
+## 3.2.7 (2026-04-19)
+
+### component-meta
+
+- **fix:** preserve non-ASCII characters in prop default values (#6012) - Thanks to @ef81sp!
+
+### workspace
+
+- **chore:** bump typescript to 6.0.3 (#6017) - Thanks to @KazariEX!
+
+## 3.2.6 (2026-03-17)
+
+### language-core
+
+- **fix:** generate `$slots` type in template correctly with `defineSlots` (#5984) - Thanks to @KazariEX!
+- **fix:** infer only readonly component of arrays in `v-for` (#5987) - Thanks to @ascott18!
+- **fix:** avoid false positives for destructured props detection on binding property names (#5994) - Thanks to @KazariEX!
+
+### vscode
+
+- **fix:** use regex for TS extension patching to support VS Code 1.110+ (#5983) - Thanks to @ebiryu!
+
+## 3.2.5 (2026-02-21)
+
+### language-core
+
+- **fix:** re-parse template when interpolation syntax breaks (#5971) - Thanks to @Dsaquel!
+
+### language-service
+
+- **fix:** use default html data provider for document symbols (#5968) - Thanks to @liangmiQwQ!
+
+### language-plugin-pug
+
+- **fix:** handle backtick attributes containing both quote types (#5970) - Thanks to @baptistejamin!
+
+### workspace
+
+- **docs:** document all packages with consistent README structure (#5953)
+- **docs:** update tsconfig schema of `plugins` option - Thanks to @KazariEX!
+
+## 3.2.4 (2026-01-26)
+
+### language-core
+
+- **feat:** place plugin configs under `ctx.config` and support type annotation via generics (#5944) - Thanks to @KazariEX!
+
+### workspace
+
+- **chore:** publish to npm with OIDC (#5912) - Thanks to @ghiscoding!
+
+## 3.2.3 (2026-01-23)
+
+### language-core
+
+- **feat:** support configuration for language plugins (#5678) - Thanks to @KazariEX!
+- **fix:** avoid `defineModel` breaking ast in `lang="js"` (#5935) - Thanks to @KazariEX!
+- **fix:** infer object keys as string if it does not extend string (#5933) - Thanks to @serkodev!
+
+### typescript-plugin
+
+- **feat:** correct rename behavior on same name shorthands in template (#5907) - Thanks to @KazariEX!
+- **fix:** only forward quick info for original results without tags (#5938) - Thanks to @KazariEX!
+
+### vscode
+
+- **fix:** correct indent for `<style>` and `<script>` tags (#5925) - Thanks to @serkodev!
+
 ## 3.2.2 (2026-01-06)
 
 ### language-core
@@ -159,7 +453,7 @@
 - fix(language-core): infer `$el` type for generic components using `inferComponentDollarEl` (#5794)
 - fix(language-core): ensure `<script>` content generates before `<script setup>` (#5795)
 - fix(language-core): remove `bypassDefineComponent` hack for better JS support (#4876) (#5379)
-- fix(language-core): `Prettify<T>` caused generic props gets inferred as `unknown`  (#5667) - Thanks to @so1ve!
+- fix(language-core): `Prettify<T>` caused generic props gets inferred as `unknown` (#5667) - Thanks to @so1ve!
 - fix(vscode): handle leading `<` as operator in SFC scripts (#5801) - Thanks to @serkodev!
 - fix(vscode): patch `isTypeScriptDocument` in VSCode for `typescript.preferences.autoImportSpecifierExcludeRegexes` config support (#5364)
 - fix(language-core): ensure type consistency for optional boolean props (#5803)

@@ -4,7 +4,7 @@ import { collectBindingIdentifiers } from '../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../utils/shared';
 import { getClosestMultiLineCommentRange, parseBindingRanges } from './utils';
 
-const tsCheckReg = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
+const tsCheckRE = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
 
 export interface CallExpressionRange {
 	callExp: TextRange;
@@ -74,10 +74,9 @@ export function parseScriptSetupRanges(
 
 	const leadingCommentRanges = ts.getLeadingCommentRanges(text, 0)?.reverse() ?? [];
 	const leadingCommentEndOffset = leadingCommentRanges.find(
-		range => tsCheckReg.test(text.slice(range.pos, range.end)),
+		range => tsCheckRE.test(text.slice(range.pos, range.end)),
 	)?.end ?? 0;
 
-	let { bindings, components } = parseBindingRanges(ts, sourceFile, vueCompilerOptions.extensions);
 	let foundNonImportExportNode = false;
 	let importSectionEndOffset = 0;
 
@@ -112,17 +111,10 @@ export function parseScriptSetupRanges(
 	});
 	ts.forEachChild(sourceFile, node => visitNode(node, [sourceFile]));
 
-	const templateRefNames = new Set(useTemplateRef.map(ref => ref.name));
-	bindings = bindings.filter(range => {
-		const name = text.slice(range.start, range.end);
-		return !templateRefNames.has(name);
-	});
-
 	return {
+		...parseBindingRanges(ts, sourceFile, vueCompilerOptions.extensions),
 		leadingCommentEndOffset,
 		importSectionEndOffset,
-		bindings,
-		components,
 		defineModel,
 		defineProps,
 		withDefaults,

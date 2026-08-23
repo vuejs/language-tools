@@ -2,6 +2,8 @@ import { names } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { getVariableType } from './utils';
 
+const directiveRE = /^v[A-Z]/;
+
 export function getComponentDirectives(
 	ts: typeof import('typescript'),
 	program: ts.Program,
@@ -20,5 +22,5 @@ export function getComponentDirectives(
 
 	return directives.type.getProperties()
 		.map(({ name }) => name)
-		.filter(name => name.match(/^v[A-Z]/));
+		.filter(name => directiveRE.test(name));
 }

@@ -1,17 +1,17 @@
+import { codeFeatures } from '../codegen/codeFeatures';
 import type { VueLanguagePlugin } from '../types';
-import { allCodeFeatures } from './shared';
 
 const plugin: VueLanguagePlugin = () => {
 	return {
 		version: 2.2,
 
-		getEmbeddedCodes(_fileName, sfc) {
+		getEmbeddedCodes(_fileName, ir) {
 			const result: {
 				id: string;
 				lang: string;
 			}[] = [];
-			for (let i = 0; i < sfc.styles.length; i++) {
-				const style = sfc.styles[i];
+			for (let i = 0; i < ir.styles.length; i++) {
+				const style = ir.styles[i];
 				if (style) {
 					result.push({
 						id: 'style_' + i,
@@ -28,10 +28,10 @@ const plugin: VueLanguagePlugin = () => {
 			return result;
 		},
 
-		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
+		resolveEmbeddedCode(_fileName, ir, embeddedFile) {
 			if (embeddedFile.id.startsWith('style_')) {
 				const index = parseInt(embeddedFile.id.split('_')[1]!);
-				const style = sfc.styles[index]!;
+				const style = ir.styles[index]!;
 				if (embeddedFile.id.endsWith('_inline_ts')) {
 					embeddedFile.parentCodeId = 'style_' + index;
 					for (const binding of style.bindings) {
@@ -41,7 +41,7 @@ const plugin: VueLanguagePlugin = () => {
 								binding.text,
 								style.name,
 								binding.offset,
-								allCodeFeatures,
+								codeFeatures.full,
 							],
 							');\n',
 						);
@@ -52,7 +52,7 @@ const plugin: VueLanguagePlugin = () => {
 						style.content,
 						style.name,
 						0,
-						allCodeFeatures,
+						codeFeatures.full,
 					]);
 				}
 			}

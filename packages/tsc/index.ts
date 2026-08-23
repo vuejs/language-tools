@@ -1,27 +1,25 @@
 import { runTsc } from '@volar/typescript/lib/quickstart/runTsc';
 import * as core from '@vue/language-core';
+import * as path from 'node:path';
 
-const windowsPathReg = /\\/g;
+const windowsPathRE = /\\/g;
+const retryToken = new Error('[Vue] Extensions changed');
 
-export function run(tscPath = require.resolve('typescript/lib/tsc')) {
-	let runExtensions = ['.vue'];
-	let extensionsChangedException: Error | undefined;
+export function run(tscPath?: string) {
+	const runExtensions = new Set(['vue']);
 
 	const main = () =>
 		runTsc(
-			tscPath,
-			runExtensions,
+			resolveTscPath(tscPath),
+			[...runExtensions],
 			(ts, options) => {
 				const { configFilePath } = options.options;
 				const vueOptions = typeof configFilePath === 'string'
-					? core.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
+					? core.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathRE, '/')).vueOptions
 					: core.createParsedCommandLineByJson(ts, ts.sys, (options.host ?? ts.sys).getCurrentDirectory(), {})
 						.vueOptions;
 				const allExtensions = core.getAllExtensions(vueOptions);
-				if (
-					runExtensions.length === allExtensions.length
-					&& runExtensions.every(ext => allExtensions.includes(ext))
-				) {
+				if (allExtensions.every(ext => runExtensions.has(ext))) {
 					const vueLanguagePlugin = core.createVueLanguagePlugin<string>(
 						ts,
 						options.options,
@@ -31,21 +29,35 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 					return { languagePlugins: [vueLanguagePlugin] };
 				}
 				else {
-					runExtensions = allExtensions;
-					throw extensionsChangedException = new Error('extensions changed');
+					for (const ext of allExtensions) {
+						runExtensions.add(ext);
+					}
+					throw retryToken;
 				}
 			},
 		);
 
-	try {
-		return main();
-	}
-	catch (err) {
-		if (err === extensionsChangedException) {
+	while (true) {
+		try {
 			return main();
 		}
-		else {
-			throw err;
+		catch (err) {
+			if (err !== retryToken) {
+				throw err;
+			}
 		}
 	}
+}
+
+function resolveTscPath(tscPath = require.resolve('typescript/lib/tsc')) {
+	try {
+		const { name } = require(path.join(tscPath, '..', '..', 'package.json'));
+		if (name === '@typescript/typescript6') {
+			// `typescript` may be aliased to `@typescript/typescript6`,
+			// which keeps tsc in its full TypeScript 6 dependency (`@typescript/old`)
+			return require.resolve('@typescript/old/lib/tsc', { paths: [path.dirname(tscPath)] });
+		}
+	}
+	catch {}
+	return tscPath;
 }

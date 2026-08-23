@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import child from './child.vue';
-</script>
+defineEmits<{
+	foo: [string];
+}>();
 
-<template>
-	<child />
-</template>
+defineProps<{
+	bar?: string;
+}>();
+</script>

@@ -2,7 +2,6 @@ import type { InsertTextFormat, LanguageServicePlugin, WorkspaceEdit } from '@vo
 import { forEachEmbeddedCode } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { posix as path } from 'path-browserify';
-import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
 import { URI } from 'vscode-uri';
 import { getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
@@ -38,8 +37,8 @@ export function create(
 						return;
 					}
 
-					const { sfc } = info.root;
-					const script = sfc.scriptSetup ?? sfc.script;
+					const { ir } = info.root;
+					const script = ir.scriptSetup ?? ir.script;
 					if (!script) {
 						return;
 					}
@@ -50,28 +49,12 @@ export function create(
 
 					const additionalEdit: WorkspaceEdit = {};
 					const code = [...forEachEmbeddedCode(info.root)].find(code =>
-						code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw')
+						code.id === (ir.scriptSetup ? 'scriptsetup_raw' : 'script_raw')
 					)!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
 					const incomingFileName = URI.parse(importUri).fsPath.replace(/\\/g, '/');
 
-					let importPath: string | null | undefined;
-
-					const serviceScript = info.script.generated.languagePlugin.typescript?.getServiceScript(info.root);
-					if (serviceScript) {
-						const tsDocumentUri = context.encodeEmbeddedDocumentUri(info.script.id, serviceScript.code.id);
-						const tsDocument = context.documents.get(
-							tsDocumentUri,
-							serviceScript.code.languageId,
-							serviceScript.code.snapshot,
-						);
-						const preferences = await getUserPreferences(context, tsDocument);
-						importPath = await getImportPathForFile(
-							info.root.fileName,
-							incomingFileName,
-							preferences,
-						);
-					}
+					let importPath = await getImportPathForFile(info.root.fileName, incomingFileName);
 
 					if (!importPath) {
 						importPath = path.relative(path.dirname(info.root.fileName), incomingFileName)
@@ -100,8 +83,8 @@ export function create(
 							+ (lastImportNode ? '' : '\n'),
 					});
 
-					if (sfc.script) {
-						const edit = createAddComponentToOptionEdit(ts, sfc, sfc.script.ast, newName);
+					if (ir.script) {
+						const edit = createAddComponentToOptionEdit(ts, ir, ir.script.ast, newName);
 						if (edit) {
 							additionalEdit.changes[embeddedDocumentUriStr].push({
 								range: {

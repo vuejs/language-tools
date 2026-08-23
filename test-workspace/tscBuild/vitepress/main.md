@@ -1,5 +1,7 @@
+# Title
+
 <script setup lang="ts">
-defineProps<{
-	bar: string;
-}>();
+const msg = 1;
 </script>
+
+{{ msg }}

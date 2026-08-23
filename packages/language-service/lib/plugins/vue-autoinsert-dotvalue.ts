@@ -34,8 +34,8 @@ export function create(
 
 					let sourceOffset: number | undefined;
 
-					const { sfc } = info.root;
-					const scriptBlocks = [sfc.script, sfc.scriptSetup].filter(block => !!block);
+					const { ir } = info.root;
+					const scriptBlocks = [ir.script, ir.scriptSetup].filter(block => !!block);
 					const map = context.language.maps.get(info.code, info.script);
 
 					if (!scriptBlocks.length) {
@@ -69,7 +69,7 @@ export function create(
 	};
 }
 
-const charReg = /\w/;
+const charRE = /\w/;
 
 function isCharacterTyping(document: TextDocument, change: { text: string; rangeOffset: number; rangeLength: number }) {
 	const lastCharacter = change.text[change.text.length - 1];
@@ -83,7 +83,7 @@ function isCharacterTyping(document: TextDocument, change: { text: string; range
 	if (change.text.includes('\n')) { // multi-line change
 		return false;
 	}
-	return charReg.test(lastCharacter) && !charReg.test(nextCharacter);
+	return charRE.test(lastCharacter) && !charRE.test(nextCharacter);
 }
 
 function shouldSkip(ts: typeof import('typescript'), node: ts.Node, pos: number, allowAccessDotValue: boolean) {

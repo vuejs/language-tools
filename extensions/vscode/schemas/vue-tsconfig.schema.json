@@ -115,10 +115,20 @@
 					"default": false,
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/577"
 				},
+				"vapor": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Enable Vapor mode for all Vue SFCs."
+				},
 				"fallthroughAttributes": {
 					"type": "boolean",
 					"default": false,
 					"markdownDescription": "Enable to support typed fallthrough attributes. Please note that enabling may significantly slow down type checking."
+				},
+				"checkRequiredFallthroughAttributes": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Check required fallthrough attributes."
 				},
 				"resolveStyleImports": {
 					"type": "boolean",
@@ -190,6 +200,22 @@
 				"plugins": {
 					"type": "array",
 					"default": [],
+					"items": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string",
+										"markdownDescription": "Name of the plugin module to be required."
+									}
+								}
+							}
+						]
+					},
 					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
 				"experimentalModelPropName": {

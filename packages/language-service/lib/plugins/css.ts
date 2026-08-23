@@ -30,7 +30,7 @@ export function create(
 						const map = modulePathCache;
 						if (!map.has(ref)) {
 							const fileName = baseUri.fsPath.replace(/\\/g, '/');
-							const promise = resolveModuleName(fileName, ref);
+							const promise = resolveModuleName(fileName, ref, true);
 							map.set(ref, promise);
 							if (promise instanceof Promise) {
 								promise.then(res => map.set(ref, res));
@@ -41,7 +41,7 @@ export function create(
 							throw cached;
 						}
 						if (cached) {
-							return cached;
+							return URI.file(cached).toString();
 						}
 					}
 					return resolveReference(ref, baseUri, context.env.workspaceFolders);
@@ -120,7 +120,7 @@ export function create(
 				if (!info?.code.id.startsWith('style_')) {
 					return false;
 				}
-				const block = info.root.sfc.styles.find(style => style.name === info.code.id);
+				const block = info.root.ir.styles.find(style => style.name === info.code.id);
 				if (!block) {
 					return false;
 				}

@@ -4,13 +4,12 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
 	defineExtension,
-	executeCommand,
+	defineLogger,
 	extensionContext,
 	nextTick,
 	onDeactivate,
 	useActiveTextEditor,
 	useCommand,
-	useOutputChannel,
 	useVisibleTextEditors,
 	watch,
 } from 'reactive-vscode';
@@ -43,6 +42,8 @@ for (
 		});
 	}
 }
+
+const logger = defineLogger('Vue Language Server');
 
 export = defineExtension(() => {
 	let client: lsp.BaseLanguageClient | undefined;
@@ -87,7 +88,7 @@ export = defineExtension(() => {
 				'Restart Extension Host',
 			);
 			if (reload) {
-				executeCommand('workbench.action.restartExtensionHost');
+				vscode.commands.executeCommand('workbench.action.restartExtensionHost');
 			}
 		});
 
@@ -138,7 +139,7 @@ export = defineExtension(() => {
 
 	useCommand('vue.welcome', () => welcome.execute(context));
 	useCommand('vue.action.restartServer', async () => {
-		await executeCommand('typescript.restartTsServer');
+		await vscode.commands.executeCommand('typescript.restartTsServer');
 		await client?.stop();
 		client?.outputChannel.clear();
 		await client?.start();
@@ -208,7 +209,7 @@ function launch(serverPath: string, tsdk: string) {
 				isTrusted: true,
 				supportHtml: true,
 			},
-			outputChannel: useOutputChannel('Vue Language Server'),
+			outputChannel: logger.logger.value!,
 		},
 	);
 
@@ -246,37 +247,22 @@ function resolveTsdkPath() {
 }
 
 function resolveServerPath() {
-	const tsPluginDir = path.join(__dirname, '..', 'node_modules', 'vue-typescript-plugin-pack');
-	const tsPluginEntry = path.join(tsPluginDir, 'index.js');
-
-	if (!fs.existsSync(tsPluginDir)) {
-		fs.mkdirSync(tsPluginDir, { recursive: true });
-	}
-
 	if (!config.server.path) {
-		fs.writeFileSync(
-			tsPluginEntry,
-			`try { module.exports = require("../@vue/typescript-plugin"); } catch { module.exports = require("../../dist/typescript-plugin.js"); }`,
-		);
 		return;
 	}
 
-	if (path.isAbsolute(config.server.path)) {
-		const entryFile = require.resolve('./index.js', { paths: [config.server.path] });
-		const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-		fs.writeFileSync(tsPluginEntry, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
-		return entryFile;
-	}
-
-	for (const { uri } of vscode.workspace.workspaceFolders ?? []) {
-		if (uri.scheme !== 'file') {
-			continue;
-		}
+	for (
+		const serverPath of path.isAbsolute(config.server.path)
+			? [config.server.path]
+			: vscode.workspace.workspaceFolders
+				?.filter(({ uri }) => uri.scheme === 'file')
+				.map(({ uri }) => path.join(uri.fsPath, config.server.path!)) ?? []
+	) {
 		try {
-			const serverPath = path.join(uri.fsPath, config.server.path);
 			const entryFile = require.resolve('./index.js', { paths: [serverPath] });
 			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-			fs.writeFileSync(tsPluginEntry, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
+			// allow tsserver inherit the per-window path without mutating the shared plugin shim
+			process.env.VUE_TYPESCRIPT_PLUGIN_PATH = tsPluginPath;
 			return entryFile;
 		}
 		catch {}
@@ -290,26 +276,11 @@ function patchTypeScriptExtension() {
 	}
 
 	const fs = require('node:fs');
-	const readFileSync = fs.readFileSync;
+	const child_process = require('node:child_process');
 	const extensionJsPath = require.resolve('./dist/extension.js', { paths: [tsExtension.extensionPath] });
 	const { publisher, name } = require('../package.json');
 	const vueExtension = vscode.extensions.getExtension(`${publisher}.${name}`)!;
 	const tsPluginName = 'vue-typescript-plugin-pack';
-	const reactiveAnalysisPluginEntry = path.join(
-		__dirname,
-		'..',
-		'node_modules',
-		'vue-reactivity-analysis-plugin-pack',
-		'index.js',
-	);
-
-	if (!fs.existsSync(reactiveAnalysisPluginEntry)) {
-		fs.mkdirSync(path.dirname(reactiveAnalysisPluginEntry), { recursive: true });
-		fs.writeFileSync(
-			reactiveAnalysisPluginEntry,
-			`try { module.exports = require("../../out/reactivityAnalysisPlugin.js"); } catch { module.exports = require("../../dist/reactivity-analysis-plugin.js"); }`,
-		);
-	}
 
 	vueExtension.packageJSON.contributes.typescriptServerPlugins = [
 		{
@@ -324,29 +295,58 @@ function patchTypeScriptExtension() {
 		},
 	];
 
+	const readFileSync = fs.readFileSync;
 	fs.readFileSync = (...args: any[]) => {
 		if (args[0] === extensionJsPath) {
 			let text = readFileSync(...args) as string;
 
+			const id = String.raw`[\w$]+(?:\.[\w$]+)?`;
+
 			// patch jsTsLanguageModes
+			// before 1.110: t.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]
+			// since 1.110:  "javascriptreact",Oh=[Ma,Ua,bl,Ns]
 			text = text.replace(
-				't.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]',
-				s => s + '.concat("vue")',
+				new RegExp(
+					String
+						.raw`(\.jsTsLanguageModes=\[${id},${id},${id},${id}\])|("javascriptreact",(${id})=\[(${id},${id},${id},${id})\])`,
+				),
+				(_match, oldFormat, _newFull, newLhs, newElements) => {
+					if (oldFormat) {
+						return oldFormat + '.concat("vue")';
+					}
+					return `"javascriptreact",${newLhs}=[${newElements}].concat("vue")`;
+				},
 			);
-			// patch isSupportedLanguageMode
+			// patch isSupportedLanguageMode (4 language IDs)
+			// before 1.110: .languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]
+			// since 1.110:  .languages.match([bl,Ns,Ma,Ua],r)>0
 			text = text.replace(
-				'.languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]',
-				s => s + '.concat("vue")',
+				new RegExp(String.raw`\.languages\.match\(\[(${id},${id},${id},${id})\]`),
+				(_, ids) => `.languages.match([${ids}].concat("vue")`,
 			);
-			// patch isTypeScriptDocument
+			// patch isTypeScriptDocument (2 language IDs)
+			// before 1.110: .languages.match([t.typescript,t.typescriptreact]
+			// since 1.110:  .languages.match([bl,Ns],r)>0
 			text = text.replace(
-				'.languages.match([t.typescript,t.typescriptreact]',
-				s => s + '.concat("vue")',
+				new RegExp(String.raw`\.languages\.match\(\[(${id},${id})\]`),
+				(_, ids) => `.languages.match([${ids}].concat("vue")`,
+			);
+			// patch standardFileExtensions
+			text = text.replace(
+				new RegExp(String.raw`registerExtensionLanguageProvider\((${id}),${id}\)\{`),
+				(match, id) => `${match}if(${id}.languageIds.includes("vue"))${id}.standardFileExtensions.push("vue");`,
+			);
+			// patch getJsTsFileBeingMoved
+			text = text.replace(
+				new RegExp(String.raw`.RelativePattern\(${id},"\*\*\/\*\.\{ts,tsx,js,jsx`),
+				match => `${match},vue`,
 			);
 
 			// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
+			// before 1.110: "--globalPlugins",i.plugins
+			// since 1.110:  "--globalPlugins",o.plugins.map(v=>v.name).join(","))
 			text = text.replace(
-				'"--globalPlugins",i.plugins',
+				/"--globalPlugins",([\w$]+)\.plugins/,
 				s => s + `.sort((a,b)=>(b.name==="${tsPluginName}"?-1:0)-(a.name==="${tsPluginName}"?-1:0))`,
 			);
 
@@ -354,6 +354,33 @@ function patchTypeScriptExtension() {
 		}
 		return readFileSync(...args);
 	};
+
+	const patchTsserverPath = path.join(__dirname, 'patch-tsserver.js');
+
+	const spawn = child_process.spawn;
+	child_process.spawn = (...args: any[]) => {
+		if (Array.isArray(args[1])) {
+			const index = args[1].findIndex(arg => typeof arg === 'string' && isTsserverFile(arg));
+			if (index !== -1) {
+				args[1].splice(index, 0, '--require', patchTsserverPath);
+			}
+		}
+		return spawn(...args);
+	};
+
+	const fork = child_process.fork;
+	child_process.fork = (...args: any[]) => {
+		if (typeof args[0] === 'string' && isTsserverFile(args[0])) {
+			const optionsIndex = Array.isArray(args[1]) ? 2 : 1;
+			const options = args[optionsIndex] ??= {};
+			options.execArgv = [...options.execArgv ?? process.execArgv, '--require', patchTsserverPath];
+		}
+		return fork(...args);
+	};
+
+	function isTsserverFile(file: string) {
+		return path.isAbsolute(file) && path.basename(file) === 'tsserver.js';
+	}
 
 	const loadedModule = require.cache[extensionJsPath];
 	if (loadedModule) {

@@ -1,9 +1,9 @@
 import type * as ts from 'typescript';
-import type { Code, Sfc, VueCompilerOptions } from '../../types';
+import type { Code, IRTemplate, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import * as names from '../names';
+import { names } from '../names';
 import { endOfLine, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
 import { generateTemplateChild } from './templateChild';
@@ -11,9 +11,12 @@ import { generateTemplateChild } from './templateChild';
 export interface TemplateCodegenOptions {
 	typescript: typeof ts;
 	vueCompilerOptions: VueCompilerOptions;
-	template: NonNullable<Sfc['template']>;
+	template: IRTemplate;
+	isVapor: boolean;
+	destructuredProps: Set<string>;
+	importedComponents: Set<string>;
 	setupRefs: Set<string>;
-	setupConsts: Set<string>;
+	setupBindings: Set<string>;
 	hasDefineSlots?: boolean;
 	propsAssignName?: string;
 	slotsAssignName?: string;
@@ -40,8 +43,7 @@ function* generateWorker(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
-	const endScope = ctx.startScope();
-	ctx.declare(...options.setupConsts);
+	const scope = ctx.scope();
 	const {
 		slotsAssignName,
 		propsAssignName,
@@ -50,10 +52,10 @@ function* generateWorker(
 	} = options;
 
 	if (slotsAssignName) {
-		ctx.declare(slotsAssignName);
+		scope.declare(slotsAssignName);
 	}
 	if (propsAssignName) {
-		ctx.declare(propsAssignName);
+		scope.declare(propsAssignName);
 	}
 	if (vueCompilerOptions.inferTemplateDollarSlots) {
 		ctx.dollarVars.add('$slots');
@@ -72,7 +74,7 @@ function* generateWorker(
 	}
 	yield* ctx.generateHoistVariables();
 	yield* generateSlotsType(options, ctx);
-	yield* generateInheritedAttrsType(ctx);
+	yield* generateInheritedAttrsType(options, ctx);
 	yield* generateTemplateRefsType(options, ctx);
 	yield* generateRootElType(ctx);
 
@@ -100,14 +102,18 @@ function* generateWorker(
 		yield `} & { [K in keyof import('${vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
 	}
 
-	yield* endScope();
+	yield* scope.end();
 }
 
 function* generateSlotsType(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
-	if (options.hasDefineSlots || (!ctx.slots.length && !ctx.dynamicSlots.length)) {
+	if (options.hasDefineSlots) {
+		ctx.generatedTypes.add(names.Slots);
+		return;
+	}
+	if (!ctx.slots.length && !ctx.dynamicSlots.length) {
 		return;
 	}
 	ctx.generatedTypes.add(names.Slots);
@@ -128,24 +134,31 @@ function* generateSlotsType(
 			);
 		}
 		else {
-			const token = yield* startBoundary('template', slot.tagRange[0], codeFeatures.navigation);
+			const boundary = yield* Boundary.start('template', ...slot.tagRange, codeFeatures.navigation);
 			yield `default`;
-			yield endBoundary(token, slot.tagRange[1]);
+			yield boundary.end();
 		}
 		yield `?: (props: typeof ${slot.propsVar}) => any }`;
 	}
 	yield endOfLine;
 }
 
-function* generateInheritedAttrsType(ctx: TemplateCodegenContext) {
+function* generateInheritedAttrsType(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+): Generator<Code> {
 	if (!ctx.inheritedAttrVars.size) {
 		return;
 	}
 	ctx.generatedTypes.add(names.InheritedAttrs);
 
-	yield `type ${names.InheritedAttrs} = Partial<${
-		[...ctx.inheritedAttrVars].map(name => `typeof ${name}`).join(` & `)
-	}>`;
+	const type = [...ctx.inheritedAttrVars].map(name => `typeof ${name}`).join(` & `);
+
+	yield `type ${names.InheritedAttrs} = ${
+		options.vueCompilerOptions.checkRequiredFallthroughAttributes
+			? type
+			: `Partial<${type}>`
+	}`;
 	yield endOfLine;
 }
 

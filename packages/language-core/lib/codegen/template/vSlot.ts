@@ -4,8 +4,9 @@ import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
+import { names } from '../names';
 import { endOfLine, getTypeScriptAST, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -35,34 +36,40 @@ export function* generateVSlot(
 			);
 		}
 		else {
-			const token = yield* startBoundary(
+			const boundary = yield* Boundary.start(
 				'template',
 				slotDir.loc.start.offset,
+				slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
 				codeFeatures.withoutHighlightAndCompletion,
 			);
 			yield `default`;
-			yield endBoundary(token, slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0));
+			yield boundary.end();
 		}
 	}
 	else {
 		yield `const { `;
 		// #932: reference for implicit default slot
-		const token = yield* startBoundary('template', node.loc.start.offset, codeFeatures.navigation);
+		const boundary = yield* Boundary.start(
+			'template',
+			node.loc.start.offset,
+			node.loc.end.offset,
+			codeFeatures.navigation,
+		);
 		yield `default`;
-		yield endBoundary(token, node.loc.end.offset);
+		yield boundary.end();
 	}
 	yield `: ${slotVar} } = ${ctxVar}.slots!${endOfLine}`;
 
-	const endScope = ctx.startScope();
+	const scope = ctx.scope();
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = getTypeScriptAST(options.typescript, options.template, `(${slotDir.exp.content}) => {}`);
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
-		ctx.declare(...collectBindingNames(options.typescript, slotAst, slotAst));
+		scope.declare(...collectBindingNames(options.typescript, slotAst, slotAst));
 	}
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}
-	yield* endScope();
+	yield* scope.end();
 
 	if (slotDir) {
 		let isStatic = true;
@@ -139,15 +146,20 @@ function* generateSlotParameters(
 
 	yield `const [`;
 	yield* interpolation;
-	yield `] = __VLS_vSlot(${slotVar}!`;
+	yield `] = ${names.vSlot}(${slotVar}!`;
 
 	if (types.some(t => t)) {
 		yield `, `;
-		const token = yield* startBoundary('template', exp.loc.start.offset, codeFeatures.verification);
+		const boundary = yield* Boundary.start(
+			'template',
+			exp.loc.start.offset,
+			exp.loc.end.offset,
+			codeFeatures.verification,
+		);
 		yield `(`;
 		yield* types.flatMap(type => type ? [`_`, type, `, `] : `_, `);
 		yield `) => [] as any`;
-		yield endBoundary(token, exp.loc.end.offset);
+		yield boundary.end();
 	}
 	yield `)${endOfLine}`;
 }

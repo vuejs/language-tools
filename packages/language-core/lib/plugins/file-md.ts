@@ -5,15 +5,14 @@ import type { VueLanguagePlugin } from '../types';
 import { buildMappings } from '../utils/buildMappings';
 import { parse } from '../utils/parseSfc';
 
-const frontmatterReg = /^---[\s\S]*?\n---(?:\r?\n|$)/;
-const codeblockReg = /(`{3,})[\s\S]+?\1/g;
-const inlineCodeblockReg = /`[^\n`]+?`/g;
-const latexBlockReg = /(\${2,})[\s\S]+?\1/g;
-const scriptSetupReg = /\\<[\s\S]+?>\n?/g;
-const codeSnippetImportReg = /^\s*<<<\s*.+/gm;
-const sfcBlockReg = /<(script|style)\b[\s\S]*?>([\s\S]*?)<\/\1>/g;
-const angleBracketReg = /<\S*:\S*>/g;
-const linkReg = /\[[\s\S]*?\]\([\s\S]*?\)/g;
+const frontmatterRE = /^---[\s\S]*?\n---(?:\r?\n|$)/;
+const codeblockRE = /(`{3}|\${2})[\s\S]+?\1/g;
+const codeSnippetImportRE = /^\s*<<<\s*.+/gm;
+const sfcBlockRE = /<(script|style)\b[^>]*>([\s\S]*?)<\/\1>/g;
+const htmlTagRE = /(?<=<\/?)([a-z][a-z0-9-]*)\b[^>]*(?=>)/gi;
+const interpolationRE = /(?<=\{\{)[\s\S]*?(?=\}\})/g;
+const inlineCodeRE = /(`{1,2})[^`\n]+\1/g;
+const angleBracketRE = /<[^\s:]*:\S*>/g;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
@@ -34,35 +33,41 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				return;
 			}
 
-			content = content
-				// frontmatter
-				.replace(frontmatterReg, match => ' '.repeat(match.length))
-				// code block
-				.replace(codeblockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
-				// inline code block
-				.replace(inlineCodeblockReg, match => `\`${' '.repeat(match.length - 2)}\``)
-				// latex block
-				.replace(latexBlockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
-				// # \<script setup>
-				.replace(scriptSetupReg, match => ' '.repeat(match.length))
-				// <<< https://vitepress.dev/guide/markdown#import-code-snippets
-				.replace(codeSnippetImportReg, match => ' '.repeat(match.length));
+			for (const pattern of [frontmatterRE, codeblockRE, codeSnippetImportRE]) {
+				content = content.replace(pattern, match => ' '.repeat(match.length));
+			}
+
+			const ambiguousRanges: [number, number][] = [];
+			for (const pattern of [inlineCodeRE, angleBracketRE]) {
+				for (const { 0: text, index } of content.matchAll(pattern)) {
+					ambiguousRanges.push([index, index + text.length]);
+				}
+			}
+
+			const semanticRanges: [number, number][] = [];
+			for (const pattern of [htmlTagRE, interpolationRE]) {
+				for (const { 0: text, index } of content.matchAll(pattern)) {
+					semanticRanges.push([index, index + text.length]);
+				}
+			}
 
 			const codes: Segment[] = [];
 
-			for (const match of content.matchAll(sfcBlockReg)) {
-				const matchText = match[0];
-				codes.push([matchText, undefined, match.index]);
+			for (const { 0: text, index } of content.matchAll(sfcBlockRE)) {
+				if (ambiguousRanges.some(([start, end]) => index >= start && index < end)) {
+					continue;
+				}
+				codes.push([text, undefined, index]);
 				codes.push('\n\n');
-				content = content.slice(0, match.index) + ' '.repeat(matchText.length)
-					+ content.slice(match.index + matchText.length);
+				content = content.slice(0, index) + ' '.repeat(text.length) + content.slice(index + text.length);
 			}
 
-			content = content
-				// angle bracket: <http://foo.com>
-				.replace(angleBracketReg, match => ' '.repeat(match.length))
-				// [foo](http://foo.com)
-				.replace(linkReg, match => ' '.repeat(match.length));
+			for (const [start, end] of ambiguousRanges) {
+				if (semanticRanges.some(range => start >= range[0] && end <= range[1])) {
+					continue;
+				}
+				content = content.slice(0, start) + ' '.repeat(end - start) + content.slice(end);
+			}
 
 			codes.push('<template>\n');
 			codes.push([content, undefined, 0]);

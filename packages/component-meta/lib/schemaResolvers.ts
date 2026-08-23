@@ -14,7 +14,8 @@ export function createSchemaResolvers(
 	ts: typeof import('typescript'),
 	typeChecker: ts.TypeChecker,
 	printer: ts.Printer,
-	language: core.Language<string>,
+	language: core.Language,
+	getSourceScript: (fileName: string) => core.SourceScript | undefined,
 	options: import('./types').MetaCheckerSchemaOptions,
 	deprecatedOptions: { noDeclarations: boolean; rawType: boolean },
 ) {
@@ -330,6 +331,19 @@ export function createSchemaResolvers(
 		else if (subtype.getCallSignatures().length === 1) {
 			return resolveCallbackSchema(subtype.getCallSignatures()[0]!);
 		}
+		else if (subtype.flags & ts.TypeFlags.EnumLiteral && subtype.isLiteral()) {
+			// enum members stringify to their qualified name (e.g. "MyEnum.Small"), which
+			// hides the runtime value from consumers such as docs generators; expose the
+			// value alongside, printed like any other literal
+			const { value } = subtype;
+			if (typeof value === 'string' || typeof value === 'number') {
+				return {
+					kind: 'literal',
+					type,
+					value: JSON.stringify(value),
+				};
+			}
+		}
 
 		return type;
 	}
@@ -349,18 +363,19 @@ export function createSchemaResolvers(
 	}
 	function getDeclaration(declaration: ts.Declaration): Declaration | undefined {
 		const fileName = declaration.getSourceFile().fileName;
-		const sourceScript = language.scripts.get(fileName);
+		const sourceScript = getSourceScript(fileName);
 		if (sourceScript?.generated) {
-			const script = sourceScript.generated.languagePlugin.typescript?.getServiceScript(sourceScript.generated.root);
-			if (script) {
-				for (const [sourceScript, map] of language.maps.forEach(script.code)) {
-					for (const [start] of map.toSourceLocation(declaration.getStart())) {
-						for (const [end] of map.toSourceLocation(declaration.getEnd())) {
-							return {
-								file: sourceScript.id,
-								range: [start, end],
-							};
-						}
+			const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(
+				sourceScript.generated.root,
+			);
+			if (serviceScript) {
+				const map = language.maps.get(serviceScript.code, sourceScript);
+				for (const [start] of map.toSourceLocation(declaration.getStart())) {
+					for (const [end] of map.toSourceLocation(declaration.getEnd())) {
+						return {
+							file: String(sourceScript.id),
+							range: [start, end],
+						};
 					}
 				}
 			}

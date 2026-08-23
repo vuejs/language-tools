@@ -8,7 +8,7 @@ import { expect, test } from 'vitest';
 const workspace = path.resolve(__dirname, '../../../test-workspace/component-meta');
 const normalizePath = (filename: string) => filename.replace(/\\/g, '/');
 const normalizeNewline = (text: string) => text.replace(/\r\n/g, '\n');
-const windowsPathReg = /\\/g;
+const windowsPathRE = /\\/g;
 
 const compilerOptions: ts.CompilerOptions = {
 	rootDir: workspace,
@@ -28,10 +28,10 @@ let vueOptions: core.VueCompilerOptions;
 const createProgram = proxyCreateProgram(ts, ts.createProgram, (ts, options) => {
 	const { configFilePath } = options.options;
 	if (typeof configFilePath === 'string') {
-		vueOptions = core.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions;
+		vueOptions = core.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathRE, '/')).vueOptions;
 	}
 	else {
-		vueOptions = core.createParsedCommandLineByJson(ts, ts.sys, workspace.replace(windowsPathReg, '/'), {}).vueOptions;
+		vueOptions = core.createParsedCommandLineByJson(ts, ts.sys, workspace.replace(windowsPathRE, '/'), {}).vueOptions;
 		vueOptions.target = 99;
 		vueOptions.extensions = ['vue', 'cext'];
 	}
@@ -57,7 +57,7 @@ for (const intputFile of options.rootNames) {
 		program.emit(
 			sourceFile,
 			(outputFile, text) => {
-				expect(outputFile.replace(windowsPathReg, '/')).toBe(expectedOutputFile.replace(windowsPathReg, '/'));
+				expect(outputFile.replace(windowsPathRE, '/')).toBe(expectedOutputFile.replace(windowsPathRE, '/'));
 				outputText = text;
 			},
 			undefined,

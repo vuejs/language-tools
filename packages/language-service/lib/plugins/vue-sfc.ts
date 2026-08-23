@@ -32,7 +32,7 @@ export function create(): LanguageServicePlugin {
 			const formatSettings = await context.env.getConfiguration<html.HTMLFormatConfiguration>?.('html.format') ?? {};
 			const blockTypes = ['template', 'script', 'style'];
 
-			for (const customBlock of info.root.sfc.customBlocks) {
+			for (const customBlock of info.root.ir.customBlocks) {
 				blockTypes.push(customBlock.type);
 			}
 
@@ -95,14 +95,14 @@ export function create(): LanguageServicePlugin {
 						return [];
 					}
 
-					const { vueSfc, sfc } = info.root;
+					const { vueSfc, ir } = info.root;
 					if (!vueSfc) {
 						return;
 					}
 
 					const originalResult = await htmlServiceInstance.provideDiagnostics?.(document, token);
 					const sfcErrors: Diagnostic[] = [];
-					const { template } = sfc;
+					const { template } = ir;
 
 					const {
 						startTagEnd = Infinity,
@@ -141,51 +141,51 @@ export function create(): LanguageServicePlugin {
 					}
 
 					const result: DocumentSymbol[] = [];
-					const { sfc } = info.root;
+					const { ir } = info.root;
 
-					if (sfc.template) {
+					if (ir.template) {
 						result.push({
 							name: 'template',
 							kind: 2 satisfies typeof SymbolKind.Module,
 							range: {
-								start: document.positionAt(sfc.template.start),
-								end: document.positionAt(sfc.template.end),
+								start: document.positionAt(ir.template.start),
+								end: document.positionAt(ir.template.end),
 							},
 							selectionRange: {
-								start: document.positionAt(sfc.template.start),
-								end: document.positionAt(sfc.template.startTagEnd),
+								start: document.positionAt(ir.template.start),
+								end: document.positionAt(ir.template.startTagEnd),
 							},
 						});
 					}
-					if (sfc.script) {
+					if (ir.script) {
 						result.push({
 							name: 'script',
 							kind: 2 satisfies typeof SymbolKind.Module,
 							range: {
-								start: document.positionAt(sfc.script.start),
-								end: document.positionAt(sfc.script.end),
+								start: document.positionAt(ir.script.start),
+								end: document.positionAt(ir.script.end),
 							},
 							selectionRange: {
-								start: document.positionAt(sfc.script.start),
-								end: document.positionAt(sfc.script.startTagEnd),
+								start: document.positionAt(ir.script.start),
+								end: document.positionAt(ir.script.startTagEnd),
 							},
 						});
 					}
-					if (sfc.scriptSetup) {
+					if (ir.scriptSetup) {
 						result.push({
 							name: 'script setup',
 							kind: 2 satisfies typeof SymbolKind.Module,
 							range: {
-								start: document.positionAt(sfc.scriptSetup.start),
-								end: document.positionAt(sfc.scriptSetup.end),
+								start: document.positionAt(ir.scriptSetup.start),
+								end: document.positionAt(ir.scriptSetup.end),
 							},
 							selectionRange: {
-								start: document.positionAt(sfc.scriptSetup.start),
-								end: document.positionAt(sfc.scriptSetup.startTagEnd),
+								start: document.positionAt(ir.scriptSetup.start),
+								end: document.positionAt(ir.scriptSetup.startTagEnd),
 							},
 						});
 					}
-					for (const style of sfc.styles) {
+					for (const style of ir.styles) {
 						let name = 'style';
 						if (style.scoped) {
 							name += ' scoped';
@@ -206,7 +206,7 @@ export function create(): LanguageServicePlugin {
 							},
 						});
 					}
-					for (const customBlock of sfc.customBlocks) {
+					for (const customBlock of ir.customBlocks) {
 						result.push({
 							name: customBlock.type,
 							kind: 2 satisfies typeof SymbolKind.Module,

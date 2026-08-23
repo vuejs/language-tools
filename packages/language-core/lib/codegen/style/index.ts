@@ -1,4 +1,4 @@
-import type { Code, Sfc, VueCompilerOptions } from '../../types';
+import type { Code, IRStyle, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
@@ -9,9 +9,11 @@ import { endOfLine } from '../utils';
 export interface StyleCodegenOptions {
 	typescript: typeof import('typescript');
 	vueCompilerOptions: VueCompilerOptions;
-	styles: Sfc['styles'];
+	styles: readonly IRStyle[];
+	destructuredProps: Set<string>;
+	importedComponents: Set<string>;
 	setupRefs: Set<string>;
-	setupConsts: Set<string>;
+	setupBindings: Set<string>;
 }
 
 export { generate as generateStyle };
@@ -33,12 +35,11 @@ function* generateWorker(
 	options: StyleCodegenOptions,
 	ctx: TemplateCodegenContext,
 ) {
-	const endScope = ctx.startScope();
-	ctx.declare(...options.setupConsts);
-	yield* generateStyleScopedClasses(options);
+	const scope = ctx.scope();
+	yield* generateStyleScopedClasses(options, ctx);
 	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);
-	yield* endScope();
+	yield* scope.end();
 }
 
 function* generateCssVars(

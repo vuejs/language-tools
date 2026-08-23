@@ -1,5 +1,5 @@
 import type { Code, VueCodeInformation } from '../../types';
-import { identifierRegex } from '../utils';
+import { identifierRE } from '../utils';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -22,7 +22,7 @@ export function* generatePropertyAccess(
 			offset,
 		);
 	}
-	else if (identifierRegex.test(code)) {
+	else if (identifierRE.test(code)) {
 		yield `.`;
 		yield [code, 'template', offset, features];
 	}

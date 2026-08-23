@@ -1,25 +1,18 @@
 {
 	"name": "vue-component-meta",
-	"version": "3.2.2",
+	"version": "3.3.11",
 	"license": "MIT",
 	"files": [
-		"**/*.js",
-		"**/*.d.ts"
+		"index.d.ts",
+		"index.js",
+		"lib/**/*.d.ts",
+		"lib/**/*.js"
 	],
 	"sideEffects": false,
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
 		"directory": "packages/component-meta"
-	},
-	"dependencies": {
-		"@volar/typescript": "2.4.27",
-		"@vue/language-core": "workspace:*",
-		"path-browserify": "^1.0.1"
-	},
-	"devDependencies": {
-		"@types/node": "^22.10.4",
-		"@types/path-browserify": "^1.0.1"
 	},
 	"peerDependencies": {
 		"typescript": "*"
@@ -28,5 +21,15 @@
 		"typescript": {
 			"optional": true
 		}
+	},
+	"dependencies": {
+		"@volar/typescript": "2.4.28",
+		"@vue/language-core": "workspace:*",
+		"path-browserify": "^1.0.1"
+	},
+	"devDependencies": {
+		"@types/node": "^26.0.1",
+		"@types/path-browserify": "^1.0.3",
+		"typescript": "latest"
 	}
 }

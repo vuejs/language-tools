@@ -7,7 +7,7 @@ export function getComponentType(
 	ts: typeof import('typescript'),
 	checker: ts.TypeChecker,
 	sourceFile: ts.SourceFile,
-	{ fileName, sfc }: VueVirtualCode,
+	{ fileName, ir }: VueVirtualCode,
 	tag: string,
 ): {
 	node: ts.Node;
@@ -18,7 +18,7 @@ export function getComponentType(
 		camelize(tag),
 		capitalize(camelize(tag)),
 	]);
-	const codegen = tsCodegen.get(sfc);
+	const codegen = tsCodegen.get(ir);
 
 	for (const importedName of codegen?.getImportedComponents() ?? []) {
 		if (testNames.has(importedName)) {
@@ -56,14 +56,14 @@ export function getComponentType(
 		else {
 			const name = getSelfComponentName(fileName);
 			if (name === capitalize(camelize(tag))) {
-				return getVariableType(ts, checker, sourceFile, names._export);
+				return getVariableType(ts, checker, sourceFile, names.export);
 			}
 		}
 	}
 
 	const selfName = getSelfComponentName(fileName);
 	if (testNames.has(selfName)) {
-		return getVariableType(ts, checker, sourceFile, names._export);
+		return getVariableType(ts, checker, sourceFile, names.export);
 	}
 }
 
@@ -130,6 +130,58 @@ function searchDefaultImportIdentifier(
 		}
 		else {
 			node.forEachChild(walk);
+		}
+	}
+}
+
+export const booleanExceptionProps = new Set(['class', 'style']);
+
+export function hasBooleanType(ts: typeof import('typescript'), type: ts.Type): boolean {
+	if (type.flags & ts.TypeFlags.BooleanLike) {
+		return true;
+	}
+	if (type.isUnionOrIntersection()) {
+		return type.types.some(type => hasBooleanType(ts, type));
+	}
+	return false;
+}
+
+export function* forEachTouchingNode(
+	ts: typeof import('typescript'),
+	sourceFile: ts.SourceFile,
+	position: number,
+) {
+	yield* binaryVisit(ts, sourceFile, sourceFile, position);
+}
+
+function* binaryVisit(
+	ts: typeof import('typescript'),
+	sourceFile: ts.SourceFile,
+	node: ts.Node,
+	position: number,
+): Generator<ts.Node> {
+	const nodes: ts.Node[] = [];
+	ts.forEachChild(node, child => {
+		nodes.push(child);
+	});
+
+	let left = 0;
+	let right = nodes.length - 1;
+
+	while (left <= right) {
+		const mid = Math.floor((left + right) / 2);
+		const node = nodes[mid]!;
+
+		if (position > node.end) {
+			left = mid + 1;
+		}
+		else if (position < node.getStart(sourceFile)) {
+			right = mid - 1;
+		}
+		else {
+			yield node;
+			yield* binaryVisit(ts, sourceFile, node, position);
+			return;
 		}
 	}
 }

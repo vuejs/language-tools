@@ -165,6 +165,5 @@ function parseAttr(p: CompilerDOM.AttributeNode, node: CompilerDOM.ElementNode) 
 	return {
 		text: content,
 		offset: offset - node.loc.start.offset,
-		quotes: offset > p.value.loc.start.offset,
 	};
 }
