@@ -2,8 +2,8 @@
 	"private": true,
 	"packageManager": "pnpm@11.9.0",
 	"scripts": {
-		"build": "tsgo -b",
-		"watch": "tsgo -b -w",
+		"build": "tsc -b",
+		"watch": "tsc -b -w",
 		"watch:ext": "node extensions/vscode/scripts/write-plugins.ts --dev && npm run watch",
 		"test:vscode": "cd extensions/vscode && npm run test",
 		"test": "npm run build && vitest run",

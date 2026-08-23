@@ -482,7 +482,7 @@
 		}
 	},
 	"scripts": {
-		"pretest": "tsgo --project ./e2e/tsconfig.json && pnpm build",
+		"pretest": "tsc --project ./e2e/tsconfig.json && pnpm build",
 		"test": "vscode-test --config ./e2e/.vscode-test.js",
 		"build": "rolldown --config",
 		"vscode:prepublish": "rolldown --config",
