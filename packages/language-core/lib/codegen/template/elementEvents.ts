@@ -85,9 +85,7 @@ export function* generateElementEvents(
 	}
 
 	const emitsVar = ctx.getInternalVariable();
-	yield `let ${emitsVar}!: ${names.ResolveEmits}<typeof ${componentOriginalVar}, typeof `;
-	yield [getCtxVar(), 'template', node.loc.start.offset, codeFeatures.verification];
-	yield `.emit>${endOfLine}`;
+	yield `let ${emitsVar}!: ${names.ResolveEmits}<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>${endOfLine}`;
 
 	for (const { propPrefix, emitPrefix, propName, emitName, items } of Object.values(definitions)) {
 		const eventVar = ctx.getInternalVariable();
@@ -170,9 +168,7 @@ export function* generateEventExpression(
 		);
 
 		if (isCompound) {
-			yield `(...[`;
-			yield ['$event', 'template', prop.exp.loc.start.offset, codeFeatures.verification];
-			yield `]) => {${newLine}`;
+			yield `(...[$event]) => {${newLine}`;
 			const scope = ctx.scope();
 			scope.declare('$event');
 			yield `void $event${endOfLine}`;
@@ -217,9 +213,7 @@ export function* generateModelEventExpression(
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		yield `(...[`;
-		yield ['$event', 'template', prop.exp.loc.start.offset, codeFeatures.verification];
-		yield `]) => {${newLine}`;
+		yield `(...[$event]) => {${newLine}`;
 		yield* ctx.generateConditionGuards();
 		yield* generateInterpolation(
 			options,
