@@ -89,7 +89,9 @@ export function* generateElementEvents(
 
 	for (const { propPrefix, emitPrefix, propName, emitName, items } of Object.values(definitions)) {
 		const eventVar = ctx.getInternalVariable();
-		yield `const ${eventVar}: ${options.vueCompilerOptions.checkUnknownEvents ? '' : 'Record<string, unknown> & '}Partial<${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
+		yield `const ${eventVar}: ${
+			options.vueCompilerOptions.checkUnknownEvents ? '' : 'Record<string, unknown> & '
+		}Partial<${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
 			camelize(emitName)
 		}'>> = {${newLine}`;
 		for (const { prop, source, offset } of items) {
