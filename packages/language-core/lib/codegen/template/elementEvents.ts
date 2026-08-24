@@ -168,6 +168,7 @@ export function* generateEventExpression(
 		);
 
 		if (isCompound) {
+			yield `// @ts-ignore${newLine}`;
 			yield `(...[$event]) => {${newLine}`;
 			const scope = ctx.scope();
 			scope.declare('$event');
@@ -231,6 +232,7 @@ export function* generateModelEventExpression(
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+		yield `// @ts-ignore${newLine}`;
 		yield `(...[$event]) => {${newLine}`;
 		yield* ctx.generateConditionGuards();
 		yield* generateInterpolation(
