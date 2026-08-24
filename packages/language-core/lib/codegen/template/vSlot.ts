@@ -77,6 +77,7 @@ export function* generateVSlot(
 			isStatic = slotDir.arg.isStatic;
 		}
 		if (isStatic && !slotDir.arg) {
+			yield `// @ts-ignore${newLine}`;
 			yield `${ctxVar}.slots!['`;
 			yield [
 				'',
