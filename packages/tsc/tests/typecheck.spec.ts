@@ -46,7 +46,8 @@ test(`vue-tsc`, () => {
 		  "test-workspace/tsc/withDotValue/main.vue(2,25): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
 		  "test-workspace/tsc/withDotValue/main.vue(3,17): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
 		  "test-workspace/tsc/withDotValue/main.vue(4,28): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
-		  "test-workspace/tsc/withDotValue/main.vue(5,20): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
+		  "test-workspace/tsc/withDotValue/main.vue(5,28): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
+		  "test-workspace/tsc/withDotValue/main.vue(6,20): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
 		]
 	`);
 });

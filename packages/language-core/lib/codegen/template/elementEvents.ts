@@ -175,13 +175,13 @@ export function* generateEventExpression(
 			// called bindings are re-asserted: for local bindings the top-level
 			// assertion already flows into this closure, and re-asserting non-call
 			// accesses would double-narrow them.
-			const before = new Set(ctx.callAccessedBindings);
+			ctx.callAccessedBindings.clear();
 			const codes: Code[] = [];
 			for (const code of interpolation) {
 				codes.push(code);
 			}
 			for (const name of ctx.callAccessedBindings) {
-				if (!before.has(name) && options.setupBindings.has(name)) {
+				if (options.setupBindings.has(name)) {
 					yield `${names.withDotValue}(${name}, {} as import('${options.vueCompilerOptions.lib}').Ref<unknown>)${endOfLine}`;
 				}
 			}
