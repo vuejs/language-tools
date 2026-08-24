@@ -413,8 +413,7 @@ function* generatePublicProps(
 		propTypes.push(names.ModelProps);
 	}
 	const target = options.vueCompilerOptions.target;
-	const used =
-		!!scriptSetup.generic
+	const used = !!scriptSetup.generic
 		|| target < 3.6
 		|| (target >= 3.5 && !scriptSetupRanges.defineProps?.arg);
 	if (propTypes.length && used) {
