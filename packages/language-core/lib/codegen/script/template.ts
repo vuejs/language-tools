@@ -16,7 +16,7 @@ export function* generateTemplate(
 	yield `void ${names.ctx}, ${names.components}, ${names.intrinsics}, ${names.directives}${endOfLine}`;
 
 	for (const name of options.withDotValueBindings) {
-		yield `${names.withDotValue}(${name}, {} as import('${options.vueCompilerOptions.lib}').Ref)${endOfLine}`;
+		yield `${names.withDotValue}(${name}, {} as import('${options.vueCompilerOptions.lib}').Ref<unknown>)${endOfLine}`;
 	}
 
 	if (options.templateAndStyleCodes.length) {
