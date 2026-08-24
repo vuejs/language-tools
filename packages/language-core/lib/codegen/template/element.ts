@@ -192,6 +192,7 @@ export function* generateComponent(
 	yield `const ${functionalVar} = ${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
+	yield `// @ts-ignore${newLine}`;
 	yield propsStr;
 	yield `}))${endOfLine}`;
 
