@@ -2,7 +2,7 @@ import type { Code } from '../../types';
 import { names } from '../names';
 import type { TemplateCodegenContext } from '../template/context';
 import { generateStyleScopedClassReference } from '../template/styleScopedClasses';
-import { endOfLine } from '../utils';
+import { endOfLine, newLine } from '../utils';
 import type { StyleCodegenOptions } from '.';
 import { generateClassProperty, generateStyleImports } from './common';
 
@@ -22,6 +22,7 @@ export function* generateStyleScopedClasses(
 
 	const visited = new Set<string>();
 	const deferredGenerates: Generator<Code>[] = [];
+	yield `// @ts-ignore${newLine}`;
 	yield `type ${names.StyleScopedClasses} = {}`;
 	for (const style of scopedStyles) {
 		if (resolveStyleImports) {

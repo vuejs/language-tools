@@ -412,7 +412,12 @@ function* generatePublicProps(
 	if (scriptSetupRanges.defineModel.length) {
 		propTypes.push(names.ModelProps);
 	}
-	if (propTypes.length) {
+	const target = options.vueCompilerOptions.target;
+	const used =
+		!!scriptSetup.generic
+		|| target < 3.6
+		|| (target >= 3.5 && !scriptSetupRanges.defineProps?.arg);
+	if (propTypes.length && used) {
 		yield `type ${names.PublicProps} = ${propTypes.join(` & `)}${endOfLine}`;
 		ctx.generatedTypes.add(names.PublicProps);
 	}

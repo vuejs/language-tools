@@ -166,7 +166,14 @@ function* generateTemplateRefsType(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
-	if (!ctx.templateRefs.size) {
+	if (
+		!ctx.templateRefs.size
+		|| !(
+			options.vueCompilerOptions.inferTemplateDollarRefs
+			|| options.vueCompilerOptions.inferComponentDollarRefs
+			|| options.setupRefs.size
+		)
+	) {
 		return;
 	}
 	ctx.generatedTypes.add(names.TemplateRefs);
