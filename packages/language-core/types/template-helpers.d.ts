@@ -53,7 +53,7 @@ declare global {
 	> = __VLS_IsFunction<Props, onEvent> extends true ? { [K in onEvent]?: Props[K & keyof Props] }
 		: __VLS_IsFunction<Emits, Event> extends true ? { [K in onEvent]?: Emits[Event & keyof Emits] }
 		: __VLS_IsFunction<Emits, CamelizedEvent> extends true ? { [K in onEvent]?: Emits[CamelizedEvent & keyof Emits] }
-		: Props;
+		: Partial<Props>;
 	// fix https://github.com/vuejs/language-tools/issues/926
 	type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends
 		((arg: infer P) => unknown) ? P : never;
