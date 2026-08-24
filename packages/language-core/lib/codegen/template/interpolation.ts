@@ -34,7 +34,7 @@ export function* generateInterpolation(
 
 	let prevEnd = 0;
 	for (
-		const [name, offset, isShorthand] of forEachIdentifiers(
+		const [name, offset, isShorthand, isCall] of forEachIdentifiers(
 			typescript,
 			ctx,
 			block,
@@ -89,6 +89,9 @@ export function* generateInterpolation(
 		}
 		else if (setupBindings.has(name)) {
 			ctx.accessVariable(block.name, name, start + offset);
+			if (isCall) {
+				ctx.accessVariableAsCall(name);
+			}
 			yield [
 				name,
 				block.name,
@@ -97,7 +100,9 @@ export function* generateInterpolation(
 					? { ...data, __shorthandExpression: 'js' }
 					: data,
 			];
-			yield `.value`;
+			if (!isCall) {
+				yield `.value`;
+			}
 		}
 		else {
 			// #1205, #1264
@@ -179,20 +184,20 @@ function* forEachIdentifiers(
 	code: string,
 	prefix: string,
 	suffix: string,
-): Generator<[string, number, boolean]> {
+): Generator<[string, number, boolean, boolean]> {
 	if (identifierRE.test(code) && !shouldIdentifierSkipped(ctx, code)) {
-		yield [code, 0, false];
+		yield [code, 0, false, false];
 		return;
 	}
 
 	const scope = ctx.scope();
 	const ast = getTypeScriptAST(ts, block, prefix + code + suffix);
-	for (const [id, isShorthand] of forEachDeclarations(ts, ast, ast, ctx, scope)) {
+	for (const [id, isShorthand, isCall] of forEachDeclarations(ts, ast, ast, ctx, scope, false)) {
 		const text = getNodeText(ts, id, ast);
 		if (shouldIdentifierSkipped(ctx, text)) {
 			continue;
 		}
-		yield [text, getStartEnd(ts, id, ast).start - prefix.length, isShorthand];
+		yield [text, getStartEnd(ts, id, ast).start - prefix.length, isShorthand, isCall];
 	}
 	scope.end();
 }
@@ -203,15 +208,52 @@ function* forEachDeclarations(
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
-): Generator<[ts.Identifier, boolean]> {
+	inCallPosition: boolean,
+): Generator<[ts.Identifier, boolean, boolean]> {
 	if (ts.isIdentifier(node)) {
-		yield [node, false];
+		yield [node, false, inCallPosition];
 	}
 	else if (ts.isShorthandPropertyAssignment(node)) {
-		yield [node.name, true];
+		yield [node.name, true, inCallPosition];
 	}
 	else if (ts.isPropertyAccessExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, false);
+	}
+	else if (ts.isCallExpression(node)) {
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
+		for (const arg of node.arguments) {
+			yield* forEachDeclarations(ts, arg, ast, ctx, scope, false);
+		}
+	}
+	else if (ts.isTaggedTemplateExpression(node)) {
+		yield* forEachDeclarations(ts, node.tag, ast, ctx, scope, true);
+		yield* forEachDeclarations(ts, node.template, ast, ctx, scope, false);
+	}
+	else if (ts.isParenthesizedExpression(node)) {
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inCallPosition);
+	}
+	else if (ts.isNonNullExpression(node)) {
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inCallPosition);
+	}
+	else if (ts.isTypeAssertionExpression(node)) {
+		yield* forEachDeclarationsInTypeNode(ts, node.type);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inCallPosition);
+	}
+	else if (ts.isAsExpression(node) || ts.isSatisfiesExpression(node)) {
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inCallPosition);
+		yield* forEachDeclarationsInTypeNode(ts, node.type);
+	}
+	else if (ts.isBinaryExpression(node)) {
+		const isLogical = node.operatorToken.kind === ts.SyntaxKind.BarBarToken
+			|| node.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken
+			|| node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken;
+		yield* forEachDeclarations(ts, node.left, ast, ctx, scope, isLogical ? inCallPosition : false);
+		yield* forEachDeclarations(ts, node.right, ast, ctx, scope, isLogical ? inCallPosition : false);
+	}
+	else if (ts.isConditionalExpression(node)) {
+		yield* forEachDeclarations(ts, node.condition, ast, ctx, scope, false);
+		yield* forEachDeclarations(ts, node.whenTrue, ast, ctx, scope, inCallPosition);
+		yield* forEachDeclarations(ts, node.whenFalse, ast, ctx, scope, inCallPosition);
 	}
 	else if (ts.isVariableDeclaration(node)) {
 		scope.declare(...collectBindingNames(ts, node.name, ast));
@@ -232,18 +274,18 @@ function* forEachDeclarations(
 			if (ts.isPropertyAssignment(prop)) {
 				// fix https://github.com/vuejs/language-tools/issues/1176
 				if (ts.isComputedPropertyName(prop.name)) {
-					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx, scope);
+					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx, scope, false);
 				}
-				yield* forEachDeclarations(ts, prop.initializer, ast, ctx, scope);
+				yield* forEachDeclarations(ts, prop.initializer, ast, ctx, scope, false);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1156
 			else if (ts.isShorthandPropertyAssignment(prop)) {
-				yield* forEachDeclarations(ts, prop, ast, ctx, scope);
+				yield* forEachDeclarations(ts, prop, ast, ctx, scope, false);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1148#issuecomment-1094378126
 			else if (ts.isSpreadAssignment(prop)) {
 				// TODO: cannot report "Spread types may only be created from object types.ts(2698)"
-				yield* forEachDeclarations(ts, prop.expression, ast, ctx, scope);
+				yield* forEachDeclarations(ts, prop.expression, ast, ctx, scope, false);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/4604
 			else if (ts.isFunctionLike(prop) && prop.body) {
@@ -258,13 +300,13 @@ function* forEachDeclarations(
 	else if (ts.isBlock(node)) {
 		const scope = ctx.scope();
 		for (const child of forEachNode(ts, node)) {
-			yield* forEachDeclarations(ts, child, ast, ctx, scope);
+			yield* forEachDeclarations(ts, child, ast, ctx, scope, false);
 		}
 		scope.end();
 	}
 	else {
 		for (const child of forEachNode(ts, node)) {
-			yield* forEachDeclarations(ts, child, ast, ctx, scope);
+			yield* forEachDeclarations(ts, child, ast, ctx, scope, false);
 		}
 	}
 }
@@ -275,15 +317,15 @@ function* forEachDeclarationsInBinding(
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
-): Generator<[ts.Identifier, boolean]> {
+): Generator<[ts.Identifier, boolean, boolean]> {
 	if ('type' in node && node.type) {
 		yield* forEachDeclarationsInTypeNode(ts, node.type);
 	}
 	if (!ts.isIdentifier(node.name)) {
-		yield* forEachDeclarations(ts, node.name, ast, ctx, scope);
+		yield* forEachDeclarations(ts, node.name, ast, ctx, scope, false);
 	}
 	if (node.initializer) {
-		yield* forEachDeclarations(ts, node.initializer, ast, ctx, scope);
+		yield* forEachDeclarations(ts, node.initializer, ast, ctx, scope, false);
 	}
 }
 
@@ -292,14 +334,14 @@ function* forEachDeclarationsInFunction(
 	node: ts.ArrowFunction | ts.FunctionExpression | ts.AccessorDeclaration | ts.MethodDeclaration,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
-): Generator<[ts.Identifier, boolean]> {
+): Generator<[ts.Identifier, boolean, boolean]> {
 	const scope = ctx.scope();
 	for (const param of node.parameters) {
 		scope.declare(...collectBindingNames(ts, param.name, ast));
 		yield* forEachDeclarationsInBinding(ts, param, ast, ctx, scope);
 	}
 	if (node.body) {
-		yield* forEachDeclarations(ts, node.body, ast, ctx, scope);
+		yield* forEachDeclarations(ts, node.body, ast, ctx, scope, false);
 	}
 	scope.end();
 }
@@ -307,13 +349,13 @@ function* forEachDeclarationsInFunction(
 function* forEachDeclarationsInTypeNode(
 	ts: typeof import('typescript'),
 	node: ts.Node,
-): Generator<[ts.Identifier, boolean]> {
+): Generator<[ts.Identifier, boolean, boolean]> {
 	if (ts.isTypeQueryNode(node)) {
 		let id = node.exprName;
 		while (!ts.isIdentifier(id)) {
 			id = id.left;
 		}
-		yield [id, false];
+		yield [id, false, false];
 	}
 	else {
 		for (const child of forEachNode(ts, node)) {
