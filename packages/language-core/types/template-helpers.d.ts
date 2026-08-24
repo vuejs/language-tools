@@ -23,7 +23,7 @@ declare global {
 		: {};
 	type __VLS_ExtractComponentContext<T, K> = __VLS_PickNotAny<
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? NonNullable<Ctx> : never : any,
-		T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
+		T extends (props: any, ctx: infer Ctx) => any ? (unknown extends Ctx ? any : Ctx) : any
 	>;
 	type __VLS_ExtractComponentProps<T, K> = '__ctx' extends keyof __VLS_PickNotAny<K, {}>
 		? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
