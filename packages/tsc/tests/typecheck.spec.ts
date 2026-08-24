@@ -43,11 +43,15 @@ test(`vue-tsc`, () => {
 		  "test-workspace/tsc/useTemplateRef-dynamic-arg/main.vue(3,7): error TS2464: A computed property name must be of type 'string', 'number', 'symbol', or 'any'.",
 		  "test-workspace/tsc/useTemplateRef-nullable/main.vue(3,5): error TS18047: 'foo.value' is possibly 'null'.",
 		  "test-workspace/tsc/useTemplateRef-nullable/main.vue(3,9): error TS2339: Property 'bar' does not exist on type 'HTMLInputElement'.",
+		  "test-workspace/tsc/withDotValue/main.vue(10,19): error TS2740: Type 'TemplateStringsArray' is missing the following properties from type 'Event': bubbles, cancelBubble, cancelable, composed, and 18 more.",
 		  "test-workspace/tsc/withDotValue/main.vue(2,25): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
 		  "test-workspace/tsc/withDotValue/main.vue(3,17): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
 		  "test-workspace/tsc/withDotValue/main.vue(4,28): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
 		  "test-workspace/tsc/withDotValue/main.vue(5,28): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
 		  "test-workspace/tsc/withDotValue/main.vue(6,20): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
+		  "test-workspace/tsc/withDotValue/main.vue(7,24): error TS2740: Type 'TemplateStringsArray' is missing the following properties from type 'Event': bubbles, cancelBubble, cancelable, composed, and 18 more.",
+		  "test-workspace/tsc/withDotValue/main.vue(8,16): error TS2740: Type 'TemplateStringsArray' is missing the following properties from type 'Event': bubbles, cancelBubble, cancelable, composed, and 18 more.",
+		  "test-workspace/tsc/withDotValue/main.vue(9,27): error TS2740: Type 'TemplateStringsArray' is missing the following properties from type 'Event': bubbles, cancelBubble, cancelable, composed, and 18 more.",
 		]
 	`);
 });
