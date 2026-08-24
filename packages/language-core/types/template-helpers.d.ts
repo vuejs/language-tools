@@ -135,7 +135,9 @@ declare global {
 	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
 	function __VLS_omit<T, K>(target: T, props: K): Omit<T, keyof K>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
-	function __VLS_withDotValue<T, Ref>(t: T, ref: Ref): asserts t is T extends Ref ? T : T & { value: T };
+	function __VLS_withDotValue<T, Ref>(t: T, ref: Ref): asserts t is T extends Ref
+		? T extends { value: infer V } ? V extends (...args: any) => any ? T & V : T : T
+		: T & { value: T };
 }
 
 export {};
