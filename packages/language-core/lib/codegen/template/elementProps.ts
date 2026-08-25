@@ -303,7 +303,7 @@ export function* generatePropExp(
 				else {
 					yield `${names.unwrap}(`;
 					yield* codes;
-					yield `)`;
+					yield `, {} as import('${options.vueCompilerOptions.lib}').Ref<unknown>)`;
 				}
 			}
 			else {

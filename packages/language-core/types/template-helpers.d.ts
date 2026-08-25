@@ -138,8 +138,12 @@ declare global {
 	function __VLS_withDotValue<T, Ref>(
 		t: T,
 		ref: Ref,
-	): asserts t is NonNullable<T> extends Ref ? T : NonNullable<T> & { value: T };
-	function __VLS_unwrap<T>(t: T): T extends { value: infer V } ? V : T;
+	): asserts t is NonNullable<T> extends Ref ? T
+		: NonNullable<T> extends { value: unknown } ? T
+		: NonNullable<T> & { value: T };
+	function __VLS_unwrap<T, Ref>(t: T, ref: Ref): T extends Ref & { value: infer V } ? V
+		: T extends { value: infer V } ? (T extends V ? V : T)
+		: T;
 }
 
 export {};

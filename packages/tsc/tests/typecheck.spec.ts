@@ -51,7 +51,6 @@ test(`vue-tsc`, () => {
 		  "test-workspace/tsc/unwrapBindingAccess/main.vue(201,36): error TS1166: A computed property name in a class property declaration must have a simple literal type or a 'unique symbol' type.",
 		  "test-workspace/tsc/unwrapBindingAccess/main.vue(204,26): error TS2464: A computed property name must be of type 'string', 'number', 'symbol', or 'any'.",
 		  "test-workspace/tsc/unwrapBindingAccess/main.vue(204,27): error TS2538: Type 'Ref<"m", "m">' cannot be used as an index type.",
-		  "test-workspace/tsc/unwrapBindingAccess/main.vue(211,20): error TS2345: Argument of type 'number & { value: number; }' is not assignable to parameter of type 'never'.",
 		  "test-workspace/tsc/unwrapBindingAccess/main.vue(214,43): error TS2345: Argument of type '1 | 2 | 3' is not assignable to parameter of type 'never'.",
 		  "test-workspace/tsc/unwrapBindingAccess/main.vue(215,53): error TS2345: Argument of type '1 | 2' is not assignable to parameter of type 'never'.",
 		  "test-workspace/tsc/unwrapBindingAccess/main.vue(215,85): error TS2345: Argument of type '"a" | "b"' is not assignable to parameter of type 'never'.",

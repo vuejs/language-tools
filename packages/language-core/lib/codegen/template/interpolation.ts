@@ -1,6 +1,6 @@
 import { isGloballyAllowed, makeMap } from '@vue/shared';
 import type * as ts from 'typescript';
-import type { Code, IRBlock, VueCodeInformation } from '../../types';
+import type { Code, IRBlock, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
@@ -13,12 +13,13 @@ import type { TemplateCodegenContext } from './context';
 const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export function* generateInterpolation(
-	{ typescript, destructuredProps, importedComponents, setupRefs, setupBindings }: {
+	{ typescript, destructuredProps, importedComponents, setupRefs, setupBindings, vueCompilerOptions }: {
 		typescript: typeof import('typescript');
 		destructuredProps: Set<string>;
 		importedComponents: Set<string>;
 		setupRefs: Set<string>;
 		setupBindings: Set<string>;
+		vueCompilerOptions: VueCompilerOptions;
 	},
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
@@ -130,7 +131,7 @@ export function* generateInterpolation(
 						? { ...data, __shorthandExpression: 'js' }
 						: data,
 				];
-				yield `)`;
+				yield `, {} as import('${vueCompilerOptions.lib}').Ref<unknown>)`;
 				if (isNewOperand) {
 					yield `)`;
 				}
