@@ -36,7 +36,7 @@ export function* generateInterpolation(
 
 	let prevEnd = 0;
 	for (
-		const [name, offset, isShorthand, isNarrowing] of forEachIdentifiers(
+		const [name, offset, isShorthand, isNarrowing, inTypeQuery] of forEachIdentifiers(
 			typescript,
 			ctx,
 			block,
@@ -69,6 +69,7 @@ export function* generateInterpolation(
 		// Access strategy, in precedence order:
 		// - destructured props / imported components → direct reference
 		// - template refs → direct `.value`
+		// - type query on binding → `.value` (non-narrowable stays bare)
 		// - other bindings → `.value` (narrowing / write) or `__VLS_unwrap` (value read)
 		// - otherwise → `__VLS_ctx.<name>`
 		if (destructuredProps.has(name) || importedComponents.has(name)) {
@@ -92,7 +93,20 @@ export function* generateInterpolation(
 		}
 		else if (setupBindings.has(name)) {
 			ctx.accessVariable(block.name, name, start + offset);
-			if (!setupNonNarrowableBindings.has(name) && (isNarrowing || ctx.isNarrowed(name))) {
+			if (inTypeQuery) {
+				yield [
+					name,
+					block.name,
+					start + offset,
+					isShorthand
+						? { ...data, __shorthandExpression: 'js' }
+						: data,
+				];
+				if (!setupNonNarrowableBindings.has(name)) {
+					yield `.value`;
+				}
+			}
+			else if (!setupNonNarrowableBindings.has(name) && (isNarrowing || ctx.isNarrowed(name))) {
 				yield [
 					name,
 					block.name,
@@ -207,20 +221,29 @@ function* forEachIdentifiers(
 	prefix: string,
 	suffix: string,
 	inNarrowing: boolean,
-): Generator<[string, number, boolean, boolean]> {
+): Generator<[string, number, boolean, boolean, boolean]> {
 	if (identifierRE.test(code) && !shouldIdentifierSkipped(ctx, code)) {
-		yield [code, 0, false, inNarrowing];
+		yield [code, 0, false, inNarrowing, false];
 		return;
 	}
 
 	const scope = ctx.scope();
 	const ast = getTypeScriptAST(ts, block, prefix + code + suffix);
-	for (const [id, isShorthand, isNarrowing, skipped] of forEachDeclarations(ts, ast, ast, ctx, scope, inNarrowing)) {
+	for (
+		const [id, isShorthand, isNarrowing, skipped, inTypeQuery] of forEachDeclarations(
+			ts,
+			ast,
+			ast,
+			ctx,
+			scope,
+			inNarrowing,
+		)
+	) {
 		if (skipped) {
 			continue;
 		}
 		const text = getNodeText(ts, id, ast);
-		yield [text, getStartEnd(ts, id, ast).start - prefix.length, isShorthand, isNarrowing];
+		yield [text, getStartEnd(ts, id, ast).start - prefix.length, isShorthand, isNarrowing, inTypeQuery];
 	}
 	scope.end();
 }
@@ -232,12 +255,12 @@ function* forEachDeclarations(
 	ctx: TemplateCodegenContext,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
 	inNarrowing: boolean,
-): Generator<[ts.Identifier, boolean, boolean, boolean]> {
+): Generator<[ts.Identifier, boolean, boolean, boolean, boolean]> {
 	if (ts.isIdentifier(node)) {
-		yield [node, false, inNarrowing, shouldIdentifierSkipped(ctx, getNodeText(ts, node, ast))];
+		yield [node, false, inNarrowing, shouldIdentifierSkipped(ctx, getNodeText(ts, node, ast)), false];
 	}
 	else if (ts.isShorthandPropertyAssignment(node)) {
-		yield [node.name, true, inNarrowing, shouldIdentifierSkipped(ctx, getNodeText(ts, node.name, ast))];
+		yield [node.name, true, inNarrowing, shouldIdentifierSkipped(ctx, getNodeText(ts, node.name, ast)), false];
 	}
 	else if (ts.isPropertyAccessExpression(node)) {
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
@@ -367,6 +390,24 @@ function* forEachDeclarations(
 	else if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
 		yield* forEachDeclarationsInFunction(ts, node, ast, ctx);
 	}
+	else if (ts.isFunctionDeclaration(node)) {
+		if (node.name) {
+			scope.declare(getNodeText(ts, node.name, ast));
+		}
+		yield* forEachDeclarationsInFunction(ts, node, ast, ctx);
+	}
+	else if (ts.isClassDeclaration(node)) {
+		if (node.name) {
+			scope.declare(getNodeText(ts, node.name, ast));
+		}
+		yield* forEachDeclarationsInClass(ts, node, ast, ctx, scope);
+	}
+	else if (ts.isClassExpression(node)) {
+		if (node.name) {
+			scope.declare(getNodeText(ts, node.name, ast));
+		}
+		yield* forEachDeclarationsInClass(ts, node, ast, ctx, scope);
+	}
 	else if (ts.isObjectLiteralExpression(node)) {
 		for (const prop of node.properties) {
 			if (ts.isPropertyAssignment(prop)) {
@@ -387,6 +428,9 @@ function* forEachDeclarations(
 			}
 			// fix https://github.com/vuejs/language-tools/issues/4604
 			else if (ts.isFunctionLike(prop) && prop.body) {
+				if (prop.name && ts.isComputedPropertyName(prop.name)) {
+					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx, scope, false);
+				}
 				yield* forEachDeclarationsInFunction(ts, prop, ast, ctx);
 			}
 		}
@@ -413,7 +457,13 @@ function* forEachDeclarations(
 			}
 		}
 		else if (ts.isIdentifier(node.initializer)) {
-			yield [node.initializer, false, true, shouldIdentifierSkipped(ctx, getNodeText(ts, node.initializer, ast))];
+			yield [
+				node.initializer,
+				false,
+				true,
+				shouldIdentifierSkipped(ctx, getNodeText(ts, node.initializer, ast)),
+				false,
+			];
 		}
 		else if (ts.isObjectLiteralExpression(node.initializer) || ts.isArrayLiteralExpression(node.initializer)) {
 			yield* forEachDeclarationsInAssignmentTarget(ts, node.initializer, ast, ctx, scope);
@@ -479,7 +529,7 @@ function* forEachDeclarations(
 				yield* forEachDeclarations(ts, node.initializer, ast, ctx, scope, false);
 			}
 		}
-		let condition: [ts.Identifier, boolean, boolean, boolean][] = [];
+		let condition: [ts.Identifier, boolean, boolean, boolean, boolean][] = [];
 		if (node.condition) {
 			condition = [...forEachDeclarations(ts, node.condition, ast, ctx, scope, true)];
 			for (const item of condition) {
@@ -520,6 +570,49 @@ function* forEachDeclarations(
 		}
 		ctx.exitNarrowedScope();
 	}
+	else if (ts.isLabeledStatement(node)) {
+		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
+	}
+	else if (ts.isBreakStatement(node) || ts.isContinueStatement(node)) {
+		// never yield the label: `break outer` / `continue outer` target a label,
+		// not a binding.
+	}
+	else if (ts.isMetaProperty(node)) {
+		// `new.target` / `import.meta` are not bindings.
+	}
+	else if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
+		yield* forEachDeclarationsInTypeNode(ts, node, ast, ctx);
+	}
+	else if (ts.isEnumDeclaration(node)) {
+		scope.declare(getNodeText(ts, node.name, ast));
+		for (const member of node.members) {
+			if (member.initializer) {
+				yield* forEachDeclarations(ts, member.initializer, ast, ctx, scope, false);
+			}
+		}
+	}
+	else if (ts.isModuleDeclaration(node)) {
+		if (node.body && ts.isModuleBlock(node.body)) {
+			const scope = ctx.scope();
+			for (const statement of node.body.statements) {
+				yield* forEachDeclarations(ts, statement, ast, ctx, scope, false);
+			}
+			scope.end();
+		}
+		else if (node.body && ts.isModuleDeclaration(node.body)) {
+			yield* forEachDeclarations(ts, node.body, ast, ctx, scope, false);
+		}
+	}
+	else if (ts.isCatchClause(node)) {
+		const scope = ctx.scope();
+		if (node.variableDeclaration) {
+			yield* forEachDeclarations(ts, node.variableDeclaration, ast, ctx, scope, false);
+		}
+		if (node.block) {
+			yield* forEachDeclarations(ts, node.block, ast, ctx, scope, false);
+		}
+		scope.end();
+	}
 	else if (ts.isSourceFile(node)) {
 		for (const statement of node.statements) {
 			yield* forEachDeclarations(ts, statement, ast, ctx, scope, inNarrowing);
@@ -541,9 +634,9 @@ function* forEachDeclarationsInAssignmentTarget(
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
-): Generator<[ts.Identifier, boolean, boolean, boolean]> {
+): Generator<[ts.Identifier, boolean, boolean, boolean, boolean]> {
 	if (ts.isIdentifier(node)) {
-		yield [node, false, true, shouldIdentifierSkipped(ctx, getNodeText(ts, node, ast))];
+		yield [node, false, true, shouldIdentifierSkipped(ctx, getNodeText(ts, node, ast)), false];
 	}
 	else if (ts.isObjectLiteralExpression(node)) {
 		for (const prop of node.properties) {
@@ -554,7 +647,7 @@ function* forEachDeclarationsInAssignmentTarget(
 				yield* forEachDeclarationsInAssignmentTarget(ts, prop.initializer, ast, ctx, scope);
 			}
 			else if (ts.isShorthandPropertyAssignment(prop)) {
-				yield [prop.name, true, true, shouldIdentifierSkipped(ctx, getNodeText(ts, prop.name, ast))];
+				yield [prop.name, true, true, shouldIdentifierSkipped(ctx, getNodeText(ts, prop.name, ast)), false];
 				if (prop.objectAssignmentInitializer) {
 					yield* forEachDeclarations(ts, prop.objectAssignmentInitializer, ast, ctx, scope, false);
 				}
@@ -595,7 +688,7 @@ function* forEachDeclarationsInBinding(
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
-): Generator<[ts.Identifier, boolean, boolean, boolean]> {
+): Generator<[ts.Identifier, boolean, boolean, boolean, boolean]> {
 	if ('type' in node && node.type) {
 		yield* forEachDeclarationsInTypeNode(ts, node.type, ast, ctx);
 	}
@@ -609,14 +702,28 @@ function* forEachDeclarationsInBinding(
 
 function* forEachDeclarationsInFunction(
 	ts: typeof import('typescript'),
-	node: ts.ArrowFunction | ts.FunctionExpression | ts.AccessorDeclaration | ts.MethodDeclaration,
+	node:
+		| ts.ArrowFunction
+		| ts.FunctionExpression
+		| ts.FunctionDeclaration
+		| ts.MethodDeclaration
+		| ts.AccessorDeclaration
+		| ts.ConstructorDeclaration,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
-): Generator<[ts.Identifier, boolean, boolean, boolean]> {
+): Generator<[ts.Identifier, boolean, boolean, boolean, boolean]> {
 	const scope = ctx.scope();
 	for (const param of node.parameters) {
 		scope.declare(...collectBindingNames(ts, param.name, ast));
 		yield* forEachDeclarationsInBinding(ts, param, ast, ctx, scope);
+	}
+	if (node.typeParameters) {
+		for (const typeParam of node.typeParameters) {
+			yield* forEachDeclarationsInTypeNode(ts, typeParam, ast, ctx);
+		}
+	}
+	if (node.type) {
+		yield* forEachDeclarationsInTypeNode(ts, node.type, ast, ctx);
 	}
 	if (node.body) {
 		yield* forEachDeclarations(ts, node.body, ast, ctx, scope, false);
@@ -624,18 +731,74 @@ function* forEachDeclarationsInFunction(
 	scope.end();
 }
 
+function* forEachDeclarationsInClass(
+	ts: typeof import('typescript'),
+	node: ts.ClassDeclaration | ts.ClassExpression,
+	ast: ts.SourceFile,
+	ctx: TemplateCodegenContext,
+	scope: ReturnType<TemplateCodegenContext['scope']>,
+): Generator<[ts.Identifier, boolean, boolean, boolean, boolean]> {
+	for (const clause of node.heritageClauses ?? []) {
+		if (clause.token === ts.SyntaxKind.ExtendsKeyword) {
+			for (const type of clause.types) {
+				yield* forEachDeclarations(ts, type.expression, ast, ctx, scope, false);
+				if (type.typeArguments) {
+					for (const typeArg of type.typeArguments) {
+						yield* forEachDeclarationsInTypeNode(ts, typeArg, ast, ctx);
+					}
+				}
+			}
+		}
+		else {
+			yield* forEachDeclarationsInTypeNode(ts, clause, ast, ctx);
+		}
+	}
+	for (const member of node.members) {
+		if (
+			ts.isPropertyDeclaration(member)
+			|| ts.isMethodDeclaration(member)
+			|| ts.isGetAccessorDeclaration(member)
+			|| ts.isSetAccessorDeclaration(member)
+		) {
+			if (member.name && ts.isComputedPropertyName(member.name)) {
+				yield* forEachDeclarations(ts, member.name.expression, ast, ctx, scope, false);
+			}
+		}
+		if (
+			ts.isConstructorDeclaration(member)
+			|| ts.isMethodDeclaration(member)
+			|| ts.isGetAccessorDeclaration(member)
+			|| ts.isSetAccessorDeclaration(member)
+		) {
+			yield* forEachDeclarationsInFunction(ts, member, ast, ctx);
+		}
+		else if (ts.isPropertyDeclaration(member)) {
+			if (member.initializer) {
+				yield* forEachDeclarations(ts, member.initializer, ast, ctx, scope, false);
+			}
+		}
+		else if (ts.isClassStaticBlockDeclaration(member)) {
+			const blockScope = ctx.scope();
+			for (const statement of member.body.statements) {
+				yield* forEachDeclarations(ts, statement, ast, ctx, blockScope, false);
+			}
+			blockScope.end();
+		}
+	}
+}
+
 function* forEachDeclarationsInTypeNode(
 	ts: typeof import('typescript'),
 	node: ts.Node,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
-): Generator<[ts.Identifier, boolean, boolean, boolean]> {
+): Generator<[ts.Identifier, boolean, boolean, boolean, boolean]> {
 	if (ts.isTypeQueryNode(node)) {
 		let id = node.exprName;
 		while (!ts.isIdentifier(id)) {
 			id = id.left;
 		}
-		yield [id, false, false, shouldIdentifierSkipped(ctx, getNodeText(ts, id, ast))];
+		yield [id, false, false, shouldIdentifierSkipped(ctx, getNodeText(ts, id, ast)), true];
 	}
 	else {
 		for (const child of forEachNode(ts, node)) {

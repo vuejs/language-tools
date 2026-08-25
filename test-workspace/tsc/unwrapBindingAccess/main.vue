@@ -114,6 +114,33 @@
 
 	<!-- switch: interleaved case statements + discriminant narrowing into clause bodies -->
 	<button @click="switch (aOrB) { case 'a': exactType(aOrB, {} as 'a'); break; case 'b': exactType(aOrB, {} as 'b'); }" />
+
+	<!-- type query on a ref keeps `.value` semantics -->
+	<div>{{ exactType(maybe as any as typeof count, {} as number) }}</div>
+
+	<!-- type query on a function declaration stays bare -->
+	<div>{{ null as any as typeof handler }}</div>
+
+	<!-- function declaration in handler: name + params must not be rewritten -->
+	<button @click="function helper(a: number) { return a; } helper(1);" />
+
+	<!-- class expression: heritage + method params -->
+	<button @click="const C = class extends Foo { m(a: number) { return a; } }; void C;" />
+
+	<!-- label + break label untouched -->
+	<button @click="outer: for (;;) { break outer; }" />
+
+	<!-- computed method name reads the binding -->
+	<button @click="void { [key]() { return 1; } }" />
+
+	<!-- catch clause scoping -->
+	<button @click="try { handler(null as any); } catch (e) { void e; }" />
+
+	<!-- enum in handler body -->
+	<button @click="enum E { A = 1 } void E;" />
+
+	<!-- interface / type alias in handler body (names + members not rewritten) -->
+	<button @click="interface I { a: number } type T = typeof count; const i: I = { a: 1 }; let v: T = 1; void i; void v;" />
 </template>
 
 <script setup lang="ts">
@@ -141,6 +168,7 @@ const y = ref(0);
 const source = ref({ x: 0 });
 const items = ref<[number, number, number]>([1, 2, 3]);
 const item = ref(0);
+const key = ref('m');
 const Child = defineComponent({
 	__typeProps: {} as { foo: string },
 });
