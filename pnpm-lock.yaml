@@ -22,7 +22,7 @@ importers:
         version: 3.1.4(@tsslint/compat-eslint@3.1.4(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2))
       '@typescript-eslint/eslint-plugin':
         specifier: latest
-        version: 8.68.0(@typescript-eslint/parser@8.65.0(eslint@10.7.0)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2))(eslint@10.7.0)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
+        version: 8.68.0(@typescript-eslint/parser@8.65.0(eslint@10.7.0)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2))(eslint@10.7.0)(supports-color@8.1.1)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
       dprint:
         specifier: latest
         version: 0.56.1
@@ -54,8 +54,8 @@ importers:
         specifier: ^0.0.12
         version: 0.0.12
       '@vscode/test-electron':
-        specifier: ^2.5.2
-        version: 2.5.2
+        specifier: ^3.1.0
+        version: 3.1.0
       '@vue/language-core':
         specifier: workspace:*
         version: link:../../packages/language-core
@@ -1036,9 +1036,9 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@vscode/test-electron@2.5.2':
-    resolution: {integrity: sha512-8ukpxv4wYe0iWMRQU18jhzJOHkeGKbnw7xWRX3Zw1WJA4cEKbHcmmLPdPrPtL6rhDcrlCZN+xKRpv09n4gRHYg==}
-    engines: {node: '>=16'}
+  '@vscode/test-electron@3.1.0':
+    resolution: {integrity: sha512-CRqv5u+YYoseuNVJ6Tyo4k0sF0mx4qnKMihRB0PjsUF8Dc0WKtCXo6CNL6nWWm5esfFQsQA/pejMj4ZbpJVLTw==}
+    engines: {node: '>=22'}
 
   '@vue/compiler-core@3.5.40':
     resolution: {integrity: sha512-39E8IgOhTbVDnoJFMKc2DvYnypcZwUqgUhQkccva/0m6FUwtIKSGV7n1hpVmYcFaoRAwf9pBcwnKlCEsN63ZEQ==}
@@ -2686,12 +2686,12 @@ snapshots:
 
   '@types/vscode@1.88.0': {}
 
-  '@typescript-eslint/eslint-plugin@8.68.0(@typescript-eslint/parser@8.65.0(eslint@10.7.0)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2))(eslint@10.7.0)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)':
+  '@typescript-eslint/eslint-plugin@8.68.0(@typescript-eslint/parser@8.65.0(eslint@10.7.0)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2))(eslint@10.7.0)(supports-color@8.1.1)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)':
     dependencies:
       '@eslint-community/regexpp': 4.12.2
       '@typescript-eslint/parser': 8.65.0(eslint@10.7.0)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
       '@typescript-eslint/scope-manager': 8.68.0
-      '@typescript-eslint/type-utils': 8.68.0(eslint@10.7.0)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
+      '@typescript-eslint/type-utils': 8.68.0(eslint@10.7.0)(supports-color@8.1.1)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
       '@typescript-eslint/utils': 8.68.0(eslint@10.7.0)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
       '@typescript-eslint/visitor-keys': 8.68.0
       eslint: 10.7.0
@@ -2716,14 +2716,14 @@ snapshots:
 
   '@typescript-eslint/project-service@8.65.0(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.65.0(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
-      '@typescript-eslint/types': 8.65.0
+      '@typescript-eslint/tsconfig-utils': 8.68.0(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
+      '@typescript-eslint/types': 8.68.0
       debug: 4.4.3(supports-color@8.1.1)
       typescript: typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/project-service@8.68.0(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)':
+  '@typescript-eslint/project-service@8.68.0(supports-color@8.1.1)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)':
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.68.0(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
       '@typescript-eslint/types': 8.68.0
@@ -2750,10 +2750,10 @@ snapshots:
     dependencies:
       typescript: typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2
 
-  '@typescript-eslint/type-utils@8.68.0(eslint@10.7.0)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)':
+  '@typescript-eslint/type-utils@8.68.0(eslint@10.7.0)(supports-color@8.1.1)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)':
     dependencies:
       '@typescript-eslint/types': 8.68.0
-      '@typescript-eslint/typescript-estree': 8.68.0(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
+      '@typescript-eslint/typescript-estree': 8.68.0(supports-color@8.1.1)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
       '@typescript-eslint/utils': 8.68.0(eslint@10.7.0)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
       debug: 4.4.3(supports-color@8.1.1)
       eslint: 10.7.0
@@ -2781,9 +2781,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/typescript-estree@8.68.0(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)':
+  '@typescript-eslint/typescript-estree@8.68.0(supports-color@8.1.1)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)':
     dependencies:
-      '@typescript-eslint/project-service': 8.68.0(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
+      '@typescript-eslint/project-service': 8.68.0(supports-color@8.1.1)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
       '@typescript-eslint/tsconfig-utils': 8.68.0(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
       '@typescript-eslint/types': 8.68.0
       '@typescript-eslint/visitor-keys': 8.68.0
@@ -2801,7 +2801,7 @@ snapshots:
       '@eslint-community/eslint-utils': 4.9.1(eslint@10.7.0)
       '@typescript-eslint/scope-manager': 8.68.0
       '@typescript-eslint/types': 8.68.0
-      '@typescript-eslint/typescript-estree': 8.68.0(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
+      '@typescript-eslint/typescript-estree': 8.68.0(supports-color@8.1.1)(typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2)
       eslint: 10.7.0
       typescript: typescript-native-bridge@6.0.3-bridge.14.tsgo.7.0.2
     transitivePeerDependencies:
@@ -2962,7 +2962,7 @@ snapshots:
     transitivePeerDependencies:
       - monocart-coverage-reports
 
-  '@vscode/test-electron@2.5.2':
+  '@vscode/test-electron@3.1.0':
     dependencies:
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
@@ -2990,7 +2990,7 @@ snapshots:
 
   '@vue/compiler-core@https://pkg.pr.new/vuejs/core/@vue/compiler-core@e1bc0eb02e22bc0c236e1471c11d96a368764b72':
     dependencies:
-      '@babel/parser': 7.29.7
+      '@babel/parser': 7.29.8
       '@vue/shared': https://pkg.pr.new/vuejs/core/@vue/shared@e1bc0eb02e22bc0c236e1471c11d96a368764b72
       entities: 4.5.0
       estree-walker: 2.0.2
@@ -3037,7 +3037,7 @@ snapshots:
 
   '@vue/compiler-sfc@https://pkg.pr.new/vuejs/core/@vue/compiler-sfc@e1bc0eb02e22bc0c236e1471c11d96a368764b72':
     dependencies:
-      '@babel/parser': 7.29.7
+      '@babel/parser': 7.29.8
       '@vue/compiler-core': https://pkg.pr.new/vuejs/core/@vue/compiler-core@e1bc0eb02e22bc0c236e1471c11d96a368764b72
       '@vue/compiler-dom': https://pkg.pr.new/vuejs/core/@vue/compiler-dom@e1bc0eb02e22bc0c236e1471c11d96a368764b72
       '@vue/compiler-ssr': https://pkg.pr.new/vuejs/core/@vue/compiler-ssr@e1bc0eb02e22bc0c236e1471c11d96a368764b72
