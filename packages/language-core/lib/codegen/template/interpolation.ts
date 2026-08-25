@@ -28,6 +28,7 @@ export function* generateInterpolation(
 	prefix: string = '',
 	suffix: string = '',
 	forceDotValue: boolean = false,
+	markNarrowed: boolean = false,
 ): Generator<Code> {
 	if (prefix) {
 		yield prefix;
@@ -90,7 +91,10 @@ export function* generateInterpolation(
 		}
 		else if (setupBindings.has(name)) {
 			ctx.accessVariable(block.name, name, start + offset);
-			if (isNarrowing || forceDotValue) {
+			if (isNarrowing || forceDotValue || ctx.isNarrowed(name)) {
+				if (markNarrowed) {
+					ctx.addNarrowedBinding(name);
+				}
 				yield [
 					name,
 					block.name,
@@ -261,6 +265,7 @@ function* forEachDeclarations(
 		const isLogical = node.operatorToken.kind === ts.SyntaxKind.BarBarToken
 			|| node.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken
 			|| node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken;
+		const isAnd = node.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken;
 		const isAssignment = node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment
 			&& node.operatorToken.kind <= ts.SyntaxKind.LastAssignment;
 		const isEquality = node.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken
@@ -269,13 +274,35 @@ function* forEachDeclarations(
 			|| node.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsToken;
 		const isInstanceof = node.operatorToken.kind === ts.SyntaxKind.InstanceOfKeyword;
 		const isIn = node.operatorToken.kind === ts.SyntaxKind.InKeyword;
-		yield* forEachDeclarations(ts, node.left, ast, ctx, scope, isLogical || isAssignment || isEquality || isInstanceof);
-		yield* forEachDeclarations(ts, node.right, ast, ctx, scope, isLogical || isEquality || isIn);
+		if (isLogical) {
+			const left = [...forEachDeclarations(ts, node.left, ast, ctx, scope, true)];
+			for (const item of left) {
+				yield item;
+			}
+			ctx.enterNarrowedScope();
+			for (const [id] of left) {
+				ctx.addNarrowedBinding(getNodeText(ts, id, ast));
+			}
+			yield* forEachDeclarations(ts, node.right, ast, ctx, scope, isAnd);
+			ctx.exitNarrowedScope();
+		}
+		else {
+			yield* forEachDeclarations(ts, node.left, ast, ctx, scope, isAssignment || isEquality || isInstanceof);
+			yield* forEachDeclarations(ts, node.right, ast, ctx, scope, isEquality || isIn);
+		}
 	}
 	else if (ts.isConditionalExpression(node)) {
-		yield* forEachDeclarations(ts, node.condition, ast, ctx, scope, true);
+		const condition = [...forEachDeclarations(ts, node.condition, ast, ctx, scope, true)];
+		for (const item of condition) {
+			yield item;
+		}
+		ctx.enterNarrowedScope();
+		for (const [id] of condition) {
+			ctx.addNarrowedBinding(getNodeText(ts, id, ast));
+		}
 		yield* forEachDeclarations(ts, node.whenTrue, ast, ctx, scope, false);
 		yield* forEachDeclarations(ts, node.whenFalse, ast, ctx, scope, false);
+		ctx.exitNarrowedScope();
 	}
 	else if (ts.isPrefixUnaryExpression(node)) {
 		yield* forEachDeclarations(
@@ -397,6 +424,26 @@ function* forEachDeclarationsInTypeNode(
 			yield* forEachDeclarationsInTypeNode(ts, child);
 		}
 	}
+}
+
+export function collectNarrowedBindingNames(
+	typescript: typeof import('typescript'),
+	block: IRBlock,
+	setupBindings: Set<string>,
+	ctx: TemplateCodegenContext,
+	code: string,
+): Set<string> {
+	const names = new Set<string>();
+	const scope = ctx.scope();
+	const ast = getTypeScriptAST(typescript, block, code);
+	for (const [id] of forEachDeclarations(typescript, ast, ast, ctx, scope, true)) {
+		const text = getNodeText(typescript, id, ast);
+		if (setupBindings.has(text) && !shouldIdentifierSkipped(ctx, text)) {
+			names.add(text);
+		}
+	}
+	scope.end();
+	return names;
 }
 
 export function shouldIdentifierSkipped(

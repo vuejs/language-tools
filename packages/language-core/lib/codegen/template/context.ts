@@ -158,6 +158,28 @@ export function createTemplateCodegenContext() {
 		return scope;
 	}
 
+	// narrowed bindings ----------------------------------------------------------
+
+	const narrowedBindings: Set<string>[] = [];
+
+	function enterNarrowedScope() {
+		narrowedBindings.push(new Set());
+	}
+
+	function exitNarrowedScope() {
+		narrowedBindings.pop();
+	}
+
+	function addNarrowedBinding(name: string) {
+		if (narrowedBindings.length) {
+			narrowedBindings[narrowedBindings.length - 1]!.add(name);
+		}
+	}
+
+	function isNarrowed(name: string) {
+		return narrowedBindings.some(set => set.has(name));
+	}
+
 	// context accesses -----------------------------------------------------------
 
 	const contextAccesses = new Map<string, Map<string, Set<number>>>();
@@ -269,6 +291,10 @@ export function createTemplateCodegenContext() {
 		contextAccesses,
 		accessVariable,
 		generateAutoImport,
+		enterNarrowedScope,
+		exitNarrowedScope,
+		addNarrowedBinding,
+		isNarrowed,
 		conditions,
 		generateConditionGuards,
 		hoistVars,
