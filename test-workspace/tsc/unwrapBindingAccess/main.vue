@@ -91,6 +91,20 @@
 
 	<!-- for-of: declared loop variable is a scoped local -->
 	<button @click="for (const it of items) { void it; }" />
+
+	<!-- || right operand narrowing: maybeFn narrows to undefined in v-else -->
+	<div v-if="flag || maybeFn"></div>
+	<div v-else>{{ exactType(maybeFn, undefined) }}</div>
+
+	<!-- ?? left operand narrowing: maybeFn narrows to undefined in v-else -->
+	<div v-if="maybeFn ?? flag"></div>
+	<div v-else>{{ exactType(maybeFn, undefined) }}</div>
+
+	<!-- if statement narrowing: maybe narrows to string in the then branch -->
+	<button @click="if (maybe) { exactType(maybe, {} as string) }" />
+
+	<!-- while statement narrowing: maybe narrows to string in the body -->
+	<button @click="while (maybe) { exactType(maybe, {} as string); break; }" />
 </template>
 
 <script setup lang="ts">

@@ -284,7 +284,6 @@ function* forEachDeclarations(
 		const isLogical = node.operatorToken.kind === ts.SyntaxKind.BarBarToken
 			|| node.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken
 			|| node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken;
-		const isAnd = node.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken;
 		const isAssignment = node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment
 			&& node.operatorToken.kind <= ts.SyntaxKind.LastAssignment;
 		const isEquality = node.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken
@@ -304,7 +303,7 @@ function* forEachDeclarations(
 					ctx.addNarrowedBinding(getNodeText(ts, id, ast));
 				}
 			}
-			yield* forEachDeclarations(ts, node.right, ast, ctx, scope, isAnd);
+			yield* forEachDeclarations(ts, node.right, ast, ctx, scope, true);
 			ctx.exitNarrowedScope();
 		}
 		else if (isAssignment) {
@@ -433,6 +432,95 @@ function* forEachDeclarations(
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, false);
 		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
 		scope.end();
+	}
+	else if (ts.isIfStatement(node)) {
+		const condition = [...forEachDeclarations(ts, node.expression, ast, ctx, scope, true)];
+		for (const item of condition) {
+			yield item;
+		}
+		ctx.enterNarrowedScope();
+		for (const [id, , , skipped] of condition) {
+			if (!skipped) {
+				ctx.addNarrowedBinding(getNodeText(ts, id, ast));
+			}
+		}
+		yield* forEachDeclarations(ts, node.thenStatement, ast, ctx, scope, false);
+		if (node.elseStatement) {
+			yield* forEachDeclarations(ts, node.elseStatement, ast, ctx, scope, false);
+		}
+		ctx.exitNarrowedScope();
+	}
+	else if (ts.isWhileStatement(node) || ts.isDoStatement(node)) {
+		const condition = [...forEachDeclarations(ts, node.expression, ast, ctx, scope, true)];
+		for (const item of condition) {
+			yield item;
+		}
+		ctx.enterNarrowedScope();
+		for (const [id, , , skipped] of condition) {
+			if (!skipped) {
+				ctx.addNarrowedBinding(getNodeText(ts, id, ast));
+			}
+		}
+		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
+		ctx.exitNarrowedScope();
+	}
+	else if (ts.isForStatement(node)) {
+		const scope = ctx.scope();
+		if (node.initializer) {
+			if (ts.isVariableDeclarationList(node.initializer)) {
+				for (const decl of node.initializer.declarations) {
+					scope.declare(...collectBindingNames(ts, decl.name, ast));
+					if (decl.initializer) {
+						yield* forEachDeclarations(ts, decl.initializer, ast, ctx, scope, false);
+					}
+				}
+			}
+			else {
+				yield* forEachDeclarations(ts, node.initializer, ast, ctx, scope, false);
+			}
+		}
+		let condition: [ts.Identifier, boolean, boolean, boolean][] = [];
+		if (node.condition) {
+			condition = [...forEachDeclarations(ts, node.condition, ast, ctx, scope, true)];
+			for (const item of condition) {
+				yield item;
+			}
+		}
+		if (node.incrementor) {
+			yield* forEachDeclarations(ts, node.incrementor, ast, ctx, scope, false);
+		}
+		ctx.enterNarrowedScope();
+		for (const [id, , , skipped] of condition) {
+			if (!skipped) {
+				ctx.addNarrowedBinding(getNodeText(ts, id, ast));
+			}
+		}
+		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
+		ctx.exitNarrowedScope();
+		scope.end();
+	}
+	else if (ts.isSwitchStatement(node)) {
+		const expression = [...forEachDeclarations(ts, node.expression, ast, ctx, scope, true)];
+		for (const item of expression) {
+			yield item;
+		}
+		for (const clause of node.caseBlock.clauses) {
+			if (ts.isCaseClause(clause)) {
+				yield* forEachDeclarations(ts, clause.expression, ast, ctx, scope, false);
+			}
+		}
+		ctx.enterNarrowedScope();
+		for (const [id, , , skipped] of expression) {
+			if (!skipped) {
+				ctx.addNarrowedBinding(getNodeText(ts, id, ast));
+			}
+		}
+		for (const clause of node.caseBlock.clauses) {
+			for (const statement of clause.statements) {
+				yield* forEachDeclarations(ts, statement, ast, ctx, scope, false);
+			}
+		}
+		ctx.exitNarrowedScope();
 	}
 	else if (ts.isSourceFile(node)) {
 		for (const statement of node.statements) {
