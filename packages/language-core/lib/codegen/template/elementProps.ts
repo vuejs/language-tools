@@ -284,7 +284,11 @@ export function* generatePropExp(
 				},
 			);
 
-			if (options.destructuredProps.has(propVariableName) || options.importedComponents.has(propVariableName)) {
+			if (
+				options.destructuredProps.has(propVariableName)
+				|| options.importedComponents.has(propVariableName)
+				|| options.pinnedNullishBindings.has(propVariableName)
+			) {
 				yield* codes;
 			}
 			else if (shouldIdentifierSkipped(ctx, propVariableName)) {

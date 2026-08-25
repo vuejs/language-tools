@@ -218,14 +218,23 @@
 	<div v-for="{ val = fallback } in objs">{{ exactType(val, {} as string | number) }}</div>
 	<div v-for="{ a: { b = fallback } } in nestedOpt">{{ exactType(b, {} as number) }}</div>
 
-	<!-- literal initializer pins the CFA flow type; narrowing must still work -->
+	<!-- unions including null/undefined narrow for real when the initializer does not pin the flow type -->
 	<div v-if="fnUndef">{{ exactType(fnUndef, {} as () => number) }}</div>
 	<div v-else>{{ exactType(fnUndef, undefined) }}</div>
 	<div v-if="strUndef">{{ exactType(strUndef, {} as string) }}</div>
-	<div v-else>{{ exactType(strUndef, undefined) }}</div>
+	<!-- an empty string is falsy, so `string` survives the else branch -->
+	<div v-else>{{ exactType(strUndef, {} as string | undefined) }}</div>
 	<div v-if="fnNull">{{ exactType(fnNull, {} as () => number) }}</div>
 	<div v-else>{{ exactType(fnNull, null) }}</div>
 	<div v-if="numZero">{{ exactType(numZero, {} as 1) }}</div>
+
+	<!-- a const initialized to null/undefined is CFA-pinned to that unit type,
+		so it is provably not a ref and is accessed directly, like plain TypeScript -->
+	<div v-if="pinnedUndef">{{ pinnedUndef }}</div>
+	<div v-else>{{ exactType(pinnedUndef, undefined) }}</div>
+	<div v-if="pinnedNull">{{ pinnedNull }}</div>
+	<div v-else>{{ exactType(pinnedNull, null) }}</div>
+	{{ pinnedUndef }}
 </template>
 
 <script setup lang="ts">
@@ -271,10 +280,12 @@ const literalKey = ref<'m'>('m');
 const box = { value: 42 };
 const fallback = ref(0);
 const nestedOpt = ref([{ a: { b: 1 } as { b?: number } }]);
-const fnUndef: (() => number) | undefined = undefined;
-const strUndef: string | undefined = undefined;
-const fnNull: (() => number) | null = null;
-const numZero: 0 | 1 = 0;
+const fnUndef: (() => number) | undefined = Math.random() > 0.5 ? () => 1 : undefined;
+const strUndef: string | undefined = Math.random() > 0.5 ? 'x' : undefined;
+const fnNull: (() => number) | null = Math.random() > 0.5 ? () => 1 : null;
+const numZero: 0 | 1 = Math.random() > 0.5 ? 0 : 1;
+const pinnedUndef: (() => number) | undefined = undefined;
+const pinnedNull: (() => number) | null = null;
 const Child = defineComponent({
 	__typeProps: {} as { foo: string },
 });
