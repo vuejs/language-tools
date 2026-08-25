@@ -5,7 +5,7 @@ import { codeFeatures } from '../codeFeatures';
 import { newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
-import { collectNarrowedBindingNames, generateInterpolation } from './interpolation';
+import { generateInterpolation } from './interpolation';
 import { generateTemplateChild } from './templateChild';
 
 export function* generateVIf(
@@ -39,16 +39,6 @@ export function* generateVIf(
 		}
 
 		if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-			conditionNames = collectNarrowedBindingNames(
-				options.typescript,
-				options.template,
-				options.setupBindings,
-				ctx,
-				branch.condition.content,
-			);
-			for (const name of conditionNames) {
-				ctx.addNarrowedBinding(name);
-			}
 			const codes = [...generateInterpolation(
 				options,
 				ctx,
@@ -59,7 +49,11 @@ export function* generateVIf(
 				`(`,
 				`)`,
 				true,
+				conditionNames,
 			)];
+			for (const name of conditionNames) {
+				ctx.addNarrowedBinding(name);
+			}
 			yield* codes;
 			ctx.conditions.push(toString(codes));
 			addedBlockCondition = true;

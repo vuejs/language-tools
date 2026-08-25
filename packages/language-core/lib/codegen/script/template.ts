@@ -1,7 +1,7 @@
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, generateSfcBlockSection } from '../utils';
+import { endOfLine, generateSfcBlockSection, getRefBrandArgument } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenOptions } from './index';
 
@@ -14,7 +14,7 @@ export function* generateTemplate(
 	yield* generateTemplateDirectives(options);
 
 	for (const name of options.withDotValueBindings) {
-		yield `${names.withDotValue}(${name}, {} as import('${options.vueCompilerOptions.lib}').Ref<unknown>)${endOfLine}`;
+		yield `${names.withDotValue}(${name}, ${getRefBrandArgument(options.vueCompilerOptions)})${endOfLine}`;
 	}
 
 	if (options.templateAndStyleCodes.length) {

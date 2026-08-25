@@ -6,7 +6,7 @@ import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../util
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { identifierRE, newLine } from '../utils';
+import { getRefBrandArgument, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
@@ -284,6 +284,7 @@ export function* generatePropExp(
 				},
 			);
 
+			// Keep in sync with the access strategy in interpolation.ts.
 			if (options.destructuredProps.has(propVariableName) || options.importedComponents.has(propVariableName)) {
 				yield* codes;
 			}
@@ -303,7 +304,7 @@ export function* generatePropExp(
 				else {
 					yield `${names.unwrap}(`;
 					yield* codes;
-					yield `, {} as import('${options.vueCompilerOptions.lib}').Ref<unknown>)`;
+					yield `, ${getRefBrandArgument(options.vueCompilerOptions)})`;
 				}
 			}
 			else {

@@ -5,7 +5,7 @@ import { collectBindingNames } from '../../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { forEachNode, getTypeScriptAST, identifierRE } from '../utils';
+import { forEachNode, getRefBrandArgument, getTypeScriptAST, identifierRE } from '../utils';
 import { Boundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 
@@ -36,6 +36,9 @@ export function* generateInterpolation(
 	prefix: string = '',
 	suffix: string = '',
 	inNarrowing: boolean = false,
+	// collects the top-level narrowing binding names for the caller (vIf uses
+	// them to mark the branch scope), so the condition is only walked once
+	narrowedBindings?: Set<string>,
 ): Generator<Code> {
 	if (prefix) {
 		yield prefix;
@@ -53,6 +56,10 @@ export function* generateInterpolation(
 			inNarrowing,
 		)
 	) {
+		const identifierData = isShorthand ? { ...data, __shorthandExpression: 'js' as const } : data;
+		if (narrowedBindings && isNarrowing && setupBindings.has(name)) {
+			narrowedBindings.add(name);
+		}
 		if (isShorthand) {
 			yield* generateNonIdentifierCode(
 				code.slice(prevEnd, offset + name.length),
@@ -73,7 +80,8 @@ export function* generateInterpolation(
 			);
 		}
 
-		// Access strategy, in precedence order:
+		// Access strategy, in precedence order (keep in sync with the v-bind
+		// shorthand handling in elementProps.ts):
 		// - destructured props / imported components → direct reference
 		// - template refs → direct `.value`
 		// - type query on binding → `.value`
@@ -84,9 +92,7 @@ export function* generateInterpolation(
 				name,
 				block.name,
 				start + offset,
-				isShorthand
-					? { ...data, __shorthandExpression: 'js' }
-					: data,
+				identifierData,
 			];
 		}
 		else if (setupRefs.has(name)) {
@@ -105,9 +111,7 @@ export function* generateInterpolation(
 					name,
 					block.name,
 					start + offset,
-					isShorthand
-						? { ...data, __shorthandExpression: 'js' }
-						: data,
+					identifierData,
 				];
 				yield `.value`;
 			}
@@ -116,9 +120,7 @@ export function* generateInterpolation(
 					name,
 					block.name,
 					start + offset,
-					isShorthand
-						? { ...data, __shorthandExpression: 'js' }
-						: data,
+					identifierData,
 				];
 				yield `.value`;
 			}
@@ -134,11 +136,9 @@ export function* generateInterpolation(
 					name,
 					block.name,
 					start + offset,
-					isShorthand
-						? { ...data, __shorthandExpression: 'js' }
-						: data,
+					identifierData,
 				];
-				yield `, {} as import('${vueCompilerOptions.lib}').Ref<unknown>)`;
+				yield `, ${getRefBrandArgument(vueCompilerOptions)})`;
 				if (isNewOperand) {
 					yield `)`;
 				}
@@ -164,9 +164,7 @@ export function* generateInterpolation(
 				name,
 				block.name,
 				start + offset,
-				isShorthand
-					? { ...data, __shorthandExpression: 'js' }
-					: data,
+				identifierData,
 			];
 			yield boundary.end();
 		}
@@ -225,7 +223,7 @@ function* forEachIdentifiers(
 	prefix: string,
 	suffix: string,
 	inNarrowing: boolean,
-): Generator<[string, number, boolean, boolean, boolean, boolean]> {
+): Generator<IdentifierAccess> {
 	if (identifierRE.test(code) && !shouldIdentifierSkipped(ctx, code)) {
 		yield [code, 0, false, inNarrowing, false, false];
 		return;
@@ -252,7 +250,23 @@ function* forEachIdentifiers(
 	scope.end();
 }
 
-type DeclarationItem = [ts.Identifier, boolean, boolean, boolean, boolean, boolean];
+type DeclarationItem = [
+	id: ts.Identifier,
+	isShorthand: boolean,
+	isNarrowing: boolean,
+	skipped: boolean,
+	inTypeQuery: boolean,
+	isNewOperand: boolean,
+];
+
+type IdentifierAccess = [
+	name: string,
+	offset: number,
+	isShorthand: boolean,
+	isNarrowing: boolean,
+	inTypeQuery: boolean,
+	isNewOperand: boolean,
+];
 
 function* forEachDeclarations(
 	ts: typeof import('typescript'),
@@ -851,29 +865,6 @@ function* forEachDeclarationsInTypeNode(
 			yield* forEachDeclarationsInTypeNode(ts, child, ast, ctx);
 		}
 	}
-}
-
-export function collectNarrowedBindingNames(
-	typescript: typeof import('typescript'),
-	block: IRBlock,
-	setupBindings: Set<string>,
-	ctx: TemplateCodegenContext,
-	code: string,
-): Set<string> {
-	const names = new Set<string>();
-	const scope = ctx.scope();
-	const ast = getTypeScriptAST(typescript, block, code);
-	for (const [id, , isNarrowing, skipped] of forEachDeclarations(typescript, ast, ast, ctx, scope, true)) {
-		if (!isNarrowing || skipped) {
-			continue;
-		}
-		const text = getNodeText(typescript, id, ast);
-		if (setupBindings.has(text)) {
-			names.add(text);
-		}
-	}
-	scope.end();
-	return names;
 }
 
 export function shouldIdentifierSkipped(
