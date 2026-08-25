@@ -1,6 +1,8 @@
 import * as CompilerDOM from '@vue/compiler-dom';
+import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
+import { getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, getTypeScriptAST, newLine } from '../utils';
@@ -19,10 +21,20 @@ export function* generateVFor(
 	const scope = ctx.scope();
 	let bindingNames: string[] = [];
 	let sourceAlias: string | undefined;
+	const defaultInitializerRanges: [number, number][] = [];
 
 	if (leftExpressionRange && leftExpressionText) {
-		const collectAst = getTypeScriptAST(options.typescript, options.template, `const [${leftExpressionText}]`);
+		const wrap = `const [`;
+		const collectAst = getTypeScriptAST(options.typescript, options.template, `${wrap}${leftExpressionText}]`);
 		bindingNames = collectBindingNames(options.typescript, collectAst, collectAst);
+		const declaration = (collectAst.statements[0] as ts.VariableStatement).declarationList.declarations[0]!;
+		const initializers: ts.Expression[] = [];
+		collectDefaultInitializers(options.typescript, declaration.name, initializers);
+		for (const initializer of initializers) {
+			const { start, end } = getStartEnd(options.typescript, initializer, collectAst);
+			defaultInitializerRanges.push([start - wrap.length, end - wrap.length]);
+		}
+		defaultInitializerRanges.sort((a, b) => a[0] - b[0]);
 	}
 	if (
 		source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
@@ -55,12 +67,34 @@ export function* generateVFor(
 
 	yield `for (const [`;
 	if (leftExpressionRange && leftExpressionText) {
-		yield [
-			leftExpressionText,
-			'template',
-			leftExpressionRange.start,
-			codeFeatures.all,
-		];
+		let lastOffset = 0;
+		for (const [start, end] of defaultInitializerRanges) {
+			if (start > lastOffset) {
+				yield [
+					leftExpressionText.slice(lastOffset, start),
+					'template',
+					leftExpressionRange.start + lastOffset,
+					codeFeatures.all,
+				];
+			}
+			yield* generateInterpolation(
+				options,
+				ctx,
+				options.template,
+				codeFeatures.all,
+				leftExpressionText.slice(start, end),
+				leftExpressionRange.start + start,
+			);
+			lastOffset = end;
+		}
+		if (lastOffset < leftExpressionText.length) {
+			yield [
+				leftExpressionText.slice(lastOffset),
+				'template',
+				leftExpressionRange.start + lastOffset,
+				codeFeatures.all,
+			];
+		}
 	}
 	yield `] of `;
 	if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -120,4 +154,25 @@ export function parseVForNode(node: CompilerDOM.ForNode) {
 		leftExpressionRange,
 		leftExpressionText,
 	};
+}
+
+function collectDefaultInitializers(
+	ts: typeof import('typescript'),
+	pattern: ts.BindingName,
+	out: ts.Expression[],
+) {
+	if (ts.isIdentifier(pattern)) {
+		return;
+	}
+	for (const element of pattern.elements) {
+		if (!ts.isBindingElement(element)) {
+			continue;
+		}
+		if (!ts.isIdentifier(element.name)) {
+			collectDefaultInitializers(ts, element.name, out);
+		}
+		if (element.initializer) {
+			out.push(element.initializer);
+		}
+	}
 }

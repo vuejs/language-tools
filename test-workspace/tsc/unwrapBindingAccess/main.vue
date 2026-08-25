@@ -210,9 +210,9 @@
 	<!-- plain object binding with a `value` property is not unwrapped -->
 	<div>{{ exactType(box, {} as { value: number }) }}</div>
 
-	<!-- v-for: inline literal sources widen like plain TS -->
-	<div v-for="n in [1, 2, 3]">{{ exactType(n, {} as number) }}</div>
-	<div v-for="(v, k) in { a: 1, b: 2 }">{{ exactType(v, {} as number) }}{{ exactType(k, {} as string) }}</div>
+	<!-- v-for: inline literal sources keep their literal types (#6067) -->
+	<div v-for="n in [1, 2, 3]">{{ exactType(n, {} as 1 | 2 | 3) }}</div>
+	<div v-for="(v, k) in { a: 1, b: 2 }">{{ exactType(v, {} as 1 | 2) }}{{ exactType(k, {} as 'a' | 'b') }}</div>
 
 	<!-- v-for: destructured defaults unwrap ref bindings -->
 	<div v-for="{ val = fallback } in objs">{{ exactType(val, {} as string | number) }}</div>
