@@ -27,6 +27,7 @@ export function* generateInterpolation(
 	start: number,
 	prefix: string = '',
 	suffix: string = '',
+	forceDotValue: boolean = false,
 ): Generator<Code> {
 	if (prefix) {
 		yield prefix;
@@ -34,7 +35,7 @@ export function* generateInterpolation(
 
 	let prevEnd = 0;
 	for (
-		const [name, offset, isShorthand, isCall] of forEachIdentifiers(
+		const [name, offset, isShorthand, isNarrowing] of forEachIdentifiers(
 			typescript,
 			ctx,
 			block,
@@ -66,7 +67,7 @@ export function* generateInterpolation(
 		// Access strategy, in precedence order:
 		// - destructured props / imported components → direct reference
 		// - template refs → direct `.value`
-		// - other bindings → `.value` + `__VLS_withDotValue` assertion
+		// - other bindings → `.value` (narrowing / write) or `__VLS_unwrap` (value read)
 		// - otherwise → `__VLS_ctx.<name>`
 		if (destructuredProps.has(name) || importedComponents.has(name)) {
 			yield [
@@ -89,19 +90,28 @@ export function* generateInterpolation(
 		}
 		else if (setupBindings.has(name)) {
 			ctx.accessVariable(block.name, name, start + offset);
-			if (isCall) {
-				ctx.accessVariableAsCall(name);
-			}
-			yield [
-				name,
-				block.name,
-				start + offset,
-				isShorthand
-					? { ...data, __shorthandExpression: 'js' }
-					: data,
-			];
-			if (!isCall) {
+			if (isNarrowing || forceDotValue) {
+				yield [
+					name,
+					block.name,
+					start + offset,
+					isShorthand
+						? { ...data, __shorthandExpression: 'js' }
+						: data,
+				];
 				yield `.value`;
+			}
+			else {
+				yield `${names.unwrap}(`;
+				yield [
+					name,
+					block.name,
+					start + offset,
+					isShorthand
+						? { ...data, __shorthandExpression: 'js' }
+						: data,
+				];
+				yield `)`;
 			}
 		}
 		else {
@@ -192,12 +202,12 @@ function* forEachIdentifiers(
 
 	const scope = ctx.scope();
 	const ast = getTypeScriptAST(ts, block, prefix + code + suffix);
-	for (const [id, isShorthand, isCall] of forEachDeclarations(ts, ast, ast, ctx, scope, false)) {
+	for (const [id, isShorthand, isNarrowing] of forEachDeclarations(ts, ast, ast, ctx, scope, false)) {
 		const text = getNodeText(ts, id, ast);
 		if (shouldIdentifierSkipped(ctx, text)) {
 			continue;
 		}
-		yield [text, getStartEnd(ts, id, ast).start - prefix.length, isShorthand, isCall];
+		yield [text, getStartEnd(ts, id, ast).start - prefix.length, isShorthand, isNarrowing];
 	}
 	scope.end();
 }
@@ -208,52 +218,77 @@ function* forEachDeclarations(
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
-	inCallPosition: boolean,
+	inNarrowing: boolean,
 ): Generator<[ts.Identifier, boolean, boolean]> {
 	if (ts.isIdentifier(node)) {
-		yield [node, false, inCallPosition];
+		yield [node, false, inNarrowing];
 	}
 	else if (ts.isShorthandPropertyAssignment(node)) {
-		yield [node.name, true, inCallPosition];
+		yield [node.name, true, inNarrowing];
 	}
 	else if (ts.isPropertyAccessExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, false);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
+	}
+	else if (ts.isElementAccessExpression(node)) {
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
+		yield* forEachDeclarations(ts, node.argumentExpression, ast, ctx, scope, false);
 	}
 	else if (ts.isCallExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, false);
 		for (const arg of node.arguments) {
-			yield* forEachDeclarations(ts, arg, ast, ctx, scope, false);
+			yield* forEachDeclarations(ts, arg, ast, ctx, scope, inNarrowing);
 		}
 	}
 	else if (ts.isTaggedTemplateExpression(node)) {
-		yield* forEachDeclarations(ts, node.tag, ast, ctx, scope, true);
-		yield* forEachDeclarations(ts, node.template, ast, ctx, scope, false);
+		yield* forEachDeclarations(ts, node.tag, ast, ctx, scope, false);
+		yield* forEachDeclarations(ts, node.template, ast, ctx, scope, inNarrowing);
 	}
 	else if (ts.isParenthesizedExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inCallPosition);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 	}
 	else if (ts.isNonNullExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inCallPosition);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 	}
 	else if (ts.isTypeAssertionExpression(node)) {
 		yield* forEachDeclarationsInTypeNode(ts, node.type);
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inCallPosition);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 	}
 	else if (ts.isAsExpression(node) || ts.isSatisfiesExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inCallPosition);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 		yield* forEachDeclarationsInTypeNode(ts, node.type);
 	}
 	else if (ts.isBinaryExpression(node)) {
 		const isLogical = node.operatorToken.kind === ts.SyntaxKind.BarBarToken
 			|| node.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken
 			|| node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken;
-		yield* forEachDeclarations(ts, node.left, ast, ctx, scope, isLogical ? inCallPosition : false);
-		yield* forEachDeclarations(ts, node.right, ast, ctx, scope, isLogical ? inCallPosition : false);
+		const isAssignment = node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment
+			&& node.operatorToken.kind <= ts.SyntaxKind.LastAssignment;
+		const isEquality = node.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken
+			|| node.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsEqualsToken
+			|| node.operatorToken.kind === ts.SyntaxKind.EqualsEqualsToken
+			|| node.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsToken;
+		const isInstanceof = node.operatorToken.kind === ts.SyntaxKind.InstanceOfKeyword;
+		const isIn = node.operatorToken.kind === ts.SyntaxKind.InKeyword;
+		yield* forEachDeclarations(ts, node.left, ast, ctx, scope, isLogical || isAssignment || isEquality || isInstanceof);
+		yield* forEachDeclarations(ts, node.right, ast, ctx, scope, isLogical || isEquality || isIn);
 	}
 	else if (ts.isConditionalExpression(node)) {
-		yield* forEachDeclarations(ts, node.condition, ast, ctx, scope, false);
-		yield* forEachDeclarations(ts, node.whenTrue, ast, ctx, scope, inCallPosition);
-		yield* forEachDeclarations(ts, node.whenFalse, ast, ctx, scope, inCallPosition);
+		yield* forEachDeclarations(ts, node.condition, ast, ctx, scope, true);
+		yield* forEachDeclarations(ts, node.whenTrue, ast, ctx, scope, false);
+		yield* forEachDeclarations(ts, node.whenFalse, ast, ctx, scope, false);
+	}
+	else if (ts.isPrefixUnaryExpression(node)) {
+		yield* forEachDeclarations(
+			ts,
+			node.operand,
+			ast,
+			ctx,
+			scope,
+			node.operator === ts.SyntaxKind.ExclamationToken,
+		);
+	}
+	else if (ts.isTypeOfExpression(node)) {
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
 	}
 	else if (ts.isVariableDeclaration(node)) {
 		scope.declare(...collectBindingNames(ts, node.name, ast));

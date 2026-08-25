@@ -296,8 +296,9 @@ export function* generatePropExp(
 			}
 			else if (options.setupBindings.has(propVariableName)) {
 				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
+				yield `${names.unwrap}(`;
 				yield* codes;
-				yield `.value`;
+				yield `)`;
 			}
 			else {
 				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);

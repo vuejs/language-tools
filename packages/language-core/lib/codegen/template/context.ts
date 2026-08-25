@@ -161,7 +161,6 @@ export function createTemplateCodegenContext() {
 	// context accesses -----------------------------------------------------------
 
 	const contextAccesses = new Map<string, Map<string, Set<number>>>();
-	const callAccessedBindings = new Set<string>();
 
 	function accessVariable(source: string, name: string, offset?: number) {
 		let map = contextAccesses.get(name);
@@ -175,10 +174,6 @@ export function createTemplateCodegenContext() {
 		if (offset !== undefined) {
 			arr.add(offset);
 		}
-	}
-
-	function accessVariableAsCall(name: string) {
-		callAccessedBindings.add(name);
 	}
 
 	function* generateAutoImport(): Generator<Code> {
@@ -273,8 +268,6 @@ export function createTemplateCodegenContext() {
 		scope,
 		contextAccesses,
 		accessVariable,
-		callAccessedBindings,
-		accessVariableAsCall,
 		generateAutoImport,
 		conditions,
 		generateConditionGuards,

@@ -40,6 +40,7 @@ export function* generateVIf(
 				branch.condition.loc.start.offset,
 				`(`,
 				`)`,
+				true,
 			)];
 			yield* codes;
 			ctx.conditions.push(toString(codes));

@@ -169,21 +169,9 @@ export function* generateEventExpression(
 			scope.declare('$event');
 			yield* ctx.generateConditionGuards();
 
-			// The top-level `__VLS_withDotValue` assertion does not narrow imported
-			// bindings inside this closure (TS control-flow limitation), so re-assert
-			// the setup bindings that are called by this handler right here. Only
-			// called bindings are re-asserted: for local bindings the top-level
-			// assertion already flows into this closure, and re-asserting non-call
-			// accesses would double-narrow them.
-			ctx.callAccessedBindings.clear();
 			const codes: Code[] = [];
 			for (const code of interpolation) {
 				codes.push(code);
-			}
-			for (const name of ctx.callAccessedBindings) {
-				if (options.setupBindings.has(name)) {
-					yield `${names.withDotValue}(${name}, {} as import('${options.vueCompilerOptions.lib}').Ref<unknown>)${endOfLine}`;
-				}
 			}
 
 			if (isSingleExpression(options.typescript, ast)) {
@@ -235,6 +223,9 @@ export function* generateModelEventExpression(
 			codeFeatures.verification,
 			prop.exp.content,
 			prop.exp.loc.start.offset,
+			undefined,
+			undefined,
+			true,
 		);
 		yield ` = $event${endOfLine}`;
 		yield `}`;
