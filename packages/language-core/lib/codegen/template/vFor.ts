@@ -26,15 +26,12 @@ export function* generateVFor(
 	}
 	if (
 		source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-		&& bindingNames.some(name =>
-			(options.setupBindings.has(name) || options.setupRefs.has(name))
-			&& new RegExp(`\\b${name}\\b`).test(source.content)
-		)
+		&& bindingNames.some(name => options.setupBindings.has(name) || options.setupRefs.has(name))
 	) {
-		// In `v-for="x in x"` the source is evaluated in the outer scope, but the
-		// loop head is inside the loop bindings' lexical scope: a bare `x` would
-		// resolve to the loop variable (TDZ). Evaluate the source before the loop
-		// and reference the alias in the head instead.
+		// When a loop binding shadows a setup binding, evaluate the source in the
+		// outer scope before the loop bindings' lexical scope is established, then
+		// reference the alias in the head instead. This matches Vue's semantics,
+		// where the source expression resolves in the parent scope.
 		sourceAlias = ctx.getInternalVariable();
 		yield `const ${sourceAlias} = `;
 		yield* generateInterpolation(

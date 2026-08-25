@@ -121,6 +121,10 @@
 	<!-- type query on a function declaration stays bare -->
 	<div>{{ null as any as typeof handler }}</div>
 
+	<!-- typeof query inside explicit call / new type arguments -->
+	<div>{{ exactType(generic<typeof count>(1), {} as number) }}</div>
+	<div>{{ exactType(new G<typeof count>(1).v, {} as number) }}</div>
+
 	<!-- function declaration in handler: name + params must not be rewritten -->
 	<button @click="function helper(a: number) { return a; } helper(1);" />
 
@@ -157,6 +161,15 @@
 
 	<!-- v-for: the source expression is evaluated in the outer scope, even when the loop variable shares its name -->
 	<div v-for="entry in entry">{{ exactType(entry, {} as number) }}</div>
+
+	<!-- new operand with a comment between `new` and the operand still parenthesizes -->
+	<div>{{ exactType(new /* gap */ Foo(), {} as Foo) }}</div>
+
+	<!-- type parameter constraint (typeof query) yields before the parameter initializer -->
+	<button @click="function f<T extends typeof count>(x: T = count as T) { return x; } f(2);" />
+
+	<!-- destructuring + type annotation: the pattern's nested reads precede the type query -->
+	<button @click="const { z = count }: typeof shape = shape; void z;" />
 </template>
 
 <script setup lang="ts">
@@ -165,7 +178,11 @@ import { exactType } from '../shared';
 
 function handler(_e: Event) {}
 function guard() { return true; }
+function generic<T>(v: T) { return v; }
 class Foo {}
+class G<T> {
+	constructor(readonly v: T) {}
+}
 const count = ref(0);
 const strOrNum = ref<string | number>('');
 const dateOrStr = ref<unknown>(new Date());
@@ -182,6 +199,7 @@ const other = ref(true);
 const x = ref(0);
 const y = ref(0);
 const source = ref({ x: 0 });
+const shape = ref({ z: 1 });
 const items = ref<[number, number, number]>([1, 2, 3]);
 const item = ref(0);
 const key = ref('m');
