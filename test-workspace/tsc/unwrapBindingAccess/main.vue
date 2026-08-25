@@ -3,6 +3,9 @@
 	<button @click="handler"></button>
 	<div>{{ exactType(handler, {} as (_e: Event) => void) }}</div>
 
+	<!-- condition callee: the callee is not the narrowed subject (the call result is), so it stays a read -->
+	<div v-if="guard()">{{ exactType(guard, {} as () => boolean) }}</div>
+
 	<!-- constructor binding: `new Foo()` should keep the constructor as a read (no `.value`) -->
 	<div v-if="new Foo()">{{ exactType(new Foo(), {} as Foo) }}</div>
 
