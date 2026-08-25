@@ -235,11 +235,20 @@
 	<div v-if="pinnedNull">{{ pinnedNull }}</div>
 	<div v-else>{{ exactType(pinnedNull, null) }}</div>
 	{{ pinnedUndef }}
+
+	<!-- imported nullish consts are not CFA-pinned across the module boundary
+		(TypeScript uses the declared type for imports), so they narrow through
+		__VLS_withDotValue like any other declared union -->
+	<div v-if="importedUndef">{{ exactType(importedUndef, {} as string) }}</div>
+	<div v-else>{{ exactType(importedUndef, {} as string | undefined) }}</div>
+	<div v-if="importedNull">{{ exactType(importedNull, {} as () => number) }}</div>
+	<div v-else>{{ exactType(importedNull, null) }}</div>
 </template>
 
 <script setup lang="ts">
 import { defineComponent, ref } from 'vue';
 import { exactType } from '../shared';
+import { importedNull, importedUndef } from './pinned';
 import Comp from './child.vue';
 
 function handler(_e: Event) {}
