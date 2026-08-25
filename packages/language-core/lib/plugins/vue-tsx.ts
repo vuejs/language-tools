@@ -146,23 +146,6 @@ function useCodegen(
 		return names;
 	});
 
-	const getSetupNonNarrowableBindings = computedSet(() => {
-		const names = new Set<string>();
-		const scriptSetupRanges = getScriptSetupRanges();
-		if (ir.scriptSetup && scriptSetupRanges) {
-			for (const range of scriptSetupRanges.nonNarrowables) {
-				names.add(ir.scriptSetup.content.slice(range.start, range.end));
-			}
-			const scriptRanges = getScriptRanges();
-			if (ir.script && scriptRanges) {
-				for (const range of scriptRanges.nonNarrowables) {
-					names.add(ir.script.content.slice(range.start, range.end));
-				}
-			}
-		}
-		return names;
-	});
-
 	const getSetupRefs = computedSet(() => {
 		return new Set(
 			getScriptSetupRanges()?.useTemplateRef
@@ -219,7 +202,6 @@ function useCodegen(
 			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
 			setupBindings: getSetupBindings(),
-			setupNonNarrowableBindings: getSetupNonNarrowableBindings(),
 			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
@@ -239,7 +221,6 @@ function useCodegen(
 			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
 			setupBindings: getSetupBindings(),
-			setupNonNarrowableBindings: getSetupNonNarrowableBindings(),
 		});
 	});
 

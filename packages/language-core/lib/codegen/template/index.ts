@@ -17,7 +17,6 @@ export interface TemplateCodegenOptions {
 	importedComponents: Set<string>;
 	setupRefs: Set<string>;
 	setupBindings: Set<string>;
-	setupNonNarrowableBindings: Set<string>;
 	hasDefineSlots?: boolean;
 	propsAssignName?: string;
 	slotsAssignName?: string;

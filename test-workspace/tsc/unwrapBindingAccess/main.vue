@@ -3,9 +3,6 @@
 	<button @click="handler"></button>
 	<div>{{ exactType(handler, {} as (_e: Event) => void) }}</div>
 
-	<!-- function binding: callee under v-if should stay read (no `.value`) -->
-	<div v-if="guard()">{{ exactType(guard, {} as () => boolean) }}</div>
-
 	<!-- constructor binding: `new Foo()` should keep the constructor as a read (no `.value`) -->
 	<div v-if="new Foo()">{{ exactType(new Foo(), {} as Foo) }}</div>
 
@@ -71,12 +68,6 @@
 	<div v-if="maybeFn">{{ exactType(maybeFn, {} as (_e: Event) => void) }}</div>
 	<div v-else>{{ exactType(maybeFn, undefined) }}</div>
 
-	<!-- function declaration: v-if condition must stay a read (no `.value`) -->
-	<div v-if="handler"></div>
-
-	<!-- class declaration: v-if condition must stay a read (no `.value`) -->
-	<div v-if="Foo"></div>
-
 	<!-- arrow IIFE in a logical condition: inner param must remain untouched -->
 	<div v-if="((x) => x)(someRef) && other"></div>
 
@@ -117,9 +108,6 @@
 
 	<!-- type query on a ref keeps `.value` semantics -->
 	<div>{{ exactType(maybe as any as typeof count, {} as number) }}</div>
-
-	<!-- type query on a function declaration stays bare -->
-	<div>{{ null as any as typeof handler }}</div>
 
 	<!-- typeof query inside explicit call / new type arguments -->
 	<div>{{ exactType(generic<typeof count>(1), {} as number) }}</div>
@@ -187,6 +175,54 @@
 
 	<!-- destructuring + type annotation: the pattern's nested reads precede the type query -->
 	<button @click="const { z = count }: typeof shape = shape; void z;" />
+
+	<!-- comma operator: the result operand drives narrowing -->
+	<div v-if="(guard(), flag)">{{ exactType(flag, {} as true) }}</div>
+	<button @click="if ((guard(), flag)) { exactType(flag, {} as true); }" />
+
+	<!-- early exit: return keeps fall-through narrowing -->
+	<button @click="if (flag) return; exactType(flag, {} as false);" />
+	<button @click="if (!maybe) return; exactType(maybe, {} as string);" />
+
+	<!-- early exit: throw keeps fall-through narrowing -->
+	<button @click="if (!maybe) throw new Error(); exactType(maybe, {} as string);" />
+	<button @click="try { if (!maybe) throw new Error(); exactType(maybe, {} as string); } catch (e) { void e; }" />
+
+	<!-- early exit: over-broad reads after the guard must still error -->
+	<!-- @vue-expect-error -->
+	<button @click="if (!maybe) return; exactType(maybe, {} as string | undefined);" />
+	<!-- @vue-expect-error -->
+	<button @click="if (flag) return; exactType(flag, {} as boolean);" />
+
+	<!-- class field computed name unwraps the ref -->
+	<button @click="const C = class { [literalKey] = 1 }; void C;" />
+
+	<!-- binding pattern computed name unwraps the ref -->
+	<button @click="const { [literalKey]: bx } = { m: 1 }; void bx;" />
+
+	<!-- bare delete on a ref binding targets `.value` (not optional) -->
+	<!-- @vue-expect-error -->
+	<button @click="delete count" />
+
+	<!-- plain object binding with a `value` property is not unwrapped -->
+	<div>{{ exactType(box, {} as { value: number }) }}</div>
+
+	<!-- v-for: inline literal sources widen like plain TS -->
+	<div v-for="n in [1, 2, 3]">{{ exactType(n, {} as number) }}</div>
+	<div v-for="(v, k) in { a: 1, b: 2 }">{{ exactType(v, {} as number) }}{{ exactType(k, {} as string) }}</div>
+
+	<!-- v-for: destructured defaults unwrap ref bindings -->
+	<div v-for="{ val = fallback } in objs">{{ exactType(val, {} as string | number) }}</div>
+	<div v-for="{ a: { b = fallback } } in nestedOpt">{{ exactType(b, {} as number) }}</div>
+
+	<!-- literal initializer pins the CFA flow type; narrowing must still work -->
+	<div v-if="fnUndef">{{ exactType(fnUndef, {} as () => number) }}</div>
+	<div v-else>{{ exactType(fnUndef, undefined) }}</div>
+	<div v-if="strUndef">{{ exactType(strUndef, {} as string) }}</div>
+	<div v-else>{{ exactType(strUndef, undefined) }}</div>
+	<div v-if="fnNull">{{ exactType(fnNull, {} as () => number) }}</div>
+	<div v-else>{{ exactType(fnNull, null) }}</div>
+	<div v-if="numZero">{{ exactType(numZero, {} as 1) }}</div>
 </template>
 
 <script setup lang="ts">
@@ -228,6 +264,14 @@ const val = ref(0);
 const objs = ref([{ val: 'x' }]);
 const entry = ref<number[]>([1, 2]);
 const matrix = ref<number[][]>([[1]]);
+const literalKey = ref<'m'>('m');
+const box = { value: 42 };
+const fallback = ref(0);
+const nestedOpt = ref([{ a: { b: 1 } as { b?: number } }]);
+const fnUndef: (() => number) | undefined = undefined;
+const strUndef: string | undefined = undefined;
+const fnNull: (() => number) | null = null;
+const numZero: 0 | 1 = 0;
 const Child = defineComponent({
 	__typeProps: {} as { foo: string },
 });

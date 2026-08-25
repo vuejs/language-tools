@@ -13,13 +13,12 @@ import type { TemplateCodegenContext } from './context';
 const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export function* generateInterpolation(
-	{ typescript, destructuredProps, importedComponents, setupRefs, setupBindings, setupNonNarrowableBindings }: {
+	{ typescript, destructuredProps, importedComponents, setupRefs, setupBindings }: {
 		typescript: typeof import('typescript');
 		destructuredProps: Set<string>;
 		importedComponents: Set<string>;
 		setupRefs: Set<string>;
 		setupBindings: Set<string>;
-		setupNonNarrowableBindings: Set<string>;
 	},
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
@@ -69,7 +68,7 @@ export function* generateInterpolation(
 		// Access strategy, in precedence order:
 		// - destructured props / imported components → direct reference
 		// - template refs → direct `.value`
-		// - type query on binding → `.value` (non-narrowable stays bare)
+		// - type query on binding → `.value`
 		// - other bindings → `.value` (narrowing / write) or `__VLS_unwrap` (value read)
 		// - otherwise → `__VLS_ctx.<name>`
 		if (destructuredProps.has(name) || importedComponents.has(name)) {
@@ -102,11 +101,9 @@ export function* generateInterpolation(
 						? { ...data, __shorthandExpression: 'js' }
 						: data,
 				];
-				if (!setupNonNarrowableBindings.has(name)) {
-					yield `.value`;
-				}
+				yield `.value`;
 			}
-			else if (!setupNonNarrowableBindings.has(name) && (isNarrowing || ctx.isNarrowed(name))) {
+			else if (isNarrowing || ctx.isNarrowed(name)) {
 				yield [
 					name,
 					block.name,
@@ -845,7 +842,6 @@ export function collectNarrowedBindingNames(
 	typescript: typeof import('typescript'),
 	block: IRBlock,
 	setupBindings: Set<string>,
-	setupNonNarrowableBindings: Set<string>,
 	ctx: TemplateCodegenContext,
 	code: string,
 ): Set<string> {
@@ -857,7 +853,7 @@ export function collectNarrowedBindingNames(
 			continue;
 		}
 		const text = getNodeText(typescript, id, ast);
-		if (setupBindings.has(text) && !setupNonNarrowableBindings.has(text)) {
+		if (setupBindings.has(text)) {
 			names.add(text);
 		}
 	}
