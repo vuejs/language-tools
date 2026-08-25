@@ -470,9 +470,13 @@ function* forEachDeclarations(
 	}
 	else if (ts.isBlock(node)) {
 		const scope = ctx.scope();
+		// Own narrowed scope, so that early-exit narrowing (see IfStatement)
+		// applies to the following statements without leaking outside.
+		ctx.enterNarrowedScope();
 		for (const child of forEachNode(ts, node)) {
 			yield* forEachDeclarations(ts, child, ast, ctx, scope, false);
 		}
+		ctx.exitNarrowedScope();
 		scope.end();
 	}
 	else if (ts.isForOfStatement(node) || ts.isForInStatement(node)) {
@@ -525,6 +529,15 @@ function* forEachDeclarations(
 			yield* forEachDeclarations(ts, node.elseStatement, ast, ctx, scope, false);
 		}
 		ctx.exitNarrowedScope();
+		if (definitelyExits(ts, node.thenStatement)) {
+			// Early exit: the negated condition holds for the statements that
+			// follow in the same sequence (narrowed scope owned by it).
+			for (const [id, , , skipped] of condition) {
+				if (!skipped) {
+					ctx.addNarrowedBinding(getNodeText(ts, id, ast));
+				}
+			}
+		}
 	}
 	else if (ts.isWhileStatement(node)) {
 		const condition = [...forEachDeclarations(ts, node.expression, ast, ctx, scope, true)];
@@ -596,9 +609,13 @@ function* forEachDeclarations(
 			if (ts.isCaseClause(clause)) {
 				yield* forEachDeclarations(ts, clause.expression, ast, ctx, scope, false);
 			}
+			// Own narrowed scope per clause, so that early-exit narrowing in one
+			// clause does not leak into the following clauses.
+			ctx.enterNarrowedScope();
 			for (const statement of clause.statements) {
 				yield* forEachDeclarations(ts, statement, ast, ctx, scope, false);
 			}
+			ctx.exitNarrowedScope();
 		}
 		ctx.exitNarrowedScope();
 	}
@@ -646,9 +663,11 @@ function* forEachDeclarations(
 		scope.end();
 	}
 	else if (ts.isSourceFile(node)) {
+		ctx.enterNarrowedScope();
 		for (const statement of node.statements) {
 			yield* forEachDeclarations(ts, statement, ast, ctx, scope, inNarrowing);
 		}
+		ctx.exitNarrowedScope();
 	}
 	else if (ts.isExpressionStatement(node)) {
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
@@ -884,4 +903,25 @@ export function shouldIdentifierSkipped(
 		|| isLiteralWhitelisted(text)
 		|| text === 'require'
 		|| text.startsWith('__VLS_');
+}
+
+function definitelyExits(ts: typeof import('typescript'), node: ts.Statement): boolean {
+	if (
+		ts.isReturnStatement(node)
+		|| ts.isThrowStatement(node)
+		|| ts.isBreakStatement(node)
+		|| ts.isContinueStatement(node)
+	) {
+		return true;
+	}
+	if (ts.isBlock(node)) {
+		const last = node.statements[node.statements.length - 1];
+		return !!last && definitelyExits(ts, last);
+	}
+	if (ts.isIfStatement(node)) {
+		return !!node.elseStatement
+			&& definitelyExits(ts, node.thenStatement)
+			&& definitelyExits(ts, node.elseStatement);
+	}
+	return false;
 }
