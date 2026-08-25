@@ -167,6 +167,12 @@
 		<div v-for="outer in outer">{{ exactType(outer, {} as number) }}</div>
 	</div>
 
+	<!-- v-for: loop variable shadows a global identifier; the source still resolves to the global -->
+	<div v-for="Array in Array(3)">{{ exactType(Array, {} as any) }}</div>
+
+	<!-- v-for: loop variable shadows an imported component; the source still resolves to the import -->
+	<div v-for="Comp in [Comp]">{{ Comp }}</div>
+
 	<!-- class expression: its name does not leak into the surrounding scope -->
 	<button @click="const C = class count {}; void C; exactType(count, {} as number)" />
 
@@ -186,6 +192,7 @@
 <script setup lang="ts">
 import { defineComponent, ref } from 'vue';
 import { exactType } from '../shared';
+import Comp from './child.vue';
 
 function handler(_e: Event) {}
 function guard() { return true; }

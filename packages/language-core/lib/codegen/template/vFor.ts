@@ -6,7 +6,7 @@ import { names } from '../names';
 import { endOfLine, getTypeScriptAST, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
-import { generateInterpolation } from './interpolation';
+import { generateInterpolation, shouldIdentifierSkipped } from './interpolation';
 import { generateTemplateChild } from './templateChild';
 
 export function* generateVFor(
@@ -29,13 +29,15 @@ export function* generateVFor(
 		&& bindingNames.some(name =>
 			options.setupBindings.has(name)
 			|| options.setupRefs.has(name)
-			|| ctx.scopes.some(scope => scope.has(name))
+			|| options.importedComponents.has(name)
+			|| shouldIdentifierSkipped(ctx, name)
 		)
 	) {
-		// When a loop binding shadows an outer binding (setup or template-local),
-		// evaluate the source before the loop bindings' lexical scope is
-		// established, then reference the alias in the head instead. This matches
-		// Vue's semantics, where the source expression resolves in the parent scope.
+		// When a loop binding shadows a name that the source could resolve
+		// lexically (setup binding, import, template-local, or global), evaluate
+		// the source before the loop bindings' lexical scope is established, then
+		// reference the alias in the head instead. This matches Vue's semantics,
+		// where the source expression resolves in the parent scope.
 		sourceAlias = ctx.getInternalVariable();
 		yield `const ${sourceAlias} = `;
 		yield* generateInterpolation(
