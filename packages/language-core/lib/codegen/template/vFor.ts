@@ -26,12 +26,16 @@ export function* generateVFor(
 	}
 	if (
 		source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-		&& bindingNames.some(name => options.setupBindings.has(name) || options.setupRefs.has(name))
+		&& bindingNames.some(name =>
+			options.setupBindings.has(name)
+			|| options.setupRefs.has(name)
+			|| ctx.scopes.some(scope => scope.has(name))
+		)
 	) {
-		// When a loop binding shadows a setup binding, evaluate the source in the
-		// outer scope before the loop bindings' lexical scope is established, then
-		// reference the alias in the head instead. This matches Vue's semantics,
-		// where the source expression resolves in the parent scope.
+		// When a loop binding shadows an outer binding (setup or template-local),
+		// evaluate the source before the loop bindings' lexical scope is
+		// established, then reference the alias in the head instead. This matches
+		// Vue's semantics, where the source expression resolves in the parent scope.
 		sourceAlias = ctx.getInternalVariable();
 		yield `const ${sourceAlias} = `;
 		yield* generateInterpolation(

@@ -162,6 +162,17 @@
 	<!-- v-for: the source expression is evaluated in the outer scope, even when the loop variable shares its name -->
 	<div v-for="entry in entry">{{ exactType(entry, {} as number) }}</div>
 
+	<!-- v-for: an inner loop variable shadows an outer loop variable; the inner source still evaluates in the outer scope -->
+	<div v-for="outer in matrix">
+		<div v-for="outer in outer">{{ exactType(outer, {} as number) }}</div>
+	</div>
+
+	<!-- class expression: its name does not leak into the surrounding scope -->
+	<button @click="const C = class count {}; void C; exactType(count, {} as number)" />
+
+	<!-- for statement: the incrementor runs after the condition, so it is narrowed too (when the body can fall through) -->
+	<button @click="for (; maybe; exactType(maybe, {} as string)) { }" />
+
 	<!-- new operand with a comment between `new` and the operand still parenthesizes -->
 	<div>{{ exactType(new /* gap */ Foo(), {} as Foo) }}</div>
 
@@ -209,6 +220,7 @@ const idx = ref(true);
 const val = ref(0);
 const objs = ref([{ val: 'x' }]);
 const entry = ref<number[]>([1, 2]);
+const matrix = ref<number[][]>([[1]]);
 const Child = defineComponent({
 	__typeProps: {} as { foo: string },
 });

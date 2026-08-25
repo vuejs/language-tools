@@ -424,10 +424,14 @@ function* forEachDeclarations(
 		yield* forEachDeclarationsInClass(ts, node, ast, ctx, scope);
 	}
 	else if (ts.isClassExpression(node)) {
+		// A named class expression's name is only visible inside the class body,
+		// so it gets its own scope instead of leaking into the surrounding one.
+		const classScope = ctx.scope();
 		if (node.name) {
-			scope.declare(getNodeText(ts, node.name, ast));
+			classScope.declare(getNodeText(ts, node.name, ast));
 		}
-		yield* forEachDeclarationsInClass(ts, node, ast, ctx, scope);
+		yield* forEachDeclarationsInClass(ts, node, ast, ctx, classScope);
+		classScope.end();
 	}
 	else if (ts.isObjectLiteralExpression(node)) {
 		for (const prop of node.properties) {
@@ -558,14 +562,16 @@ function* forEachDeclarations(
 				yield item;
 			}
 		}
-		if (node.incrementor) {
-			yield* forEachDeclarations(ts, node.incrementor, ast, ctx, scope, false);
-		}
+		// The incrementor runs after each successful condition check, so the
+		// condition's narrowing applies to it as well as to the body.
 		ctx.enterNarrowedScope();
 		for (const [id, , , skipped] of condition) {
 			if (!skipped) {
 				ctx.addNarrowedBinding(getNodeText(ts, id, ast));
 			}
+		}
+		if (node.incrementor) {
+			yield* forEachDeclarations(ts, node.incrementor, ast, ctx, scope, false);
 		}
 		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
 		ctx.exitNarrowedScope();
@@ -735,6 +741,10 @@ function* forEachDeclarationsInFunction(
 	ctx: TemplateCodegenContext,
 ): Generator<[ts.Identifier, boolean, boolean, boolean, boolean, boolean]> {
 	const scope = ctx.scope();
+	if (ts.isFunctionExpression(node) && node.name) {
+		// A named function expression's name is only visible inside its own body.
+		scope.declare(getNodeText(ts, node.name, ast));
+	}
 	for (const param of node.parameters) {
 		scope.declare(...collectBindingNames(ts, param.name, ast));
 	}
