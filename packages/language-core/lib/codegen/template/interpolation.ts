@@ -715,6 +715,9 @@ function* forEachDeclarationsInBinding(
 	ctx: TemplateCodegenContext,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
 ): Generator<[ts.Identifier, boolean, boolean, boolean, boolean, boolean]> {
+	if ('propertyName' in node && node.propertyName && ts.isComputedPropertyName(node.propertyName)) {
+		yield* forEachDeclarations(ts, node.propertyName.expression, ast, ctx, scope, true);
+	}
 	if (!ts.isIdentifier(node.name)) {
 		yield* forEachDeclarations(ts, node.name, ast, ctx, scope, false);
 	}
@@ -793,7 +796,10 @@ function* forEachDeclarationsInClass(
 			|| ts.isSetAccessorDeclaration(member)
 		) {
 			if (member.name && ts.isComputedPropertyName(member.name)) {
-				yield* forEachDeclarations(ts, member.name.expression, ast, ctx, scope, false);
+				// A computed name in a class property declaration must be an entity
+				// name expression (grammar rule), so a call to `__VLS_unwrap` is not
+				// allowed here; `.value` keeps it an entity name.
+				yield* forEachDeclarations(ts, member.name.expression, ast, ctx, scope, true);
 			}
 		}
 		if (
