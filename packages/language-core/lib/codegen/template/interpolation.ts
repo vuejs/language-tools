@@ -330,7 +330,13 @@ function* forEachDeclarations(
 			|| node.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsToken;
 		const isInstanceof = node.operatorToken.kind === ts.SyntaxKind.InstanceOfKeyword;
 		const isIn = node.operatorToken.kind === ts.SyntaxKind.InKeyword;
-		if (isLogical) {
+		if (node.operatorToken.kind === ts.SyntaxKind.CommaToken) {
+			// Only the last operand of a comma sequence drives narrowing;
+			// the others are plain evaluations.
+			yield* forEachDeclarations(ts, node.left, ast, ctx, scope, false);
+			yield* forEachDeclarations(ts, node.right, ast, ctx, scope, inNarrowing);
+		}
+		else if (isLogical) {
 			const left = [...forEachDeclarations(ts, node.left, ast, ctx, scope, true)];
 			for (const item of left) {
 				yield item;

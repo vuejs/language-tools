@@ -40,8 +40,6 @@ test(`vue-tsc`, () => {
 		  "test-workspace/tsc/_failed_fragment_props/main.vue(12,54): error TS2339: Property 'baz' does not exist on type '{ id: number; }'.",
 		  "test-workspace/tsc/_failed_fragment_props/main.vue(6,31): error TS2322: Type '{ id: number; }' is not assignable to type 'PropertyKey | undefined'.",
 		  "test-workspace/tsc/_failed_fragment_props/main.vue(9,32): error TS2353: Object literal may only specify known properties, and 'foo' does not exist in type 'HTMLAttributes & ReservedProps'.",
-		  "test-workspace/tsc/unwrapBindingAccess/main.vue(183,43): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'never'.",
-		  "test-workspace/tsc/unwrapBindingAccess/main.vue(184,51): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'never'.",
 		  "test-workspace/tsc/unwrapBindingAccess/main.vue(187,46): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'never'.",
 		  "test-workspace/tsc/unwrapBindingAccess/main.vue(188,48): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'never'.",
 		  "test-workspace/tsc/unwrapBindingAccess/main.vue(191,59): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'never'.",
