@@ -105,6 +105,15 @@
 
 	<!-- while statement narrowing: maybe narrows to string in the body -->
 	<button @click="while (maybe) { exactType(maybe, {} as string); break; }" />
+
+	<!-- v-if: RHS-nested condition name narrows into branch children -->
+	<div v-if="flag && maybe">{{ exactType(maybe, {} as string) }}</div>
+
+	<!-- do-while: body precedes condition in source order -->
+	<button @click="do { void item; } while (flag)" />
+
+	<!-- switch: interleaved case statements + discriminant narrowing into clause bodies -->
+	<button @click="switch (aOrB) { case 'a': exactType(aOrB, {} as 'a'); break; case 'b': exactType(aOrB, {} as 'b'); }" />
 </template>
 
 <script setup lang="ts">

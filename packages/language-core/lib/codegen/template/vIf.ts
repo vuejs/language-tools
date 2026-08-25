@@ -47,6 +47,9 @@ export function* generateVIf(
 				ctx,
 				branch.condition.content,
 			);
+			for (const name of conditionNames) {
+				ctx.addNarrowedBinding(name);
+			}
 			const codes = [...generateInterpolation(
 				options,
 				ctx,
@@ -56,7 +59,6 @@ export function* generateVIf(
 				branch.condition.loc.start.offset,
 				`(`,
 				`)`,
-				true,
 				true,
 			)];
 			yield* codes;

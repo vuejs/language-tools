@@ -29,7 +29,6 @@ export function* generateInterpolation(
 	prefix: string = '',
 	suffix: string = '',
 	inNarrowing: boolean = false,
-	markNarrowed: boolean = false,
 ): Generator<Code> {
 	if (prefix) {
 		yield prefix;
@@ -94,9 +93,6 @@ export function* generateInterpolation(
 		else if (setupBindings.has(name)) {
 			ctx.accessVariable(block.name, name, start + offset);
 			if (!setupNonNarrowableBindings.has(name) && (isNarrowing || ctx.isNarrowed(name))) {
-				if (markNarrowed && isNarrowing) {
-					ctx.addNarrowedBinding(name);
-				}
 				yield [
 					name,
 					block.name,
@@ -450,7 +446,7 @@ function* forEachDeclarations(
 		}
 		ctx.exitNarrowedScope();
 	}
-	else if (ts.isWhileStatement(node) || ts.isDoStatement(node)) {
+	else if (ts.isWhileStatement(node)) {
 		const condition = [...forEachDeclarations(ts, node.expression, ast, ctx, scope, true)];
 		for (const item of condition) {
 			yield item;
@@ -463,6 +459,10 @@ function* forEachDeclarations(
 		}
 		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
 		ctx.exitNarrowedScope();
+	}
+	else if (ts.isDoStatement(node)) {
+		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
 	}
 	else if (ts.isForStatement(node)) {
 		const scope = ctx.scope();
@@ -504,11 +504,6 @@ function* forEachDeclarations(
 		for (const item of expression) {
 			yield item;
 		}
-		for (const clause of node.caseBlock.clauses) {
-			if (ts.isCaseClause(clause)) {
-				yield* forEachDeclarations(ts, clause.expression, ast, ctx, scope, false);
-			}
-		}
 		ctx.enterNarrowedScope();
 		for (const [id, , , skipped] of expression) {
 			if (!skipped) {
@@ -516,6 +511,9 @@ function* forEachDeclarations(
 			}
 		}
 		for (const clause of node.caseBlock.clauses) {
+			if (ts.isCaseClause(clause)) {
+				yield* forEachDeclarations(ts, clause.expression, ast, ctx, scope, false);
+			}
 			for (const statement of clause.statements) {
 				yield* forEachDeclarations(ts, statement, ast, ctx, scope, false);
 			}
