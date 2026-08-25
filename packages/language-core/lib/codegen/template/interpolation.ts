@@ -27,7 +27,7 @@ export function* generateInterpolation(
 	start: number,
 	prefix: string = '',
 	suffix: string = '',
-	forceDotValue: boolean = false,
+	inNarrowing: boolean = false,
 	markNarrowed: boolean = false,
 ): Generator<Code> {
 	if (prefix) {
@@ -43,7 +43,7 @@ export function* generateInterpolation(
 			code,
 			prefix,
 			suffix,
-			forceDotValue,
+			inNarrowing,
 		)
 	) {
 		if (isShorthand) {
@@ -107,6 +107,13 @@ export function* generateInterpolation(
 				yield `.value`;
 			}
 			else {
+				// A `new` operand must stay parenthesized: `new __VLS_unwrap(Foo)()`
+				// parses as `new (__VLS_unwrap(Foo)())`, whose target lacks a
+				// construct signature.
+				const isNewOperand = /\bnew\s*$/.test(code.slice(prevEnd, offset));
+				if (isNewOperand) {
+					yield `(`;
+				}
 				yield `${names.unwrap}(`;
 				yield [
 					name,
@@ -117,6 +124,9 @@ export function* generateInterpolation(
 						: data,
 				];
 				yield `)`;
+				if (isNewOperand) {
+					yield `)`;
+				}
 			}
 		}
 		else {
@@ -242,6 +252,12 @@ function* forEachDeclarations(
 	else if (ts.isCallExpression(node)) {
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, false);
 		for (const arg of node.arguments) {
+			yield* forEachDeclarations(ts, arg, ast, ctx, scope, inNarrowing);
+		}
+	}
+	else if (ts.isNewExpression(node)) {
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, false);
+		for (const arg of node.arguments ?? []) {
 			yield* forEachDeclarations(ts, arg, ast, ctx, scope, inNarrowing);
 		}
 	}
@@ -373,9 +389,17 @@ function* forEachDeclarations(
 		}
 		scope.end();
 	}
+	else if (ts.isSourceFile(node)) {
+		for (const statement of node.statements) {
+			yield* forEachDeclarations(ts, statement, ast, ctx, scope, inNarrowing);
+		}
+	}
+	else if (ts.isExpressionStatement(node)) {
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
+	}
 	else {
 		for (const child of forEachNode(ts, node)) {
-			yield* forEachDeclarations(ts, child, ast, ctx, scope, inNarrowing);
+			yield* forEachDeclarations(ts, child, ast, ctx, scope, false);
 		}
 	}
 }

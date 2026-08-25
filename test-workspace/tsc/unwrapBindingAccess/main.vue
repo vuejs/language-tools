@@ -6,6 +6,9 @@
 	<!-- function binding: callee under v-if should stay read (no `.value`) -->
 	<div v-if="guard()">{{ exactType(guard, {} as () => boolean) }}</div>
 
+	<!-- constructor binding: `new Foo()` should keep the constructor as a read (no `.value`) -->
+	<div v-if="new Foo()">{{ exactType(new Foo(), {} as Foo) }}</div>
+
 	<!-- ref binding: read -->
 	<div>{{ exactType(count, {} as number) }}</div>
 
@@ -75,6 +78,7 @@ import { exactType } from '../shared';
 
 function handler(_e: Event) {}
 function guard() { return true; }
+class Foo {}
 const count = ref(0);
 const strOrNum = ref<string | number>('');
 const dateOrStr = ref<unknown>(new Date());
