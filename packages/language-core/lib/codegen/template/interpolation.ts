@@ -13,7 +13,15 @@ import type { TemplateCodegenContext } from './context';
 const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export function* generateInterpolation(
-	{ typescript, destructuredProps, importedComponents, setupRefs, setupBindings, pinnedNullishBindings, vueCompilerOptions }: {
+	{
+		typescript,
+		destructuredProps,
+		importedComponents,
+		setupRefs,
+		setupBindings,
+		pinnedNullishBindings,
+		vueCompilerOptions,
+	}: {
 		typescript: typeof import('typescript');
 		destructuredProps: Set<string>;
 		importedComponents: Set<string>;
