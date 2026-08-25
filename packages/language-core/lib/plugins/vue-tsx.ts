@@ -9,7 +9,6 @@ import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
 import type { IR, VueCompilerOptions, VueLanguagePlugin } from '../types';
-import { getNodeText } from '../utils/shared';
 import { computedSet } from '../utils/signals';
 
 export const serviceScriptRE = /^script_(?:js|jsx|ts|tsx)$/;
@@ -137,48 +136,6 @@ function useCodegen(
 		return names;
 	});
 
-	// A `const` initialized to `null` / `undefined` is pinned by control-flow
-	// analysis to that unit type for the entire file, so it can never hold a
-	// ref. The `__VLS_withDotValue` assertion cannot flip such a pinned flow
-	// type, and emitting `.value` for it would report false positives that
-	// plain TypeScript does not have; these bindings are referenced directly.
-	const getPinnedNullishBindings = computedSet(() => {
-		const names = new Set<string>();
-		if (ir.scriptSetup && validLangs.has(ir.scriptSetup.lang)) {
-			collect(ir.scriptSetup.ast);
-			if (ir.script && validLangs.has(ir.script.lang)) {
-				collect(ir.script.ast);
-			}
-		}
-		return names;
-
-		function collect(ast: import('typescript').SourceFile) {
-			ts.forEachChild(ast, node => {
-				if (
-					ts.isVariableStatement(node)
-					&& node.declarationList.flags & ts.NodeFlags.Const
-				) {
-					for (const decl of node.declarationList.declarations) {
-						let initializer = decl.initializer;
-						while (initializer && ts.isParenthesizedExpression(initializer)) {
-							initializer = initializer.expression;
-						}
-						if (
-							ts.isIdentifier(decl.name)
-							&& initializer
-							&& (
-								initializer.kind === ts.SyntaxKind.NullKeyword
-								|| (ts.isIdentifier(initializer) && getNodeText(ts, initializer, ast) === 'undefined')
-							)
-						) {
-							names.add(getNodeText(ts, decl.name, ast));
-						}
-					}
-				}
-			});
-		}
-	});
-
 	const getDestructuredProps = computedSet(() => {
 		const scriptSetupRanges = getScriptSetupRanges();
 		const names = new Set(scriptSetupRanges?.defineProps?.destructured?.keys() ?? []);
@@ -245,7 +202,6 @@ function useCodegen(
 			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
 			setupBindings: getSetupBindings(),
-			pinnedNullishBindings: getPinnedNullishBindings(),
 			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
@@ -265,7 +221,6 @@ function useCodegen(
 			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
 			setupBindings: getSetupBindings(),
-			pinnedNullishBindings: getPinnedNullishBindings(),
 		});
 	});
 
@@ -304,15 +259,6 @@ function useCodegen(
 		].filter(name => bindings.has(name)));
 	});
 
-	const getWithDotValueBindings = computedSet(() => {
-		const referenced = getReferencedBindings();
-		const pinned = getPinnedNullishBindings();
-		if (!pinned.size) {
-			return referenced;
-		}
-		return new Set([...referenced].filter(name => !pinned.has(name)));
-	});
-
 	const getUsedSetupBindings = computedSet(() => {
 		return new Set([
 			...getReferencedBindings(),
@@ -329,7 +275,7 @@ function useCodegen(
 			setupBindings: getScriptSetupBindings(),
 			localComponents: getLocalComponents(),
 			localDirectives: getLocalDirectives(),
-			withDotValueBindings: getWithDotValueBindings(),
+			withDotValueBindings: getReferencedBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateAndStyleTypes: new Set([

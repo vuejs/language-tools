@@ -14,7 +14,6 @@ export interface StyleCodegenOptions {
 	importedComponents: Set<string>;
 	setupRefs: Set<string>;
 	setupBindings: Set<string>;
-	pinnedNullishBindings: Set<string>;
 }
 
 export { generate as generateStyle };

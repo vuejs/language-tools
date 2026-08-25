@@ -228,14 +228,6 @@
 	<div v-else>{{ exactType(fnNull, null) }}</div>
 	<div v-if="numZero">{{ exactType(numZero, {} as 1) }}</div>
 
-	<!-- a const initialized to null/undefined is CFA-pinned to that unit type,
-		so it is provably not a ref and is accessed directly, like plain TypeScript -->
-	<div v-if="pinnedUndef">{{ pinnedUndef }}</div>
-	<div v-else>{{ exactType(pinnedUndef, undefined) }}</div>
-	<div v-if="pinnedNull">{{ pinnedNull }}</div>
-	<div v-else>{{ exactType(pinnedNull, null) }}</div>
-	{{ pinnedUndef }}
-
 	<!-- imported nullish consts are not CFA-pinned across the module boundary
 		(TypeScript uses the declared type for imports), so they narrow through
 		__VLS_withDotValue like any other declared union -->
@@ -293,8 +285,6 @@ const fnUndef: (() => number) | undefined = Math.random() > 0.5 ? () => 1 : unde
 const strUndef: string | undefined = Math.random() > 0.5 ? 'x' : undefined;
 const fnNull: (() => number) | null = Math.random() > 0.5 ? () => 1 : null;
 const numZero: 0 | 1 = Math.random() > 0.5 ? 0 : 1;
-const pinnedUndef: (() => number) | undefined = undefined;
-const pinnedNull: (() => number) | null = null;
 const Child = defineComponent({
 	__typeProps: {} as { foo: string },
 });

@@ -19,7 +19,6 @@ export function* generateInterpolation(
 		importedComponents,
 		setupRefs,
 		setupBindings,
-		pinnedNullishBindings,
 		vueCompilerOptions,
 	}: {
 		typescript: typeof import('typescript');
@@ -27,7 +26,6 @@ export function* generateInterpolation(
 		importedComponents: Set<string>;
 		setupRefs: Set<string>;
 		setupBindings: Set<string>;
-		pinnedNullishBindings: Set<string>;
 		vueCompilerOptions: VueCompilerOptions;
 	},
 	ctx: TemplateCodegenContext,
@@ -77,13 +75,11 @@ export function* generateInterpolation(
 
 		// Access strategy, in precedence order:
 		// - destructured props / imported components → direct reference
-		// - pinned-nullish consts → direct reference (provably not refs; a
-		//   `__VLS_withDotValue` assertion cannot flip their CFA-pinned flow type)
 		// - template refs → direct `.value`
 		// - type query on binding → `.value`
 		// - other bindings → `.value` (narrowing / write) or `__VLS_unwrap` (value read)
 		// - otherwise → `__VLS_ctx.<name>`
-		if (destructuredProps.has(name) || importedComponents.has(name) || pinnedNullishBindings.has(name)) {
+		if (destructuredProps.has(name) || importedComponents.has(name)) {
 			yield [
 				name,
 				block.name,
