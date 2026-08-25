@@ -675,6 +675,9 @@
 		},
 		{
 			"path": "./withDefaults/tsconfig.json"
+		},
+		{
+			"path": "./withDotValue/tsconfig.json"
 		}
 	]
 }
