@@ -70,6 +70,27 @@
 	<!-- withDotValue nullish collapse (non-ref union): v-else should narrow to undefined -->
 	<div v-if="maybeFn">{{ exactType(maybeFn, {} as (_e: Event) => void) }}</div>
 	<div v-else>{{ exactType(maybeFn, undefined) }}</div>
+
+	<!-- function declaration: v-if condition must stay a read (no `.value`) -->
+	<div v-if="handler"></div>
+
+	<!-- class declaration: v-if condition must stay a read (no `.value`) -->
+	<div v-if="Foo"></div>
+
+	<!-- arrow IIFE in a logical condition: inner param must remain untouched -->
+	<div v-if="((x) => x)(someRef) && other"></div>
+
+	<!-- destructuring assignment: object write target -->
+	<button @click="({ x } = source)" />
+
+	<!-- destructuring assignment: array write target -->
+	<button @click="[y] = items" />
+
+	<!-- for-of: bare loop target writes to the setup binding -->
+	<button @click="for (item of items) {}" />
+
+	<!-- for-of: declared loop variable is a scoped local -->
+	<button @click="for (const it of items) { void it; }" />
 </template>
 
 <script setup lang="ts">
@@ -90,6 +111,13 @@ const otherFlag = ref<boolean>(true);
 const a = ref<string | undefined>('');
 const b = ref<string | undefined>('');
 const maybeFn: ((_e: Event) => void) | undefined = Math.random() > 0.5 ? (_e: Event) => {} : undefined;
+const someRef = ref(0);
+const other = ref(true);
+const x = ref(0);
+const y = ref(0);
+const source = ref({ x: 0 });
+const items = ref<[number, number, number]>([1, 2, 3]);
+const item = ref(0);
 const Child = defineComponent({
 	__typeProps: {} as { foo: string },
 });

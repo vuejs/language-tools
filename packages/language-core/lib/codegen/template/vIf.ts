@@ -43,6 +43,7 @@ export function* generateVIf(
 				options.typescript,
 				options.template,
 				options.setupBindings,
+				options.setupNonNarrowableBindings,
 				ctx,
 				branch.condition.content,
 			);

@@ -9,6 +9,7 @@ export function parseBindingRanges(
 	componentExtsensions: string[],
 ) {
 	const bindings: TextRange[] = [];
+	const nonNarrowables: TextRange[] = [];
 	const components: TextRange[] = [];
 
 	ts.forEachChild(ast, node => {
@@ -20,16 +21,22 @@ export function parseBindingRanges(
 		}
 		else if (ts.isFunctionDeclaration(node)) {
 			if (node.name && ts.isIdentifier(node.name)) {
-				bindings.push(_getStartEnd(node.name));
+				const range = _getStartEnd(node.name);
+				bindings.push(range);
+				nonNarrowables.push(range);
 			}
 		}
 		else if (ts.isClassDeclaration(node)) {
 			if (node.name) {
-				bindings.push(_getStartEnd(node.name));
+				const range = _getStartEnd(node.name);
+				bindings.push(range);
+				nonNarrowables.push(range);
 			}
 		}
 		else if (ts.isEnumDeclaration(node)) {
-			bindings.push(_getStartEnd(node.name));
+			const range = _getStartEnd(node.name);
+			bindings.push(range);
+			nonNarrowables.push(range);
 		}
 
 		if (ts.isImportDeclaration(node)) {
@@ -74,6 +81,7 @@ export function parseBindingRanges(
 
 	return {
 		bindings,
+		nonNarrowables,
 		components,
 	};
 
