@@ -3,7 +3,7 @@ import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { getTypeScriptAST, newLine } from '../utils';
+import { endOfLine, getTypeScriptAST, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -17,21 +17,26 @@ export function* generateVFor(
 	const { source } = node.parseResult;
 	const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
 	const scope = ctx.scope();
+	let bindingNames: string[] = [];
+	let sourceAlias: string | undefined;
 
-	yield `for (const [`;
 	if (leftExpressionRange && leftExpressionText) {
 		const collectAst = getTypeScriptAST(options.typescript, options.template, `const [${leftExpressionText}]`);
-		scope.declare(...collectBindingNames(options.typescript, collectAst, collectAst));
-		yield [
-			leftExpressionText,
-			'template',
-			leftExpressionRange.start,
-			codeFeatures.all,
-		];
+		bindingNames = collectBindingNames(options.typescript, collectAst, collectAst);
 	}
-	yield `] of `;
-	if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		yield `${names.vFor}(`;
+	if (
+		source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+		&& bindingNames.some(name =>
+			(options.setupBindings.has(name) || options.setupRefs.has(name))
+			&& new RegExp(`\\b${name}\\b`).test(source.content)
+		)
+	) {
+		// In `v-for="x in x"` the source is evaluated in the outer scope, but the
+		// loop head is inside the loop bindings' lexical scope: a bare `x` would
+		// resolve to the loop variable (TDZ). Evaluate the source before the loop
+		// and reference the alias in the head instead.
+		sourceAlias = ctx.getInternalVariable();
+		yield `const ${sourceAlias} = `;
 		yield* generateInterpolation(
 			options,
 			ctx,
@@ -42,12 +47,46 @@ export function* generateVFor(
 			`(`,
 			`)`,
 		);
+		yield endOfLine;
+	}
+
+	yield `for (const [`;
+	if (leftExpressionRange && leftExpressionText) {
+		yield [
+			leftExpressionText,
+			'template',
+			leftExpressionRange.start,
+			codeFeatures.all,
+		];
+	}
+	yield `] of `;
+	if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+		yield `${names.vFor}(`;
+		if (sourceAlias !== undefined) {
+			yield sourceAlias;
+		}
+		else {
+			yield* generateInterpolation(
+				options,
+				ctx,
+				options.template,
+				codeFeatures.all,
+				source.content,
+				source.loc.start.offset,
+				`(`,
+				`)`,
+			);
+		}
 		yield `!)`; // #3102
 	}
 	else {
 		yield `{} as any`;
 	}
 	yield `) {${newLine}`;
+
+	// Declare after the source expression: in `v-for="x in x"`, the source
+	// is evaluated in the outer scope where `x` is not yet shadowed.
+	scope.declare(...bindingNames);
 
 	const { inVFor } = ctx;
 	ctx.inVFor = true;

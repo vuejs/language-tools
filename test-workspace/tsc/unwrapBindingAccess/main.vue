@@ -141,6 +141,22 @@
 
 	<!-- interface / type alias in handler body (names + members not rewritten) -->
 	<button @click="interface I { a: number } type T = typeof count; const i: I = { a: 1 }; let v: T = 1; void i; void v;" />
+
+	<!-- v-for: loop variable shadows the same-named setup binding -->
+	<div v-for="num in nums">{{ exactType(num, {} as number) }}</div>
+	<div>{{ exactType(num, {} as string) }}</div>
+
+	<!-- v-for: narrowed setup binding shadowed by loop variable inside the branch -->
+	<div v-if="maybe"><div v-for="maybe in nums">{{ exactType(maybe, {} as number) }}</div></div>
+
+	<!-- v-for: key/index aliases and destructured patterns shadow same-named bindings -->
+	<div v-for="(row, idx) in nums">{{ exactType(row, {} as number) }}{{ exactType(idx, {} as number) }}</div>
+	<div>{{ exactType(idx, {} as boolean) }}</div>
+	<div v-for="{ val } in objs">{{ exactType(val, {} as string) }}</div>
+	<div>{{ exactType(val, {} as number) }}</div>
+
+	<!-- v-for: the source expression is evaluated in the outer scope, even when the loop variable shares its name -->
+	<div v-for="entry in entry">{{ exactType(entry, {} as number) }}</div>
 </template>
 
 <script setup lang="ts">
@@ -169,6 +185,12 @@ const source = ref({ x: 0 });
 const items = ref<[number, number, number]>([1, 2, 3]);
 const item = ref(0);
 const key = ref('m');
+const num = ref('');
+const nums = ref<number[]>([1, 2]);
+const idx = ref(true);
+const val = ref(0);
+const objs = ref([{ val: 'x' }]);
+const entry = ref<number[]>([1, 2]);
 const Child = defineComponent({
 	__typeProps: {} as { foo: string },
 });
