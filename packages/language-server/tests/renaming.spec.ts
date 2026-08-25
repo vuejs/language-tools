@@ -1433,6 +1433,17 @@ test('Same Name Shorthand', async () => {
 		      "locs": [
 		        {
 		          "end": {
+		            "line": 4,
+		            "offset": 25,
+		          },
+		          "start": {
+		            "line": 4,
+		            "offset": 19,
+		          },
+		          "suffixText": ": fooBar",
+		        },
+		        {
+		          "end": {
 		            "line": 3,
 		            "offset": 19,
 		          },
