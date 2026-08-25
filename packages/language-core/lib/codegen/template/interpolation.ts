@@ -252,6 +252,8 @@ function* forEachIdentifiers(
 	scope.end();
 }
 
+type DeclarationItem = [ts.Identifier, boolean, boolean, boolean, boolean, boolean];
+
 function* forEachDeclarations(
 	ts: typeof import('typescript'),
 	node: ts.Node,
@@ -259,7 +261,7 @@ function* forEachDeclarations(
 	ctx: TemplateCodegenContext,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
 	inNarrowing: boolean,
-): Generator<[ts.Identifier, boolean, boolean, boolean, boolean, boolean]> {
+): Generator<DeclarationItem> {
 	if (ts.isIdentifier(node)) {
 		yield [node, false, inNarrowing, shouldIdentifierSkipped(ctx, getNodeText(ts, node, ast)), false, false];
 	}
@@ -344,18 +346,9 @@ function* forEachDeclarations(
 			yield* forEachDeclarations(ts, node.right, ast, ctx, scope, inNarrowing);
 		}
 		else if (isLogical) {
-			const left = [...forEachDeclarations(ts, node.left, ast, ctx, scope, true)];
-			for (const item of left) {
-				yield item;
-			}
-			ctx.enterNarrowedScope();
-			for (const [id, , , skipped] of left) {
-				if (!skipped) {
-					ctx.addNarrowedBinding(getNodeText(ts, id, ast));
-				}
-			}
-			yield* forEachDeclarations(ts, node.right, ast, ctx, scope, true);
-			ctx.exitNarrowedScope();
+			yield* forEachNarrowedBy(ts, node.left, ast, ctx, scope, function*() {
+				yield* forEachDeclarations(ts, node.right, ast, ctx, scope, true);
+			});
 		}
 		else if (isAssignment) {
 			let left = node.left;
@@ -376,19 +369,10 @@ function* forEachDeclarations(
 		}
 	}
 	else if (ts.isConditionalExpression(node)) {
-		const condition = [...forEachDeclarations(ts, node.condition, ast, ctx, scope, true)];
-		for (const item of condition) {
-			yield item;
-		}
-		ctx.enterNarrowedScope();
-		for (const [id, , , skipped] of condition) {
-			if (!skipped) {
-				ctx.addNarrowedBinding(getNodeText(ts, id, ast));
-			}
-		}
-		yield* forEachDeclarations(ts, node.whenTrue, ast, ctx, scope, false);
-		yield* forEachDeclarations(ts, node.whenFalse, ast, ctx, scope, false);
-		ctx.exitNarrowedScope();
+		yield* forEachNarrowedBy(ts, node.condition, ast, ctx, scope, function*() {
+			yield* forEachDeclarations(ts, node.whenTrue, ast, ctx, scope, false);
+			yield* forEachDeclarations(ts, node.whenFalse, ast, ctx, scope, false);
+		});
 	}
 	else if (ts.isPrefixUnaryExpression(node)) {
 		yield* forEachDeclarations(
@@ -521,44 +505,22 @@ function* forEachDeclarations(
 		scope.end();
 	}
 	else if (ts.isIfStatement(node)) {
-		const condition = [...forEachDeclarations(ts, node.expression, ast, ctx, scope, true)];
-		for (const item of condition) {
-			yield item;
-		}
-		ctx.enterNarrowedScope();
-		for (const [id, , , skipped] of condition) {
-			if (!skipped) {
-				ctx.addNarrowedBinding(getNodeText(ts, id, ast));
+		const condition = yield* forEachNarrowedBy(ts, node.expression, ast, ctx, scope, function*() {
+			yield* forEachDeclarations(ts, node.thenStatement, ast, ctx, scope, false);
+			if (node.elseStatement) {
+				yield* forEachDeclarations(ts, node.elseStatement, ast, ctx, scope, false);
 			}
-		}
-		yield* forEachDeclarations(ts, node.thenStatement, ast, ctx, scope, false);
-		if (node.elseStatement) {
-			yield* forEachDeclarations(ts, node.elseStatement, ast, ctx, scope, false);
-		}
-		ctx.exitNarrowedScope();
+		});
 		if (definitelyExits(ts, node.thenStatement)) {
 			// Early exit: the negated condition holds for the statements that
 			// follow in the same sequence (narrowed scope owned by it).
-			for (const [id, , , skipped] of condition) {
-				if (!skipped) {
-					ctx.addNarrowedBinding(getNodeText(ts, id, ast));
-				}
-			}
+			addNarrowedBindings(ts, ast, ctx, condition);
 		}
 	}
 	else if (ts.isWhileStatement(node)) {
-		const condition = [...forEachDeclarations(ts, node.expression, ast, ctx, scope, true)];
-		for (const item of condition) {
-			yield item;
-		}
-		ctx.enterNarrowedScope();
-		for (const [id, , , skipped] of condition) {
-			if (!skipped) {
-				ctx.addNarrowedBinding(getNodeText(ts, id, ast));
-			}
-		}
-		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
-		ctx.exitNarrowedScope();
+		yield* forEachNarrowedBy(ts, node.expression, ast, ctx, scope, function*() {
+			yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
+		});
 	}
 	else if (ts.isDoStatement(node)) {
 		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
@@ -579,52 +541,31 @@ function* forEachDeclarations(
 				yield* forEachDeclarations(ts, node.initializer, ast, ctx, scope, false);
 			}
 		}
-		let condition: [ts.Identifier, boolean, boolean, boolean, boolean, boolean][] = [];
-		if (node.condition) {
-			condition = [...forEachDeclarations(ts, node.condition, ast, ctx, scope, true)];
-			for (const item of condition) {
-				yield item;
-			}
-		}
 		// The incrementor runs after each successful condition check, so the
 		// condition's narrowing applies to it as well as to the body.
-		ctx.enterNarrowedScope();
-		for (const [id, , , skipped] of condition) {
-			if (!skipped) {
-				ctx.addNarrowedBinding(getNodeText(ts, id, ast));
+		yield* forEachNarrowedBy(ts, node.condition, ast, ctx, scope, function*() {
+			if (node.incrementor) {
+				yield* forEachDeclarations(ts, node.incrementor, ast, ctx, scope, false);
 			}
-		}
-		if (node.incrementor) {
-			yield* forEachDeclarations(ts, node.incrementor, ast, ctx, scope, false);
-		}
-		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
-		ctx.exitNarrowedScope();
+			yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
+		});
 		scope.end();
 	}
 	else if (ts.isSwitchStatement(node)) {
-		const expression = [...forEachDeclarations(ts, node.expression, ast, ctx, scope, true)];
-		for (const item of expression) {
-			yield item;
-		}
-		ctx.enterNarrowedScope();
-		for (const [id, , , skipped] of expression) {
-			if (!skipped) {
-				ctx.addNarrowedBinding(getNodeText(ts, id, ast));
+		yield* forEachNarrowedBy(ts, node.expression, ast, ctx, scope, function*() {
+			for (const clause of node.caseBlock.clauses) {
+				if (ts.isCaseClause(clause)) {
+					yield* forEachDeclarations(ts, clause.expression, ast, ctx, scope, false);
+				}
+				// Own narrowed scope per clause, so that early-exit narrowing in one
+				// clause does not leak into the following clauses.
+				ctx.enterNarrowedScope();
+				for (const statement of clause.statements) {
+					yield* forEachDeclarations(ts, statement, ast, ctx, scope, false);
+				}
+				ctx.exitNarrowedScope();
 			}
-		}
-		for (const clause of node.caseBlock.clauses) {
-			if (ts.isCaseClause(clause)) {
-				yield* forEachDeclarations(ts, clause.expression, ast, ctx, scope, false);
-			}
-			// Own narrowed scope per clause, so that early-exit narrowing in one
-			// clause does not leak into the following clauses.
-			ctx.enterNarrowedScope();
-			for (const statement of clause.statements) {
-				yield* forEachDeclarations(ts, statement, ast, ctx, scope, false);
-			}
-			ctx.exitNarrowedScope();
-		}
-		ctx.exitNarrowedScope();
+		});
 	}
 	else if (ts.isLabeledStatement(node)) {
 		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
@@ -682,6 +623,41 @@ function* forEachDeclarations(
 	else {
 		for (const child of forEachNode(ts, node)) {
 			yield* forEachDeclarations(ts, child, ast, ctx, scope, false);
+		}
+	}
+}
+
+function* forEachNarrowedBy(
+	ts: typeof import('typescript'),
+	condition: ts.Expression | undefined,
+	ast: ts.SourceFile,
+	ctx: TemplateCodegenContext,
+	scope: ReturnType<TemplateCodegenContext['scope']>,
+	body: () => Generator<DeclarationItem>,
+): Generator<DeclarationItem, DeclarationItem[]> {
+	// Yield the condition's declarations first (they map back to the source),
+	// then traverse the body in a narrowed scope marked with the condition's
+	// identifiers, mirroring how control-flow narrowing treats the condition.
+	const items = condition ? [...forEachDeclarations(ts, condition, ast, ctx, scope, true)] : [];
+	yield* items;
+	ctx.enterNarrowedScope();
+	addNarrowedBindings(ts, ast, ctx, items);
+	yield* body();
+	ctx.exitNarrowedScope();
+	// Return the items so callers can extend narrowing past the scope
+	// (see the early-exit handling for IfStatement).
+	return items;
+}
+
+function addNarrowedBindings(
+	ts: typeof import('typescript'),
+	ast: ts.SourceFile,
+	ctx: TemplateCodegenContext,
+	items: DeclarationItem[],
+) {
+	for (const [id, , , skipped] of items) {
+		if (!skipped) {
+			ctx.addNarrowedBinding(getNodeText(ts, id, ast));
 		}
 	}
 }
