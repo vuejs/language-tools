@@ -43,6 +43,7 @@ export function* generateInterpolation(
 			code,
 			prefix,
 			suffix,
+			forceDotValue,
 		)
 	) {
 		if (isShorthand) {
@@ -91,8 +92,8 @@ export function* generateInterpolation(
 		}
 		else if (setupBindings.has(name)) {
 			ctx.accessVariable(block.name, name, start + offset);
-			if (isNarrowing || forceDotValue || ctx.isNarrowed(name)) {
-				if (markNarrowed) {
+			if (isNarrowing || ctx.isNarrowed(name)) {
+				if (markNarrowed && isNarrowing) {
 					ctx.addNarrowedBinding(name);
 				}
 				yield [
@@ -198,15 +199,16 @@ function* forEachIdentifiers(
 	code: string,
 	prefix: string,
 	suffix: string,
+	inNarrowing: boolean,
 ): Generator<[string, number, boolean, boolean]> {
 	if (identifierRE.test(code) && !shouldIdentifierSkipped(ctx, code)) {
-		yield [code, 0, false, false];
+		yield [code, 0, false, inNarrowing];
 		return;
 	}
 
 	const scope = ctx.scope();
 	const ast = getTypeScriptAST(ts, block, prefix + code + suffix);
-	for (const [id, isShorthand, isNarrowing] of forEachDeclarations(ts, ast, ast, ctx, scope, false)) {
+	for (const [id, isShorthand, isNarrowing] of forEachDeclarations(ts, ast, ast, ctx, scope, inNarrowing)) {
 		const text = getNodeText(ts, id, ast);
 		if (shouldIdentifierSkipped(ctx, text)) {
 			continue;
@@ -311,8 +313,13 @@ function* forEachDeclarations(
 			ast,
 			ctx,
 			scope,
-			node.operator === ts.SyntaxKind.ExclamationToken,
+			node.operator === ts.SyntaxKind.ExclamationToken
+				|| node.operator === ts.SyntaxKind.PlusPlusToken
+				|| node.operator === ts.SyntaxKind.MinusMinusToken,
 		);
+	}
+	else if (ts.isPostfixUnaryExpression(node)) {
+		yield* forEachDeclarations(ts, node.operand, ast, ctx, scope, true);
 	}
 	else if (ts.isTypeOfExpression(node)) {
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
@@ -368,7 +375,7 @@ function* forEachDeclarations(
 	}
 	else {
 		for (const child of forEachNode(ts, node)) {
-			yield* forEachDeclarations(ts, child, ast, ctx, scope, false);
+			yield* forEachDeclarations(ts, child, ast, ctx, scope, inNarrowing);
 		}
 	}
 }
@@ -436,7 +443,10 @@ export function collectNarrowedBindingNames(
 	const names = new Set<string>();
 	const scope = ctx.scope();
 	const ast = getTypeScriptAST(typescript, block, code);
-	for (const [id] of forEachDeclarations(typescript, ast, ast, ctx, scope, true)) {
+	for (const [id, , isNarrowing] of forEachDeclarations(typescript, ast, ast, ctx, scope, true)) {
+		if (!isNarrowing) {
+			continue;
+		}
 		const text = getNodeText(typescript, id, ast);
 		if (setupBindings.has(text) && !shouldIdentifierSkipped(ctx, text)) {
 			names.add(text);

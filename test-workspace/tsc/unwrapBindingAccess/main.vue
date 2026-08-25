@@ -3,6 +3,9 @@
 	<button @click="handler"></button>
 	<div>{{ exactType(handler, {} as (_e: Event) => void) }}</div>
 
+	<!-- function binding: callee under v-if should stay read (no `.value`) -->
+	<div v-if="guard()">{{ exactType(guard, {} as () => boolean) }}</div>
+
 	<!-- ref binding: read -->
 	<div>{{ exactType(count, {} as number) }}</div>
 
@@ -14,6 +17,10 @@
 
 	<!-- ref binding: write (v-model) -->
 	<input v-model="count" />
+
+	<!-- ref binding: write (increment / decrement) -->
+	<button @click="count++" />
+	<button @click="++count" />
 
 	<!-- type guard: typeof -->
 	<div>{{ typeof strOrNum === 'string' && exactType(strOrNum, {} as string) }}</div>
@@ -32,6 +39,9 @@
 
 	<!-- narrowing loss: v-if + shorthand prop (prop type does NOT allow undefined) -->
 	<Child v-if="maybe" :foo="maybe" />
+
+	<!-- narrowing loss: v-if + shorthand prop -->
+	<ChildMaybe v-if="maybe" :maybe />
 
 	<!-- narrowing loss: ternary condition + read -->
 	<div>{{ maybe ? exactType(maybe, {} as string) : '' }}</div>
@@ -64,6 +74,7 @@ import { defineComponent, ref } from 'vue';
 import { exactType } from '../shared';
 
 function handler(_e: Event) {}
+function guard() { return true; }
 const count = ref(0);
 const strOrNum = ref<string | number>('');
 const dateOrStr = ref<unknown>(new Date());
@@ -77,5 +88,8 @@ const b = ref<string | undefined>('');
 const maybeFn: ((_e: Event) => void) | undefined = Math.random() > 0.5 ? (_e: Event) => {} : undefined;
 const Child = defineComponent({
 	__typeProps: {} as { foo: string },
+});
+const ChildMaybe = defineComponent({
+	__typeProps: {} as { maybe: string },
 });
 </script>
