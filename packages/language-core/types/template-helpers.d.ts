@@ -141,7 +141,6 @@ declare global {
 	): asserts t is NonNullable<T> extends Ref ? T
 		: NonNullable<T> & { value: T };
 	function __VLS_unwrap<T, Ref>(t: T, ref: Ref): T extends Ref & { value: infer V } ? V
-		: T extends { value: infer V } ? (T extends V ? V : T)
 		: T;
 }
 
