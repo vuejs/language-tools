@@ -636,7 +636,7 @@ function* forEachDeclarationsInAssignmentTarget(
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
-): Generator<[ts.Identifier, boolean, boolean, boolean, boolean, boolean]> {
+): Generator<DeclarationItem> {
 	if (ts.isIdentifier(node)) {
 		yield [node, false, true, shouldIdentifierSkipped(ctx, getNodeText(ts, node, ast)), false, false];
 	}
@@ -690,7 +690,7 @@ function* forEachDeclarationsInBinding(
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
-): Generator<[ts.Identifier, boolean, boolean, boolean, boolean, boolean]> {
+): Generator<DeclarationItem> {
 	if ('propertyName' in node && node.propertyName && ts.isComputedPropertyName(node.propertyName)) {
 		yield* forEachDeclarations(ts, node.propertyName.expression, ast, ctx, scope, true);
 	}
@@ -716,7 +716,7 @@ function* forEachDeclarationsInFunction(
 		| ts.ConstructorDeclaration,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
-): Generator<[ts.Identifier, boolean, boolean, boolean, boolean, boolean]> {
+): Generator<DeclarationItem> {
 	const scope = ctx.scope();
 	if (ts.isFunctionExpression(node) && node.name) {
 		// A named function expression's name is only visible inside its own body.
@@ -748,7 +748,7 @@ function* forEachDeclarationsInClass(
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
-): Generator<[ts.Identifier, boolean, boolean, boolean, boolean, boolean]> {
+): Generator<DeclarationItem> {
 	for (const clause of node.heritageClauses ?? []) {
 		if (clause.token === ts.SyntaxKind.ExtendsKeyword) {
 			for (const type of clause.types) {
@@ -806,7 +806,7 @@ function* forEachDeclarationsInTypeNode(
 	node: ts.Node,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
-): Generator<[ts.Identifier, boolean, boolean, boolean, boolean, boolean]> {
+): Generator<DeclarationItem> {
 	if (ts.isTypeQueryNode(node)) {
 		let id = node.exprName;
 		while (!ts.isIdentifier(id)) {
