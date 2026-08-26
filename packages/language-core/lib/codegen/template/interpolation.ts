@@ -102,8 +102,7 @@ export function* generateInterpolation(
 			yield `.value`;
 		}
 		else if (setupBindings.has(name)) {
-			// Detection only: populates `dotValueAccesses` for the first
-			// (collection) pass; the second pass emits by `dotValueBindings`.
+			// First pass records narrowing accesses here; the second pass emits from dotValueBindings.
 			ctx.accessVariable(block.name, name, start + offset, inTypeQuery || isNarrowing);
 			if (inTypeQuery || dotValueBindings.has(name)) {
 				yield [
@@ -115,9 +114,8 @@ export function* generateInterpolation(
 				yield `.value`;
 			}
 			else {
-				// A `new` operand must stay parenthesized: `new __VLS_unwrap(Foo)()`
-				// parses as `new (__VLS_unwrap(Foo)())`, whose target lacks a
-				// construct signature.
+				// `new __VLS_unwrap(Foo)()` parses as `new (__VLS_unwrap(Foo)())`,
+				// whose target lacks a construct signature; keep the operand parenthesized.
 				if (isNewOperand) {
 					yield `(`;
 				}
@@ -344,8 +342,6 @@ function* forEachDeclarations(
 		const isInstanceof = node.operatorToken.kind === ts.SyntaxKind.InstanceOfKeyword;
 		const isIn = node.operatorToken.kind === ts.SyntaxKind.InKeyword;
 		if (node.operatorToken.kind === ts.SyntaxKind.CommaToken) {
-			// Only the last operand of a comma sequence drives narrowing;
-			// the others are plain evaluations.
 			yield* forEachDeclarations(ts, node.left, ast, ctx, scope, false);
 			yield* forEachDeclarations(ts, node.right, ast, ctx, scope, inNarrowing);
 		}
@@ -384,7 +380,6 @@ function* forEachDeclarations(
 	else if (ts.isPostfixUnaryExpression(node)) {
 		yield* forEachDeclarations(ts, node.operand, ast, ctx, scope, true);
 	}
-	// `delete foo` on a setup binding deletes `foo.value`, a write-shaped target
 	else if (ts.isDeleteExpression(node)) {
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
 	}
@@ -418,8 +413,6 @@ function* forEachDeclarations(
 		yield* forEachDeclarationsInClass(ts, node, ast, ctx, scope);
 	}
 	else if (ts.isClassExpression(node)) {
-		// A named class expression's name is only visible inside the class body,
-		// so it gets its own scope instead of leaking into the surrounding one.
 		const classScope = ctx.scope();
 		if (node.name) {
 			classScope.declare(getNodeText(ts, node.name, ast));
@@ -479,8 +472,7 @@ function* forEachDeclarations(
 		else {
 			yield* forEachDeclarationsInAssignmentTarget(ts, node.initializer, ast, ctx, scope);
 		}
-		// The source resolves before the loop bindings are in scope:
-		// `for (const x of x)` reads the outer `x` (same rule as `v-for="x in x"`).
+		// The source resolves before the loop bindings are in scope (`for (const x of x)` reads the outer `x`).
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, false);
 		if (declarations) {
 			for (const decl of declarations) {
@@ -522,8 +514,6 @@ function* forEachDeclarations(
 				yield* forEachDeclarations(ts, node.initializer, ast, ctx, scope, false);
 			}
 		}
-		// The incrementor runs after each successful condition check, so the
-		// condition's narrowing applies to it as well as to the body.
 		yield* forEachNarrowedBy(ts, node.condition, ast, ctx, scope, function*() {
 			if (node.incrementor) {
 				yield* forEachDeclarations(ts, node.incrementor, ast, ctx, scope, false);
@@ -533,7 +523,6 @@ function* forEachDeclarations(
 		scope.end();
 	}
 	else if (ts.isSwitchStatement(node)) {
-		// Function declarations in any clause hoist to the case block scope
 		predeclareFunctionDeclarations(ts, node.caseBlock.clauses.flatMap(clause => [...clause.statements]), ast, scope);
 		yield* forEachNarrowedBy(ts, node.expression, ast, ctx, scope, function*() {
 			for (const clause of node.caseBlock.clauses) {
@@ -550,8 +539,7 @@ function* forEachDeclarations(
 		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
 	}
 	else if (ts.isBreakStatement(node) || ts.isContinueStatement(node)) {
-		// never yield the label: `break outer` / `continue outer` target a label,
-		// not a binding.
+		// break/continue labels are not bindings.
 	}
 	else if (ts.isMetaProperty(node)) {
 		// `new.target` / `import.meta` are not bindings.
@@ -614,16 +602,13 @@ function* forEachNarrowedBy(
 	scope: ReturnType<TemplateCodegenContext['scope']>,
 	body: () => Generator<DeclarationItem>,
 ): Generator<DeclarationItem> {
-	// Yield the condition's declarations first (they map back to the source and
-	// are detected as narrowing positions), then traverse the body.
+	// The condition's declarations come first (narrowing positions), then the body.
 	if (condition) {
 		yield* forEachDeclarations(ts, condition, ast, ctx, scope, true);
 	}
 	yield* body();
 }
 
-// Function declarations hoist: predeclare their names before traversing a
-// statement list, so earlier references resolve to the local declaration.
 function predeclareFunctionDeclarations(
 	ts: typeof import('typescript'),
 	statements: readonly ts.Statement[],
@@ -726,7 +711,6 @@ function* forEachDeclarationsInFunction(
 ): Generator<DeclarationItem> {
 	const scope = ctx.scope();
 	if (ts.isFunctionExpression(node) && node.name) {
-		// A named function expression's name is only visible inside its own body.
 		scope.declare(getNodeText(ts, node.name, ast));
 	}
 	for (const param of node.parameters) {
@@ -782,9 +766,7 @@ function* forEachDeclarationsInClass(
 			|| ts.isSetAccessorDeclaration(member)
 		) {
 			if (member.name && ts.isComputedPropertyName(member.name)) {
-				// A computed name in a class property declaration must be an entity
-				// name expression (grammar rule), so a call to `__VLS_unwrap` is not
-				// allowed here; `.value` keeps it an entity name.
+				// A computed name in a class property must be an entity name (grammar rule): no `__VLS_unwrap` call allowed.
 				yield* forEachDeclarations(ts, member.name.expression, ast, ctx, scope, true);
 			}
 		}
@@ -830,8 +812,7 @@ function* forEachDeclarationsInTypeNode(
 		yield [id, false, false, shouldIdentifierSkipped(ctx, getNodeText(ts, id, ast)), true, false];
 	}
 	else if (ts.isComputedPropertyName(node)) {
-		// TS1170: a computed name in a type literal must be an entity-name
-		// expression, so every reference keeps the `.value` form (no calls).
+		// TS1170: a computed name in a type literal must be an entity-name expression (no calls).
 		for (const item of forEachDeclarations(ts, node.expression, ast, ctx, scope, false)) {
 			item[4] = true;
 			yield item;

@@ -268,10 +268,8 @@ function useCodegen(
 		return new Set([...bindings].filter(name => /^v[A-Z]/.test(name)));
 	});
 
-	// First pass: collect bindings used in narrowing positions (the emitted
-	// output is discarded). The second pass — the computeds below — finalizes
-	// every access of these with `.value`; bare `__VLS_unwrap` reads keep
-	// seeing the original type.
+	// First pass: collect bindings used in narrowing positions (output discarded);
+	// the second pass (the computeds below) finalizes every access of these with `.value`.
 	const getDotValueBindings = computedSet(() => {
 		const bindings = getSetupBindings();
 		if (!bindings.size) {

@@ -3,7 +3,7 @@
 	<button @click="handler"></button>
 	<div>{{ exactType(handler, {} as (_e: Event) => void) }}</div>
 
-	<!-- condition callee: the callee is not the narrowed subject (the call result is), so it stays a read -->
+	<!-- condition callee: the call result is the narrowed subject, so the callee stays a read -->
 	<div v-if="guard()">{{ exactType(guard, {} as () => boolean) }}</div>
 
 	<!-- constructor binding: `new Foo()` should keep the constructor as a read (no `.value`) -->
@@ -67,7 +67,7 @@
 	<!-- && right operand narrowing (regression): b should be narrowed to string -->
 	<div>{{ a && b && exactType(b, {} as string) }}</div>
 
-	<!-- withDotValue nullish collapse (non-ref union): v-else should narrow to undefined -->
+	<!-- withDotValue nullish collapse: v-else narrows to undefined -->
 	<div v-if="maybeFn">{{ exactType(maybeFn, {} as (_e: Event) => void) }}</div>
 	<div v-else>{{ exactType(maybeFn, undefined) }}</div>
 
@@ -108,6 +108,9 @@
 
 	<!-- switch: interleaved case statements + discriminant narrowing into clause bodies -->
 	<button @click="switch (aOrB) { case 'a': exactType(aOrB, {} as 'a'); break; case 'b': exactType(aOrB, {} as 'b'); }" />
+
+	<!-- switch: a function declaration inside a clause hoists to the case block -->
+	<button @click="switch (aOrB) { case 'a': caseFn(); function caseFn() {} }" />
 
 	<!-- type query on a ref keeps `.value` semantics -->
 	<div>{{ exactType(maybe as any as typeof count, {} as number) }}</div>
@@ -167,6 +170,9 @@
 	<!-- class expression: its name does not leak into the surrounding scope -->
 	<button @click="const C = class count {}; void C; exactType(count, {} as number)" />
 
+	<!-- function expression: its name does not leak into the surrounding scope -->
+	<button @click="const F = function count() {}; void F; exactType(count, {} as number)" />
+
 	<!-- for statement: the incrementor runs after the condition, so it is narrowed too (when the body can fall through) -->
 	<button @click="for (; maybe; exactType(maybe, {} as string)) { }" />
 
@@ -197,16 +203,12 @@
 	<!-- @vue-expect-error -->
 	<button @click="if (flag) return; exactType(flag, {} as boolean);" />
 
-	<!-- inline handler closures: if-guards must also narrow nullish non-ref
-		bindings inside the closure (TypeScript does not carry the top-level
-		assertion narrowing into nested closures) -->
+	<!-- inline handler closures: guards re-assert nullish non-ref bindings inside the closure -->
 	<button @click="if (maybeFn) exactType(maybeFn, {} as (e: Event) => void);" />
 	<button @click="if (fnNull) fnNull()" />
 	<button @click="if (importedNull) importedNull()" />
 
-	<!-- a never-assigned `let` keeps the flowed assertion narrowing inside
-		closures; the re-assert must stay a no-op instead of wrapping twice.
-		(`var` never flows, so its re-assert wraps the fresh declared type.) -->
+	<!-- never-assigned let/var: re-assertion inside closures (no-op for let, fresh wrap for var) -->
 	<button @click="if (letNum) { exactType(letNum, {} as number); }" />
 	<button @click="if (varStr) { exactType(varStr, {} as string); }" />
 	<div v-if="letNum">
@@ -242,19 +244,15 @@
 	<!-- plain object binding with a `value` property is not unwrapped -->
 	<div>{{ exactType(box, {} as { value: number }) }}</div>
 
-	<!-- member access on a native-`value` object resolves the user's own
-		`.value`: codegen appends one level, the assert wrap restores it -->
+	<!-- member access on a native-`value` object resolves the user's own `.value` -->
 	<div>{{ exactType(box2.value, {} as number) }}</div>
 	<div v-if="box2.value">{{ exactType(box2.value, {} as number) }}</div>
 
-	<!-- ref-or-nullish union (e.g. inject): `.value` must resolve instead of
-		erroring, and narrowing positions still narrow; note the ref's own
-		`value` property absorbs the nullish member, so reads stay `number` -->
+	<!-- ref-or-nullish union (inject): `.value` resolves; the ref's own `value` absorbs the nullish member -->
 	<div>{{ exactType(injected, {} as number) }}</div>
 	<div v-if="injected">{{ exactType(injected, {} as number) }}</div>
 
-	<!-- a logical right operand is a plain read, not a narrowing position:
-		`box` must stay unmarked (marking it would corrupt its own `.value`) -->
+	<!-- logical right operand is a plain read, not a narrowing position: `box` stays unmarked -->
 	<div>{{ exactType(flag && box, {} as false | { value: number }) }}</div>
 
 	<!-- v-for: inline literal sources keep their literal types (#6067) -->
@@ -278,22 +276,18 @@
 	<div v-else>{{ exactType(fnNull, null) }}</div>
 	<div v-if="numZero">{{ exactType(numZero, {} as 1) }}</div>
 
-	<!-- imported nullish consts are not CFA-pinned across the module boundary
-		(TypeScript uses the declared type for imports), so they narrow through
-		__VLS_withDotValue like any other declared union -->
+	<!-- imported nullish consts narrow through __VLS_withDotValue like any declared union -->
 	<div v-if="importedUndef">{{ exactType(importedUndef, {} as string) }}</div>
 	<div v-else>{{ exactType(importedUndef, {} as string | undefined) }}</div>
 	<div v-if="importedNull">{{ exactType(importedNull, {} as () => number) }}</div>
 	<div v-else>{{ exactType(importedNull, null) }}</div>
 
-	<!-- the condition guard copied into a nested inline handler gets its own
-		reassert even when the handler itself never touches the binding -->
+	<!-- the condition guard copied into a nested inline handler gets its own reassert -->
 	<div v-if="importedNull">
 		<button @click="void 0" />
 	</div>
 
-	<!-- a slot prop shadowing the condition name must not be re-asserted: the
-		name inside refers to the slot prop, not the setup binding -->
+	<!-- a slot prop shadowing the condition name must not be re-asserted -->
 	<Comp v-if="shadowed" v-slot="{ shadowed }">
 		<button @click="exactType(shadowed, {} as number)" />
 	</Comp>

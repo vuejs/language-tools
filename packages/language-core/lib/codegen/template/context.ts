@@ -161,14 +161,10 @@ export function createTemplateCodegenContext() {
 	// context accesses -----------------------------------------------------------
 
 	const contextAccesses = new Map<string, Map<string, Set<number>>>();
-
-	// Names of bindings used in narrowing positions (conditions, type guards,
-	// write targets); the template codegen gives these a `.value` access at
-	// every position and a single `__VLS_withDotValue` assertion at the top.
 	const dotValueAccesses = new Set<string>();
 
-	// Ordered log of accessed variable names; event-handler closures use slices
-	// of it to find which bindings were accessed within the closure body.
+	// Ordered log of accessed names; event-handler closures slice from a mark
+	// to find the names accessed within their body.
 	const accessLog: string[] = [];
 
 	function accessVariable(source: string, name: string, offset?: number, dotValue = false) {
@@ -210,17 +206,12 @@ export function createTemplateCodegenContext() {
 
 	// conditions -----------------------------------------------------------------
 
-	// Generated text of each active branch condition, along with the names the
-	// condition expression accessed. Condition guards are replayed inside
-	// inline-handler closures, which re-assert the accessed bindings on demand.
+	// Active branch conditions with the names each accessed; the guards are
+	// replayed inside inline-handler closures.
 	const conditions: { text: string; accesses: string[] }[] = [];
 
 	function* generateConditionGuards() {
 		for (const condition of conditions) {
-			// The guard is replayed under the current scope chain; when every
-			// accessed name is shadowed there (slot prop, v-for binding, ...),
-			// the replay would test the shadowing locals instead of the
-			// bindings the condition was generated from.
 			if (condition.accesses.length && condition.accesses.every(name => scopes.some(scope => scope.has(name)))) {
 				continue;
 			}

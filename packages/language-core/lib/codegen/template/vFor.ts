@@ -36,15 +36,12 @@ export function* generateVFor(
 		defaultInitializerRanges.sort((a, b) => a[0] - b[0]);
 	}
 
-	// Evaluate the source before the loop bindings' lexical scope is
-	// established: in `v-for="x in x"` the source resolves in the outer scope.
-	// Destructuring defaults (`{ a, b = a }`) are interpolated afterwards and
-	// must see the sibling aliases, so the declaration happens in between.
+	// Evaluate the source before the loop bindings enter scope (`v-for="x in x"` reads the outer `x`);
+	// destructuring defaults (`{ a, b = a }`) are interpolated after the declaration to see the sibling aliases.
 	let sourceAlias: string | undefined;
 	if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		sourceAlias = ctx.getInternalVariable();
-		// tryAsConstant keeps inline literal sources (`v-for="n in [1, 2, 3]"`)
-		// from widening to `number[]` when lifted into the alias const (#6067).
+		// tryAsConstant keeps inline literal sources from widening to `number[]` (#6067).
 		yield `const ${sourceAlias} = ${names.tryAsConstant}(`;
 		yield* generateInterpolation(
 			options,

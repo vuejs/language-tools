@@ -135,20 +135,12 @@ declare global {
 	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
 	function __VLS_omit<T, K>(target: T, props: K): Omit<T, keyof K>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
-	// The assertion rewrites the binding so that the `.value` appended by
-	// codegen resolves with the unwrapped type, mirroring runtime unref:
-	// a wholly-ref type stays as-is; anything else is intersected with `Ref`
-	// (passed in by the caller, since this file cannot import vue) whose
-	// `value` is narrowed to unwrap ref members per union member. The `Ref`
-	// conjunct doubles as the idempotency marker: an already-wrapped binding
-	// satisfies the first branch, so re-asserting it (assertion narrowing
-	// flows into closures for never-assigned `let`) is a no-op. Every branch
-	// must stay assignable to `T` (TS2677), so the first check uses the tuple
-	// form: distributing the intersection over union members would turn
-	// nullish members into `never` and drop them. Note that in a
-	// ref-or-nullish union (e.g. `inject<Ref<T>>`), the ref's own `value`
-	// property absorbs the nullish member, so reads stay `T` instead of
-	// `T | undefined`.
+	// Rewrites the binding so codegen's appended `.value` resolves with the
+	// unwrapped type: a wholly-ref type stays as-is; anything else gains a
+	// `Ref` conjunct (passed by the caller — this file cannot import vue) that
+	// doubles as the idempotency marker for re-assertion. The tuple form keeps
+	// every branch assignable to `T` (TS2677); distributing the intersection
+	// would turn nullish union members into `never`.
 	function __VLS_withDotValue<T, Ref>(
 		t: T,
 		ref: Ref,

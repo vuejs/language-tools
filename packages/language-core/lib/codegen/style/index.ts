@@ -21,8 +21,7 @@ export interface StyleCodegenOptions {
 export { generate as generateStyle };
 
 function generate(options: StyleCodegenOptions) {
-	// Codegen may run twice per file (dot-value collection pass + final pass);
-	// the references registry accumulates as a side effect, so start clean.
+	// The references registry accumulates across codegen passes; start clean.
 	for (const style of options.styles) {
 		styleScopedClassReferences.delete(style);
 	}

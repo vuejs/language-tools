@@ -10,8 +10,7 @@ export function parseBindingRanges(
 ) {
 	const bindings: TextRange[] = [];
 	const components: TextRange[] = [];
-	// Bindings whose narrowing does not flow into nested closures (imports,
-	// `let`/`var`); the template codegen re-asserts them per closure.
+	// Bindings re-asserted per closure by the template codegen (imports, `let`/`var`).
 	const nonFlowingBindings: TextRange[] = [];
 
 	ts.forEachChild(ast, node => {

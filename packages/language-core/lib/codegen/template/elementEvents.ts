@@ -241,10 +241,8 @@ export function* generateModelEventExpression(
 	}
 }
 
-// TS does not carry the top-level `__VLS_withDotValue` assertion narrowing
-// into nested closures for imports and `let`/`var` bindings, so re-assert
-// them at the top of each closure that accesses them with `.value`.
-// Bindings referenced by the replayed condition guards need it too.
+// Assertion narrowing does not flow into nested closures for imports and
+// `let`/`var` bindings (TS limitation), so re-assert those bindings at closure tops.
 function* generateReasserts(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
@@ -252,8 +250,6 @@ function* generateReasserts(
 ): Generator<Code> {
 	const reasserts = new Set<string>();
 	const collect = (name: string) => {
-		// A name covered by an active template scope (slot prop, v-for binding,
-		// ...) refers to that local here, not to the setup binding.
 		if (options.reassertBindings.has(name) && !ctx.scopes.some(scope => scope.has(name))) {
 			reasserts.add(name);
 		}

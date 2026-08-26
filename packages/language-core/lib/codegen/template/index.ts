@@ -19,12 +19,9 @@ export interface TemplateCodegenOptions {
 	setupRefs: Set<string>;
 	setupBindings: Set<string>;
 	// Bindings narrowed at least once anywhere in the template/styles; every
-	// access of these is emitted with `.value`. Collected by a first codegen
-	// pass (pass an empty set) and finalized for the second pass.
+	// access of these is emitted with `.value`. Collected by a first codegen pass.
 	dotValueBindings: Set<string>;
-	// The subset of `dotValueBindings` whose top-level `__VLS_withDotValue`
-	// assertion does not flow into closures (imports, `let`/`var`);
-	// re-asserted at closure tops.
+	// The subset of `dotValueBindings` re-asserted at closure tops (imports, `let`/`var`).
 	reassertBindings: Set<string>;
 	hasDefineSlots?: boolean;
 	propsAssignName?: string;
@@ -36,8 +33,7 @@ export interface TemplateCodegenOptions {
 export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
-	// Codegen may run twice per file (dot-value collection pass + final pass);
-	// the references registry accumulates as a side effect, so start clean.
+	// The references registry accumulates across codegen passes; start clean.
 	styleScopedClassReferences.delete(options.template);
 	const ctx = createTemplateCodegenContext();
 	const codeGenerator = generateWorker(options, ctx);
