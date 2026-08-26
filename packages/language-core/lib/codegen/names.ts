@@ -47,6 +47,7 @@ const raw = {
 	functionalComponentArgsRest: '',
 	omit: '',
 	tryAsConstant: '',
+	unwrap: '',
 	vFor: '',
 	vSlot: '',
 	withDotValue: '',

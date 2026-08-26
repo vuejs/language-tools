@@ -5,7 +5,7 @@ import { getUnwrappedExpression } from '../../parsers/utils';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, getTypeScriptAST, identifierRE, newLine } from '../utils';
+import { endOfLine, getRefBrandArgument, getTypeScriptAST, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
@@ -168,29 +168,20 @@ export function* generateEventExpression(
 		);
 
 		if (isCompound) {
-			yield `// @ts-ignore${newLine}`;
-			yield `(...[$event]) => {${newLine}`;
 			const scope = ctx.scope();
 			scope.declare('$event');
-			yield `void $event${endOfLine}`;
-			yield* ctx.generateConditionGuards();
 
-			// The top-level `__VLS_withDotValue` assertion does not narrow imported
-			// bindings inside this closure (TS control-flow limitation), so re-assert
-			// the setup bindings that are called by this handler right here. Only
-			// called bindings are re-asserted: for local bindings the top-level
-			// assertion already flows into this closure, and re-asserting non-call
-			// accesses would double-narrow them.
-			ctx.callAccessedBindings.clear();
+			const accessMark = ctx.accessLog.length;
 			const codes: Code[] = [];
 			for (const code of interpolation) {
 				codes.push(code);
 			}
-			for (const name of ctx.callAccessedBindings) {
-				if (options.setupBindings.has(name)) {
-					yield `${names.withDotValue}(${name}, {} as import('${options.vueCompilerOptions.lib}').Ref<unknown>)${endOfLine}`;
-				}
-			}
+
+			yield `// @ts-ignore${newLine}`;
+			yield `(...[$event]) => {${newLine}`;
+			yield `void $event${endOfLine}`;
+			yield* generateReasserts(options, ctx, accessMark);
+			yield* ctx.generateConditionGuards();
 
 			if (isSingleExpression(options.typescript, ast)) {
 				yield `return (`;
@@ -232,22 +223,54 @@ export function* generateModelEventExpression(
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		yield `// @ts-ignore${newLine}`;
-		yield `(...[$event]) => {${newLine}`;
-		yield* ctx.generateConditionGuards();
-		yield* generateInterpolation(
+		const accessMark = ctx.accessLog.length;
+		const codes = [...generateInterpolation(
 			options,
 			ctx,
 			options.template,
 			codeFeatures.verification,
 			prop.exp.content,
 			prop.exp.loc.start.offset,
-		);
+			undefined,
+			undefined,
+			true,
+		)];
+		yield `// @ts-ignore${newLine}`;
+		yield `(...[$event]) => {${newLine}`;
+		yield* generateReasserts(options, ctx, accessMark);
+		yield* ctx.generateConditionGuards();
+		yield* codes;
 		yield ` = $event${endOfLine}`;
 		yield `}`;
 	}
 	else {
 		yield `() => {}`;
+	}
+}
+
+// Assertion narrowing does not flow into nested closures for imports and
+// `let`/`var` bindings (TS limitation), so re-assert those bindings at closure tops.
+function* generateReasserts(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	accessMark: number,
+): Generator<Code> {
+	const reasserts = new Set<string>();
+	const collect = (name: string) => {
+		if (options.reassertBindings.has(name) && !ctx.scopes.some(scope => scope.has(name))) {
+			reasserts.add(name);
+		}
+	};
+	for (const name of ctx.accessLog.slice(accessMark)) {
+		collect(name);
+	}
+	for (const condition of ctx.conditions) {
+		for (const name of condition.accesses) {
+			collect(name);
+		}
+	}
+	for (const name of reasserts) {
+		yield `${names.withDotValue}(${name}, ${getRefBrandArgument(options.vueCompilerOptions)})${endOfLine}`;
 	}
 }
 

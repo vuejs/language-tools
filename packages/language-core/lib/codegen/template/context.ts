@@ -161,9 +161,14 @@ export function createTemplateCodegenContext() {
 	// context accesses -----------------------------------------------------------
 
 	const contextAccesses = new Map<string, Map<string, Set<number>>>();
-	const callAccessedBindings = new Set<string>();
+	const dotValueAccesses = new Set<string>();
 
-	function accessVariable(source: string, name: string, offset?: number) {
+	// Ordered log of accessed names; event-handler closures slice from a mark
+	// to find the names accessed within their body.
+	const accessLog: string[] = [];
+
+	function accessVariable(source: string, name: string, offset?: number, dotValue = false) {
+		accessLog.push(name);
 		let map = contextAccesses.get(name);
 		if (!map) {
 			contextAccesses.set(name, map = new Map());
@@ -175,10 +180,9 @@ export function createTemplateCodegenContext() {
 		if (offset !== undefined) {
 			arr.add(offset);
 		}
-	}
-
-	function accessVariableAsCall(name: string) {
-		callAccessedBindings.add(name);
+		if (dotValue) {
+			dotValueAccesses.add(name);
+		}
 	}
 
 	function* generateAutoImport(): Generator<Code> {
@@ -202,11 +206,16 @@ export function createTemplateCodegenContext() {
 
 	// conditions -----------------------------------------------------------------
 
-	const conditions: string[] = [];
+	// Active branch conditions with the names each accessed; the guards are
+	// replayed inside inline-handler closures.
+	const conditions: { text: string; accesses: string[] }[] = [];
 
 	function* generateConditionGuards() {
 		for (const condition of conditions) {
-			yield `if (!${condition}) throw 0${endOfLine}`;
+			if (condition.accesses.length && condition.accesses.every(name => scopes.some(scope => scope.has(name)))) {
+				continue;
+			}
+			yield `if (!${condition.text}) throw 0${endOfLine}`;
 		}
 	}
 
@@ -272,9 +281,9 @@ export function createTemplateCodegenContext() {
 		scopes,
 		scope,
 		contextAccesses,
+		dotValueAccesses,
+		accessLog,
 		accessVariable,
-		callAccessedBindings,
-		accessVariableAsCall,
 		generateAutoImport,
 		conditions,
 		generateConditionGuards,

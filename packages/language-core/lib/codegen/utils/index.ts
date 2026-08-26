@@ -1,10 +1,17 @@
 import type * as ts from 'typescript';
-import type { Code, IRBlock, IRScript, IRScriptSetup, VueCodeInformation } from '../../types';
+import type { Code, IRBlock, IRScript, IRScriptSetup, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
 export const identifierRE = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
+
+// The phantom argument that carries the component library's `Ref` brand into
+// `__VLS_unwrap` / `__VLS_withDotValue`; the helper declarations cannot
+// resolve the library import themselves.
+export function getRefBrandArgument(vueCompilerOptions: VueCompilerOptions): string {
+	return `{} as import('${vueCompilerOptions.lib}').Ref<unknown>`;
+}
 
 const cacheMaps = new WeakMap<IRBlock, [content: string, Map<string, [ts.SourceFile, usages: number]>]>();
 

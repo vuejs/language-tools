@@ -653,6 +653,9 @@
 			"path": "./unknownTag/tsconfig.json"
 		},
 		{
+			"path": "./unwrapBindingAccess/tsconfig.json"
+		},
+		{
 			"path": "./useTemplateRef-dynamic-arg/tsconfig.json"
 		},
 		{
