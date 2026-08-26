@@ -468,9 +468,9 @@ function* forEachDeclarations(
 	}
 	else if (ts.isForOfStatement(node) || ts.isForInStatement(node)) {
 		const scope = ctx.scope();
-		if (ts.isVariableDeclarationList(node.initializer)) {
-			for (const decl of node.initializer.declarations) {
-				scope.declare(...collectBindingNames(ts, decl.name, ast));
+		const declarations = ts.isVariableDeclarationList(node.initializer) ? node.initializer.declarations : undefined;
+		if (declarations) {
+			for (const decl of declarations) {
 				if (decl.initializer) {
 					yield* forEachDeclarations(ts, decl.initializer, ast, ctx, scope, false);
 				}
@@ -479,7 +479,14 @@ function* forEachDeclarations(
 		else {
 			yield* forEachDeclarationsInAssignmentTarget(ts, node.initializer, ast, ctx, scope);
 		}
+		// The source resolves before the loop bindings are in scope:
+		// `for (const x of x)` reads the outer `x` (same rule as `v-for="x in x"`).
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, false);
+		if (declarations) {
+			for (const decl of declarations) {
+				scope.declare(...collectBindingNames(ts, decl.name, ast));
+			}
+		}
 		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
 		scope.end();
 	}

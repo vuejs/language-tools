@@ -1,5 +1,6 @@
 declare global {
 	const __VLS_directiveBindingRestFields: { instance: null; oldValue: null; modifiers: any; dir: any };
+	const __VLS_dotValueBrand: unique symbol;
 
 	type __VLS_Elements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
@@ -135,11 +136,16 @@ declare global {
 	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
 	function __VLS_omit<T, K>(target: T, props: K): Omit<T, keyof K>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
+	// The brand marks types already produced by __VLS_withDotValue, so that
+	// re-asserting a binding whose assertion narrowing already flowed into the
+	// closure (never-assigned `let`) is a no-op instead of wrapping twice.
+	// The tuple form keeps the check from distributing over union members.
 	function __VLS_withDotValue<T, Ref>(
 		t: T,
 		ref: Ref,
 	): asserts t is NonNullable<T> extends Ref ? T
-		: NonNullable<T> & { value: T };
+		: [T] extends [{ [__VLS_dotValueBrand]: true }] ? T
+		: NonNullable<T> & { value: T; [__VLS_dotValueBrand]: true };
 	function __VLS_unwrap<T, Ref>(t: T, ref: Ref): T extends Ref & { value: infer V } ? V
 		: T;
 }

@@ -217,6 +217,13 @@ export function createTemplateCodegenContext() {
 
 	function* generateConditionGuards() {
 		for (const condition of conditions) {
+			// The guard is replayed under the current scope chain; when every
+			// accessed name is shadowed there (slot prop, v-for binding, ...),
+			// the replay would test the shadowing locals instead of the
+			// bindings the condition was generated from.
+			if (condition.accesses.length && condition.accesses.every(name => scopes.some(scope => scope.has(name)))) {
+				continue;
+			}
 			yield `if (!${condition.text}) throw 0${endOfLine}`;
 		}
 	}

@@ -204,6 +204,15 @@
 	<button @click="if (fnNull) fnNull()" />
 	<button @click="if (importedNull) importedNull()" />
 
+	<!-- a never-assigned `let` keeps the flowed assertion narrowing inside
+		closures; the re-assert must stay a no-op instead of wrapping twice.
+		(`var` never flows, so its re-assert wraps the fresh declared type.) -->
+	<button @click="if (letNum) { exactType(letNum, {} as number); }" />
+	<button @click="if (varStr) { exactType(varStr, {} as string); }" />
+	<div v-if="letNum">
+		<button @click="exactType(letNum, {} as number)" />
+	</div>
+
 	<!-- class field computed name unwraps the ref -->
 	<button @click="const C = class { [literalKey] = 1 }; void C;" />
 
@@ -272,6 +281,19 @@
 	<div v-if="importedNull">
 		<button @click="void 0" />
 	</div>
+
+	<!-- a slot prop shadowing the condition name must not be re-asserted: the
+		name inside refers to the slot prop, not the setup binding -->
+	<Comp v-if="shadowed" v-slot="{ shadowed }">
+		<button @click="exactType(shadowed, {} as number)" />
+	</Comp>
+
+	<!-- same for a v-for binding shadowing the condition name -->
+	<div v-if="shadowed">
+		<div v-for="shadowed in nums">
+			<button @click="exactType(shadowed, {} as number)" />
+		</div>
+	</div>
 </template>
 
 <script setup lang="ts">
@@ -326,7 +348,16 @@ const nestedOpt = ref([{ a: { b: 1 } as { b?: number } }]);
 const fnUndef: (() => number) | undefined = Math.random() > 0.5 ? () => 1 : undefined;
 const strUndef: string | undefined = Math.random() > 0.5 ? 'x' : undefined;
 const fnNull: (() => number) | null = Math.random() > 0.5 ? () => 1 : null;
+// assigned on purpose so the binding stays non-flowing (TS only carries
+// assertion narrowing into closures for never-assigned `let`)
+let shadowed: string | undefined = Math.random() > 0.5 ? 'x' : undefined;
+if (Math.random() > 0.5) {
+	shadowed = undefined;
+}
 const numZero: 0 | 1 = Math.random() > 0.5 ? 0 : 1;
+let letNum: number | undefined = Math.random() > 0.5 ? 1 : undefined;
+// eslint-disable-next-line no-var
+var varStr: string | undefined = Math.random() > 0.5 ? 'x' : undefined;
 const Child = defineComponent({
 	__typeProps: {} as { foo: string },
 });

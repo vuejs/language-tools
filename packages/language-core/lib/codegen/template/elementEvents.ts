@@ -251,16 +251,19 @@ function* generateReasserts(
 	accessMark: number,
 ): Generator<Code> {
 	const reasserts = new Set<string>();
-	for (const name of ctx.accessLog.slice(accessMark)) {
-		if (options.reassertBindings.has(name)) {
+	const collect = (name: string) => {
+		// A name covered by an active template scope (slot prop, v-for binding,
+		// ...) refers to that local here, not to the setup binding.
+		if (options.reassertBindings.has(name) && !ctx.scopes.some(scope => scope.has(name))) {
 			reasserts.add(name);
 		}
+	};
+	for (const name of ctx.accessLog.slice(accessMark)) {
+		collect(name);
 	}
 	for (const condition of ctx.conditions) {
 		for (const name of condition.accesses) {
-			if (options.reassertBindings.has(name)) {
-				reasserts.add(name);
-			}
+			collect(name);
 		}
 	}
 	for (const name of reasserts) {
