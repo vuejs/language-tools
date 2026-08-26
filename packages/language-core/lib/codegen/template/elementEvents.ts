@@ -5,7 +5,7 @@ import { getUnwrappedExpression } from '../../parsers/utils';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, getTypeScriptAST, identifierRE, newLine } from '../utils';
+import { endOfLine, getRefBrandArgument, getTypeScriptAST, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
@@ -164,15 +164,18 @@ export function* generateEventExpression(
 		);
 
 		if (isCompound) {
-			yield `(...[$event]) => {${newLine}`;
 			const scope = ctx.scope();
 			scope.declare('$event');
-			yield* ctx.generateConditionGuards();
 
+			const accessMark = ctx.accessLog.length;
 			const codes: Code[] = [];
 			for (const code of interpolation) {
 				codes.push(code);
 			}
+
+			yield `(...[$event]) => {${newLine}`;
+			yield* generateReasserts(options, ctx, accessMark);
+			yield* ctx.generateConditionGuards();
 
 			if (isSingleExpression(options.typescript, ast)) {
 				yield `return (`;
@@ -214,9 +217,8 @@ export function* generateModelEventExpression(
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		yield `(...[$event]) => {${newLine}`;
-		yield* ctx.generateConditionGuards();
-		yield* generateInterpolation(
+		const accessMark = ctx.accessLog.length;
+		const codes = [...generateInterpolation(
 			options,
 			ctx,
 			options.template,
@@ -226,12 +228,35 @@ export function* generateModelEventExpression(
 			undefined,
 			undefined,
 			true,
-		);
+		)];
+		yield `(...[$event]) => {${newLine}`;
+		yield* generateReasserts(options, ctx, accessMark);
+		yield* ctx.generateConditionGuards();
+		yield* codes;
 		yield ` = $event${endOfLine}`;
 		yield `}`;
 	}
 	else {
 		yield `() => {}`;
+	}
+}
+
+// TS does not carry the top-level `__VLS_withDotValue` assertion narrowing
+// into nested closures for imports and `let`/`var` bindings, so re-assert
+// them at the top of each closure that accesses them with `.value`.
+function* generateReasserts(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	accessMark: number,
+): Generator<Code> {
+	const reasserts = new Set<string>();
+	for (const name of ctx.accessLog.slice(accessMark)) {
+		if (options.dotValueBindings.has(name) && options.nonFlowingBindings.has(name)) {
+			reasserts.add(name);
+		}
+	}
+	for (const name of reasserts) {
+		yield `${names.withDotValue}(${name}, ${getRefBrandArgument(options.vueCompilerOptions)})${endOfLine}`;
 	}
 }
 

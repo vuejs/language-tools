@@ -19,6 +19,7 @@ export function* generateInterpolation(
 		importedComponents,
 		setupRefs,
 		setupBindings,
+		dotValueBindings,
 		vueCompilerOptions,
 	}: {
 		typescript: typeof import('typescript');
@@ -26,6 +27,7 @@ export function* generateInterpolation(
 		importedComponents: Set<string>;
 		setupRefs: Set<string>;
 		setupBindings: Set<string>;
+		dotValueBindings: Set<string>;
 		vueCompilerOptions: VueCompilerOptions;
 	},
 	ctx: TemplateCodegenContext,
@@ -36,9 +38,6 @@ export function* generateInterpolation(
 	prefix: string = '',
 	suffix: string = '',
 	inNarrowing: boolean = false,
-	// collects the top-level narrowing binding names for the caller (vIf uses
-	// them to mark the branch scope), so the condition is only walked once
-	narrowedBindings?: Set<string>,
 ): Generator<Code> {
 	if (prefix) {
 		yield prefix;
@@ -57,9 +56,6 @@ export function* generateInterpolation(
 		)
 	) {
 		const identifierData = isShorthand ? { ...data, __shorthandExpression: 'js' as const } : data;
-		if (narrowedBindings && isNarrowing && setupBindings.has(name)) {
-			narrowedBindings.add(name);
-		}
 		if (isShorthand) {
 			yield* generateNonIdentifierCode(
 				code.slice(prevEnd, offset + name.length),
@@ -84,8 +80,9 @@ export function* generateInterpolation(
 		// shorthand handling in elementProps.ts):
 		// - destructured props / imported components → direct reference
 		// - template refs → direct `.value`
-		// - type query on binding → `.value`
-		// - other bindings → `.value` (narrowing / write) or `__VLS_unwrap` (value read)
+		// - dotValue bindings (narrowed at least once anywhere) → `.value` at
+		//   every position; narrowing then works on the `.value` reference chain
+		// - other bindings → `__VLS_unwrap` (plain reads keep the original type)
 		// - otherwise → `__VLS_ctx.<name>`
 		if (destructuredProps.has(name) || importedComponents.has(name)) {
 			yield [
@@ -105,18 +102,10 @@ export function* generateInterpolation(
 			yield `.value`;
 		}
 		else if (setupBindings.has(name)) {
-			const dotValue = inTypeQuery || isNarrowing || ctx.isNarrowed(name);
-			ctx.accessVariable(block.name, name, start + offset, dotValue);
-			if (inTypeQuery) {
-				yield [
-					name,
-					block.name,
-					start + offset,
-					identifierData,
-				];
-				yield `.value`;
-			}
-			else if (isNarrowing || ctx.isNarrowed(name)) {
+			// Detection only: populates `dotValueAccesses` for the first
+			// (collection) pass; the second pass emits by `dotValueBindings`.
+			ctx.accessVariable(block.name, name, start + offset, inTypeQuery || isNarrowing);
+			if (inTypeQuery || dotValueBindings.has(name)) {
 				yield [
 					name,
 					block.name,
@@ -476,13 +465,9 @@ function* forEachDeclarations(
 	}
 	else if (ts.isBlock(node)) {
 		const scope = ctx.scope();
-		// Own narrowed scope, so that early-exit narrowing (see IfStatement)
-		// applies to the following statements without leaking outside.
-		ctx.enterNarrowedScope();
 		for (const child of forEachNode(ts, node)) {
 			yield* forEachDeclarations(ts, child, ast, ctx, scope, false);
 		}
-		ctx.exitNarrowedScope();
 		scope.end();
 	}
 	else if (ts.isForOfStatement(node) || ts.isForInStatement(node)) {
@@ -520,17 +505,12 @@ function* forEachDeclarations(
 		scope.end();
 	}
 	else if (ts.isIfStatement(node)) {
-		const condition = yield* forEachNarrowedBy(ts, node.expression, ast, ctx, scope, function*() {
+		yield* forEachNarrowedBy(ts, node.expression, ast, ctx, scope, function*() {
 			yield* forEachDeclarations(ts, node.thenStatement, ast, ctx, scope, false);
 			if (node.elseStatement) {
 				yield* forEachDeclarations(ts, node.elseStatement, ast, ctx, scope, false);
 			}
 		});
-		if (definitelyExits(ts, node.thenStatement)) {
-			// Early exit: the negated condition holds for the statements that
-			// follow in the same sequence (narrowed scope owned by it).
-			addNarrowedBindings(ts, ast, ctx, condition);
-		}
 	}
 	else if (ts.isWhileStatement(node)) {
 		yield* forEachNarrowedBy(ts, node.expression, ast, ctx, scope, function*() {
@@ -572,13 +552,9 @@ function* forEachDeclarations(
 				if (ts.isCaseClause(clause)) {
 					yield* forEachDeclarations(ts, clause.expression, ast, ctx, scope, false);
 				}
-				// Own narrowed scope per clause, so that early-exit narrowing in one
-				// clause does not leak into the following clauses.
-				ctx.enterNarrowedScope();
 				for (const statement of clause.statements) {
 					yield* forEachDeclarations(ts, statement, ast, ctx, scope, false);
 				}
-				ctx.exitNarrowedScope();
 			}
 		});
 	}
@@ -626,11 +602,9 @@ function* forEachDeclarations(
 		scope.end();
 	}
 	else if (ts.isSourceFile(node)) {
-		ctx.enterNarrowedScope();
 		for (const statement of node.statements) {
 			yield* forEachDeclarations(ts, statement, ast, ctx, scope, inNarrowing);
 		}
-		ctx.exitNarrowedScope();
 	}
 	else if (ts.isExpressionStatement(node)) {
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
@@ -649,32 +623,11 @@ function* forEachNarrowedBy(
 	ctx: TemplateCodegenContext,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
 	body: () => Generator<DeclarationItem>,
-): Generator<DeclarationItem, DeclarationItem[]> {
-	// Yield the condition's declarations first (they map back to the source),
-	// then traverse the body in a narrowed scope marked with the condition's
-	// identifiers, mirroring how control-flow narrowing treats the condition.
-	const items = condition ? [...forEachDeclarations(ts, condition, ast, ctx, scope, true)] : [];
-	yield* items;
-	ctx.enterNarrowedScope();
-	addNarrowedBindings(ts, ast, ctx, items);
+): Generator<DeclarationItem> {
+	// Yield the condition's declarations first (they map back to the source and
+	// are detected as narrowing positions), then traverse the body.
+	yield* condition ? [...forEachDeclarations(ts, condition, ast, ctx, scope, true)] : [];
 	yield* body();
-	ctx.exitNarrowedScope();
-	// Return the items so callers can extend narrowing past the scope
-	// (see the early-exit handling for IfStatement).
-	return items;
-}
-
-function addNarrowedBindings(
-	ts: typeof import('typescript'),
-	ast: ts.SourceFile,
-	ctx: TemplateCodegenContext,
-	items: DeclarationItem[],
-) {
-	for (const [id, , , skipped] of items) {
-		if (!skipped) {
-			ctx.addNarrowedBinding(getNodeText(ts, id, ast));
-		}
-	}
 }
 
 function* forEachDeclarationsInAssignmentTarget(
@@ -878,25 +831,4 @@ export function shouldIdentifierSkipped(
 		|| isLiteralWhitelisted(text)
 		|| text === 'require'
 		|| text.startsWith('__VLS_');
-}
-
-function definitelyExits(ts: typeof import('typescript'), node: ts.Statement): boolean {
-	if (
-		ts.isReturnStatement(node)
-		|| ts.isThrowStatement(node)
-		|| ts.isBreakStatement(node)
-		|| ts.isContinueStatement(node)
-	) {
-		return true;
-	}
-	if (ts.isBlock(node)) {
-		const last = node.statements[node.statements.length - 1];
-		return !!last && definitelyExits(ts, last);
-	}
-	if (ts.isIfStatement(node)) {
-		return !!node.elseStatement
-			&& definitelyExits(ts, node.thenStatement)
-			&& definitelyExits(ts, node.elseStatement);
-	}
-	return false;
 }

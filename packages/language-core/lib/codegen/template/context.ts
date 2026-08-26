@@ -158,37 +158,21 @@ export function createTemplateCodegenContext() {
 		return scope;
 	}
 
-	// narrowed bindings ----------------------------------------------------------
-
-	const narrowedBindings: Set<string>[] = [];
-
-	function enterNarrowedScope() {
-		narrowedBindings.push(new Set());
-	}
-
-	function exitNarrowedScope() {
-		narrowedBindings.pop();
-	}
-
-	function addNarrowedBinding(name: string) {
-		if (narrowedBindings.length) {
-			narrowedBindings[narrowedBindings.length - 1]!.add(name);
-		}
-	}
-
-	function isNarrowed(name: string) {
-		return narrowedBindings.some(set => set.has(name));
-	}
-
 	// context accesses -----------------------------------------------------------
 
 	const contextAccesses = new Map<string, Map<string, Set<number>>>();
 
-	// Names of bindings that had at least one access emitted with an appended
-	// `.value`; only these need the `__VLS_withDotValue` assertion.
+	// Names of bindings used in narrowing positions (conditions, type guards,
+	// write targets); the template codegen gives these a `.value` access at
+	// every position and a single `__VLS_withDotValue` assertion at the top.
 	const dotValueAccesses = new Set<string>();
 
+	// Ordered log of accessed variable names; event-handler closures use slices
+	// of it to find which bindings were accessed within the closure body.
+	const accessLog: string[] = [];
+
 	function accessVariable(source: string, name: string, offset?: number, dotValue = false) {
+		accessLog.push(name);
 		let map = contextAccesses.get(name);
 		if (!map) {
 			contextAccesses.set(name, map = new Map());
@@ -297,12 +281,9 @@ export function createTemplateCodegenContext() {
 		scope,
 		contextAccesses,
 		dotValueAccesses,
+		accessLog,
 		accessVariable,
 		generateAutoImport,
-		enterNarrowedScope,
-		exitNarrowedScope,
-		addNarrowedBinding,
-		isNarrowed,
 		conditions,
 		generateConditionGuards,
 		hoistVars,

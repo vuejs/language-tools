@@ -2,10 +2,11 @@ import type * as ts from 'typescript';
 import type { Code, IRTemplate, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, newLine } from '../utils';
+import { cutUnwrapPrefixBoundary, endOfLine, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
+import { references as styleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
 
 export interface TemplateCodegenOptions {
@@ -17,6 +18,13 @@ export interface TemplateCodegenOptions {
 	importedComponents: Set<string>;
 	setupRefs: Set<string>;
 	setupBindings: Set<string>;
+	// Bindings narrowed at least once anywhere in the template/styles; every
+	// access of these is emitted with `.value`. Collected by a first codegen
+	// pass (pass an empty set) and finalized for the second pass.
+	dotValueBindings: Set<string>;
+	// Bindings whose top-level `__VLS_withDotValue` assertion does not flow
+	// into closures (imports, `let`/`var`); re-asserted at closure tops.
+	nonFlowingBindings: Set<string>;
 	hasDefineSlots?: boolean;
 	propsAssignName?: string;
 	slotsAssignName?: string;
@@ -27,6 +35,9 @@ export interface TemplateCodegenOptions {
 export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
+	// Codegen may run twice per file (dot-value collection pass + final pass);
+	// the references registry accumulates as a side effect, so start clean.
+	styleScopedClassReferences.delete(options.template);
 	const ctx = createTemplateCodegenContext();
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
@@ -36,6 +47,7 @@ function generate(options: TemplateCodegenOptions) {
 		}
 		codes.push(code);
 	}
+	cutUnwrapPrefixBoundary(codes);
 	return { ...ctx, codes };
 }
 

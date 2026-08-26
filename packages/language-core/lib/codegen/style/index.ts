@@ -4,7 +4,8 @@ import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
-import { endOfLine } from '../utils';
+import { references as styleScopedClassReferences } from '../template/styleScopedClasses';
+import { cutUnwrapPrefixBoundary, endOfLine } from '../utils';
 
 export interface StyleCodegenOptions {
 	typescript: typeof import('typescript');
@@ -14,11 +15,17 @@ export interface StyleCodegenOptions {
 	importedComponents: Set<string>;
 	setupRefs: Set<string>;
 	setupBindings: Set<string>;
+	dotValueBindings: Set<string>;
 }
 
 export { generate as generateStyle };
 
 function generate(options: StyleCodegenOptions) {
+	// Codegen may run twice per file (dot-value collection pass + final pass);
+	// the references registry accumulates as a side effect, so start clean.
+	for (const style of options.styles) {
+		styleScopedClassReferences.delete(style);
+	}
 	const ctx = createTemplateCodegenContext();
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
@@ -28,6 +35,7 @@ function generate(options: StyleCodegenOptions) {
 		}
 		codes.push(code);
 	}
+	cutUnwrapPrefixBoundary(codes);
 	return { ...ctx, codes };
 }
 

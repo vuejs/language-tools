@@ -14,7 +14,6 @@ export function* generateVIf(
 	node: CompilerDOM.IfNode,
 ): Generator<Code> {
 	const originalBlockConditionsLength = ctx.conditions.length;
-	const negated = new Set<string>();
 
 	for (let i = 0; i < node.branches.length; i++) {
 		const branch = node.branches[i]!;
@@ -30,13 +29,6 @@ export function* generateVIf(
 		}
 
 		let addedBlockCondition = false;
-		let conditionNames = new Set<string>();
-
-		ctx.enterNarrowedScope();
-
-		for (const name of negated) {
-			ctx.addNarrowedBinding(name);
-		}
 
 		if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 			const codes = [...generateInterpolation(
@@ -49,11 +41,7 @@ export function* generateVIf(
 				`(`,
 				`)`,
 				true,
-				conditionNames,
 			)];
-			for (const name of conditionNames) {
-				ctx.addNarrowedBinding(name);
-			}
 			yield* codes;
 			ctx.conditions.push(toString(codes));
 			addedBlockCondition = true;
@@ -65,12 +53,6 @@ export function* generateVIf(
 			yield* generateTemplateChild(options, ctx, child, i !== 0, true);
 		}
 		yield `}${newLine}`;
-
-		ctx.exitNarrowedScope();
-
-		for (const name of conditionNames) {
-			negated.add(name);
-		}
 
 		if (addedBlockCondition) {
 			ctx.conditions[ctx.conditions.length - 1] = `!${ctx.conditions[ctx.conditions.length - 1]}`;

@@ -10,12 +10,19 @@ export function parseBindingRanges(
 ) {
 	const bindings: TextRange[] = [];
 	const components: TextRange[] = [];
+	// Bindings whose narrowing does not flow into nested closures (imports,
+	// `let`/`var`); the template codegen re-asserts them per closure.
+	const nonFlowingBindings: TextRange[] = [];
 
 	ts.forEachChild(ast, node => {
 		if (ts.isVariableStatement(node)) {
+			const isConst = (node.declarationList.flags & ts.NodeFlags.Const) !== 0;
 			for (const decl of node.declarationList.declarations) {
 				const ranges = collectBindingRanges(ts, decl.name, ast);
 				bindings.push(...ranges);
+				if (!isConst) {
+					nonFlowingBindings.push(...ranges);
+				}
 			}
 		}
 		else if (ts.isFunctionDeclaration(node)) {
@@ -47,6 +54,7 @@ export function parseBindingRanges(
 					}
 					else {
 						bindings.push(_getStartEnd(name));
+						nonFlowingBindings.push(_getStartEnd(name));
 					}
 				}
 				if (namedBindings) {
@@ -64,11 +72,13 @@ export function parseBindingRanges(
 							}
 							else {
 								bindings.push(_getStartEnd(element.name));
+								nonFlowingBindings.push(_getStartEnd(element.name));
 							}
 						}
 					}
 					else {
 						bindings.push(_getStartEnd(namedBindings.name));
+						nonFlowingBindings.push(_getStartEnd(namedBindings.name));
 					}
 				}
 			}
@@ -78,6 +88,7 @@ export function parseBindingRanges(
 	return {
 		bindings,
 		components,
+		nonFlowingBindings,
 	};
 
 	function _getStartEnd(node: ts.Node) {

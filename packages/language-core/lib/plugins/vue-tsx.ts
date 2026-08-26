@@ -125,6 +125,23 @@ function useCodegen(
 		return names;
 	});
 
+	const getNonFlowingBindings = computedSet(() => {
+		const names = new Set<string>();
+		const scriptSetupRanges = getScriptSetupRanges();
+		if (ir.scriptSetup && scriptSetupRanges) {
+			for (const range of scriptSetupRanges.nonFlowingBindings) {
+				names.add(ir.scriptSetup.content.slice(range.start, range.end));
+			}
+			const scriptRanges = getScriptRanges();
+			if (ir.script && scriptRanges) {
+				for (const range of scriptRanges.nonFlowingBindings) {
+					names.add(ir.script.content.slice(range.start, range.end));
+				}
+			}
+		}
+		return names;
+	});
+
 	const getScriptSetupBindings = computedSet(() => {
 		const names = new Set<string>();
 		const scriptSetupRanges = getScriptSetupRanges();
@@ -188,7 +205,7 @@ function useCodegen(
 		return capitalize(camelize(name));
 	});
 
-	const getGeneratedTemplate = computed(() => {
+	const generateTemplatePass = (dotValueBindings: Set<string>) => {
 		if (getResolvedOptions().skipTemplateCodegen || !ir.template) {
 			return;
 		}
@@ -202,14 +219,16 @@ function useCodegen(
 			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
 			setupBindings: getSetupBindings(),
+			dotValueBindings,
+			nonFlowingBindings: getNonFlowingBindings(),
 			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getInheritAttrs(),
 		});
-	});
+	};
 
-	const getGeneratedStyle = computed(() => {
+	const generateStylePass = (dotValueBindings: Set<string>) => {
 		if (!ir.styles.length) {
 			return;
 		}
@@ -221,8 +240,9 @@ function useCodegen(
 			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
 			setupBindings: getSetupBindings(),
+			dotValueBindings,
 		});
-	});
+	};
 
 	const getLocalComponents = computedSet(() => {
 		const bindings = getSetupBindings();
@@ -248,25 +268,36 @@ function useCodegen(
 		return new Set([...bindings].filter(name => /^v[A-Z]/.test(name)));
 	});
 
-	const getAccessedSetupBindings = (dotValueOnly: boolean) =>
-		computedSet(() => {
-			const bindings = getSetupBindings();
-			if (!bindings.size) {
-				return bindings;
-			}
-			const names: string[] = [];
-			for (const generated of [getGeneratedTemplate(), getGeneratedStyle()]) {
-				names.push(...(dotValueOnly ? generated?.dotValueAccesses : generated?.contextAccesses.keys()) ?? []);
-			}
-			return new Set(names.filter(name => bindings.has(name)));
-		});
+	// First pass: collect bindings used in narrowing positions (the emitted
+	// output is discarded). The second pass — the computeds below — finalizes
+	// every access of these with `.value`; bare `__VLS_unwrap` reads keep
+	// seeing the original type.
+	const getDotValueBindings = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
+		}
+		const names: string[] = [];
+		for (const generated of [generateTemplatePass(new Set()), generateStylePass(new Set())]) {
+			names.push(...generated?.dotValueAccesses ?? []);
+		}
+		return new Set(names.filter(name => bindings.has(name)));
+	});
 
-	const getReferencedBindings = getAccessedSetupBindings(false);
+	const getGeneratedTemplate = computed(() => generateTemplatePass(getDotValueBindings()));
+	const getGeneratedStyle = computed(() => generateStylePass(getDotValueBindings()));
 
-	// Bindings that had at least one access emitted with an appended `.value`;
-	// only these get the `__VLS_withDotValue` assertion (bare `__VLS_unwrap`
-	// reads must keep seeing the original type).
-	const getDotValueBindings = getAccessedSetupBindings(true);
+	const getReferencedBindings = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
+		}
+		const names: string[] = [];
+		for (const generated of [getGeneratedTemplate(), getGeneratedStyle()]) {
+			names.push(...generated?.contextAccesses.keys() ?? []);
+		}
+		return new Set(names.filter(name => bindings.has(name)));
+	});
 
 	const getUsedSetupBindings = computedSet(() => {
 		return new Set([
