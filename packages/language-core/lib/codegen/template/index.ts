@@ -6,6 +6,7 @@ import { endOfLine, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
+import { references as styleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
 
 export interface TemplateCodegenOptions {
@@ -17,6 +18,11 @@ export interface TemplateCodegenOptions {
 	importedComponents: Set<string>;
 	setupRefs: Set<string>;
 	setupBindings: Set<string>;
+	// Bindings narrowed at least once anywhere in the template/styles; every
+	// access of these is emitted with `.value`. Collected by a first codegen pass.
+	dotValueBindings: Set<string>;
+	// The subset of `dotValueBindings` re-asserted at closure tops (imports, `let`/`var`).
+	reassertBindings: Set<string>;
 	hasDefineSlots?: boolean;
 	propsAssignName?: string;
 	slotsAssignName?: string;
@@ -27,6 +33,8 @@ export interface TemplateCodegenOptions {
 export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
+	// The references registry accumulates across codegen passes; start clean.
+	styleScopedClassReferences.delete(options.template);
 	const ctx = createTemplateCodegenContext();
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
