@@ -220,7 +220,7 @@ function useCodegen(
 			setupRefs: getSetupRefs(),
 			setupBindings: getSetupBindings(),
 			dotValueBindings,
-			nonFlowingBindings: getNonFlowingBindings(),
+			reassertBindings: new Set([...dotValueBindings].filter(name => getNonFlowingBindings().has(name))),
 			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
@@ -281,7 +281,7 @@ function useCodegen(
 		for (const generated of [generateTemplatePass(new Set()), generateStylePass(new Set())]) {
 			names.push(...generated?.dotValueAccesses ?? []);
 		}
-		return new Set(names.filter(name => bindings.has(name)));
+		return new Set(names);
 	});
 
 	const getGeneratedTemplate = computed(() => generateTemplatePass(getDotValueBindings()));
@@ -292,11 +292,10 @@ function useCodegen(
 		if (!bindings.size) {
 			return bindings;
 		}
-		const names: string[] = [];
-		for (const generated of [getGeneratedTemplate(), getGeneratedStyle()]) {
-			names.push(...generated?.contextAccesses.keys() ?? []);
-		}
-		return new Set(names.filter(name => bindings.has(name)));
+		return new Set([
+			...getGeneratedTemplate()?.contextAccesses.keys() ?? [],
+			...getGeneratedStyle()?.contextAccesses.keys() ?? [],
+		].filter(name => bindings.has(name)));
 	});
 
 	const getUsedSetupBindings = computedSet(() => {

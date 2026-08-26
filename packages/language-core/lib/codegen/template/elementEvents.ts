@@ -251,7 +251,7 @@ function* generateReasserts(
 ): Generator<Code> {
 	const reasserts = new Set<string>();
 	for (const name of ctx.accessLog.slice(accessMark)) {
-		if (options.dotValueBindings.has(name) && options.nonFlowingBindings.has(name)) {
+		if (options.reassertBindings.has(name)) {
 			reasserts.add(name);
 		}
 	}

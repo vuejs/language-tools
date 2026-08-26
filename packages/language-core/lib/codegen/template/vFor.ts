@@ -8,7 +8,7 @@ import { names } from '../names';
 import { endOfLine, getTypeScriptAST, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
-import { generateInterpolation, shouldIdentifierSkipped } from './interpolation';
+import { generateInterpolation } from './interpolation';
 import { generateTemplateChild } from './templateChild';
 
 export function* generateVFor(
@@ -20,7 +20,6 @@ export function* generateVFor(
 	const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
 	const scope = ctx.scope();
 	let bindingNames: string[] = [];
-	let sourceAlias: string | undefined;
 	const defaultInitializerRanges: [number, number][] = [];
 
 	if (leftExpressionRange && leftExpressionText) {
@@ -36,22 +35,17 @@ export function* generateVFor(
 		}
 		defaultInitializerRanges.sort((a, b) => a[0] - b[0]);
 	}
-	if (
-		source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-		&& bindingNames.some(name =>
-			options.setupBindings.has(name)
-			|| options.setupRefs.has(name)
-			|| options.importedComponents.has(name)
-			|| shouldIdentifierSkipped(ctx, name)
-		)
-	) {
-		// When a loop binding shadows a name that the source could resolve
-		// lexically (setup binding, import, template-local, or global), evaluate
-		// the source before the loop bindings' lexical scope is established, then
-		// reference the alias in the head instead. This matches Vue's semantics,
-		// where the source expression resolves in the parent scope.
+
+	// Evaluate the source before the loop bindings' lexical scope is
+	// established: in `v-for="x in x"` the source resolves in the outer scope.
+	// Destructuring defaults (`{ a, b = a }`) are interpolated afterwards and
+	// must see the sibling aliases, so the declaration happens in between.
+	let sourceAlias: string | undefined;
+	if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		sourceAlias = ctx.getInternalVariable();
-		yield `const ${sourceAlias} = `;
+		// tryAsConstant keeps inline literal sources (`v-for="n in [1, 2, 3]"`)
+		// from widening to `number[]` when lifted into the alias const (#6067).
+		yield `const ${sourceAlias} = ${names.tryAsConstant}(`;
 		yield* generateInterpolation(
 			options,
 			ctx,
@@ -62,25 +56,8 @@ export function* generateVFor(
 			`(`,
 			`)`,
 		);
+		yield `)`;
 		yield endOfLine;
-	}
-
-	// Evaluate the source before the loop bindings' lexical scope is
-	// established: in `v-for="x in x"` the source resolves in the outer scope.
-	// Destructuring defaults (`{ a, b = a }`) are interpolated afterwards and
-	// must see the sibling aliases, so the declaration happens in between.
-	let bufferedSource: Code[] | undefined;
-	if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && sourceAlias === undefined) {
-		bufferedSource = [...generateInterpolation(
-			options,
-			ctx,
-			options.template,
-			codeFeatures.all,
-			source.content,
-			source.loc.start.offset,
-			`(`,
-			`)`,
-		)];
 	}
 
 	scope.declare(...bindingNames);
@@ -117,14 +94,9 @@ export function* generateVFor(
 		}
 	}
 	yield `] of `;
-	if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+	if (sourceAlias !== undefined) {
 		yield `${names.vFor}(`;
-		if (sourceAlias !== undefined) {
-			yield sourceAlias;
-		}
-		else {
-			yield* bufferedSource!;
-		}
+		yield sourceAlias;
 		yield `!)`; // #3102
 	}
 	else {

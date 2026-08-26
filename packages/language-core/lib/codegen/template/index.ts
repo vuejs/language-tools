@@ -22,9 +22,10 @@ export interface TemplateCodegenOptions {
 	// access of these is emitted with `.value`. Collected by a first codegen
 	// pass (pass an empty set) and finalized for the second pass.
 	dotValueBindings: Set<string>;
-	// Bindings whose top-level `__VLS_withDotValue` assertion does not flow
-	// into closures (imports, `let`/`var`); re-asserted at closure tops.
-	nonFlowingBindings: Set<string>;
+	// The subset of `dotValueBindings` whose top-level `__VLS_withDotValue`
+	// assertion does not flow into closures (imports, `let`/`var`);
+	// re-asserted at closure tops.
+	reassertBindings: Set<string>;
 	hasDefineSlots?: boolean;
 	propsAssignName?: string;
 	slotsAssignName?: string;

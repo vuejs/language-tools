@@ -27,19 +27,16 @@ export function parseBindingRanges(
 		}
 		else if (ts.isFunctionDeclaration(node)) {
 			if (node.name && ts.isIdentifier(node.name)) {
-				const range = _getStartEnd(node.name);
-				bindings.push(range);
+				bindings.push(_getStartEnd(node.name));
 			}
 		}
 		else if (ts.isClassDeclaration(node)) {
 			if (node.name) {
-				const range = _getStartEnd(node.name);
-				bindings.push(range);
+				bindings.push(_getStartEnd(node.name));
 			}
 		}
 		else if (ts.isEnumDeclaration(node)) {
-			const range = _getStartEnd(node.name);
-			bindings.push(range);
+			bindings.push(_getStartEnd(node.name));
 		}
 
 		if (ts.isImportDeclaration(node)) {

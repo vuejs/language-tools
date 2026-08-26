@@ -355,16 +355,7 @@ function* forEachDeclarations(
 			});
 		}
 		else if (isAssignment) {
-			let left = node.left;
-			while (ts.isParenthesizedExpression(left)) {
-				left = left.expression;
-			}
-			if (ts.isObjectLiteralExpression(left) || ts.isArrayLiteralExpression(left)) {
-				yield* forEachDeclarationsInAssignmentTarget(ts, left, ast, ctx, scope);
-			}
-			else {
-				yield* forEachDeclarations(ts, node.left, ast, ctx, scope, true);
-			}
+			yield* forEachDeclarationsInAssignmentTarget(ts, node.left, ast, ctx, scope);
 			yield* forEachDeclarations(ts, node.right, ast, ctx, scope, false);
 		}
 		else {
@@ -485,25 +476,8 @@ function* forEachDeclarations(
 				}
 			}
 		}
-		else if (ts.isIdentifier(node.initializer)) {
-			yield [
-				node.initializer,
-				false,
-				true,
-				shouldIdentifierSkipped(ctx, getNodeText(ts, node.initializer, ast)),
-				false,
-				false,
-			];
-		}
-		else if (ts.isObjectLiteralExpression(node.initializer) || ts.isArrayLiteralExpression(node.initializer)) {
+		else {
 			yield* forEachDeclarationsInAssignmentTarget(ts, node.initializer, ast, ctx, scope);
-		}
-		else if (ts.isPropertyAccessExpression(node.initializer)) {
-			yield* forEachDeclarations(ts, node.initializer.expression, ast, ctx, scope, true);
-		}
-		else if (ts.isElementAccessExpression(node.initializer)) {
-			yield* forEachDeclarations(ts, node.initializer.expression, ast, ctx, scope, true);
-			yield* forEachDeclarations(ts, node.initializer.argumentExpression, ast, ctx, scope, false);
 		}
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, false);
 		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
@@ -635,7 +609,9 @@ function* forEachNarrowedBy(
 ): Generator<DeclarationItem> {
 	// Yield the condition's declarations first (they map back to the source and
 	// are detected as narrowing positions), then traverse the body.
-	yield* condition ? [...forEachDeclarations(ts, condition, ast, ctx, scope, true)] : [];
+	if (condition) {
+		yield* forEachDeclarations(ts, condition, ast, ctx, scope, true);
+	}
 	yield* body();
 }
 
