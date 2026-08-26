@@ -749,6 +749,9 @@ function* forEachDeclarationsInClass(
 	ctx: TemplateCodegenContext,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
 ): Generator<DeclarationItem> {
+	for (const typeParam of node.typeParameters ?? []) {
+		yield* forEachDeclarationsInTypeNode(ts, typeParam, ast, ctx, scope);
+	}
 	for (const clause of node.heritageClauses ?? []) {
 		if (clause.token === ts.SyntaxKind.ExtendsKeyword) {
 			for (const type of clause.types) {

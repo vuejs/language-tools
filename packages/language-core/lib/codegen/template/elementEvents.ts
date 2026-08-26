@@ -244,6 +244,7 @@ export function* generateModelEventExpression(
 // TS does not carry the top-level `__VLS_withDotValue` assertion narrowing
 // into nested closures for imports and `let`/`var` bindings, so re-assert
 // them at the top of each closure that accesses them with `.value`.
+// Bindings referenced by the replayed condition guards need it too.
 function* generateReasserts(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
@@ -253,6 +254,13 @@ function* generateReasserts(
 	for (const name of ctx.accessLog.slice(accessMark)) {
 		if (options.reassertBindings.has(name)) {
 			reasserts.add(name);
+		}
+	}
+	for (const condition of ctx.conditions) {
+		for (const name of condition.accesses) {
+			if (options.reassertBindings.has(name)) {
+				reasserts.add(name);
+			}
 		}
 	}
 	for (const name of reasserts) {

@@ -210,11 +210,14 @@ export function createTemplateCodegenContext() {
 
 	// conditions -----------------------------------------------------------------
 
-	const conditions: string[] = [];
+	// Generated text of each active branch condition, along with the names the
+	// condition expression accessed. Condition guards are replayed inside
+	// inline-handler closures, which re-assert the accessed bindings on demand.
+	const conditions: { text: string; accesses: string[] }[] = [];
 
 	function* generateConditionGuards() {
 		for (const condition of conditions) {
-			yield `if (!${condition}) throw 0${endOfLine}`;
+			yield `if (!${condition.text}) throw 0${endOfLine}`;
 		}
 	}
 

@@ -224,6 +224,9 @@
 	<!-- class property type annotation sees the unwrapped type -->
 	<button @click="const C2 = class { field: typeof typedField = typedField }; void C2;" />
 
+	<!-- class declaration type parameter constraint sees the unwrapped type -->
+	<button @click="class C3<T extends typeof count> { constructor(readonly v: T) {} } const c = new C3(1); void c;" />
+
 	<!-- function declarations hoist: an earlier reference resolves to the local declaration -->
 	<button @click="hoistedHelper(); function hoistedHelper() {}" />
 
@@ -263,6 +266,12 @@
 	<div v-else>{{ exactType(importedUndef, {} as string | undefined) }}</div>
 	<div v-if="importedNull">{{ exactType(importedNull, {} as () => number) }}</div>
 	<div v-else>{{ exactType(importedNull, null) }}</div>
+
+	<!-- the condition guard copied into a nested inline handler gets its own
+		reassert even when the handler itself never touches the binding -->
+	<div v-if="importedNull">
+		<button @click="void 0" />
+	</div>
 </template>
 
 <script setup lang="ts">

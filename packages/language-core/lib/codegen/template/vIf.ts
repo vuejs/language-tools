@@ -31,6 +31,7 @@ export function* generateVIf(
 		let addedBlockCondition = false;
 
 		if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+			const accessMark = ctx.accessLog.length;
 			const codes = [...generateInterpolation(
 				options,
 				ctx,
@@ -43,7 +44,7 @@ export function* generateVIf(
 				true,
 			)];
 			yield* codes;
-			ctx.conditions.push(toString(codes));
+			ctx.conditions.push({ text: toString(codes), accesses: ctx.accessLog.slice(accessMark) });
 			addedBlockCondition = true;
 			yield ` `;
 		}
@@ -55,7 +56,8 @@ export function* generateVIf(
 		yield `}${newLine}`;
 
 		if (addedBlockCondition) {
-			ctx.conditions[ctx.conditions.length - 1] = `!${ctx.conditions[ctx.conditions.length - 1]}`;
+			const condition = ctx.conditions[ctx.conditions.length - 1]!;
+			condition.text = `!${condition.text}`;
 		}
 	}
 
