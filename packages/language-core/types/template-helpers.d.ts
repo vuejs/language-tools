@@ -139,7 +139,12 @@ declare global {
 		t: T,
 		ref: Ref,
 	): asserts t is NonNullable<T> extends Ref ? T
-		: NonNullable<T> extends { value: unknown } ? T
+		// Codegen appends exactly one `.value` to every access of an asserted
+		// binding; wrapping in `{ value: T }` restores that one level, so that
+		// member access (e.g. the user's own `.value` on a native-`value`
+		// object) resolves at the shifted level. Only bindings with an
+		// appended access are asserted, so bare `__VLS_unwrap` reads of other
+		// bindings keep seeing the original type.
 		: NonNullable<T> & { value: T };
 	function __VLS_unwrap<T, Ref>(t: T, ref: Ref): T extends Ref & { value: infer V } ? V
 		: T extends { value: infer V } ? (T extends V ? V : T)

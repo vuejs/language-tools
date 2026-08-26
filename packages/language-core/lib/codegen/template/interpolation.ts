@@ -105,7 +105,8 @@ export function* generateInterpolation(
 			yield `.value`;
 		}
 		else if (setupBindings.has(name)) {
-			ctx.accessVariable(block.name, name, start + offset);
+			const dotValue = inTypeQuery || isNarrowing || ctx.isNarrowed(name);
+			ctx.accessVariable(block.name, name, start + offset, dotValue);
 			if (inTypeQuery) {
 				yield [
 					name,

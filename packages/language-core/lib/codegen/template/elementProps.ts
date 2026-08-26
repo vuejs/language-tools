@@ -296,8 +296,9 @@ export function* generatePropExp(
 				yield `.value`;
 			}
 			else if (options.setupBindings.has(propVariableName)) {
-				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
-				if (ctx.isNarrowed(propVariableName)) {
+				const narrowed = ctx.isNarrowed(propVariableName);
+				ctx.accessVariable('template', propVariableName, exp.loc.start.offset, narrowed);
+				if (narrowed) {
 					yield* codes;
 					yield `.value`;
 				}

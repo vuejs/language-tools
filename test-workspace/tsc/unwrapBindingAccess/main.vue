@@ -210,6 +210,11 @@
 	<!-- plain object binding with a `value` property is not unwrapped -->
 	<div>{{ exactType(box, {} as { value: number }) }}</div>
 
+	<!-- member access on a native-`value` object resolves the user's own
+		`.value`: codegen appends one level, the assert wrap restores it -->
+	<div>{{ exactType(box2.value, {} as number) }}</div>
+	<div v-if="box2">{{ exactType(box2.value, {} as number) }}</div>
+
 	<!-- v-for: inline literal sources keep their literal types (#6067) -->
 	<div v-for="n in [1, 2, 3]">{{ exactType(n, {} as 1 | 2 | 3) }}</div>
 	<div v-for="(v, k) in { a: 1, b: 2 }">{{ exactType(v, {} as 1 | 2) }}{{ exactType(k, {} as 'a' | 'b') }}</div>
@@ -279,6 +284,7 @@ const entry = ref<number[]>([1, 2]);
 const matrix = ref<number[][]>([[1]]);
 const literalKey = ref<'m'>('m');
 const box = { value: 42 };
+const box2 = { value: 42 };
 const fallback = ref(0);
 const nestedOpt = ref([{ a: { b: 1 } as { b?: number } }]);
 const fnUndef: (() => number) | undefined = Math.random() > 0.5 ? () => 1 : undefined;

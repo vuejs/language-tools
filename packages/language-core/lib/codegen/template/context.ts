@@ -184,7 +184,11 @@ export function createTemplateCodegenContext() {
 
 	const contextAccesses = new Map<string, Map<string, Set<number>>>();
 
-	function accessVariable(source: string, name: string, offset?: number) {
+	// Names of bindings that had at least one access emitted with an appended
+	// `.value`; only these need the `__VLS_withDotValue` assertion.
+	const dotValueAccesses = new Set<string>();
+
+	function accessVariable(source: string, name: string, offset?: number, dotValue = false) {
 		let map = contextAccesses.get(name);
 		if (!map) {
 			contextAccesses.set(name, map = new Map());
@@ -195,6 +199,9 @@ export function createTemplateCodegenContext() {
 		}
 		if (offset !== undefined) {
 			arr.add(offset);
+		}
+		if (dotValue) {
+			dotValueAccesses.add(name);
 		}
 	}
 
@@ -289,6 +296,7 @@ export function createTemplateCodegenContext() {
 		scopes,
 		scope,
 		contextAccesses,
+		dotValueAccesses,
 		accessVariable,
 		generateAutoImport,
 		enterNarrowedScope,

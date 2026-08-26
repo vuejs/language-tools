@@ -259,6 +259,20 @@ function useCodegen(
 		].filter(name => bindings.has(name)));
 	});
 
+	// Bindings that had at least one access emitted with an appended `.value`;
+	// only these get the `__VLS_withDotValue` assertion (bare `__VLS_unwrap`
+	// reads must keep seeing the original type).
+	const getDotValueBindings = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
+		}
+		return new Set([
+			...getGeneratedTemplate()?.dotValueAccesses ?? [],
+			...getGeneratedStyle()?.dotValueAccesses ?? [],
+		].filter(name => bindings.has(name)));
+	});
+
 	const getUsedSetupBindings = computedSet(() => {
 		return new Set([
 			...getReferencedBindings(),
@@ -275,7 +289,7 @@ function useCodegen(
 			setupBindings: getScriptSetupBindings(),
 			localComponents: getLocalComponents(),
 			localDirectives: getLocalDirectives(),
-			withDotValueBindings: getReferencedBindings(),
+			withDotValueBindings: getDotValueBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateAndStyleTypes: new Set([
