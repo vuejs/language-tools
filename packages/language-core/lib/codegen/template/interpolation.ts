@@ -94,7 +94,7 @@ export function* generateInterpolation(
 				start + offset,
 				data,
 			];
-			yield `.value`;
+			yield [`.value`, block.name, start + offset, codeFeatures.verification];
 		}
 		else if (setupBindings.has(name)) {
 			// First pass records narrowing accesses here; the second pass emits from dotValueBindings.
@@ -106,7 +106,7 @@ export function* generateInterpolation(
 					start + offset,
 					identifierData,
 				];
-				yield `.value`;
+				yield [`.value`, block.name, start + offset, codeFeatures.verification];
 			}
 			else {
 				// `new __VLS_unwrap(Foo)()` parses as `new (__VLS_unwrap(Foo)())`,
