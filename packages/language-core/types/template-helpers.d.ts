@@ -127,9 +127,10 @@ declare global {
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
 		: __VLS_FunctionalComponent<{}, Record<string, unknown>>;
+	type __VLS_PadArgs<A extends any[]> = A extends [any, ...infer Rest] ? [any, ...__VLS_PadArgs<Rest>] : [];
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(
 		t: T,
-	): 2 extends Parameters<T>['length'] ? [any] : [];
+	): __VLS_PadArgs<Parameters<T> extends [any, ...infer Rest] ? Rest : []>;
 	function __VLS_asFunctionalElement0<T>(tag: T, endTag?: T): (attrs: T) => void;
 	function __VLS_asFunctionalElement1<T>(tag: T, endTag?: T): (attrs: T & Record<string, unknown>) => void;
 	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
