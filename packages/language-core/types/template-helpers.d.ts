@@ -1,6 +1,5 @@
 declare global {
 	const __VLS_directiveBindingRestFields: { instance: null; oldValue: null; modifiers: any; dir: any };
-	const __VLS_dotValueBrand: unique symbol;
 
 	type __VLS_Elements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
@@ -138,24 +137,23 @@ declare global {
 	function __VLS_tryAsConstant<const T>(t: T): T;
 	// The assertion rewrites the binding so that the `.value` appended by
 	// codegen resolves with the unwrapped type, mirroring runtime unref:
-	// a wholly-ref type stays as-is; anything else gets an intersection whose
-	// `value` unwraps ref members per union member. The brand makes
-	// re-asserting an already-wrapped binding a no-op (assertion narrowing
-	// flows into closures for never-assigned `let`). All branches must stay
-	// assignable to `T` (TS2677), so the tuple form avoids distributing over
-	// union members: distributing the intersection would turn nullish members
-	// into `never` and drop them. Note that in a ref-or-nullish union (e.g.
-	// `inject<Ref<T>>`), the ref's own `value` property absorbs the nullish
-	// member, so reads stay `T` instead of `T | undefined`.
+	// a wholly-ref type stays as-is; anything else is intersected with `Ref`
+	// (passed in by the caller, since this file cannot import vue) whose
+	// `value` is narrowed to unwrap ref members per union member. The `Ref`
+	// conjunct doubles as the idempotency marker: an already-wrapped binding
+	// satisfies the first branch, so re-asserting it (assertion narrowing
+	// flows into closures for never-assigned `let`) is a no-op. Every branch
+	// must stay assignable to `T` (TS2677), so the first check uses the tuple
+	// form: distributing the intersection over union members would turn
+	// nullish members into `never` and drop them. Note that in a
+	// ref-or-nullish union (e.g. `inject<Ref<T>>`), the ref's own `value`
+	// property absorbs the nullish member, so reads stay `T` instead of
+	// `T | undefined`.
 	function __VLS_withDotValue<T, Ref>(
 		t: T,
 		ref: Ref,
 	): asserts t is [T] extends [Ref] ? T
-		: [T] extends [{ [__VLS_dotValueBrand]: true }] ? T
-		: NonNullable<T> & {
-			value: T extends Ref & { value: infer V } ? V : T;
-			[__VLS_dotValueBrand]: true;
-		};
+		: NonNullable<T> & Ref & { value: T extends Ref & { value: infer V } ? V : T };
 	function __VLS_unwrap<T, Ref>(t: T, ref: Ref): T extends Ref & { value: infer V } ? V
 		: T;
 }
