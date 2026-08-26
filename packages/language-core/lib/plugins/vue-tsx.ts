@@ -248,30 +248,24 @@ function useCodegen(
 		return new Set([...bindings].filter(name => /^v[A-Z]/.test(name)));
 	});
 
-	const getReferencedBindings = computedSet(() => {
+	const getAccessedSetupBindings = (dotValueOnly: boolean) => computedSet(() => {
 		const bindings = getSetupBindings();
 		if (!bindings.size) {
 			return bindings;
 		}
-		return new Set([
-			...getGeneratedTemplate()?.contextAccesses.keys() ?? [],
-			...getGeneratedStyle()?.contextAccesses.keys() ?? [],
-		].filter(name => bindings.has(name)));
+		const names: string[] = [];
+		for (const generated of [getGeneratedTemplate(), getGeneratedStyle()]) {
+			names.push(...(dotValueOnly ? generated?.dotValueAccesses : generated?.contextAccesses.keys()) ?? []);
+		}
+		return new Set(names.filter(name => bindings.has(name)));
 	});
+
+	const getReferencedBindings = getAccessedSetupBindings(false);
 
 	// Bindings that had at least one access emitted with an appended `.value`;
 	// only these get the `__VLS_withDotValue` assertion (bare `__VLS_unwrap`
 	// reads must keep seeing the original type).
-	const getDotValueBindings = computedSet(() => {
-		const bindings = getSetupBindings();
-		if (!bindings.size) {
-			return bindings;
-		}
-		return new Set([
-			...getGeneratedTemplate()?.dotValueAccesses ?? [],
-			...getGeneratedStyle()?.dotValueAccesses ?? [],
-		].filter(name => bindings.has(name)));
-	});
+	const getDotValueBindings = getAccessedSetupBindings(true);
 
 	const getUsedSetupBindings = computedSet(() => {
 		return new Set([
