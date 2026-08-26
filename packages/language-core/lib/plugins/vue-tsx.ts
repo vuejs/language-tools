@@ -248,17 +248,18 @@ function useCodegen(
 		return new Set([...bindings].filter(name => /^v[A-Z]/.test(name)));
 	});
 
-	const getAccessedSetupBindings = (dotValueOnly: boolean) => computedSet(() => {
-		const bindings = getSetupBindings();
-		if (!bindings.size) {
-			return bindings;
-		}
-		const names: string[] = [];
-		for (const generated of [getGeneratedTemplate(), getGeneratedStyle()]) {
-			names.push(...(dotValueOnly ? generated?.dotValueAccesses : generated?.contextAccesses.keys()) ?? []);
-		}
-		return new Set(names.filter(name => bindings.has(name)));
-	});
+	const getAccessedSetupBindings = (dotValueOnly: boolean) =>
+		computedSet(() => {
+			const bindings = getSetupBindings();
+			if (!bindings.size) {
+				return bindings;
+			}
+			const names: string[] = [];
+			for (const generated of [getGeneratedTemplate(), getGeneratedStyle()]) {
+				names.push(...(dotValueOnly ? generated?.dotValueAccesses : generated?.contextAccesses.keys()) ?? []);
+			}
+			return new Set(names.filter(name => bindings.has(name)));
+		});
 
 	const getReferencedBindings = getAccessedSetupBindings(false);
 
