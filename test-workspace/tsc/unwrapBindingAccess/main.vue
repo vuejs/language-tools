@@ -197,6 +197,13 @@
 	<!-- @vue-expect-error -->
 	<button @click="if (flag) return; exactType(flag, {} as boolean);" />
 
+	<!-- inline handler closures: if-guards must also narrow nullish non-ref
+		bindings inside the closure (TypeScript does not carry the top-level
+		assertion narrowing into nested closures) -->
+	<button @click="if (maybeFn) exactType(maybeFn, {} as (e: Event) => void);" />
+	<button @click="if (fnNull) fnNull()" />
+	<button @click="if (importedNull) importedNull()" />
+
 	<!-- class field computed name unwraps the ref -->
 	<button @click="const C = class { [literalKey] = 1 }; void C;" />
 
