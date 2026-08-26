@@ -65,6 +65,26 @@ export function* generateVFor(
 		yield endOfLine;
 	}
 
+	// Evaluate the source before the loop bindings' lexical scope is
+	// established: in `v-for="x in x"` the source resolves in the outer scope.
+	// Destructuring defaults (`{ a, b = a }`) are interpolated afterwards and
+	// must see the sibling aliases, so the declaration happens in between.
+	let bufferedSource: Code[] | undefined;
+	if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && sourceAlias === undefined) {
+		bufferedSource = [...generateInterpolation(
+			options,
+			ctx,
+			options.template,
+			codeFeatures.all,
+			source.content,
+			source.loc.start.offset,
+			`(`,
+			`)`,
+		)];
+	}
+
+	scope.declare(...bindingNames);
+
 	yield `for (const [`;
 	if (leftExpressionRange && leftExpressionText) {
 		let lastOffset = 0;
@@ -103,16 +123,7 @@ export function* generateVFor(
 			yield sourceAlias;
 		}
 		else {
-			yield* generateInterpolation(
-				options,
-				ctx,
-				options.template,
-				codeFeatures.all,
-				source.content,
-				source.loc.start.offset,
-				`(`,
-				`)`,
-			);
+			yield* bufferedSource!;
 		}
 		yield `!)`; // #3102
 	}
@@ -120,10 +131,6 @@ export function* generateVFor(
 		yield `{} as any`;
 	}
 	yield `) {${newLine}`;
-
-	// Declare after the source expression: in `v-for="x in x"`, the source
-	// is evaluated in the outer scope where `x` is not yet shadowed.
-	scope.declare(...bindingNames);
 
 	const { inVFor } = ctx;
 	ctx.inVFor = true;

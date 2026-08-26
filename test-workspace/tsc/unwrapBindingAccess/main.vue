@@ -223,6 +223,9 @@
 	<div v-for="{ val = fallback } in objs">{{ exactType(val, {} as string | number) }}</div>
 	<div v-for="{ a: { b = fallback } } in nestedOpt">{{ exactType(b, {} as number) }}</div>
 
+	<!-- v-for: a destructured default can reference a sibling alias -->
+	<div v-for="{ a, b = a } in pairs">{{ exactType(a, {} as number) }}{{ exactType(b, {} as number) }}</div>
+
 	<!-- unions including null/undefined narrow for real when the initializer does not pin the flow type -->
 	<div v-if="fnUndef">{{ exactType(fnUndef, {} as () => number) }}</div>
 	<div v-else>{{ exactType(fnUndef, undefined) }}</div>
@@ -280,6 +283,7 @@ const nums = ref<number[]>([1, 2]);
 const idx = ref(true);
 const val = ref(0);
 const objs = ref([{ val: 'x' }]);
+const pairs: { a: number; b?: number }[] = [];
 const entry = ref<number[]>([1, 2]);
 const matrix = ref<number[][]>([[1]]);
 const literalKey = ref<'m'>('m');
