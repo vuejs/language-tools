@@ -214,6 +214,19 @@
 	<!-- @vue-expect-error -->
 	<button @click="delete count" />
 
+	<!-- delete as the ONLY usage of a ref binding still targets `.value` -->
+	<!-- @vue-expect-error -->
+	<button @click="delete deleteOnly" />
+
+	<!-- computed property name in a type literal keeps entity-name form (TS1170 forbids calls) -->
+	<button @click="type T = { [typeLiteralKey]: number }; const x: T = { m: 1 }; void x;" />
+
+	<!-- class property type annotation sees the unwrapped type -->
+	<button @click="const C2 = class { field: typeof typedField = typedField }; void C2;" />
+
+	<!-- function declarations hoist: an earlier reference resolves to the local declaration -->
+	<button @click="hoistedHelper(); function hoistedHelper() {}" />
+
 	<!-- plain object binding with a `value` property is not unwrapped -->
 	<div>{{ exactType(box, {} as { value: number }) }}</div>
 
@@ -294,6 +307,9 @@ const pairs: { a: number; b?: number }[] = [];
 const entry = ref<number[]>([1, 2]);
 const matrix = ref<number[][]>([[1]]);
 const literalKey = ref<'m'>('m');
+const deleteOnly = ref(0);
+const typeLiteralKey = ref<'m'>('m');
+const typedField = ref(0);
 const box = { value: 42 };
 const box2 = { value: 42 };
 const fallback = ref(0);
