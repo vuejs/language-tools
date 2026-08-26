@@ -10,11 +10,12 @@ import { getRefBrandArgument, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
+import { shouldIdentifierSkipped } from './bindingReferences';
 import type { TemplateCodegenContext } from './context';
 import { generateModifiers } from './elementDirectives';
 import { generateEventArg, generateEventExpression } from './elementEvents';
 import type { TemplateCodegenOptions } from './index';
-import { generateInterpolation, shouldIdentifierSkipped } from './interpolation';
+import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 
 export interface FailedPropExpressions {
