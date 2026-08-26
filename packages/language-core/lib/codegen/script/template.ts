@@ -13,7 +13,7 @@ export function* generateTemplate(
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 
-	for (const name of options.withDotValueBindings) {
+	for (const name of options.dotValueBindings) {
 		yield `${names.withDotValue}(${name}, ${getRefBrandArgument(options.vueCompilerOptions)})${endOfLine}`;
 	}
 

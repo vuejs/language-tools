@@ -247,6 +247,16 @@
 	<div>{{ exactType(box2.value, {} as number) }}</div>
 	<div v-if="box2.value">{{ exactType(box2.value, {} as number) }}</div>
 
+	<!-- ref-or-nullish union (e.g. inject): `.value` must resolve instead of
+		erroring, and narrowing positions still narrow; note the ref's own
+		`value` property absorbs the nullish member, so reads stay `number` -->
+	<div>{{ exactType(injected, {} as number) }}</div>
+	<div v-if="injected">{{ exactType(injected, {} as number) }}</div>
+
+	<!-- a logical right operand is a plain read, not a narrowing position:
+		`box` must stay unmarked (marking it would corrupt its own `.value`) -->
+	<div>{{ exactType(flag && box, {} as false | { value: number }) }}</div>
+
 	<!-- v-for: inline literal sources keep their literal types (#6067) -->
 	<div v-for="n in [1, 2, 3]">{{ exactType(n, {} as 1 | 2 | 3) }}</div>
 	<div v-for="(v, k) in { a: 1, b: 2 }">{{ exactType(v, {} as 1 | 2) }}{{ exactType(k, {} as 'a' | 'b') }}</div>
@@ -297,7 +307,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, inject, ref, type Ref } from 'vue';
 import { exactType } from '../shared';
 import { importedNull, importedUndef } from './pinned';
 import Comp from './child.vue';
@@ -343,17 +353,13 @@ const typeLiteralKey = ref<'m'>('m');
 const typedField = ref(0);
 const box = { value: 42 };
 const box2 = { value: 42 };
+const injected = inject<Ref<number>>('count');
 const fallback = ref(0);
 const nestedOpt = ref([{ a: { b: 1 } as { b?: number } }]);
 const fnUndef: (() => number) | undefined = Math.random() > 0.5 ? () => 1 : undefined;
 const strUndef: string | undefined = Math.random() > 0.5 ? 'x' : undefined;
 const fnNull: (() => number) | null = Math.random() > 0.5 ? () => 1 : null;
-// assigned on purpose so the binding stays non-flowing (TS only carries
-// assertion narrowing into closures for never-assigned `let`)
 let shadowed: string | undefined = Math.random() > 0.5 ? 'x' : undefined;
-if (Math.random() > 0.5) {
-	shadowed = undefined;
-}
 const numZero: 0 | 1 = Math.random() > 0.5 ? 0 : 1;
 let letNum: number | undefined = Math.random() > 0.5 ? 1 : undefined;
 // eslint-disable-next-line no-var

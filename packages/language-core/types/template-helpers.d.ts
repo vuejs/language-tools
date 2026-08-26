@@ -136,16 +136,26 @@ declare global {
 	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
 	function __VLS_omit<T, K>(target: T, props: K): Omit<T, keyof K>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
-	// The brand marks types already produced by __VLS_withDotValue, so that
-	// re-asserting a binding whose assertion narrowing already flowed into the
-	// closure (never-assigned `let`) is a no-op instead of wrapping twice.
-	// The tuple form keeps the check from distributing over union members.
+	// The assertion rewrites the binding so that the `.value` appended by
+	// codegen resolves with the unwrapped type, mirroring runtime unref:
+	// a wholly-ref type stays as-is; anything else gets an intersection whose
+	// `value` unwraps ref members per union member. The brand makes
+	// re-asserting an already-wrapped binding a no-op (assertion narrowing
+	// flows into closures for never-assigned `let`). All branches must stay
+	// assignable to `T` (TS2677), so the tuple form avoids distributing over
+	// union members: distributing the intersection would turn nullish members
+	// into `never` and drop them. Note that in a ref-or-nullish union (e.g.
+	// `inject<Ref<T>>`), the ref's own `value` property absorbs the nullish
+	// member, so reads stay `T` instead of `T | undefined`.
 	function __VLS_withDotValue<T, Ref>(
 		t: T,
 		ref: Ref,
-	): asserts t is NonNullable<T> extends Ref ? T
+	): asserts t is [T] extends [Ref] ? T
 		: [T] extends [{ [__VLS_dotValueBrand]: true }] ? T
-		: NonNullable<T> & { value: T; [__VLS_dotValueBrand]: true };
+		: NonNullable<T> & {
+			value: T extends Ref & { value: infer V } ? V : T;
+			[__VLS_dotValueBrand]: true;
+		};
 	function __VLS_unwrap<T, Ref>(t: T, ref: Ref): T extends Ref & { value: infer V } ? V
 		: T;
 }

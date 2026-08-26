@@ -351,7 +351,7 @@ function* forEachDeclarations(
 		}
 		else if (isLogical) {
 			yield* forEachNarrowedBy(ts, node.left, ast, ctx, scope, function*() {
-				yield* forEachDeclarations(ts, node.right, ast, ctx, scope, true);
+				yield* forEachDeclarations(ts, node.right, ast, ctx, scope, inNarrowing);
 			});
 		}
 		else if (isAssignment) {
