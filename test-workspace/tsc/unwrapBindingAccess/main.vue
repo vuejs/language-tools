@@ -213,7 +213,7 @@
 	<!-- member access on a native-`value` object resolves the user's own
 		`.value`: codegen appends one level, the assert wrap restores it -->
 	<div>{{ exactType(box2.value, {} as number) }}</div>
-	<div v-if="box2">{{ exactType(box2.value, {} as number) }}</div>
+	<div v-if="box2.value">{{ exactType(box2.value, {} as number) }}</div>
 
 	<!-- v-for: inline literal sources keep their literal types (#6067) -->
 	<div v-for="n in [1, 2, 3]">{{ exactType(n, {} as 1 | 2 | 3) }}</div>
