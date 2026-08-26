@@ -5,7 +5,7 @@ import { generateStyleScopedClasses } from '../style/scopedClasses';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import { references as styleScopedClassReferences } from '../template/styleScopedClasses';
-import { cutUnwrapPrefixBoundary, endOfLine } from '../utils';
+import { endOfLine } from '../utils';
 
 export interface StyleCodegenOptions {
 	typescript: typeof import('typescript');
@@ -35,7 +35,6 @@ function generate(options: StyleCodegenOptions) {
 		}
 		codes.push(code);
 	}
-	cutUnwrapPrefixBoundary(codes);
 	return { ...ctx, codes };
 }
 

@@ -1,7 +1,6 @@
 import type * as ts from 'typescript';
 import type { Code, IRBlock, IRScript, IRScriptSetup, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { names } from '../names';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
@@ -74,48 +73,5 @@ export function* forEachNode(ts: typeof import('typescript'), node: ts.Node): Ge
 	});
 	for (const child of children) {
 		yield child;
-	}
-}
-
-/**
- * `__VLS_unwrap(` is unmapped text injected right before a mapped binding
- * chunk. When the preceding mapped chunk ends exactly at the binding's source
- * start, the shared boundary would resolve to two disjoint generated positions
- * (the chunk's end lands on the `__VLS_unwrap` helper identifier), breaking
- * rename / navigation. Cut the preceding chunk's last character down to
- * verification-only so only the binding chunk claims the boundary; mirrors the
- * boundary cut in `generateNonIdentifierCode`.
- */
-export function cutUnwrapPrefixBoundary(codes: Code[]): void {
-	for (let i = 1; i < codes.length - 1; i++) {
-		if (codes[i] !== `${names.unwrap}(`) {
-			continue;
-		}
-		const prev = codes[i - 1];
-		const next = codes[i + 1];
-		if (
-			!Array.isArray(prev) || prev.length < 3
-			|| !Array.isArray(next) || next.length < 3
-			|| prev[1] !== next[1]
-			|| prev[2] + prev[0].length !== next[2]
-		) {
-			continue;
-		}
-		const features = prev[3];
-		if (features && !features.completion && !features.semantic && !features.navigation) {
-			continue;
-		}
-		const [text, source, offset] = prev;
-		if (source === undefined) {
-			continue;
-		}
-		const cut: Code = [text.slice(-1), source, offset + text.length - 1, { verification: features?.verification }];
-		if (text.length > 1) {
-			codes.splice(i - 1, 1, [text.slice(0, -1), source, offset, features], cut);
-			i++;
-		}
-		else {
-			codes[i - 1] = cut;
-		}
 	}
 }

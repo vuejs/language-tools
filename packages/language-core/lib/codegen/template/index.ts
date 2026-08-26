@@ -2,7 +2,7 @@ import type * as ts from 'typescript';
 import type { Code, IRTemplate, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { cutUnwrapPrefixBoundary, endOfLine, newLine } from '../utils';
+import { endOfLine, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
@@ -47,7 +47,6 @@ function generate(options: TemplateCodegenOptions) {
 		}
 		codes.push(code);
 	}
-	cutUnwrapPrefixBoundary(codes);
 	return { ...ctx, codes };
 }
 
