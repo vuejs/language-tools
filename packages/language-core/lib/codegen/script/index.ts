@@ -279,9 +279,9 @@ function* generateGlobalTypesReference(
 	}
 }
 
-function* generateExportDeclareEqual(block: IRBlock, name: string): Generator<Code> {
+export function* generateExportDeclareEqual(block: IRBlock, name: string, start = 0, end = block.content.length): Generator<Code> {
 	yield `const `;
-	const boundary = yield* Boundary.start(block.name, 0, block.content.length, codeFeatures.doNotReportTs6133);
+	const boundary = yield* Boundary.start(block.name, start, end, codeFeatures.doNotReportTs6133);
 	yield name;
 	yield boundary.end();
 	yield ` = `;

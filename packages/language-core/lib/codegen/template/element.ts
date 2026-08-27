@@ -20,6 +20,7 @@ import { generatePropertyAccess } from './propertyAccess';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
 import { generateVSlot } from './vSlot';
+import { generateExportDeclareEqual } from '../script';
 
 export function* generateComponent(
 	options: TemplateCodegenOptions,
@@ -198,16 +199,8 @@ export function* generateComponent(
 	yield propsStr.replace(/\n/g, ' ');
 	yield `}))${endOfLine}`;
 
-	yield `const `;
-	const boundary = yield* Boundary.start(
-		'template',
-		node.loc.start.offset,
-		node.loc.end.offset,
-		codeFeatures.doNotReportTs6133,
-	);
-	yield vnodeVar;
-	yield boundary.end();
-	yield ` = ${functionalVar}`;
+	yield* generateExportDeclareEqual(options.template, vnodeVar, node.loc.start.offset, node.loc.end.offset);
+	yield functionalVar;
 
 	const commentInfo = ctx.getCommentInfo();
 	if (commentInfo.generic) {
