@@ -3,7 +3,7 @@ import { camelize, isBuiltInDirective } from '@vue/shared';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine } from '../utils';
+import { endOfLine, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
@@ -50,7 +50,11 @@ export function* generateElementDirectives(
 			yield* generateArg(options, ctx, prop);
 			yield* generateModifiers(options, ctx, prop);
 			yield* generateValue(options, ctx, prop);
-			yield `}, null!, null!)`;
+			// Vue invokes hooks with all four arguments regardless of the declared
+			// arity. The excess-argument error (TS2554) lands on the first extra
+			// argument, so the synthetic trailing args get their own @ts-ignore'd
+			// line; when the arity matches, the binding above is checked as usual.
+			yield `},${newLine}// @ts-ignore${newLine}null!, null!)`;
 		}
 		yield boundary.end();
 		yield endOfLine;
