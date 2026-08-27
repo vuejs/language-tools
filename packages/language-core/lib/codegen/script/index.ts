@@ -187,7 +187,9 @@ function* generateWorker(
 
 	yield* ctx.localTypes.generate();
 
-	if (scriptSetup && scriptSetupRanges) {
+	// The <script src> branch never embeds the script setup content, so no
+	// macro references can appear and the import would be unused.
+	if (scriptSetup && scriptSetupRanges && typeof script?.src !== 'object') {
 		yield* generateMacros(options);
 	}
 }

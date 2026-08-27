@@ -5,7 +5,7 @@ import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, getTypeScriptAST, newLine } from '../utils';
+import { endOfLine, getTypeScriptAST, isTsLang, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -159,7 +159,7 @@ function* generateSlotParameters(
 		);
 		yield `(`;
 		yield* types.flatMap(type => type ? [`_`, type, `, `] : `_, `);
-		yield `) => [] as any`;
+		yield isTsLang(options.scriptLang) ? `) => [] as any` : `) => /** @type {any} */ ([])`;
 		yield boundary.end();
 	}
 	yield `)${endOfLine}`;
