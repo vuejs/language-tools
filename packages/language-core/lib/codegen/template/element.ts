@@ -6,6 +6,7 @@ import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
+import { generateExportDeclareEqual } from '../script';
 import { endOfLine, generateTypedVar, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
@@ -20,7 +21,6 @@ import { generatePropertyAccess } from './propertyAccess';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
 import { generateVSlot } from './vSlot';
-import { generateExportDeclareEqual } from '../script';
 
 export function* generateComponent(
 	options: TemplateCodegenOptions,
