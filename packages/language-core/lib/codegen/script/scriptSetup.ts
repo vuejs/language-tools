@@ -114,7 +114,7 @@ export function* generateGeneric(
 	if (propTypes.length) {
 		yield ` & ${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}>`;
 	}
-	yield ` & (typeof globalThis extends { __VLS_PROPS_FALLBACK: infer P } ? P : {})${endOfLine}`;
+	yield endOfLine;
 	yield `	expose: (exposed: `;
 	yield scriptSetupRanges.defineExpose
 		? `import('${vueCompilerOptions.lib}').ShallowUnwrapRef<typeof ${names.exposed}>`

@@ -8,9 +8,7 @@ declare const __VLS_export: <Row extends BaseRow>(__VLS_props: NonNullable<Await
     props: import('vue').PublicProps & __VLS_PrettifyLocal<{
         nonGeneric: string;
         rows: Row[];
-    }> & (typeof globalThis extends {
-        __VLS_PROPS_FALLBACK: infer P;
-    } ? P : {});
+    }>;
     expose: (exposed: {}) => void;
     attrs: any;
     slots: {
@@ -247,9 +245,7 @@ exports[`content mapper declaration emit > generic/component.d.vue.ts 1`] = `
     }) & {
         onBar?: ((data: number) => any) | undefined;
         "onUpdate:title"?: ((value: string | undefined) => any) | undefined;
-    }> & (typeof globalThis extends {
-        __VLS_PROPS_FALLBACK: infer P;
-    } ? P : {});
+    }>;
     expose: (exposed: import('vue').ShallowUnwrapRef<{
         baz: number;
     }>) => void;

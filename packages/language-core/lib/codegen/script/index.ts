@@ -271,7 +271,6 @@ function* generateGlobalTypesReference(
 		typesPath = typesRoot;
 	}
 	yield `/// <reference types=${JSON.stringify(typesPath + '/template-helpers.d.ts')} />${newLine}`;
-	yield `/// <reference types=${JSON.stringify(typesPath + '/props-fallback.d.ts')} />${newLine}`;
 	if (lib === 'vue' && target < 3.5) {
 		yield `/// <reference types=${JSON.stringify(typesPath + '/vue-3.4-shims.d.ts')} />${newLine}`;
 	}

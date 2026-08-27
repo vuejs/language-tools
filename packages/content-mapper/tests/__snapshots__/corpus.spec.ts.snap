@@ -6,15 +6,15 @@ exports[`content mapper full corpus 1`] = `
   "test-workspace/tsc/#2678/main.vue(2,7): error TS2339: Property 'vTouch' does not exist on type 'GlobalDirectives'.",
   "test-workspace/tsc/#3123/main.vue(13,40): error TS2561: Object literal may only specify known properties, but 'fillOpacity' does not exist in type 'SVGAttributes & {}'. Did you mean to write 'fill-opacity'?",
   "test-workspace/tsc/#4827/child.vue(2,23): error TS2551: Property 'vOnce' does not exist on type 'GlobalDirectives'. Did you mean 'VOnce'?",
-  "test-workspace/tsc/_failed_#3632/both.vue(10,1): error TS1109: Expression expected.
+  "test-workspace/tsc/_failed_#3632/both.vue(5,1): error TS1109: Expression expected.
   This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
-  "test-workspace/tsc/_failed_#3632/both.vue(6,1): error TS1109: Expression expected.
+  "test-workspace/tsc/_failed_#3632/both.vue(9,1): error TS1109: Expression expected.
   This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
-  "test-workspace/tsc/_failed_#3632/script.vue(5,1): error TS1109: Expression expected.
+  "test-workspace/tsc/_failed_#3632/script.vue(4,1): error TS1109: Expression expected.
   This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
-  "test-workspace/tsc/_failed_#3632/scriptSetup.vue(5,1): error TS1109: Expression expected.
+  "test-workspace/tsc/_failed_#3632/scriptSetup.vue(4,1): error TS1109: Expression expected.
   This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
-  "test-workspace/tsc/_failed_#4569/main.vue(4,7): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.
+  "test-workspace/tsc/_failed_#4569/main.vue(3,7): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.
   This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
   "test-workspace/tsc/_failed_#5071/withScript.vue(1,19): error TS1005: ';' expected.",
   "test-workspace/tsc/_failed_#5071/withoutScript.vue(2,26): error TS1005: ';' expected.",
@@ -26,6 +26,7 @@ exports[`content mapper full corpus 1`] = `
   "test-workspace/tsc/_failed_fragment_props/main.vue(12,54): error TS2339: Property 'baz' does not exist on type '{ id: number; }'.",
   "test-workspace/tsc/_failed_fragment_props/main.vue(6,31): error TS2322: Type '{ id: number; }' is not assignable to type 'PropertyKey | undefined'.",
   "test-workspace/tsc/_failed_fragment_props/main.vue(9,32): error TS2353: Object literal may only specify known properties, and 'foo' does not exist in type 'HTMLAttributes & ReservedProps'.",
+  "test-workspace/tsc/components/main.vue(74,11): error TS2345: Argument of type '<T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>['props'], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, 'attrs' | 'emit' | 'slots'>>, __VLS_exposed?: NonNullable<Awaited<typeof __VLS_setup>>['expose'], __VLS_setup?: Promise<...>) => import('vue').VNode & { __ctx?: NonNullab...' is not assignable to parameter of type 'never'.",
   "test-workspace/tsc/useTemplateRef-dynamic-arg/main.vue(3,8): error TS2464: A computed property name must be of type 'string', 'number', 'symbol', or 'any'.",
   "test-workspace/tsc/useTemplateRef-nullable/main.vue(3,5): error TS18047: 'foo.value' is possibly 'null'.",
   "test-workspace/tsc/useTemplateRef-nullable/main.vue(3,9): error TS2339: Property 'bar' does not exist on type 'HTMLInputElement'.",
