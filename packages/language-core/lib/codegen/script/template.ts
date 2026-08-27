@@ -121,9 +121,7 @@ function* generateTemplateComponents(
 		yield `${names.LocalComponents} & ${names.GlobalComponents}`;
 	});
 	yield* generateTypedVar('let', names.intrinsics, scriptLang, function*() {
-		yield vueCompilerOptions.target >= 3.3
-			? `import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements`
-			: `globalThis.JSX.IntrinsicElements`;
+		yield `import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements`;
 	});
 }
 

@@ -84,9 +84,7 @@ export function* generateGeneric(
 		);
 		yield endOfLine;
 		propTypes.push(
-			`import('${vueCompilerOptions.lib}').${
-				vueCompilerOptions.target >= 3.3 ? `ExtractPublicPropTypes` : `ExtractPropTypes`
-			}<typeof ${names.propsOption}>`,
+			`import('${vueCompilerOptions.lib}').ExtractPublicPropTypes<typeof ${names.propsOption}>`,
 		);
 	}
 	if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
@@ -106,11 +104,9 @@ export function* generateGeneric(
 	yield `	props: `;
 	yield vueCompilerOptions.target >= 3.4
 		? `import('${vueCompilerOptions.lib}').PublicProps`
-		: vueCompilerOptions.target >= 3
-		? `import('${vueCompilerOptions.lib}').VNodeProps`
+		: `import('${vueCompilerOptions.lib}').VNodeProps`
 			+ ` & import('${vueCompilerOptions.lib}').AllowedComponentProps`
-			+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`
-		: `globalThis.JSX.IntrinsicAttributes`;
+			+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`;
 	if (propTypes.length) {
 		yield ` & ${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}>`;
 	}
@@ -364,20 +360,18 @@ export function* generateSetupFunction(
 // so this can be emitted after all user content: leading directives stay ahead
 // of any statement, and the import-section/content junction stays intact.
 export function* generateMacros(options: ScriptCodegenOptions): Generator<Code> {
-	if (options.vueCompilerOptions.target >= 3.3) {
-		let emitted = false;
-		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
-			if (!options.setupBindings.has(macro)) {
-				if (!emitted) {
-					yield `// @ts-ignore${newLine}import { `;
-					emitted = true;
-				}
-				yield `${macro}, `;
+	let emitted = false;
+	for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
+		if (!options.setupBindings.has(macro)) {
+			if (!emitted) {
+				yield `// @ts-ignore${newLine}import { `;
+				emitted = true;
 			}
+			yield `${macro}, `;
 		}
-		if (emitted) {
-			yield `} from '${options.vueCompilerOptions.lib}'${endOfLine}`;
-		}
+	}
+	if (emitted) {
+		yield `} from '${options.vueCompilerOptions.lib}'${endOfLine}`;
 	}
 }
 
