@@ -5,7 +5,15 @@ import { getUnwrappedExpression } from '../../parsers/utils';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, getRefBrandArgument, getTypeScriptAST, identifierRE, newLine } from '../utils';
+import {
+	endOfLine,
+	generateTypedVar,
+	getRefBrandArgument,
+	getTypeScriptAST,
+	identifierRE,
+	isTsLang,
+	newLine,
+} from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
@@ -85,15 +93,23 @@ export function* generateElementEvents(
 	}
 
 	const emitsVar = ctx.getInternalVariable();
-	yield `let ${emitsVar}!: ${names.ResolveEmits}<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>${endOfLine}`;
+	yield* generateTypedVar('let', emitsVar, options.scriptLang, function*() {
+		yield `${names.ResolveEmits}<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>`;
+	});
 
 	for (const { propPrefix, emitPrefix, propName, emitName, items } of Object.values(definitions)) {
 		const eventVar = ctx.getInternalVariable();
-		yield `const ${eventVar}: ${
+		const eventType = `${
 			options.vueCompilerOptions.checkUnknownEvents ? '' : 'Record<string, unknown> & '
 		}Partial<${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
 			camelize(emitName)
-		}'>> = {${newLine}`;
+		}'>>`;
+		if (isTsLang(options.scriptLang)) {
+			yield `const ${eventVar}: ${eventType} = {${newLine}`;
+		}
+		else {
+			yield `/** @type {${eventType}} */${newLine}const ${eventVar} = {${newLine}`;
+		}
 		for (const { prop, source, offset } of items) {
 			if (prop.name === 'on') {
 				yield `/** @type {typeof ${emitsVar}.`;
@@ -270,7 +286,9 @@ function* generateReasserts(
 		}
 	}
 	for (const name of reasserts) {
-		yield `${names.withDotValue}(${name}, ${getRefBrandArgument(options.vueCompilerOptions)})${endOfLine}`;
+		yield `${names.withDotValue}(${name}, ${
+			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
+		})${endOfLine}`;
 	}
 }
 

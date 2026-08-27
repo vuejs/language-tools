@@ -16,6 +16,7 @@ export function* generateInterpolation(
 		setupBindings,
 		dotValueBindings,
 		vueCompilerOptions,
+		scriptLang,
 	}: {
 		typescript: typeof import('typescript');
 		destructuredProps: Set<string>;
@@ -24,6 +25,7 @@ export function* generateInterpolation(
 		setupBindings: Set<string>;
 		dotValueBindings: Set<string>;
 		vueCompilerOptions: VueCompilerOptions;
+		scriptLang: string;
 	},
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
@@ -121,7 +123,7 @@ export function* generateInterpolation(
 					start + offset,
 					identifierData,
 				];
-				yield `, ${getRefBrandArgument(vueCompilerOptions)})`;
+				yield `, ${getRefBrandArgument(vueCompilerOptions, scriptLang)})`;
 				if (isNewOperand) {
 					yield `)`;
 				}

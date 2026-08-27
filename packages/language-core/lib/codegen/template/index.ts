@@ -2,7 +2,7 @@ import type * as ts from 'typescript';
 import type { Code, IRTemplate, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, newLine } from '../utils';
+import { endOfLine, generateTypeAlias, generateTypedVar, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
@@ -14,6 +14,7 @@ export interface TemplateCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	template: IRTemplate;
 	isVapor: boolean;
+	scriptLang: string;
 	destructuredProps: Set<string>;
 	importedComponents: Set<string>;
 	setupRefs: Set<string>;
@@ -84,30 +85,32 @@ function* generateWorker(
 	yield* generateSlotsType(options, ctx);
 	yield* generateInheritedAttrsType(options, ctx);
 	yield* generateTemplateRefsType(options, ctx);
-	yield* generateRootElType(ctx);
+	yield* generateRootElType(options, ctx);
 
 	if (ctx.dollarVars.size) {
-		yield `var ${names.dollars}!: {${newLine}`;
-		if (ctx.dollarVars.has('$slots')) {
-			const type = ctx.generatedTypes.has(names.Slots) ? names.Slots : `{}`;
-			yield `$slots: ${type}${endOfLine}`;
-		}
-		if (ctx.dollarVars.has('$attrs')) {
-			yield `$attrs: import('${vueCompilerOptions.lib}').ComponentPublicInstance['$attrs']`;
-			if (ctx.generatedTypes.has(names.InheritedAttrs)) {
-				yield ` & ${names.InheritedAttrs}`;
+		yield* generateTypedVar('var', names.dollars, options.scriptLang, function*() {
+			yield `{${newLine}`;
+			if (ctx.dollarVars.has('$slots')) {
+				const type = ctx.generatedTypes.has(names.Slots) ? names.Slots : `{}`;
+				yield `$slots: ${type}${endOfLine}`;
 			}
-			yield endOfLine;
-		}
-		if (ctx.dollarVars.has('$refs')) {
-			const type = ctx.generatedTypes.has(names.TemplateRefs) ? names.TemplateRefs : `{}`;
-			yield `$refs: ${type}${endOfLine}`;
-		}
-		if (ctx.dollarVars.has('$el')) {
-			const type = ctx.generatedTypes.has(names.RootEl) ? names.RootEl : `any`;
-			yield `$el: ${type}${endOfLine}`;
-		}
-		yield `} & { [K in keyof import('${vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
+			if (ctx.dollarVars.has('$attrs')) {
+				yield `$attrs: import('${vueCompilerOptions.lib}').ComponentPublicInstance['$attrs']`;
+				if (ctx.generatedTypes.has(names.InheritedAttrs)) {
+					yield ` & ${names.InheritedAttrs}`;
+				}
+				yield endOfLine;
+			}
+			if (ctx.dollarVars.has('$refs')) {
+				const type = ctx.generatedTypes.has(names.TemplateRefs) ? names.TemplateRefs : `{}`;
+				yield `$refs: ${type}${endOfLine}`;
+			}
+			if (ctx.dollarVars.has('$el')) {
+				const type = ctx.generatedTypes.has(names.RootEl) ? names.RootEl : `any`;
+				yield `$el: ${type}${endOfLine}`;
+			}
+			yield `} & { [K in keyof import('${vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }`;
+		});
 	}
 
 	yield* scope.end();
@@ -126,29 +129,30 @@ function* generateSlotsType(
 	}
 	ctx.generatedTypes.add(names.Slots);
 
-	yield `type ${names.Slots} = {}`;
-	for (const { expVar, propsVar } of ctx.dynamicSlots) {
-		yield `${newLine}& { [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${propsVar}) => any }`;
-	}
-	for (const slot of ctx.slots) {
-		yield `${newLine}& { `;
-		if (slot.name && slot.offset !== undefined) {
-			yield* generateObjectProperty(
-				options,
-				ctx,
-				slot.name,
-				slot.offset,
-				codeFeatures.navigation,
-			);
+	yield* generateTypeAlias(names.Slots, options.scriptLang, function*() {
+		yield `{}`;
+		for (const { expVar, propsVar } of ctx.dynamicSlots) {
+			yield `${newLine}& { [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${propsVar}) => any }`;
 		}
-		else {
-			const boundary = yield* Boundary.start('template', ...slot.tagRange, codeFeatures.navigation);
-			yield `default`;
-			yield boundary.end();
+		for (const slot of ctx.slots) {
+			yield `${newLine}& { `;
+			if (slot.name && slot.offset !== undefined) {
+				yield* generateObjectProperty(
+					options,
+					ctx,
+					slot.name,
+					slot.offset,
+					codeFeatures.navigation,
+				);
+			}
+			else {
+				const boundary = yield* Boundary.start('template', ...slot.tagRange, codeFeatures.navigation);
+				yield `default`;
+				yield boundary.end();
+			}
+			yield `?: (props: typeof ${slot.propsVar}) => any }`;
 		}
-		yield `?: (props: typeof ${slot.propsVar}) => any }`;
-	}
-	yield endOfLine;
+	});
 }
 
 function* generateInheritedAttrsType(
@@ -162,12 +166,11 @@ function* generateInheritedAttrsType(
 
 	const type = [...ctx.inheritedAttrVars].map(name => `typeof ${name}`).join(` & `);
 
-	yield `type ${names.InheritedAttrs} = ${
-		options.vueCompilerOptions.checkRequiredFallthroughAttributes
+	yield* generateTypeAlias(names.InheritedAttrs, options.scriptLang, function*() {
+		yield options.vueCompilerOptions.checkRequiredFallthroughAttributes
 			? type
-			: `Partial<${type}>`
-	}`;
-	yield endOfLine;
+			: `Partial<${type}>`;
+	});
 }
 
 function* generateTemplateRefsType(
@@ -186,43 +189,47 @@ function* generateTemplateRefsType(
 	}
 	ctx.generatedTypes.add(names.TemplateRefs);
 
-	yield `type ${names.TemplateRefs} = {}`;
-	for (const [name, refs] of ctx.templateRefs) {
-		yield `${newLine}& `;
-		if (refs.length >= 2) {
-			yield `(`;
-		}
-		for (let i = 0; i < refs.length; i++) {
-			const { typeExp, offset } = refs[i]!;
-			if (i) {
-				yield ` | `;
+	yield* generateTypeAlias(names.TemplateRefs, options.scriptLang, function*() {
+		yield `{}`;
+		for (const [name, refs] of ctx.templateRefs) {
+			yield `${newLine}& `;
+			if (refs.length >= 2) {
+				yield `(`;
 			}
-			yield `{ `;
-			yield* generateObjectProperty(
-				options,
-				ctx,
-				name,
-				offset,
-				codeFeatures.navigation,
-			);
-			yield `: ${typeExp} }`;
+			for (let i = 0; i < refs.length; i++) {
+				const { typeExp, offset } = refs[i]!;
+				if (i) {
+					yield ` | `;
+				}
+				yield `{ `;
+				yield* generateObjectProperty(
+					options,
+					ctx,
+					name,
+					offset,
+					codeFeatures.navigation,
+				);
+				yield `: ${typeExp} }`;
+			}
+			if (refs.length >= 2) {
+				yield `)`;
+			}
 		}
-		if (refs.length >= 2) {
-			yield `)`;
-		}
-	}
-	yield endOfLine;
+	});
 }
 
-function* generateRootElType(ctx: TemplateCodegenContext): Generator<Code> {
+function* generateRootElType(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+): Generator<Code> {
 	if (!ctx.singleRootElTypes.size || ctx.singleRootNodes.has(null)) {
 		return;
 	}
 	ctx.generatedTypes.add(names.RootEl);
 
-	yield `type ${names.RootEl} = `;
-	for (const type of ctx.singleRootElTypes) {
-		yield `${newLine}| ${type}`;
-	}
-	yield endOfLine;
+	yield* generateTypeAlias(names.RootEl, options.scriptLang, function*() {
+		for (const type of ctx.singleRootElTypes) {
+			yield `${newLine}| ${type}`;
+		}
+	});
 }

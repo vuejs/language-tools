@@ -5,7 +5,7 @@ import { collectBindingNames } from '../../utils/collectBindings';
 import { getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, getTypeScriptAST, newLine } from '../utils';
+import { asType, endOfLine, getTypeScriptAST, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -97,7 +97,7 @@ export function* generateVFor(
 		yield `))`; // #3102
 	}
 	else {
-		yield `{} as any`;
+		yield asType('{}', 'any', options.scriptLang);
 	}
 	yield `) {${newLine}`;
 
