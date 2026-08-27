@@ -355,7 +355,6 @@ export function* generateSetupFunction(
 			yield* output;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
-			yield `void ${names.export}${endOfLine}`;
 		}
 	}
 }
