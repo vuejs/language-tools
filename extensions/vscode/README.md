@@ -101,7 +101,7 @@ It is recommended to use the TypeScript version from your project instead of the
 If you encounter any issues, you can try the following steps:
 
 1. **Reload Window**: Run the `Developer: Reload Window` command in VSCode
-2. **Check `vue-tsc`**: Run `npx vue-tsc --noEmit` in the command line to check for type errors
+2. **Type-check**: Run `npx tsc --noEmit --runExternalCode` in the command line to check for type errors
 3. **Check Output Channel**: In VSCode's "Output" panel, select `Vue Language Server` to see if there are any error messages
 
 If the problem persists, feel free to open an issue on [GitHub Issues](https://github.com/vuejs/language-tools/issues).

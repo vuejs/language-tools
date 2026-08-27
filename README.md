@@ -21,13 +21,23 @@ Install the [Vue (Official)](https://marketplace.visualstudio.com/items?itemName
 ### Command-Line Type Checking
 
 ```bash
-npm install vue-tsc typescript --save-dev
+npm install typescript @vue/content-mapper --save-dev
+```
+
+```jsonc
+// tsconfig.json
+{
+  "compilerOptions": { "noEmit": true },
+  "contentMappers": [
+    { "package": "@vue/content-mapper", "extensions": [".vue"] }
+  ]
+}
 ```
 
 ```json
 {
   "scripts": {
-    "type-check": "vue-tsc --noEmit"
+    "type-check": "tsc --noEmit --runExternalCode"
   }
 }
 ```
@@ -39,7 +49,7 @@ npm install vue-tsc typescript --save-dev
 | Package | Description |
 | :--- | :--- |
 | [Vue (Official)](./extensions/vscode) | Vue, Vitepress, petite-vue language support extension for VSCode |
-| [vue-tsc](./packages/tsc) | Type-check and dts build command line tool |
+| [@vue/content-mapper](./packages/content-mapper) | Type-check `.vue` files with native TypeScript |
 
 ### For Editor Integration
 
@@ -103,16 +113,22 @@ npm install vue-tsc typescript --save-dev
 	<img src="https://www.mermaidchart.com/raw/91fd02c0-5c91-4f72-a8b4-7af21b7c4d86?theme=light&version=v0.1&format=svg"/>
 </a>
 
-## `vueCompilerOptions`
+## Configuration
 
-Configure Vue compiler options in `tsconfig.json`:
+Configure Vue compiler options inside the content mapper's `options`:
 
 ```jsonc
 {
   "compilerOptions": { /* ... */ },
-  "vueCompilerOptions": {
-    "target": 3.5
-  }
+  "contentMappers": [
+    {
+      "package": "@vue/content-mapper",
+      "extensions": [".vue"],
+      "options": {
+        "target": 3.5
+      }
+    }
+  ]
 }
 ```
 

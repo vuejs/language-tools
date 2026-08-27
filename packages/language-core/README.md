@@ -5,7 +5,7 @@
   <a href="https://github.com/vuejs/language-tools/blob/master/LICENSE"><img src="https://img.shields.io/github/license/vuejs/language-tools.svg?labelColor=18181B&color=1584FC" alt="License"></a>
 </p>
 
-The core module for Vue Language Tools, responsible for parsing Vue Single File Components (SFCs) and transforming them into virtual code structures that TypeScript can understand. This package is a low-level dependency for `@vue/language-server` and `vue-tsc`.
+The core module for Vue Language Tools, responsible for parsing Vue Single File Components (SFCs) and transforming them into virtual code structures that TypeScript can understand. This package is a low-level dependency for `@vue/language-server` and `@vue/content-mapper`.
 
 ## Installation
 
@@ -148,7 +148,7 @@ This package includes the following built-in plugins to handle different file ty
 
 - [`@vue/language-server`](../language-server) - Language Server
 - [`@vue/language-service`](../language-service) - Language Service
-- [`vue-tsc`](../tsc) - Command-line Type Checker
+- [`@vue/content-mapper`](../content-mapper) - Content mapper for native TypeScript
 
 ## License
 

@@ -1,5 +1,5 @@
 {
-	"properties": {
+	"definitions": {
 		"vueCompilerOptions": {
 			"type": "object",
 			"properties": {
@@ -201,6 +201,12 @@
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/1969"
 				}
 			}
+		}
+	},
+	"properties": {
+		"vueCompilerOptions": {
+			"$ref": "#/definitions/vueCompilerOptions",
+			"deprecationMessage": "Deprecated: configure Vue options under contentMappers[].options instead."
 		}
 	}
 }

@@ -2,7 +2,7 @@
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"type": "object",
 	"allOf": [
-		{ "$ref": "./vue-tsconfig.schema.json#/properties/vueCompilerOptions" }
+		{ "$ref": "./vue-tsconfig.schema.json#/definitions/vueCompilerOptions" }
 	],
 	"properties": {
 		"languageFeatures": {
