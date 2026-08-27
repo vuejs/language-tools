@@ -56,7 +56,7 @@ export function* generateElementDirectives(
 			// arity. The excess-argument error (TS2554) lands on the first extra
 			// argument, so the synthetic trailing args get their own @ts-ignore'd
 			// line; when the arity matches, the binding above is checked as usual.
-			yield `},${newLine}// @ts-ignore${newLine}${names.nonNull}(null), ${names.nonNull}(null))`;
+			yield `},${newLine}// @ts-ignore${newLine}null, null)`;
 		}
 		yield boundary.end();
 		yield endOfLine;
