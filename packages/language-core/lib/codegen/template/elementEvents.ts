@@ -46,8 +46,7 @@ export function* generateElementEvents(
 			&& (
 				prop.name === 'on'
 					&& (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
-				|| options.vueCompilerOptions.strictVModel
-					&& prop.name === 'model'
+				|| prop.name === 'model'
 					&& (!prop.arg || prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
 			)
 		) {

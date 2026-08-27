@@ -9,7 +9,7 @@
 					"required": ["package"],
 					"properties": {
 						"package": {
-							"const": "@vue/typescript-content-mapper"
+							"const": "@vue/content-mapper"
 						}
 					}
 				},

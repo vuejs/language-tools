@@ -119,9 +119,6 @@ export function* generateComponent(
 			yield endOfLine;
 		}
 		else {
-			if (!options.vueCompilerOptions.checkUnknownComponents) {
-				yield `// @ts-ignore${newLine}`;
-			}
 			yield* generateTypedVar('let', componentVar, options.scriptLang, function*() {
 				yield `${names.WithComponent}<'${tag}', ${names.LocalComponents}, ${names.GlobalComponents}`;
 				yield originalNames.has(options.componentName)

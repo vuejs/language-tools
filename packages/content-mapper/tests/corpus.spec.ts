@@ -26,7 +26,7 @@ test('content mapper full corpus', () => {
 					{
 						extends: './tsconfig.json',
 						contentMappers: [{
-							package: '@vue/typescript-content-mapper',
+							package: '@vue/content-mapper',
 							extensions: ['.vue'],
 							options: { languageFeatures: false },
 						}],

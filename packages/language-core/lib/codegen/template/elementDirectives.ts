@@ -36,7 +36,7 @@ export function* generateElementDirectives(
 		);
 		if (options.isVapor && !isBuiltInDirective(prop.name)) {
 			// vapor custom directives receive a value getter instead of a vdom binding object
-			yield* generateIdentifier(options, ctx, prop);
+			yield* generateIdentifier(ctx, prop);
 			yield `(${names.nonNull}(null), `;
 			yield* generateValue(options, ctx, prop, false);
 			yield* generateArg(options, ctx, prop, false);
@@ -45,7 +45,7 @@ export function* generateElementDirectives(
 		}
 		else {
 			yield `${names.asFunctionalDirective}(`;
-			yield* generateIdentifier(options, ctx, prop);
+			yield* generateIdentifier(ctx, prop);
 			yield `, ${
 				asType(`import('${options.vueCompilerOptions.lib}').ObjectDirective`, options.scriptLang)
 			})(${names.nonNull}(null), { ...${names.directiveBindingRestFields}, `;
@@ -64,7 +64,6 @@ export function* generateElementDirectives(
 }
 
 function* generateIdentifier(
-	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
@@ -84,7 +83,7 @@ function* generateIdentifier(
 		prop.loc.start.offset,
 		{
 			...codeFeatures.withoutHighlightAndCompletion,
-			verification: options.vueCompilerOptions.checkUnknownDirectives && !isBuiltInDirective(prop.name),
+			verification: !isBuiltInDirective(prop.name),
 		},
 	);
 	if (!isBuiltInDirective(prop.name)) {

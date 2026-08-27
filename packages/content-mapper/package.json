@@ -1,5 +1,5 @@
 {
-	"name": "@vue/typescript-content-mapper",
+	"name": "@vue/content-mapper",
 	"version": "3.3.9",
 	"license": "MIT",
 	"files": [

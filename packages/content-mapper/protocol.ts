@@ -43,7 +43,7 @@ export interface TransformResult {
 
 export interface MapperOptions {
 	languageFeatures?: boolean;
-	vueCompilerOptions?: Record<string, unknown>;
+	[option: string]: unknown;
 }
 
 export interface DiagnosticDirectives {

@@ -291,10 +291,10 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 				inferredProject: {
 					options: {
 						languageFeatures: true,
-						vueCompilerOptions: { target: 99 },
+						target: 99,
 					},
 					manifest: {
-						name: '@vue/typescript-content-mapper',
+						name: '@vue/content-mapper',
 						version: require('../package.json').version,
 						exec: [
 							process.execPath,

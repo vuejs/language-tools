@@ -305,7 +305,7 @@ importers:
 
   test-workspace:
     devDependencies:
-      '@vue/typescript-content-mapper':
+      '@vue/content-mapper':
         specifier: workspace:*
         version: link:../packages/content-mapper
       typescript:

@@ -5,17 +5,21 @@ exports[`content mapper full corpus 1`] = `
   "test-workspace/tsc/#2588/main.vue(2,10): error TS2339: Property 'vTrack' does not exist on type 'GlobalDirectives'.",
   "test-workspace/tsc/#2678/main.vue(2,7): error TS2339: Property 'vTouch' does not exist on type 'GlobalDirectives'.",
   "test-workspace/tsc/#3123/main.vue(13,40): error TS2561: Object literal may only specify known properties, but 'fillOpacity' does not exist in type 'SVGAttributes & {}'. Did you mean to write 'fill-opacity'?",
+  "test-workspace/tsc/#4646/parent.vue(15,25): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.",
+  "test-workspace/tsc/#4822/main.vue(18,62): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.",
   "test-workspace/tsc/#4827/child.vue(2,23): error TS2551: Property 'vOnce' does not exist on type 'GlobalDirectives'. Did you mean 'VOnce'?",
   "test-workspace/tsc/_failed_#3632/both.vue(5,1): error TS1109: Expression expected.
-  This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
+  This location is in virtual code produced by the content mapper '@vue/content-mapper@3.3.9' and has no corresponding location in the original file.",
   "test-workspace/tsc/_failed_#3632/both.vue(9,1): error TS1109: Expression expected.
-  This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
+  This location is in virtual code produced by the content mapper '@vue/content-mapper@3.3.9' and has no corresponding location in the original file.",
   "test-workspace/tsc/_failed_#3632/script.vue(4,1): error TS1109: Expression expected.
-  This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
+  This location is in virtual code produced by the content mapper '@vue/content-mapper@3.3.9' and has no corresponding location in the original file.",
   "test-workspace/tsc/_failed_#3632/scriptSetup.vue(4,1): error TS1109: Expression expected.
-  This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
+  This location is in virtual code produced by the content mapper '@vue/content-mapper@3.3.9' and has no corresponding location in the original file.",
   "test-workspace/tsc/_failed_#4569/main.vue(3,7): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.
-  This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
+  This location is in virtual code produced by the content mapper '@vue/content-mapper@3.3.9' and has no corresponding location in the original file.",
   "test-workspace/tsc/_failed_#5071/withScript.vue(1,19): error TS1005: ';' expected.",
   "test-workspace/tsc/_failed_#5071/withoutScript.vue(2,26): error TS1005: ';' expected.",
   "test-workspace/tsc/_failed_#5823/main.vue(6,13): error TS1109: Expression expected.",

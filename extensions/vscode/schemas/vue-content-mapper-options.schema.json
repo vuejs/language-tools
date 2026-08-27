@@ -1,15 +1,14 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"type": "object",
-	"additionalProperties": false,
+	"allOf": [
+		{ "$ref": "./vue-tsconfig.schema.json#/properties/vueCompilerOptions" }
+	],
 	"properties": {
 		"languageFeatures": {
 			"type": "boolean",
 			"default": true,
 			"markdownDescription": "Include static language-feature capabilities in source mappings. Set to `false` for CLI-only projects to reduce mapping work while preserving diagnostic spans."
-		},
-		"vueCompilerOptions": {
-			"$ref": "./vue-tsconfig.schema.json#/properties/vueCompilerOptions"
 		}
 	}
 }

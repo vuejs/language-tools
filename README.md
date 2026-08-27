@@ -111,8 +111,7 @@ Configure Vue compiler options in `tsconfig.json`:
 {
   "compilerOptions": { /* ... */ },
   "vueCompilerOptions": {
-    "target": 3.5,
-    "strictTemplates": true
+    "target": 3.5
   }
 }
 ```

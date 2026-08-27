@@ -241,10 +241,10 @@ exports[`content mapper declaration emit > generic/component.d.vue.ts 1`] = `
     props: import('vue').PublicProps & __VLS_PrettifyLocal<({
         foo: number;
     } & {
-        title?: string;
+        title: string;
     }) & {
         onBar?: ((data: number) => any) | undefined;
-        "onUpdate:title"?: ((value: string | undefined) => any) | undefined;
+        "onUpdate:title"?: ((value: string) => any) | undefined;
     }>;
     expose: (exposed: import('vue').ShallowUnwrapRef<{
         baz: number;
@@ -255,7 +255,7 @@ exports[`content mapper declaration emit > generic/component.d.vue.ts 1`] = `
             foo: number;
         }) => any;
     };
-    emit: ((e: 'bar', data: number) => void) & ((event: "update:title", value: string | undefined) => void);
+    emit: ((e: 'bar', data: number) => void) & ((event: "update:title", value: string) => void);
 }>) => import('vue').VNode & {
     __ctx?: NonNullable<Awaited<typeof __VLS_setup>>;
 };

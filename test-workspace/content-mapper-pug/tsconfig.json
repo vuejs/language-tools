@@ -10,7 +10,7 @@
 	},
 	"contentMappers": [
 		{
-			"package": "@vue/typescript-content-mapper",
+			"package": "@vue/content-mapper",
 			"extensions": [".vue"],
 			"options": {
 				"languageFeatures": false

@@ -76,7 +76,6 @@ Configure Vue compiler behavior through the `vueCompilerOptions` field in `tscon
   "compilerOptions": { /* ... */ },
   "vueCompilerOptions": {
     "target": 3.5,
-    "strictTemplates": true,
     "plugins": ["@vue/language-plugin-pug"]
   }
 }
@@ -96,13 +95,7 @@ Configure Vue compiler behavior through the `vueCompilerOptions` field in `tscon
 
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `strictTemplates` | `boolean` | `false` | A convenience option that enables the four `check*` options below and `strictVModel`. |
-| `checkUnknownProps` | `boolean` | `false` | Check for unknown props. |
-| `checkUnknownEvents` | `boolean` | `false` | Check for unknown events. |
-| `checkUnknownComponents` | `boolean` | `false` | Check for unknown components. |
-| `checkUnknownDirectives` | `boolean` | `false` | Check for unknown directives. |
-| `strictVModel` | `boolean` | `false` | Strictly check v-model bindings. |
-| `strictCssModules` | `boolean` | `false` | Strictly check CSS Modules class names (not affected by `strictTemplates`). |
+| `strictCssModules` | `boolean` | `false` | Strictly check CSS Modules class names. |
 
 ### Advanced Options
 

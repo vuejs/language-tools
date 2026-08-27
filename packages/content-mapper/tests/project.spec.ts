@@ -45,10 +45,8 @@ test('uses stable mapper options for inferred projects', () => {
 		projectHandle,
 		compilerOptions: { strict: true },
 		options: {
-			vueCompilerOptions: {
-				skipTemplateCodegen: true,
-				target: 99,
-			},
+			skipTemplateCodegen: true,
+			target: 99,
 		},
 	});
 

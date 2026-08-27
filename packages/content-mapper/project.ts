@@ -172,11 +172,10 @@ function createConfiguration(
 	if (watchedFiles && configFileName) {
 		watchedFiles.add(path.normalize(configFileName));
 	}
+	const { languageFeatures, ...vueCompilerOptions } = state.params.options ?? {};
 	const parsed = configFileName
 		? vue.createParsedCommandLine(ts, host, normalizePath(configFileName))
-		: vue.createParsedCommandLineByJson(ts, host, normalizePath(rootDir), {
-			vueCompilerOptions: state.params.options?.vueCompilerOptions,
-		});
+		: vue.createParsedCommandLineByJson(ts, host, normalizePath(rootDir), { vueCompilerOptions });
 	const compilerOptions = normalizeCompilerOptions(state.params.compilerOptions);
 	const configuration = {
 		plugin: vue.createVueLanguagePlugin<string>(
@@ -185,7 +184,7 @@ function createConfiguration(
 			parsed.vueOptions,
 			fileName => fileName,
 		),
-		languageFeatures: state.params.options?.languageFeatures !== false,
+		languageFeatures: languageFeatures !== false,
 		virtualCodes: new Map(),
 	};
 	if (watchedFiles) {
