@@ -39,7 +39,7 @@ function* generateWorker(
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
 	const { script, scriptRanges, scriptSetup, scriptSetupRanges, vueCompilerOptions, fileName } = options;
-	const exportExpression = asType('{}', `typeof ${names.export}`, options.scriptLang);
+	const exportExpression = asType(`typeof ${names.export}`, options.scriptLang);
 
 	yield* generateGlobalTypesReference(vueCompilerOptions, fileName);
 

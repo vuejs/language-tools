@@ -52,7 +52,7 @@ export function* generateElementProps(
 					yield `},`;
 				}
 				else {
-					yield `...{ '${camelize('on-' + prop.arg.loc.source)}': ${asType('{}', 'any', options.scriptLang)} },`;
+					yield `...{ '${camelize('on-' + prop.arg.loc.source)}': ${asType('any', options.scriptLang)} },`;
 				}
 				yield newLine;
 			}

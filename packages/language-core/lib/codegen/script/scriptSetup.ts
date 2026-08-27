@@ -248,7 +248,7 @@ export function* generateSetupFunction(
 					}
 				}),
 				replace(arg.start, arg.end, function*() {
-					yield asType('{}', 'any', options.scriptLang);
+					yield asType('any', options.scriptLang);
 				}),
 			);
 		}
@@ -326,7 +326,7 @@ export function* generateSetupFunction(
 		if (arg) {
 			transforms.push(
 				replace(arg.start, arg.end, function*() {
-					yield asType('{}', 'any', options.scriptLang);
+					yield asType('any', options.scriptLang);
 				}),
 			);
 		}
@@ -348,7 +348,7 @@ export function* generateSetupFunction(
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 			yield* output;
-			yield asType('{}', `${ctx.localTypes.WithSlots}<typeof ${names.base}, ${names.Slots}>`, options.scriptLang);
+			yield asType(`${ctx.localTypes.WithSlots}<typeof ${names.base}, ${names.Slots}>`, options.scriptLang);
 			yield endOfLine;
 		}
 		else {

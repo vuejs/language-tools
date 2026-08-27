@@ -97,7 +97,7 @@ export function* generateVFor(
 		yield `))`; // #3102
 	}
 	else {
-		yield asType('{}', 'any', options.scriptLang);
+		yield asType('any', options.scriptLang);
 	}
 	yield `) {${newLine}`;
 

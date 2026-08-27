@@ -28,14 +28,14 @@ export function* generateComponent(
 		&& options.vueCompilerOptions.inferComponentDollarRefs
 		&& options.templateAndStyleTypes.has(names.TemplateRefs)
 	) {
-		yield `__typeRefs: ${asType('{}', names.TemplateRefs, options.scriptLang)},${newLine}`;
+		yield `__typeRefs: ${asType(names.TemplateRefs, options.scriptLang)},${newLine}`;
 	}
 	if (
 		options.vueCompilerOptions.target >= 3.5
 		&& options.vueCompilerOptions.inferComponentDollarEl
 		&& options.templateAndStyleTypes.has(names.RootEl)
 	) {
-		yield `__typeEl: ${asType('{}', names.RootEl, options.scriptLang)},${newLine}`;
+		yield `__typeEl: ${asType(names.RootEl, options.scriptLang)},${newLine}`;
 	}
 	yield `})`;
 }
@@ -53,7 +53,7 @@ function* generateEmitsOption(
 		: [];
 
 	if (typeCodes.length) {
-		yield `__typeEmits: ${asType('{}', typeCodes.join(` & `), options.scriptLang)},${newLine}`;
+		yield `__typeEmits: ${asType(typeCodes.join(` & `), options.scriptLang)},${newLine}`;
 	}
 	else if (runtimeCodes.length) {
 		yield `emits: `;
@@ -76,11 +76,10 @@ function* generateRuntimeEmitsOption(
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<string> {
 	if (scriptSetupRanges.defineModel.length) {
-		yield asType('{}', `${names.NormalizeEmits}<typeof ${names.modelEmit}>`, options.scriptLang);
+		yield asType(`${names.NormalizeEmits}<typeof ${names.modelEmit}>`, options.scriptLang);
 	}
 	if (scriptSetupRanges.defineEmits) {
 		yield asType(
-			'{}',
 			`${names.NormalizeEmits}<typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}>`,
 			options.scriptLang,
 		);
@@ -126,10 +125,10 @@ function* generateTypePropsOption(
 		const attrsType = hasEmitsOption
 			? `Omit<${names.InheritedAttrs}, keyof ${names.EmitProps}>`
 			: names.InheritedAttrs;
-		yield asType('{}', attrsType, options.scriptLang);
+		yield asType(attrsType, options.scriptLang);
 	}
 	if (ctx.generatedTypes.has(names.PublicProps)) {
-		yield asType('{}', names.PublicProps, options.scriptLang);
+		yield asType(names.PublicProps, options.scriptLang);
 	}
 }
 
@@ -146,14 +145,14 @@ function* generateRuntimePropsOption(
 			: names.InheritedAttrs;
 		const propsType =
 			`${ctx.localTypes.TypePropsToOption}<${names.PickNotAny}<${ctx.localTypes.OmitIndexSignature}<${attrsType}>, {}>>`;
-		yield asType('{}', propsType, options.scriptLang);
+		yield asType(propsType, options.scriptLang);
 	}
 	if (ctx.generatedTypes.has(names.PublicProps) && options.vueCompilerOptions.target < 3.6) {
 		let propsType = `${ctx.localTypes.TypePropsToOption}<${names.PublicProps}>`;
 		if (scriptSetupRanges.withDefaults?.arg) {
 			propsType = `${ctx.localTypes.WithDefaults}<${propsType}, typeof ${names.defaults}>`;
 		}
-		yield asType('{}', propsType, options.scriptLang);
+		yield asType(propsType, options.scriptLang);
 	}
 	if (scriptSetupRanges.defineProps?.arg) {
 		const { arg } = scriptSetupRanges.defineProps;

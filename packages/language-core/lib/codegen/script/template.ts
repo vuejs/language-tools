@@ -47,13 +47,13 @@ function* generateTemplateCtx(
 		exps.push(`globalThis`);
 	}
 	if (selfType) {
-		exps.push(asType('{}', `InstanceType<${names.PickNotAny}<typeof ${selfType}, new () => {}>>`, scriptLang));
+		exps.push(asType(`InstanceType<${names.PickNotAny}<typeof ${selfType}, new () => {}>>`, scriptLang));
 	}
 	else {
-		exps.push(asType('{}', `import('${vueCompilerOptions.lib}').ComponentPublicInstance`, scriptLang));
+		exps.push(asType(`import('${vueCompilerOptions.lib}').ComponentPublicInstance`, scriptLang));
 	}
 	if (templateAndStyleTypes.has(names.StyleModules)) {
-		exps.push(asType('{}', names.StyleModules, scriptLang));
+		exps.push(asType(names.StyleModules, scriptLang));
 	}
 
 	if (scriptSetupRanges?.defineEmits) {
@@ -66,7 +66,7 @@ function* generateTemplateCtx(
 		yield* generateTypeAlias(names.EmitProps, scriptLang, function*() {
 			yield `${names.EmitsToProps}<${names.NormalizeEmits}<${emitTypes.join(` & `)}>>`;
 		});
-		exps.push(asType('{}', `{ $emit: ${emitTypes.join(` & `)} }`, scriptLang));
+		exps.push(asType(`{ $emit: ${emitTypes.join(` & `)} }`, scriptLang));
 	}
 
 	if (scriptSetupRanges?.defineProps) {
@@ -79,8 +79,8 @@ function* generateTemplateCtx(
 		propTypes.push(names.EmitProps);
 	}
 	if (propTypes.length) {
-		exps.push(asType('{}', `{ $props: ${propTypes.join(` & `)} }`, scriptLang));
-		exps.push(asType('{}', propTypes.join(` & `), scriptLang));
+		exps.push(asType(`{ $props: ${propTypes.join(` & `)} }`, scriptLang));
+		exps.push(asType(propTypes.join(` & `), scriptLang));
 	}
 
 	yield `const ${names.ctx} = `;

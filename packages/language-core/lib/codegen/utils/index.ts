@@ -10,10 +10,10 @@ export function isTsLang(lang: string): boolean {
 	return lang === 'ts' || lang === 'tsx';
 }
 
-// `exp as T` in TS; `/** @type {T} */ (exp)` in JS. The JSDoc cast keeps the
+// `{} as T` in TS; `/** @type {T} */ ({})` in JS. The JSDoc cast keeps the
 // same assertion semantics under checkJs, and requires no type-only syntax.
-export function asType(exp: string, type: string, lang: string): string {
-	return isTsLang(lang) ? `${exp} as ${type}` : `/** @type {${type}} */ (${exp})`;
+export function asType(type: string, lang: string): string {
+	return isTsLang(lang) ? `{} as ${type}` : `/** @type {${type}} */ ({})`;
 }
 
 // `let name!: T;` in TS; `var name = /** @type {T} */ ({});` in JS.
@@ -57,7 +57,7 @@ export function* generateTypeAlias(
 // `__VLS_unwrap` / `__VLS_withDotValue`; the helper declarations cannot
 // resolve the library import themselves.
 export function getRefBrandArgument(vueCompilerOptions: VueCompilerOptions, lang: string): string {
-	return asType('{}', `import('${vueCompilerOptions.lib}').Ref<unknown>`, lang);
+	return asType(`import('${vueCompilerOptions.lib}').Ref<unknown>`, lang);
 }
 
 const cacheMaps = new WeakMap<IRBlock, [content: string, Map<string, [ts.SourceFile, usages: number]>]>();

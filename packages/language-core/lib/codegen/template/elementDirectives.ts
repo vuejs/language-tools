@@ -47,7 +47,7 @@ export function* generateElementDirectives(
 			yield `${names.asFunctionalDirective}(`;
 			yield* generateIdentifier(options, ctx, prop);
 			yield `, ${
-				asType('{}', `import('${options.vueCompilerOptions.lib}').ObjectDirective`, options.scriptLang)
+				asType(`import('${options.vueCompilerOptions.lib}').ObjectDirective`, options.scriptLang)
 			})(${names.nonNull}(null), { ...${names.directiveBindingRestFields}, `;
 			yield* generateArg(options, ctx, prop);
 			yield* generateModifiers(options, ctx, prop);
