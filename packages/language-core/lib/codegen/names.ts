@@ -45,6 +45,7 @@ const raw = {
 	asFunctionalSlot: '',
 	directiveBindingRestFields: '',
 	functionalComponentArgsRest: '',
+	nonNull: '',
 	omit: '',
 	tryAsConstant: '',
 	unwrap: '',

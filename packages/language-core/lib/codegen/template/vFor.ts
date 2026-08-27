@@ -92,9 +92,9 @@ export function* generateVFor(
 	}
 	yield `] of `;
 	if (sourceAlias !== undefined) {
-		yield `${names.vFor}(`;
+		yield `${names.vFor}(${names.nonNull}(`;
 		yield sourceAlias;
-		yield `!)`; // #3102
+		yield `))`; // #3102
 	}
 	else {
 		yield `{} as any`;

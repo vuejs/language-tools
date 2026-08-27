@@ -58,7 +58,7 @@ export function* generateVSlot(
 		yield `default`;
 		yield boundary.end();
 	}
-	yield `: ${slotVar} } = ${ctxVar}.slots!${endOfLine}`;
+	yield `: ${slotVar} } = ${names.nonNull}(${ctxVar}.slots)${endOfLine}`;
 
 	const scope = ctx.scope();
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -78,7 +78,7 @@ export function* generateVSlot(
 		}
 		if (isStatic && !slotDir.arg) {
 			yield `// @ts-ignore${newLine}`;
-			yield `${ctxVar}.slots!['`;
+			yield `${names.nonNull}(${ctxVar}.slots)['`;
 			yield [
 				'',
 				'template',
@@ -147,7 +147,7 @@ function* generateSlotParameters(
 
 	yield `const [`;
 	yield* interpolation;
-	yield `] = ${names.vSlot}(${slotVar}!`;
+	yield `] = ${names.vSlot}(${names.nonNull}(${slotVar})`;
 
 	if (types.some(t => t)) {
 		yield `, `;
