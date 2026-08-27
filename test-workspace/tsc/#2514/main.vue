@@ -3,5 +3,5 @@
 </template>
 
 <script setup lang="ts">
-let eventName: string | null;
+let eventName: string | null = null;
 </script>

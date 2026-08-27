@@ -39,23 +39,23 @@ const plugin: VueLanguagePlugin = ({
 			}
 		},
 	};
-
-	function computeLang(ir: IR) {
-		let lang = ir.scriptSetup?.lang ?? ir.script?.lang;
-		if (ir.script && ir.scriptSetup) {
-			if (ir.scriptSetup.lang !== 'js') {
-				lang = ir.scriptSetup.lang;
-			}
-			else {
-				lang = ir.script.lang;
-			}
-		}
-		if (lang && validLangs.has(lang)) {
-			return lang;
-		}
-		return 'ts';
-	}
 };
+
+function computeLang(ir: IR) {
+	let lang = ir.scriptSetup?.lang ?? ir.script?.lang;
+	if (ir.script && ir.scriptSetup) {
+		if (ir.scriptSetup.lang !== 'js') {
+			lang = ir.scriptSetup.lang;
+		}
+		else {
+			lang = ir.script.lang;
+		}
+	}
+	if (lang && validLangs.has(lang)) {
+		return lang;
+	}
+	return 'ts';
+}
 
 export default plugin;
 
@@ -125,12 +125,37 @@ function useCodegen(
 		return names;
 	});
 
-	const getSetupConsts = computedSet(() => {
+	const getNonFlowingBindings = computedSet(() => {
+		const names = new Set<string>();
 		const scriptSetupRanges = getScriptSetupRanges();
-		const names = new Set([
-			...scriptSetupRanges?.defineProps?.destructured?.keys() ?? [],
-			...getImportedComponents(),
-		]);
+		if (ir.scriptSetup && scriptSetupRanges) {
+			for (const range of scriptSetupRanges.nonFlowingBindings) {
+				names.add(ir.scriptSetup.content.slice(range.start, range.end));
+			}
+			const scriptRanges = getScriptRanges();
+			if (ir.script && scriptRanges) {
+				for (const range of scriptRanges.nonFlowingBindings) {
+					names.add(ir.script.content.slice(range.start, range.end));
+				}
+			}
+		}
+		return names;
+	});
+
+	const getScriptSetupBindings = computedSet(() => {
+		const names = new Set<string>();
+		const scriptSetupRanges = getScriptSetupRanges();
+		if (ir.scriptSetup && scriptSetupRanges) {
+			for (const range of scriptSetupRanges.bindings) {
+				names.add(ir.scriptSetup.content.slice(range.start, range.end));
+			}
+		}
+		return names;
+	});
+
+	const getDestructuredProps = computedSet(() => {
+		const scriptSetupRanges = getScriptSetupRanges();
+		const names = new Set(scriptSetupRanges?.defineProps?.destructured?.keys() ?? []);
 		const rest = scriptSetupRanges?.defineProps?.destructuredRest;
 		if (rest) {
 			names.add(rest);
@@ -180,7 +205,7 @@ function useCodegen(
 		return capitalize(camelize(name));
 	});
 
-	const getGeneratedTemplate = computed(() => {
+	const generateTemplatePass = (dotValueBindings: Set<string>) => {
 		if (getResolvedOptions().skipTemplateCodegen || !ir.template) {
 			return;
 		}
@@ -189,17 +214,22 @@ function useCodegen(
 			vueCompilerOptions: getResolvedOptions(),
 			template: ir.template,
 			isVapor: getIsVapor(),
+			scriptLang: computeLang(ir),
 			componentName: getComponentName(),
-			setupConsts: getSetupConsts(),
+			destructuredProps: getDestructuredProps(),
+			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
+			setupBindings: getSetupBindings(),
+			dotValueBindings,
+			reassertBindings: new Set([...dotValueBindings].filter(name => getNonFlowingBindings().has(name))),
 			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getInheritAttrs(),
 		});
-	});
+	};
 
-	const getGeneratedStyle = computed(() => {
+	const generateStylePass = (dotValueBindings: Set<string>) => {
 		if (!ir.styles.length) {
 			return;
 		}
@@ -207,12 +237,57 @@ function useCodegen(
 			typescript: ts,
 			vueCompilerOptions: getResolvedOptions(),
 			styles: ir.styles,
-			setupConsts: getSetupConsts(),
+			scriptLang: computeLang(ir),
+			destructuredProps: getDestructuredProps(),
+			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
+			setupBindings: getSetupBindings(),
+			dotValueBindings,
 		});
+	};
+
+	const getLocalComponents = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
+		}
+		return new Set(
+			(ir.template?.ast?.components ?? [])
+				.flatMap(name => [camelize(name), capitalize(camelize(name))])
+				.filter(name => bindings.has(name)),
+		);
 	});
 
-	const getSetupExposed = computedSet(() => {
+	const getLocalDirectives = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
+		}
+		// `v[A-Z]` is a naming heuristic: without type analysis there is no
+		// reliable signal to tell a directive from a same-named value binding.
+		// This feeds the local-directive type / completion, where false positives
+		// are harmless (they only surface as extra completion candidates).
+		return new Set([...bindings].filter(name => /^v[A-Z]/.test(name)));
+	});
+
+	// First pass: collect bindings used in narrowing positions (output discarded);
+	// the second pass (the computeds below) finalizes every access of these with `.value`.
+	const getDotValueBindings = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
+		}
+		const names: string[] = [];
+		for (const generated of [generateTemplatePass(new Set()), generateStylePass(new Set())]) {
+			names.push(...generated?.dotValueAccesses ?? []);
+		}
+		return new Set(names);
+	});
+
+	const getGeneratedTemplate = computed(() => generateTemplatePass(getDotValueBindings()));
+	const getGeneratedStyle = computed(() => generateStylePass(getDotValueBindings()));
+
+	const getReferencedBindings = computedSet(() => {
 		const bindings = getSetupBindings();
 		if (!bindings.size) {
 			return bindings;
@@ -220,8 +295,14 @@ function useCodegen(
 		return new Set([
 			...getGeneratedTemplate()?.contextAccesses.keys() ?? [],
 			...getGeneratedStyle()?.contextAccesses.keys() ?? [],
-			...ir.template?.ast?.components.flatMap(name => [camelize(name), capitalize(camelize(name))]) ?? [],
 		].filter(name => bindings.has(name)));
+	});
+
+	const getUsedSetupBindings = computedSet(() => {
+		return new Set([
+			...getReferencedBindings(),
+			...getLocalComponents(),
+		]);
 	});
 
 	const getGeneratedScript = computed(() => {
@@ -230,7 +311,11 @@ function useCodegen(
 			fileName,
 			script: ir.script,
 			scriptSetup: ir.scriptSetup,
-			exposed: getSetupExposed(),
+			scriptLang: computeLang(ir),
+			setupBindings: getScriptSetupBindings(),
+			localComponents: getLocalComponents(),
+			localDirectives: getLocalDirectives(),
+			dotValueBindings: getDotValueBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateAndStyleTypes: new Set([
@@ -251,6 +336,7 @@ function useCodegen(
 		getGeneratedTemplate,
 		getImportedComponents,
 		getSetupBindings,
-		getSetupExposed,
+		getLocalComponents,
+		getUsedSetupBindings,
 	};
 }

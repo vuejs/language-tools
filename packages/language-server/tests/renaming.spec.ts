@@ -238,7 +238,7 @@ test('CSS', async () => {
 		    "canRename": true,
 		    "displayName": "foo",
 		    "fullDisplayName": "foo",
-		    "kind": "property",
+		    "kind": "const",
 		    "kindModifiers": "",
 		    "triggerSpan": {
 		      "end": {
@@ -255,24 +255,6 @@ test('CSS', async () => {
 		    {
 		      "file": "\${testWorkspacePath}/fixture.vue",
 		      "locs": [
-		        {
-		          "contextEnd": {
-		            "line": 3,
-		            "offset": 18,
-		          },
-		          "contextStart": {
-		            "line": 3,
-		            "offset": 4,
-		          },
-		          "end": {
-		            "line": 3,
-		            "offset": 13,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 10,
-		          },
-		        },
 		        {
 		          "end": {
 		            "line": 12,
@@ -341,6 +323,24 @@ test('CSS', async () => {
 		          "start": {
 		            "line": 8,
 		            "offset": 25,
+		          },
+		        },
+		        {
+		          "contextEnd": {
+		            "line": 3,
+		            "offset": 18,
+		          },
+		          "contextStart": {
+		            "line": 3,
+		            "offset": 4,
+		          },
+		          "end": {
+		            "line": 3,
+		            "offset": 13,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 10,
 		          },
 		        },
 		      ],
@@ -595,7 +595,7 @@ test('Component dynamic props', async () => {
 		    "canRename": true,
 		    "displayName": "foo",
 		    "fullDisplayName": "foo",
-		    "kind": "property",
+		    "kind": "const",
 		    "kindModifiers": "",
 		    "triggerSpan": {
 		      "end": {
@@ -612,6 +612,16 @@ test('Component dynamic props', async () => {
 		    {
 		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
 		      "locs": [
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 15,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 12,
+		          },
+		        },
 		        {
 		          "contextEnd": {
 		            "line": 7,
@@ -630,6 +640,52 @@ test('Component dynamic props', async () => {
 		            "offset": 10,
 		          },
 		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+});
+
+test('#6176', async () => {
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<div :[foo|]="123"></div>
+			</template>
+
+			<script lang="ts" setup>
+			import { useTemplateRef } from 'vue';
+			const foo = useTemplateRef('foo');
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "foo",
+		    "fullDisplayName": "foo",
+		    "kind": "const",
+		    "kindModifiers": "",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 3,
+		        "offset": 15,
+		      },
+		      "start": {
+		        "line": 3,
+		        "offset": 12,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
 		        {
 		          "end": {
 		            "line": 3,
@@ -638,6 +694,16 @@ test('Component dynamic props', async () => {
 		          "start": {
 		            "line": 3,
 		            "offset": 12,
+		          },
+		        },
+		        {
+		          "end": {
+		            "line": 8,
+		            "offset": 13,
+		          },
+		          "start": {
+		            "line": 8,
+		            "offset": 10,
 		          },
 		        },
 		      ],
@@ -749,7 +815,7 @@ test('<script setup>', async () => {
 		    "canRename": true,
 		    "displayName": "foo",
 		    "fullDisplayName": "foo",
-		    "kind": "property",
+		    "kind": "const",
 		    "kindModifiers": "",
 		    "triggerSpan": {
 		      "end": {
@@ -767,6 +833,16 @@ test('<script setup>', async () => {
 		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
 		      "locs": [
 		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 11,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 8,
+		          },
+		        },
+		        {
 		          "contextEnd": {
 		            "line": 7,
 		            "offset": 18,
@@ -782,16 +858,6 @@ test('<script setup>', async () => {
 		          "start": {
 		            "line": 7,
 		            "offset": 10,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 11,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 8,
 		          },
 		        },
 		      ],
@@ -1280,24 +1346,6 @@ test('Same Name Shorthand', async () => {
 		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
 		      "locs": [
 		        {
-		          "contextEnd": {
-		            "line": 8,
-		            "offset": 21,
-		          },
-		          "contextStart": {
-		            "line": 8,
-		            "offset": 4,
-		          },
-		          "end": {
-		            "line": 8,
-		            "offset": 16,
-		          },
-		          "start": {
-		            "line": 8,
-		            "offset": 10,
-		          },
-		        },
-		        {
 		          "end": {
 		            "line": 4,
 		            "offset": 25,
@@ -1319,6 +1367,24 @@ test('Same Name Shorthand', async () => {
 		            "offset": 12,
 		          },
 		          "suffixText": """,
+		        },
+		        {
+		          "contextEnd": {
+		            "line": 8,
+		            "offset": 21,
+		          },
+		          "contextStart": {
+		            "line": 8,
+		            "offset": 4,
+		          },
+		          "end": {
+		            "line": 8,
+		            "offset": 16,
+		          },
+		          "start": {
+		            "line": 8,
+		            "offset": 10,
+		          },
 		        },
 		      ],
 		    },
@@ -1413,6 +1479,369 @@ test('Same Name Shorthand', async () => {
 });
 
 const openedDocuments: TextDocument[] = [];
+
+test('Setup binding access positions', async () => {
+	// interpolation read
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				{{ cou|nt }}
+			</template>
+
+			<script lang="ts" setup>
+			import { ref } from 'vue';
+			const count = ref(0);
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "count",
+		    "fullDisplayName": "count",
+		    "kind": "const",
+		    "kindModifiers": "",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 3,
+		        "offset": 13,
+		      },
+		      "start": {
+		        "line": 3,
+		        "offset": 8,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 13,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 8,
+		          },
+		        },
+		        {
+		          "contextEnd": {
+		            "line": 8,
+		            "offset": 25,
+		          },
+		          "contextStart": {
+		            "line": 8,
+		            "offset": 4,
+		          },
+		          "end": {
+		            "line": 8,
+		            "offset": 15,
+		          },
+		          "start": {
+		            "line": 8,
+		            "offset": 10,
+		          },
+		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+
+	// v-for source
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<div v-for="n in num|s">{{ n }}</div>
+			</template>
+
+			<script lang="ts" setup>
+			import { ref } from 'vue';
+			const nums = ref<number[]>([]);
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "nums",
+		    "fullDisplayName": "nums",
+		    "kind": "const",
+		    "kindModifiers": "",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 3,
+		        "offset": 26,
+		      },
+		      "start": {
+		        "line": 3,
+		        "offset": 22,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 26,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 22,
+		          },
+		        },
+		        {
+		          "contextEnd": {
+		            "line": 8,
+		            "offset": 35,
+		          },
+		          "contextStart": {
+		            "line": 8,
+		            "offset": 4,
+		          },
+		          "end": {
+		            "line": 8,
+		            "offset": 14,
+		          },
+		          "start": {
+		            "line": 8,
+		            "offset": 10,
+		          },
+		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+
+	// inline event handler write target
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<button @click="cou|nt++" />
+			</template>
+
+			<script lang="ts" setup>
+			import { ref } from 'vue';
+			const count = ref(0);
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "count",
+		    "fullDisplayName": "count",
+		    "kind": "const",
+		    "kindModifiers": "",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 3,
+		        "offset": 26,
+		      },
+		      "start": {
+		        "line": 3,
+		        "offset": 21,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 26,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 21,
+		          },
+		        },
+		        {
+		          "contextEnd": {
+		            "line": 8,
+		            "offset": 25,
+		          },
+		          "contextStart": {
+		            "line": 8,
+		            "offset": 4,
+		          },
+		          "end": {
+		            "line": 8,
+		            "offset": 15,
+		          },
+		          "start": {
+		            "line": 8,
+		            "offset": 10,
+		          },
+		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+
+	// v-bind shorthand
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<div :cou|nt />
+			</template>
+
+			<script lang="ts" setup>
+			import { ref } from 'vue';
+			const count = ref(0);
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "count",
+		    "fullDisplayName": "__object.count",
+		    "kind": "property",
+		    "kindModifiers": "",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 3,
+		        "offset": 16,
+		      },
+		      "start": {
+		        "line": 3,
+		        "offset": 11,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 16,
+		          },
+		          "prefixText": "count="",
+		          "start": {
+		            "line": 3,
+		            "offset": 11,
+		          },
+		          "suffixText": """,
+		        },
+		        {
+		          "contextEnd": {
+		            "line": 8,
+		            "offset": 25,
+		          },
+		          "contextStart": {
+		            "line": 8,
+		            "offset": 4,
+		          },
+		          "end": {
+		            "line": 8,
+		            "offset": 15,
+		          },
+		          "start": {
+		            "line": 8,
+		            "offset": 10,
+		          },
+		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+
+	// inline for-of with a same-named loop variable: matches plain TS, which
+	// binds the source to the loop declaration (TS2448), so rename covers the
+	// loop variable's occurrences
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<button @click="for (const nums of nu|ms) {}" />
+			</template>
+
+			<script lang="ts" setup>
+			import { ref } from 'vue';
+			const nums = ref<number[]>([]);
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "nums",
+		    "fullDisplayName": "nums",
+		    "kind": "const",
+		    "kindModifiers": "",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 3,
+		        "offset": 44,
+		      },
+		      "start": {
+		        "line": 3,
+		        "offset": 40,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 44,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 40,
+		          },
+		        },
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 36,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 32,
+		          },
+		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+});
 
 afterEach(async () => {
 	const server = await getLanguageServer();

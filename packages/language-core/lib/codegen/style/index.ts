@@ -4,19 +4,28 @@ import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
+import { references as styleScopedClassReferences } from '../template/styleScopedClasses';
 import { endOfLine } from '../utils';
 
 export interface StyleCodegenOptions {
 	typescript: typeof import('typescript');
 	vueCompilerOptions: VueCompilerOptions;
 	styles: readonly IRStyle[];
+	scriptLang: string;
+	destructuredProps: Set<string>;
+	importedComponents: Set<string>;
 	setupRefs: Set<string>;
-	setupConsts: Set<string>;
+	setupBindings: Set<string>;
+	dotValueBindings: Set<string>;
 }
 
 export { generate as generateStyle };
 
 function generate(options: StyleCodegenOptions) {
+	// The references registry accumulates across codegen passes; start clean.
+	for (const style of options.styles) {
+		styleScopedClassReferences.delete(style);
+	}
 	const ctx = createTemplateCodegenContext();
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
@@ -34,7 +43,6 @@ function* generateWorker(
 	ctx: TemplateCodegenContext,
 ) {
 	const scope = ctx.scope();
-	scope.declare(...options.setupConsts);
 	yield* generateStyleScopedClasses(options, ctx);
 	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);
