@@ -175,7 +175,7 @@ function createConfiguration(
 		: vue.createParsedCommandLineByJson(ts, host, normalizePath(rootDir), {
 			vueCompilerOptions: state.params.options?.vueCompilerOptions,
 		});
-	const compilerOptions = normalizeCompilerOptions(state.params.compilerOptions, rootDir);
+	const compilerOptions = normalizeCompilerOptions(state.params.compilerOptions);
 	const configuration = {
 		plugin: vue.createVueLanguagePlugin<string>(
 			ts,
@@ -201,7 +201,7 @@ function createStandaloneConfiguration(params: TransformParams): ProjectConfigur
 	return {
 		plugin: vue.createVueLanguagePlugin<string>(
 			ts,
-			{ ...parsed.options, ...normalizeCompilerOptions(params.compilerOptions ?? {}, path.dirname(params.fileName)) },
+			{ ...parsed.options, ...normalizeCompilerOptions(params.compilerOptions ?? {}) },
 			parsed.vueOptions,
 			fileName => fileName,
 		),
@@ -210,8 +210,11 @@ function createStandaloneConfiguration(params: TransformParams): ProjectConfigur
 	};
 }
 
-function normalizeCompilerOptions(options: Record<string, unknown>, basePath: string) {
-	return ts.convertCompilerOptionsFromJson(options, basePath).options;
+function normalizeCompilerOptions(options: Record<string, unknown>) {
+	// `options` already arrives in the numeric-enum wire format that
+	// `ts.CompilerOptions` expects; `convertCompilerOptionsFromJson` expects
+	// string enums and silently drops numeric `lib`/`target`/`module`/`jsx`.
+	return options as ReturnType<typeof ts.convertCompilerOptionsFromJson>['options'];
 }
 
 function createIdentity(params: OpenProjectParams, watchedFiles: Iterable<string>) {
