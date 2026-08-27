@@ -122,9 +122,11 @@ export function transformVue(params: TransformParams): TransformResult {
 function getVirtualExtension(extension: string): VirtualExtension {
 	switch (extension) {
 		case '.js':
+			return '.js';
+		case '.jsx':
+			return '.jsx';
 		case '.ts':
 			return '.ts';
-		case '.jsx':
 		case '.tsx':
 			return '.tsx';
 		case '.mjs':

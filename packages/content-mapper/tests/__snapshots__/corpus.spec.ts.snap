@@ -4,19 +4,8 @@ exports[`content mapper full corpus 1`] = `
 [
   "test-workspace/tsc/#2588/main.vue(2,10): error TS2339: Property 'vTrack' does not exist on type 'GlobalDirectives'.",
   "test-workspace/tsc/#2678/main.vue(2,7): error TS2339: Property 'vTouch' does not exist on type 'GlobalDirectives'.",
-  "test-workspace/tsc/#3121/main.vue(4,21): error TS2339: Property 'slotFilters' does not exist on type '{}'.",
-  "test-workspace/tsc/#3121/main.vue(6,34): error TS6133: 'column' is declared but its value is never read.",
   "test-workspace/tsc/#3123/main.vue(13,40): error TS2561: Object literal may only specify known properties, but 'fillOpacity' does not exist in type 'SVGAttributes & {}'. Did you mean to write 'fill-opacity'?",
-  "test-workspace/tsc/#3152/MyInput.vue(5,3): error TS2339: Property 'input' does not exist on type '{}'.",
-  "test-workspace/tsc/#3152/main.vue(5,7): error TS6133: 'msg' is declared but its value is never read.",
-  "test-workspace/tsc/#3353/main.vue(2,7): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.",
-  "test-workspace/tsc/#3592/main.vue(8,5): error TS2339: Property 'msg' does not exist on type '{}'.",
-  "test-workspace/tsc/#4826/child.vue(9,3): error TS2339: Property 'a' does not exist on type '{}'.",
-  "test-workspace/tsc/#4826/main.vue(7,24): error TS2339: Property 'a' does not exist on type '{}'.",
   "test-workspace/tsc/#4827/child.vue(2,23): error TS2551: Property 'vOnce' does not exist on type 'GlobalDirectives'. Did you mean 'VOnce'?",
-  "test-workspace/tsc/#4878/main.vue(16,16): error TS2351: This expression is not constructable.
-  Type '{}' has no construct signatures.",
-  "test-workspace/tsc/#5934/main.vue(7,5): error TS2339: Property '$emit' does not exist on type '{}'.",
   "test-workspace/tsc/_failed_#3632/both.vue(10,1): error TS1109: Expression expected.
   This location is in virtual code produced by the content mapper '@vue/typescript-content-mapper@3.3.9' and has no corresponding location in the original file.",
   "test-workspace/tsc/_failed_#3632/both.vue(6,1): error TS1109: Expression expected.

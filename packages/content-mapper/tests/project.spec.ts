@@ -66,8 +66,8 @@ test('uses stable mapper options for inferred projects', () => {
 test('returns a parser-compatible service script extension', () => {
 	for (
 		const [lang, extension] of [
-			['js', '.ts'],
-			['jsx', '.tsx'],
+			['js', '.js'],
+			['jsx', '.jsx'],
 			['ts', '.ts'],
 			['tsx', '.tsx'],
 		] as const
