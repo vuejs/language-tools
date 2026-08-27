@@ -252,7 +252,7 @@ function* generateScriptWithExportDefault(
 }
 
 function* generateGlobalTypesReference(
-	{ typesRoot, lib, target, checkUnknownProps }: VueCompilerOptions,
+	{ typesRoot, lib, target }: VueCompilerOptions,
 	fileName: string,
 ): Generator<Code> {
 	let typesPath: string;
@@ -271,9 +271,7 @@ function* generateGlobalTypesReference(
 		typesPath = typesRoot;
 	}
 	yield `/// <reference types=${JSON.stringify(typesPath + '/template-helpers.d.ts')} />${newLine}`;
-	if (!checkUnknownProps) {
-		yield `/// <reference types=${JSON.stringify(typesPath + '/props-fallback.d.ts')} />${newLine}`;
-	}
+	yield `/// <reference types=${JSON.stringify(typesPath + '/props-fallback.d.ts')} />${newLine}`;
 	if (lib === 'vue' && target < 3.5) {
 		yield `/// <reference types=${JSON.stringify(typesPath + '/vue-3.4-shims.d.ts')} />${newLine}`;
 	}
@@ -286,7 +284,7 @@ export function* generateExportDeclareEqual(
 	end = block.content.length,
 ): Generator<Code> {
 	yield `const `;
-	const boundary = yield* Boundary.start(block.name, start, end, codeFeatures.doNotReportTs6133);
+	const boundary = yield* Boundary.start(block.name, start, end, codeFeatures.verification);
 	yield name;
 	yield boundary.end();
 	yield ` = `;

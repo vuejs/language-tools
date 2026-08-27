@@ -47,8 +47,6 @@ export interface VueCompilerOptions {
 	jsxSlots: boolean;
 	strictVModel: boolean;
 	strictCssModules: boolean;
-	checkUnknownProps: boolean;
-	checkUnknownEvents: boolean;
 	checkUnknownDirectives: boolean;
 	checkUnknownComponents: boolean;
 	inferComponentDollarEl: boolean;

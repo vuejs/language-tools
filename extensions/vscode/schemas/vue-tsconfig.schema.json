@@ -63,12 +63,14 @@
 				"checkUnknownProps": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "Check unknown props. If not set, uses the 'strictTemplates' value."
+					"markdownDescription": "Check unknown props. If not set, uses the 'strictTemplates' value.",
+					"deprecationMessage": "Unknown props are always checked; this option is a no-op."
 				},
 				"checkUnknownEvents": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "Check unknown events. If not set, uses the 'strictTemplates' value."
+					"markdownDescription": "Check unknown events. If not set, uses the 'strictTemplates' value.",
+					"deprecationMessage": "Unknown events are always checked; this option is a no-op."
 				},
 				"checkUnknownDirectives": {
 					"type": "boolean",

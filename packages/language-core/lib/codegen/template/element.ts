@@ -119,6 +119,9 @@ export function* generateComponent(
 			yield endOfLine;
 		}
 		else {
+			if (!options.vueCompilerOptions.checkUnknownComponents) {
+				yield `// @ts-ignore${newLine}`;
+			}
 			yield* generateTypedVar('let', componentVar, options.scriptLang, function*() {
 				yield `${names.WithComponent}<'${tag}', ${names.LocalComponents}, ${names.GlobalComponents}`;
 				yield originalNames.has(options.componentName)
@@ -133,9 +136,7 @@ export function* generateComponent(
 					startTagOffset,
 					{
 						...codeFeatures.semanticWithoutHighlight,
-						...options.vueCompilerOptions.checkUnknownComponents
-							? codeFeatures.verification
-							: codeFeatures.doNotReportTs2339AndTs2551,
+						...codeFeatures.verification,
 					},
 				);
 				yield `]`;
@@ -186,15 +187,12 @@ export function* generateComponent(
 		ctx,
 		node,
 		props,
-		options.vueCompilerOptions.checkUnknownProps,
 		failedPropExps,
 	)];
 	const propsStr = toString(propCodes);
 
 	yield `// @ts-ignore${newLine}`;
-	yield `const ${functionalVar} = ${
-		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
-	}(${componentVar}, new ${componentVar}({${newLine}`;
+	yield `const ${functionalVar} = ${names.asFunctionalComponent0}(${componentVar}, new ${componentVar}({${newLine}`;
 	yield `// @ts-ignore${newLine}`;
 	yield propsStr.replace(/\n/g, ' ');
 	yield `}))${endOfLine}`;
@@ -235,6 +233,7 @@ export function* generateComponent(
 	yield `}`;
 	yield boundary2.end();
 	yield `, ...${names.functionalComponentArgsRest}(${functionalVar}))${endOfLine}`;
+	yield `void ${vnodeVar}${endOfLine}`;
 
 	yield* generateFailedExpressions(options, ctx, failedPropExps);
 	yield* generateElementEvents(
@@ -309,9 +308,7 @@ export function* generateElement(
 	const [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
 	const failedPropExps: FailedPropExpressions[] = [];
 
-	yield `${
-		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalElement0 : names.asFunctionalElement1
-	}(${names.intrinsics}`;
+	yield `${names.asFunctionalElement0}(${names.intrinsics}`;
 	yield* generatePropertyAccess(
 		options,
 		ctx,
@@ -343,7 +340,6 @@ export function* generateElement(
 		ctx,
 		node,
 		node.props,
-		options.vueCompilerOptions.checkUnknownProps,
 		failedPropExps,
 	);
 	yield `}`;
@@ -389,9 +385,7 @@ export function* generateFragment(
 
 	// special case for <template v-for="..." :key="..." />
 	if (node.props.length) {
-		yield `${
-			options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalElement0 : names.asFunctionalElement1
-		}(${names.intrinsics}.template)(`;
+		yield `${names.asFunctionalElement0}(${names.intrinsics}.template)(`;
 		const boundary = yield* Boundary.start(
 			'template',
 			startTagOffset,
@@ -404,7 +398,6 @@ export function* generateFragment(
 			ctx,
 			node,
 			node.props,
-			options.vueCompilerOptions.checkUnknownProps,
 			failedPropExps,
 		);
 		yield `}`;

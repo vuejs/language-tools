@@ -9,7 +9,9 @@ let b = 0;
 </script>
 
 <template>
+	<!-- @vue-ignore -->
 	<template v-if="a" :foo />
+	<!-- @vue-ignore -->
 	<template v-else-if="b" :bar />
 	<Comp>
 		<template #default v-if="baz" />

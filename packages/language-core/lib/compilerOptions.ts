@@ -136,8 +136,6 @@ export class CompilerOptionsResolver {
 				case 'strictTemplates':
 					const strict = !!options.strictTemplates;
 					this.options.strictVModel ??= strict;
-					this.options.checkUnknownProps ??= strict;
-					this.options.checkUnknownEvents ??= strict;
 					this.options.checkUnknownDirectives ??= strict;
 					this.options.checkUnknownComponents ??= strict;
 					break;
@@ -259,8 +257,6 @@ export function getDefaultCompilerOptions(
 		jsxSlots: false,
 		strictCssModules: false,
 		strictVModel: strictTemplates,
-		checkUnknownProps: strictTemplates,
-		checkUnknownEvents: strictTemplates,
 		checkUnknownDirectives: strictTemplates,
 		checkUnknownComponents: strictTemplates,
 		inferComponentDollarEl: false,

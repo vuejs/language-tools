@@ -12,5 +12,6 @@ const fooBar = 1;
 	<child :foo></child>
 	<!-- @vue-expect-error should typecheck -->
 	<child :bar></child>
+	<!-- @vue-expect-error -->
 	<child :foo-bar></child>
 </template>

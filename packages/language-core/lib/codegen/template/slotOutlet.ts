@@ -102,7 +102,6 @@ export function* generateSlotOutlet(
 			ctx,
 			node,
 			node.props.filter(prop => prop !== nameProp),
-			true,
 		);
 		yield `}`;
 		yield boundary.end();
@@ -115,7 +114,6 @@ export function* generateSlotOutlet(
 			ctx,
 			node,
 			node.props.filter(prop => prop !== nameProp),
-			options.vueCompilerOptions.checkUnknownProps,
 		);
 		yield `}${endOfLine}`;
 
