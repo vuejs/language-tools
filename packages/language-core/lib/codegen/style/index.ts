@@ -11,6 +11,7 @@ export interface StyleCodegenOptions {
 	typescript: typeof import('typescript');
 	vueCompilerOptions: VueCompilerOptions;
 	styles: readonly IRStyle[];
+	scriptLang: string;
 	destructuredProps: Set<string>;
 	importedComponents: Set<string>;
 	setupRefs: Set<string>;

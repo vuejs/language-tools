@@ -16,6 +16,7 @@ export function* generateInterpolation(
 		setupBindings,
 		dotValueBindings,
 		vueCompilerOptions,
+		scriptLang,
 	}: {
 		typescript: typeof import('typescript');
 		destructuredProps: Set<string>;
@@ -24,6 +25,7 @@ export function* generateInterpolation(
 		setupBindings: Set<string>;
 		dotValueBindings: Set<string>;
 		vueCompilerOptions: VueCompilerOptions;
+		scriptLang: string;
 	},
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
@@ -94,7 +96,7 @@ export function* generateInterpolation(
 				start + offset,
 				data,
 			];
-			yield `.value`;
+			yield [`.value`, block.name, start + offset, codeFeatures.verification];
 		}
 		else if (setupBindings.has(name)) {
 			// First pass records narrowing accesses here; the second pass emits from dotValueBindings.
@@ -106,7 +108,7 @@ export function* generateInterpolation(
 					start + offset,
 					identifierData,
 				];
-				yield `.value`;
+				yield [`.value`, block.name, start + offset, codeFeatures.verification];
 			}
 			else {
 				// `new __VLS_unwrap(Foo)()` parses as `new (__VLS_unwrap(Foo)())`,
@@ -121,7 +123,7 @@ export function* generateInterpolation(
 					start + offset,
 					identifierData,
 				];
-				yield `, ${getRefBrandArgument(vueCompilerOptions)})`;
+				yield `, ${getRefBrandArgument(vueCompilerOptions, scriptLang)})`;
 				if (isNewOperand) {
 					yield `)`;
 				}

@@ -1,7 +1,15 @@
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, generateSfcBlockSection, getRefBrandArgument } from '../utils';
+import {
+	asType,
+	endOfLine,
+	generateSfcBlockSection,
+	generateTypeAlias,
+	generateTypedVar,
+	getRefBrandArgument,
+	newLine,
+} from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenOptions } from './index';
 
@@ -13,8 +21,13 @@ export function* generateTemplate(
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 
+	yield `void ${names.ctx}, ${names.components}, ${names.intrinsics}, ${names.directives}${endOfLine}`;
+
 	for (const name of options.dotValueBindings) {
-		yield `${names.withDotValue}(${name}, ${getRefBrandArgument(options.vueCompilerOptions)})${endOfLine}`;
+		yield `// @ts-ignore${newLine}`;
+		yield `${names.withDotValue}(${name}, ${
+			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
+		})${endOfLine}`;
 	}
 
 	if (options.templateAndStyleCodes.length) {
@@ -23,7 +36,7 @@ export function* generateTemplate(
 }
 
 function* generateTemplateCtx(
-	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, fileName }: ScriptCodegenOptions,
+	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, fileName, scriptLang }: ScriptCodegenOptions,
 	selfType: string | undefined,
 ): Generator<Code> {
 	const exps: Code[] = [];
@@ -34,13 +47,13 @@ function* generateTemplateCtx(
 		exps.push(`globalThis`);
 	}
 	if (selfType) {
-		exps.push(`{} as InstanceType<${names.PickNotAny}<typeof ${selfType}, new () => {}>>`);
+		exps.push(asType(`InstanceType<${names.PickNotAny}<typeof ${selfType}, new () => {}>>`, scriptLang));
 	}
 	else {
-		exps.push(`{} as import('${vueCompilerOptions.lib}').ComponentPublicInstance`);
+		exps.push(asType(`import('${vueCompilerOptions.lib}').ComponentPublicInstance`, scriptLang));
 	}
 	if (templateAndStyleTypes.has(names.StyleModules)) {
-		exps.push(`{} as ${names.StyleModules}`);
+		exps.push(asType(names.StyleModules, scriptLang));
 	}
 
 	if (scriptSetupRanges?.defineEmits) {
@@ -50,10 +63,10 @@ function* generateTemplateCtx(
 		emitTypes.push(`typeof ${names.modelEmit}`);
 	}
 	if (emitTypes.length) {
-		yield `type ${names.EmitProps} = ${names.EmitsToProps}<${names.NormalizeEmits}<${
-			emitTypes.join(` & `)
-		}>>${endOfLine}`;
-		exps.push(`{} as { $emit: ${emitTypes.join(` & `)} }`);
+		yield* generateTypeAlias(names.EmitProps, scriptLang, function*() {
+			yield `${names.EmitsToProps}<${names.NormalizeEmits}<${emitTypes.join(` & `)}>>`;
+		});
+		exps.push(asType(`{ $emit: ${emitTypes.join(` & `)} }`, scriptLang));
 	}
 
 	if (scriptSetupRanges?.defineProps) {
@@ -66,8 +79,8 @@ function* generateTemplateCtx(
 		propTypes.push(names.EmitProps);
 	}
 	if (propTypes.length) {
-		exps.push(`{} as { $props: ${propTypes.join(` & `)} }`);
-		exps.push(`{} as ${propTypes.join(` & `)}`);
+		exps.push(asType(`{ $props: ${propTypes.join(` & `)} }`, scriptLang));
+		exps.push(asType(propTypes.join(` & `), scriptLang));
 	}
 
 	yield `const ${names.ctx} = `;
@@ -76,7 +89,7 @@ function* generateTemplateCtx(
 }
 
 function* generateTemplateComponents(
-	{ vueCompilerOptions, script, scriptRanges, localComponents }: ScriptCodegenOptions,
+	{ vueCompilerOptions, script, scriptRanges, localComponents, scriptLang }: ScriptCodegenOptions,
 ): Generator<Code> {
 	const types: string[] = [];
 
@@ -96,22 +109,26 @@ function* generateTemplateComponents(
 		types.push(`typeof ${names.componentsOption}`);
 	}
 
-	yield `type ${names.LocalComponents} = ${types.length ? types.join(` & `) : `{}`}${endOfLine}`;
-	yield `type ${names.GlobalComponents} = ${
-		vueCompilerOptions.target >= 3.5
+	yield* generateTypeAlias(names.LocalComponents, scriptLang, function*() {
+		yield types.length ? types.join(` & `) : `{}`;
+	});
+	yield* generateTypeAlias(names.GlobalComponents, scriptLang, function*() {
+		yield vueCompilerOptions.target >= 3.5
 			? `import('${vueCompilerOptions.lib}').GlobalComponents`
-			: `import('${vueCompilerOptions.lib}').GlobalComponents & Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>`
-	}${endOfLine}`;
-	yield `let ${names.components}!: ${names.LocalComponents} & ${names.GlobalComponents}${endOfLine}`;
-	yield `let ${names.intrinsics}!: ${
-		vueCompilerOptions.target >= 3.3
+			: `import('${vueCompilerOptions.lib}').GlobalComponents & Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>`;
+	});
+	yield* generateTypedVar('let', names.components, scriptLang, function*() {
+		yield `${names.LocalComponents} & ${names.GlobalComponents}`;
+	});
+	yield* generateTypedVar('let', names.intrinsics, scriptLang, function*() {
+		yield vueCompilerOptions.target >= 3.3
 			? `import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements`
-			: `globalThis.JSX.IntrinsicElements`
-	}${endOfLine}`;
+			: `globalThis.JSX.IntrinsicElements`;
+	});
 }
 
 function* generateTemplateDirectives(
-	{ vueCompilerOptions, script, scriptRanges, localDirectives }: ScriptCodegenOptions,
+	{ vueCompilerOptions, script, scriptRanges, localDirectives, scriptLang }: ScriptCodegenOptions,
 ): Generator<Code> {
 	const types: string[] = [];
 
@@ -131,8 +148,12 @@ function* generateTemplateDirectives(
 		types.push(`${names.ResolveDirectives}<typeof ${names.directivesOption}>`);
 	}
 
-	yield `type ${names.LocalDirectives} = ${types.length ? types.join(` & `) : `{}`}${endOfLine}`;
-	yield `let ${names.directives}!: ${names.LocalDirectives} & import('${vueCompilerOptions.lib}').GlobalDirectives${endOfLine}`;
+	yield* generateTypeAlias(names.LocalDirectives, scriptLang, function*() {
+		yield types.length ? types.join(` & `) : `{}`;
+	});
+	yield* generateTypedVar('let', names.directives, scriptLang, function*() {
+		yield `${names.LocalDirectives} & import('${vueCompilerOptions.lib}').GlobalDirectives`;
+	});
 }
 
 function generateExposedType(lib: string, bindings: Set<string>): string {

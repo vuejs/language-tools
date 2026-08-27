@@ -6,7 +6,7 @@ import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { endOfLine, identifierRE, newLine } from '../utils';
+import { endOfLine, generateTypedVar, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
@@ -118,25 +118,27 @@ export function* generateComponent(
 			yield endOfLine;
 		}
 		else {
-			yield `let ${componentVar}!: ${names.WithComponent}<'${tag}', ${names.LocalComponents}, ${names.GlobalComponents}`;
-			yield originalNames.has(options.componentName)
-				? `, typeof ${names.export}`
-				: `, void`;
-			for (const name of originalNames) {
-				yield `, '${name}'`;
-			}
-			yield `>[`;
-			yield* generateStringLiteralKey(
-				tag,
-				startTagOffset,
-				{
-					...codeFeatures.semanticWithoutHighlight,
-					...options.vueCompilerOptions.checkUnknownComponents
-						? codeFeatures.verification
-						: codeFeatures.doNotReportTs2339AndTs2551,
-				},
-			);
-			yield `]${endOfLine}`;
+			yield* generateTypedVar('let', componentVar, options.scriptLang, function*() {
+				yield `${names.WithComponent}<'${tag}', ${names.LocalComponents}, ${names.GlobalComponents}`;
+				yield originalNames.has(options.componentName)
+					? `, typeof ${names.export}`
+					: `, void`;
+				for (const name of originalNames) {
+					yield `, '${name}'`;
+				}
+				yield `>[`;
+				yield* generateStringLiteralKey(
+					tag,
+					startTagOffset,
+					{
+						...codeFeatures.semanticWithoutHighlight,
+						...options.vueCompilerOptions.checkUnknownComponents
+							? codeFeatures.verification
+							: codeFeatures.doNotReportTs2339AndTs2551,
+					},
+				);
+				yield `]`;
+			});
 
 			if (identifierRE.test(camelize(tag))) {
 				// navigation support
@@ -192,7 +194,8 @@ export function* generateComponent(
 	yield `const ${functionalVar} = ${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
-	yield propsStr;
+	yield `// @ts-ignore${newLine}`;
+	yield propsStr.replace(/\n/g, ' ');
 	yield `}))${endOfLine}`;
 
 	yield `const `;
@@ -254,11 +257,13 @@ export function* generateComponent(
 	const templateRef = getTemplateRef(node);
 	const isSingleRoot = ctx.singleRootNodes.has(node)
 		&& !options.vueCompilerOptions.fallthroughComponentNames.includes(hyphenateTag(tag));
+	const inferRootEl = ctx.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl;
 
-	if (templateRef || isSingleRoot) {
+	if (templateRef || (isSingleRoot && inferRootEl)) {
 		const componentInstanceVar = ctx.getInternalVariable();
-		yield `var ${componentInstanceVar}!: Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0]`;
-		yield endOfLine;
+		yield* generateTypedVar('var', componentInstanceVar, options.scriptLang, function*() {
+			yield `Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0]`;
+		});
 
 		if (templateRef) {
 			let typeExp = `typeof ${ctx.getHoistVariable(componentInstanceVar)} | null`;
@@ -267,7 +272,7 @@ export function* generateComponent(
 			}
 			ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 		}
-		if (isSingleRoot) {
+		if (isSingleRoot && inferRootEl) {
 			ctx.singleRootElTypes.add(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
 		}
 	}
@@ -291,10 +296,14 @@ export function* generateComponent(
 	}
 
 	if (isCtxVarUsed) {
-		yield `var ${ctxVar}!: ${names.ExtractComponentContext}<typeof ${componentVar}, typeof ${vnodeVar}>${endOfLine}`;
+		yield* generateTypedVar('var', ctxVar, options.scriptLang, function*() {
+			yield `${names.ExtractComponentContext}<typeof ${componentVar}, typeof ${vnodeVar}>`;
+		});
 	}
 	if (isPropsVarUsed) {
-		yield `var ${propsVar}!: ${names.ExtractComponentProps}<typeof ${componentVar}, typeof ${vnodeVar}>${endOfLine}`;
+		yield* generateTypedVar('var', propsVar, options.scriptLang, function*() {
+			yield `${names.ExtractComponentProps}<typeof ${componentVar}, typeof ${vnodeVar}>`;
+		});
 	}
 	ctx.components.pop();
 }
@@ -359,7 +368,9 @@ export function* generateElement(
 		}
 		ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 	}
-	if (ctx.singleRootNodes.has(node)) {
+	if (
+		ctx.singleRootNodes.has(node) && (ctx.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl)
+	) {
 		ctx.singleRootElTypes.add(`${names.Elements}['${node.tag}']`);
 	}
 

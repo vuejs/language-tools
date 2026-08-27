@@ -39,23 +39,23 @@ const plugin: VueLanguagePlugin = ({
 			}
 		},
 	};
-
-	function computeLang(ir: IR) {
-		let lang = ir.scriptSetup?.lang ?? ir.script?.lang;
-		if (ir.script && ir.scriptSetup) {
-			if (ir.scriptSetup.lang !== 'js') {
-				lang = ir.scriptSetup.lang;
-			}
-			else {
-				lang = ir.script.lang;
-			}
-		}
-		if (lang && validLangs.has(lang)) {
-			return lang;
-		}
-		return 'ts';
-	}
 };
+
+function computeLang(ir: IR) {
+	let lang = ir.scriptSetup?.lang ?? ir.script?.lang;
+	if (ir.script && ir.scriptSetup) {
+		if (ir.scriptSetup.lang !== 'js') {
+			lang = ir.scriptSetup.lang;
+		}
+		else {
+			lang = ir.script.lang;
+		}
+	}
+	if (lang && validLangs.has(lang)) {
+		return lang;
+	}
+	return 'ts';
+}
 
 export default plugin;
 
@@ -214,6 +214,7 @@ function useCodegen(
 			vueCompilerOptions: getResolvedOptions(),
 			template: ir.template,
 			isVapor: getIsVapor(),
+			scriptLang: computeLang(ir),
 			componentName: getComponentName(),
 			destructuredProps: getDestructuredProps(),
 			importedComponents: getImportedComponents(),
@@ -236,6 +237,7 @@ function useCodegen(
 			typescript: ts,
 			vueCompilerOptions: getResolvedOptions(),
 			styles: ir.styles,
+			scriptLang: computeLang(ir),
 			destructuredProps: getDestructuredProps(),
 			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
@@ -309,6 +311,7 @@ function useCodegen(
 			fileName,
 			script: ir.script,
 			scriptSetup: ir.scriptSetup,
+			scriptLang: computeLang(ir),
 			setupBindings: getScriptSetupBindings(),
 			localComponents: getLocalComponents(),
 			localDirectives: getLocalDirectives(),

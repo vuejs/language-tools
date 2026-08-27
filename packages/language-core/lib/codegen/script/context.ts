@@ -5,7 +5,7 @@ import type { ScriptCodegenOptions } from './index';
 export type ScriptCodegenContext = ReturnType<typeof createScriptCodegenContext>;
 
 export function createScriptCodegenContext(options: ScriptCodegenOptions) {
-	const localTypes = getLocalTypesGenerator(options.vueCompilerOptions);
+	const localTypes = getLocalTypesGenerator(options.vueCompilerOptions, options.scriptLang);
 	const inlayHints: InlayHintInfo[] = [];
 
 	return {

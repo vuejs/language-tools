@@ -6,7 +6,7 @@ import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../util
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { getRefBrandArgument, identifierRE, newLine } from '../utils';
+import { asType, getRefBrandArgument, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
@@ -52,7 +52,7 @@ export function* generateElementProps(
 					yield `},`;
 				}
 				else {
-					yield `...{ '${camelize('on-' + prop.arg.loc.source)}': {} as any },`;
+					yield `...{ '${camelize('on-' + prop.arg.loc.source)}': ${asType('any', options.scriptLang)} },`;
 				}
 				yield newLine;
 			}
@@ -294,18 +294,18 @@ export function* generatePropExp(
 			}
 			else if (options.setupRefs.has(propVariableName)) {
 				yield* codes;
-				yield `.value`;
+				yield [`.value`, 'template', exp.loc.start.offset, codeFeatures.verification];
 			}
 			else if (options.setupBindings.has(propVariableName)) {
 				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
 				if (options.dotValueBindings.has(propVariableName)) {
 					yield* codes;
-					yield `.value`;
+					yield [`.value`, 'template', exp.loc.start.offset, codeFeatures.verification];
 				}
 				else {
 					yield `${names.unwrap}(`;
 					yield* codes;
-					yield `, ${getRefBrandArgument(options.vueCompilerOptions)})`;
+					yield `, ${getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)})`;
 				}
 			}
 			else {

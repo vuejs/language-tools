@@ -10,6 +10,59 @@ export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenCont
 
 const directiveCommentRE = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)-->$/;
 
+// Reserved words can never be auto-imported bindings, and emitting them as
+// bare array elements is a syntax error (#5267: `[class,]`).
+const reservedWords = new Set([
+	'arguments',
+	'await',
+	'break',
+	'case',
+	'catch',
+	'class',
+	'const',
+	'continue',
+	'debugger',
+	'default',
+	'delete',
+	'do',
+	'else',
+	'enum',
+	'eval',
+	'export',
+	'extends',
+	'false',
+	'finally',
+	'for',
+	'function',
+	'if',
+	'implements',
+	'import',
+	'in',
+	'instanceof',
+	'interface',
+	'let',
+	'new',
+	'null',
+	'package',
+	'private',
+	'protected',
+	'public',
+	'return',
+	'static',
+	'super',
+	'switch',
+	'this',
+	'throw',
+	'true',
+	'try',
+	'typeof',
+	'var',
+	'void',
+	'while',
+	'with',
+	'yield',
+]);
+
 export function createTemplateCodegenContext() {
 	// directive comments ---------------------------------------------------------
 
@@ -194,9 +247,11 @@ export function createTemplateCodegenContext() {
 		yield `[`;
 		for (const [varName, map] of all) {
 			for (const [source, offsets] of map) {
-				for (const offset of offsets) {
-					yield [varName, source, offset, codeFeatures.importCompletionOnly];
-					yield `,`;
+				if (!reservedWords.has(varName)) {
+					for (const offset of offsets) {
+						yield [varName, source, offset, codeFeatures.importCompletionOnly];
+						yield `,`;
+					}
 				}
 				offsets.clear();
 			}

@@ -2,8 +2,8 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRScriptSetup } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { generateSfcBlockSection, newLine } from '../utils';
-import { generateIntersectMerge, generateSpreadMerge } from '../utils/merge';
+import { asType, generateSfcBlockSection, newLine } from '../utils';
+import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 
@@ -28,14 +28,14 @@ export function* generateComponent(
 		&& options.vueCompilerOptions.inferComponentDollarRefs
 		&& options.templateAndStyleTypes.has(names.TemplateRefs)
 	) {
-		yield `__typeRefs: {} as ${names.TemplateRefs},${newLine}`;
+		yield `__typeRefs: ${asType(names.TemplateRefs, options.scriptLang)},${newLine}`;
 	}
 	if (
 		options.vueCompilerOptions.target >= 3.5
 		&& options.vueCompilerOptions.inferComponentDollarEl
 		&& options.templateAndStyleTypes.has(names.RootEl)
 	) {
-		yield `__typeEl: {} as ${names.RootEl},${newLine}`;
+		yield `__typeEl: ${asType(names.RootEl, options.scriptLang)},${newLine}`;
 	}
 	yield `})`;
 }
@@ -49,13 +49,11 @@ function* generateEmitsOption(
 		: [];
 
 	const runtimeCodes = !typeCodes.length
-		? [...generateRuntimeEmitsOption(scriptSetupRanges)]
+		? [...generateRuntimeEmitsOption(options, scriptSetupRanges)]
 		: [];
 
 	if (typeCodes.length) {
-		yield `__typeEmits: {} as `;
-		yield* generateIntersectMerge(...typeCodes);
-		yield `,${newLine}`;
+		yield `__typeEmits: ${asType(typeCodes.join(` & `), options.scriptLang)},${newLine}`;
 	}
 	else if (runtimeCodes.length) {
 		yield `emits: `;
@@ -73,12 +71,18 @@ function* generateTypeEmitsOption(scriptSetupRanges: ScriptSetupRanges): Generat
 	}
 }
 
-function* generateRuntimeEmitsOption(scriptSetupRanges: ScriptSetupRanges): Generator<string> {
+function* generateRuntimeEmitsOption(
+	options: ScriptCodegenOptions,
+	scriptSetupRanges: ScriptSetupRanges,
+): Generator<string> {
 	if (scriptSetupRanges.defineModel.length) {
-		yield `{} as ${names.NormalizeEmits}<typeof ${names.modelEmit}>`;
+		yield asType(`${names.NormalizeEmits}<typeof ${names.modelEmit}>`, options.scriptLang);
 	}
 	if (scriptSetupRanges.defineEmits) {
-		yield `{} as ${names.NormalizeEmits}<typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}>`;
+		yield asType(
+			`${names.NormalizeEmits}<typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}>`,
+			options.scriptLang,
+		);
 	}
 }
 
@@ -121,10 +125,10 @@ function* generateTypePropsOption(
 		const attrsType = hasEmitsOption
 			? `Omit<${names.InheritedAttrs}, keyof ${names.EmitProps}>`
 			: names.InheritedAttrs;
-		yield `{} as ${attrsType}`;
+		yield asType(attrsType, options.scriptLang);
 	}
 	if (ctx.generatedTypes.has(names.PublicProps)) {
-		yield `{} as ${names.PublicProps}`;
+		yield asType(names.PublicProps, options.scriptLang);
 	}
 }
 
@@ -141,14 +145,14 @@ function* generateRuntimePropsOption(
 			: names.InheritedAttrs;
 		const propsType =
 			`${ctx.localTypes.TypePropsToOption}<${names.PickNotAny}<${ctx.localTypes.OmitIndexSignature}<${attrsType}>, {}>>`;
-		yield `{} as ${propsType}`;
+		yield asType(propsType, options.scriptLang);
 	}
 	if (ctx.generatedTypes.has(names.PublicProps) && options.vueCompilerOptions.target < 3.6) {
 		let propsType = `${ctx.localTypes.TypePropsToOption}<${names.PublicProps}>`;
 		if (scriptSetupRanges.withDefaults?.arg) {
 			propsType = `${ctx.localTypes.WithDefaults}<${propsType}, typeof ${names.defaults}>`;
 		}
-		yield `{} as ${propsType}`;
+		yield asType(propsType, options.scriptLang);
 	}
 	if (scriptSetupRanges.defineProps?.arg) {
 		const { arg } = scriptSetupRanges.defineProps;
