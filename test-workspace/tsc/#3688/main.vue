@@ -3,7 +3,7 @@
 <template>
 	{{() => {
 		exactType({} as __VLS_StyleScopedClasses, {} as { 'foo': boolean });
-	}}}
+	} }}
 </template>
 
 <script setup lang="ts">

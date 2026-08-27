@@ -6,15 +6,16 @@ import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../util
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { identifierRE, newLine } from '../utils';
+import { asType, getRefBrandArgument, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
+import { shouldIdentifierSkipped } from './bindingReferences';
 import type { TemplateCodegenContext } from './context';
 import { generateModifiers } from './elementDirectives';
 import { generateEventArg, generateEventExpression } from './elementEvents';
 import type { TemplateCodegenOptions } from './index';
-import { generateInterpolation, shouldIdentifierSkipped } from './interpolation';
+import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 
 export interface FailedPropExpressions {
@@ -51,7 +52,7 @@ export function* generateElementProps(
 					yield `},`;
 				}
 				else {
-					yield `...{ '${camelize('on-' + prop.arg.loc.source)}': {} as any },`;
+					yield `...{ '${camelize('on-' + prop.arg.loc.source)}': ${asType('any', options.scriptLang)} },`;
 				}
 				yield newLine;
 			}
@@ -284,6 +285,7 @@ export function* generatePropExp(
 				},
 			);
 
+			// Keep in sync with the access strategy in interpolation.ts.
 			if (options.destructuredProps.has(propVariableName) || options.importedComponents.has(propVariableName)) {
 				yield* codes;
 			}
@@ -292,12 +294,19 @@ export function* generatePropExp(
 			}
 			else if (options.setupRefs.has(propVariableName)) {
 				yield* codes;
-				yield `.value`;
+				yield [`.value`, 'template', exp.loc.start.offset, codeFeatures.verification];
 			}
 			else if (options.setupBindings.has(propVariableName)) {
 				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
-				yield* codes;
-				yield `.value`;
+				if (options.dotValueBindings.has(propVariableName)) {
+					yield* codes;
+					yield [`.value`, 'template', exp.loc.start.offset, codeFeatures.verification];
+				}
+				else {
+					yield `${names.unwrap}(`;
+					yield* codes;
+					yield `, ${getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)})`;
+				}
 			}
 			else {
 				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);

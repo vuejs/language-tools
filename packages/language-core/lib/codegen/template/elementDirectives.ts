@@ -3,7 +3,7 @@ import { camelize, isBuiltInDirective } from '@vue/shared';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine } from '../utils';
+import { asType, endOfLine, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
@@ -37,7 +37,7 @@ export function* generateElementDirectives(
 		if (options.isVapor && !isBuiltInDirective(prop.name)) {
 			// vapor custom directives receive a value getter instead of a vdom binding object
 			yield* generateIdentifier(options, ctx, prop);
-			yield `(null!, `;
+			yield `(${names.nonNull}(null), `;
 			yield* generateValue(options, ctx, prop, false);
 			yield* generateArg(options, ctx, prop, false);
 			yield* generateModifiers(options, ctx, prop, 'modifiers', false);
@@ -46,11 +46,17 @@ export function* generateElementDirectives(
 		else {
 			yield `${names.asFunctionalDirective}(`;
 			yield* generateIdentifier(options, ctx, prop);
-			yield `, {} as import('${options.vueCompilerOptions.lib}').ObjectDirective)(null!, { ...${names.directiveBindingRestFields}, `;
+			yield `, ${
+				asType(`import('${options.vueCompilerOptions.lib}').ObjectDirective`, options.scriptLang)
+			})(${names.nonNull}(null), { ...${names.directiveBindingRestFields}, `;
 			yield* generateArg(options, ctx, prop);
 			yield* generateModifiers(options, ctx, prop);
 			yield* generateValue(options, ctx, prop);
-			yield `}, null!, null!)`;
+			// Vue invokes hooks with all four arguments regardless of the declared
+			// arity. The excess-argument error (TS2554) lands on the first extra
+			// argument, so the synthetic trailing args get their own @ts-ignore'd
+			// line; when the arity matches, the binding above is checked as usual.
+			yield `},${newLine}// @ts-ignore${newLine}null, null)`;
 		}
 		yield boundary.end();
 		yield endOfLine;

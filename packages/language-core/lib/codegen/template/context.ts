@@ -10,6 +10,59 @@ export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenCont
 
 const directiveCommentRE = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)-->$/;
 
+// Reserved words can never be auto-imported bindings, and emitting them as
+// bare array elements is a syntax error (#5267: `[class,]`).
+const reservedWords = new Set([
+	'arguments',
+	'await',
+	'break',
+	'case',
+	'catch',
+	'class',
+	'const',
+	'continue',
+	'debugger',
+	'default',
+	'delete',
+	'do',
+	'else',
+	'enum',
+	'eval',
+	'export',
+	'extends',
+	'false',
+	'finally',
+	'for',
+	'function',
+	'if',
+	'implements',
+	'import',
+	'in',
+	'instanceof',
+	'interface',
+	'let',
+	'new',
+	'null',
+	'package',
+	'private',
+	'protected',
+	'public',
+	'return',
+	'static',
+	'super',
+	'switch',
+	'this',
+	'throw',
+	'true',
+	'try',
+	'typeof',
+	'var',
+	'void',
+	'while',
+	'with',
+	'yield',
+]);
+
 export function createTemplateCodegenContext() {
 	// directive comments ---------------------------------------------------------
 
@@ -248,8 +301,14 @@ export function createTemplateCodegenContext() {
 	// context accesses -----------------------------------------------------------
 
 	const contextAccesses = new Map<string, Map<string, Set<number>>>();
+	const dotValueAccesses = new Set<string>();
 
-	function accessVariable(source: string, name: string, offset?: number) {
+	// Ordered log of accessed names; event-handler closures slice from a mark
+	// to find the names accessed within their body.
+	const accessLog: string[] = [];
+
+	function accessVariable(source: string, name: string, offset?: number, dotValue = false) {
+		accessLog.push(name);
 		let map = contextAccesses.get(name);
 		if (!map) {
 			contextAccesses.set(name, map = new Map());
@@ -260,6 +319,9 @@ export function createTemplateCodegenContext() {
 		}
 		if (offset !== undefined) {
 			arr.add(offset);
+		}
+		if (dotValue) {
+			dotValueAccesses.add(name);
 		}
 	}
 
@@ -272,9 +334,11 @@ export function createTemplateCodegenContext() {
 		yield `[`;
 		for (const [varName, map] of all) {
 			for (const [source, offsets] of map) {
-				for (const offset of offsets) {
-					yield [varName, source, offset, codeFeatures.importCompletionOnly];
-					yield `,`;
+				if (!reservedWords.has(varName)) {
+					for (const offset of offsets) {
+						yield [varName, source, offset, codeFeatures.importCompletionOnly];
+						yield `,`;
+					}
 				}
 				offsets.clear();
 			}
@@ -284,11 +348,16 @@ export function createTemplateCodegenContext() {
 
 	// conditions -----------------------------------------------------------------
 
-	const conditions: string[] = [];
+	// Active branch conditions with the names each accessed; the guards are
+	// replayed inside inline-handler closures.
+	const conditions: { text: string; accesses: string[] }[] = [];
 
 	function* generateConditionGuards() {
 		for (const condition of conditions) {
-			yield `if (!${condition}) throw 0${endOfLine}`;
+			if (condition.accesses.length && condition.accesses.every(name => scopes.some(scope => scope.has(name)))) {
+				continue;
+			}
+			yield `if (!${condition.text}) throw 0${endOfLine}`;
 		}
 	}
 
@@ -356,6 +425,8 @@ export function createTemplateCodegenContext() {
 		scopes,
 		scope,
 		contextAccesses,
+		dotValueAccesses,
+		accessLog,
 		accessVariable,
 		generateAutoImport,
 		conditions,

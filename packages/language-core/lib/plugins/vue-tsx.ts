@@ -39,23 +39,23 @@ const plugin: VueLanguagePlugin = ({
 			}
 		},
 	};
-
-	function computeLang(ir: IR) {
-		let lang = ir.scriptSetup?.lang ?? ir.script?.lang;
-		if (ir.script && ir.scriptSetup) {
-			if (ir.scriptSetup.lang !== 'js') {
-				lang = ir.scriptSetup.lang;
-			}
-			else {
-				lang = ir.script.lang;
-			}
-		}
-		if (lang && validLangs.has(lang)) {
-			return lang;
-		}
-		return 'ts';
-	}
 };
+
+function computeLang(ir: IR) {
+	let lang = ir.scriptSetup?.lang ?? ir.script?.lang;
+	if (ir.script && ir.scriptSetup) {
+		if (ir.scriptSetup.lang !== 'js') {
+			lang = ir.scriptSetup.lang;
+		}
+		else {
+			lang = ir.script.lang;
+		}
+	}
+	if (lang && validLangs.has(lang)) {
+		return lang;
+	}
+	return 'ts';
+}
 
 export default plugin;
 
@@ -118,6 +118,23 @@ function useCodegen(
 			const scriptRanges = getScriptRanges();
 			if (ir.script && scriptRanges) {
 				for (const range of scriptRanges.bindings) {
+					names.add(ir.script.content.slice(range.start, range.end));
+				}
+			}
+		}
+		return names;
+	});
+
+	const getNonFlowingBindings = computedSet(() => {
+		const names = new Set<string>();
+		const scriptSetupRanges = getScriptSetupRanges();
+		if (ir.scriptSetup && scriptSetupRanges) {
+			for (const range of scriptSetupRanges.nonFlowingBindings) {
+				names.add(ir.scriptSetup.content.slice(range.start, range.end));
+			}
+			const scriptRanges = getScriptRanges();
+			if (ir.script && scriptRanges) {
+				for (const range of scriptRanges.nonFlowingBindings) {
 					names.add(ir.script.content.slice(range.start, range.end));
 				}
 			}
@@ -188,7 +205,7 @@ function useCodegen(
 		return capitalize(camelize(name));
 	});
 
-	const getGeneratedTemplate = computed(() => {
+	const generateTemplatePass = (dotValueBindings: Set<string>) => {
 		if (getResolvedOptions().skipTemplateCodegen || !ir.template) {
 			return;
 		}
@@ -197,19 +214,22 @@ function useCodegen(
 			vueCompilerOptions: getResolvedOptions(),
 			template: ir.template,
 			isVapor: getIsVapor(),
+			scriptLang: computeLang(ir),
 			componentName: getComponentName(),
 			destructuredProps: getDestructuredProps(),
 			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
 			setupBindings: getSetupBindings(),
+			dotValueBindings,
+			reassertBindings: new Set([...dotValueBindings].filter(name => getNonFlowingBindings().has(name))),
 			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getInheritAttrs(),
 		});
-	});
+	};
 
-	const getGeneratedStyle = computed(() => {
+	const generateStylePass = (dotValueBindings: Set<string>) => {
 		if (!ir.styles.length) {
 			return;
 		}
@@ -217,12 +237,14 @@ function useCodegen(
 			typescript: ts,
 			vueCompilerOptions: getResolvedOptions(),
 			styles: ir.styles,
+			scriptLang: computeLang(ir),
 			destructuredProps: getDestructuredProps(),
 			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
 			setupBindings: getSetupBindings(),
+			dotValueBindings,
 		});
-	});
+	};
 
 	const getLocalComponents = computedSet(() => {
 		const bindings = getSetupBindings();
@@ -248,6 +270,23 @@ function useCodegen(
 		return new Set([...bindings].filter(name => /^v[A-Z]/.test(name)));
 	});
 
+	// First pass: collect bindings used in narrowing positions (output discarded);
+	// the second pass (the computeds below) finalizes every access of these with `.value`.
+	const getDotValueBindings = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
+		}
+		const names: string[] = [];
+		for (const generated of [generateTemplatePass(new Set()), generateStylePass(new Set())]) {
+			names.push(...generated?.dotValueAccesses ?? []);
+		}
+		return new Set(names);
+	});
+
+	const getGeneratedTemplate = computed(() => generateTemplatePass(getDotValueBindings()));
+	const getGeneratedStyle = computed(() => generateStylePass(getDotValueBindings()));
+
 	const getReferencedBindings = computedSet(() => {
 		const bindings = getSetupBindings();
 		if (!bindings.size) {
@@ -272,10 +311,11 @@ function useCodegen(
 			fileName,
 			script: ir.script,
 			scriptSetup: ir.scriptSetup,
+			scriptLang: computeLang(ir),
 			setupBindings: getScriptSetupBindings(),
 			localComponents: getLocalComponents(),
 			localDirectives: getLocalDirectives(),
-			withDotValueBindings: getReferencedBindings(),
+			dotValueBindings: getDotValueBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateAndStyleTypes: new Set([
