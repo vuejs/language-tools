@@ -195,7 +195,6 @@ export function* generateEventExpression(
 
 			yield `// @ts-ignore${newLine}`;
 			yield `(...[$event]) => {${newLine}`;
-			yield `void $event${endOfLine}`;
 			yield* generateReasserts(options, ctx, accessMark);
 			yield* ctx.generateConditionGuards();
 
