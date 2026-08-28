@@ -647,6 +647,9 @@
 			"path": "./type-helpers/tsconfig.json"
 		},
 		{
+			"path": "./unknownComponent/tsconfig.json"
+		},
+		{
 			"path": "./unknownProp/tsconfig.json"
 		},
 		{
