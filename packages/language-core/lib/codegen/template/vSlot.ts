@@ -76,24 +76,23 @@ export function* generateVSlot(
 		if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 			isStatic = slotDir.arg.isStatic;
 		}
-		if (isStatic && !slotDir.arg) {
-			yield `// @ts-ignore${newLine}`;
-			yield `${names.nonNull}(${ctxVar}.slots)['`;
-			yield [
-				'',
-				'template',
-				slotDir.loc.start.offset + (
-					slotDir.loc.source.startsWith('#')
-						? '#'.length
-						: slotDir.loc.source.startsWith('v-slot:')
-						? 'v-slot:'.length
-						: 0
-				),
-				codeFeatures.completion,
-			];
-			yield `'/* empty slot name completion */]${endOfLine}`;
-		}
 		yield `}${newLine}`;
+		if (isStatic && !slotDir.arg) {
+			if (slotDir.loc.source.startsWith('#') || slotDir.loc.source.startsWith('v-slot:')) {
+				yield `/** @type {NonNullable<typeof ${ctxVar}['slots']>['`;
+				yield [
+					'',
+					'template',
+					slotDir.loc.start.offset + (
+						slotDir.loc.source.startsWith('#')
+							? '#'.length
+							: 'v-slot:'.length
+					),
+					codeFeatures.completion,
+				];
+				yield `']} */${endOfLine}`;
+			}
+		}
 	}
 }
 
