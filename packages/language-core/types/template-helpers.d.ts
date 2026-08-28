@@ -1,6 +1,12 @@
 declare global {
 	const __VLS_directiveBindingRestFields: { instance: null; oldValue: null; value: null; modifiers: any; dir: any };
 
+	type __VLS_BuiltInDirectives = {
+		vHtml: (el: HTMLElement, binding: { value: string }) => void;
+		vText: (el: HTMLElement, binding: { value: string | number }) => void;
+		vCloak: (el: HTMLElement) => void;
+		vMemo: (el: HTMLElement, binding: { value: any[] }) => void;
+	};
 	type __VLS_Elements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;

@@ -26,6 +26,7 @@ const raw = {
 	InheritedAttrs: '',
 	LocalComponents: '',
 	LocalDirectives: '',
+	BuiltInDirectives: '',
 	ModelEmit: '',
 	ModelProps: '',
 	Props: '',

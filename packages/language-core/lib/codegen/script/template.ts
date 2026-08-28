@@ -150,7 +150,7 @@ function* generateTemplateDirectives(
 		yield types.length ? types.join(` & `) : `{}`;
 	});
 	yield* generateTypedVar('let', names.directives, scriptLang, function*() {
-		yield `${names.LocalDirectives} & import('${vueCompilerOptions.lib}').GlobalDirectives`;
+		yield `${names.LocalDirectives} & ${names.BuiltInDirectives} & import('${vueCompilerOptions.lib}').GlobalDirectives`;
 	});
 }
 
