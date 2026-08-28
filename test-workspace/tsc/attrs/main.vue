@@ -5,7 +5,7 @@
 import { type AnchorHTMLAttributes, type ReservedProps, useAttrs } from 'vue';
 import { exactType } from '../shared';
 
-type InheritedAttrs = Partial<AnchorHTMLAttributes & ReservedProps> & Record<string, unknown>;
+type InheritedAttrs = import('vue').Attrs & Partial<AnchorHTMLAttributes & ReservedProps>;
 
 const attrs = useAttrs();
 exactType(attrs, {} as InheritedAttrs);

@@ -158,12 +158,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 					    "kind": "enum",
 					    "schema": [
 					      "undefined",
-					      "Partial<Record<"trim" | "lazy", true>>",
+					      "Partial<Record<"lazy" | "trim", true>>",
 					    ],
-					    "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
+					    "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
 					  },
 					  "tags": [],
-					  "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
+					  "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
 					}
 				`);
 			}
@@ -1285,7 +1285,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  ],
 				  "signature": "(event: "foo", data?: { foo: string; } | undefined): void",
 				  "tags": [],
-				  "type": "[{ foo: string; } | undefined]",
+				  "type": "[data?: { foo: string; } | undefined]",
 				}
 			`);
 
@@ -1336,7 +1336,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  ],
 				  "signature": "(event: "bar", value: { arg1: number; arg2?: any; }): void",
 				  "tags": [],
-				  "type": "[{ arg1: number; arg2?: any; }]",
+				  "type": "[value: { arg1: number; arg2?: any; }]",
 				}
 			`);
 
@@ -1350,7 +1350,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "name": "baz",
 				  "rawType": undefined,
 				  "schema": [],
-				  "signature": "(e: "baz"): void",
+				  "signature": "(event: "baz"): void",
 				  "tags": [],
 				  "type": "[]",
 				}
