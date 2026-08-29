@@ -835,7 +835,7 @@ test('<script setup>', async () => {
 });
 
 test('Slot name', async () => {
-	await requestCompletionItemToTsServer(
+	const completion = await requestCompletionItemToTsServer(
 		'fixture.vue',
 		'vue',
 		`
@@ -855,6 +855,67 @@ test('Slot name', async () => {
 	`,
 		'default',
 	);
+	expect(completion.replacementSpan).toBeDefined();
+	expect((completion.replacementSpan as any).end.offset - (completion.replacementSpan as any).start.offset).toBe(0);
+});
+
+test('Slot name (v-slot:)', async () => {
+	const completion = await requestCompletionItemToTsServer(
+		'fixture.vue',
+		'vue',
+		`
+		<template>
+			<Foo>
+				<template v-slot:|></template>
+			</Foo>
+		</template>
+
+		<script lang="ts" setup>
+		let Foo: new () => {
+			$slots: {
+				default: any;
+			};
+		};
+		</script>
+		`,
+		'default',
+	);
+	expect(completion.replacementSpan).toBeDefined();
+	expect((completion.replacementSpan as any).end.offset - (completion.replacementSpan as any).start.offset).toBe(0);
+});
+
+test('Slot name (bare v-slot)', async () => {
+	const content = `
+	<template>
+		<Foo v-slot|></Foo>
+	</template>
+
+	<script lang="ts" setup>
+	let Foo: new () => {
+		$slots: {
+			default: any;
+		};
+	};
+	</script>
+	`;
+	const offset = content.indexOf('|');
+	expect(offset).toBeGreaterThanOrEqual(0);
+	const document = await prepareDocument(
+		'fixture.vue',
+		'vue',
+		content.slice(0, offset) + content.slice(offset + 1),
+	);
+	const server = await getLanguageServer();
+	const res = await server.tsserver.message({
+		seq: server.nextSeq(),
+		command: 'completions',
+		arguments: {
+			file: URI.parse(document.uri).fsPath,
+			position: offset,
+		},
+	});
+	const completions = (res.success ? res.body : undefined) as ts.CompletionEntry[] | undefined;
+	expect(completions?.find(item => item.name === 'default')).toBeUndefined();
 });
 
 test('#2454', async () => {
