@@ -365,17 +365,22 @@ export function* generateSetupFunction(
 // of any statement, and the import-section/content junction stays intact.
 export function* generateMacros(options: ScriptCodegenOptions): Generator<Code> {
 	if (options.vueCompilerOptions.target >= 3.3) {
-		let emitted = false;
-		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
-			if (!options.setupBindings.has(macro)) {
-				if (!emitted) {
-					yield `// @ts-ignore${newLine}import { `;
-					emitted = true;
-				}
+		const scriptSetupRanges = options.scriptSetupRanges;
+		const usedMacros = [
+			scriptSetupRanges?.defineProps && 'defineProps',
+			scriptSetupRanges?.defineEmits && 'defineEmits',
+			scriptSetupRanges?.defineModel?.length && 'defineModel',
+			scriptSetupRanges?.defineSlots && 'defineSlots',
+			scriptSetupRanges?.defineExpose && 'defineExpose',
+			scriptSetupRanges?.defineOptions && 'defineOptions',
+			scriptSetupRanges?.withDefaults && 'withDefaults',
+		].filter((macro): macro is string => !!macro && !options.setupBindings.has(macro));
+
+		if (usedMacros.length) {
+			yield `import { `;
+			for (const macro of usedMacros) {
 				yield `${macro}, `;
 			}
-		}
-		if (emitted) {
 			yield `} from '${options.vueCompilerOptions.lib}'${endOfLine}`;
 		}
 	}
