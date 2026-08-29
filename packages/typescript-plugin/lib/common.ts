@@ -435,7 +435,7 @@ export function postprocessLanguageService<T>(
 					}
 					const styles = root.ir.styles;
 					if (!styles.length) {
-						return result;
+						continue;
 					}
 					const isInStyle = styles.some(style =>
 						reference.textSpan.start >= style.startTagEnd
