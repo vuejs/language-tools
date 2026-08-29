@@ -365,21 +365,36 @@ export function* generateSetupFunction(
 // of any statement, and the import-section/content junction stays intact.
 export function* generateMacros(options: ScriptCodegenOptions): Generator<Code> {
 	if (options.vueCompilerOptions.target >= 3.3) {
+		const scriptSetup = options.scriptSetup;
 		const scriptSetupRanges = options.scriptSetupRanges;
-		const usedMacros = [
-			scriptSetupRanges?.defineProps && 'defineProps',
-			scriptSetupRanges?.defineEmits && 'defineEmits',
-			scriptSetupRanges?.defineModel?.length && 'defineModel',
-			scriptSetupRanges?.defineSlots && 'defineSlots',
-			scriptSetupRanges?.defineExpose && 'defineExpose',
-			scriptSetupRanges?.defineOptions && 'defineOptions',
-			scriptSetupRanges?.withDefaults && 'withDefaults',
-		].filter((macro): macro is string => !!macro && !options.setupBindings.has(macro));
+		if (!scriptSetup || !scriptSetupRanges) {
+			return;
+		}
 
-		if (usedMacros.length) {
+		const usedMacros: { canonical: string; alias: string }[] = [];
+		const add = (canonical: string, exp: TextRange | undefined) => {
+			if (exp) {
+				usedMacros.push({ canonical, alias: getRangeText(scriptSetup, exp) });
+			}
+		};
+		add('defineProps', scriptSetupRanges.defineProps?.exp);
+		add('defineEmits', scriptSetupRanges.defineEmits?.exp);
+		add('defineSlots', scriptSetupRanges.defineSlots?.exp);
+		add('defineExpose', scriptSetupRanges.defineExpose?.exp);
+		add('withDefaults', scriptSetupRanges.withDefaults?.exp);
+		if (scriptSetupRanges.defineModel.length) {
+			usedMacros.push({ canonical: 'defineModel', alias: 'defineModel' });
+		}
+		if (scriptSetupRanges.defineOptions) {
+			usedMacros.push({ canonical: 'defineOptions', alias: 'defineOptions' });
+		}
+
+		const toImport = usedMacros.filter(({ alias }) => !options.setupBindings.has(alias));
+
+		if (toImport.length) {
 			yield `import { `;
-			for (const macro of usedMacros) {
-				yield `${macro}, `;
+			for (const { canonical, alias } of toImport) {
+				yield alias === canonical ? `${canonical}, ` : `${canonical} as ${alias}, `;
 			}
 			yield `} from '${options.vueCompilerOptions.lib}'${endOfLine}`;
 		}
