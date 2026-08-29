@@ -247,14 +247,17 @@ export function* generateComponent(
 	const isSingleRoot = ctx.singleRootNodes.has(node)
 		&& !options.vueCompilerOptions.fallthroughComponentNames.includes(hyphenateTag(tag));
 	const inferRootEl = ctx.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl;
+	const inferTemplateRefs = options.vueCompilerOptions.inferTemplateDollarRefs
+		|| options.vueCompilerOptions.inferComponentDollarRefs
+		|| options.setupRefs.size > 0;
 
-	if (templateRef || (isSingleRoot && inferRootEl)) {
+	if ((templateRef && inferTemplateRefs) || (isSingleRoot && inferRootEl)) {
 		const componentInstanceVar = ctx.getInternalVariable();
 		yield* generateTypedVar('var', componentInstanceVar, options.scriptLang, function*() {
 			yield `Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0]`;
 		});
 
-		if (templateRef) {
+		if (templateRef && inferTemplateRefs) {
 			let typeExp = `typeof ${ctx.getHoistVariable(componentInstanceVar)} | null`;
 			if (ctx.inVFor) {
 				typeExp = `(${typeExp})[]`;
