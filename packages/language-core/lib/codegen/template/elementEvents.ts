@@ -195,6 +195,9 @@ export function* generateEventExpression(
 
 			yield `// @ts-ignore${newLine}`;
 			yield `(...[$event]) => {${newLine}`;
+			// consume $event to avoid TS6133 when the expression doesn't use it
+			yield `void $event${endOfLine}`;
+
 			yield* generateReasserts(options, ctx, accessMark);
 			yield* ctx.generateConditionGuards();
 
