@@ -614,6 +614,9 @@
 			"path": "./intrinsicProps/tsconfig.json"
 		},
 		{
+			"path": "./macros-alias/tsconfig.json"
+		},
+		{
 			"path": "./namespace-component/tsconfig.json"
 		},
 		{

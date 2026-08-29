@@ -365,17 +365,37 @@ export function* generateSetupFunction(
 // of any statement, and the import-section/content junction stays intact.
 export function* generateMacros(options: ScriptCodegenOptions): Generator<Code> {
 	if (options.vueCompilerOptions.target >= 3.3) {
-		let emitted = false;
-		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
-			if (!options.setupBindings.has(macro)) {
-				if (!emitted) {
-					yield `// @ts-ignore${newLine}import { `;
-					emitted = true;
-				}
-				yield `${macro}, `;
-			}
+		const scriptSetup = options.scriptSetup;
+		const scriptSetupRanges = options.scriptSetupRanges;
+		if (!scriptSetup || !scriptSetupRanges) {
+			return;
 		}
-		if (emitted) {
+
+		const usedMacros: { canonical: string; alias: string }[] = [];
+		const add = (canonical: string, exp: TextRange | undefined) => {
+			if (exp) {
+				usedMacros.push({ canonical, alias: getRangeText(scriptSetup, exp) });
+			}
+		};
+		add('defineProps', scriptSetupRanges.defineProps?.exp);
+		add('defineEmits', scriptSetupRanges.defineEmits?.exp);
+		add('defineSlots', scriptSetupRanges.defineSlots?.exp);
+		add('defineExpose', scriptSetupRanges.defineExpose?.exp);
+		add('withDefaults', scriptSetupRanges.withDefaults?.exp);
+		if (scriptSetupRanges.defineModel.length) {
+			usedMacros.push({ canonical: 'defineModel', alias: 'defineModel' });
+		}
+		if (scriptSetupRanges.defineOptions) {
+			usedMacros.push({ canonical: 'defineOptions', alias: 'defineOptions' });
+		}
+
+		const toImport = usedMacros.filter(({ alias }) => !options.setupBindings.has(alias));
+
+		if (toImport.length) {
+			yield `import { `;
+			for (const { canonical, alias } of toImport) {
+				yield alias === canonical ? `${canonical}, ` : `${canonical} as ${alias}, `;
+			}
 			yield `} from '${options.vueCompilerOptions.lib}'${endOfLine}`;
 		}
 	}
