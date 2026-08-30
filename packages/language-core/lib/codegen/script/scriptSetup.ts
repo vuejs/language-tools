@@ -480,7 +480,7 @@ function* generatePublicProps(
 
 	const propTypes: string[] = [];
 	if (options.vueCompilerOptions.jsxSlots && hasSlotsType(options)) {
-		propTypes.push(`${ctx.localTypes.PropsChildren}<${names.Slots}>`);
+		propTypes.push(`${names.PropsChildren}<${names.Slots}>`);
 	}
 	if (scriptSetupRanges.defineProps?.typeArg) {
 		propTypes.push(names.Props);

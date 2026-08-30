@@ -46,29 +46,6 @@ type __VLS_WithSlots<T, S> = T & {
 `.trimStart()
 				: jsTypedef(`T, S`, `__VLS_WithSlots`, `T & { new(): { $slots: S; } }`),
 	);
-	const PropsChildren = defineHelper(
-		`__VLS_PropsChildren`,
-		() =>
-			isTs
-				? `
-type __VLS_PropsChildren<S> = {
-	[K in keyof (
-		boolean extends (
-			// @ts-ignore
-			JSX.ElementChildrenAttribute extends never
-				? true
-				: false
-		)
-			? never
-			// @ts-ignore
-			: JSX.ElementChildrenAttribute
-	)]?: S;
-};
-`.trimStart()
-				// The single-line form lets the preceding @ts-ignore cover the whole typedef,
-				// mirroring the inline @ts-ignore guards of the TS form.
-				: `// @ts-ignore${newLine}/** @template S @typedef {{ [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; }} __VLS_PropsChildren */${newLine}`,
-	);
 	const TypePropsToOption = defineHelper(
 		`__VLS_TypePropsToOption`,
 		() =>
@@ -101,7 +78,6 @@ type __VLS_TypePropsToOption<T> = {
 		[PrettifyLocal.name]: PrettifyLocal,
 		[WithDefaults.name]: WithDefaults,
 		[WithSlots.name]: WithSlots,
-		[PropsChildren.name]: PropsChildren,
 		[TypePropsToOption.name]: TypePropsToOption,
 		[OmitIndexSignature.name]: OmitIndexSignature,
 	};
@@ -117,9 +93,6 @@ type __VLS_TypePropsToOption<T> = {
 		},
 		get WithSlots() {
 			return WithSlots.name;
-		},
-		get PropsChildren() {
-			return PropsChildren.name;
 		},
 		get TypePropsToOption() {
 			return TypePropsToOption.name;

@@ -66,6 +66,7 @@ const raw = {
 	OverloadUnionInner: '',
 	PickNotAny: '',
 	PrettifyGlobal: '',
+	PropsChildren: '',
 	ResolveDirectives: '',
 	ResolveEmits: '',
 	ResolveEvent: '',

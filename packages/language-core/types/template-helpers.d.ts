@@ -98,6 +98,19 @@ declare global {
 		[K in keyof T & string as `v${Capitalize<K>}`]: T[K];
 	};
 	type __VLS_PrettifyGlobal<T> = (T extends any ? { [K in keyof T]: T[K] } : { [K in keyof T as K]: T[K] }) & {};
+	type __VLS_PropsChildren<S> = {
+		[
+			K in keyof (
+				boolean extends (
+					// @ts-ignore
+					JSX.ElementChildrenAttribute extends never ? true
+						: false
+				) ? never
+					// @ts-ignore
+					: JSX.ElementChildrenAttribute
+			)
+		]?: S;
+	};
 
 	function __VLS_vFor<const T>(source: T): T extends number ? [number, number][]
 		: T extends string ? [string, number][]
