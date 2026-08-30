@@ -42,8 +42,8 @@ export function* generateStyleScopedClasses(
 		}
 	});
 	if (isTsLang(scriptLang)) {
-		// trick to avoid TS6196; the alias is otherwise only referenced from JSDoc casts
-		yield `0 as unknown as ${names.StyleScopedClasses}${endOfLine}`;
+		// avoid TS6196: JSDoc refs don't count as usage; JS @typedefs skip the check
+		yield `void ({} as ${names.StyleScopedClasses})${endOfLine}`;
 	}
 
 	for (const generate of deferredGenerates) {
