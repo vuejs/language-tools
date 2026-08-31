@@ -158,6 +158,76 @@ export default _default;
 "
 `;
 
+exports[`Input: jsx-slots/generic-slots.vue, Output: jsx-slots/generic-slots.vue.d.ts 1`] = `
+"declare const __VLS_export: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_exposed?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+    props: import("vue").PublicProps & __VLS_PrettifyLocal<__VLS_PropsChildren<{
+        default?: (props: {
+            item: T;
+        }) => any;
+    }> & {
+        items: T[];
+    }> & (typeof globalThis extends {
+        __VLS_PROPS_FALLBACK: infer P;
+    } ? P : {});
+    expose: (exposed: {}) => void;
+    attrs: any;
+    slots: {
+        default?: (props: {
+            item: T;
+        }) => any;
+    };
+    emit: {};
+}>) => import("vue").VNode & {
+    __ctx?: NonNullable<Awaited<typeof __VLS_setup>>;
+};
+declare const _default: typeof __VLS_export;
+export default _default;
+type __VLS_PrettifyLocal<T> = (T extends any ? {
+    [K in keyof T]: T[K];
+} : {
+    [K in keyof T as K]: T[K];
+}) & {};
+type __VLS_PropsChildren<S> = {
+    [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S;
+};
+"
+`;
+
+exports[`Input: jsx-slots/no-slots.vue, Output: jsx-slots/no-slots.vue.d.ts 1`] = `
+"type __VLS_Props = {
+    msg: string;
+};
+declare const __VLS_export: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
+declare const _default: typeof __VLS_export;
+export default _default;
+"
+`;
+
+exports[`Input: jsx-slots/slots.vue, Output: jsx-slots/slots.vue.d.ts 1`] = `
+"type __VLS_Props = {
+    msg: string;
+};
+type __VLS_Slots = {
+    default?: (props: {
+        msg: string;
+    }) => any;
+};
+type __VLS_PublicProps = __VLS_PropsChildren<__VLS_Slots> & __VLS_Props;
+declare const __VLS_base: import("vue").DefineComponent<__VLS_PublicProps, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_PublicProps> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
+declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
+declare const _default: typeof __VLS_export;
+export default _default;
+type __VLS_PropsChildren<S> = {
+    [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S;
+};
+type __VLS_WithSlots<T, S> = T & {
+    new (): {
+        $slots: S;
+    };
+};
+"
+`;
+
 exports[`Input: non-component/component.ts, Output: non-component/component.d.ts 1`] = `
 "declare const _default: {};
 export default _default;
