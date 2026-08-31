@@ -99,6 +99,15 @@ declare global {
 	};
 	type __VLS_PrettifyGlobal<T> = (T extends any ? { [K in keyof T]: T[K] } : { [K in keyof T as K]: T[K] }) & {};
 
+	// Vue invokes hooks with all four args regardless of the declared arity
+	// make the generated 4-arg call legal for short hooks while their declared params stay checked.
+	type __VLS_PadDirectiveHook<F> = F extends (...args: infer A) => infer R
+		? A extends [any, any, any, any, ...any[]] ? F
+		: (<G>() => G extends F ? 1 : 2) extends (<G>() => G extends (...args: A) => R ? 1 : 2)
+			? (...args: [...A, ...any[]]) => R
+		: F & ((...args: any[]) => R)
+		: F;
+
 	function __VLS_vFor<const T>(source: T): T extends number ? [number, number][]
 		: T extends string ? [string, number][]
 		: T extends readonly any[] ? (T extends readonly (infer U)[] ? [U, number] : never)[]
@@ -109,11 +118,15 @@ declare global {
 	function __VLS_asFunctionalDirective<T, ObjectDirective>(
 		dir: T,
 		od: ObjectDirective,
-	): T extends ObjectDirective ? NonNullable<
-			T[keyof T & ('created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted')]
-		>
-		: T extends (...args: any) => any ? T
-		: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
+	): __VLS_PadDirectiveHook<
+		T extends ObjectDirective ? NonNullable<
+				T[
+					keyof T & ('created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted')
+				]
+			>
+			: T extends (...args: any) => any ? T
+			: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void
+	>;
 	function __VLS_asFunctionalComponent0<T, K>(
 		t: T,
 		instance: K,
