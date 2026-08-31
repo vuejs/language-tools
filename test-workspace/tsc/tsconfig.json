@@ -542,6 +542,9 @@
 			"path": "./_failed_#5823/tsconfig.json"
 		},
 		{
+			"path": "./_failed_directive_arity/tsconfig.json"
+		},
+		{
 			"path": "./_failed_directives/tsconfig.json"
 		},
 		{

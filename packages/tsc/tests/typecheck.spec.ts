@@ -32,6 +32,8 @@ test(`vue-tsc`, () => {
 		  "test-workspace/tsc/_failed_#5071/withScript.vue(1,19): error TS1005: ';' expected.",
 		  "test-workspace/tsc/_failed_#5071/withoutScript.vue(2,26): error TS1005: ';' expected.",
 		  "test-workspace/tsc/_failed_#5823/main.vue(6,13): error TS1109: Expression expected.",
+		  "test-workspace/tsc/_failed_directive_arity/main.vue(10,17): error TS2322: Type 'string' is not assignable to type 'number'.",
+		  "test-workspace/tsc/_failed_directive_arity/main.vue(11,16): error TS2353: Object literal may only specify known properties, and 'unknown' does not exist in type 'Partial<Record<"attr" | "prop", boolean>>'.",
 		  "test-workspace/tsc/_failed_directives/main.vue(14,6): error TS2339: Property 'notExist' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.",
 		  "test-workspace/tsc/_failed_directives/main.vue(17,2): error TS2578: Unused '@ts-expect-error' directive.",
 		  "test-workspace/tsc/_failed_directives/main.vue(20,2): error TS2578: Unused '@ts-expect-error' directive.",
