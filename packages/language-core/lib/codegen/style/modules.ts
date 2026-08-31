@@ -20,7 +20,17 @@ export function* generateStyleModules(
 		yield `{${newLine}`;
 		for (const style of styleModules) {
 			if (style.module === true) {
-				yield `$style`;
+				if (style.moduleAttrOffset === undefined) {
+					yield `$style`;
+				}
+				else {
+					yield [
+						`$style`,
+						'main',
+						style.moduleAttrOffset,
+						codeFeatures.verification,
+					];
+				}
 			}
 			else {
 				const { text, offset } = style.module!;
@@ -28,7 +38,7 @@ export function* generateStyleModules(
 					text,
 					'main',
 					offset,
-					codeFeatures.navigation,
+					codeFeatures.navigationAndVerification,
 				];
 			}
 			yield `: `;

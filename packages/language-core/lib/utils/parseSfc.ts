@@ -142,6 +142,7 @@ function createBlock(node: ElementNode, source: string) {
 				}
 				else if (p.name === 'module') {
 					block.__module = parseAttr(p, node);
+					block.__moduleAttrOffset = p.loc.start.offset - node.loc.start.offset;
 				}
 			}
 		}
