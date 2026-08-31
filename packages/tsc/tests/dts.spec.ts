@@ -67,6 +67,53 @@ for (const intputFile of options.rootNames) {
 	});
 }
 
+// Global `__VLS_` helpers don't exist for .d.ts consumers,
+// recheck each output as plain .ts so no `__VLS_` name dangles.
+test(`Self-contained d.ts emit: ${shortenPath(workspace)}`, () => {
+	const emitted = new Map<string, string>();
+	for (const inputFile of options.rootNames) {
+		const sourceFile = program.getSourceFile(inputFile);
+		program.emit(
+			sourceFile,
+			(outputFile, text) => emitted.set(normalizePath(outputFile), text),
+			undefined,
+			true,
+		);
+	}
+	expect(emitted.size).toBeGreaterThan(0);
+	for (const text of emitted.values()) {
+		expect(text).not.toContain('/// <reference');
+	}
+
+	const checkFiles = new Map<string, string>(
+		[...emitted].map(([outputFile, text]) => [outputFile.slice(0, -'.d.ts'.length) + '.check.ts', text]),
+	);
+	const checkOptions: ts.CompilerOptions = {
+		noEmit: true,
+		skipLibCheck: true,
+		target: ts.ScriptTarget.ESNext,
+		module: ts.ModuleKind.ESNext,
+		moduleResolution: ts.ModuleResolutionKind.Bundler,
+	};
+	const checkHost = ts.createCompilerHost(checkOptions);
+	const { fileExists, getSourceFile } = checkHost;
+	checkHost.fileExists = fileName => checkFiles.has(normalizePath(fileName)) || fileExists.call(checkHost, fileName);
+	checkHost.getSourceFile = (fileName, languageVersion, ...args) => {
+		const text = checkFiles.get(normalizePath(fileName));
+		return text !== undefined
+			? ts.createSourceFile(fileName, text, languageVersion)
+			: getSourceFile.call(checkHost, fileName, languageVersion, ...args);
+	};
+	const checkProgram = ts.createProgram([...checkFiles.keys()], checkOptions, checkHost);
+	const danglingReferences = checkProgram.getSemanticDiagnostics()
+		.map(diagnostic => ({
+			file: diagnostic.file ? shortenPath(diagnostic.file.fileName) : '',
+			message: ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'),
+		}))
+		.filter(({ message }) => /Cannot find (name|namespace) '__VLS_/.test(message));
+	expect(danglingReferences).toEqual([]);
+});
+
 function readFilesRecursive(dir: string) {
 	if (path.relative(workspace, dir).startsWith('#')) {
 		return [];
