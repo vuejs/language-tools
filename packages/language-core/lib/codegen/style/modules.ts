@@ -21,21 +21,19 @@ export function* generateStyleModules(
 		yield `{${newLine}`;
 		for (const style of styleModules) {
 			if (style.module === true) {
-				if (style.moduleAttrOffset === undefined) {
-					yield `$style`;
-				}
-				else {
-					yield [
-						`$style`,
-						'main',
-						style.moduleAttrOffset,
-						codeFeatures.verification,
-					];
-				}
+				yield `$style`;
 			}
 			else {
 				const { text, offset } = style.module!;
-				if (identifierRE.test(text)) {
+				if (!text) {
+					yield [
+						`$style`,
+						'main',
+						offset,
+						codeFeatures.verification,
+					];
+				}
+				else if (identifierRE.test(text)) {
 					yield [
 						text,
 						'main',
