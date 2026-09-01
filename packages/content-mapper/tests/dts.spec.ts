@@ -84,7 +84,8 @@ function assertSelfContained(emitted: Map<string, string>) {
 	};
 	const checkHost = ts.createCompilerHost(checkOptions);
 	const { fileExists, getSourceFile } = checkHost;
-	checkHost.fileExists = fileName => checkFiles.has(fileName.replace(/\\/g, '/')) || fileExists.call(checkHost, fileName);
+	checkHost.fileExists = fileName =>
+		checkFiles.has(fileName.replace(/\\/g, '/')) || fileExists.call(checkHost, fileName);
 	checkHost.getSourceFile = (fileName, languageVersion, ...args) => {
 		const text = checkFiles.get(fileName.replace(/\\/g, '/'));
 		return text !== undefined
