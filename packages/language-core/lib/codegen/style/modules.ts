@@ -2,7 +2,8 @@ import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import type { TemplateCodegenContext } from '../template/context';
-import { endOfLine, generateTypeAlias, newLine } from '../utils';
+import { endOfLine, generateTypeAlias, identifierRE, newLine } from '../utils';
+import { Boundary } from '../utils/boundary';
 import type { StyleCodegenOptions } from '.';
 import { generateClassProperty, generateStyleImports } from './common';
 
@@ -34,12 +35,26 @@ export function* generateStyleModules(
 			}
 			else {
 				const { text, offset } = style.module!;
-				yield [
-					text,
-					'main',
-					offset,
-					codeFeatures.navigationAndVerification,
-				];
+				if (identifierRE.test(text)) {
+					yield [
+						text,
+						'main',
+						offset,
+						codeFeatures.navigationAndVerification,
+					];
+				}
+				else {
+					const boundary = yield* Boundary.start(
+						'main',
+						offset,
+						offset + text.length,
+						codeFeatures.navigationAndVerification,
+					);
+					yield `'`;
+					yield [text, 'main', offset, boundary.features];
+					yield `'`;
+					yield boundary.end();
+				}
 			}
 			yield `: `;
 			if (!vueCompilerOptions.strictCssModules) {
