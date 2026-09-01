@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`content mapper declaration emit > #4577/main.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > #4577/main.d.vue.ts 1`] = `
 "export type BaseRow = {
     value: string;
 };
@@ -30,7 +30,7 @@ type __VLS_PrettifyLocal<T> = (T extends any ? {
 "
 `;
 
-exports[`content mapper declaration emit > #5546/main.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > #5546/main.d.vue.ts 1`] = `
 "type __VLS_Props = {
     title: string;
     onCompleted: () => void;
@@ -45,7 +45,7 @@ export default _default;
 "
 `;
 
-exports[`content mapper declaration emit > component-name-description/component.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > component-name-description/component.d.vue.ts 1`] = `
 "/**
  * My awesome component description
  */
@@ -71,7 +71,7 @@ declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractP
 "
 `;
 
-exports[`content mapper declaration emit > component-name-description/component-no-name.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > component-name-description/component-no-name.d.vue.ts 1`] = `
 "/**
  * Component without explicit name
  */
@@ -87,7 +87,7 @@ export default _default;
 "
 `;
 
-exports[`content mapper declaration emit > component-name-description/component-ts.d.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > component-name-description/component-ts.d.ts 1`] = `
 "/**
  * TypeScript component with description
  */
@@ -112,7 +112,7 @@ export default _default;
 "
 `;
 
-exports[`content mapper declaration emit > declaration output files 1`] = `
+exports[`content mapper declaration emit: component-meta > declaration output files 1`] = `
 [
   "#4577/main.d.vue.ts",
   "#5546/main.d.vue.ts",
@@ -146,14 +146,14 @@ exports[`content mapper declaration emit > declaration output files 1`] = `
 ]
 `;
 
-exports[`content mapper declaration emit > empty-component/component.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > empty-component/component.d.vue.ts 1`] = `
 "declare const __VLS_export: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 declare const _default: typeof __VLS_export;
 export default _default;
 "
 `;
 
-exports[`content mapper declaration emit > generic/component.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > generic/component.d.vue.ts 1`] = `
 "declare const __VLS_export: (__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>['props'], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, 'attrs' | 'emit' | 'slots'>>, __VLS_exposed?: NonNullable<Awaited<typeof __VLS_setup>>['expose'], __VLS_setup?: Promise<{
     props: import('vue').PublicProps & __VLS_PrettifyLocal<({
         foo: number;
@@ -186,20 +186,20 @@ type __VLS_PrettifyLocal<T> = (T extends any ? {
 "
 `;
 
-exports[`content mapper declaration emit > generic/main.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > generic/main.d.vue.ts 1`] = `
 "declare const __VLS_export: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 declare const _default: typeof __VLS_export;
 export default _default;
 "
 `;
 
-exports[`content mapper declaration emit > non-component/component.d.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > non-component/component.d.ts 1`] = `
 "declare const _default: {};
 export default _default;
 "
 `;
 
-exports[`content mapper declaration emit > options-api/component.d.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > options-api/component.d.ts 1`] = `
 "interface SubmitPayload {
     /**
      * email of user
@@ -286,7 +286,7 @@ export default _default;
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-events/component.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-events/component.d.vue.ts 1`] = `
 "import type { MyEvents } from './my-events';
 declare const __VLS_export: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, import("vue").TypeEmitsToOptions<MyEvents>, string, import("vue").PublicProps, Readonly<{}> & Readonly<{
     onBar?: ((value: {
@@ -303,7 +303,7 @@ export default _default;
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-events/my-events.d.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-events/my-events.d.ts 1`] = `
 "/**
  * Emitted when the foo property is changed.
  */
@@ -322,7 +322,7 @@ export {};
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-exposed/component.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-exposed/component.d.vue.ts 1`] = `
 "import { type VNode } from 'vue';
 import type { MyExposed } from './my-exposed';
 type __VLS_Props = {
@@ -347,7 +347,7 @@ type __VLS_WithSlots<T, S> = T & {
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-exposed/component-options-api.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-exposed/component-options-api.d.vue.ts 1`] = `
 "declare const _default: typeof __VLS_export;
 export default _default;
 declare const __VLS_export: import("vue").DefineComponent<{}, {}, {
@@ -361,7 +361,7 @@ declare const __VLS_export: import("vue").DefineComponent<{}, {}, {
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-exposed/my-exposed.d.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-exposed/my-exposed.d.ts 1`] = `
 "import type { Ref } from 'vue';
 export interface MyExposed {
     /**
@@ -377,7 +377,7 @@ export interface MyExposed {
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-model/component.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-model/component.d.vue.ts 1`] = `
 "type __VLS_ModelProps = {
     /**
      * required number modelValue
@@ -407,7 +407,7 @@ export default _default;
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-props/component.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-props/component.d.vue.ts 1`] = `
 "import { MyProps } from './my-props';
 declare const __VLS_export: import("vue").DefineComponent<MyProps, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<MyProps> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: typeof __VLS_export;
@@ -415,7 +415,7 @@ export default _default;
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-props/component-destructure.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-props/component-destructure.d.vue.ts 1`] = `
 "type __VLS_Props = {
     text: string;
 };
@@ -425,7 +425,7 @@ export default _default;
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-props/component-js.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-props/component-js.d.vue.ts 1`] = `
 "declare const _default: typeof __VLS_export;
 export default _default;
 declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
@@ -481,7 +481,7 @@ declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractP
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-props/component-js-setup.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-props/component-js-setup.d.vue.ts 1`] = `
 "declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
     foo: {
         type: StringConstructor;
@@ -574,7 +574,7 @@ export default _default;
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-props/component-non-ascii.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-props/component-non-ascii.d.vue.ts 1`] = `
 "type __VLS_Props = {
     label?: string;
 };
@@ -584,7 +584,7 @@ export default _default;
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-props/my-props.d.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-props/my-props.d.ts 1`] = `
 "export interface MyNestedProps {
     /**
      * nested prop documentation
@@ -704,7 +704,7 @@ export {};
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-slots/component.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-slots/component.d.vue.ts 1`] = `
 "declare var __VLS_1: {}, __VLS_3: {
     num: number;
 }, __VLS_5: {
@@ -734,7 +734,7 @@ type __VLS_WithSlots<T, S> = T & {
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-slots/component-define-slots.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-slots/component-define-slots.d.vue.ts 1`] = `
 "import type { MySlots } from './my-slots';
 type __VLS_Slots = MySlots;
 declare const __VLS_base: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
@@ -749,7 +749,7 @@ type __VLS_WithSlots<T, S> = T & {
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-slots/component-no-script.d.vue.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-slots/component-no-script.d.vue.ts 1`] = `
 "declare var __VLS_1: {}, __VLS_3: {
     num: number;
 }, __VLS_5: {
@@ -779,7 +779,7 @@ type __VLS_WithSlots<T, S> = T & {
 "
 `;
 
-exports[`content mapper declaration emit > reference-type-slots/my-slots.d.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > reference-type-slots/my-slots.d.ts 1`] = `
 "import type { VNode } from 'vue';
 export interface MySlots {
     /**
@@ -804,7 +804,7 @@ export interface MySlots {
 "
 `;
 
-exports[`content mapper declaration emit > ts-component/PropDefinitions.d.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > ts-component/PropDefinitions.d.ts 1`] = `
 "export interface MyProps {
     /**
      * string foo
@@ -818,14 +818,14 @@ exports[`content mapper declaration emit > ts-component/PropDefinitions.d.ts 1`]
 "
 `;
 
-exports[`content mapper declaration emit > ts-component/component.d.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > ts-component/component.d.ts 1`] = `
 "import { type MyProps } from './PropDefinitions';
 declare const _default: import("vue").DefineSetupFnComponent<MyProps, {}, {}, MyProps & {}, import("vue").PublicProps>;
 export default _default;
 "
 `;
 
-exports[`content mapper declaration emit > ts-named-export/component.d.ts 1`] = `
+exports[`content mapper declaration emit: component-meta > ts-named-export/component.d.ts 1`] = `
 "export declare const Foo: import("vue").DefineSetupFnComponent<{
     foo: string;
 }, {}, {}, {
@@ -836,5 +836,81 @@ export declare const Bar: import("vue").DefineSetupFnComponent<{
 }, {}, {}, {
     bar?: number;
 } & {}, import("vue").PublicProps>;
+"
+`;
+
+exports[`content mapper declaration emit: dts/jsx-slots > declaration output files 1`] = `
+[
+  "generic-slots.d.vue.ts",
+  "no-slots.d.vue.ts",
+  "slots.d.vue.ts",
+]
+`;
+
+exports[`content mapper declaration emit: dts/jsx-slots > generic-slots.d.vue.ts 1`] = `
+"declare const __VLS_export: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>['props'], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, 'attrs' | 'emit' | 'slots'>>, __VLS_exposed?: NonNullable<Awaited<typeof __VLS_setup>>['expose'], __VLS_setup?: Promise<{
+    props: import('vue').PublicProps & __VLS_PrettifyLocal<__VLS_PropsChildren<{
+        default?: (props: {
+            item: T;
+        }) => any;
+    }> & {
+        items: T[];
+    }>;
+    expose: (exposed: {}) => void;
+    attrs: any;
+    slots: {
+        default?: (props: {
+            item: T;
+        }) => any;
+    };
+    emit: {};
+}>) => import('vue').VNode & {
+    __ctx?: NonNullable<Awaited<typeof __VLS_setup>>;
+};
+declare const _default: typeof __VLS_export;
+export default _default;
+type __VLS_PrettifyLocal<T> = (T extends any ? {
+    [K in keyof T]: T[K];
+} : {
+    [K in keyof T as K]: T[K];
+}) & {};
+type __VLS_PropsChildren<S> = {
+    [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S;
+};
+"
+`;
+
+exports[`content mapper declaration emit: dts/jsx-slots > no-slots.d.vue.ts 1`] = `
+"type __VLS_Props = {
+    msg: string;
+};
+declare const __VLS_export: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
+declare const _default: typeof __VLS_export;
+export default _default;
+"
+`;
+
+exports[`content mapper declaration emit: dts/jsx-slots > slots.d.vue.ts 1`] = `
+"type __VLS_Props = {
+    msg: string;
+};
+type __VLS_Slots = {
+    default?: (props: {
+        msg: string;
+    }) => any;
+};
+type __VLS_PublicProps = __VLS_PropsChildren<__VLS_Slots> & __VLS_Props;
+declare const __VLS_base: import("vue").DefineComponent<__VLS_PublicProps, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_PublicProps> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
+declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
+declare const _default: typeof __VLS_export;
+export default _default;
+type __VLS_PropsChildren<S> = {
+    [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S;
+};
+type __VLS_WithSlots<T, S> = T & {
+    new (): {
+        $slots: S;
+    };
+};
 "
 `;

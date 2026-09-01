@@ -176,6 +176,7 @@ export interface IRScriptSetup extends IRBlock {
 export interface IRStyle extends IRBlock {
 	src: IRAttr | undefined;
 	module: IRAttr | undefined;
+	moduleAttrOffset: number | undefined;
 	scoped: boolean;
 	imports: {
 		text: string;
@@ -206,6 +207,7 @@ declare module '@vue/compiler-sfc' {
 
 	interface SFCStyleBlock {
 		__module?: IRAttr;
+		__moduleAttrOffset?: number;
 	}
 }
 
