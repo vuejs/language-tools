@@ -29,7 +29,7 @@ interface TypeScriptNativePreviewAPI {
 		contributorId: string,
 		contributions: readonly {
 			extensions: readonly string[];
-			inferredProject?: {
+			inferredProjectContribution?: {
 				options?: Readonly<Record<string, unknown>>;
 				manifest: {
 					name: string;
@@ -288,7 +288,7 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 			'Vue.volar',
 			[{
 				extensions: ['.vue'],
-				inferredProject: {
+				inferredProjectContribution: {
 					options: {
 						languageFeatures: true,
 						target: 99,

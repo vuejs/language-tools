@@ -28,6 +28,13 @@ export interface ScriptCodegenOptions {
 
 export { generate as generateScript };
 
+function* generateSyntheticDefaultExport(exportedExpression: string): Generator<Code> {
+	// keep the synthetic default export navigable: go-to-definition on
+	// `import Foo from './Foo.vue'` lands on this zero-length anchor at the SFC top
+	yield [``, 'main', 0, codeFeatures.navigationWithoutRename];
+	yield `export default ${exportedExpression}${endOfLine}`;
+}
+
 function generate(options: ScriptCodegenOptions) {
 	const ctx = createScriptCodegenContext(options);
 	const codeGenerator = generateWorker(options, ctx);
@@ -69,7 +76,7 @@ function* generateWorker(
 		yield `'`;
 		yield boundary.end();
 		yield endOfLine;
-		yield `export default ${names.src}${endOfLine}`;
+		yield* generateSyntheticDefaultExport(names.src);
 
 		yield* generateTemplate(options, names.src);
 	}
@@ -93,7 +100,7 @@ function* generateWorker(
 		}
 		else {
 			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
-			yield `export default ${exportExpression}${endOfLine}`;
+			yield* generateSyntheticDefaultExport(exportExpression);
 		}
 
 		// <script setup>
@@ -159,7 +166,7 @@ function* generateWorker(
 				generateExportDeclareEqual(scriptSetup, names.export),
 			);
 		}
-		yield `export default ${exportExpression}${endOfLine}`;
+		yield* generateSyntheticDefaultExport(exportExpression);
 	}
 	// only <script>
 	else if (script && scriptRanges) {
@@ -181,7 +188,7 @@ function* generateWorker(
 			yield* generateExportDeclareEqual(script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 			yield* generateTemplate(options, names.export);
-			yield `export default ${exportExpression}${endOfLine}`;
+			yield* generateSyntheticDefaultExport(exportExpression);
 		}
 	}
 

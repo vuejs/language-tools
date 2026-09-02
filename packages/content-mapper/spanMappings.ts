@@ -10,7 +10,6 @@ const completionFeatures = SpanMapFeature.Completion
 const navigationFeatures = SpanMapFeature.Definition
 	| SpanMapFeature.TypeDefinition
 	| SpanMapFeature.Implementation
-	| SpanMapFeature.SourceDefinition
 	| SpanMapFeature.References
 	| SpanMapFeature.DocumentHighlights
 	| SpanMapFeature.Rename
@@ -57,7 +56,7 @@ export function toSpanMappings(
 				generatedStart === undefined
 				|| originalStart === undefined
 				|| length === undefined
-				|| length <= 0
+				|| length < 0
 				|| generatedStart < 0
 				|| originalStart < 0
 				|| generatedStart + length > generatedText.length
@@ -70,13 +69,26 @@ export function toSpanMappings(
 			const originalEnd = originalStart + length;
 			const verbatim = generatedText.slice(generatedStart, generatedEnd)
 				=== originalText.slice(originalStart, originalEnd);
+			let features = languageFeatures ? getFeatures(mapping.data) : 0;
+			if (length === 0) {
+				// Zero-length spans only serve as navigation anchors (e.g. the synthetic
+				// default export); drop boundary scaffolding and other zero-length markers.
+				const data: unknown = mapping.data;
+				if (typeof data !== 'object' || data === null || '__combineToken' in data) {
+					continue;
+				}
+				features &= navigationFeatures;
+				if (!features) {
+					continue;
+				}
+			}
 			candidates.push({
 				generatedStart,
 				generatedEnd,
 				originalStart,
 				originalEnd,
 				kind: verbatim ? SpanMapKind.Verbatim : SpanMapKind.Atom,
-				features: languageFeatures ? getFeatures(mapping.data) : 0,
+				features,
 			});
 		}
 	}

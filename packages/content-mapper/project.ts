@@ -202,11 +202,11 @@ function createStandaloneConfiguration(params: TransformParams): ProjectConfigur
 	return {
 		plugin: vue.createVueLanguagePlugin<string>(
 			ts,
-			{ ...parsed.options, ...normalizeCompilerOptions(params.compilerOptions ?? {}) },
+			parsed.options,
 			parsed.vueOptions,
 			fileName => fileName,
 		),
-		languageFeatures: params.options?.languageFeatures !== false,
+		languageFeatures: true,
 		virtualCodes: new Map(),
 	};
 }

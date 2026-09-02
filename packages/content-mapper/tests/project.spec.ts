@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
 import { closeProject, openProject, transformVue } from '../project';
+import { SpanMapFeature } from '../protocol';
 
 test('generates a Vue service script with source mappings', () => {
 	const projectHandle = 'test-project';
@@ -73,10 +74,34 @@ test('returns a parser-compatible service script extension', () => {
 		const result = transformVue({
 			fileName: path.resolve(__dirname, `ServiceScript.${lang}.vue`),
 			content: `<script lang="${lang}">export default {};</script>`,
-			compilerOptions: {},
 		});
 		expect(result.extension).toBe(extension);
 	}
+});
+
+test('maps the synthetic default export to the top of the SFC', () => {
+	const projectHandle = 'export-anchor-project';
+	openProject({
+		configFileName: '',
+		projectHandle,
+		compilerOptions: {},
+	});
+
+	const result = transformVue({
+		projectHandle,
+		fileName: path.resolve(__dirname, 'Anchor.vue'),
+		content: `<script setup lang="ts">const msg = 'hi';</script>\n<template>{{ msg }}</template>\n`,
+	});
+	closeProject(projectHandle);
+
+	const exportStart = result.text.indexOf('export default');
+	expect(exportStart).toBeGreaterThanOrEqual(0);
+	const anchor = result.mappings.find(mapping => mapping[0] === exportStart && mapping[1] === 0);
+	expect(anchor).toBeDefined();
+	expect(anchor![2]).toBe(0);
+	expect(anchor![3]).toBe(0);
+	expect(anchor![5] & SpanMapFeature.Definition).toBeTruthy();
+	expect(anchor![5] & SpanMapFeature.Rename).toBeFalsy();
 });
 
 test('maps Vue diagnostic directives to virtual regions', () => {
