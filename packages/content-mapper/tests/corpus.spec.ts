@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
 import { repositoryRoot, runTsc } from './utils';
@@ -16,6 +17,7 @@ test('content mapper full corpus', () => {
 		.map(entry => entry.name)
 		.sort();
 	const createdSidecars: string[] = [];
+	const emitDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-content-mapper-corpus-'));
 
 	try {
 		for (const project of projects) {
@@ -25,6 +27,12 @@ test('content mapper full corpus', () => {
 				JSON.stringify(
 					{
 						extends: './tsconfig.json',
+						compilerOptions: {
+							// keep emitted files and build info out of the fixture directories;
+							// rootDir must cover cross-project imports (composite pins it to the project directory)
+							rootDir: corpusRoot,
+							outDir: path.join(emitDirectory, project),
+						},
 						contentMappers: [{
 							package: '@vue/content-mapper',
 							extensions: ['.vue'],
@@ -45,6 +53,9 @@ test('content mapper full corpus', () => {
 			JSON.stringify(
 				{
 					include: [],
+					compilerOptions: {
+						tsBuildInfoFile: path.join(emitDirectory, 'root.tsbuildinfo'),
+					},
 					references: projects.map(project => ({
 						path: `./${project}/${sidecarName}`,
 					})),
@@ -76,6 +87,7 @@ test('content mapper full corpus', () => {
 		for (const sidecar of createdSidecars.reverse()) {
 			fs.rmSync(sidecar, { force: true });
 		}
+		fs.rmSync(emitDirectory, { recursive: true, force: true });
 	}
 });
 

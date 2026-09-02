@@ -3,20 +3,10 @@ import * as path from 'node:path';
 
 export const repositoryRoot = path.resolve(__dirname, '../../..');
 
-function compilerCommand() {
-	const tsgoPath = process.env.TSGO_PATH;
-	if (tsgoPath) {
-		return { command: tsgoPath, prefixArgs: [] as string[] };
-	}
-	return {
-		command: process.execPath,
-		prefixArgs: [path.join(repositoryRoot, 'node_modules/typescript-7/bin/tsc')],
-	};
-}
+const compilerArgs = [path.join(repositoryRoot, 'node_modules/typescript-7/bin/tsc')];
 
 function spawnCompiler(args: string[]) {
-	const { command, prefixArgs } = compilerCommand();
-	return spawnSync(command, [...prefixArgs, ...args], {
+	return spawnSync(process.execPath, [...compilerArgs, ...args], {
 		cwd: repositoryRoot,
 		encoding: 'utf8',
 		env: {

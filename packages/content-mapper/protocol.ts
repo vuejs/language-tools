@@ -1,11 +1,9 @@
 export interface InitializeParams {
-	protocolVersion: number;
 	locale?: string;
 	positionEncodings: PositionEncoding[];
 }
 
 export interface InitializeResult {
-	protocolVersion: number;
 	positionEncoding: PositionEncoding;
 	diagnosticSource: string;
 }

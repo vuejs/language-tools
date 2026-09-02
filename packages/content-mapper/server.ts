@@ -104,12 +104,8 @@ async function handleMessage(message: RequestMessage) {
 }
 
 function initialize(params: InitializeParams): InitializeResult {
-	if (params.protocolVersion !== 1) {
-		throw new Error(`Unsupported content mapper protocol version: ${params.protocolVersion}`);
-	}
 	unusedExpectErrorMessage = getUnusedExpectErrorMessage(params.locale, typescriptPath);
 	return {
-		protocolVersion: 1,
 		positionEncoding: selectPositionEncoding(params.positionEncodings),
 		diagnosticSource: 'vue',
 	};
