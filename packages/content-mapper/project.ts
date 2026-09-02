@@ -107,7 +107,7 @@ export function transformVue(params: TransformParams): TransformResult {
 		diagnosticDirectives: {
 			unusedExpectDirectiveDiagnostics: [{
 				code: 2578,
-				messageText: "Unused '@ts-expect-error' directive.",
+				messageText: "Unused '@vue-expect-error' directive.",
 			}],
 			directives: withSynthesizedDiagnosticIgnores(
 				text.length,

@@ -1,10 +1,8 @@
-import { shouldReportDiagnostics } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
@@ -70,7 +68,6 @@ export function createTemplateCodegenContext() {
 		ignoreError?: boolean;
 		ignoreErrorNode?: CompilerDOM.CommentNode;
 		expectError?: {
-			token: number;
 			node: CompilerDOM.CommentNode;
 		};
 		diagnosticDirectives?: {
@@ -119,7 +116,6 @@ export function createTemplateCodegenContext() {
 					}
 					case 'expect-error': {
 						info.expectError = {
-							token: 0,
 							node: comment,
 						};
 						break;
@@ -182,32 +178,8 @@ export function createTemplateCodegenContext() {
 	}
 
 	function* exit(): Generator<Code> {
-		const info = stack.pop()!;
+		stack.pop();
 		commentBuffer.length = 0;
-		if (info.expectError !== undefined) {
-			const expectDirective = info.diagnosticDirectives?.find(
-				info => info.directive.policy === 'expect',
-			);
-			if (expectDirective) {
-				yield diagnosticDirectiveMarker(expectDirective, 'legacyStart');
-			}
-			const boundary = yield* Boundary.start(
-				'template',
-				info.expectError.node.loc.start.offset,
-				info.expectError.node.loc.end.offset,
-				{
-					verification: {
-						shouldReport: () => info.expectError!.token === 0,
-					},
-				},
-			);
-			yield `// @ts-expect-error`;
-			yield boundary.end();
-			yield `${newLine}${endOfLine}`;
-			if (expectDirective) {
-				yield diagnosticDirectiveMarker(expectDirective, 'legacyEnd');
-			}
-		}
 	}
 
 	function resolveCodeFeatures(features: VueCodeInformation): VueCodeInformation {
@@ -233,12 +205,7 @@ export function createTemplateCodegenContext() {
 				return {
 					...features,
 					verification: {
-						shouldReport: (source, code) => {
-							if (shouldReportDiagnostics(features, source, code)) {
-								data.expectError!.token++;
-							}
-							return false;
-						},
+						shouldReport: () => false,
 					},
 					__diagnosticDirective: directive && {
 						directive: directive.directive,

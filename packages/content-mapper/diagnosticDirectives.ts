@@ -7,8 +7,6 @@ interface DirectiveState {
 	contentRanges: [start: number, end: number][];
 	anchor?: number;
 	end?: number;
-	legacyStart?: number;
-	legacyEnd?: number;
 }
 
 export function toDiagnosticDirectives(
@@ -49,12 +47,6 @@ export function toDiagnosticDirectives(
 			else if (marker.phase === 'end') {
 				state.end = virtualOffset;
 			}
-			else if (marker.phase === 'legacyStart') {
-				state.legacyStart = virtualOffset;
-			}
-			else {
-				state.legacyEnd = virtualOffset;
-			}
 		}
 	}
 
@@ -86,19 +78,6 @@ export function toDiagnosticDirectives(
 					DiagnosticDirectivePolicy.Ignore,
 				]);
 			}
-		}
-		if (
-			state.legacyStart !== undefined
-			&& state.legacyEnd !== undefined
-			&& state.legacyEnd > state.legacyStart
-		) {
-			result.push([
-				state.originalStart,
-				state.directive.originalLength,
-				state.legacyStart,
-				state.legacyEnd,
-				DiagnosticDirectivePolicy.Ignore,
-			]);
 		}
 	}
 

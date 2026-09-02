@@ -30,7 +30,7 @@ export interface VueCodeInformation extends CodeInformation {
 			policy: 'ignore' | 'expect';
 			originalLength: number;
 		};
-		phase: 'anchor' | 'content' | 'end' | 'legacyStart' | 'legacyEnd';
+		phase: 'anchor' | 'content' | 'end';
 	};
 }
 
