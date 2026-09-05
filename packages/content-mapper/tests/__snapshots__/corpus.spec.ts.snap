@@ -2,16 +2,27 @@
 
 exports[`content mapper full corpus 1`] = `
 [
+  "test-workspace/tsc/#2225/main.vue(17,4): error TS2339: Property 'component' does not exist on type '{}'.",
+  "test-workspace/tsc/#2468/main.vue(12,8): error TS2353: Object literal may only specify known properties, and 'onBar' does not exist in type 'Partial<{ foo: string; }>'.",
   "test-workspace/tsc/#2588/main.vue(2,10): error TS2339: Property 'vTrack' does not exist on type '__VLS_BuiltInDirectives & GlobalDirectives'.",
+  "test-workspace/tsc/#2629/main.vue(2,7): error TS2353: Object literal may only specify known properties, and ''data-test-id'' does not exist in type 'HTMLAttributes & ReservedProps'.",
+  "test-workspace/tsc/#2646/main.vue(2,6): error TS2339: Property 'foo' does not exist on type '{}'.",
   "test-workspace/tsc/#2678/main.vue(2,7): error TS2339: Property 'vTouch' does not exist on type '__VLS_BuiltInDirectives & GlobalDirectives'.",
+  "test-workspace/tsc/#2725/main.vue(10,6): error TS2339: Property 'Component' does not exist on type '{}'.",
+  "test-workspace/tsc/#2725/main.vue(9,6): error TS2339: Property 'Component' does not exist on type '{}'.",
+  "test-workspace/tsc/#3122/main.vue(2,10): error TS2353: Object literal may only specify known properties, and 'onClick' does not exist in type 'Partial<NonNullable<Partial<{}> & Omit<{} & VNodeProps & AllowedComponentProps & ComponentCustomProps, never>>>'.",
   "test-workspace/tsc/#3123/main.vue(13,40): error TS2561: Object literal may only specify known properties, but 'fillOpacity' does not exist in type 'SVGAttributes & {}'. Did you mean to write 'fill-opacity'?",
+  "test-workspace/tsc/#3718/main.vue(2,27): error TS2353: Object literal may only specify known properties, and 'onEventDoesNotExist' does not exist in type 'Partial<NonNullable<Partial<{}> & Omit<{ readonly to: string | RendererElement | null | undefined; readonly disabled?: boolean | undefined; readonly defer?: boolean | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps, undefined>>>'.",
   "test-workspace/tsc/#4646/parent.vue(15,25): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | null'.
   Type 'undefined' is not assignable to type 'string | null'.",
   "test-workspace/tsc/#4682/main.vue(4,24): error TS2322: Type '(_a: 1) => void' is not assignable to type '(a: number) => void'.
   Types of parameters '_a' and 'a' are incompatible.
     Type 'number' is not assignable to type '1'.",
+  "test-workspace/tsc/#4785/main.vue(6,20): error TS2353: Object literal may only specify known properties, and ''aria-atomic'' does not exist in type 'VNodeProps & AllowedComponentProps & ComponentCustomProps & { foo: number; }'.",
   "test-workspace/tsc/#4822/main.vue(18,62): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
   Type 'undefined' is not assignable to type 'number'.",
+  "test-workspace/tsc/#5840/main.vue(11,3): error TS2339: Property 'Comp' does not exist on type '{}'.",
+  "test-workspace/tsc/#5899/main.vue(2,1): error TS2339: Property 'Input' does not exist on type '{}'.",
   "test-workspace/tsc/_failed_#3632/both.vue(3,1): error TS1109: Expression expected.",
   "test-workspace/tsc/_failed_#3632/both.vue(7,1): error TS1109: Expression expected.",
   "test-workspace/tsc/_failed_#3632/script.vue(3,1): error TS1109: Expression expected.",
@@ -27,6 +38,9 @@ exports[`content mapper full corpus 1`] = `
   "test-workspace/tsc/_failed_cssModuleDuplicate/empty.vue(1,8): error TS2300: Duplicate identifier '$style'.",
   "test-workspace/tsc/_failed_cssModuleDuplicate/empty.vue(5,8): error TS2300: Duplicate identifier '$style'.",
   "test-workspace/tsc/_failed_cssModuleDuplicate/empty.vue(5,8): error TS2717: Subsequent property declarations must have the same type.  Property '$style' must be of type 'Record<string, string> & { a: string; }', but here has type 'Record<string, string> & { b: string; }'.",
+  "test-workspace/tsc/_failed_cssModuleDuplicate/kebab.vue(1,16): error TS2300: Duplicate identifier ''a-b''.",
+  "test-workspace/tsc/_failed_cssModuleDuplicate/kebab.vue(5,16): error TS2300: Duplicate identifier ''a-b''.",
+  "test-workspace/tsc/_failed_cssModuleDuplicate/kebab.vue(5,16): error TS2717: Subsequent property declarations must have the same type.  Property ''a-b'' must be of type 'Record<string, string> & { a: string; }', but here has type 'Record<string, string> & { b: string; }'.",
   "test-workspace/tsc/_failed_cssModuleDuplicate/named.vue(1,16): error TS2300: Duplicate identifier 'foo'.",
   "test-workspace/tsc/_failed_cssModuleDuplicate/named.vue(5,16): error TS2300: Duplicate identifier 'foo'.",
   "test-workspace/tsc/_failed_directives/main.vue(14,6): error TS2339: Property 'notExist' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.",
@@ -37,6 +51,11 @@ exports[`content mapper full corpus 1`] = `
   "test-workspace/tsc/_failed_fragment_props/main.vue(6,31): error TS2322: Type '{ id: number; }' is not assignable to type 'PropertyKey | undefined'.",
   "test-workspace/tsc/_failed_fragment_props/main.vue(9,32): error TS2353: Object literal may only specify known properties, and 'foo' does not exist in type 'HTMLAttributes & ReservedProps'.",
   "test-workspace/tsc/components/main.vue(74,11): error TS2345: Argument of type '<T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>['props'], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, 'attrs' | 'emit' | 'slots'>>, __VLS_exposed?: NonNullable<Awaited<typeof __VLS_setup>>['expose'], __VLS_setup?: Promise<...>) => import('vue').VNode & { __ctx?: NonNullab...' is not assignable to parameter of type 'never'.",
+  "test-workspace/tsc/events/main.vue(13,49): error TS2561: Object literal may only specify known properties, but 'onBarBaz' does not exist in type 'Partial<NonNullable<Partial<{}> & Omit<{ readonly "onBar-baz"?: ((_num: number) => any) | undefined; readonly onFooBar?: ((_num: number) => any) | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps, never>>>'. Did you mean to write 'onBar-baz'?",
+  "test-workspace/tsc/noPropertyAccessFromIndexSignature/#2236/main.vue(2,3): error TS2339: Property 'component' does not exist on type '{}'.",
+  "test-workspace/tsc/noPropertyAccessFromIndexSignature/#2236/main.vue(5,3): error TS2339: Property 'component' does not exist on type '{}'.",
+  "test-workspace/tsc/templateRef/missing-import.vue(6,3): error TS2339: Property 'TemplateRef' does not exist on type '{}'.",
+  "test-workspace/tsc/unknownComponent/main.vue(2,3): error TS2339: Property 'UnknownComponent' does not exist on type '{}'.",
   "test-workspace/tsc/useTemplateRef-dynamic-arg/main.vue(3,8): error TS2464: A computed property name must be of type 'string', 'number', 'symbol', or 'any'.",
   "test-workspace/tsc/useTemplateRef-nullable/main.vue(3,5): error TS18047: 'foo.value' is possibly 'null'.",
   "test-workspace/tsc/useTemplateRef-nullable/main.vue(3,9): error TS2339: Property 'bar' does not exist on type 'HTMLInputElement'.",

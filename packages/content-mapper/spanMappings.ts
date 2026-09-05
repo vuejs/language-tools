@@ -30,6 +30,14 @@ interface Candidate {
 	features: number;
 }
 
+interface RawEntry {
+	generatedStart: number;
+	generatedLength: number;
+	originalStart: number;
+	originalLength: number;
+	data: Mapping['data'];
+}
+
 interface IntervalNode {
 	start: number;
 	end: number;
@@ -46,6 +54,7 @@ export function toSpanMappings(
 	languageFeatures = true,
 ): SpanMapping[] {
 	const candidates: Candidate[] = [];
+	const entries: (RawEntry & { token?: symbol })[] = [];
 
 	for (const mapping of mappings) {
 		for (let index = 0; index < mapping.lengths.length; index++) {
@@ -59,38 +68,96 @@ export function toSpanMappings(
 				|| length < 0
 				|| generatedStart < 0
 				|| originalStart < 0
-				|| generatedStart + length > generatedText.length
-				|| originalStart + length > originalText.length
 			) {
 				continue;
 			}
-
-			const generatedEnd = generatedStart + length;
-			const originalEnd = originalStart + length;
-			const verbatim = generatedText.slice(generatedStart, generatedEnd)
-				=== originalText.slice(originalStart, originalEnd);
-			let features = languageFeatures ? getFeatures(mapping.data) : 0;
-			if (length === 0) {
-				// Zero-length spans only serve as navigation anchors (e.g. the synthetic
-				// default export); drop boundary scaffolding and other zero-length markers.
-				const data: unknown = mapping.data;
-				if (typeof data !== 'object' || data === null || '__combineToken' in data) {
-					continue;
-				}
-				features &= navigationFeatures;
-				if (!features) {
-					continue;
-				}
-			}
-			candidates.push({
+			entries.push({
 				generatedStart,
-				generatedEnd,
+				generatedLength: length,
 				originalStart,
-				originalEnd,
-				kind: verbatim ? SpanMapKind.Verbatim : SpanMapKind.Atom,
-				features,
+				originalLength: length,
+				data: mapping.data,
+				token: getCombineToken(mapping.data),
 			});
 		}
+	}
+
+	// Mappings sharing a multi-use __combineToken are chunks of one logical
+	// token: camelized identifiers split into segments, or content wrapped in
+	// synthesized characters (quotes, escapes, `on` prefixes) bracketed by
+	// zero-length boundary markers. Merge each group into a single span so
+	// token-wide diagnostics map back to the original range, matching the
+	// mapping combiner in the vue-tsc pipeline. A token used only once is
+	// decoration (e.g. single-segment camelized names) and stays individual.
+	const tokenCounts = new Map<symbol, number>();
+	for (const entry of entries) {
+		if (entry.token !== undefined) {
+			tokenCounts.set(entry.token, (tokenCounts.get(entry.token) ?? 0) + 1);
+		}
+	}
+	const combineGroups = new Map<symbol, typeof entries>();
+	for (const entry of entries) {
+		if (entry.token !== undefined && tokenCounts.get(entry.token)! > 1) {
+			const group = combineGroups.get(entry.token);
+			if (group) {
+				group.push(entry);
+			}
+			else {
+				combineGroups.set(entry.token, [entry]);
+			}
+		}
+	}
+	for (const group of combineGroups.values()) {
+		group.sort((left, right) => left.generatedStart - right.generatedStart);
+		const first = group[0]!;
+		const last = group[group.length - 1]!;
+		entries.push({
+			generatedStart: first.generatedStart,
+			generatedLength: last.generatedStart + last.generatedLength - first.generatedStart,
+			originalStart: first.originalStart,
+			originalLength: last.originalStart + last.originalLength - first.originalStart,
+			data: first.data,
+		});
+	}
+	const grouped = new Set([...combineGroups.values()].flat());
+
+	for (const entry of entries) {
+		if (grouped.has(entry)) {
+			continue;
+		}
+		const { generatedStart, generatedLength, originalStart, originalLength, data } = entry;
+		if (
+			generatedStart + generatedLength > generatedText.length
+			|| originalStart + originalLength > originalText.length
+		) {
+			continue;
+		}
+
+		const generatedEnd = generatedStart + generatedLength;
+		const originalEnd = originalStart + originalLength;
+		const verbatim = generatedLength === originalLength
+			&& generatedText.slice(generatedStart, generatedEnd)
+				=== originalText.slice(originalStart, originalEnd);
+		let features = languageFeatures ? getFeatures(data) : 0;
+		if (generatedLength === 0) {
+			// Zero-length spans only serve as navigation anchors (e.g. the synthetic
+			// default export); drop boundary scaffolding and other zero-length markers.
+			if (typeof data !== 'object' || data === null || '__combineToken' in data) {
+				continue;
+			}
+			features &= navigationFeatures;
+			if (!features) {
+				continue;
+			}
+		}
+		candidates.push({
+			generatedStart,
+			generatedEnd,
+			originalStart,
+			originalEnd,
+			kind: verbatim ? SpanMapKind.Verbatim : SpanMapKind.Atom,
+			features,
+		});
 	}
 
 	candidates.sort((left, right) =>
@@ -123,6 +190,16 @@ export function toSpanMappings(
 		mapping.kind,
 		mapping.features,
 	]);
+}
+
+function getCombineToken(data: Mapping['data']): symbol | undefined {
+	if (typeof data === 'object' && data !== null && '__combineToken' in data) {
+		const token = (data as { __combineToken: unknown }).__combineToken;
+		if (typeof token === 'symbol') {
+			return token;
+		}
+	}
+	return undefined;
 }
 
 function getFeatures(data: Mapping['data']) {

@@ -154,7 +154,14 @@ test('keeps zero-length navigation anchors and drops other zero-length markers',
 	);
 
 	expect(mappings).toEqual([
-		[0, 3, 0, 3, SpanMapKind.Verbatim, SpanMapFeature.Hover | SpanMapFeature.SignatureHelp | SpanMapFeature.InlayHints | SpanMapFeature.SemanticTokens],
+		[
+			0,
+			3,
+			0,
+			3,
+			SpanMapKind.Verbatim,
+			SpanMapFeature.Hover | SpanMapFeature.SignatureHelp | SpanMapFeature.InlayHints | SpanMapFeature.SemanticTokens,
+		],
 		[
 			3,
 			0,
@@ -197,4 +204,59 @@ test('flattens static rename and highlight callbacks into feature bits', () => {
 	expect(mapping![5] & SpanMapFeature.SemanticTokens).toBeFalsy();
 	expect(mapping![5] & SpanMapFeature.DocumentHighlights).toBeFalsy();
 	expect(mapping![5] & SpanMapFeature.Rename).toBeFalsy();
+});
+
+const navigationBits = SpanMapFeature.Definition
+	| SpanMapFeature.TypeDefinition
+	| SpanMapFeature.Implementation
+	| SpanMapFeature.References
+	| SpanMapFeature.DocumentHighlights
+	| SpanMapFeature.Rename
+	| SpanMapFeature.CallHierarchy
+	| SpanMapFeature.CodeActions
+	| SpanMapFeature.LinkedEditing;
+
+test('merges boundary-wrapped tokens (synthesized quotes) into one span', () => {
+	const data = { navigation: true, __combineToken: Symbol() };
+	// generated: ----------'a-b'   (quotes at 10 and 14, `a-b` at 11..14)
+	// original:  --------------------a-b   (`a-b` at 20..23)
+	expect(toSpanMappings(
+		[
+			{ sourceOffsets: [20], generatedOffsets: [10], lengths: [0], data },
+			{ sourceOffsets: [20], generatedOffsets: [11], lengths: [3], data },
+			{ sourceOffsets: [23], generatedOffsets: [15], lengths: [0], data },
+		],
+		`----------'a-b'`,
+		`--------------------a-b`,
+	)).toEqual([
+		[10, 5, 20, 3, SpanMapKind.Atom, navigationBits],
+	]);
+});
+
+test('merges camelized identifier segments into one span', () => {
+	const data = { navigation: true, __combineToken: Symbol() };
+	// generated: vOnce   (`v` at 0..1, `Once` at 1..5)
+	// original:  v-once  (`v` at 0..1, `once` at 2..6)
+	expect(toSpanMappings(
+		[
+			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [1], data },
+			{ sourceOffsets: [2], generatedOffsets: [1], lengths: [4], data },
+		],
+		'vOnce',
+		'v-once',
+	)).toEqual([
+		[0, 5, 0, 6, SpanMapKind.Atom, navigationBits],
+	]);
+});
+
+test('keeps single-use combine tokens as individual spans', () => {
+	// e.g. `Click` from `@click`: camelized, but a single segment
+	const data = { navigation: true, __combineToken: Symbol() };
+	expect(toSpanMappings(
+		[{ sourceOffsets: [0], generatedOffsets: [0], lengths: [5], data }],
+		'Click',
+		'click',
+	)).toEqual([
+		[0, 5, 0, 5, SpanMapKind.Atom, navigationBits],
+	]);
 });
