@@ -53,9 +53,9 @@ export function* generateElementDirectives(
 			yield* generateModifiers(options, ctx, prop);
 			yield* generateValue(options, ctx, prop);
 			// Vue invokes hooks with all four arguments regardless of the declared
-			// arity. The excess-argument error (TS2554) lands on the first extra
-			// argument, so the synthetic trailing args get their own @ts-ignore'd
-			// line; when the arity matches, the binding above is checked as usual.
+			// signature. The synthetic trailing vnode arguments are not assignable
+			// to object-form directive hooks, so they get their own @ts-ignore'd
+			// line; functional directives are widened by __VLS_asFunctionalDirective.
 			yield `},${newLine}// @ts-ignore${newLine}null, null)`;
 		}
 		yield boundary.end();

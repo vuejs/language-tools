@@ -7,6 +7,9 @@ exports[`content mapper full corpus 1`] = `
   "test-workspace/tsc/#3123/main.vue(13,40): error TS2561: Object literal may only specify known properties, but 'fillOpacity' does not exist in type 'SVGAttributes & {}'. Did you mean to write 'fill-opacity'?",
   "test-workspace/tsc/#4646/parent.vue(15,25): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | null'.
   Type 'undefined' is not assignable to type 'string | null'.",
+  "test-workspace/tsc/#4682/main.vue(4,24): error TS2322: Type '(_a: 1) => void' is not assignable to type '(a: number) => void'.
+  Types of parameters '_a' and 'a' are incompatible.
+    Type 'number' is not assignable to type '1'.",
   "test-workspace/tsc/#4822/main.vue(18,62): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
   Type 'undefined' is not assignable to type 'number'.",
   "test-workspace/tsc/_failed_#3632/both.vue(3,1): error TS1109: Expression expected.",

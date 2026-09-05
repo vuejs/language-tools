@@ -118,7 +118,10 @@ declare global {
 	): T extends ObjectDirective ? NonNullable<
 			T[keyof T & ('created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted')]
 		>
-		: T extends (...args: any) => any ? T
+		// Vue invokes directives with all four arguments regardless of the
+		// declared arity; widen functional directives so the synthetic trailing
+		// arguments type-check instead of surfacing a spurious TS2554.
+		: T extends (...args: infer P) => infer R ? (...args: [...P, ...any[]]) => R
 		: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
 	function __VLS_asFunctionalComponent0<T, K>(
 		t: T,
