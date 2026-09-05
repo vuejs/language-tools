@@ -104,8 +104,9 @@ export function* generateSfcBlockSection(
 			const diagStart = diag.start;
 			const diagEnd = diag.start + diag.length;
 			if (diagStart >= textEnd && diagEnd <= end) {
-				yield `;`;
-				yield ['', block.name, end, codeFeatures.verification];
+				// map the synthesized terminator to the end of the section, so that
+				// truncation parse errors resolve back to the original block
+				yield [';', block.name, end, codeFeatures.verification];
 				yield newLine;
 				break;
 			}

@@ -9,8 +9,7 @@ exports[`content mapper full corpus 1`] = `
   Type 'undefined' is not assignable to type 'string | null'.",
   "test-workspace/tsc/#4822/main.vue(18,62): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
   Type 'undefined' is not assignable to type 'number'.",
-  "test-workspace/tsc/_failed_#3632/both.vue(5,1): error TS1109: Expression expected.
-  This location is in virtual code produced by the content mapper '@vue/content-mapper@3.3.9' and has no corresponding location in the original file.",
+  "test-workspace/tsc/_failed_#3632/both.vue(3,1): error TS1109: Expression expected.",
   "test-workspace/tsc/_failed_#3632/both.vue(7,1): error TS1109: Expression expected.",
   "test-workspace/tsc/_failed_#3632/script.vue(3,1): error TS1109: Expression expected.",
   "test-workspace/tsc/_failed_#3632/scriptSetup.vue(3,1): error TS1109: Expression expected.",
