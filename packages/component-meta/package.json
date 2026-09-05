@@ -14,22 +14,14 @@
 		"url": "https://github.com/vuejs/language-tools.git",
 		"directory": "packages/component-meta"
 	},
-	"peerDependencies": {
-		"typescript": "*"
-	},
-	"peerDependenciesMeta": {
-		"typescript": {
-			"optional": true
-		}
-	},
 	"dependencies": {
 		"@volar/typescript": "2.4.28",
 		"@vue/language-core": "workspace:*",
-		"path-browserify": "^1.0.1"
+		"path-browserify": "^1.0.1",
+		"typescript": "npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2"
 	},
 	"devDependencies": {
 		"@types/node": "^26.0.1",
-		"@types/path-browserify": "^1.0.3",
-		"typescript": "latest"
+		"@types/path-browserify": "^1.0.3"
 	}
 }

@@ -10,8 +10,7 @@ export type { SFCParseResult } from '@vue/compiler-sfc';
 export { VueEmbeddedCode };
 
 export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
-	strictTemplates?: boolean;
-	target?: 'auto' | 3 | 3.3 | 3.5 | 3.6 | 99 | number;
+	target?: 'auto' | 3.3 | 3.5 | 3.6 | 99 | number;
 	plugins?: RawPlugin[];
 };
 
@@ -26,6 +25,13 @@ export interface VueCodeInformation extends CodeInformation {
 	__propsCompletion?: boolean;
 	__shorthandExpression?: 'html' | 'js';
 	__combineToken?: symbol;
+	__diagnosticDirective?: {
+		directive: {
+			policy: 'ignore' | 'expect';
+			originalLength: number;
+		};
+		phase: 'anchor' | 'content' | 'end';
+	};
 }
 
 export type Code = Segment<VueCodeInformation>;
@@ -38,12 +44,7 @@ export interface VueCompilerOptions {
 	vitePressExtensions: string[];
 	petiteVueExtensions: string[];
 	jsxSlots: boolean;
-	strictVModel: boolean;
 	strictCssModules: boolean;
-	checkUnknownProps: boolean;
-	checkUnknownEvents: boolean;
-	checkUnknownDirectives: boolean;
-	checkUnknownComponents: boolean;
 	inferComponentDollarEl: boolean;
 	inferComponentDollarRefs: boolean;
 	inferTemplateDollarAttrs: boolean;

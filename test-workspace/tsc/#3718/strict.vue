@@ -1,4 +1,3 @@
-<!-- @strictTemplates true -->
 
 <template>
 	<!-- @vue-expect-error -->

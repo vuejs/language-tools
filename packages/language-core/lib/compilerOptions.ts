@@ -112,7 +112,7 @@ export function createParsedCommandLine(
 }
 
 export class CompilerOptionsResolver {
-	options: Omit<RawVueCompilerOptions, 'target' | 'strictTemplates' | 'typesRoot' | 'plugins'> = {};
+	options: Omit<RawVueCompilerOptions, 'target' | 'typesRoot' | 'plugins'> = {};
 	target: number | undefined;
 	typesRoot: string | undefined;
 	plugins: VueLanguagePlugin[] = [];
@@ -132,14 +132,6 @@ export class CompilerOptionsResolver {
 					else {
 						this.target = options[key];
 					}
-					break;
-				case 'strictTemplates':
-					const strict = !!options.strictTemplates;
-					this.options.strictVModel ??= strict;
-					this.options.checkUnknownProps ??= strict;
-					this.options.checkUnknownEvents ??= strict;
-					this.options.checkUnknownDirectives ??= strict;
-					this.options.checkUnknownComponents ??= strict;
 					break;
 				case 'typesRoot':
 					if (options[key] !== undefined) {
@@ -189,7 +181,6 @@ export class CompilerOptionsResolver {
 		defaults = getDefaultCompilerOptions(
 			this.target,
 			this.options.lib,
-			undefined,
 			this.typesRoot,
 		),
 	): VueCompilerOptions {
@@ -244,7 +235,6 @@ export class CompilerOptionsResolver {
 export function getDefaultCompilerOptions(
 	target = 99,
 	lib = 'vue',
-	strictTemplates = false,
 	typesRoot = typeof __dirname !== 'undefined'
 		? path.join(__dirname.replace(/\\/g, '/'), '..', 'types')
 		: '@vue/language-core/types',
@@ -258,11 +248,6 @@ export function getDefaultCompilerOptions(
 		petiteVueExtensions: [],
 		jsxSlots: false,
 		strictCssModules: false,
-		strictVModel: strictTemplates,
-		checkUnknownProps: strictTemplates,
-		checkUnknownEvents: strictTemplates,
-		checkUnknownDirectives: strictTemplates,
-		checkUnknownComponents: strictTemplates,
 		inferComponentDollarEl: false,
 		inferComponentDollarRefs: false,
 		inferTemplateDollarAttrs: false,
