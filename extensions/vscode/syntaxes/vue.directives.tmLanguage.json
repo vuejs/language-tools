@@ -1,0 +1,10 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"scopeName": "vue.directives",
+	"injectionSelector": "L:meta.tag -meta.attribute -meta.ng-binding -entity.name.tag.pug -attribute_value -source.tsx -source.js.jsx -source.ts.embedded.html.vue, L:meta.element -meta.attribute -source.ts.embedded.html.vue",
+	"patterns": [
+		{
+			"include": "text.html.vue#vue-directives"
+		}
+	]
+}
