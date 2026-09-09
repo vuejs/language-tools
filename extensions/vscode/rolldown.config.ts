@@ -9,6 +9,8 @@ export default defineConfig({
 		'patch-tsserver': './src/patch-tsserver.ts',
 		'language-server': './node_modules/@vue/language-server/index.ts',
 		'typescript-plugin': './node_modules/@vue/typescript-plugin/index.ts',
+		'content-mapper-server': '../../packages/content-mapper/server.ts',
+		'content-mapper-worker': '../../packages/content-mapper/worker.ts',
 	},
 	output: {
 		format: 'cjs',

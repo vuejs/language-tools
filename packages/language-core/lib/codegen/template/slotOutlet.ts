@@ -102,7 +102,6 @@ export function* generateSlotOutlet(
 			ctx,
 			node,
 			node.props.filter(prop => prop !== nameProp),
-			true,
 		);
 		yield `}`;
 		yield boundary.end();
@@ -115,7 +114,6 @@ export function* generateSlotOutlet(
 			ctx,
 			node,
 			node.props.filter(prop => prop !== nameProp),
-			options.vueCompilerOptions.checkUnknownProps,
 		);
 		yield `}${endOfLine}`;
 
@@ -164,6 +162,7 @@ export function* generateSlotOutlet(
 			});
 		}
 	}
+	yield* ctx.generateDiagnosticDirectiveEnd();
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}

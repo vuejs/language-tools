@@ -1,0 +1,26 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"properties": {
+		"contentMappers": {
+			"type": "array",
+			"items": {
+				"if": {
+					"required": ["package"],
+					"properties": {
+						"package": {
+							"const": "@vue/content-mapper"
+						}
+					}
+				},
+				"then": {
+					"properties": {
+						"options": {
+							"$ref": "./vue-content-mapper-options.schema.json"
+						}
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const exist = {};
-const Comp = () => {};
+const Comp = (_props: { foo?: string }) => {};
 </script>
 
 <template>

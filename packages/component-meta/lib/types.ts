@@ -1,4 +1,4 @@
-import type * as ts from 'typescript';
+import type * as ts from 'typescript-native-bridge';
 
 export type ComponentMetaChecker = ReturnType<typeof import('./checker')['createCheckerBase']>;
 

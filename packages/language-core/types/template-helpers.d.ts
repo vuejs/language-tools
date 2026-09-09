@@ -1,6 +1,12 @@
 declare global {
 	const __VLS_directiveBindingRestFields: { instance: null; oldValue: null; value: null; modifiers: any; dir: any };
 
+	type __VLS_BuiltInDirectives = {
+		vHtml: (el: HTMLElement, binding: { value: string }) => void;
+		vText: (el: HTMLElement, binding: { value: string | number }) => void;
+		vCloak: (el: HTMLElement) => void;
+		vMemo: (el: HTMLElement, binding: { value: any[] }) => void;
+	};
 	type __VLS_Elements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
@@ -112,7 +118,10 @@ declare global {
 	): T extends ObjectDirective ? NonNullable<
 			T[keyof T & ('created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted')]
 		>
-		: T extends (...args: any) => any ? T
+		// Vue invokes directives with all four arguments regardless of the
+		// declared arity; widen functional directives so the synthetic trailing
+		// arguments type-check instead of surfacing a spurious TS2554.
+		: T extends (...args: infer P) => infer R ? (...args: [...P, ...any[]]) => R
 		: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
 	function __VLS_asFunctionalComponent0<T, K>(
 		t: T,
@@ -121,19 +130,11 @@ declare global {
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
 		: __VLS_FunctionalComponent<{}>;
-	function __VLS_asFunctionalComponent1<T, K>(
-		t: T,
-		instance: K,
-	): T extends new(...args: any) => any ? __VLS_FunctionalComponent<K, Record<string, unknown>>
-		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
-		: T extends (...args: any) => any ? T
-		: __VLS_FunctionalComponent<{}, Record<string, unknown>>;
 	type __VLS_PadArgs<A extends any[]> = A extends [any, ...infer Rest] ? [any, ...__VLS_PadArgs<Rest>] : [];
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(
 		t: T,
 	): __VLS_PadArgs<Parameters<T> extends [any, ...infer Rest] ? Rest : []>;
 	function __VLS_asFunctionalElement0<T>(tag: T, endTag?: T): (attrs: T) => void;
-	function __VLS_asFunctionalElement1<T>(tag: T, endTag?: T): (attrs: T & Record<string, unknown>) => void;
 	function __VLS_asFunctionalSlot<S>(
 		slot: S,
 	): S extends (...args: any) => any ? (S extends () => infer R ? (props: {}) => R : S)

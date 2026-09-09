@@ -26,6 +26,7 @@ const raw = {
 	InheritedAttrs: '',
 	LocalComponents: '',
 	LocalDirectives: '',
+	BuiltInDirectives: '',
 	ModelEmit: '',
 	ModelProps: '',
 	Props: '',
@@ -38,10 +39,8 @@ const raw = {
 
 	// #region template helpers
 	asFunctionalComponent0: '',
-	asFunctionalComponent1: '',
 	asFunctionalDirective: '',
 	asFunctionalElement0: '',
-	asFunctionalElement1: '',
 	asFunctionalSlot: '',
 	directiveBindingRestFields: '',
 	functionalComponentArgsRest: '',

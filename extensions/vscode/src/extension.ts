@@ -24,6 +24,25 @@ import * as welcome from './welcome';
 let serverPath = resolveServerPath();
 const neededRestart = !patchTypeScriptExtension();
 
+interface TypeScriptNativePreviewAPI {
+	registerContentMappers(
+		contributorId: string,
+		contributions: readonly {
+			extensions: readonly string[];
+			inferredProjectContribution?: {
+				options?: Readonly<Record<string, unknown>>;
+				manifest: {
+					name: string;
+					version?: string;
+					exec: readonly string[];
+					cwd?: vscode.Uri;
+					dynamicConfig?: boolean;
+				};
+			};
+		}[],
+	): vscode.Disposable;
+}
+
 for (
 	const incompatibleExtensionId of [
 		'johnsoncodehk.vscode-typescript-vue-plugin',
@@ -49,6 +68,7 @@ export = defineExtension(() => {
 	let client: lsp.BaseLanguageClient | undefined;
 
 	const context = extensionContext.value!;
+	registerTypeScriptContentMapper(context);
 	const volarLabs = createLabsInfo();
 	const activeTextEditor = useActiveTextEditor();
 	const visibleTextEditors = useVisibleTextEditors();
@@ -244,6 +264,51 @@ function resolveTsdkPath() {
 			return theiaTsdk;
 		}
 	}
+}
+
+function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
+	const nativePreview = vscode.extensions.getExtension<TypeScriptNativePreviewAPI>(
+		'TypeScriptTeam.native-preview',
+	);
+	if (!nativePreview) {
+		return;
+	}
+
+	void nativePreview.activate().then(api => {
+		if (!api?.registerContentMappers) {
+			return;
+		}
+		const tsdk = resolveTsdkPath();
+		if (!tsdk) {
+			return;
+		}
+		const mapperServer = path.join(context.extensionPath, 'dist', 'content-mapper-server.js');
+		const mapperWorker = path.join(context.extensionPath, 'dist', 'content-mapper-worker.js');
+		context.subscriptions.push(api.registerContentMappers(
+			'Vue.volar',
+			[{
+				extensions: ['.vue'],
+				inferredProjectContribution: {
+					options: {
+						languageFeatures: true,
+						target: 99,
+					},
+					manifest: {
+						name: '@vue/content-mapper',
+						version: require('../package.json').version,
+						exec: [
+							process.execPath,
+							mapperServer,
+							`--worker=${mapperWorker}`,
+							`--typescript=${path.join(tsdk, 'typescript.js')}`,
+						],
+						cwd: vscode.Uri.file(context.extensionPath),
+						dynamicConfig: true,
+					},
+				},
+			}],
+		));
+	}, error => logger.logger.value?.error(String(error)));
 }
 
 function resolveServerPath() {

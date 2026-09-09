@@ -5,7 +5,7 @@
   <a href="https://github.com/vuejs/language-tools/blob/master/LICENSE"><img src="https://img.shields.io/github/license/vuejs/language-tools.svg?labelColor=18181B&color=1584FC" alt="License"></a>
 </p>
 
-The core module for Vue Language Tools, responsible for parsing Vue Single File Components (SFCs) and transforming them into virtual code structures that TypeScript can understand. This package is a low-level dependency for `@vue/language-server` and `vue-tsc`.
+The core module for Vue Language Tools, responsible for parsing Vue Single File Components (SFCs) and transforming them into virtual code structures that TypeScript can understand. This package is a low-level dependency for `@vue/language-server` and `@vue/content-mapper`.
 
 ## Installation
 
@@ -76,7 +76,6 @@ Configure Vue compiler behavior through the `vueCompilerOptions` field in `tscon
   "compilerOptions": { /* ... */ },
   "vueCompilerOptions": {
     "target": 3.5,
-    "strictTemplates": true,
     "plugins": ["@vue/language-plugin-pug"]
   }
 }
@@ -96,13 +95,7 @@ Configure Vue compiler behavior through the `vueCompilerOptions` field in `tscon
 
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `strictTemplates` | `boolean` | `false` | A convenience option that enables the four `check*` options below and `strictVModel`. |
-| `checkUnknownProps` | `boolean` | `false` | Check for unknown props. |
-| `checkUnknownEvents` | `boolean` | `false` | Check for unknown events. |
-| `checkUnknownComponents` | `boolean` | `false` | Check for unknown components. |
-| `checkUnknownDirectives` | `boolean` | `false` | Check for unknown directives. |
-| `strictVModel` | `boolean` | `false` | Strictly check v-model bindings. |
-| `strictCssModules` | `boolean` | `false` | Strictly check CSS Modules class names (not affected by `strictTemplates`). |
+| `strictCssModules` | `boolean` | `false` | Strictly check CSS Modules class names. |
 
 ### Advanced Options
 
@@ -155,7 +148,7 @@ This package includes the following built-in plugins to handle different file ty
 
 - [`@vue/language-server`](../language-server) - Language Server
 - [`@vue/language-service`](../language-service) - Language Service
-- [`vue-tsc`](../tsc) - Command-line Type Checker
+- [`@vue/content-mapper`](../content-mapper) - Content mapper for native TypeScript
 
 ## License
 

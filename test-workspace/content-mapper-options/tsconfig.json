@@ -1,0 +1,19 @@
+{
+	"extends": "../tsconfig.base.json",
+	"compilerOptions": {
+		"noEmit": true
+	},
+	"contentMappers": [
+		{
+			"package": "@vue/content-mapper",
+			"extensions": [".vue"],
+			"options": {
+				"languageFeatures": false,
+				"strictTemplates": true,
+				"jsxSlots": "yes",
+				"unknownOption": 1
+			}
+		}
+	],
+	"include": ["App.vue"]
+}

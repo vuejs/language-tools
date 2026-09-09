@@ -1,5 +1,5 @@
 import type * as core from '@vue/language-core';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript-native-bridge';
 import { resolveDefaultOptionExpression } from './scriptSetup';
 import type { Declaration, EventMeta, ExposeMeta, PropertyMeta, PropertyMetaSchema, SlotMeta } from './types';
 
