@@ -14,4 +14,10 @@ test-workspace/content-mapper-directives/App.vue(23,2): error vue2578: Unused '@
 test-workspace/content-mapper-directives/App.vue(4,6): error TS2339: Property 'childError' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'."
 `;
 
+exports[`content mapper fixtures > test-workspace/content-mapper-options/tsconfig.json 1`] = `
+"test-workspace/content-mapper-options/tsconfig.json(12,24): error vue2: Option 'strictTemplates' was removed in v4. Template checking now follows the TypeScript settings for the script's language, so this option has no equivalent.
+test-workspace/content-mapper-options/tsconfig.json(13,17): error vue3: Option 'jsxSlots' requires a boolean.
+test-workspace/content-mapper-options/tsconfig.json(14,22): error vue1: Unknown option 'unknownOption'."
+`;
+
 exports[`content mapper fixtures > test-workspace/content-mapper-pug/tsconfig.json 1`] = `"test-workspace/content-mapper-pug/App.vue(7,6): error TS2339: Property 'missing' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'."`;

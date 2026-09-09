@@ -62,6 +62,43 @@ test('uses stable mapper options for inferred projects', () => {
 	expect(result.text).not.toContain('templateValue');
 });
 
+test('applies mapper options on top of the tsconfig options', () => {
+	const configFileName = path.resolve(__dirname, '../../../test-workspace/content-mapper/tsconfig.json');
+	const fileName = path.resolve(__dirname, '../../../test-workspace/content-mapper/App.vue');
+	const content = `<template><div /></template>`;
+
+	openProject({ configFileName, projectHandle: 'baseline-project', compilerOptions: {}, options: {} });
+	const baseline = transformVue({ projectHandle: 'baseline-project', fileName, content }).text;
+	closeProject('baseline-project');
+
+	const opened = openProject({
+		configFileName,
+		projectHandle: 'configured-project',
+		compilerOptions: {},
+		options: { skipTemplateCodegen: true },
+	});
+	const result = transformVue({ projectHandle: 'configured-project', fileName, content }).text;
+	closeProject('configured-project');
+
+	expect(result.length).toBeLessThan(baseline.length);
+	expect(opened.optionDiagnostics).toEqual([]);
+});
+
+test('reports invalid mapper options', () => {
+	const opened = openProject({
+		configFileName: path.resolve(__dirname, '../../../test-workspace/content-mapper/tsconfig.json'),
+		projectHandle: 'invalid-options-project',
+		compilerOptions: {},
+		options: { strictTemplates: true, typo: 1 },
+	});
+	closeProject('invalid-options-project');
+
+	expect(opened.optionDiagnostics).toEqual([
+		expect.objectContaining({ path: ['strictTemplates'] }),
+		expect.objectContaining({ path: ['typo'] }),
+	]);
+});
+
 test('returns a parser-compatible service script extension', () => {
 	for (
 		const [lang, extension] of [

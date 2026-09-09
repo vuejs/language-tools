@@ -18,6 +18,14 @@ export interface OpenProjectParams {
 export interface OpenProjectResult {
 	configIdentity: string;
 	watchedFiles?: string[];
+	optionDiagnostics?: OptionDiagnostic[];
+}
+
+export interface OptionDiagnostic {
+	/** Property path into the mapper entry's `options` object. */
+	path: (string | number)[];
+	messageText: string;
+	code: number;
 }
 
 export interface CloseProjectParams {

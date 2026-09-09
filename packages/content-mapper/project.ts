@@ -2,6 +2,7 @@ import * as vue from '@vue/language-core';
 import { createHash } from 'node:crypto';
 import * as path from 'node:path';
 import { toDiagnosticDirectives, withSynthesizedDiagnosticIgnores } from './diagnosticDirectives';
+import { toOptionDiagnostics } from './optionDiagnostics';
 import type {
 	OpenProjectParams,
 	OpenProjectResult,
@@ -34,9 +35,11 @@ export function openProject(params: OpenProjectParams): OpenProjectResult {
 	};
 	projects.set(params.projectHandle, state);
 
+	const optionDiagnostics = toOptionDiagnostics(params.options);
 	if (!params.configFileName) {
 		return {
 			configIdentity: createIdentity(params, []),
+			optionDiagnostics,
 		};
 	}
 
@@ -45,6 +48,7 @@ export function openProject(params: OpenProjectParams): OpenProjectResult {
 	return {
 		configIdentity: createIdentity(params, watchedFiles),
 		watchedFiles: [...watchedFiles].sort(),
+		optionDiagnostics,
 	};
 }
 
@@ -172,23 +176,34 @@ function createConfiguration(
 	if (watchedFiles && configFileName) {
 		watchedFiles.add(path.normalize(configFileName));
 	}
-	const { languageFeatures, ...vueCompilerOptions } = state.params.options ?? {};
+	const { languageFeatures, ...mapperOptions } = state.params.options ?? {};
 	const parsed = configFileName
 		? vue.createParsedCommandLine(ts, host, normalizePath(configFileName))
-		: vue.createParsedCommandLineByJson(ts, host, normalizePath(rootDir), { vueCompilerOptions });
+		: undefined;
+	// v4 moves the Vue compiler options from the tsconfig's `vueCompilerOptions` field to the mapper
+	// entry's `options`; apply the entry options on top of any options a tsconfig still carries.
+	const baseVueOptions = parsed?.vueOptions ?? vue.getDefaultCompilerOptions();
+	const resolver = new vue.CompilerOptionsResolver(ts, host.readFile);
+	resolver.addConfig(mapperOptions as vue.RawVueCompilerOptions, normalizePath(rootDir));
+	const vueOptions = resolver.build({
+		...baseVueOptions,
+		target: resolver.target ?? baseVueOptions.target,
+		typesRoot: resolver.typesRoot ?? baseVueOptions.typesRoot,
+	});
+	vueOptions.plugins = [...new Set([...baseVueOptions.plugins, ...resolver.plugins])];
 	const compilerOptions = normalizeCompilerOptions(state.params.compilerOptions);
 	const configuration = {
 		plugin: vue.createVueLanguagePlugin<string>(
 			ts,
-			{ ...parsed.options, ...compilerOptions },
-			parsed.vueOptions,
+			{ ...parsed?.options, ...compilerOptions },
+			vueOptions,
 			fileName => fileName,
 		),
 		languageFeatures: languageFeatures !== false,
 		virtualCodes: new Map(),
 	};
 	if (watchedFiles) {
-		addPluginWatchFiles(watchedFiles);
+		addPluginWatchFiles(watchedFiles, mapperOptions.plugins, rootDir);
 	}
 	state.configurations.set(configFileName, configuration);
 	return configuration;
@@ -229,27 +244,19 @@ function createIdentity(params: OpenProjectParams, watchedFiles: Iterable<string
 	return hash.digest('hex');
 }
 
-function addPluginWatchFiles(watchedFiles: Set<string>) {
-	for (const configFileName of [...watchedFiles]) {
-		const content = ts.sys.readFile(configFileName);
-		if (!content) {
+function addPluginWatchFiles(watchedFiles: Set<string>, plugins: unknown, rootDir: string) {
+	if (!Array.isArray(plugins)) {
+		return;
+	}
+	for (const plugin of plugins) {
+		const name = typeof plugin === 'string' ? plugin : plugin?.name;
+		if (typeof name !== 'string') {
 			continue;
 		}
-		const parsed = ts.parseConfigFileTextToJson(configFileName, content);
-		const plugins = parsed.config?.vueCompilerOptions?.plugins;
-		if (!Array.isArray(plugins)) {
-			continue;
+		try {
+			watchedFiles.add(require.resolve(name, { paths: [rootDir] }));
 		}
-		for (const plugin of plugins) {
-			const name = typeof plugin === 'string' ? plugin : plugin?.name;
-			if (typeof name !== 'string') {
-				continue;
-			}
-			try {
-				watchedFiles.add(require.resolve(name, { paths: [path.dirname(configFileName)] }));
-			}
-			catch {}
-		}
+		catch {}
 	}
 }
 
