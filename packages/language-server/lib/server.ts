@@ -15,6 +15,7 @@ import {
 } from '@vue/language-service';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
+import { createProjectResolver, resolveModuleName } from './project';
 
 export function startServer(ts: typeof import('typescript')) {
 	const connection = createConnection();
@@ -32,7 +33,7 @@ export function startServer(ts: typeof import('typescript')) {
 
 	connection.onInitialize(params => {
 		const tsconfigProjects = createUriMap<LanguageService>();
-		const file2ProjectInfo = new Map<string, Promise<ts.server.protocol.ProjectInfo | null>>();
+		const projectResolver = createProjectResolver(ts);
 
 		server.fileWatcher.onDidChangeWatchedFiles(({ changes }) => {
 			for (const change of changes) {
@@ -40,7 +41,7 @@ export function startServer(ts: typeof import('typescript')) {
 				if (tsconfigProjects.has(changeUri)) {
 					tsconfigProjects.get(changeUri)!.dispose();
 					tsconfigProjects.delete(changeUri);
-					file2ProjectInfo.clear();
+					projectResolver.dispose();
 				}
 			}
 		});
@@ -51,23 +52,11 @@ export function startServer(ts: typeof import('typescript')) {
 			params,
 			{
 				setup() {},
-				async getLanguageService(uri) {
+				getLanguageService(uri) {
 					if (uri.scheme === 'file') {
 						const fileName = uri.fsPath.replace(/\\/g, '/');
-						let projectInfoPromise = file2ProjectInfo.get(fileName);
-						if (!projectInfoPromise) {
-							projectInfoPromise = sendTsServerRequest<ts.server.protocol.ProjectInfo>(
-								'_vue:' + ts.server.protocol.CommandTypes.ProjectInfo,
-								{
-									file: fileName,
-									needFileNameList: false,
-								} satisfies ts.server.protocol.ProjectInfoRequestArgs,
-							);
-							file2ProjectInfo.set(fileName, projectInfoPromise);
-						}
-						const projectInfo = await projectInfoPromise;
-						if (projectInfo) {
-							const { configFileName } = projectInfo;
+						const configFileName = projectResolver.getConfigFileName(fileName);
+						if (configFileName) {
 							let languageService = tsconfigProjects.get(URI.file(configFileName));
 							if (!languageService) {
 								languageService = createProjectLanguageService(server, configFileName);
@@ -133,8 +122,14 @@ export function startServer(ts: typeof import('typescript')) {
 				isRefAtPosition(...args) {
 					return sendTsServerRequest('_vue:isRefAtPosition', args);
 				},
-				resolveModuleName(...args) {
-					return sendTsServerRequest('_vue:resolveModuleName', args);
+				resolveModuleName(fileName, moduleName, allowNonExistent) {
+					return resolveModuleName(
+						ts,
+						projectResolver.getCommandLine(fileName)?.options ?? {},
+						fileName,
+						moduleName,
+						allowNonExistent,
+					);
 				},
 				getDocumentHighlights(fileName, position) {
 					return sendTsServerRequest(

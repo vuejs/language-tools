@@ -66,6 +66,27 @@ test('resolves module names with the owning project in a multi-project session',
 	);
 });
 
+test('resolves module names with the owning project without the tsserver bridge', async () => {
+	const server = await getLanguageServer();
+	const fileName = path.join(testWorkspacePath, 'tsconfigProject2', 'module-alias.vue');
+	// The `@2/*` alias only exists in tsconfigProject2, so the CSS `@import` can only resolve with the
+	// owning project's compilerOptions.
+	const document = await server.open(
+		URI.file(fileName).toString(),
+		'vue',
+		`<template><div /></template>
+<style>
+@import "@2/fixture.css";
+</style>
+`,
+	);
+	openedDocuments.push(document);
+
+	const links = await server.vueserver.sendDocumentLinkRequest(document.uri);
+	expect(links).toHaveLength(1);
+	expect(links![0]!.target).toBe(URI.file(path.join(testWorkspacePath, 'tsconfigProject2', 'fixture.css')).toString());
+});
+
 const openedDocuments: TextDocument[] = [];
 const createdFiles: string[] = [];
 
