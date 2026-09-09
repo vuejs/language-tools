@@ -1,6 +1,6 @@
 import * as core from '@vue/language-core';
 import { posix as path } from 'path-browserify';
-import * as ts from 'typescript';
+import * as ts from 'typescript-native-bridge';
 import { createCheckerBase } from './lib/checker';
 import type { MetaCheckerOptions } from './lib/types';
 

@@ -86,9 +86,9 @@ importers:
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
-      typescript:
-        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+      typescript-native-bridge:
+        specifier: 6.0.3-bridge.16.tsgo.7.0.2
+        version: 6.0.3-bridge.16.tsgo.7.0.2
     devDependencies:
       '@types/node':
         specifier: ^26.0.1
