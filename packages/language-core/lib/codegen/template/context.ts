@@ -177,7 +177,7 @@ export function createTemplateCodegenContext() {
 		}
 	}
 
-	function* exit(): Generator<Code> {
+	function exit() {
 		stack.pop();
 		commentBuffer.length = 0;
 	}

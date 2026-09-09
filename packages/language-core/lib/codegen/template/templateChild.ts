@@ -88,7 +88,7 @@ export function* generateTemplateChild(
 
 	if (enterNode) {
 		yield* ctx.generateDiagnosticDirectiveEnd();
-		yield* ctx.exit();
+		ctx.exit();
 	}
 }
 
