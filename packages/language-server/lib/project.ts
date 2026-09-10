@@ -31,22 +31,45 @@ export function createProjectResolver(ts: typeof import('typescript')): ProjectR
 	}
 
 	function search(fileName: string) {
+		const visited = new Set<string>();
 		let dir = path.dirname(fileName);
 		while (true) {
 			const configFileName = ts.findConfigFile(dir, ts.sys.fileExists);
 			if (!configFileName) {
 				return undefined;
 			}
-			if (isOwned(configFileName, fileName)) {
-				return configFileName;
+			const owned = searchConfig(configFileName, fileName, visited);
+			if (owned) {
+				return owned;
 			}
-			// The nearest tsconfig does not include the file (e.g. a solution-style config that only
-			// holds references); keep looking in the parent directory.
+			// The nearest tsconfig does not include the file; keep looking in the parent directory.
 			const parent = path.dirname(path.dirname(configFileName));
 			if (parent === path.dirname(configFileName)) {
 				return undefined;
 			}
 			dir = parent;
+		}
+	}
+
+	/**
+	 * A solution-style tsconfig (`files: []` plus `references`) does not include anything itself —
+	 * Nuxt 3 generates exactly this shape at the project root, pointing at `.nuxt/tsconfig.*.json`.
+	 * Follow the references to find the config that actually owns the file.
+	 */
+	function searchConfig(configFileName: string, fileName: string, visited: Set<string>): string | undefined {
+		const key = configFileName.replace(/\\/g, '/').toLowerCase();
+		if (visited.has(key)) {
+			return undefined;
+		}
+		visited.add(key);
+		if (isOwned(configFileName, fileName)) {
+			return configFileName;
+		}
+		for (const reference of getCommandLine(configFileName)?.projectReferences ?? []) {
+			const owned = searchConfig(reference.path, fileName, visited);
+			if (owned) {
+				return owned;
+			}
 		}
 	}
 

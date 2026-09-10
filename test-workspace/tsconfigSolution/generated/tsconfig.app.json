@@ -1,0 +1,8 @@
+{
+	"include": ["../**/*"],
+	"compilerOptions": {
+		"paths": {
+			"@solution/*": ["../src/*"]
+		}
+	}
+}

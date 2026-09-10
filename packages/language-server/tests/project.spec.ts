@@ -18,6 +18,17 @@ test('resolves the tsconfig that owns a file', () => {
 	resolver.dispose();
 });
 
+test('follows project references of a solution-style tsconfig', () => {
+	const resolver = createProjectResolver(ts);
+	// Nuxt 3 shape: the root tsconfig only holds references, the generated config owns the files.
+	const appFile = path.join(testWorkspacePath, 'tsconfigSolution/src/App.vue');
+
+	expect(normalize(resolver.getConfigFileName(appFile)!)).toMatch(/tsconfigSolution\/generated\/tsconfig\.app\.json$/);
+	expect(resolver.getCommandLine(appFile)!.options.paths).toEqual({ '@solution/*': ['../src/*'] });
+
+	resolver.dispose();
+});
+
 test('resolves module names with the owning project options', () => {
 	const resolver = createProjectResolver(ts);
 	const firstOptions = resolver.getCommandLine(firstProjectFile)!.options;
