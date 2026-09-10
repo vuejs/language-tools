@@ -130,12 +130,6 @@ export function useIR(
 			const base = useSfcBlock('style_' + i, 'css', getBlock);
 			const getSrc = useAttrValue('__src', base, getBlock);
 			const getModule = useAttrValue('__module', base, getBlock);
-			const getModuleAttrOffset = computed(() => {
-				const offset = getBlock().__moduleAttrOffset;
-				if (offset !== undefined) {
-					return base.start + offset;
-				}
-			});
 			const getScoped = computed(() => !!getBlock().scoped);
 			const getIr = computed(() => {
 				for (const plugin of plugins) {
@@ -164,9 +158,6 @@ export function useIR(
 					},
 					get module() {
 						return getModule();
-					},
-					get moduleAttrOffset() {
-						return getModuleAttrOffset();
 					},
 					get scoped() {
 						return getScoped();
