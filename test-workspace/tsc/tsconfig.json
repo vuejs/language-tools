@@ -545,6 +545,9 @@
 			"path": "./_failed_cssModuleDuplicate/tsconfig.json"
 		},
 		{
+			"path": "./_failed_directive_arity/tsconfig.json"
+		},
+		{
 			"path": "./_failed_directives/tsconfig.json"
 		},
 		{
