@@ -4,7 +4,7 @@ import { getLocalTypesGenerator } from '@vue/language-core/lib/codegen/localType
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as ts from 'typescript';
-import { expect, test } from 'vitest';
+import { beforeAll, expect, test } from 'vitest';
 
 const workspace = path.resolve(__dirname, '../../../test-workspace/tsc/slot-children');
 const normalize = (file: string) => file.replace(/\\/g, '/');
@@ -47,41 +47,61 @@ function createProgram(
 	return create({ host, rootNames: files, options: compilerOptions });
 }
 
-for (
-	const name of [
-		'main.vue',
-		'advanced.vue',
-		'forwarding.vue',
-		'imports.vue',
-		'namespaces.vue',
-		'unions.vue',
-		'conditional.vue',
-		'declared.vue',
-	]
-) {
+const fixtures = [
+	'main.vue',
+	'advanced.vue',
+	'forwarding.vue',
+	'imports.vue',
+	'namespaces.vue',
+	'unions.vue',
+	'conditional.vue',
+	'declared.vue',
+].map(name => {
 	const file = normalize(path.join(workspace, name));
 	const source = fs.readFileSync(file, 'utf8');
-	const overlay = new Map([[file, source.replaceAll('@vue-expect-error', 'unsuppressed')]]);
 	const expectedLines = source.split('\n').flatMap((line, index) =>
 		line.includes('@vue-expect-error') ? [index + 2] : []
 	);
+	return { name, file, source, expectedLines };
+});
+const files = fixtures.map(({ file }) => file);
+const overlay = new Map(
+	fixtures.map(({ file, source }) => [file, source.replaceAll('@vue-expect-error', 'unsuppressed')]),
+);
+let checked: readonly ts.Diagnostic[];
+let unsuppressed: readonly ts.Diagnostic[];
+let unchecked: readonly ts.Diagnostic[];
+
+beforeAll(() => {
+	checked = ts.getPreEmitDiagnostics(createProgram(files));
+	unsuppressed = ts.getPreEmitDiagnostics(createProgram(files, overlay));
+	unchecked = ts.getPreEmitDiagnostics(createProgram(files, overlay, {}));
+});
+
+for (const { name, file, expectedLines } of fixtures) {
+	const forFile = (diagnostics: readonly ts.Diagnostic[]) =>
+		diagnostics.filter(diagnostic =>
+			!diagnostic.file || !files.includes(normalize(diagnostic.file.fileName))
+			|| normalize(diagnostic.file.fileName) === file
+		);
 
 	test(`slot children: ${name} accepts valid cases and consumes every expected error`, () => {
-		expect(messages(ts.getPreEmitDiagnostics(createProgram([file])))).toEqual([]);
+		expect(messages(forFile(checked))).toEqual([]);
 	});
 
 	test(`slot children: ${name} reports slot assignment errors at the exact source ranges`, () => {
-		const diagnostics = ts.getPreEmitDiagnostics(createProgram([file], overlay));
-		expect(diagnostics.map(diagnostic => ({
-			file: normalize(diagnostic.file!.fileName),
-			line: diagnostic.file!.text.slice(0, diagnostic.start).split('\n').length,
-			code: diagnostic.code,
-			start: diagnostic.file!.text.slice(diagnostic.start, diagnostic.start! + 1),
-		}))).toEqual(expectedLines.map(line => ({ file, line, code: 2322, start: '<' })));
+		expect(
+			forFile(unsuppressed).map(diagnostic => ({
+				file: normalize(diagnostic.file!.fileName),
+				line: diagnostic.file!.text.slice(0, diagnostic.start).split('\n').length,
+				code: diagnostic.code,
+				start: diagnostic.file!.text.slice(diagnostic.start, diagnostic.start! + 1),
+			})),
+		).toEqual(expectedLines.map(line => ({ file, line, code: 2322, start: '<' })));
 	});
 
 	test(`slot children: ${name} remains unchecked without the explicit opt-in`, () => {
-		expect(messages(ts.getPreEmitDiagnostics(createProgram([file], overlay, {})))).toEqual([]);
+		expect(messages(forFile(unchecked))).toEqual([]);
 	});
 }
 
