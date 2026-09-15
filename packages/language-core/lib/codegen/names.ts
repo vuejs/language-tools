@@ -40,14 +40,7 @@ const raw = {
 	StyleScopedClasses: '',
 	TemplateRefs: '',
 
-	SlotComponentProps: '',
 	SlotElement: '',
-	SlotChild: '',
-	SlotReturn: '',
-	SlotReturns: '',
-	ExpandSlotOutlet: '',
-	ExpandSlotChild: '',
-	ExpandSlotChildren: '',
 
 	// #region template helpers
 	asFunctionalComponent0: '',

@@ -1,2 +1,4 @@
 <script setup lang="ts"></script>
-<template><slot name="header" /></template>
+<template>
+	<slot name="header" />
+</template>

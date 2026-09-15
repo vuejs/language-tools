@@ -55,6 +55,7 @@ for (
 		'namespaces.vue',
 		'unions.vue',
 		'conditional.vue',
+		'declared.vue',
 	]
 ) {
 	const file = normalize(path.join(workspace, name));
@@ -135,17 +136,29 @@ import Item from './__declarations/Item.vue';
 import Other from './__declarations/Other.vue';
 </script>
 <template>
-  <Basic><Wrapper :value="1" /><PairWrapper /></Basic>
-  <Basic><Wrapper value="wrong" /></Basic>
-  <Basic><Recursive :depth="3" /></Basic>
-  <UnionHolder><Item :value="1" /><Other other="yes" /></UnionHolder>
-  <UnionHolder><Item value="wrong" /></UnionHolder>
+  <Basic>
+    <Wrapper :value="1" />
+    <PairWrapper />
+  </Basic>
+  <Basic>
+    <Wrapper value="wrong" />
+  </Basic>
+  <Basic>
+    <Recursive :depth="3" />
+  </Basic>
+  <UnionHolder>
+    <Item :value="1" />
+    <Other other="yes" />
+  </UnionHolder>
+  <UnionHolder>
+    <Item value="wrong" />
+  </UnionHolder>
 </template>`,
 	);
 	const diagnostics = ts.getPreEmitDiagnostics(createProgram([file], emitted));
 	expect(diagnostics.map(
 		d => [normalize(d.file!.fileName), d.file!.text.slice(0, d.start).split('\n').length, d.code],
-	)).toEqual([12, 13, 15].map(line => [file, line, 2322]));
+	)).toEqual([15, 18, 25].map(line => [file, line, 2322]));
 });
 
 test('slot children: wrapper chains are not limited to an arbitrary depth', () => {
@@ -158,7 +171,9 @@ test('slot children: wrapper chains are not limited to an arbitrary depth', () =
 			`<script setup lang="ts">
 import Child from './${previous}.vue';
 </script>
-<template><Child /></template>`,
+<template>
+  <Child />
+</template>`,
 		);
 		previous = name;
 	}
@@ -169,7 +184,13 @@ import Child from './${previous}.vue';
 import Basic from './Basic.vue';
 import Deep from './${previous}.vue';
 </script>
-<template><Basic><template #pair><Deep /></template></Basic></template>`,
+<template>
+  <Basic>
+    <template #pair>
+      <Deep />
+    </template>
+  </Basic>
+</template>`,
 	);
 	expect(messages(ts.getPreEmitDiagnostics(createProgram([file], overlay)))).toEqual([]);
 });

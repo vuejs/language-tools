@@ -2,4 +2,6 @@
 import Item from './Item.vue';
 defineProps<{ ok: boolean }>();
 </script>
-<template><Item v-if="ok" :value="1" /></template>
+<template>
+	<Item v-if="ok" :value="1" />
+</template>

@@ -1,4 +1,6 @@
 <script lang="ts">
 import './ScriptSource';
 </script>
-<template><input /></template>
+<template>
+	<input />
+</template>

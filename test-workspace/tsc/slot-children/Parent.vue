@@ -3,4 +3,6 @@ import type { Slots } from './types';
 defineProps<{ value: T }>();
 defineSlots<Slots<T>>();
 </script>
-<template><slot /></template>
+<template>
+	<slot />
+</template>

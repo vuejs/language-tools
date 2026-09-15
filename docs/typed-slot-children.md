@@ -26,12 +26,14 @@ defineSlots<{
   controls?(): readonly [HTMLInputElement, HTMLButtonElement];
 }>();
 </script>
-<template><slot /></template>
+<template>
+  <slot />
+</template>
 ```
 
 Imported interfaces, aliases, re-exports, and component generic arguments are resolved by TypeScript. A `typeof Component` return type is also supported.
 
-The API addresses the same composition-contract use case as [Flow render types](https://flow.org/en/docs/react/render-types/):
+Like [Flow render types](https://flow.org/en/docs/react/render-types/), this API lets a component specify which components it accepts as children:
 
 | TypeScript slot return | Flow analogy |
 | --- | --- |
@@ -46,7 +48,9 @@ This does not add a TypeScript keyword or change runtime slot results.
 - `Renders<typeof A | typeof B>` and `Renders<typeof A> | Renders<typeof B>` associate each component with its own props.
 - `(Renders<typeof A> | Renders<typeof B>)[]` permits mixed children.
 - `Renders<typeof A>[] | Renders<typeof B>[]` requires one homogeneous alternative.
-- Tuples preserve order, cardinality, and unions of complete alternatives.
+- Tuples preserve order, cardinality, and unions of complete alternatives. Wrapper expansion respects each tuple position.
+- Dynamic slot names and dynamic components must satisfy every possible slot contract. A single slot function returning a union can return any member of that union.
+- Conditional named slots preserve which names exist together on each branch. A dynamic name provides one of its possible names; it does not provide them all.
 - Each `v-if`, `v-else-if`, and `v-else` path must satisfy the return type. Without an `else`, an empty path is included.
 - Type narrowing inside a branch is preserved when inferring component props and generic arguments.
 - A `v-for` may render zero or many children; it cannot prove a fixed nonzero cardinality.

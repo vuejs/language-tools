@@ -1,1 +1,3 @@
-<template><input /></template>
+<template>
+	<input />
+</template>

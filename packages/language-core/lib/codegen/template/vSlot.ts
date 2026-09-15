@@ -96,7 +96,7 @@ export function* generateVSlot(
 				}
 			}
 			const type = yield* generateSlotChildrenVar(ctx);
-			providers.push(`{ [K in ${name}]: ${type} }`);
+			providers.push(`__VLS_SlotProvider<${name}, ${type}>`);
 		}
 	}
 	ctx.slotChildren = parentChildren;
