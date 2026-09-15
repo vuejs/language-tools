@@ -6,6 +6,7 @@ import { endOfLine, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
+import { getSlotChildrenTypes } from './slotChildren';
 import { generateTemplateChild } from './templateChild';
 
 export interface TemplateCodegenOptions {
@@ -67,8 +68,16 @@ function* generateWorker(
 	if (vueCompilerOptions.inferTemplateDollarEl) {
 		ctx.dollarVars.add('$el');
 	}
+	if (vueCompilerOptions.strictSlotChildren) {
+		ctx.slotChildren = [];
+	}
 	if (template.ast) {
 		yield* generateTemplateChild(options, ctx, template.ast);
+	}
+	if (ctx.slotChildren) {
+		yield getSlotChildrenTypes(vueCompilerOptions.lib);
+		ctx.generatedTypes.add(names.RootChildren);
+		yield `type ${names.RootChildren} = [${ctx.slotChildren.join(', ')}]${endOfLine}`;
 	}
 	yield* ctx.generateHoistVariables();
 	yield* generateSlotsType(options, ctx);

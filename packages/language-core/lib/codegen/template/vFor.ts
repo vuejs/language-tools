@@ -7,6 +7,7 @@ import { getTypeScriptAST, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
+import { generateSlotChildrenVar } from './slotChildren';
 import { generateTemplateChild } from './templateChild';
 
 export function* generateVFor(
@@ -49,12 +50,25 @@ export function* generateVFor(
 	}
 	yield `) {${newLine}`;
 
+	const parentChildren = ctx.slotChildren;
+	const parentProviders = ctx.slotProviders;
+	ctx.slotProviders = parentProviders ? [] : undefined;
+	ctx.slotChildren = parentChildren ? [] : undefined;
 	const { inVFor } = ctx;
 	ctx.inVFor = true;
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child, false, true);
 	}
 	ctx.inVFor = inVFor;
+	if (ctx.slotChildren) {
+		const type = yield* generateSlotChildrenVar(ctx);
+		parentChildren!.push(`...(${type})[number][]`);
+	}
+	ctx.slotChildren = parentChildren;
+	if (ctx.slotProviders?.length) {
+		parentProviders!.push(`Partial<${ctx.slotProviders.join(' & ')}>`);
+	}
+	ctx.slotProviders = parentProviders;
 
 	yield* endScope();
 	yield `}${newLine}`;

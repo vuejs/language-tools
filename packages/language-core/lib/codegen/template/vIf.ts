@@ -6,6 +6,7 @@ import { newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
+import { generateSlotChildrenVar } from './slotChildren';
 import { generateTemplateChild } from './templateChild';
 
 export function* generateVIf(
@@ -13,6 +14,10 @@ export function* generateVIf(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.IfNode,
 ): Generator<Code> {
+	const parentChildren = ctx.slotChildren;
+	const parentProviders = ctx.slotProviders;
+	const providerBranches: string[] = [];
+	const branches: string[] = [];
 	const originalBlockConditionsLength = ctx.blockConditions.length;
 
 	for (let i = 0; i < node.branches.length; i++) {
@@ -48,8 +53,16 @@ export function* generateVIf(
 		}
 
 		yield `{${newLine}`;
+		ctx.slotChildren = parentChildren ? [] : undefined;
+		ctx.slotProviders = parentProviders ? [] : undefined;
 		for (const child of branch.children) {
 			yield* generateTemplateChild(options, ctx, child, i !== 0, true);
+		}
+		if (ctx.slotChildren) {
+			branches.push(yield* generateSlotChildrenVar(ctx));
+		}
+		if (ctx.slotProviders) {
+			providerBranches.push(`(${ctx.slotProviders.join(' & ') || '{}'})`);
 		}
 		yield `}${newLine}`;
 
@@ -58,5 +71,19 @@ export function* generateVIf(
 		}
 	}
 
+	ctx.slotChildren = parentChildren;
+	ctx.slotProviders = parentProviders;
+	if (parentProviders) {
+		if (node.branches.at(-1)?.condition) {
+			providerBranches.push('{}');
+		}
+		parentProviders.push(`(${providerBranches.join(' | ')})`);
+	}
+	if (parentChildren) {
+		if (node.branches.at(-1)?.condition) {
+			branches.push('[]');
+		}
+		parentChildren.push(`...(${branches.join(' | ')})`);
+	}
 	ctx.blockConditions.length = originalBlockConditionsLength;
 }

@@ -119,6 +119,11 @@ export function* generateGeneric(
 	yield `) => void${endOfLine}`;
 	yield `	attrs: any${endOfLine}`;
 	yield `	slots: ${hasSlotsType(options) ? names.Slots : `{}`}${endOfLine}`;
+	if (options.vueCompilerOptions.strictSlotChildren) {
+		yield `__slotChildren: { id: ${names.RootIdentity}; children: ${
+			options.templateAndStyleTypes.has(names.RootChildren) ? names.RootChildren : 'never'
+		} }${endOfLine}`;
+	}
 	yield `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`}${endOfLine}`;
 	yield `}${endOfLine}`;
 	yield `})(),${newLine}`; // __VLS_setup = (async () => {
@@ -285,12 +290,21 @@ export function* generateSetupFunction(
 	yield* body;
 
 	if (output) {
-		if (hasSlotsType(options)) {
+		const hasChildren = options.vueCompilerOptions.strictSlotChildren;
+		if (hasSlotsType(options) || hasChildren) {
 			yield `const ${names.base} = `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 			yield* output;
-			yield `{} as ${ctx.localTypes.WithSlots}<typeof ${names.base}, ${names.Slots}>${endOfLine}`;
+			yield hasSlotsType(options)
+				? `{} as ${ctx.localTypes.WithSlots}<typeof ${names.base}, ${names.Slots}>`
+				: `{} as typeof ${names.base}`;
+			if (hasChildren) {
+				yield ` & { readonly __slotChildren: { id: ${names.RootIdentity}; children: ${
+					options.templateAndStyleTypes.has(names.RootChildren) ? names.RootChildren : 'never'
+				} } }`;
+			}
+			yield endOfLine;
 		}
 		else {
 			yield* output;

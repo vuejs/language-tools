@@ -17,3 +17,13 @@ export type ComponentEmit<T> = T extends new(...args: any) => { $emit: infer E }
 export type ComponentExposed<T> = T extends new(...args: any) => infer E ? E
 	: T extends (props: any, ctx: any, expose: (exposed: infer E) => any, ...args: any) => any ? NonNullable<E>
 	: {};
+
+/**
+ * Content that renders Component, optionally constrained by the props passed to it.
+ * Used in defineSlots return types when strictSlotChildren is enabled (RFC 734).
+ * This type has no runtime representation.
+ */
+export type Renders<Component, Props = unknown> = Component extends unknown ? {
+		readonly __renders: { component: Component; props: ComponentProps<Component> & Props };
+	}
+	: never;

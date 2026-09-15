@@ -147,6 +147,8 @@ export function createTemplateCodegenContext() {
 	const commentBuffer: CompilerDOM.CommentNode[] = [];
 
 	return {
+		slotChildren: undefined as string[] | undefined,
+		slotProviders: undefined as string[] | undefined,
 		generatedTypes: new Set<string>(),
 		get currentInfo() {
 			return stack[stack.length - 1]!;

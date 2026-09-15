@@ -51,7 +51,16 @@ export function* generateTemplateChild(
 			}
 		}
 	}
+	else if (node.type === CompilerDOM.NodeTypes.TEXT) {
+		if (node.content.trim()) {
+			ctx.slotChildren?.push(`{ text: string }`);
+		}
+	}
 	else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
+		// Adjacent text/interpolations form one rendered text node.
+		const parentChildren = ctx.slotChildren;
+		parentChildren?.push(`{ text: string }`);
+		ctx.slotChildren = undefined;
 		// {{ ... }} {{ ... }}
 		for (const child of node.children) {
 			if (typeof child !== 'object') {
@@ -59,8 +68,10 @@ export function* generateTemplateChild(
 			}
 			yield* generateTemplateChild(options, ctx, child, false);
 		}
+		ctx.slotChildren = parentChildren;
 	}
 	else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
+		ctx.slotChildren?.push(`{ text: string }`);
 		// {{ ... }}
 		const [content, start] = parseInterpolationNode(node, options.template.content);
 		yield* generateInterpolation(

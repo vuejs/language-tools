@@ -109,6 +109,13 @@ declare global {
 	};
 	type __VLS_PrettifyGlobal<T> = (T extends any ? { [K in keyof T]: T[K] } : { [K in keyof T as K]: T[K] }) & {};
 
+	function __VLS_componentSlotIdentity<C, V>(component: C, vnode: V): C extends { __slotChildren: { id: infer I } } ? I
+		: C extends (...args: any) => { __ctx?: { __slotChildren: { id: infer I } } } ? I
+		: V extends { __ctx?: { __slotChildren: { id: infer I } } } ? I
+		: C;
+	function __VLS_componentSlotChildren<C, V>(component: C, vnode: V): C extends { __slotChildren: infer R } ? R
+		: V extends { __ctx?: { __slotChildren: infer R } } ? R
+		: never;
 	function __VLS_vFor<const T>(source: T): T extends number ? [number, number][]
 		: T extends string ? [string, number][]
 		: T extends readonly (infer U)[] ? [U, number][]

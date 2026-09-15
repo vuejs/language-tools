@@ -299,6 +299,7 @@ export function getDefaultCompilerOptions(
 			useTemplateRef: ['useTemplateRef', 'templateRef'],
 		},
 		plugins: [],
+		strictSlotChildren: false,
 		experimentalModelPropName: {
 			'': {
 				input: true,

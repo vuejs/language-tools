@@ -1,4 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
+import { toString } from 'muggle-string';
 import type { Code } from '../../types';
 import { getElementTagOffsets, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
@@ -146,7 +147,33 @@ export function* generateSlotOutlet(
 			});
 		}
 	}
+	const parentChildren = ctx.slotChildren;
+	let name = "'default'";
+	if (parentChildren) {
+		if (nameProp?.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
+			name = JSON.stringify(nameProp.value.content);
+		}
+		else if (
+			nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+		) {
+			const nameVar = ctx.getInternalVariable();
+			yield `var ${nameVar} = ${names.tryAsConstant}(${
+				toString([...generatePropExp(options, ctx, nameProp, nameProp.exp)])
+			})${endOfLine}`;
+			name = `typeof ${ctx.getHoistVariable(nameVar)}`;
+		}
+	}
+	ctx.slotChildren = parentChildren ? [] : undefined;
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}
+	if (parentChildren) {
+		parentChildren.push(
+			`{ outlet: ${name}; declared: ${options.hasDefineSlots ? names.Slots : 'unknown'}; fallback: [${
+				ctx.slotChildren!.join(', ')
+			}] }`,
+		);
+	}
+	ctx.slotChildren = parentChildren;
 }
