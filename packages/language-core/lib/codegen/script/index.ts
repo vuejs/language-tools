@@ -39,6 +39,10 @@ function* generateWorker(
 	const { script, scriptRanges, scriptSetup, scriptSetupRanges, vueCompilerOptions, fileName } = options;
 
 	yield* generateGlobalTypesReference(vueCompilerOptions, fileName);
+	if (options.vueCompilerOptions.strictSlotChildren) {
+		yield `declare const ${names.rootChildrenId}: unique symbol${endOfLine}`;
+		yield `export interface ${names.RootIdentity} { readonly [${names.rootChildrenId}]: true }${endOfLine}`;
+	}
 
 	// <script src="">
 	if (typeof script?.src === 'object') {
@@ -61,7 +65,13 @@ function* generateWorker(
 		yield `'`;
 		yield endBoundary(token, script.src.offset + script.src.text.length);
 		yield endOfLine;
-		yield `export default ${names.src}${endOfLine}`;
+		yield `export default ${names.src}`;
+		if (options.vueCompilerOptions.strictSlotChildren) {
+			yield ` as typeof ${names.src} & { readonly __slotChildren: { id: ${names.RootIdentity}; children: ${
+				options.templateAndStyleTypes.has(names.RootChildren) ? names.RootChildren : 'never'
+			} } }`;
+		}
+		yield endOfLine;
 
 		yield* generateTemplate(options, ctx, names.src);
 	}
@@ -164,6 +174,7 @@ function* generateWorker(
 				vueCompilerOptions,
 				names.export,
 				generateTemplate(options, ctx, names.export),
+				options.templateAndStyleTypes.has(names.RootChildren) ? names.RootChildren : 'never',
 			);
 		}
 		else {
@@ -171,7 +182,13 @@ function* generateWorker(
 			yield* generateExportDeclareEqual(script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 			yield* generateTemplate(options, ctx, names.export);
-			yield `export default ${exportExpression}${endOfLine}`;
+			yield `export default ${exportExpression}`;
+			if (vueCompilerOptions.strictSlotChildren) {
+				yield ` & { readonly __slotChildren: { id: ${names.RootIdentity}; children: ${
+					options.templateAndStyleTypes.has(names.RootChildren) ? names.RootChildren : 'never'
+				} } }`;
+			}
+			yield endOfLine;
 		}
 	}
 
@@ -186,6 +203,7 @@ function* generateScriptWithExportDefault(
 	vueCompilerOptions: VueCompilerOptions,
 	varName: string,
 	templateGenerator?: Generator<Code>,
+	rootChildrenType = 'never',
 ): Generator<Code> {
 	const componentOptions = scriptRanges.exportDefault?.options;
 	const { expression, isObjectLiteral } = componentOptions ?? exportDefault;
@@ -216,6 +234,9 @@ function* generateScriptWithExportDefault(
 
 	yield* generateSfcBlockSection(script, 0, expression.start, codeFeatures.all);
 	yield exportExpression;
+	if (templateGenerator && vueCompilerOptions.strictSlotChildren) {
+		yield ` & { readonly __slotChildren: { id: ${names.RootIdentity}; children: ${rootChildrenType} } }`;
+	}
 	yield* generateSfcBlockSection(script, expression.end, exportDefault.end, codeFeatures.all);
 	yield endOfLine;
 	if (templateGenerator) {

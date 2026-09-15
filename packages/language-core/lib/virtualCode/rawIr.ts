@@ -99,7 +99,7 @@ export function parseRawIR(source: string, options: CompilerDOM.CompilerOptions)
 							item.loc.start.offset -= block.innerStart;
 							item.loc.end.offset -= block.innerStart;
 							block.initialValue[key].push(
-								...list.splice(list.indexOf(item), 1)!,
+								...list.splice(list.indexOf(item), 1),
 							);
 						}
 					}

@@ -1,7 +1,8 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import type { Code, VueCodeInformation } from '../../types';
+import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
+import { getLocalTypesGenerator } from '../localTypes';
 import { endOfLine, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 
@@ -106,7 +107,8 @@ const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)
  * an error/diagnostic was encountered for a region of code covered by a `@vue-expect-error` directive,
  * and additionally how we use that to determine whether to propagate diagnostics back upward.
  */
-export function createTemplateCodegenContext() {
+export function createTemplateCodegenContext(vueCompilerOptions: VueCompilerOptions) {
+	let localTypes: ReturnType<typeof getLocalTypesGenerator> | undefined;
 	let variableId = 0;
 
 	const scopes: Set<string>[] = [];
@@ -147,6 +149,11 @@ export function createTemplateCodegenContext() {
 	const commentBuffer: CompilerDOM.CommentNode[] = [];
 
 	return {
+		get localTypes() {
+			return localTypes ??= getLocalTypesGenerator(vueCompilerOptions);
+		},
+		slotChildren: undefined as string[] | undefined,
+		slotProviders: undefined as string[] | undefined,
 		generatedTypes: new Set<string>(),
 		get currentInfo() {
 			return stack[stack.length - 1]!;

@@ -632,6 +632,9 @@
 			"path": "./script_src/tsconfig.json"
 		},
 		{
+			"path": "./slot-children/tsconfig.json"
+		},
+		{
 			"path": "./slots/tsconfig.json"
 		},
 		{

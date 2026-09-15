@@ -1,5 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { replaceSourceRange } from 'muggle-string';
+import { replaceSourceRange, toString } from 'muggle-string';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
@@ -11,6 +11,7 @@ import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
+import { generateSlotChildrenCheck, generateSlotChildrenVar } from './slotChildren';
 import { generateTemplateChild } from './templateChild';
 
 export function* generateVSlot(
@@ -60,9 +61,46 @@ export function* generateVSlot(
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
 		ctx.declare(...collectBindingNames(options.typescript, slotAst, slotAst));
 	}
+	const parentChildren = ctx.slotChildren;
+	const providers = ctx.slotProviders;
+	if (slotDir) {
+		ctx.slotProviders = undefined;
+	}
+	ctx.slotChildren = options.vueCompilerOptions.strictSlotChildren ? [] : undefined;
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}
+	if (ctx.slotChildren && (slotDir || ctx.slotChildren.length || !node.children.length)) {
+		yield* generateSlotChildrenCheck(ctx, node, `typeof ${slotVar}`, ctx.slotChildren);
+		if (providers) {
+			let name = "'default'";
+			if (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+				if (slotDir.arg.isStatic) {
+					name = JSON.stringify(slotDir.arg.content);
+				}
+				else {
+					const nameVar = ctx.getInternalVariable();
+					yield `var ${nameVar} = ${names.tryAsConstant}(${
+						toString([
+							...generateInterpolation(
+								options,
+								ctx,
+								options.template,
+								codeFeatures.all,
+								slotDir.arg.content,
+								slotDir.arg.loc.start.offset,
+							),
+						])
+					})${endOfLine}`;
+					name = `typeof ${ctx.getHoistVariable(nameVar)}`;
+				}
+			}
+			const type = yield* generateSlotChildrenVar(ctx);
+			providers.push(`${ctx.localTypes.SlotProvider}<${name}, ${type}>`);
+		}
+	}
+	ctx.slotChildren = parentChildren;
+	ctx.slotProviders = providers;
 	yield* endScope();
 
 	if (slotDir) {

@@ -17,7 +17,7 @@ export interface StyleCodegenOptions {
 export { generate as generateStyle };
 
 function generate(options: StyleCodegenOptions) {
-	const ctx = createTemplateCodegenContext();
+	const ctx = createTemplateCodegenContext(options.vueCompilerOptions);
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
 	for (const code of codeGenerator) {

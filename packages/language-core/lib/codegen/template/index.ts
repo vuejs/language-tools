@@ -24,7 +24,7 @@ export interface TemplateCodegenOptions {
 export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
-	const ctx = createTemplateCodegenContext();
+	const ctx = createTemplateCodegenContext(options.vueCompilerOptions);
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
 	for (const code of codeGenerator) {
@@ -67,8 +67,16 @@ function* generateWorker(
 	if (vueCompilerOptions.inferTemplateDollarEl) {
 		ctx.dollarVars.add('$el');
 	}
+	if (vueCompilerOptions.strictSlotChildren) {
+		ctx.slotChildren = [];
+	}
 	if (template.ast) {
 		yield* generateTemplateChild(options, ctx, template.ast);
+	}
+	if (ctx.slotChildren) {
+		yield* ctx.localTypes.generate();
+		ctx.generatedTypes.add(names.RootChildren);
+		yield `type ${names.RootChildren} = [${ctx.slotChildren.join(', ')}]${endOfLine}`;
 	}
 	yield* ctx.generateHoistVariables();
 	yield* generateSlotsType(options, ctx);

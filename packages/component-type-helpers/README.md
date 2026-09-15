@@ -70,6 +70,23 @@ import MyComponent from './MyComponent.vue';
 type Exposed = ComponentExposed<typeof MyComponent>;
 ```
 
+### `Renders<Component, Props = unknown>` (experimental)
+
+Describes content that renders a component in a `defineSlots` return type, including SFC wrappers that render it. Requires `vueCompilerOptions.strictSlotChildren: true`.
+
+```ts
+import type { Renders } from 'vue-component-type-helpers';
+import type Item from './Item.vue';
+import type Separator from './Separator.vue';
+
+defineSlots<{
+  default(): Renders<typeof Item<number> | typeof Separator>[];
+  selected(): Renders<typeof Item<number>, { selected: true }>;
+}>();
+```
+
+The optional second parameter constrains the props actually passed to the child. Each member of a component union keeps its own props. See [typed slot children](../../docs/typed-slot-children.md) for cardinality, conditional branches, forwarding, and the relationship to Flow's `renders`.
+
 ## Example
 
 Given the following component:

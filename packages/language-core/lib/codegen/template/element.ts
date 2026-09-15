@@ -18,6 +18,7 @@ import { type FailedPropExpressions, generateElementProps } from './elementProps
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
+import { generateMissingSlotChildrenCheck } from './slotChildren';
 import { generateStyleScopedClassReference } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
 import { generateVSlot } from './vSlot';
@@ -172,6 +173,8 @@ export function* generateComponent(
 	const getCtxVar = () => (isCtxVarUsed = true, ctxVar);
 	const getPropsVar = () => (isPropsVarUsed = true, propsVar);
 	ctx.components.push(getCtxVar);
+	const parentProviders = ctx.slotProviders;
+	ctx.slotProviders = options.vueCompilerOptions.strictSlotChildren ? [] : undefined;
 
 	const functionalVar = ctx.getInternalVariable();
 	const vnodeVar = ctx.getInternalVariable();
@@ -278,6 +281,24 @@ export function* generateComponent(
 	if (slotDir || node.children.length) {
 		yield* generateVSlot(options, ctx, node, slotDir, getCtxVar());
 	}
+	if (options.vueCompilerOptions.strictSlotChildren) {
+		yield* generateMissingSlotChildrenCheck(ctx, node, `typeof ${getCtxVar()}`, ctx.slotProviders!);
+	}
+
+	if (ctx.slotChildren) {
+		const boundPropsVar = ctx.getInternalVariable();
+		yield `const ${boundPropsVar} = ${names.tryAsConstant}({${propsStr}})${endOfLine}`;
+		const renderedVar = ctx.getInternalVariable();
+		yield `const ${renderedVar} = ${names.componentSlotChildren}(${componentVar}, ${vnodeVar})${endOfLine}`;
+		const identityVar = ctx.getInternalVariable();
+		yield `const ${identityVar} = ${names.componentSlotIdentity}(${componentVar}, ${vnodeVar})${endOfLine}`;
+		ctx.slotChildren.push(
+			`{ component: typeof ${identityVar}; props: typeof ${boundPropsVar}; renders: typeof ${renderedVar}; slots: ${
+				ctx.slotProviders?.join(' & ') || '{}'
+			} }`,
+		);
+	}
+	ctx.slotProviders = parentProviders;
 
 	if (isCtxVarUsed) {
 		yield `var ${ctxVar}!: ${names.FunctionalComponentCtx}<typeof ${componentVar}, typeof ${vnodeVar}>${endOfLine}`;
@@ -353,9 +374,13 @@ export function* generateElement(
 
 	yield* generateStyleScopedClassReferences(options, node);
 
+	const parentChildren = ctx.slotChildren;
+	parentChildren?.push(`{ element: ${ctx.localTypes.SlotElement}<'${node.tag}', ${node.ns}> }`);
+	ctx.slotChildren = undefined;
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}
+	ctx.slotChildren = parentChildren;
 }
 
 export function* generateFragment(

@@ -78,6 +78,7 @@ export interface VueCompilerOptions {
 	plugins: VueLanguagePlugin[];
 
 	// experimental
+	strictSlotChildren: boolean;
 	experimentalModelPropName: Record<
 		string,
 		Record<string, boolean | Record<string, string> | Record<string, string>[]>

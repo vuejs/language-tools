@@ -103,6 +103,7 @@ Configure Vue compiler behavior through the `vueCompilerOptions` field in `tscon
 | `checkUnknownDirectives` | `boolean` | `false` | Check for unknown directives. |
 | `strictVModel` | `boolean` | `false` | Strictly check v-model bindings. |
 | `strictCssModules` | `boolean` | `false` | Strictly check CSS Modules class names (not affected by `strictTemplates`). |
+| `strictSlotChildren` | `boolean` | `false` | Experimental [typed slot children](../../docs/typed-slot-children.md) (RFC 734). Requires explicit opt-in; independent of `strictTemplates`. |
 
 ### Advanced Options
 
