@@ -71,7 +71,7 @@ export function* generateVSlot(
 		yield* generateTemplateChild(options, ctx, child);
 	}
 	if (ctx.slotChildren && (slotDir || ctx.slotChildren.length || !node.children.length)) {
-		yield* generateSlotChildrenCheck(node, `typeof ${slotVar}`, ctx.slotChildren);
+		yield* generateSlotChildrenCheck(ctx, node, `typeof ${slotVar}`, ctx.slotChildren);
 		if (providers) {
 			let name = "'default'";
 			if (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -96,7 +96,7 @@ export function* generateVSlot(
 				}
 			}
 			const type = yield* generateSlotChildrenVar(ctx);
-			providers.push(`__VLS_SlotProvider<${name}, ${type}>`);
+			providers.push(`${ctx.localTypes.SlotProvider}<${name}, ${type}>`);
 		}
 	}
 	ctx.slotChildren = parentChildren;

@@ -1,5 +1,6 @@
 import { proxyCreateProgram } from '@volar/typescript';
 import * as core from '@vue/language-core';
+import { getLocalTypesGenerator } from '@vue/language-core/lib/codegen/localTypes';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as ts from 'typescript';
@@ -83,6 +84,57 @@ for (
 		expect(messages(ts.getPreEmitDiagnostics(createProgram([file], overlay, {})))).toEqual([]);
 	});
 }
+
+test('slot children: native roots do not emit component or forwarding helpers', () => {
+	const localTypes = getLocalTypesGenerator(core.getDefaultCompilerOptions());
+	expect([...localTypes.generate()]).toEqual([]);
+	const name = localTypes.SlotElement;
+	expect(localTypes.SlotElement).toBe(name);
+	const code = [...localTypes.generate()].join('');
+	const file = ts.createSourceFile('helpers.ts', code, ts.ScriptTarget.Latest, true);
+	expect(
+		file.statements.map(statement =>
+			ts.isTypeAliasDeclaration(statement) ? ts.unescapeLeadingUnderscores(statement.name.escapedText) : undefined
+		),
+	)
+		.toEqual([name]);
+	expect([...localTypes.generate()]).toEqual([]);
+});
+
+test('slot children: local helper dependencies type-check with a custom Vue library', () => {
+	const localTypes = getLocalTypesGenerator({ ...core.getDefaultCompilerOptions(), lib: 'custom-vue' });
+	const check = localTypes.SlotChildrenCheck;
+	const missing = localTypes.MissingSlotChildren;
+	const provider = localTypes.SlotProvider;
+	const element = localTypes.SlotElement;
+	const code = [...localTypes.generate()].join('');
+	const source = ts.createSourceFile('helpers.ts', code, ts.ScriptTarget.Latest, true);
+	const names = source.statements.map(statement =>
+		ts.isTypeAliasDeclaration(statement) ? ts.unescapeLeadingUnderscores(statement.name.escapedText) : undefined
+	);
+	expect(new Set(names).size).toBe(names.length);
+	expect(code).toContain("import('custom-vue').VNode");
+	expect(code).not.toContain("import('vue')");
+
+	const file = normalize(path.join(workspace, 'local-helpers.ts'));
+	const library = normalize(path.join(workspace, 'custom-vue.ts'));
+	const text = code + `
+const children: ${check}<[{ element: ${element}<'input', 0> }], () => import('custom-vue').VNode[]> = [];
+const slots: ${missing}<{ slots: { default(): HTMLInputElement } }, ${provider}<'default', [HTMLInputElement]>> = [];
+export { children, slots };
+`;
+	const overlay = new Map([[file, text], [library, "export * from 'vue';"]]);
+	const host = ts.createCompilerHost(options);
+	const { readFile, fileExists } = host;
+	host.readFile = file => overlay.get(normalize(file)) ?? readFile(file);
+	host.fileExists = file => overlay.has(normalize(file)) || fileExists(file);
+	const program = ts.createProgram({
+		host,
+		rootNames: [file],
+		options: { ...options, skipLibCheck: false, paths: { 'custom-vue': [library] } },
+	});
+	expect(messages(ts.getPreEmitDiagnostics(program))).toEqual([]);
+});
 
 test('slot children: strictTemplates does not enable the experimental option', () => {
 	const resolved = core.createParsedCommandLineByJson(ts, ts.sys, workspace, {

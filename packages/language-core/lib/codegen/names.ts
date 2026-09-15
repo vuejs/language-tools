@@ -40,8 +40,6 @@ const raw = {
 	StyleScopedClasses: '',
 	TemplateRefs: '',
 
-	SlotElement: '',
-
 	// #region template helpers
 	asFunctionalComponent0: '',
 	asFunctionalComponent1: '',

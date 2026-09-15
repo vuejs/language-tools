@@ -282,7 +282,7 @@ export function* generateComponent(
 		yield* generateVSlot(options, ctx, node, slotDir, getCtxVar());
 	}
 	if (options.vueCompilerOptions.strictSlotChildren) {
-		yield* generateMissingSlotChildrenCheck(node, `typeof ${getCtxVar()}`, ctx.slotProviders!);
+		yield* generateMissingSlotChildrenCheck(ctx, node, `typeof ${getCtxVar()}`, ctx.slotProviders!);
 	}
 
 	if (ctx.slotChildren) {
@@ -375,7 +375,7 @@ export function* generateElement(
 	yield* generateStyleScopedClassReferences(options, node);
 
 	const parentChildren = ctx.slotChildren;
-	parentChildren?.push(`{ element: ${names.SlotElement}<'${node.tag}', ${node.ns}> }`);
+	parentChildren?.push(`{ element: ${ctx.localTypes.SlotElement}<'${node.tag}', ${node.ns}> }`);
 	ctx.slotChildren = undefined;
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);

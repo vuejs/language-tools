@@ -6,7 +6,6 @@ import { endOfLine, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
-import { getSlotChildrenTypes } from './slotChildren';
 import { generateTemplateChild } from './templateChild';
 
 export interface TemplateCodegenOptions {
@@ -25,7 +24,7 @@ export interface TemplateCodegenOptions {
 export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
-	const ctx = createTemplateCodegenContext();
+	const ctx = createTemplateCodegenContext(options.vueCompilerOptions);
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
 	for (const code of codeGenerator) {
@@ -75,7 +74,7 @@ function* generateWorker(
 		yield* generateTemplateChild(options, ctx, template.ast);
 	}
 	if (ctx.slotChildren) {
-		yield getSlotChildrenTypes(vueCompilerOptions.lib);
+		yield* ctx.localTypes.generate();
 		ctx.generatedTypes.add(names.RootChildren);
 		yield `type ${names.RootChildren} = [${ctx.slotChildren.join(', ')}]${endOfLine}`;
 	}

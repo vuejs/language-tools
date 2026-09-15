@@ -70,7 +70,7 @@ Distinct SFC identities prevent unrelated components with identical props from m
 
 ## Implementation and boundaries
 
-Template code generation records logical children separately from VNodes: native nodes, text, components with bound props, and slot outlets. Branches produce unions of tuples; loops produce variadic arrays. Local conditional types normalize slot return types and expand only wrappers needed to establish compatibility.
+Template code generation records logical children separately from VNodes: native nodes, text, components with bound props, and slot outlets. Branches produce unions of tuples; loops produce variadic arrays. Local conditional types normalize slot return types and expand only wrappers needed to establish compatibility. They use the existing `localTypes.ts` / `defineHelper` mechanism, which emits referenced helpers and their dependencies once per scope.
 
 Each component supplies its identity and inferred roots in generated metadata. Cycle detection tracks identities, not structural component equality or a fixed depth cutoff. A cycle that cannot prove the requested render type produces an unknown child and fails a restricted slot check. TypeScript's own type-instantiation limits still apply.
 
