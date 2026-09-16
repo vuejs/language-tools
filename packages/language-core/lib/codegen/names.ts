@@ -20,6 +20,10 @@ const raw = {
 	slots: '',
 	src: '',
 
+	MatchPattern: '',
+	SubtractPattern: '',
+	CheckMatchExhaustive: '',
+
 	Emit: '',
 	EmitProps: '',
 	GlobalComponents: '',

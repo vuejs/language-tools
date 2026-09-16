@@ -38,7 +38,7 @@ function* generateWorker(
 ): Generator<Code> {
 	const { script, scriptRanges, scriptSetup, scriptSetupRanges, vueCompilerOptions, fileName } = options;
 
-	yield* generateGlobalTypesReference(vueCompilerOptions, fileName);
+	yield* generateGlobalTypesReference(vueCompilerOptions, fileName, options.templateAndStyleTypes);
 
 	// <script src="">
 	if (typeof script?.src === 'object') {
@@ -237,6 +237,7 @@ function* generateScriptWithExportDefault(
 function* generateGlobalTypesReference(
 	{ typesRoot, lib, target, checkUnknownProps }: VueCompilerOptions,
 	fileName: string,
+	templateTypes: Set<string>,
 ): Generator<Code> {
 	let typesPath: string;
 	if (path.isAbsolute(typesRoot)) {
@@ -254,6 +255,9 @@ function* generateGlobalTypesReference(
 		typesPath = typesRoot;
 	}
 	yield `/// <reference types=${JSON.stringify(typesPath + '/template-helpers.d.ts')} />${newLine}`;
+	if (templateTypes.has(names.MatchPattern)) {
+		yield `/// <reference types=${JSON.stringify(typesPath + '/pattern-matching.d.ts')} />${newLine}`;
+	}
 	if (!checkUnknownProps) {
 		yield `/// <reference types=${JSON.stringify(typesPath + '/props-fallback.d.ts')} />${newLine}`;
 	}

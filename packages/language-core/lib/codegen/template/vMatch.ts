@@ -3,11 +3,11 @@ import type { MatchPattern, PatternBinding } from '../../template/patterns/parse
 import type { TemplateMatch, TemplateMatchArm } from '../../template/patterns/prepare';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
+import { names } from '../names';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
-import { matchTypes } from './matchTypes';
 import { generateTemplateChild } from './templateChild';
 
 export function* generateVMatch(
@@ -15,10 +15,7 @@ export function* generateVMatch(
 	ctx: TemplateCodegenContext,
 	match: TemplateMatch,
 ): Generator<Code> {
-	if (!ctx.generatedTypes.has('__VLS_PMMatch')) {
-		ctx.generatedTypes.add('__VLS_PMMatch');
-		yield matchTypes;
-	}
+	ctx.generatedTypes.add(names.MatchPattern);
 	const valueDeclarations: [string, Code[]][] = [];
 	const { subject, arms } = match;
 	const subjectCodes = [
@@ -50,7 +47,7 @@ export function* generateVMatch(
 		yield* descriptors;
 		yield `;\n`;
 		const narrowed = ctx.getInternalVariable();
-		yield `type ${narrowed} = __VLS_PMMatch<${remaining}, ${patternType}>;\n`;
+		yield `type ${narrowed} = ${names.MatchPattern}<${remaining}, ${patternType}>;\n`;
 		// Marker is inspected by the language service for warning-only unreachable arms.
 		yield `type __VLS_match_arm_${arm.offset}_${arm.directive.exp!.loc.end.offset} = ${narrowed};\n`;
 		const endArmScope = ctx.startScope();
@@ -94,7 +91,7 @@ export function* generateVMatch(
 		ctx.blockConditions.length = conditionLength;
 		if (!arm.guard) {
 			const next = ctx.getInternalVariable();
-			yield `type ${next} = __VLS_PMSubtract<${remaining}, ${patternType}>;\n`;
+			yield `type ${next} = ${names.SubtractPattern}<${remaining}, ${patternType}>;\n`;
 			remaining = next;
 		}
 	}
@@ -103,7 +100,7 @@ export function* generateVMatch(
 	const token = yield* startBoundary('template', subject.loc.start.offset, codeFeatures.verification);
 	yield check;
 	yield endBoundary(token, subject.loc.end.offset);
-	yield `: __VLS_PMAssert<${remaining}> = true`;
+	yield `: ${names.CheckMatchExhaustive}<${remaining}> = true`;
 	yield ';\n';
 	yield* endMatchScope();
 	yield '}\n';
