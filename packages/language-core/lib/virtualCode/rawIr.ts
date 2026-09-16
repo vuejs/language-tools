@@ -1,5 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { transformTemplate } from '../template/compile';
+import { prepareTemplateMatches } from '../template/patterns/prepare';
 import { normalizeAttributeValue } from '../utils/shared';
 
 export interface RawIR {
@@ -27,6 +28,7 @@ export type RawIRAttr = true | {
 };
 
 export interface RawIRTemplate extends RawIRBlock {
+	match?: CompilerDOM.DirectiveNode;
 	initialValue?: {
 		ast: CompilerDOM.RootNode;
 		errors: CompilerDOM.CompilerError[];
@@ -72,6 +74,11 @@ export function parseRawIR(source: string, options: CompilerDOM.CompilerOptions)
 		switch (node.tag) {
 			case 'template': {
 				const block = createBlock(node, source) as RawIRTemplate;
+				block.match = CompilerDOM.findDir(node, 'match', true);
+				for (const loc of traverseLoc({ match: block.match })) {
+					loc.start.offset -= block.innerStart;
+					loc.end.offset -= block.innerStart;
+				}
 				block.initialValue = {
 					ast: {
 						type: CompilerDOM.NodeTypes.ROOT,
@@ -104,7 +111,13 @@ export function parseRawIR(source: string, options: CompilerDOM.CompilerOptions)
 						}
 					}
 				}
-				transformTemplate(block.initialValue.ast, options);
+				const templateOptions = {
+					...options,
+					onError: (error: CompilerDOM.CompilerError) => block.initialValue!.errors.push(error),
+					onWarn: (warning: CompilerDOM.CompilerError) => block.initialValue!.warnings.push(warning),
+				};
+				prepareTemplateMatches(block.initialValue.ast, templateOptions, block.match);
+				transformTemplate(block.initialValue.ast, templateOptions);
 				rawIr.templates.push(block);
 				break;
 			}

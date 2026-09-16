@@ -13,7 +13,23 @@ export interface TemplateMatch {
 const matches = new WeakMap<CompilerDOM.ElementNode, TemplateMatch>();
 export const getTemplateMatch = (node: CompilerDOM.ElementNode) => matches.get(node);
 
-export function prepareTemplateMatches(ast: CompilerDOM.RootNode, options: CompilerDOM.CompilerOptions) {
+export function prepareTemplateMatches(
+	ast: CompilerDOM.RootNode,
+	options: CompilerDOM.CompilerOptions,
+	rootMatch?: CompilerDOM.DirectiveNode,
+) {
+	if (rootMatch) {
+		ast.children = [{
+			type: CompilerDOM.NodeTypes.ELEMENT,
+			tag: 'template',
+			tagType: CompilerDOM.ElementTypes.TEMPLATE,
+			ns: 0,
+			props: [rootMatch],
+			children: ast.children,
+			loc: ast.loc,
+			codegenNode: undefined,
+		}];
+	}
 	function report(message: string, loc: CompilerDOM.SourceLocation, warning = false) {
 		const error = Object.assign(new SyntaxError(message), { code: 'V_MATCH_SYNTAX', loc });
 		if (warning) {

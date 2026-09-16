@@ -303,6 +303,38 @@ for (const [index, pattern] of duplicatePatterns.entries()) {
 	);
 }
 
+for (const [index] of cases.entries()) {
+	for (const lang of ['', ' lang="html"']) {
+		sources.set(
+			`${workspace}/root-${index}${lang ? '-html' : ''}.vue`,
+			sources.get(`${workspace}/${index}.vue`)!
+				.replace('<template>\n<template v-match', `<template${lang} v-match`)
+				.replace('</template>\n</template>', '</template>'),
+		);
+	}
+}
+sources.set(
+	`${workspace}/root-generics.vue`,
+	`<script setup lang="ts" generic="T extends { id: string }">
+import type { Result } from './imported';
+import { exactType } from '../tsc/shared';
+defineProps<{ result: Result<T> }>();
+</script><template v-match="result">
+<div v-when="{ kind: 'ok', const data } as result">
+{{ exactType(data, {} as T) }} {{ exactType(result.data, {} as T) }}
+<!-- @vue-expect-error -->
+{{ result.error }}
+<i v-for="data in [1, 2]">{{ exactType(data, {} as 1 | 2) }}</i>
+{{ exactType(data, {} as T) }}
+<template v-match="data.id"><b v-when="const id">{{ exactType(id, {} as string) }}</b></template>
+</div>
+<p v-when="{ kind: 'error', const error }">{{ result.error.message }} {{ error.message }}
+<!-- @vue-expect-error -->
+{{ data }}
+</p>
+</template>`,
+);
+
 const options: ts.CompilerOptions = {
 	allowJs: true,
 	checkJs: true,
@@ -330,6 +362,19 @@ const createProgram = proxyCreateProgram(ts, ts.createProgram, (ts, options) => 
 const program = createProgram({ rootNames: [...sources.keys()], options, host });
 
 describe('RFC 823 required coverage', () => {
+	for (const [index, [name, , , exhaustive]] of cases.entries()) {
+		test.each(['', '-html'])(`SFC root ${name} (%s)`, suffix => {
+			const fileName = `${workspace}/root-${index}${suffix}.vue`;
+			const file = program.getSourceFile(fileName)!;
+			const diagnostics = [...program.getSyntacticDiagnostics(file), ...program.getSemanticDiagnostics(file)];
+			expect(diagnostics.map(d => ts.flattenDiagnosticMessageText(d.messageText, '\n')))
+				.toEqual(exhaustive ? [] : [expect.stringContaining('Non-exhaustive v-match')]);
+			if (!exhaustive) {
+				expect(diagnostics[0]!.start).toBe(sources.get(fileName)!.indexOf('v-match="subject"') + 'v-match="'.length);
+				expect(diagnostics[0]!.length).toBe('subject'.length);
+			}
+		});
+	}
 	for (const [index, pattern] of duplicatePatterns.entries()) {
 		test(`rejects duplicate declarations in ${pattern}`, () => {
 			const file = program.getSourceFile(`${workspace}/duplicate-${index}.vue`)!;
@@ -384,6 +429,7 @@ describe('RFC 823 required coverage', () => {
 			'javascript',
 			'scopes',
 			'event-scopes',
+			'root-generics',
 		]
 	) {
 		test(name, () => {

@@ -135,3 +135,45 @@ test('editor rejects repeated names within one pattern', async () => {
 		expect.objectContaining({ text: expect.stringContaining('Duplicate pattern binding value') }),
 	]);
 });
+
+test.each(['', ' lang="html"'])('SFC root header supports navigation and completion (%s)', async lang => {
+	const text = source.replace('<template><template v-match', `<template${lang} v-match`).replace(
+		'</template></template>',
+		'</template>',
+	);
+	const offset = text.indexOf('v-match="result"') + 'v-match="'.length;
+	const { body } = await request('quickinfo', text, offset);
+	expect(body.displayString).toContain('result:');
+	const definition = await request('definition', text, offset);
+	const position = definition.document.positionAt(text.indexOf('result:'));
+	expect(definition.body).toEqual([
+		expect.objectContaining({ start: { line: position.line + 1, offset: position.character + 1 } }),
+	]);
+	const rename = await request('rename', text, offset, { findInStrings: false, findInComments: false });
+	expect(rename.body.info.canRename).toBe(true);
+	expect(rename.body.locs.flatMap((file: { locs: unknown[] }) => file.locs)).toHaveLength(2);
+	const completions = await request('completionInfo', text, offset + 3);
+	expect(completions.body.entries.map((entry: { name: string }) => entry.name)).toContain('result');
+	const binding = await request('quickinfo', text, text.indexOf('article.length'));
+	expect(binding.body.displayString).toBe('const article: string');
+	expect((await request('semanticDiagnosticsSync', text)).body).toEqual([]);
+});
+
+test('header-only edits refresh coverage and diagnostic locations', async () => {
+	const text = `<script setup lang="ts">defineProps<{ a: 'a'; b: 'a' | 'b' }>();</script>
+<template v-match="a"><p v-when="'a'"/></template>`;
+	expect((await request('semanticDiagnosticsSync', text)).body).toEqual([]);
+	for (
+		const edited of [text.replace('v-match="a"', 'v-match="b"'), text.replace('v-match="a"', 'lang="html" v-match="b"')]
+	) {
+		const { body, document } = await request('semanticDiagnosticsSync', edited);
+		const position = document.positionAt(edited.indexOf('v-match="b"') + 'v-match="'.length);
+		expect(body).toEqual([
+			expect.objectContaining({
+				text: expect.stringContaining('Non-exhaustive v-match'),
+				start: { line: position.line + 1, offset: position.character + 1 },
+			}),
+		]);
+	}
+	expect((await request('semanticDiagnosticsSync', text)).body).toEqual([]);
+});
