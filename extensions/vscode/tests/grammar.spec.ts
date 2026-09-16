@@ -40,6 +40,10 @@ describe('embedded grammar', async () => {
 		it(fixture, async () => {
 			const result = await snapshot(`tests/embeddedGrammarFixtures/${fixture}`);
 
+			if (fixture === 'patterned-templates.vue') {
+				expect(result).toContain('constant.language.wildcard.vue');
+				expect(result).toContain('keyword.declaration.pattern.vue');
+			}
 			expect(result).toMatchSnapshot();
 		});
 	}

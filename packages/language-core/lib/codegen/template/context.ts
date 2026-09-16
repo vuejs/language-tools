@@ -125,7 +125,7 @@ export function createTemplateCodegenContext() {
 		expVar: string;
 		propsVar: string;
 	}[] = [];
-	const blockConditions: string[] = [];
+	const blockConditions: { code: string; bindings?: Map<string, Set<string> | undefined> }[] = [];
 	const inlayHints: InlayHintInfo[] = [];
 	const inheritedAttrVars = new Set<string>();
 	const templateRefs = new Map<string, {
@@ -145,6 +145,14 @@ export function createTemplateCodegenContext() {
 		};
 	}[] = [];
 	const commentBuffer: CompilerDOM.CommentNode[] = [];
+
+	function getLocalBinding(name: string) {
+		for (let i = scopes.length - 1; i >= 0; i--) {
+			if (scopes[i]!.has(name)) {
+				return scopes[i];
+			}
+		}
+	}
 
 	return {
 		generatedTypes: new Set<string>(),
@@ -184,6 +192,7 @@ export function createTemplateCodegenContext() {
 			}
 		},
 		scopes,
+		getLocalBinding,
 		components,
 		declare(...varNames: string[]) {
 			const scope = scopes.at(-1)!;
@@ -222,7 +231,11 @@ export function createTemplateCodegenContext() {
 		},
 		*generateConditionGuards() {
 			for (const condition of blockConditions) {
-				yield `if (!${condition}) return${endOfLine}`;
+				// A repeated guard must still refer to the bindings it originally tested.
+				if (condition.bindings && [...condition.bindings].some(([name, scope]) => getLocalBinding(name) !== scope)) {
+					continue;
+				}
+				yield `if (!${condition.code}) return${endOfLine}`;
 			}
 		},
 		enter(node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode) {

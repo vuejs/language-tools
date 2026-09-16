@@ -110,6 +110,27 @@ export function* generateInterpolation(
 	}
 }
 
+export function getConditionBindings(
+	ts: typeof import('typescript'),
+	ctx: TemplateCodegenContext,
+	block: IRBlock,
+	code: string,
+) {
+	const bindings = new Map<string, Set<string> | undefined>();
+	const enclosingScopes = new Set(ctx.scopes);
+	const endScope = ctx.startScope();
+	const ast = getTypeScriptAST(ts, block, `(${code})`);
+	for (const [id] of forEachDeclarations(ts, ast, ast, ctx)) {
+		const name = getNodeText(ts, id, ast);
+		const scope = ctx.getLocalBinding(name);
+		if (!scope || enclosingScopes.has(scope)) {
+			bindings.set(name, scope);
+		}
+	}
+	endScope();
+	return bindings;
+}
+
 function* forEachIdentifiers(
 	ts: typeof import('typescript'),
 	ctx: TemplateCodegenContext,

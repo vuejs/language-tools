@@ -213,6 +213,7 @@ export function useIR(
 	interface ParsedTemplateResult {
 		snapshot: ts.IScriptSnapshot;
 		template: string;
+		match?: CompilerDOM.DirectiveNode;
 		errors: CompilerDOM.CompilerError[];
 		warnings: CompilerDOM.CompilerError[];
 		ast?: CompilerDOM.RootNode;
@@ -223,7 +224,12 @@ export function useIR(
 		let rerunned = false;
 
 		return computed<ParsedTemplateResult>(lastResult => {
-			if (lastResult?.template === base.content) {
+			const match = getBlock().match;
+			if (
+				lastResult?.template === base.content
+				&& lastResult.match?.loc.source === match?.loc.source
+				&& lastResult.match?.loc.start.offset === match?.loc.start.offset
+			) {
 				return lastResult;
 			}
 
@@ -237,6 +243,7 @@ export function useIR(
 					return {
 						snapshot: getUntrackedSnapshot(),
 						template: base.content,
+						match,
 						ast,
 						errors,
 						warnings,
@@ -248,6 +255,7 @@ export function useIR(
 			// incremental update
 			if (
 				lastResult?.ast && lastResult.plugin?.updateSFCTemplate
+				&& !match && !lastResult.match
 				&& !lastResult.errors.length
 				&& !lastResult.warnings.length
 			) {
@@ -267,6 +275,7 @@ export function useIR(
 						return {
 							snapshot: getUntrackedSnapshot(),
 							template: base.content,
+							match,
 							ast: newAst,
 							plugin: lastResult.plugin,
 							errors: [],
@@ -293,11 +302,12 @@ export function useIR(
 
 			for (const plugin of plugins) {
 				try {
-					const result = plugin.compileSFCTemplate?.(base.lang, base.content, options);
+					const result = plugin.compileSFCTemplate?.(base.lang, base.content, options, match);
 					if (result) {
 						return {
 							snapshot: getUntrackedSnapshot(),
 							template: base.content,
+							match,
 							ast: result,
 							plugin,
 							errors,
@@ -309,6 +319,7 @@ export function useIR(
 					return {
 						snapshot: getUntrackedSnapshot(),
 						template: base.content,
+						match,
 						plugin,
 						errors: [e as CompilerDOM.CompilerError],
 						warnings,
@@ -319,6 +330,7 @@ export function useIR(
 			return {
 				snapshot: getUntrackedSnapshot(),
 				template: base.content,
+				match,
 				errors,
 				warnings,
 			};

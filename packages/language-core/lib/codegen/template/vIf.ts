@@ -5,7 +5,7 @@ import { codeFeatures } from '../codeFeatures';
 import { newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
-import { generateInterpolation } from './interpolation';
+import { generateInterpolation, getConditionBindings } from './interpolation';
 import { generateTemplateChild } from './templateChild';
 
 export function* generateVIf(
@@ -42,7 +42,10 @@ export function* generateVIf(
 				`)`,
 			)];
 			yield* codes;
-			ctx.blockConditions.push(toString(codes));
+			ctx.blockConditions.push({
+				code: toString(codes),
+				bindings: getConditionBindings(options.typescript, ctx, options.template, toString(codes)),
+			});
 			addedBlockCondition = true;
 			yield ` `;
 		}
@@ -54,7 +57,8 @@ export function* generateVIf(
 		yield `}${newLine}`;
 
 		if (addedBlockCondition) {
-			ctx.blockConditions[ctx.blockConditions.length - 1] = `!${ctx.blockConditions[ctx.blockConditions.length - 1]}`;
+			const condition = ctx.blockConditions[ctx.blockConditions.length - 1]!;
+			condition.code = `!${condition.code}`;
 		}
 	}
 

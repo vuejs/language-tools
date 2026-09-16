@@ -109,6 +109,7 @@ export interface VueLanguagePluginReturn {
 		lang: string,
 		template: string,
 		options: CompilerDOM.CompilerOptions,
+		rootMatch?: CompilerDOM.DirectiveNode,
 	): CompilerDOM.RootNode | undefined;
 	compileSFCStyle?(lang: string, style: string):
 		| Pick<IRStyle, 'imports' | 'bindings' | 'classNames'>

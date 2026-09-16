@@ -106,6 +106,9 @@ export function startServer(ts: typeof import('typescript')) {
 				getComponentMeta(...args) {
 					return sendTsServerRequest('_vue:getComponentMeta', args);
 				},
+				getMatchWarnings(...args) {
+					return sendTsServerRequest('_vue:getMatchWarnings', args);
+				},
 				getComponentNames(...args) {
 					return sendTsServerRequest('_vue:getComponentNames', args);
 				},

@@ -19,6 +19,7 @@ import { getComponentSlots } from './lib/requests/getComponentSlots';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
+import { getMatchWarnings } from './lib/requests/getMatchWarnings';
 import { isRefAtPosition } from './lib/requests/isRefAtPosition';
 import { resolveModuleName } from './lib/requests/resolveModuleName';
 
@@ -271,6 +272,11 @@ export = createLanguageServicePlugin(
 						tag,
 					),
 				);
+			});
+			session.addProtocolHandler('_vue:getMatchWarnings', request => {
+				const [fileName]: Parameters<Requests['getMatchWarnings']> = request.arguments;
+				const { program, virtualCode } = getProjectAndVirtualCode(fileName);
+				return createResponse(getMatchWarnings(ts, program, virtualCode.fileName));
 			});
 			session.addProtocolHandler('_vue:getComponentNames', request => {
 				const [fileName]: Parameters<Requests['getComponentNames']> = request.arguments;

@@ -20,7 +20,7 @@ const plugin: VueLanguagePlugin = () => {
 	return {
 		version: 3,
 
-		compileSFCTemplate(lang, template, options) {
+		compileSFCTemplate(lang, template, options, rootMatch) {
 			if (lang === 'html' || lang === 'md') {
 				let addedSuffix = false;
 
@@ -30,7 +30,7 @@ const plugin: VueLanguagePlugin = () => {
 					addedSuffix = true;
 				}
 
-				const ast = compileTemplate(template, options);
+				const ast = compileTemplate(template, options, rootMatch);
 				(ast as any).__addedSuffix = addedSuffix;
 
 				return ast;
@@ -38,6 +38,9 @@ const plugin: VueLanguagePlugin = () => {
 		},
 
 		updateSFCTemplate(oldAst, change) {
+			if (/v-(match|when)\b/.test(oldAst.source)) {
+				return;
+			}
 			const newSource = oldAst.source.slice(0, change.start)
 				+ change.newText
 				+ oldAst.source.slice(change.end);
