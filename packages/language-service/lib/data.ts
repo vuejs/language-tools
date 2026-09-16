@@ -40,7 +40,30 @@ export function loadTemplateData(lang: string) {
 
 	resolveReferences(data);
 
-	return data;
+	return {
+		...data,
+		globalAttributes: [
+			...data.globalAttributes ?? [],
+			{
+				name: 'v-match',
+				description:
+					'RFC #823 reference implementation: evaluate one subject and render the first matching v-when arm. Template type checking requires exhaustive coverage.',
+				references: [{
+					name: 'RFC #823 (Draft reference implementation)',
+					url: 'https://github.com/vuejs/rfcs/pull/823',
+				}],
+			},
+			{
+				name: 'v-when',
+				description:
+					'RFC #823 reference implementation: a pattern with optional const/rest/as bindings and an if (guard). Must be a direct v-match child. No arguments, modifiers, or shorthand.',
+				references: [{
+					name: 'RFC #823 (Draft reference implementation)',
+					url: 'https://github.com/vuejs/rfcs/pull/823',
+				}],
+			},
+		],
+	};
 }
 
 export function loadLanguageBlocks(lang: string): html.HTMLDataV1 {

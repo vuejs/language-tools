@@ -1,4 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
+import { getTemplateMatch } from '../../template/patterns/prepare';
 import type { Code } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
@@ -10,6 +11,7 @@ import { generateInterpolation } from './interpolation';
 import { generateSlotOutlet } from './slotOutlet';
 import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
+import { generateVMatch } from './vMatch';
 import { generateVSlot } from './vSlot';
 
 export function* generateTemplateChild(
@@ -32,7 +34,11 @@ export function* generateTemplateChild(
 		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
-		if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
+		const match = getTemplateMatch(node);
+		if (match) {
+			yield* generateVMatch(options, ctx, match);
+		}
+		else if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
 			yield* generateSlotOutlet(options, ctx, node);
 		}
 		else {

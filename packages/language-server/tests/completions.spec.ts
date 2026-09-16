@@ -1180,3 +1180,8 @@ async function prepareDocument(fileName: string, languageId: string, content: st
 	}
 	return document;
 }
+
+test('RFC 823 long-form directive names are completed', async () => {
+	const result = await requestCompletionListToVueServer('fixture.vue', 'vue', '<template><div v-| /></template>');
+	expect(result.items.map(item => item.label)).toEqual(expect.arrayContaining(['v-match', 'v-when']));
+});

@@ -4,6 +4,7 @@ import type { VueCompletionData } from '../common';
 type Response<T> = T | null | undefined | Promise<T | null | undefined>;
 
 export interface Requests {
+	getMatchWarnings(fileName: string): Response<ReturnType<typeof import('./getMatchWarnings.js')['getMatchWarnings']>>;
 	collectExtractProps(
 		fileName: string,
 		templateCodeRange: [number, number],

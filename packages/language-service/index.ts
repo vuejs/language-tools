@@ -22,6 +22,7 @@ import { create as createVueDocumentHighlightsPlugin } from './lib/plugins/vue-d
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
 import { create as createVueFormatPerBlockPlugin } from './lib/plugins/vue-format-per-block';
 import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
+import { create as createVueMatchWarningsPlugin } from './lib/plugins/vue-match-warnings';
 import { create as createVueMissingPropsHintsPlugin } from './lib/plugins/vue-missing-props-hints';
 import { create as createVueScopedClassLinksPlugin } from './lib/plugins/vue-scoped-class-links';
 import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
@@ -75,5 +76,6 @@ export function createVueLanguageServicePlugins(
 		createVueTemplatePlugin(ts, 'html', client),
 		createVueTemplatePlugin(ts, 'jade', client),
 		createVueTwoslashQueriesPlugin(client),
+		createVueMatchWarningsPlugin(client),
 	];
 }

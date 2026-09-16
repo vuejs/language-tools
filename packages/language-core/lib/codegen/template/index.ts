@@ -67,6 +67,16 @@ function* generateWorker(
 	if (vueCompilerOptions.inferTemplateDollarEl) {
 		ctx.dollarVars.add('$el');
 	}
+	for (const error of template.errors) {
+		if (error.code !== 'V_MATCH_SYNTAX' || !error.loc) {
+			continue;
+		}
+		yield 'const ';
+		const token = yield* startBoundary('template', error.loc.start.offset, codeFeatures.verification);
+		yield ctx.getInternalVariable();
+		yield endBoundary(token, error.loc.end.offset);
+		yield `: { ${JSON.stringify(error.message)}: never } = {};\n`;
+	}
 	if (template.ast) {
 		yield* generateTemplateChild(options, ctx, template.ast);
 	}

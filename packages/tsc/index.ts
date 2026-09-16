@@ -1,5 +1,6 @@
 import { runTsc } from '@volar/typescript/lib/quickstart/runTsc';
 import * as core from '@vue/language-core';
+import { withMatchWarnings } from './lib/matchWarnings';
 
 const windowsPathReg = /\\/g;
 
@@ -38,11 +39,11 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 		);
 
 	try {
-		return main();
+		return withMatchWarnings(main);
 	}
 	catch (err) {
 		if (err === extensionsChangedException) {
-			return main();
+			return withMatchWarnings(main);
 		}
 		else {
 			throw err;

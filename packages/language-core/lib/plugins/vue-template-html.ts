@@ -38,6 +38,9 @@ const plugin: VueLanguagePlugin = () => {
 		},
 
 		updateSFCTemplate(oldAst, change) {
+			if (/v-(match|when)\b/.test(oldAst.source)) {
+				return;
+			}
 			const newSource = oldAst.source.slice(0, change.start)
 				+ change.newText
 				+ oldAst.source.slice(change.end);

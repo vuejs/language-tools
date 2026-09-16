@@ -1240,6 +1240,9 @@
 		"vue-directives": {
 			"patterns": [
 				{
+					"include": "#vue-directives-match-arm"
+				},
+				{
 					"include": "#vue-directives-control"
 				},
 				{
@@ -1307,7 +1310,7 @@
 			]
 		},
 		"vue-directives-control": {
-			"begin": "(?:(v-for)|(v-if|v-else-if|v-else))(?=[=/>)\\s])",
+			"begin": "(?:(v-for)|(v-if|v-else-if|v-else|v-match))(?=[=/>)\\s])",
 			"beginCaptures": {
 				"1": {
 					"name": "keyword.control.loop.vue"
@@ -1583,6 +1586,119 @@
 			"patterns": [
 				{
 					"include": "source.json#value"
+				}
+			]
+		},
+		"vue-directives-match-arm": {
+			"begin": "(v-when)(?=[=/>)\\s])",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.conditional.vue"
+				}
+			},
+			"end": "(?=\\s*[^=\\s])",
+			"name": "meta.attribute.directive.control.vue",
+			"patterns": [
+				{
+					"begin": "(=)\\s*('|\"|`)",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.separator.key-value.html.vue"
+						},
+						"2": {
+							"name": "punctuation.definition.string.begin.html.vue"
+						}
+					},
+					"end": "(\\2)",
+					"endCaptures": {
+						"1": {
+							"name": "punctuation.definition.string.end.html.vue"
+						}
+					},
+					"contentName": "meta.pattern.vue",
+					"patterns": [
+						{
+							"include": "#vue-match-pattern"
+						}
+					]
+				}
+			]
+		},
+		"vue-match-pattern": {
+			"patterns": [
+				{
+					"begin": "\\b(if)\\s*(\\()",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.control.conditional.vue"
+						},
+						"2": {
+							"name": "punctuation.definition.parameters.begin.ts"
+						}
+					},
+					"end": "\\)(?=\\s*['\"`])",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.parameters.end.ts"
+						}
+					},
+					"contentName": "source.ts.embedded.html.vue",
+					"patterns": [
+						{
+							"include": "source.ts#expression"
+						}
+					]
+				},
+				{
+					"match": "'(?:\\\\.|[^'\\\\])*'|\"(?:\\\\.|[^\"\\\\])*\"",
+					"name": "string.quoted.vue"
+				},
+				{
+					"match": "\\b(const|as)\\b\\s*([\\w$]+)?",
+					"captures": {
+						"1": {
+							"name": "keyword.declaration.pattern.vue"
+						},
+						"2": {
+							"name": "variable.other.constant.ts"
+						}
+					}
+				},
+				{
+					"match": "\\b(let|var)\\b",
+					"name": "invalid.illegal.pattern.vue"
+				},
+				{
+					"match": "(?<![\\w$])_(?![\\w$])",
+					"name": "constant.language.wildcard.vue"
+				},
+				{
+					"match": "\\b(true|false|null|undefined|NaN)\\b",
+					"name": "constant.language.ts"
+				},
+				{
+					"match": "(?<![\\w$])[-+]?(?:0[xX][\\da-fA-F]+|\\d+(?:\\.\\d+)?(?:[eE][-+]?\\d+)?)(?:n)?",
+					"name": "constant.numeric.ts"
+				},
+				{
+					"match": "\\.\\.\\.",
+					"name": "keyword.operator.rest.vue"
+				},
+				{
+					"match": "\\|",
+					"name": "keyword.operator.pattern.vue"
+				},
+				{
+					"match": "[{}\\[\\]()]",
+					"name": "punctuation.definition.pattern.vue"
+				},
+				{
+					"match": "[,:.]",
+					"name": "punctuation.separator.pattern.vue"
+				},
+				{
+					"match": "[\\w$]+",
+					"name": "variable.other.readwrite.ts"
 				}
 			]
 		}

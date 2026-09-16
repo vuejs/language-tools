@@ -5,6 +5,7 @@ export * from './lib/parsers/scriptRanges';
 export * from './lib/parsers/scriptSetupRanges';
 export * from './lib/plugins';
 export * from './lib/template/compile';
+export * from './lib/template/patterns/warnings';
 export * from './lib/types';
 export * from './lib/utils/collectBindings';
 export * from './lib/utils/forEachTemplateNode';
