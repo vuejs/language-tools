@@ -98,7 +98,7 @@ defineProps<{ rows: { value: string }[] }>();
 </script><template>
 <div v-for="value in rows"><template v-match="value">
 <button v-when="{ const value } if (value.length)" :title="value" @click="value.toUpperCase()">
-<b v-for="value in [1, 2]">{{ value.toFixed() }}</b>{{ value }}
+<b v-for="value in value">{{ value.toLowerCase() }}</b>{{ value }}
 </button><i v-when="const value">{{ value.value }}</i>
 </template></div><footer>{{ value }}</footer>
 </template>`;
@@ -118,10 +118,11 @@ defineProps<{ rows: { value: string }[] }>();
 		text.indexOf('value.length'),
 		text.indexOf(':title="value"') + ':title="'.length,
 		armReference,
+		text.indexOf('in value') + 'in '.length,
 		text.indexOf('</b>{{ value') + '</b>{{ '.length,
 	]);
-	const inner = await request('quickinfo', text, text.indexOf('value.toFixed'));
-	expect(inner.body.displayString).toBe('const value: 1 | 2');
+	const inner = await request('quickinfo', text, text.indexOf('value.toLowerCase'));
+	expect(inner.body.displayString).toBe('const value: string');
 	const diagnostics = await request('semanticDiagnosticsSync', text);
 	expect(diagnostics.body).toEqual([]);
 });

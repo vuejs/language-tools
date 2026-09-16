@@ -224,6 +224,7 @@ defineProps<{ count: number; rows: { value: string; count: boolean }[] }>();
   {{ exactType(row, {} as { value: string; count: boolean }) }}
 </div>
 {{ exactType(value, {} as 'setup') }} {{ exactType(count, {} as number) }}
+<i v-for="Math in [Math.PI]">{{ exactType(Math, {} as number) }}</i>
 <template v-match="{ tag: value, value: 123 }">
   <i v-when="{ tag: value, const value }">{{ exactType(value, {} as number) }}</i>
   <i v-when="_"/>
@@ -235,6 +236,12 @@ defineProps<{ count: number; rows: { value: string; count: boolean }[] }>();
 <template v-match="rows[0]">
   <ScopeSlot v-when="{ const value }" :label="value" v-slot="{ value }">{{ exactType(value, {} as boolean) }}</ScopeSlot>
   <i v-when="_"/>
+</template>
+<template v-match="rows">
+  <div v-when="const rows">
+    <i v-for="rows in rows">{{ exactType(rows, {} as { value: string; count: boolean }) }}</i>
+    {{ exactType(rows, {} as { value: string; count: boolean }[]) }}
+  </div>
 </template>
 <template v-match="rows">
   <i v-when="[const row, ...const tail]">{{ row.value }} {{ tail.length }}</i>
