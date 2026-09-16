@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
 import { closeProject, openProject, transformVue } from '../project';
@@ -15,6 +16,9 @@ test('generates a Vue service script with source mappings', () => {
 
 	expect(opened.configIdentity).toHaveLength(64);
 	expect(opened.watchedFiles).toContain(configFileName);
+	expect(opened.watchedFiles).toContain(
+		path.resolve(__dirname, '../../../test-workspace/tsconfig.base.json'),
+	);
 
 	const result = transformVue({
 		projectHandle,
@@ -180,5 +184,110 @@ test('maps Vue diagnostic directives to virtual regions', () => {
 				directive[0] + directive[1],
 			)).toContain('@vue-expect-error');
 		}
+	}
+});
+
+/**
+ * Creates a throwaway workspace with an installed Vue version and a Vue language plugin, so that
+ * `target: 'auto'` and `plugins` resolution have something to resolve from the project root.
+ */
+function createWorkspace() {
+	const workspace = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'vue-content-mapper-')));
+	const pluginDir = path.join(workspace, 'node_modules/vue-test-plugin');
+	fs.mkdirSync(path.join(workspace, 'node_modules/vue'), { recursive: true });
+	fs.mkdirSync(pluginDir, { recursive: true });
+	fs.writeFileSync(
+		path.join(workspace, 'node_modules/vue/package.json'),
+		JSON.stringify({ name: 'vue', version: '3.5.0' }),
+	);
+	fs.writeFileSync(
+		path.join(pluginDir, 'package.json'),
+		JSON.stringify({ name: 'vue-test-plugin', version: '1.0.0', main: 'index.js' }),
+	);
+	fs.writeFileSync(pluginEntry(workspace), `module.exports = () => ({ name: 'vue-test-plugin', version: 2 });\n`);
+	return workspace;
+}
+
+function pluginEntry(workspace: string) {
+	return path.join(workspace, 'node_modules/vue-test-plugin/index.js');
+}
+
+test('tracks dynamic configuration for inferred projects', () => {
+	const workspace = createWorkspace();
+	const configFileName = '';
+	const options = { target: 'auto', plugins: ['vue-test-plugin'] };
+	const previousCwd = process.cwd();
+	try {
+		process.chdir(workspace);
+		const openInferredProject = (projectHandle: string) =>
+			openProject({ configFileName, projectHandle, compilerOptions: {}, options });
+
+		const first = openInferredProject('inferred-project');
+		closeProject('inferred-project');
+		const vueManifest = path.join(workspace, 'node_modules/vue/package.json');
+		expect(first.watchedFiles).toContain(vueManifest);
+		expect(first.watchedFiles).toContain(pluginEntry(workspace));
+
+		fs.writeFileSync(vueManifest, JSON.stringify({ name: 'vue', version: '3.6.0' }));
+		const withNewerVue = openInferredProject('inferred-project');
+		closeProject('inferred-project');
+		expect(withNewerVue.configIdentity).not.toBe(first.configIdentity);
+
+		fs.writeFileSync(pluginEntry(workspace), `module.exports = () => ({ name: 'vue-test-plugin', version: 2, order: 3 });\n`);
+		const withNewerPlugin = openInferredProject('inferred-project');
+		closeProject('inferred-project');
+		expect(withNewerPlugin.configIdentity).not.toBe(withNewerVue.configIdentity);
+	} finally {
+		process.chdir(previousCwd);
+		fs.rmSync(workspace, { recursive: true, force: true });
+	}
+});
+
+test('watches plugins declared in the tsconfig vueCompilerOptions', () => {
+	const workspace = createWorkspace();
+	const configFileName = path.join(workspace, 'tsconfig.json');
+	fs.writeFileSync(configFileName, JSON.stringify({
+		compilerOptions: { strict: true },
+		vueCompilerOptions: { plugins: ['vue-test-plugin'] },
+	}));
+	try {
+		const first = openProject({
+			configFileName,
+			projectHandle: 'tsconfig-plugin-project',
+			compilerOptions: {},
+			options: {},
+		});
+		closeProject('tsconfig-plugin-project');
+		expect(first.watchedFiles).toContain(pluginEntry(workspace));
+
+		fs.writeFileSync(pluginEntry(workspace), `module.exports = () => ({ name: 'vue-test-plugin', version: 2, order: 3 });\n`);
+		const second = openProject({
+			configFileName,
+			projectHandle: 'tsconfig-plugin-project',
+			compilerOptions: {},
+			options: {},
+		});
+		closeProject('tsconfig-plugin-project');
+		expect(second.configIdentity).not.toBe(first.configIdentity);
+	} finally {
+		fs.rmSync(workspace, { recursive: true, force: true });
+	}
+});
+
+test('watches plugins declared in the mapper entry options', () => {
+	const workspace = createWorkspace();
+	const configFileName = path.join(workspace, 'tsconfig.json');
+	fs.writeFileSync(configFileName, JSON.stringify({ compilerOptions: { strict: true } }));
+	try {
+		const opened = openProject({
+			configFileName,
+			projectHandle: 'mapper-plugin-project',
+			compilerOptions: {},
+			options: { plugins: ['vue-test-plugin'] },
+		});
+		closeProject('mapper-plugin-project');
+		expect(opened.watchedFiles).toContain(pluginEntry(workspace));
+	} finally {
+		fs.rmSync(workspace, { recursive: true, force: true });
 	}
 });

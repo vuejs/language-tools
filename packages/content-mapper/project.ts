@@ -35,20 +35,15 @@ export function openProject(params: OpenProjectParams): OpenProjectResult {
 	};
 	projects.set(params.projectHandle, state);
 
-	const optionDiagnostics = toOptionDiagnostics(params.options);
-	if (!params.configFileName) {
-		return {
-			configIdentity: createIdentity(params, []),
-			optionDiagnostics,
-		};
-	}
-
+	// Inferred projects have no tsconfig, but resolving `target: 'auto'` and the mapper entry's
+	// `plugins` still reads dynamic inputs, so the configuration is always created through the
+	// watching host.
 	const watchedFiles = new Set<string>();
 	createConfiguration(state, params.configFileName, watchedFiles);
 	return {
 		configIdentity: createIdentity(params, watchedFiles),
 		watchedFiles: [...watchedFiles].sort(),
-		optionDiagnostics,
+		optionDiagnostics: toOptionDiagnostics(params.options),
 	};
 }
 
@@ -177,9 +172,20 @@ function createConfiguration(
 		watchedFiles.add(path.normalize(configFileName));
 	}
 	const { languageFeatures, ...mapperOptions } = state.params.options ?? {};
+	const watchedBefore = watchedFiles ? new Set(watchedFiles) : undefined;
 	const parsed = configFileName
 		? vue.createParsedCommandLine(ts, host, normalizePath(configFileName))
 		: undefined;
+	// `createParsedCommandLine` is the only reader of the tsconfig `extends` chain, so the files it
+	// added are exactly the configs that may declare legacy Vue options.
+	const configFileNames = configFileName
+		? [
+			normalizePath(configFileName),
+			...(watchedFiles && watchedBefore
+				? [...watchedFiles].filter(fileName => !watchedBefore.has(fileName))
+				: []),
+		]
+		: [];
 	// v4 moves the Vue compiler options from the tsconfig's `vueCompilerOptions` field to the mapper
 	// entry's `options`; apply the entry options on top of any options a tsconfig still carries.
 	const baseVueOptions = parsed?.vueOptions ?? vue.getDefaultCompilerOptions();
@@ -204,6 +210,7 @@ function createConfiguration(
 	};
 	if (watchedFiles) {
 		addPluginWatchFiles(watchedFiles, mapperOptions.plugins, rootDir);
+		addConfigPluginWatchFiles(watchedFiles, configFileNames);
 	}
 	state.configurations.set(configFileName, configuration);
 	return configuration;
@@ -257,6 +264,23 @@ function addPluginWatchFiles(watchedFiles: Set<string>, plugins: unknown, rootDi
 			watchedFiles.add(require.resolve(name, { paths: [rootDir] }));
 		}
 		catch {}
+	}
+}
+
+/**
+ * A tsconfig may still carry `vueCompilerOptions.plugins`; `createParsedCommandLine` loads those
+ * plugins, so their entry files participate in transforms and must be watched as well.
+ */
+function addConfigPluginWatchFiles(watchedFiles: Set<string>, configFileNames: string[]) {
+	for (const configFileName of configFileNames) {
+		const content = ts.sys.readFile(configFileName);
+		if (content === undefined) {
+			continue;
+		}
+		const plugins = ts.parseConfigFileTextToJson(configFileName, content).config?.vueCompilerOptions?.plugins;
+		if (plugins !== undefined) {
+			addPluginWatchFiles(watchedFiles, plugins, path.dirname(configFileName));
+		}
 	}
 }
 
