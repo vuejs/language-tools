@@ -233,11 +233,15 @@ test('tracks dynamic configuration for inferred projects', () => {
 		closeProject('inferred-project');
 		expect(withNewerVue.configIdentity).not.toBe(first.configIdentity);
 
-		fs.writeFileSync(pluginEntry(workspace), `module.exports = () => ({ name: 'vue-test-plugin', version: 2, order: 3 });\n`);
+		fs.writeFileSync(
+			pluginEntry(workspace),
+			`module.exports = () => ({ name: 'vue-test-plugin', version: 2, order: 3 });\n`,
+		);
 		const withNewerPlugin = openInferredProject('inferred-project');
 		closeProject('inferred-project');
 		expect(withNewerPlugin.configIdentity).not.toBe(withNewerVue.configIdentity);
-	} finally {
+	}
+	finally {
 		process.chdir(previousCwd);
 		fs.rmSync(workspace, { recursive: true, force: true });
 	}
@@ -246,10 +250,13 @@ test('tracks dynamic configuration for inferred projects', () => {
 test('watches plugins declared in the tsconfig vueCompilerOptions', () => {
 	const workspace = createWorkspace();
 	const configFileName = path.join(workspace, 'tsconfig.json');
-	fs.writeFileSync(configFileName, JSON.stringify({
-		compilerOptions: { strict: true },
-		vueCompilerOptions: { plugins: ['vue-test-plugin'] },
-	}));
+	fs.writeFileSync(
+		configFileName,
+		JSON.stringify({
+			compilerOptions: { strict: true },
+			vueCompilerOptions: { plugins: ['vue-test-plugin'] },
+		}),
+	);
 	try {
 		const first = openProject({
 			configFileName,
@@ -260,7 +267,10 @@ test('watches plugins declared in the tsconfig vueCompilerOptions', () => {
 		closeProject('tsconfig-plugin-project');
 		expect(first.watchedFiles).toContain(pluginEntry(workspace));
 
-		fs.writeFileSync(pluginEntry(workspace), `module.exports = () => ({ name: 'vue-test-plugin', version: 2, order: 3 });\n`);
+		fs.writeFileSync(
+			pluginEntry(workspace),
+			`module.exports = () => ({ name: 'vue-test-plugin', version: 2, order: 3 });\n`,
+		);
 		const second = openProject({
 			configFileName,
 			projectHandle: 'tsconfig-plugin-project',
@@ -269,7 +279,8 @@ test('watches plugins declared in the tsconfig vueCompilerOptions', () => {
 		});
 		closeProject('tsconfig-plugin-project');
 		expect(second.configIdentity).not.toBe(first.configIdentity);
-	} finally {
+	}
+	finally {
 		fs.rmSync(workspace, { recursive: true, force: true });
 	}
 });
@@ -287,7 +298,8 @@ test('watches plugins declared in the mapper entry options', () => {
 		});
 		closeProject('mapper-plugin-project');
 		expect(opened.watchedFiles).toContain(pluginEntry(workspace));
-	} finally {
+	}
+	finally {
 		fs.rmSync(workspace, { recursive: true, force: true });
 	}
 });
