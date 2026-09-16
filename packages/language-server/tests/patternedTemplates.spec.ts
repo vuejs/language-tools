@@ -90,3 +90,47 @@ test('type-aware unreachable arms warn without becoming vue-tsc errors', async (
 		'Unreachable v-when: this pattern cannot match any remaining value.',
 	]);
 });
+
+test('definition and rename distinguish shadowed bindings', async () => {
+	const text = `<script setup lang="ts">
+const value = 'setup';
+defineProps<{ rows: { value: string }[] }>();
+</script><template>
+<div v-for="value in rows"><template v-match="value">
+<button v-when="{ const value } if (value.length)" :title="value" @click="value.toUpperCase()">
+<b v-for="value in [1, 2]">{{ value.toFixed() }}</b>{{ value }}
+</button><i v-when="const value">{{ value.value }}</i>
+</template></div><footer>{{ value }}</footer>
+</template>`;
+	const armDeclaration = text.indexOf('{ const value') + '{ const '.length;
+	const armReference = text.indexOf('value.toUpperCase');
+	const { body, document } = await request('definition', text, armReference);
+	const position = document.positionAt(armDeclaration);
+	expect(body).toEqual([
+		expect.objectContaining({ start: { line: position.line + 1, offset: position.character + 1 } }),
+	]);
+	const rename = await request('rename', text, armReference, { findInStrings: false, findInComments: false });
+	const offsets = rename.body.locs.flatMap((file: { locs: { start: { line: number; offset: number } }[] }) =>
+		file.locs.map(loc => document.offsetAt({ line: loc.start.line - 1, character: loc.start.offset - 1 }))
+	);
+	expect(offsets.sort((a: number, b: number) => a - b)).toEqual([
+		armDeclaration,
+		text.indexOf('value.length'),
+		text.indexOf(':title="value"') + ':title="'.length,
+		armReference,
+		text.indexOf('</b>{{ value') + '</b>{{ '.length,
+	]);
+	const inner = await request('quickinfo', text, text.indexOf('value.toFixed'));
+	expect(inner.body.displayString).toBe('const value: 1 | 2');
+	const diagnostics = await request('semanticDiagnosticsSync', text);
+	expect(diagnostics.body).toEqual([]);
+});
+
+test('editor rejects repeated names within one pattern', async () => {
+	const text = `<script setup lang="ts">defineProps<{ result: unknown }>();</script>
+<template><template v-match="result"><i v-when="{ const value, ...const value }"/><i v-when="_"/></template></template>`;
+	const { body } = await request('semanticDiagnosticsSync', text);
+	expect(body).toEqual([
+		expect.objectContaining({ text: expect.stringContaining('Duplicate pattern binding value') }),
+	]);
+});

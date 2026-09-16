@@ -7,7 +7,7 @@ import { names } from '../names';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
-import { generateInterpolation } from './interpolation';
+import { generateInterpolation, getConditionBindings } from './interpolation';
 import { generateTemplateChild } from './templateChild';
 
 export function* generateVMatch(
@@ -26,14 +26,17 @@ export function* generateVMatch(
 			codeFeatures.all,
 			subject.content,
 			subject.loc.start.offset,
+			'(',
+			')',
 		),
 	];
 	const subjectText = toString(subjectCodes);
+	const subjectBindings = getConditionBindings(options.typescript, ctx, options.template, subjectText);
 	const local = ctx.getInternalVariable();
 	const endMatchScope = ctx.startScope();
-	yield `{\nconst ${local} = (`;
+	yield `{\nconst ${local} = `;
 	yield* subjectCodes;
-	yield `);\n`;
+	yield `;\n`;
 	let remaining = `typeof ${local}`;
 	for (const arm of arms) {
 		const patternType = ctx.getInternalVariable();
@@ -59,7 +62,7 @@ export function* generateVMatch(
 			`((value: typeof ${local}): value is typeof ${local} & ${narrowed} => true)(${subjectText})`;
 		yield `if (${condition} && ${sourceCondition}) {\nconst ${localValue} = ${local} as ${narrowed};\n`;
 		const conditionLength = ctx.blockConditions.length;
-		ctx.blockConditions.push(condition, sourceCondition);
+		ctx.blockConditions.push({ code: condition }, { code: sourceCondition, bindings: subjectBindings });
 		for (const binding of arm.bindings) {
 			ctx.declare(binding.name);
 		}
@@ -80,7 +83,10 @@ export function* generateVMatch(
 			yield 'if ';
 			yield* codes;
 			yield ' {\n';
-			ctx.blockConditions.push(toString(codes));
+			ctx.blockConditions.push({
+				code: toString(codes),
+				bindings: getConditionBindings(options.typescript, ctx, options.template, toString(codes)),
+			});
 		}
 		yield* generateTemplateChild(options, ctx, arm.node, true, true);
 		if (arm.guard) {

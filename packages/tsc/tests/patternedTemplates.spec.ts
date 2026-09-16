@@ -195,6 +195,107 @@ sources.set(
 	sources.get(`${workspace}/javascript.vue`)!.replace('<i v-when="false"/>', ''),
 );
 
+sources.set(
+	`${workspace}/ScopeSlot.vue`,
+	`<script setup lang="ts">
+defineProps<{ label?: string }>();
+defineSlots<{ default(props: { value: boolean }): any }>();
+</script>`,
+);
+sources.set(
+	`${workspace}/scopes.vue`,
+	`<script setup lang="ts">
+import ScopeSlot from './ScopeSlot.vue';
+import { exactType } from '../tsc/shared';
+const value = 'setup';
+defineProps<{ count: number; rows: { value: string; count: boolean }[] }>();
+</script><template>
+<div v-for="row in rows">
+  <template v-match="row">
+    <div v-when="{ const value, const count } if (count)" :title="value.toUpperCase()">
+      {{ exactType(value, {} as string) }} {{ exactType(count, {} as true) }}
+      <b v-for="value in [1, 2]">{{ exactType(value, {} as 1 | 2) }}</b>
+      <ScopeSlot v-slot="{ value }">{{ exactType(value, {} as boolean) }}</ScopeSlot>
+      {{ exactType(value, {} as string) }}
+      <template v-match="value"><i v-when="const value">{{ exactType(value, {} as string) }}</i></template>
+    </div>
+    <i v-when="const value">{{ exactType(value, {} as { value: string; count: boolean }) }}</i>
+  </template>
+  {{ exactType(row, {} as { value: string; count: boolean }) }}
+</div>
+{{ exactType(value, {} as 'setup') }} {{ exactType(count, {} as number) }}
+<template v-match="{ tag: value, value: 123 }">
+  <i v-when="{ tag: value, const value }">{{ exactType(value, {} as number) }}</i>
+  <i v-when="_"/>
+</template>
+<ScopeSlot v-slot="{ value }">
+  <template v-match="value"><i v-when="const value">{{ exactType(value, {} as boolean) }}</i></template>
+  {{ exactType(value, {} as boolean) }}
+</ScopeSlot>
+<template v-match="rows[0]">
+  <ScopeSlot v-when="{ const value }" :label="value" v-slot="{ value }">{{ exactType(value, {} as boolean) }}</ScopeSlot>
+  <i v-when="_"/>
+</template>
+<template v-match="rows">
+  <i v-when="[const row, ...const tail]">{{ row.value }} {{ tail.length }}</i>
+  <i v-when="[]">
+    <!-- @vue-expect-error -->
+    {{ row }}
+    <!-- @vue-expect-error -->
+    {{ tail }}
+  </i>
+</template>
+</template>`,
+);
+sources.set(
+	`${workspace}/event-scopes.vue`,
+	`<script setup lang="ts">
+import { exactType } from '../tsc/shared';
+import ScopeSlot from './ScopeSlot.vue';
+defineProps<{ rows: { value: string }[] }>();
+</script><template>
+<div v-for="value in rows">
+  <template v-match="value">
+    <button v-when="{ const value }" @click="exactType(value, {} as string); exactType($event, {} as MouseEvent)">{{ value }}</button>
+  </template>
+</div>
+<template v-match="rows[0]">
+  <button v-when="{ value: const $event } if (typeof $event === 'string')" @click="exactType($event, {} as MouseEvent)">{{ exactType($event, {} as string) }}</button>
+  <i v-when="_"/>
+</template>
+<div v-for="value in rows">
+  <template v-if="value.value">
+    <template v-match="value"><button v-when="{ const value }" @click="exactType(value, {} as string)"/></template>
+  </template>
+</div>
+<template v-match="rows[0]">
+  <div v-when="{ const value } if (value === 'arm')">
+    <button v-for="value in [1, 2]" @click="exactType(value, {} as 1 | 2)"/>
+    <ScopeSlot v-slot="{ value }"><button @click="exactType(value, {} as boolean)"/></ScopeSlot>
+    <button @click="exactType(value, {} as 'arm')"/>
+  </div>
+  <i v-when="_"/>
+</template>
+</template>`,
+);
+
+const duplicatePatterns = [
+	'{ a: const value, b: const value }',
+	'{ const value, nested: { const value } }',
+	'{ const value, ...const value }',
+	'[const value, ...const value]',
+	'{ const value } as value',
+	'const value as value',
+];
+for (const [index, pattern] of duplicatePatterns.entries()) {
+	sources.set(
+		`${workspace}/duplicate-${index}.vue`,
+		`<script setup lang="ts">defineProps<{ subject: unknown }>();</script><template>
+<template v-match="subject"><i v-when="${pattern}"/><i v-when="_"/></template>
+</template>`,
+	);
+}
+
 const options: ts.CompilerOptions = {
 	allowJs: true,
 	checkJs: true,
@@ -222,6 +323,13 @@ const createProgram = proxyCreateProgram(ts, ts.createProgram, (ts, options) => 
 const program = createProgram({ rootNames: [...sources.keys()], options, host });
 
 describe('RFC 823 required coverage', () => {
+	for (const [index, pattern] of duplicatePatterns.entries()) {
+		test(`rejects duplicate declarations in ${pattern}`, () => {
+			const file = program.getSourceFile(`${workspace}/duplicate-${index}.vue`)!;
+			expect(program.getSemanticDiagnostics(file).map(d => ts.flattenDiagnosticMessageText(d.messageText, '\n')))
+				.toEqual([expect.stringContaining('Duplicate pattern binding value')]);
+		});
+	}
 	test('inferred JavaScript template types require coverage', () => {
 		const file = program.getSourceFile(`${workspace}/javascript-missing.vue`)!;
 		const diagnostics = program.getSemanticDiagnostics(file);
@@ -258,7 +366,19 @@ describe('RFC 823 required coverage', () => {
 			}
 		});
 	}
-	for (const name of ['narrowing', 'values', 'rest', 'generics', 'nested', 'unknown-narrowing', 'javascript']) {
+	for (
+		const name of [
+			'narrowing',
+			'values',
+			'rest',
+			'generics',
+			'nested',
+			'unknown-narrowing',
+			'javascript',
+			'scopes',
+			'event-scopes',
+		]
+	) {
 		test(name, () => {
 			const file = program.getSourceFile(`${workspace}/${name}.vue`)!;
 			expect(
