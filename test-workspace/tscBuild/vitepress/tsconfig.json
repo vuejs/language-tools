@@ -9,7 +9,7 @@
 			}
 		},
 		{
-			"package": "vitepress-content-mapper",
+			"package": "@vue/content-mapper-vitepress",
 			"extensions": [".md"],
 			"options": {
 				"languageFeatures": false
