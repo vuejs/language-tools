@@ -1,9 +1,10 @@
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
+import { vueContentMapper } from '../project';
 import { TransformPool } from '../workerPool';
 
 test('transforms files concurrently with project state in every worker', async () => {
-	const pool = new TransformPool(2);
+	const pool = new TransformPool(vueContentMapper, 2);
 	const projectHandle = 'worker-project';
 	const configFileName = path.resolve(__dirname, '../../../test-workspace/content-mapper/tsconfig.json');
 	await pool.openProject({
@@ -33,6 +34,7 @@ test('transforms files concurrently with project state in every worker', async (
 
 test('rejects requests when a worker exits cleanly but unexpectedly', async () => {
 	const pool = new TransformPool(
+		vueContentMapper,
 		2,
 		path.resolve(__dirname, 'fixtures/exitWorker.cjs'),
 	);
@@ -47,6 +49,7 @@ test('rejects requests when a worker exits cleanly but unexpectedly', async () =
 
 test('rejects in-flight requests when the pool closes', async () => {
 	const pool = new TransformPool(
+		vueContentMapper,
 		2,
 		path.resolve(__dirname, 'fixtures/idleWorker.cjs'),
 	);

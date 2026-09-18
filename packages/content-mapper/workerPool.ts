@@ -1,6 +1,7 @@
 import { availableParallelism } from 'node:os';
 import * as path from 'node:path';
 import { Worker } from 'node:worker_threads';
+import type { ContentMapper } from './mapper';
 import type {
 	CloseProjectParams,
 	OpenProjectParams,
@@ -44,36 +45,35 @@ const filesBeforeParallelism = 32;
 
 export class TransformPool {
 	readonly workerCount: number;
-	#directModule: Promise<typeof import('./project.js')> | undefined;
+	#mapper: ContentMapper;
 	#nextRequestId = 0;
 	#projects = new Map<string, PoolProject>();
 	#workers: PoolWorker[];
 	#workerPath: string;
 
 	constructor(
+		mapper: ContentMapper,
 		workerCount = readWorkerCount(),
 		workerPath = path.resolve(__dirname, 'worker.js'),
 	) {
 		this.workerCount = workerCount;
+		this.#mapper = mapper;
 		this.#workerPath = workerPath;
-		this.#directModule = workerCount === 1
-			? import('./project.js')
-			: undefined;
 		this.#workers = workerCount === 1
 			? []
 			: [this.#createWorker()];
 	}
 
 	async openProject(params: OpenProjectParams) {
-		if (this.#directModule) {
-			return (await this.#directModule).openProject(params);
+		if (this.workerCount === 1) {
+			return this.#mapper.openProject(params);
 		}
 		if (this.#projects.has(params.projectHandle)) {
-			throw new Error(`Vue content mapper project is already open: ${params.projectHandle}`);
+			throw new Error(`${this.#mapper.name} project is already open: ${params.projectHandle}`);
 		}
 		const primaryWorker = this.#workers[0];
 		if (!primaryWorker) {
-			throw new Error('Vue content mapper has no available worker');
+			throw new Error(`${this.#mapper.name} has no available worker`);
 		}
 		const project: PoolProject = {
 			params,
@@ -93,8 +93,8 @@ export class TransformPool {
 	}
 
 	async closeProject(params: CloseProjectParams) {
-		if (this.#directModule) {
-			(await this.#directModule).closeProject(params.projectHandle);
+		if (this.workerCount === 1) {
+			this.#mapper.closeProject(params.projectHandle);
 			return;
 		}
 		const project = this.#projects.get(params.projectHandle);
@@ -118,14 +118,14 @@ export class TransformPool {
 	}
 
 	async transform(params: TransformParams) {
-		if (this.#directModule) {
-			return (await this.#directModule).transformVue(params);
+		if (this.workerCount === 1) {
+			return this.#mapper.transform(params);
 		}
 		const project = params.projectHandle
 			? this.#projects.get(params.projectHandle)
 			: undefined;
 		if (params.projectHandle && !project) {
-			throw new Error(`Unknown Vue content mapper project handle: ${params.projectHandle}`);
+			throw new Error(`Unknown ${this.#mapper.name} project handle: ${params.projectHandle}`);
 		}
 		let worker = project?.fileWorkers.get(params.fileName);
 		if (!worker) {
@@ -139,7 +139,7 @@ export class TransformPool {
 			}
 		}
 		if (!worker) {
-			throw new Error('Vue content mapper has no available worker');
+			throw new Error(`${this.#mapper.name} has no available worker`);
 		}
 		if (project) {
 			await this.#ensureProject(worker, project);
@@ -151,7 +151,7 @@ export class TransformPool {
 		this.#projects.clear();
 		await Promise.all(this.#workers.map(worker => {
 			worker.terminating = true;
-			this.#failWorker(worker, new Error('Vue content mapper worker pool is shutting down'));
+			this.#failWorker(worker, new Error(`${this.#mapper.name} worker pool is shutting down`));
 			return worker.thread.terminate();
 		}));
 	}
@@ -186,7 +186,7 @@ export class TransformPool {
 		thread.on('error', error => this.#failWorker(worker, error));
 		thread.on('exit', code => {
 			if (!worker.terminating) {
-				this.#failWorker(worker, new Error(`Vue content mapper worker exited unexpectedly with code ${code}`));
+				this.#failWorker(worker, new Error(`${this.#mapper.name} worker exited unexpectedly with code ${code}`));
 			}
 		});
 		thread.unref();
@@ -206,7 +206,7 @@ export class TransformPool {
 			opened = (this.#request(worker, 'openProject', project.params) as Promise<OpenProjectResult>)
 				.then(result => {
 					if (project.configIdentity && result.configIdentity !== project.configIdentity) {
-						throw new Error('Vue content mapper workers produced inconsistent project configuration');
+						throw new Error(`${this.#mapper.name} workers produced inconsistent project configuration`);
 					}
 					return result;
 				})
@@ -225,7 +225,7 @@ export class TransformPool {
 		params: WorkerRequest['params'],
 	) {
 		if (worker.failed) {
-			return Promise.reject(new Error('Vue content mapper worker is unavailable'));
+			return Promise.reject(new Error(`${this.#mapper.name} worker is unavailable`));
 		}
 		const id = ++this.#nextRequestId;
 		return new Promise<OpenProjectResult | TransformResult | undefined>((resolve, reject) => {
