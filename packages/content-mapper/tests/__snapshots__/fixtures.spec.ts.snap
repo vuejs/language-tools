@@ -21,3 +21,8 @@ test-workspace/content-mapper-options/tsconfig.json(14,22): error vue1: Unknown 
 `;
 
 exports[`content mapper fixtures > test-workspace/content-mapper-pug/tsconfig.json 1`] = `"test-workspace/content-mapper-pug/App.vue(7,6): error TS2339: Property 'missing' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'."`;
+
+exports[`content mapper fixtures > test-workspace/content-mapper-vitepress/tsconfig.json 1`] = `
+"test-workspace/content-mapper-vitepress/main.md(12,7): error TS2322: Type 'string' is not assignable to type 'number'.
+test-workspace/content-mapper-vitepress/main.md(18,10): error TS2339: Property 'nope' does not exist on type 'number'."
+`;

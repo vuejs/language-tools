@@ -9,7 +9,10 @@
 					"required": ["package"],
 					"properties": {
 						"package": {
-							"const": "@vue/content-mapper"
+							"enum": [
+								"@vue/content-mapper",
+								"@vue/vitepress-content-mapper"
+							]
 						}
 					}
 				},

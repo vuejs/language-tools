@@ -1,0 +1,25 @@
+{
+	"extends": "../tsconfig.base.json",
+	"compilerOptions": {
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"strict": true
+	},
+	"contentMappers": [
+		{
+			"package": "@vue/content-mapper",
+			"extensions": [".vue"],
+			"options": {
+				"languageFeatures": false
+			}
+		},
+		{
+			"package": "@vue/vitepress-content-mapper",
+			"extensions": [".md"],
+			"options": {
+				"languageFeatures": false
+			}
+		}
+	],
+	"include": ["**/*"]
+}

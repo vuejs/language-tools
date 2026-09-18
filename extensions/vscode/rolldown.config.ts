@@ -11,6 +11,8 @@ export default defineConfig({
 		'typescript-plugin': './node_modules/@vue/typescript-plugin/index.ts',
 		'content-mapper-server': '../../packages/content-mapper/server.ts',
 		'content-mapper-worker': '../../packages/content-mapper/worker.ts',
+		'vitepress-content-mapper-server': '../../packages/content-mapper-vitepress/server.ts',
+		'vitepress-content-mapper-worker': '../../packages/content-mapper-vitepress/worker.ts',
 	},
 	output: {
 		format: 'cjs',

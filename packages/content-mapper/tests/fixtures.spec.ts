@@ -7,6 +7,7 @@ const configFileNames = [
 	'test-workspace/content-mapper-options/tsconfig.json',
 	'test-workspace/content-mapper-pug/tsconfig.json',
 	'test-workspace/content-mapper-directives/tsconfig.json',
+	'test-workspace/content-mapper-vitepress/tsconfig.json',
 ];
 
 test('content mapper fixtures', () => {

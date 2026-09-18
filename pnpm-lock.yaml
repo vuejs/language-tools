@@ -112,6 +112,31 @@ importers:
         specifier: ^26.0.1
         version: 26.1.1
 
+  packages/content-mapper-vitepress:
+    dependencies:
+      '@volar/language-core':
+        specifier: 2.4.28
+        version: 2.4.28
+      '@vue/content-mapper':
+        specifier: workspace:*
+        version: link:../content-mapper
+      '@vue/language-core':
+        specifier: workspace:*
+        version: link:../language-core
+      muggle-string:
+        specifier: ^0.4.1
+        version: 0.4.1
+      typescript:
+        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+    devDependencies:
+      '@types/node':
+        specifier: ^26.0.1
+        version: 26.1.1
+      '@vue/compiler-sfc':
+        specifier: ^3.5.0
+        version: 3.5.40
+
   packages/language-core:
     dependencies:
       '@volar/language-core':
@@ -308,6 +333,9 @@ importers:
       '@vue/content-mapper':
         specifier: workspace:*
         version: link:../packages/content-mapper
+      '@vue/vitepress-content-mapper':
+        specifier: workspace:*
+        version: link:../packages/content-mapper-vitepress
       typescript:
         specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
         version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2

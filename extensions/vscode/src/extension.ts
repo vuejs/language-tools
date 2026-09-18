@@ -282,31 +282,49 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 		if (!tsdk) {
 			return;
 		}
-		const mapperServer = path.join(context.extensionPath, 'dist', 'content-mapper-server.js');
-		const mapperWorker = path.join(context.extensionPath, 'dist', 'content-mapper-worker.js');
+		const typescriptPath = path.join(tsdk, 'typescript.js');
+		const createContribution = (
+			extensions: string[],
+			name: string,
+			server: string,
+			worker: string,
+		) => ({
+			extensions,
+			inferredProjectContribution: {
+				options: {
+					languageFeatures: true,
+					target: 99,
+				},
+				manifest: {
+					name,
+					version: require('../package.json').version,
+					exec: [
+						process.execPath,
+						path.join(context.extensionPath, 'dist', server),
+						`--worker=${path.join(context.extensionPath, 'dist', worker)}`,
+						`--typescript=${typescriptPath}`,
+					],
+					cwd: vscode.Uri.file(context.extensionPath),
+					dynamicConfig: true,
+				},
+			},
+		});
 		context.subscriptions.push(api.registerContentMappers(
 			'Vue.volar',
-			[{
-				extensions: ['.vue'],
-				inferredProjectContribution: {
-					options: {
-						languageFeatures: true,
-						target: 99,
-					},
-					manifest: {
-						name: '@vue/content-mapper',
-						version: require('../package.json').version,
-						exec: [
-							process.execPath,
-							mapperServer,
-							`--worker=${mapperWorker}`,
-							`--typescript=${path.join(tsdk, 'typescript.js')}`,
-						],
-						cwd: vscode.Uri.file(context.extensionPath),
-						dynamicConfig: true,
-					},
-				},
-			}],
+			[
+				createContribution(
+					['.vue'],
+					'@vue/content-mapper',
+					'content-mapper-server.js',
+					'content-mapper-worker.js',
+				),
+				createContribution(
+					['.md'],
+					'@vue/vitepress-content-mapper',
+					'vitepress-content-mapper-server.js',
+					'vitepress-content-mapper-worker.js',
+				),
+			],
 		));
 	}, error => logger.logger.value?.error(String(error)));
 }
