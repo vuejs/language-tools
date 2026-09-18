@@ -87,8 +87,6 @@ Configure Vue compiler behavior through the `vueCompilerOptions` field in `tscon
 | :--- | :--- | :--- | :--- |
 | `target` | `number \| 'auto'` | `'auto'` | Vue version. `'auto'` reads from `node_modules/vue/package.json`. |
 | `extensions` | `string[]` | `['.vue']` | File extensions to be treated as Vue SFCs. |
-| `vitePressExtensions` | `string[]` | `[]` | File extensions to be treated as VitePress Markdown. |
-| `petiteVueExtensions` | `string[]` | `[]` | File extensions to be treated as Petite Vue HTML. |
 | `plugins` | `string[]` | `[]` | Custom language plugins, e.g., [`@vue/language-plugin-pug`](../language-plugin-pug). |
 
 ### Type Checking Options
@@ -121,8 +119,6 @@ This package includes the following built-in plugins to handle different file ty
 | Plugin | Function | Controlled By |
 | :--- | :--- | :--- |
 | `file-vue` | Parses `.vue` files into an SFC structure. | `extensions` |
-| `file-md` | Parses Markdown files into an SFC structure. | `vitePressExtensions` |
-| `file-html` | Parses HTML files into an SFC structure. | `petiteVueExtensions` |
 
 ### Virtual Code Generation Plugins
 

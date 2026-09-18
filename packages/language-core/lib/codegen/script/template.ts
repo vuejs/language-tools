@@ -36,16 +36,13 @@ export function* generateTemplate(
 }
 
 function* generateTemplateCtx(
-	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, fileName, scriptLang }: ScriptCodegenOptions,
+	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, scriptLang }: ScriptCodegenOptions,
 	selfType: string | undefined,
 ): Generator<Code> {
 	const exps: Code[] = [];
 	const emitTypes: string[] = [];
 	const propTypes: string[] = [];
 
-	if (vueCompilerOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {
-		exps.push(`globalThis`);
-	}
 	if (selfType) {
 		exps.push(asType(`InstanceType<${names.PickNotAny}<typeof ${selfType}, new () => {}>>`, scriptLang));
 	}

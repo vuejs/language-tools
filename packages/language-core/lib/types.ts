@@ -41,8 +41,6 @@ export interface VueCompilerOptions {
 	lib: string;
 	typesRoot: string;
 	extensions: string[];
-	vitePressExtensions: string[];
-	petiteVueExtensions: string[];
 	jsxSlots: boolean;
 	strictCssModules: boolean;
 	inferComponentDollarEl: boolean;

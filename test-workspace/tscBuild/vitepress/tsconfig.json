@@ -1,7 +1,20 @@
 {
 	"extends": "../../tsconfig.base.json",
-	"vueCompilerOptions": {
-		"vitePressExtensions": [".md"]
-	},
+	"contentMappers": [
+		{
+			"package": "@vue/content-mapper",
+			"extensions": [".vue"],
+			"options": {
+				"languageFeatures": false
+			}
+		},
+		{
+			"package": "@vue/vitepress-content-mapper",
+			"extensions": [".md"],
+			"options": {
+				"languageFeatures": false
+			}
+		}
+	],
 	"include": ["**/*"]
 }

@@ -28,16 +28,6 @@
 					"default": [".vue"],
 					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/vuejs/language-tools/tree/master/extensions/vscode/README.md#custom-file-extensions."
 				},
-				"vitePressExtensions": {
-					"type": "array",
-					"default": [".md"],
-					"markdownDescription": "Valid file extensions that should be considered as regular VitePress SFC."
-				},
-				"petiteVueExtensions": {
-					"type": "array",
-					"default": [".html"],
-					"markdownDescription": "Valid file extensions that should be considered as regular PetiteVue SFC."
-				},
 				"jsxSlots": {
 					"type": "boolean",
 					"default": false,
