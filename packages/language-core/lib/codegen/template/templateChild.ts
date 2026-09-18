@@ -22,6 +22,9 @@ export function* generateTemplateChild(
 	if (enterNode && !ctx.enter(node)) {
 		return;
 	}
+	if (enterNode) {
+		yield* ctx.generateDiagnosticDirectiveStart();
+	}
 
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
 		for (const item of collectSingleRootNodes(options, node.children)) {
@@ -84,7 +87,8 @@ export function* generateTemplateChild(
 	}
 
 	if (enterNode) {
-		yield* ctx.exit();
+		yield* ctx.generateDiagnosticDirectiveEnd();
+		ctx.exit();
 	}
 }
 

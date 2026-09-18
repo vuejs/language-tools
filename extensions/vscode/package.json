@@ -44,6 +44,17 @@
 					"jsconfig-*.json"
 				],
 				"url": "./schemas/vue-tsconfig.schema.json"
+			},
+			{
+				"fileMatch": [
+					"tsconfig.json",
+					"tsconfig.*.json",
+					"tsconfig-*.json",
+					"jsconfig.json",
+					"jsconfig.*.json",
+					"jsconfig-*.json"
+				],
+				"url": "./schemas/vue-content-mapper-tsconfig.schema.json"
 			}
 		],
 		"languages": [

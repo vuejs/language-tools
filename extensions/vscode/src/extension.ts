@@ -24,6 +24,25 @@ import * as welcome from './welcome';
 let serverPath = resolveServerPath();
 const neededRestart = !patchTypeScriptExtension();
 
+interface TypeScriptNativePreviewAPI {
+	registerContentMappers(
+		contributorId: string,
+		contributions: readonly {
+			extensions: readonly string[];
+			inferredProjectContribution?: {
+				options?: Readonly<Record<string, unknown>>;
+				manifest: {
+					name: string;
+					version?: string;
+					exec: readonly string[];
+					cwd?: vscode.Uri;
+					dynamicConfig?: boolean;
+				};
+			};
+		}[],
+	): vscode.Disposable;
+}
+
 for (
 	const incompatibleExtensionId of [
 		'johnsoncodehk.vscode-typescript-vue-plugin',
@@ -49,6 +68,7 @@ export = defineExtension(() => {
 	let client: lsp.BaseLanguageClient | undefined;
 
 	const context = extensionContext.value!;
+	registerTypeScriptContentMapper(context);
 	const volarLabs = createLabsInfo();
 	const activeTextEditor = useActiveTextEditor();
 	const visibleTextEditors = useVisibleTextEditors();
@@ -244,6 +264,69 @@ function resolveTsdkPath() {
 			return theiaTsdk;
 		}
 	}
+}
+
+function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
+	const nativePreview = vscode.extensions.getExtension<TypeScriptNativePreviewAPI>(
+		'TypeScriptTeam.native-preview',
+	);
+	if (!nativePreview) {
+		return;
+	}
+
+	void nativePreview.activate().then(api => {
+		if (!api?.registerContentMappers) {
+			return;
+		}
+		const tsdk = resolveTsdkPath();
+		if (!tsdk) {
+			return;
+		}
+		const typescriptPath = path.join(tsdk, 'typescript.js');
+		const createContribution = (
+			extensions: string[],
+			name: string,
+			server: string,
+			worker: string,
+		) => ({
+			extensions,
+			inferredProjectContribution: {
+				options: {
+					languageFeatures: true,
+					target: 99,
+				},
+				manifest: {
+					name,
+					version: require('../package.json').version,
+					exec: [
+						process.execPath,
+						path.join(context.extensionPath, 'dist', server),
+						`--worker=${path.join(context.extensionPath, 'dist', worker)}`,
+						`--typescript=${typescriptPath}`,
+					],
+					cwd: vscode.Uri.file(context.extensionPath),
+					dynamicConfig: true,
+				},
+			},
+		});
+		context.subscriptions.push(api.registerContentMappers(
+			'Vue.volar',
+			[
+				createContribution(
+					['.vue'],
+					'@vue/content-mapper',
+					'content-mapper-server.js',
+					'content-mapper-worker.js',
+				),
+				createContribution(
+					['.md'],
+					'@vue/content-mapper-vitepress',
+					'content-mapper-vitepress-server.js',
+					'content-mapper-vitepress-worker.js',
+				),
+			],
+		));
+	}, error => logger.logger.value?.error(String(error)));
 }
 
 function resolveServerPath() {

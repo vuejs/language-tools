@@ -106,7 +106,6 @@ export default defineConfig([{
 	include: [
 		'packages/language-core/**/*.ts',
 		'packages/language-plugin-pug/**/*.ts',
-		'packages/tsc/**/*.ts',
 	],
 	rules: {
 		'typescript-services-types': (await import('./lint/typescript-services-types-rule.ts')).default,

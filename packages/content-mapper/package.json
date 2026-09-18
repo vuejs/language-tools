@@ -1,0 +1,36 @@
+{
+	"name": "@vue/content-mapper",
+	"version": "3.3.9",
+	"license": "MIT",
+	"files": [
+		"*.d.ts",
+		"*.js",
+		"MIGRATION.md",
+		"README.md"
+	],
+	"sideEffects": true,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/vuejs/language-tools.git",
+		"directory": "packages/content-mapper"
+	},
+	"typescript": {
+		"contentMapper": {
+			"exec": [
+				"node",
+				"server.js"
+			],
+			"dynamicConfig": true
+		}
+	},
+	"peerDependencies": {
+		"typescript": ">=5.0.0"
+	},
+	"dependencies": {
+		"@vue/language-core": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/node": "^26.0.1",
+		"typescript": "<7"
+	}
+}

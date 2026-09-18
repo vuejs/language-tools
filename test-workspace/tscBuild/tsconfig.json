@@ -1,9 +1,6 @@
 {
 	"references": [
 		{
-			"path": "./petiteVue/tsconfig.json"
-		},
-		{
 			"path": "./vitepress/tsconfig.json"
 		},
 		{

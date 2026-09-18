@@ -1,7 +1,9 @@
 {
 	"private": true,
 	"devDependencies": {
-		"typescript": "latest",
+		"@vue/content-mapper": "workspace:*",
+		"@vue/content-mapper-vitepress": "workspace:*",
+		"typescript": "<7",
 		"vue": "3.6.0-rc.6",
 		"vue-component-meta": "workspace:*",
 		"vue-component-type-helpers": "workspace:*"

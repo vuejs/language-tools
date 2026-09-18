@@ -66,6 +66,7 @@ export function* generateVSlot(
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
 		scope.declare(...collectBindingNames(options.typescript, slotAst, slotAst));
 	}
+	yield* ctx.generateDiagnosticDirectiveEnd();
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}

@@ -36,16 +36,13 @@ export function* generateTemplate(
 }
 
 function* generateTemplateCtx(
-	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, fileName, scriptLang }: ScriptCodegenOptions,
+	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, scriptLang }: ScriptCodegenOptions,
 	selfType: string | undefined,
 ): Generator<Code> {
 	const exps: Code[] = [];
 	const emitTypes: string[] = [];
 	const propTypes: string[] = [];
 
-	if (vueCompilerOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {
-		exps.push(`globalThis`);
-	}
 	if (selfType) {
 		exps.push(asType(`InstanceType<${names.PickNotAny}<typeof ${selfType}, new () => {}>>`, scriptLang));
 	}
@@ -121,9 +118,7 @@ function* generateTemplateComponents(
 		yield `${names.LocalComponents} & ${names.GlobalComponents}`;
 	});
 	yield* generateTypedVar('let', names.intrinsics, scriptLang, function*() {
-		yield vueCompilerOptions.target >= 3.3
-			? `import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements`
-			: `globalThis.JSX.IntrinsicElements`;
+		yield `import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements`;
 	});
 }
 
@@ -152,7 +147,7 @@ function* generateTemplateDirectives(
 		yield types.length ? types.join(` & `) : `{}`;
 	});
 	yield* generateTypedVar('let', names.directives, scriptLang, function*() {
-		yield `${names.LocalDirectives} & import('${vueCompilerOptions.lib}').GlobalDirectives`;
+		yield `${names.LocalDirectives} & ${names.BuiltInDirectives} & import('${vueCompilerOptions.lib}').GlobalDirectives`;
 	});
 }
 
