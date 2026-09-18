@@ -1,5 +1,5 @@
 {
-	"name": "@vue/vitepress-content-mapper",
+	"name": "vitepress-content-mapper",
 	"version": "3.3.11",
 	"license": "MIT",
 	"files": [
@@ -11,7 +11,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
-		"directory": "packages/content-mapper-vitepress"
+		"directory": "packages/vitepress-content-mapper"
 	},
 	"typescript": {
 		"contentMapper": {

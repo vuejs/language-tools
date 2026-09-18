@@ -11,7 +11,7 @@
 						"package": {
 							"enum": [
 								"@vue/content-mapper",
-								"@vue/vitepress-content-mapper"
+								"vitepress-content-mapper"
 							]
 						}
 					}

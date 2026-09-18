@@ -320,7 +320,7 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 				),
 				createContribution(
 					['.md'],
-					'@vue/vitepress-content-mapper',
+					'vitepress-content-mapper',
 					'vitepress-content-mapper-server.js',
 					'vitepress-content-mapper-worker.js',
 				),

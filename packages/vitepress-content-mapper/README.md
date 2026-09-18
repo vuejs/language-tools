@@ -1,6 +1,6 @@
 # VitePress content mapper
 
-`@vue/vitepress-content-mapper` type-checks VitePress markdown with `tsc` through the TypeScript
+`vitepress-content-mapper` type-checks VitePress markdown with `tsc` through the TypeScript
 content-mapper protocol. It turns a markdown file into the SFC shape that VitePress renders —
 frontmatter, fenced code blocks and `<<<` snippet imports blanked, `<script>` / `<style>` blocks
 lifted out, the remaining markdown as the template — and reuses `@vue/content-mapper`'s project
@@ -14,7 +14,7 @@ Install it beside the Vue mapper, then register both in `tsconfig.json`:
 {
 	"contentMappers": [
 		{ "package": "@vue/content-mapper", "extensions": [".vue"] },
-		{ "package": "@vue/vitepress-content-mapper", "extensions": [".md"] }
+		{ "package": "vitepress-content-mapper", "extensions": [".md"] }
 	]
 }
 ```
