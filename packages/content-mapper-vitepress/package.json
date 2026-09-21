@@ -1,0 +1,39 @@
+{
+	"name": "@vue/content-mapper-vitepress",
+	"version": "3.3.11",
+	"license": "MIT",
+	"files": [
+		"*.d.ts",
+		"*.js",
+		"README.md"
+	],
+	"sideEffects": true,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/vuejs/language-tools.git",
+		"directory": "packages/content-mapper-vitepress"
+	},
+	"typescript": {
+		"contentMapper": {
+			"exec": [
+				"node",
+				"server.js"
+			],
+			"dynamicConfig": true
+		}
+	},
+	"peerDependencies": {
+		"typescript": ">=5.0.0"
+	},
+	"dependencies": {
+		"@volar/language-core": "2.4.28",
+		"@vue/content-mapper": "workspace:*",
+		"@vue/language-core": "workspace:*",
+		"muggle-string": "^0.4.1"
+	},
+	"devDependencies": {
+		"@types/node": "^26.0.1",
+		"@vue/compiler-sfc": "^3.5.0",
+		"typescript": "<7"
+	}
+}

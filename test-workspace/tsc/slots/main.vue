@@ -4,6 +4,8 @@
 import { ref, useSlots, type VNode } from 'vue';
 import { exactType } from '../shared';
 
+defineOptions({ name: 'Self' });
+
 type Slots = {
 	bar?: (props: { str: string; num: number; }) => any;
 } & {

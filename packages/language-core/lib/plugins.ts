@@ -1,5 +1,3 @@
-import useHtmlFilePlugin from './plugins/file-html';
-import useMdFilePlugin from './plugins/file-md';
 import useVueFilePlugin from './plugins/file-vue';
 import vueRootTagsPlugin from './plugins/vue-root-tags';
 import vueScriptJsPlugin from './plugins/vue-script-js';
@@ -17,8 +15,6 @@ import { validVersions, type VueLanguagePlugin } from './types';
 export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 	const plugins: VueLanguagePlugin[] = [
 		useVueFilePlugin,
-		useMdFilePlugin,
-		useHtmlFilePlugin,
 		vueRootTagsPlugin,
 		vueTsx,
 		vueScriptJsPlugin,

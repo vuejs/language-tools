@@ -1,5 +1,5 @@
 import * as core from '@vue/language-core';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript-native-bridge';
 
 export function getDefaultsFromScriptSetup(
 	ts: typeof import('typescript'),

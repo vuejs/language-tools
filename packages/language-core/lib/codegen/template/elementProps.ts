@@ -29,7 +29,6 @@ export function* generateElementProps(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	props: CompilerDOM.ElementNode['props'],
-	checkUnknownProps: boolean,
 	failedPropExps?: FailedPropExpressions[],
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
@@ -46,7 +45,7 @@ export function* generateElementProps(
 			) {
 				if (!isComponent) {
 					yield `...{ `;
-					yield* generateEventArg(options, prop.arg.loc.source, prop.arg.loc.start.offset);
+					yield* generateEventArg(prop.arg.loc.source, prop.arg.loc.start.offset);
 					yield `: `;
 					yield* generateEventExpression(options, ctx, prop);
 					yield `},`;
@@ -113,7 +112,7 @@ export function* generateElementProps(
 
 			const shouldSpread = propName === 'style' || propName === 'class';
 			const shouldCamelize = getShouldCamelize(options, node, prop, propName);
-			const features = getPropsCodeFeatures(checkUnknownProps);
+			const features = getPropsCodeFeatures();
 
 			if (shouldSpread) {
 				yield `...{ `;
@@ -177,7 +176,7 @@ export function* generateElementProps(
 
 			const shouldSpread = prop.name === 'style' || prop.name === 'class';
 			const shouldCamelize = getShouldCamelize(options, node, prop, prop.name);
-			const features = getPropsCodeFeatures(checkUnknownProps);
+			const features = getPropsCodeFeatures();
 
 			if (shouldSpread) {
 				yield `...{ `;
@@ -351,12 +350,10 @@ function getShouldCamelize(
 		);
 }
 
-function getPropsCodeFeatures(checkUnknownProps: boolean): VueCodeInformation {
+function getPropsCodeFeatures(): VueCodeInformation {
 	return {
 		...codeFeatures.withoutHighlightAndCompletion,
-		...checkUnknownProps
-			? codeFeatures.verification
-			: codeFeatures.doNotReportTs2353AndTs2561,
+		...codeFeatures.verification,
 		__propsCompletion: true,
 	};
 }

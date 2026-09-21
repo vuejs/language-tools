@@ -46,8 +46,7 @@ export function* generateElementEvents(
 			&& (
 				prop.name === 'on'
 					&& (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
-				|| options.vueCompilerOptions.strictVModel
-					&& prop.name === 'model'
+				|| prop.name === 'model'
 					&& (!prop.arg || prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
 			)
 		) {
@@ -99,11 +98,10 @@ export function* generateElementEvents(
 
 	for (const { propPrefix, emitPrefix, propName, emitName, items } of Object.values(definitions)) {
 		const eventVar = ctx.getInternalVariable();
-		const eventType = `${
-			options.vueCompilerOptions.checkUnknownEvents ? '' : 'Record<string, unknown> & '
-		}Partial<${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
-			camelize(emitName)
-		}'>>`;
+		const eventType =
+			`Partial<${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
+				camelize(emitName)
+			}'>>`;
 		if (isTsLang(options.scriptLang)) {
 			yield `const ${eventVar}: ${eventType} = {${newLine}`;
 		}
@@ -113,11 +111,11 @@ export function* generateElementEvents(
 		for (const { prop, source, offset } of items) {
 			if (prop.name === 'on') {
 				yield `/** @type {typeof ${emitsVar}.`;
-				yield* generateEventArg(options, source, offset!, emitPrefix.slice(0, -1), codeFeatures.navigation);
+				yield* generateEventArg(source, offset!, emitPrefix.slice(0, -1), codeFeatures.navigation);
 				yield `} */${newLine}`;
 			}
 			if (prop.name === 'on') {
-				yield* generateEventArg(options, source, offset!, propPrefix.slice(0, -1));
+				yield* generateEventArg(source, offset!, propPrefix.slice(0, -1));
 				yield `: `;
 				yield* generateEventExpression(options, ctx, prop);
 			}
@@ -133,7 +131,6 @@ export function* generateElementEvents(
 }
 
 export function* generateEventArg(
-	options: TemplateCodegenOptions,
 	name: string,
 	start: number,
 	directive = 'on',
@@ -142,9 +139,7 @@ export function* generateEventArg(
 	features ??= {
 		...codeFeatures.semanticWithoutHighlight,
 		...codeFeatures.navigationWithoutRename,
-		...options.vueCompilerOptions.checkUnknownEvents
-			? codeFeatures.verification
-			: codeFeatures.doNotReportTs2353AndTs2561,
+		...codeFeatures.verification,
 	};
 
 	if (directive.length) {

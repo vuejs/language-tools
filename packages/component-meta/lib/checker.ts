@@ -1,6 +1,6 @@
 import { createLanguageServiceHost, resolveFileLanguageId, type TypeScriptProjectHost } from '@volar/typescript';
 import * as core from '@vue/language-core';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript-native-bridge';
 import { getComponentMeta } from './componentMeta';
 import type { MetaCheckerOptions } from './types';
 

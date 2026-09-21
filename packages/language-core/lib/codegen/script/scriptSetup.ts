@@ -84,9 +84,7 @@ export function* generateGeneric(
 		);
 		yield endOfLine;
 		propTypes.push(
-			`import('${vueCompilerOptions.lib}').${
-				vueCompilerOptions.target >= 3.3 ? `ExtractPublicPropTypes` : `ExtractPropTypes`
-			}<typeof ${names.propsOption}>`,
+			`import('${vueCompilerOptions.lib}').ExtractPublicPropTypes<typeof ${names.propsOption}>`,
 		);
 	}
 	if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
@@ -106,15 +104,13 @@ export function* generateGeneric(
 	yield `	props: `;
 	yield vueCompilerOptions.target >= 3.4
 		? `import('${vueCompilerOptions.lib}').PublicProps`
-		: vueCompilerOptions.target >= 3
-		? `import('${vueCompilerOptions.lib}').VNodeProps`
+		: `import('${vueCompilerOptions.lib}').VNodeProps`
 			+ ` & import('${vueCompilerOptions.lib}').AllowedComponentProps`
-			+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`
-		: `globalThis.JSX.IntrinsicAttributes`;
+			+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`;
 	if (propTypes.length) {
 		yield ` & ${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}>`;
 	}
-	yield ` & (typeof globalThis extends { __VLS_PROPS_FALLBACK: infer P } ? P : {})${endOfLine}`;
+	yield endOfLine;
 	yield `	expose: (exposed: `;
 	yield scriptSetupRanges.defineExpose
 		? `import('${vueCompilerOptions.lib}').ShallowUnwrapRef<typeof ${names.exposed}>`
