@@ -33,6 +33,24 @@ function writePluginPackage(rootDir: string, tag: string) {
 	);
 }
 
+function writeNamedPluginPackage(rootDir: string, specifier: string, factoryNames: string[]) {
+	const packageDir = path.join(rootDir, 'node_modules', specifier);
+	fs.mkdirSync(packageDir, { recursive: true });
+	fs.writeFileSync(
+		path.join(packageDir, 'package.json'),
+		JSON.stringify({ name: specifier, main: 'index.js' }),
+	);
+	const factories = factoryNames
+		.map(name => `function ${name}() {\n\treturn { name: ${JSON.stringify(name)}, version: 2.2 };\n}`)
+		.join(',\n');
+	fs.writeFileSync(
+		path.join(packageDir, 'index.js'),
+		factoryNames.length > 1
+			? `module.exports = [\n${factories}\n];`
+			: `${factories}\nmodule.exports = ${factoryNames[0]};`,
+	);
+}
+
 describe('CompilerOptionsResolver', () => {
 	let tmpDir = '';
 
@@ -43,8 +61,8 @@ describe('CompilerOptionsResolver', () => {
 		}
 	});
 
-	it('deduplicates vueCompilerOptions.plugins by package name; last config wins', () => {
-		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-dedupe-'));
+	it('replaces the inherited plugins with the ones declared by the last config', () => {
+		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-override-'));
 		const layerDir = path.join(tmpDir, 'layer');
 		const clientDir = path.join(tmpDir, 'client');
 		fs.mkdirSync(layerDir);
@@ -77,5 +95,66 @@ describe('CompilerOptionsResolver', () => {
 			code: '',
 			preamble: '',
 		});
+	});
+
+	it('drops every plugin inherited from the extended configs', () => {
+		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-replace-'));
+		const baseDir = path.join(tmpDir, 'base');
+		const appDir = path.join(tmpDir, 'app');
+		writeNamedPluginPackage(baseDir, '@fixture/base', ['basePlugin']);
+		writeNamedPluginPackage(appDir, '@fixture/app', ['appPlugin']);
+
+		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		resolver.addConfig({ plugins: ['@fixture/base'] }, baseDir);
+		resolver.addConfig({ plugins: ['@fixture/app'] }, appDir);
+
+		expect(resolver.build().plugins.map(plugin => plugin.name)).toEqual(['appPlugin']);
+	});
+
+	it('keeps the inherited plugins when a config does not declare them', () => {
+		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-inherit-'));
+		const baseDir = path.join(tmpDir, 'base');
+		const appDir = path.join(tmpDir, 'app');
+		writeNamedPluginPackage(baseDir, '@fixture/base', ['basePlugin']);
+
+		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		resolver.addConfig({ plugins: ['@fixture/base'] }, baseDir);
+		resolver.addConfig({ strictTemplates: true }, appDir);
+
+		const vueCompilerOptions = resolver.build();
+		expect(vueCompilerOptions.plugins.map(plugin => plugin.name)).toEqual(['basePlugin']);
+		expect(vueCompilerOptions.checkUnknownProps).toBe(true);
+	});
+
+	it('clears the inherited plugins with an empty array', () => {
+		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-clear-'));
+		const baseDir = path.join(tmpDir, 'base');
+		const appDir = path.join(tmpDir, 'app');
+		writeNamedPluginPackage(baseDir, '@fixture/base', ['basePlugin']);
+
+		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		resolver.addConfig({ plugins: ['@fixture/base'] }, baseDir);
+		resolver.addConfig({ plugins: [] }, appDir);
+
+		expect(resolver.build().plugins).toEqual([]);
+	});
+
+	it('keeps every plugin exported by a single module', () => {
+		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-array-'));
+		writeNamedPluginPackage(tmpDir, '@fixture/multi', ['firstPlugin', 'secondPlugin']);
+
+		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		resolver.addConfig({ plugins: ['@fixture/multi'] }, tmpDir);
+
+		expect(resolver.build().plugins.map(plugin => plugin.name)).toEqual(['firstPlugin', 'secondPlugin']);
+	});
+
+	it('has no plugins when no config declares them', () => {
+		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-none-'));
+
+		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		resolver.addConfig({ strictTemplates: true }, tmpDir);
+
+		expect(resolver.build().plugins).toEqual([]);
 	});
 });
