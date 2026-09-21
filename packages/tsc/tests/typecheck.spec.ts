@@ -43,6 +43,8 @@ test(`vue-tsc`, () => {
 		  "test-workspace/tsc/_failed_cssModuleDuplicate/kebab.vue(5,16): error TS2717: Subsequent property declarations must have the same type.  Property ''a-b'' must be of type 'Record<string, string> & { a: string; }', but here has type 'Record<string, string> & { b: string; }'.",
 		  "test-workspace/tsc/_failed_cssModuleDuplicate/named.vue(1,16): error TS2300: Duplicate identifier 'foo'.",
 		  "test-workspace/tsc/_failed_cssModuleDuplicate/named.vue(5,16): error TS2300: Duplicate identifier 'foo'.",
+		  "test-workspace/tsc/_failed_directive_arity/main.vue(10,17): error TS2322: Type 'string' is not assignable to type 'number'.",
+		  "test-workspace/tsc/_failed_directive_arity/main.vue(11,16): error TS2353: Object literal may only specify known properties, and 'unknown' does not exist in type 'Partial<Record<"attr" | "prop", boolean>>'.",
 		  "test-workspace/tsc/_failed_directives/main.vue(14,6): error TS2339: Property 'notExist' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.",
 		  "test-workspace/tsc/_failed_directives/main.vue(17,2): error TS2578: Unused '@ts-expect-error' directive.",
 		  "test-workspace/tsc/_failed_directives/main.vue(20,2): error TS2578: Unused '@ts-expect-error' directive.",
