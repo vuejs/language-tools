@@ -641,6 +641,9 @@
 			"path": "./reference-type-in-template/tsconfig.json"
 		},
 		{
+			"path": "./rfcs#836/tsconfig.json"
+		},
+		{
 			"path": "./rootEl/tsconfig.json"
 		},
 		{
