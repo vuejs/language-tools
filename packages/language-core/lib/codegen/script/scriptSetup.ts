@@ -150,6 +150,24 @@ export function* generateSetupFunction(
 ): Generator<Code> {
 	const transforms: CodeTransform[] = [];
 
+	for (const { defaultPropsArg } of scriptSetupRanges.defineModel) {
+		if (defaultPropsArg) {
+			transforms.push({
+				range: [defaultPropsArg.end, defaultPropsArg.end],
+				*generate() {
+					yield `: `;
+					if (scriptSetupRanges.defineProps?.typeArg) {
+						yield names.Props;
+					}
+					else {
+						// FIXME: (props: typeof props) => ... would cause TS2502
+						yield `typeof `;
+						yield scriptSetupRanges.defineProps?.name ?? names.props;
+					}
+				},
+			});
+		}
+	}
 	if (scriptSetupRanges.defineProps) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
 		const _callExp = scriptSetupRanges.withDefaults?.callExp ?? callExp;

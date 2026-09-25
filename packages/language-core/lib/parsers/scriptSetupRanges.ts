@@ -21,6 +21,7 @@ export interface DefineModel {
 	modifierType?: TextRange;
 	runtimeType?: TextRange;
 	defaultValue?: TextRange;
+	defaultPropsArg?: TextRange;
 	required?: boolean;
 	comments?: TextRange;
 }
@@ -143,6 +144,7 @@ export function parseScriptSetupRanges(
 				let modifierType: TextRange | undefined;
 				let runtimeType: TextRange | undefined;
 				let defaultValue: TextRange | undefined;
+				let defaultPropsArg: TextRange | undefined;
 				let required = false;
 
 				if (ts.isVariableDeclaration(parent) && ts.isIdentifier(parent.name)) {
@@ -173,18 +175,43 @@ export function parseScriptSetupRanges(
 
 				if (options && ts.isObjectLiteralExpression(options)) {
 					for (const property of options.properties) {
-						if (!ts.isPropertyAssignment(property) || !ts.isIdentifier(property.name)) {
+						let initializer: ts.Node;
+						if (ts.isPropertyAssignment(property)) {
+							initializer = property.initializer;
+						}
+						else if (ts.isMethodDeclaration(property) && _getNodeText(property.name) === 'default') {
+							initializer = property;
+						}
+						else {
 							continue;
 						}
-						const text = _getNodeText(property.name);
-						if (text === 'type') {
-							runtimeType = _getStartEnd(property.initializer);
+						if (!ts.isIdentifier(property.name)) {
+							continue;
 						}
-						else if (text === 'default') {
-							defaultValue = _getStartEnd(property.initializer);
-						}
-						else if (text === 'required' && property.initializer.kind === ts.SyntaxKind.TrueKeyword) {
-							required = true;
+
+						switch (_getNodeText(property.name)) {
+							case 'type': {
+								runtimeType = _getStartEnd(initializer);
+								break;
+							}
+							case 'default': {
+								if (ts.isPropertyAssignment(property)) {
+									defaultValue = _getStartEnd(initializer);
+								}
+								if (ts.isFunctionLike(initializer) && initializer.parameters.length) {
+									const firstArg = initializer.parameters[0]!;
+									if (!firstArg.dotDotDotToken && !firstArg.type) {
+										defaultPropsArg = _getStartEnd(firstArg);
+									}
+								}
+								break;
+							}
+							case 'required': {
+								if (initializer.kind === ts.SyntaxKind.TrueKeyword) {
+									required = true;
+								}
+								break;
+							}
 						}
 					}
 				}
@@ -201,6 +228,7 @@ export function parseScriptSetupRanges(
 					modifierType,
 					runtimeType,
 					defaultValue,
+					defaultPropsArg,
 					required,
 					comments: getClosestMultiLineCommentRange(ts, node, parents, sourceFile),
 					arg: _getStartEnd(node),
