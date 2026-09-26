@@ -96,11 +96,11 @@ export function* forEachDeclarations(
 	else if (ts.isNonNullExpression(node)) {
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 	}
-	else if (ts.isTypeAssertionExpression(node)) {
+	else if (isTypeAssertionExpression(ts, node)) {
 		yield* forEachDeclarationsInTypeNode(ts, node.type, ast, ctx, scope);
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 	}
-	else if (ts.isAsExpression(node) || ts.isSatisfiesExpression(node)) {
+	else if (isAsExpression(ts, node) || isSatisfiesExpression(ts, node)) {
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 		yield* forEachDeclarationsInTypeNode(ts, node.type, ast, ctx, scope);
 	}
@@ -155,7 +155,7 @@ export function* forEachDeclarations(
 	else if (ts.isPostfixUnaryExpression(node)) {
 		yield* forEachDeclarations(ts, node.operand, ast, ctx, scope, true);
 	}
-	else if (ts.isDeleteExpression(node)) {
+	else if (isDeleteExpression(ts, node)) {
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
 	}
 	else if (ts.isTypeOfExpression(node)) {
@@ -265,12 +265,12 @@ export function* forEachDeclarations(
 			}
 		});
 	}
-	else if (ts.isWhileStatement(node)) {
+	else if (isWhileStatement(ts, node)) {
 		yield* forEachNarrowedBy(ts, node.expression, ast, ctx, scope, function*() {
 			yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
 		});
 	}
-	else if (ts.isDoStatement(node)) {
+	else if (isDoStatement(ts, node)) {
 		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
 	}
@@ -313,7 +313,7 @@ export function* forEachDeclarations(
 	else if (ts.isLabeledStatement(node)) {
 		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
 	}
-	else if (ts.isBreakStatement(node) || ts.isContinueStatement(node)) {
+	else if (isBreakOrContinueStatement(ts, node)) {
 		// break/continue labels are not bindings.
 	}
 	else if (ts.isMetaProperty(node)) {
@@ -631,4 +631,38 @@ export function shouldIdentifierSkipped(
 		|| isLiteralWhitelisted(text)
 		|| text === 'require'
 		|| text.startsWith('__VLS_');
+}
+
+// vue-tsc runs against TypeScript's tsc bundle, which does not include
+// type guards that the compiler itself never uses, so check `kind` directly.
+
+function isTypeAssertionExpression(ts: typeof import('typescript'), node: ts.Node): node is ts.TypeAssertion {
+	return node.kind === ts.SyntaxKind.TypeAssertionExpression;
+}
+
+function isAsExpression(ts: typeof import('typescript'), node: ts.Node): node is ts.AsExpression {
+	return node.kind === ts.SyntaxKind.AsExpression;
+}
+
+function isSatisfiesExpression(ts: typeof import('typescript'), node: ts.Node): node is ts.SatisfiesExpression {
+	return node.kind === ts.SyntaxKind.SatisfiesExpression;
+}
+
+function isDeleteExpression(ts: typeof import('typescript'), node: ts.Node): node is ts.DeleteExpression {
+	return node.kind === ts.SyntaxKind.DeleteExpression;
+}
+
+function isWhileStatement(ts: typeof import('typescript'), node: ts.Node): node is ts.WhileStatement {
+	return node.kind === ts.SyntaxKind.WhileStatement;
+}
+
+function isDoStatement(ts: typeof import('typescript'), node: ts.Node): node is ts.DoStatement {
+	return node.kind === ts.SyntaxKind.DoStatement;
+}
+
+function isBreakOrContinueStatement(
+	ts: typeof import('typescript'),
+	node: ts.Node,
+): node is ts.BreakOrContinueStatement {
+	return node.kind === ts.SyntaxKind.BreakStatement || node.kind === ts.SyntaxKind.ContinueStatement;
 }
