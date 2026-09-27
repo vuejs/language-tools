@@ -208,7 +208,7 @@ export function createSchemaResolvers(
 			},
 		};
 	}
-	function resolveEventSignature(call: ts.Signature): EventMeta {
+	function resolveEventSignature(call: ts.Signature, eventName?: string): EventMeta {
 		let schema: PropertyMetaSchema[] | undefined;
 		let declarations: Declaration[] | undefined;
 		let subtype: ts.Type | undefined;
@@ -241,7 +241,7 @@ export function createSchemaResolvers(
 		}
 
 		return {
-			name: (typeChecker.getTypeOfSymbol(call.parameters[0]!) as ts.StringLiteralType).value,
+			name: eventName ?? (typeChecker.getTypeOfSymbol(call.parameters[0]!) as ts.StringLiteralType).value,
 			description: ts.displayPartsToString(call.getDocumentationComment(typeChecker)),
 			tags: getJsDocTags(call),
 			type: subtypeStr,

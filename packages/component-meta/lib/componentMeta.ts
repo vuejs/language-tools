@@ -118,12 +118,17 @@ export function getComponentMeta(
 		if (emitType) {
 			const calls = emitType.getCallSignatures();
 
-			return calls.map(call => {
+			return calls.flatMap(call => {
 				const {
 					resolveEventSignature,
 				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
 
-				return resolveEventSignature(call);
+				// `emits: ['a', 'b']` is typed as a single `(event: 'a' | 'b', ...args: any[]) => void`
+				const eventType = call.parameters[0] && typeChecker.getTypeOfSymbol(call.parameters[0]);
+				if (eventType?.isUnion() && eventType.types.every(type => type.isStringLiteral())) {
+					return eventType.types.map(type => resolveEventSignature(call, type.value));
+				}
+				return [resolveEventSignature(call)];
 			}).filter(event => event.name);
 		}
 

@@ -321,6 +321,19 @@ export default _default;
 "
 `;
 
+exports[`Input: options-api/component-emits-array.ts, Output: options-api/component-emits-array.d.ts 1`] = `
+"declare const _default: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
+    label: StringConstructor;
+}>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, ("open" | "close")[], "open" | "close", import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
+    label: StringConstructor;
+}>> & Readonly<{
+    onOpen?: ((...args: any[]) => any) | undefined;
+    onClose?: ((...args: any[]) => any) | undefined;
+}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+export default _default;
+"
+`;
+
 exports[`Input: reference-type-events/component.vue, Output: reference-type-events/component.vue.d.ts 1`] = `
 "import type { MyEvents } from './my-events';
 declare const __VLS_export: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, import("vue").TypeEmitsToOptions<MyEvents>, string, import("vue").PublicProps, Readonly<{}> & Readonly<{

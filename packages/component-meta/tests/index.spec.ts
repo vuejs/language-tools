@@ -1552,6 +1552,18 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(meta.props.find(prop => prop.name === 'onCompleted')).toBeDefined();
 		});
 
+		test('options-api emits array', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/options-api/component-emits-array.ts',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.events.map(event => event.name).sort()).toEqual(['close', 'open']);
+			expect(meta.events.map(event => event.schema)).toEqual([['any'], ['any']]);
+			expect(meta.props.filter(prop => !prop.global).map(prop => prop.name)).toEqual(['label']);
+		});
+
 		test('non-component', () => {
 			const componentPath = path.resolve(
 				__dirname,
