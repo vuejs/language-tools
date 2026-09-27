@@ -19,6 +19,8 @@ export interface TemplateCodegenOptions {
 	importedComponents: Set<string>;
 	setupRefs: Set<string>;
 	setupBindings: Set<string>;
+	// Function / class / enum declarations: never refs, always referenced directly.
+	nonRefBindings: Set<string>;
 	// Bindings narrowed at least once anywhere in the template/styles; every
 	// access of these is emitted with `.value`. Collected by a first codegen pass.
 	dotValueBindings: Set<string>;

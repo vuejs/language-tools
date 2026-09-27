@@ -16,6 +16,7 @@ export interface StyleCodegenOptions {
 	importedComponents: Set<string>;
 	setupRefs: Set<string>;
 	setupBindings: Set<string>;
+	nonRefBindings: Set<string>;
 	dotValueBindings: Set<string>;
 }
 

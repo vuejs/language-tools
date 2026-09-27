@@ -14,6 +14,7 @@ export function* generateInterpolation(
 		importedComponents,
 		setupRefs,
 		setupBindings,
+		nonRefBindings,
 		dotValueBindings,
 		vueCompilerOptions,
 		scriptLang,
@@ -23,6 +24,7 @@ export function* generateInterpolation(
 		importedComponents: Set<string>;
 		setupRefs: Set<string>;
 		setupBindings: Set<string>;
+		nonRefBindings: Set<string>;
 		dotValueBindings: Set<string>;
 		vueCompilerOptions: VueCompilerOptions;
 		scriptLang: string;
@@ -77,6 +79,8 @@ export function* generateInterpolation(
 		// shorthand handling in elementProps.ts):
 		// - destructured props / imported components → direct reference
 		// - template refs → direct `.value`
+		// - function / class / enum declarations → direct reference (never refs,
+		//   and assertion narrowing cannot apply to them)
 		// - dotValue bindings (narrowed at least once anywhere) → `.value` at
 		//   every position; narrowing then works on the `.value` reference chain
 		// - other bindings → `__VLS_unwrap` (plain reads keep the original type)
@@ -97,6 +101,15 @@ export function* generateInterpolation(
 				data,
 			];
 			yield [`.value`, block.name, start + offset, codeFeatures.verification];
+		}
+		else if (nonRefBindings.has(name)) {
+			ctx.accessVariable(block.name, name, start + offset);
+			yield [
+				name,
+				block.name,
+				start + offset,
+				identifierData,
+			];
 		}
 		else if (setupBindings.has(name)) {
 			// First pass records narrowing accesses here; the second pass emits from dotValueBindings.

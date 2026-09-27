@@ -298,7 +298,22 @@
 			<button @click="exactType(shadowed, {} as number)" />
 		</div>
 	</div>
+
+	<!-- function / class / enum declarations: member access keeps a direct reference -->
+	<div v-if="step === Step.Done">{{ exactType(step, {} as Step.Done) }}</div>
+	<button @click="step = Step.Idle" />
+	<div>{{ exactType(Step.Idle, {} as Step.Idle) }}{{ exactType(ConstStep.Idle, {} as ConstStep.Idle) }}</div>
+	<div>{{ exactType(View.Grid, {} as View.Grid) }}{{ exactType(handler.length, {} as number) }}</div>
+	<div v-if="Session.current">{{ exactType(Session.current, {} as string) }}</div>
+	<div :guard :class="View.Grid" />
+	<div v-if="'Done' in Step">{{ exactType(Step.Done, {} as Step.Done) }}</div>
+	<!-- a template-local name shadowing a declaration is not the declaration -->
+	<template v-for="Step in [{ x: 1 }]">{{ exactType(Step.x, {} as 1) }}</template>
 </template>
+
+<script lang="ts">
+export enum View { List = 'list', Grid = 'grid' }
+</script>
 
 <script setup lang="ts">
 import { defineComponent, inject, ref, type Ref } from 'vue';
@@ -313,6 +328,10 @@ class Foo {}
 class G<T> {
 	constructor(readonly v: T) {}
 }
+enum Step { Idle, Done }
+const enum ConstStep { Idle }
+class Session { static current: string | null = null; }
+const step = ref(Step.Idle);
 const count = ref(0);
 const strOrNum = ref<string | number>('');
 const dateOrStr = ref<unknown>(new Date());
@@ -365,3 +384,7 @@ const ChildMaybe = defineComponent({
 	__typeProps: {} as { maybe: string },
 });
 </script>
+
+<style scoped>
+.view { color: v-bind(View.Grid); }
+</style>

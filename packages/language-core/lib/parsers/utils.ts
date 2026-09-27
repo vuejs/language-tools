@@ -12,6 +12,9 @@ export function parseBindingRanges(
 	const components: TextRange[] = [];
 	// Bindings re-asserted per closure by the template codegen (imports, `let`/`var`).
 	const nonFlowingBindings: TextRange[] = [];
+	// Function / class / enum declarations: never refs, and assertion narrowing
+	// cannot apply to them, so the template codegen references them directly.
+	const nonRefBindings: TextRange[] = [];
 
 	ts.forEachChild(ast, node => {
 		if (ts.isVariableStatement(node)) {
@@ -24,18 +27,12 @@ export function parseBindingRanges(
 				}
 			}
 		}
-		else if (ts.isFunctionDeclaration(node)) {
-			if (node.name && ts.isIdentifier(node.name)) {
-				bindings.push(_getStartEnd(node.name));
-			}
-		}
-		else if (ts.isClassDeclaration(node)) {
-			if (node.name) {
-				bindings.push(_getStartEnd(node.name));
-			}
-		}
-		else if (ts.isEnumDeclaration(node)) {
+		else if (
+			(ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isEnumDeclaration(node))
+			&& node.name && ts.isIdentifier(node.name)
+		) {
 			bindings.push(_getStartEnd(node.name));
+			nonRefBindings.push(_getStartEnd(node.name));
 		}
 
 		if (ts.isImportDeclaration(node)) {
@@ -85,6 +82,7 @@ export function parseBindingRanges(
 		bindings,
 		components,
 		nonFlowingBindings,
+		nonRefBindings,
 	};
 
 	function _getStartEnd(node: ts.Node) {

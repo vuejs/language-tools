@@ -153,6 +153,28 @@ function useCodegen(
 		return names;
 	});
 
+	const getNonRefBindings = computedSet(() => {
+		const names = new Set<string>();
+		const scriptSetupRanges = getScriptSetupRanges();
+		if (ir.scriptSetup && scriptSetupRanges) {
+			for (const range of scriptSetupRanges.nonRefBindings) {
+				names.add(ir.scriptSetup.content.slice(range.start, range.end));
+			}
+			const scriptRanges = getScriptRanges();
+			if (ir.script && scriptRanges) {
+				const scriptSetupBindings = getScriptSetupBindings();
+				for (const range of scriptRanges.nonRefBindings) {
+					const name = ir.script.content.slice(range.start, range.end);
+					// shadowed by a `<script setup>` binding of the same name
+					if (!scriptSetupBindings.has(name)) {
+						names.add(name);
+					}
+				}
+			}
+		}
+		return names;
+	});
+
 	const getDestructuredProps = computedSet(() => {
 		const scriptSetupRanges = getScriptSetupRanges();
 		const names = new Set(scriptSetupRanges?.defineProps?.destructured?.keys() ?? []);
@@ -220,6 +242,7 @@ function useCodegen(
 			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
 			setupBindings: getSetupBindings(),
+			nonRefBindings: getNonRefBindings(),
 			dotValueBindings,
 			reassertBindings: new Set([...dotValueBindings].filter(name => getNonFlowingBindings().has(name))),
 			hasDefineSlots: hasDefineSlots(),
@@ -242,6 +265,7 @@ function useCodegen(
 			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
 			setupBindings: getSetupBindings(),
+			nonRefBindings: getNonRefBindings(),
 			dotValueBindings,
 		});
 	};

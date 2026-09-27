@@ -296,6 +296,10 @@ export function* generatePropExp(
 				yield* codes;
 				yield [`.value`, 'template', exp.loc.start.offset, codeFeatures.verification];
 			}
+			else if (options.nonRefBindings.has(propVariableName)) {
+				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
+				yield* codes;
+			}
 			else if (options.setupBindings.has(propVariableName)) {
 				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
 				if (options.dotValueBindings.has(propVariableName)) {
