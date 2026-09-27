@@ -1,6 +1,7 @@
 import type * as core from '@vue/language-core';
 import type * as ts from 'typescript';
-import { resolveDefaultOptionExpression } from './scriptSetup';
+import { isFunctionPropType } from './helpers';
+import { printDefaultOption } from './scriptSetup';
 import type { Declaration, EventMeta, ExposeMeta, PropertyMeta, PropertyMetaSchema, SlotMeta } from './types';
 
 const publicPropsInterfaces = new Set([
@@ -78,13 +79,18 @@ export function createSchemaResolvers(
 			}
 			if (ts.isPropertyAssignment(decl) && ts.isObjectLiteralExpression(decl.initializer)) {
 				for (const option of decl.initializer.properties) {
-					if (ts.isPropertyAssignment(option)) {
+					if (ts.isPropertyAssignment(option) || ts.isMethodDeclaration(option)) {
 						const key = option.name.getText();
 						if (key === 'default') {
-							const defaultExp = resolveDefaultOptionExpression(ts, option.initializer);
-							_default = printer.printNode(ts.EmitHint.Expression, defaultExp, decl.getSourceFile());
+							_default = printDefaultOption(
+								ts,
+								printer,
+								decl.getSourceFile(),
+								option,
+								isFunctionPropType(ts, subtype),
+							);
 						}
-						else if (key === 'required') {
+						else if (key === 'required' && ts.isPropertyAssignment(option)) {
 							if (option.initializer.getText() === 'true') {
 								required = true;
 							}

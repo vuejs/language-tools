@@ -144,3 +144,16 @@ function findProperty(
 		}
 	}
 }
+
+/**
+ * Whether the runtime type of a prop with this type is `Function`, in which case
+ * Vue uses a function default as the default value itself instead of calling it as a factory.
+ */
+export function isFunctionPropType(
+	ts: typeof import('typescript'),
+	type: ts.Type,
+) {
+	const types = (type.isUnion() ? type.types : [type]).filter(type => !(type.flags & ts.TypeFlags.Undefined));
+	return types.length > 0
+		&& types.every(type => type.getCallSignatures().length > 0 || type.getSymbol()?.getName() === 'Function');
+}

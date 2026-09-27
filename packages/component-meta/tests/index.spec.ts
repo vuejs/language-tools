@@ -857,6 +857,38 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(label?.default).toEqual('"こんにちは"');
 		});
 
+		test('reference-type-props-function-default', () => {
+			const getDefault = (file: string, name: string) => {
+				const componentPath = path.resolve(
+					__dirname,
+					'../../../test-workspace/component-meta/reference-type-props',
+					file,
+				);
+				const meta = checker.getComponentMeta(componentPath);
+				return meta.props.find(prop => prop.name === name)?.default;
+			};
+
+			expect(getDefault('component-function-default.vue', 'object')).toEqual(`{ message: 'foo' }`);
+			expect(getDefault('component-function-default.vue', 'func')).toEqual('(value: number) => value * 2');
+			expect(getDefault('component-function-default.vue', 'funcMethod')).toEqual(
+				`function () {\n    return 'Default function';\n}`,
+			);
+			expect(getDefault('component-function-default.vue', 'funcOrString')).toEqual(`'foo'`);
+			expect(getDefault('component-function-default.vue', 'commented')).toEqual(
+				`function () {\n    return 1;\n}`,
+			);
+			expect(getDefault('component-function-default.vue', 'generator')).toEqual(
+				`function* () {\n    yield 1;\n}`,
+			);
+			expect(getDefault('component-function-default.vue', 'asyncFactory')).toEqual(
+				`async function () {\n    return {};\n}`,
+			);
+
+			expect(getDefault('component-function-default-ts.vue', 'items')).toEqual('["foo"]');
+			expect(getDefault('component-function-default-ts.vue', 'formatter')).toEqual('value => String(value)');
+			expect(getDefault('component-function-default-ts.vue', 'transform')).toEqual('(value: number) => value');
+		});
+
 		test('reference-type-props-js', () => {
 			const componentPath = path.resolve(
 				__dirname,

@@ -460,6 +460,102 @@ export default _default;
 "
 `;
 
+exports[`Input: reference-type-props/component-function-default.vue, Output: reference-type-props/component-function-default.vue.d.ts 1`] = `
+"declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
+    object: {
+        type: ObjectConstructor;
+        default(): {
+            message: string;
+        };
+    };
+    func: {
+        type: FunctionConstructor;
+        default: (value: number) => number;
+    };
+    funcMethod: {
+        type: FunctionConstructor;
+        default(): string;
+    };
+    funcOrString: {
+        type: (StringConstructor | FunctionConstructor)[];
+        default: () => string;
+    };
+    commented: {
+        type: FunctionConstructor;
+        default(): number;
+    };
+    generator: {
+        type: FunctionConstructor;
+        default(): Generator<number, void, unknown>;
+    };
+    asyncFactory: {
+        type: ObjectConstructor;
+        default(): Promise<{}>;
+    };
+}>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
+    object: {
+        type: ObjectConstructor;
+        default(): {
+            message: string;
+        };
+    };
+    func: {
+        type: FunctionConstructor;
+        default: (value: number) => number;
+    };
+    funcMethod: {
+        type: FunctionConstructor;
+        default(): string;
+    };
+    funcOrString: {
+        type: (StringConstructor | FunctionConstructor)[];
+        default: () => string;
+    };
+    commented: {
+        type: FunctionConstructor;
+        default(): number;
+    };
+    generator: {
+        type: FunctionConstructor;
+        default(): Generator<number, void, unknown>;
+    };
+    asyncFactory: {
+        type: ObjectConstructor;
+        default(): Promise<{}>;
+    };
+}>> & Readonly<{}>, {
+    object: Record<string, any>;
+    func: Function;
+    funcMethod: Function;
+    funcOrString: string | Function;
+    commented: Function;
+    generator: Function;
+    asyncFactory: Record<string, any>;
+}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+declare const _default: typeof __VLS_export;
+export default _default;
+"
+`;
+
+exports[`Input: reference-type-props/component-function-default-ts.vue, Output: reference-type-props/component-function-default-ts.vue.d.ts 1`] = `
+"type __VLS_Props = {
+    items?: string[];
+    formatter?: (value: number) => string;
+};
+type __VLS_ModelProps = {
+    'transform'?: (value: number) => number;
+};
+type __VLS_PublicProps = __VLS_Props & __VLS_ModelProps;
+declare const __VLS_export: import("vue").DefineComponent<__VLS_PublicProps, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+    "update:transform": (value: (value: number) => number) => any;
+}, string, import("vue").PublicProps, Readonly<__VLS_PublicProps> & Readonly<{
+    "onUpdate:transform"?: ((value: (value: number) => number) => any) | undefined;
+}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
+declare const _default: typeof __VLS_export;
+export default _default;
+"
+`;
+
 exports[`Input: reference-type-props/component-js.vue, Output: reference-type-props/component-js.vue.d.ts 1`] = `
 "declare const _default: typeof __VLS_export;
 export default _default;

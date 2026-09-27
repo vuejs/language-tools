@@ -5,6 +5,7 @@ export function getDefaultsFromScriptSetup(
 	ts: typeof import('typescript'),
 	printer: ts.Printer,
 	sourceScript: core.SourceScript | undefined,
+	isFunctionProp: (name: string) => boolean,
 ) {
 	const virtualCode = sourceScript?.generated?.root as core.VueVirtualCode | undefined;
 	if (!virtualCode) {
@@ -21,6 +22,7 @@ export function getDefaultsFromScriptSetup(
 			printer,
 			sourceFile,
 			scriptSetupRanges,
+			isFunctionProp,
 		);
 	}
 }
@@ -30,6 +32,7 @@ function collectPropDefaultsFromScriptSetup(
 	printer: ts.Printer,
 	sourceFile: ts.SourceFile,
 	scriptSetupRanges: core.ScriptSetupRanges,
+	isFunctionProp: (name: string) => boolean,
 ) {
 	const result = new Map<string, string>();
 
@@ -37,11 +40,9 @@ function collectPropDefaultsFromScriptSetup(
 		const obj = findObjectLiteralExpression(ts, scriptSetupRanges.withDefaults.arg.node);
 		if (obj) {
 			for (const prop of obj.properties) {
-				if (ts.isPropertyAssignment(prop)) {
+				if (ts.isPropertyAssignment(prop) || ts.isMethodDeclaration(prop)) {
 					const name = prop.name.getText(sourceFile);
-					const expNode = resolveDefaultOptionExpression(ts, prop.initializer);
-					const expText = printer.printNode(ts.EmitHint.Expression, expNode, sourceFile);
-					result.set(name, expText);
+					result.set(name, printDefaultOption(ts, printer, sourceFile, prop, isFunctionProp(name)));
 				}
 			}
 		}
@@ -62,7 +63,7 @@ function collectPropDefaultsFromScriptSetup(
 				const name = defineModel.name
 					? sourceFile.text.slice(defineModel.name.start, defineModel.name.end).slice(1, -1)
 					: 'modelValue';
-				const _default = resolveModelOption(ts, printer, sourceFile, obj);
+				const _default = resolveModelOption(ts, printer, sourceFile, obj, isFunctionProp(name));
 				if (_default) {
 					result.set(name, _default);
 				}
@@ -94,21 +95,57 @@ function resolveModelOption(
 	printer: ts.Printer,
 	sourceFile: ts.SourceFile,
 	options: ts.ObjectLiteralExpression,
+	isFunctionType: boolean,
 ) {
 	let _default: string | undefined;
 
 	for (const prop of options.properties) {
-		if (ts.isPropertyAssignment(prop)) {
+		if (ts.isPropertyAssignment(prop) || ts.isMethodDeclaration(prop)) {
 			const name = prop.name.getText(sourceFile);
 			if (name === 'default') {
-				const expNode = resolveDefaultOptionExpression(ts, prop.initializer);
-				const expText = printer.printNode(ts.EmitHint.Expression, expNode, sourceFile) ?? expNode.getText(sourceFile);
-				_default = expText;
+				_default = printDefaultOption(ts, printer, sourceFile, prop, isFunctionType);
 			}
 		}
 	}
 
 	return _default;
+}
+
+/**
+ * Vue calls a function default as a factory, unless the runtime type of the prop is `Function`,
+ * in which case the function itself is the default value.
+ */
+export function printDefaultOption(
+	ts: typeof import('typescript'),
+	printer: ts.Printer,
+	sourceFile: ts.SourceFile,
+	option: ts.PropertyAssignment | ts.MethodDeclaration,
+	isFunctionType: boolean,
+) {
+	if (ts.isPropertyAssignment(option)) {
+		const expNode = isFunctionType ? option.initializer : resolveDefaultOptionExpression(ts, option.initializer);
+		return printer.printNode(ts.EmitHint.Expression, expNode, sourceFile);
+	}
+	const isAsync = !!ts.getModifiers(option)?.some(modifier => modifier.kind === ts.SyntaxKind.AsyncKeyword);
+	if (!isFunctionType && !isAsync && !option.asteriskToken && option.body?.statements.length === 1) {
+		const statement = option.body.statements[0]!;
+		if (ts.isReturnStatement(statement) && statement.expression) {
+			return printer.printNode(ts.EmitHint.Expression, statement.expression, sourceFile);
+		}
+	}
+	// `default() { ... }` -> `function () { ... }`
+	// (node arrays are copied, as the ones from typescript-native-bridge have a read-only `pos`)
+	const functionExp = ts.factory.createFunctionExpression(
+		// create new tokens, as the original ones would carry leading comments of the method
+		isAsync ? [ts.factory.createModifier(ts.SyntaxKind.AsyncKeyword)] : undefined,
+		option.asteriskToken && ts.factory.createToken(ts.SyntaxKind.AsteriskToken),
+		undefined,
+		option.typeParameters && [...option.typeParameters],
+		[...option.parameters],
+		option.type,
+		option.body ?? ts.factory.createBlock([]),
+	);
+	return printer.printNode(ts.EmitHint.Expression, functionExp, sourceFile);
 }
 
 export function resolveDefaultOptionExpression(

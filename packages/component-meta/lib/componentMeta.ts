@@ -6,6 +6,7 @@ import {
 	inferComponentProps,
 	inferComponentSlots,
 	inferComponentType,
+	isFunctionPropType,
 } from './helpers';
 import { createSchemaResolvers } from './schemaResolvers';
 import { getDefaultsFromScriptSetup } from './scriptSetup';
@@ -100,7 +101,15 @@ export function getComponentMeta(
 			})
 			.filter((prop): prop is PropertyMeta => !!prop && !eventProps.has(prop.name));
 
-		const defaults = getDefaultsFromScriptSetup(ts, printer, getSourceScript(componentFile.fileName));
+		const defaults = getDefaultsFromScriptSetup(
+			ts,
+			printer,
+			getSourceScript(componentFile.fileName),
+			name => {
+				const prop = propsType.getProperty(name);
+				return !!prop && isFunctionPropType(ts, typeChecker.getTypeOfSymbol(prop));
+			},
+		);
 
 		for (const prop of result) {
 			if (vnodeEventRE.test(prop.name)) {
