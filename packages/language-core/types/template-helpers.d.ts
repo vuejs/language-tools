@@ -169,6 +169,11 @@ declare global {
 		: NonNullable<T> & Ref & { value: T extends Ref & { value: infer V } ? V : T };
 	function __VLS_unwrap<T, Ref>(t: T, ref: Ref): T extends Ref & { value: infer V } ? V
 		: T;
+	// The `__VLS_withDotValue` narrowing, inlined as `(__VLS_reassert(x, R), x).value`
+	// in template closures, which the top-level narrowing of imports and `let`/`var`
+	// bindings does not reach. Only an `asserts` call narrows as a comma operand.
+	function __VLS_reassert<T, Ref>(t: T, ref: Ref): asserts t is [T] extends [Ref] ? T
+		: NonNullable<T> & Ref & { value: T extends Ref & { value: infer V } ? V : T };
 }
 
 export {};

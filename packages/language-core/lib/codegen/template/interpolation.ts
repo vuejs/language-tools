@@ -15,6 +15,7 @@ export function* generateInterpolation(
 		setupRefs,
 		setupBindings,
 		dotValueBindings,
+		reassertBindings,
 		vueCompilerOptions,
 		scriptLang,
 	}: {
@@ -24,6 +25,7 @@ export function* generateInterpolation(
 		setupRefs: Set<string>;
 		setupBindings: Set<string>;
 		dotValueBindings: Set<string>;
+		reassertBindings?: Set<string>;
 		vueCompilerOptions: VueCompilerOptions;
 		scriptLang: string;
 	},
@@ -42,7 +44,7 @@ export function* generateInterpolation(
 
 	let prevEnd = 0;
 	for (
-		const [name, offset, isShorthand, isNarrowing, inTypeQuery, isNewOperand] of forEachIdentifiers(
+		const [name, offset, isShorthand, isNarrowing, inTypeQuery, isNewOperand, inFunction] of forEachIdentifiers(
 			typescript,
 			ctx,
 			block,
@@ -102,12 +104,22 @@ export function* generateInterpolation(
 			// First pass records narrowing accesses here; the second pass emits from dotValueBindings.
 			ctx.accessVariable(block.name, name, start + offset, inTypeQuery || isNarrowing);
 			if (inTypeQuery || dotValueBindings.has(name)) {
+				// Like `generateReasserts` for generated closures: top-level narrowing does not
+				// flow into user closures for imports and `let`/`var` bindings (TS limitation),
+				// so re-assert inline; the comma expression stays a narrowable reference.
+				const reassert = inFunction && !inTypeQuery && reassertBindings?.has(name);
+				if (reassert) {
+					yield `(${names.reassert}(${name}, ${getRefBrandArgument(vueCompilerOptions, scriptLang)}), `;
+				}
 				yield [
 					name,
 					block.name,
 					start + offset,
 					identifierData,
 				];
+				if (reassert) {
+					yield `)`;
+				}
 				yield [`.value`, block.name, start + offset, codeFeatures.verification];
 			}
 			else {
@@ -210,14 +222,14 @@ function* forEachIdentifiers(
 	inNarrowing: boolean,
 ): Generator<IdentifierAccess> {
 	if (identifierRE.test(code) && !shouldIdentifierSkipped(ctx, code)) {
-		yield [code, 0, false, inNarrowing, false, false];
+		yield [code, 0, false, inNarrowing, false, false, false];
 		return;
 	}
 
 	const scope = ctx.scope();
 	const ast = getTypeScriptAST(ts, block, prefix + code + suffix);
 	for (
-		const { id, isShorthand, isNarrowing, skipped, inTypeQuery, isNewOperand } of forEachDeclarations(
+		const { id, isShorthand, isNarrowing, skipped, inTypeQuery, isNewOperand, inFunction } of forEachDeclarations(
 			ts,
 			ast,
 			ast,
@@ -230,7 +242,15 @@ function* forEachIdentifiers(
 			continue;
 		}
 		const text = getNodeText(ts, id, ast);
-		yield [text, getStartEnd(ts, id, ast).start - prefix.length, isShorthand, isNarrowing, inTypeQuery, isNewOperand];
+		yield [
+			text,
+			getStartEnd(ts, id, ast).start - prefix.length,
+			isShorthand,
+			isNarrowing,
+			inTypeQuery,
+			isNewOperand,
+			!!inFunction,
+		];
 	}
 	scope.end();
 }
@@ -242,4 +262,5 @@ type IdentifierAccess = [
 	isNarrowing: boolean,
 	inTypeQuery: boolean,
 	isNewOperand: boolean,
+	inFunction: boolean,
 ];

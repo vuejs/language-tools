@@ -15,6 +15,8 @@ export interface DeclarationItem {
 	skipped: boolean;
 	inTypeQuery: boolean;
 	isNewOperand: boolean;
+	// Inside a template-local function, where top-level assertion narrowing may not reach.
+	inFunction?: boolean;
 }
 
 export function* forEachDeclarations(
@@ -511,13 +513,19 @@ function* forEachDeclarationsInFunction(
 		}
 	}
 	for (const param of node.parameters) {
-		yield* forEachDeclarationsInBinding(ts, param, ast, ctx, scope);
+		for (const item of forEachDeclarationsInBinding(ts, param, ast, ctx, scope)) {
+			item.inFunction = true;
+			yield item;
+		}
 	}
 	if (node.type) {
 		yield* forEachDeclarationsInTypeNode(ts, node.type, ast, ctx, scope);
 	}
 	if (node.body) {
-		yield* forEachDeclarations(ts, node.body, ast, ctx, scope, false);
+		for (const item of forEachDeclarations(ts, node.body, ast, ctx, scope, false)) {
+			item.inFunction = true;
+			yield item;
+		}
 	}
 	scope.end();
 }
