@@ -1452,6 +1452,30 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			));
 		});
 
+		test('reference-type-slots w/ SlotsType', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/reference-type-slots/component-slots-type.ts',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.slots.map(({ name, type, description, schema }) => ({ name, type, description, schema })))
+				.toStrictEqual([
+					{
+						name: 'default',
+						type: '{ num: number; }',
+						description: 'Default slot',
+						schema: expect.objectContaining({ kind: 'object', type: '{ num: number; }' }),
+					},
+					{
+						name: 'named-slot',
+						type: '{ str: string; }',
+						description: '',
+						schema: expect.objectContaining({ kind: 'object', type: '{ str: string; }' }),
+					},
+				]);
+		});
+
 		test('reference-type-slots w/ generic', () => {
 			const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/generic/component.vue');
 			const meta = checker.getComponentMeta(componentPath);

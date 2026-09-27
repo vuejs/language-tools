@@ -143,9 +143,21 @@ export function createSchemaResolvers(
 		const propType = typeChecker.getNonNullableType(typeChecker.getTypeOfSymbol(prop));
 		const signatures = propType.getCallSignatures();
 		const paramType = signatures[0]?.parameters[0];
-		const subtype = paramType
+		let subtype = paramType
 			? typeChecker.getTypeOfSymbol(paramType)
 			: typeChecker.getAnyType();
+		// `SlotsType` slots are typed as `(...args: [props] | []) => VNode[]`
+		if ((paramType?.valueDeclaration as any)?.dotDotDotToken) {
+			const elements = (subtype.isUnion() ? subtype.types : [subtype])
+				.filter(type => typeChecker.isTupleType(type))
+				.map(type => typeChecker.getTypeArguments(type as ts.TypeReference)[0])
+				.filter(type => !!type);
+			const [element] = elements;
+			if (element && elements.length === 1) {
+				// keep `unknown`, which `getNonNullableType` would turn into `{}`
+				subtype = element.flags & ts.TypeFlags.Unknown ? element : typeChecker.getNonNullableType(element);
+			}
+		}
 		let schema: PropertyMetaSchema | undefined;
 		let declarations: Declaration[] | undefined;
 
