@@ -1464,6 +1464,18 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			)).toBeDefined();
 		});
 
+		test('reference-type-exposed w/ generic', () => {
+			const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/generic/component.vue');
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.type).toEqual(TypeMeta.Function);
+
+			expect(meta.exposed.find(exposed =>
+				exposed.name === 'baz'
+				&& exposed.type === 'number'
+			)).toBeDefined();
+		});
+
 		test('reference-type-exposed', () => {
 			const componentPath = path.resolve(
 				__dirname,

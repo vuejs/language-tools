@@ -113,7 +113,7 @@ export function inferComponentExposed(
 		if (sig.parameters.length > 2) {
 			const exposeParam = sig.parameters[2];
 			if (exposeParam) {
-				const exposeType = typeChecker.getTypeOfSymbol(exposeParam);
+				const exposeType = typeChecker.getNonNullableType(typeChecker.getTypeOfSymbol(exposeParam));
 				const callSignatures = exposeType.getCallSignatures();
 				for (const callSig of callSignatures) {
 					const params = callSig.getParameters();
