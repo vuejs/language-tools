@@ -25,9 +25,9 @@ export function* generateTemplate(
 
 	for (const name of options.dotValueBindings) {
 		yield `// @ts-ignore${newLine}`;
-		yield `${names.withDotValue}(${name}, ${
+		yield `if (!${names.withDotValue}(${name}, ${
 			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
-		})${endOfLine}`;
+		})) throw 0${endOfLine}`;
 	}
 
 	if (options.templateAndStyleCodes.length) {

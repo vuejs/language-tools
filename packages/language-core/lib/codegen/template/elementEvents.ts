@@ -266,7 +266,7 @@ export function* generateModelEventExpression(
 	}
 }
 
-// Assertion narrowing does not flow into nested closures for imports and
+// Narrowing does not flow into nested closures for imports and
 // `let`/`var` bindings (TS limitation), so re-assert those bindings at closure tops.
 function* generateReasserts(
 	options: TemplateCodegenOptions,
@@ -288,9 +288,9 @@ function* generateReasserts(
 		}
 	}
 	for (const name of reasserts) {
-		yield `${names.withDotValue}(${name}, ${
+		yield `if (!${names.withDotValue}(${name}, ${
 			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
-		})${endOfLine}`;
+		})) throw 0${endOfLine}`;
 	}
 }
 

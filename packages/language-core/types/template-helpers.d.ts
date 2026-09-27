@@ -161,11 +161,14 @@ declare global {
 	// `Ref` conjunct (passed by the caller — this file cannot import vue) that
 	// doubles as the idempotency marker for re-assertion. The tuple form keeps
 	// every branch assignable to `T` (TS2677); distributing the intersection
-	// would turn nullish union members into `never`.
+	// would turn nullish union members into `never`. It is a type guard used as
+	// `if (!guard) throw` rather than an `asserts` function: TS resolves a
+	// generic assertion call for every reference whose flow passes it, which
+	// can loop back through the component's own type.
 	function __VLS_withDotValue<T, Ref>(
 		t: T,
 		ref: Ref,
-	): asserts t is [T] extends [Ref] ? T
+	): t is [T] extends [Ref] ? T
 		: NonNullable<T> & Ref & { value: T extends Ref & { value: infer V } ? V : T };
 	function __VLS_unwrap<T, Ref>(t: T, ref: Ref): T extends Ref & { value: infer V } ? V
 		: T;
