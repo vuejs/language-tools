@@ -1778,6 +1778,36 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			`);
 		});
 
+		test('js-component (script setup)', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/js-component/script-setup.vue',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.type).toEqual(TypeMeta.Class);
+			expect(meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.required])).toEqual([
+				['foo', false],
+				['bar', true],
+			]);
+			expect(meta.slots.map(slot => [slot.name, slot.type])).toEqual([['header', '{ count: number; }']]);
+		});
+
+		test('js-component (options api)', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/js-component/options-api.vue',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.type).toEqual(TypeMeta.Class);
+			expect(meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.required])).toEqual([
+				['foo', false],
+				['bar', true],
+			]);
+			expect(meta.events.map(event => event.name)).toEqual(['close']);
+		});
+
 		test('component-name-description (vue)', () => {
 			const componentPath = path.resolve(
 				__dirname,

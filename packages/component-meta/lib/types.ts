@@ -124,7 +124,7 @@ export interface MetaCheckerOptions {
 	 */
 	noDeclarations?: boolean;
 	/**
-	 * @deprecated No longer needed, this is default behavior now
+	 * @deprecated No longer has any effect
 	 */
 	forceUseTs?: boolean;
 	/**
