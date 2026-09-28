@@ -2,7 +2,7 @@ import type * as ts from 'typescript';
 import type { TextRange, VueCompilerOptions } from '../types';
 import { collectBindingIdentifiers } from '../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../utils/shared';
-import { getClosestMultiLineCommentRange, parseBindingRanges } from './utils';
+import { getClosestMultiLineCommentRange, parseBindings } from './utils';
 
 const tsCheckRE = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
 
@@ -113,7 +113,7 @@ export function parseScriptSetupRanges(
 	ts.forEachChild(sourceFile, node => visitNode(node, [sourceFile]));
 
 	return {
-		...parseBindingRanges(ts, sourceFile, vueCompilerOptions.extensions),
+		bindings: parseBindings(ts, sourceFile, vueCompilerOptions.extensions),
 		leadingCommentEndOffset,
 		importSectionEndOffset,
 		defineModel,

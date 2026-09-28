@@ -15,9 +15,9 @@ export interface TemplateCodegenOptions {
 	template: IRTemplate;
 	isVapor: boolean;
 	scriptLang: string;
-	destructuredProps: Set<string>;
 	importedComponents: Set<string>;
 	setupRefs: Set<string>;
+	setupConsts: Set<string>;
 	setupBindings: Set<string>;
 	// Bindings narrowed at least once anywhere in the template/styles; every
 	// access of these is emitted with `.value`. Collected by a first codegen pass.

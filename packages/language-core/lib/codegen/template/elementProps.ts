@@ -286,7 +286,7 @@ export function* generatePropExp(
 			);
 
 			// Keep in sync with the access strategy in interpolation.ts.
-			if (options.destructuredProps.has(propVariableName) || options.importedComponents.has(propVariableName)) {
+			if (options.setupConsts.has(propVariableName)) {
 				yield* codes;
 			}
 			else if (shouldIdentifierSkipped(ctx, propVariableName)) {

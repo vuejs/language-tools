@@ -10,18 +10,16 @@ import type { TemplateCodegenContext } from './context';
 export function* generateInterpolation(
 	{
 		typescript,
-		destructuredProps,
-		importedComponents,
 		setupRefs,
+		setupConsts,
 		setupBindings,
 		dotValueBindings,
 		vueCompilerOptions,
 		scriptLang,
 	}: {
 		typescript: typeof import('typescript');
-		destructuredProps: Set<string>;
-		importedComponents: Set<string>;
 		setupRefs: Set<string>;
+		setupConsts: Set<string>;
 		setupBindings: Set<string>;
 		dotValueBindings: Set<string>;
 		vueCompilerOptions: VueCompilerOptions;
@@ -81,7 +79,7 @@ export function* generateInterpolation(
 		//   every position; narrowing then works on the `.value` reference chain
 		// - other bindings → `__VLS_unwrap` (plain reads keep the original type)
 		// - otherwise → `__VLS_ctx.<name>`
-		if (destructuredProps.has(name) || importedComponents.has(name)) {
+		if (setupConsts.has(name)) {
 			yield [
 				name,
 				block.name,
