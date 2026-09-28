@@ -96,11 +96,11 @@ export function* forEachDeclarations(
 	else if (ts.isNonNullExpression(node)) {
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 	}
-	else if (isTypeAssertionExpression(ts, node)) {
+	else if (ts.isTypeAssertionExpression(node)) {
 		yield* forEachDeclarationsInTypeNode(ts, node.type, ast, ctx, scope);
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 	}
-	else if (isAsExpression(ts, node) || isSatisfiesExpression(ts, node)) {
+	else if (ts.isAsExpression(node) || ts.isSatisfiesExpression(node)) {
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 		yield* forEachDeclarationsInTypeNode(ts, node.type, ast, ctx, scope);
 	}
@@ -635,18 +635,6 @@ export function shouldIdentifierSkipped(
 
 // vue-tsc runs against TypeScript's tsc bundle, which does not include
 // type guards that the compiler itself never uses, so check `kind` directly.
-
-function isTypeAssertionExpression(ts: typeof import('typescript'), node: ts.Node): node is ts.TypeAssertion {
-	return node.kind === ts.SyntaxKind.TypeAssertionExpression;
-}
-
-function isAsExpression(ts: typeof import('typescript'), node: ts.Node): node is ts.AsExpression {
-	return node.kind === ts.SyntaxKind.AsExpression;
-}
-
-function isSatisfiesExpression(ts: typeof import('typescript'), node: ts.Node): node is ts.SatisfiesExpression {
-	return node.kind === ts.SyntaxKind.SatisfiesExpression;
-}
 
 function isDeleteExpression(ts: typeof import('typescript'), node: ts.Node): node is ts.DeleteExpression {
 	return node.kind === ts.SyntaxKind.DeleteExpression;
