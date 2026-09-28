@@ -1,5 +1,6 @@
 import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
+import picomatch from 'picomatch';
 import type * as ts from 'typescript';
 import type { RawPlugin, RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from './types';
 import { hyphenateTag } from './utils/shared';
@@ -200,6 +201,9 @@ export class CompilerOptionsResolver {
 				).map(([k, v]) => [camelize(k), v]),
 			),
 		};
+		// Compiling a glob costs far more than testing it, and codegen tests every prop against these
+		resolvedOptions.isDataAttribute = picomatch(resolvedOptions.dataAttributes);
+		resolvedOptions.isHtmlAttribute = picomatch(resolvedOptions.htmlAttributes);
 
 		return resolvedOptions;
 	}
@@ -257,6 +261,9 @@ export function getDefaultCompilerOptions(
 		? path.join(__dirname.replace(/\\/g, '/'), '..', 'types')
 		: '@vue/language-core/types',
 ): VueCompilerOptions {
+	const dataAttributes: string[] = [];
+	const htmlAttributes = ['aria-*'];
+
 	return {
 		target,
 		lib,
@@ -289,8 +296,10 @@ export function getDefaultCompilerOptions(
 			'Teleport',
 			'Suspense',
 		],
-		dataAttributes: [],
-		htmlAttributes: ['aria-*'],
+		dataAttributes,
+		htmlAttributes,
+		isDataAttribute: picomatch(dataAttributes),
+		isHtmlAttribute: picomatch(htmlAttributes),
 		optionsWrapper: [`(await import('${lib}')).defineComponent(`, `)`],
 		macros: {
 			defineProps: ['defineProps'],
