@@ -6,16 +6,15 @@ import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../util
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { asType, getRefBrandArgument, identifierRE, newLine } from '../utils';
+import { asType, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
-import { shouldIdentifierSkipped } from './bindingReferences';
 import type { TemplateCodegenContext } from './context';
 import { generateModifiers } from './elementDirectives';
 import { generateEventArg, generateEventExpression } from './elementEvents';
 import type { TemplateCodegenOptions } from './index';
-import { generateInterpolation } from './interpolation';
+import { generateIdentifier, generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 
 export interface FailedPropExpressions {
@@ -284,52 +283,15 @@ export function* generatePropExp(
 					__shorthandExpression: 'html',
 				},
 			);
-
-			// Keep in sync with the access strategy in interpolation.ts.
-			if (options.setupConsts.has(propVariableName)) {
-				yield* codes;
-			}
-			else if (shouldIdentifierSkipped(ctx, propVariableName)) {
-				yield* codes;
-			}
-			else if (options.setupRefs.has(propVariableName)) {
-				yield* codes;
-				yield `.`;
-				const boundary = yield* Boundary.start(
-					'template',
-					exp.loc.start.offset,
-					exp.loc.start.offset + exp.loc.source.length,
-					codeFeatures.verification,
-				);
-				yield `value`;
-				yield boundary.end();
-			}
-			else if (options.setupBindings.has(propVariableName)) {
-				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
-				if (options.dotValueBindings.has(propVariableName)) {
-					yield* codes;
-					yield `.`;
-					const boundary = yield* Boundary.start(
-						'template',
-						exp.loc.start.offset,
-						exp.loc.start.offset + exp.loc.source.length,
-						codeFeatures.verification,
-					);
-					yield `value`;
-					yield boundary.end();
-				}
-				else {
-					yield `${names.unwrap}(`;
-					yield* codes;
-					yield `, ${getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)})`;
-				}
-			}
-			else {
-				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
-				yield names.ctx;
-				yield `.`;
-				yield* codes;
-			}
+			yield* generateIdentifier(
+				options,
+				ctx,
+				codes,
+				propVariableName,
+				'template',
+				exp.loc.start.offset,
+				exp.loc.end.offset,
+			);
 
 			ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
 		}

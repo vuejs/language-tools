@@ -8,26 +8,12 @@ import { forEachDeclarations, shouldIdentifierSkipped } from './bindingReference
 import type { TemplateCodegenContext } from './context';
 
 export function* generateInterpolation(
-	{
-		typescript,
-		setupRefs,
-		setupConsts,
-		setupBindings,
-		dotValueBindings,
-		vueCompilerOptions,
-		scriptLang,
-	}: {
+	options: IdentifierOptions & {
 		typescript: typeof import('typescript');
-		setupRefs: Set<string>;
-		setupConsts: Set<string>;
-		setupBindings: Set<string>;
-		dotValueBindings: Set<string>;
-		vueCompilerOptions: VueCompilerOptions;
-		scriptLang: string;
 	},
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
-	data: VueCodeInformation,
+	features: VueCodeInformation,
 	code: string,
 	start: number,
 	prefix: string = '',
@@ -41,7 +27,7 @@ export function* generateInterpolation(
 	let prevEnd = 0;
 	for (
 		const [name, offset, isShorthand, isNarrowing, inTypeQuery, isNewOperand] of forEachIdentifiers(
-			typescript,
+			options.typescript,
 			ctx,
 			block,
 			code,
@@ -50,13 +36,12 @@ export function* generateInterpolation(
 			inNarrowing,
 		)
 	) {
-		const identifierData = isShorthand ? { ...data, __shorthandExpression: 'js' as const } : data;
 		if (isShorthand) {
 			yield* generateNonIdentifierCode(
 				code.slice(prevEnd, offset + name.length),
 				block.name,
 				start + prevEnd,
-				data,
+				features,
 				prevEnd > 0,
 			);
 			yield `: `;
@@ -66,107 +51,32 @@ export function* generateInterpolation(
 				code.slice(prevEnd, offset),
 				block.name,
 				start + prevEnd,
-				data,
+				features,
 				prevEnd > 0,
 			);
 		}
 
-		// Access strategy, in precedence order (keep in sync with the v-bind
-		// shorthand handling in elementProps.ts):
-		// - destructured props / imported components → direct reference
-		// - template refs → direct `.value`
-		// - dotValue bindings (narrowed at least once anywhere) → `.value` at
-		//   every position; narrowing then works on the `.value` reference chain
-		// - other bindings → `__VLS_unwrap` (plain reads keep the original type)
-		// - otherwise → `__VLS_ctx.<name>`
-		if (setupConsts.has(name)) {
-			yield [
-				name,
-				block.name,
-				start + offset,
-				identifierData,
-			];
-		}
-		else if (setupRefs.has(name)) {
-			yield [
-				name,
-				block.name,
-				start + offset,
-				data,
-			];
-			yield `.`;
-			const boundary = yield* Boundary.start(
-				block.name,
-				start + offset,
-				start + offset + name.length,
-				codeFeatures.verification,
-			);
-			yield `value`;
-			yield boundary.end();
-		}
-		else if (setupBindings.has(name)) {
-			// First pass records narrowing accesses here; the second pass emits from dotValueBindings.
-			ctx.accessVariable(block.name, name, start + offset, inTypeQuery || isNarrowing);
-			if (inTypeQuery || dotValueBindings.has(name)) {
-				yield [
-					name,
-					block.name,
-					start + offset,
-					identifierData,
-				];
-				yield `.`;
-				const boundary = yield* Boundary.start(
-					block.name,
-					start + offset,
-					start + offset + name.length,
-					codeFeatures.verification,
-				);
-				yield `value`;
-				yield boundary.end();
-			}
-			else {
-				// `new __VLS_unwrap(Foo)()` parses as `new (__VLS_unwrap(Foo)())`,
-				// whose target lacks a construct signature; keep the operand parenthesized.
-				if (isNewOperand) {
-					yield `(`;
-				}
-				yield `${names.unwrap}(`;
-				yield [
-					name,
-					block.name,
-					start + offset,
-					identifierData,
-				];
-				yield `, ${getRefBrandArgument(vueCompilerOptions, scriptLang)})`;
-				if (isNewOperand) {
-					yield `)`;
-				}
-			}
-		}
-		else {
-			// #1205, #1264
-			const boundary = yield* Boundary.start(
-				block.name,
-				start + offset,
-				start + offset + name.length,
-				codeFeatures.verification,
-			);
-			if (ctx.dollarVars.has(name)) {
-				yield names.dollars;
-			}
-			else {
-				ctx.accessVariable(block.name, name, start + offset);
-				yield names.ctx;
-			}
-			yield `.`;
-			yield [
-				name,
-				block.name,
-				start + offset,
-				identifierData,
-			];
-			yield boundary.end();
-		}
+		const codes: Code[] = [[
+			name,
+			block.name,
+			start + offset,
+			isShorthand
+				? { ...features, __shorthandExpression: 'js' as const }
+				: features,
+		]];
+
+		yield* generateIdentifier(
+			options,
+			ctx,
+			codes,
+			name,
+			block.name,
+			start + offset,
+			start + offset + name.length,
+			isNarrowing,
+			inTypeQuery,
+			isNewOperand,
+		);
 
 		prevEnd = offset + name.length;
 	}
@@ -176,7 +86,7 @@ export function* generateInterpolation(
 			code.slice(prevEnd),
 			block.name,
 			start + prevEnd,
-			data,
+			features,
 			prevEnd > 0,
 		);
 	}
@@ -211,6 +121,101 @@ function* generateNonIdentifierCode(
 	yield [code.slice(0, 1), source, offset, { verification: data.verification }];
 	if (code.length > 1) {
 		yield [code.slice(1), source, offset + 1, data];
+	}
+}
+
+interface IdentifierOptions {
+	setupRefs: Set<string>;
+	setupConsts: Set<string>;
+	setupBindings: Set<string>;
+	dotValueBindings: Set<string>;
+	vueCompilerOptions: VueCompilerOptions;
+	scriptLang: string;
+}
+
+// Access strategy, in precedence order:
+// - setup consts → direct reference
+// - local-scope / global names → direct reference (the interpolation path
+//   filters these earlier; the v-bind shorthand path relies on this branch)
+// - template refs → direct `.value`
+// - dotValue bindings (narrowed at least once anywhere) → `.value` at
+//   every position; narrowing then works on the `.value` reference chain
+// - other bindings → `__VLS_unwrap` (plain reads keep the original type)
+// - otherwise → `__VLS_ctx.<name>`
+export function* generateIdentifier(
+	options: IdentifierOptions,
+	ctx: TemplateCodegenContext,
+	codes: Iterable<Code>,
+	name: string,
+	source: string,
+	start: number,
+	end: number,
+	isNarrowing = false,
+	inTypeQuery = false,
+	isNewOperand = false,
+): Generator<Code> {
+	if (options.setupConsts.has(name) || shouldIdentifierSkipped(ctx, name)) {
+		yield* codes;
+	}
+	else if (options.setupRefs.has(name)) {
+		yield* codes;
+		yield `.`;
+		const boundary = yield* Boundary.start(
+			source,
+			start,
+			end,
+			codeFeatures.verification,
+		);
+		yield `value`;
+		yield boundary.end();
+	}
+	else if (options.setupBindings.has(name)) {
+		// First pass records narrowing accesses here; the second pass emits from dotValueBindings.
+		ctx.accessVariable(source, name, start, inTypeQuery || isNarrowing);
+		if (inTypeQuery || options.dotValueBindings.has(name)) {
+			yield* codes;
+			yield `.`;
+			const boundary = yield* Boundary.start(
+				source,
+				start,
+				end,
+				codeFeatures.verification,
+			);
+			yield `value`;
+			yield boundary.end();
+		}
+		else {
+			// `new __VLS_unwrap(Foo)()` parses as `new (__VLS_unwrap(Foo)())`,
+			// whose target lacks a construct signature; keep the operand parenthesized.
+			if (isNewOperand) {
+				yield `(`;
+			}
+			yield `${names.unwrap}(`;
+			yield* codes;
+			yield `, ${getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)})`;
+			if (isNewOperand) {
+				yield `)`;
+			}
+		}
+	}
+	else {
+		// #1205, #1264
+		const boundary = yield* Boundary.start(
+			source,
+			start,
+			end,
+			codeFeatures.verification,
+		);
+		if (ctx.dollarVars.has(name)) {
+			yield names.dollars;
+		}
+		else {
+			ctx.accessVariable(source, name, start);
+			yield names.ctx;
+		}
+		yield `.`;
+		yield* codes;
+		yield boundary.end();
 	}
 }
 
