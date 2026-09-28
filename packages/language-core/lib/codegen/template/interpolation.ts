@@ -96,7 +96,15 @@ export function* generateInterpolation(
 				start + offset,
 				data,
 			];
-			yield [`.value`, block.name, start + offset, codeFeatures.verification];
+			yield `.`;
+			const boundary = yield* Boundary.start(
+				block.name,
+				start + offset,
+				start + offset + name.length,
+				codeFeatures.verification,
+			);
+			yield `value`;
+			yield boundary.end();
 		}
 		else if (setupBindings.has(name)) {
 			// First pass records narrowing accesses here; the second pass emits from dotValueBindings.
@@ -108,7 +116,15 @@ export function* generateInterpolation(
 					start + offset,
 					identifierData,
 				];
-				yield [`.value`, block.name, start + offset, codeFeatures.verification];
+				yield `.`;
+				const boundary = yield* Boundary.start(
+					block.name,
+					start + offset,
+					start + offset + name.length,
+					codeFeatures.verification,
+				);
+				yield `value`;
+				yield boundary.end();
 			}
 			else {
 				// `new __VLS_unwrap(Foo)()` parses as `new (__VLS_unwrap(Foo)())`,

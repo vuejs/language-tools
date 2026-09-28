@@ -294,13 +294,29 @@ export function* generatePropExp(
 			}
 			else if (options.setupRefs.has(propVariableName)) {
 				yield* codes;
-				yield [`.value`, 'template', exp.loc.start.offset, codeFeatures.verification];
+				yield `.`;
+				const boundary = yield* Boundary.start(
+					'template',
+					exp.loc.start.offset,
+					exp.loc.start.offset + exp.loc.source.length,
+					codeFeatures.verification,
+				);
+				yield `value`;
+				yield boundary.end();
 			}
 			else if (options.setupBindings.has(propVariableName)) {
 				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
 				if (options.dotValueBindings.has(propVariableName)) {
 					yield* codes;
-					yield [`.value`, 'template', exp.loc.start.offset, codeFeatures.verification];
+					yield `.`;
+					const boundary = yield* Boundary.start(
+						'template',
+						exp.loc.start.offset,
+						exp.loc.start.offset + exp.loc.source.length,
+						codeFeatures.verification,
+					);
+					yield `value`;
+					yield boundary.end();
 				}
 				else {
 					yield `${names.unwrap}(`;
