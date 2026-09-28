@@ -1,6 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
-import { isMatch } from 'picomatch';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
@@ -95,7 +94,7 @@ export function* generateElementProps(
 
 			if (
 				propName === undefined
-				|| options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(propName!, pattern))
+				|| options.vueCompilerOptions.isDataAttribute(propName)
 			) {
 				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
 					failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
@@ -170,7 +169,7 @@ export function* generateElementProps(
 			}
 		}
 		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
-			if (options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(prop.name, pattern))) {
+			if (options.vueCompilerOptions.isDataAttribute(prop.name)) {
 				continue;
 			}
 
@@ -325,7 +324,7 @@ function getShouldCamelize(
 		&& hyphenateAttr(propName) === propName
 		&& (
 			node.tagType === CompilerDOM.ElementTypes.SLOT
-			|| !options.vueCompilerOptions.htmlAttributes.some(pattern => isMatch(propName, pattern))
+			|| !options.vueCompilerOptions.isHtmlAttribute(propName)
 		);
 }
 
