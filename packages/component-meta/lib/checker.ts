@@ -73,22 +73,11 @@ export function createCheckerBase(
 		// @ts-expect-error internal option to prevent unicode-escaping non-ASCII characters
 		neverAsciiEscape: true,
 	});
-	const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
-
-	if (checkerOptions.forceUseTs ?? true) {
-		languageServiceHost.getScriptKind = fileName => {
-			const scriptKind = getScriptKind!(fileName);
-			if (vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
-				if (scriptKind === ts.ScriptKind.JS) {
-					return ts.ScriptKind.TS;
-				}
-				if (scriptKind === ts.ScriptKind.JSX) {
-					return ts.ScriptKind.TSX;
-				}
-			}
-			return scriptKind;
-		};
-	}
+	// `forceUseTs` used to rewrite the script kind of JavaScript Vue files to
+	// TypeScript so that the generated code, which was TypeScript at the time,
+	// would parse. The generated code for a JavaScript block is JavaScript with
+	// JSDoc casts now, and checking it as TypeScript throws those casts away,
+	// leaving an empty meta. The option is kept for compatibility and ignored.
 
 	return {
 		getExportNames,
