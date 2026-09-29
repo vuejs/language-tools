@@ -6,7 +6,7 @@ import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { endOfLine, flattenInferOnlyProps, generateTypedVar, identifierRE, newLine } from '../utils';
+import { endOfLine, generateTypedVar, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
@@ -195,7 +195,7 @@ export function* generateComponent(
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
 	yield `// @ts-ignore${newLine}`;
-	yield flattenInferOnlyProps(options.typescript, propsStr);
+	yield propsStr.replace(/\/\/.*$/gm, (line) => `/*${line.slice(2)} */`).replace(/\n/g, ' ');
 	yield `}))${endOfLine}`;
 
 	yield `const `;
