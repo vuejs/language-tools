@@ -196,7 +196,7 @@ export function* generateComponent(
 	}(${componentVar}, new ${componentVar}({${newLine}`;
 	yield `// @ts-ignore${newLine}`;
 	yield propsStr
-		.replace(/(?<=\/\/).*(?=$)/gm, (line) => `/*${line.replaceAll("*/", "*\\/")} */`)
+		.replace(/(?<=\/\/).*$/gm, (line) => `/*${line.replaceAll("*/", "*\\/")} */`)
 		.replace(/\n/g, ' ');
 	yield `}))${endOfLine}`;
 
