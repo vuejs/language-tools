@@ -195,7 +195,9 @@ export function* generateComponent(
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
 	yield `// @ts-ignore${newLine}`;
-	yield propsStr.replace(/\n/g, ' ');
+	yield propsStr
+		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll("*/", "*\\/")} */`)
+		.replace(/\n/g, ' ');
 	yield `}))${endOfLine}`;
 
 	yield `const `;
