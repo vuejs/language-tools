@@ -2,6 +2,8 @@ import type * as ts from 'typescript';
 import type { Code, IRBlock, IRScript, IRScriptSetup, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 
+export { flattenInferOnlyProps } from './flattenInferOnlyProps';
+
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
 export const identifierRE = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
