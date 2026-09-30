@@ -1778,10 +1778,10 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			`);
 		});
 
-		test('plain-js (script setup without lang)', () => {
+		test('js-component (script setup)', () => {
 			const componentPath = path.resolve(
 				__dirname,
-				'../../../test-workspace/component-meta/plain-js/component.vue',
+				'../../../test-workspace/component-meta/js-component/component.vue',
 			);
 			const meta = checker.getComponentMeta(componentPath);
 
@@ -1795,10 +1795,10 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(meta.slots.map(slot => [slot.name, slot.type])).toEqual([['header', '{ count: number; }']]);
 		});
 
-		test('plain-js (options api without lang)', () => {
+		test('js-component (options api)', () => {
 			const componentPath = path.resolve(
 				__dirname,
-				'../../../test-workspace/component-meta/plain-js/component-options.vue',
+				'../../../test-workspace/component-meta/js-component/component-options.vue',
 			);
 			const meta = checker.getComponentMeta(componentPath);
 

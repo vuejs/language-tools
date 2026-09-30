@@ -73,12 +73,6 @@ export function createCheckerBase(
 		// @ts-expect-error internal option to prevent unicode-escaping non-ASCII characters
 		neverAsciiEscape: true,
 	});
-	// `forceUseTs` used to rewrite the script kind of JavaScript Vue files to
-	// TypeScript so that the generated code, which was TypeScript at the time,
-	// would parse. The generated code for a JavaScript block is JavaScript with
-	// JSDoc casts now, and checking it as TypeScript throws those casts away,
-	// leaving an empty meta. The option is kept for compatibility and ignored.
-
 	return {
 		getExportNames,
 		getComponentMeta(fileName: string, exportName = 'default') {
