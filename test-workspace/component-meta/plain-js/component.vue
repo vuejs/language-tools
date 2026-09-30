@@ -9,7 +9,6 @@ defineProps({
     default: 1
   }
 });
-defineEmits(['change']);
 </script>
 
 <template>

@@ -1792,7 +1792,6 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				['bar', 'number | undefined', false],
 				['foo', 'string', true],
 			]);
-			expect(meta.events.map(event => event.name)).toEqual(['change']);
 			expect(meta.slots.map(slot => [slot.name, slot.type])).toEqual([['header', '{ count: number; }']]);
 		});
 

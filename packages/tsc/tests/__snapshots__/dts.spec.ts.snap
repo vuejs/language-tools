@@ -321,6 +321,80 @@ export default _default;
 "
 `;
 
+exports[`Input: plain-js/component.vue, Output: plain-js/component.vue.d.ts 1`] = `
+"declare const _default: typeof __VLS_export;
+export default _default;
+export type __VLS_LocalComponents = {};
+export type __VLS_GlobalComponents = import("vue").GlobalComponents;
+export type __VLS_LocalDirectives = {};
+export type __VLS_Slots = {} & {
+    header?: (props: typeof __VLS_1) => any;
+};
+export type __VLS_WithSlots<T, S> = T & {
+    new (): {
+        $slots: S;
+    };
+};
+declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
+declare namespace __VLS_1 {
+    let count: number;
+}
+/** @typedef {{}
+& { header?: (props: typeof __VLS_1) => any }} __VLS_Slots */
+declare const __VLS_base: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
+    foo: {
+        type: StringConstructor;
+        required: true;
+    };
+    bar: {
+        type: NumberConstructor;
+        default: number;
+    };
+}>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
+    foo: {
+        type: StringConstructor;
+        required: true;
+    };
+    bar: {
+        type: NumberConstructor;
+        default: number;
+    };
+}>> & Readonly<{}>, {
+    bar: number;
+}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+"
+`;
+
+exports[`Input: plain-js/component-options.vue, Output: plain-js/component-options.vue.d.ts 1`] = `
+"declare const _default: typeof __VLS_export;
+export default _default;
+export type __VLS_LocalComponents = {};
+export type __VLS_GlobalComponents = import("vue").GlobalComponents;
+export type __VLS_LocalDirectives = {};
+export type __VLS_Slots = {} & {
+    header?: (props: typeof __VLS_1) => any;
+};
+/** @typedef {{}
+& { header?: (props: typeof __VLS_1) => any }} __VLS_Slots */
+declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
+    foo: {
+        type: StringConstructor;
+        required: true;
+    };
+}>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, "change"[], "change", import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
+    foo: {
+        type: StringConstructor;
+        required: true;
+    };
+}>> & Readonly<{
+    onChange?: ((...args: any[]) => any) | undefined;
+}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+declare namespace __VLS_1 {
+    let count: number;
+}
+"
+`;
+
 exports[`Input: reference-type-events/component.vue, Output: reference-type-events/component.vue.d.ts 1`] = `
 "import type { MyEvents } from './my-events';
 declare const __VLS_export: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, import("vue").TypeEmitsToOptions<MyEvents>, string, import("vue").PublicProps, Readonly<{}> & Readonly<{
