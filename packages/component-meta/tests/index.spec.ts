@@ -1778,6 +1778,37 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			`);
 		});
 
+		test('js-component (script setup)', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/js-component/component.vue',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.type).toEqual(TypeMeta.Class);
+			expect(
+				meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.type, prop.required]).sort(),
+			).toEqual([
+				['bar', 'number | undefined', false],
+				['foo', 'string', true],
+			]);
+			expect(meta.slots.map(slot => [slot.name, slot.type])).toEqual([['header', '{ count: number; }']]);
+		});
+
+		test('js-component (options api)', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/js-component/component-options.vue',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.type).toEqual(TypeMeta.Class);
+			expect(meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.type, prop.required])).toEqual([
+				['foo', 'string', true],
+			]);
+			expect(meta.events.map(event => event.name)).toEqual(['change']);
+		});
+
 		test('component-name-description (vue)', () => {
 			const componentPath = path.resolve(
 				__dirname,
