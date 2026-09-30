@@ -1787,7 +1787,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 
 			expect(meta.type).toEqual(TypeMeta.Class);
 			expect(
-				meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.type, prop.required]).sort(),
+				meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.type, prop.required]),
 			).toEqual([
 				['bar', 'number | undefined', false],
 				['foo', 'string', true],
@@ -1803,7 +1803,9 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const meta = checker.getComponentMeta(componentPath);
 
 			expect(meta.type).toEqual(TypeMeta.Class);
-			expect(meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.type, prop.required])).toEqual([
+			expect(
+				meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.type, prop.required]),
+			).toEqual([
 				['foo', 'string', true],
 			]);
 			expect(meta.events.map(event => event.name)).toEqual(['change']);
