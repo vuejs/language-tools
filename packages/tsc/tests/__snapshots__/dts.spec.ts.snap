@@ -176,8 +176,6 @@ declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
 declare namespace __VLS_1 {
     let count: number;
 }
-/** @typedef {{}
-& { header?: (props: typeof __VLS_1) => any }} __VLS_Slots */
 declare const __VLS_base: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
     foo: {
         type: StringConstructor;
@@ -211,8 +209,6 @@ export type __VLS_LocalDirectives = {};
 export type __VLS_Slots = {} & {
     header?: (props: typeof __VLS_1) => any;
 };
-/** @typedef {{}
-& { header?: (props: typeof __VLS_1) => any }} __VLS_Slots */
 declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
     foo: {
         type: StringConstructor;

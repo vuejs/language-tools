@@ -35,7 +35,7 @@ export function* generateTypedVar(
 	}
 }
 
-// `type name = T;` in TS; `/** @typedef {T} name */` in JS.
+// `type name = T;` in TS; `/** @typedef {T} name */;` in JS.
 export function* generateTypeAlias(
 	name: string,
 	lang: string,
@@ -49,7 +49,7 @@ export function* generateTypeAlias(
 	else {
 		yield `/** @typedef {`;
 		yield* type();
-		yield `} ${name} */${newLine}`;
+		yield `} ${name} */${endOfLine}`;
 	}
 }
 
