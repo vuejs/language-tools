@@ -73,6 +73,7 @@ export function createCheckerBase(
 		// @ts-expect-error internal option to prevent unicode-escaping non-ASCII characters
 		neverAsciiEscape: true,
 	});
+
 	return {
 		getExportNames,
 		getComponentMeta(fileName: string, exportName = 'default') {
