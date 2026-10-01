@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { exactType } from '../shared';
-import Button from './Button.vue';
+import Button from './button.vue';
 
 type Props = InstanceType<typeof Button>['$props'];
 
