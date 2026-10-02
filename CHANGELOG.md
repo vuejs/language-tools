@@ -694,91 +694,99 @@
 
 ## 3.0.5 (2025-08-01)
 
-### Features
+### language-core
 
-- feat(language-core): introduce `compileSFCStyle` to provide style related infomation ([4718cc2](https://github.com/vuejs/language-tools/commit/4718cc2ff30410bd7267850047fbdd3eeebc8626)) - Thanks to @KazariEX!
-- feat(language-service): completion snippet for `v-for` ([5084123](https://github.com/vuejs/language-tools/commit/50841239eb0e2e44d35df43c363f4f8f1c467062)) - Thanks to @KazariEX!
+- **feat:** introduce `compileSFCStyle` to provide style related information ([4718cc2](https://github.com/vuejs/language-tools/commit/4718cc2ff30410bd7267850047fbdd3eeebc8626))
+- **fix:** generate `modelModifiers` for an explicitly declared default model name ([0e0ffd9](https://github.com/vuejs/language-tools/commit/0e0ffd974b6642fe74e6ac634999941b9757031c))
+- **fix:** remove local variable addition for the model `$event`, and simplify event codegen ([eea37a7](https://github.com/vuejs/language-tools/commit/eea37a7099c7b11e9fc7208d23d6e9863448df99)) ([12b863e](https://github.com/vuejs/language-tools/commit/12b863eee366db8e1f72db8c0af985d481e2cbf1))
+- **fix:** enable the navigation code feature on directive modifiers ([0ceba6e](https://github.com/vuejs/language-tools/commit/0ceba6ec40aee6581f6c828513d388d5970ebf0b))
+- **fix:** tolerance for an incomplete root template tag ([aa3531f](https://github.com/vuejs/language-tools/commit/aa3531f6e619e253b17592694b0ef5b9f765f229))
+- **fix:** avoid references highlight of unrelated native element tags ([64f5da2](https://github.com/vuejs/language-tools/commit/64f5da224ca4681330ae0af40edfa8e7aa9aa54a))
 
-### Bug Fixes
+### language-service
 
-- fix(language-core): generate `modelModifiers` for explicitly declared default model name ([0e0ffd9](https://github.com/vuejs/language-tools/commit/0e0ffd974b6642fe74e6ac634999941b9757031c)) - Thanks to @KazariEX!
-- fix(language-service): more responsive `.value` insertion
-- fix(vscode): add `class` scope fallback for `component` semantic tokens ([dff519a](https://github.com/vuejs/language-tools/commit/dff519af4505d9935cbba80fe3ba5234571e23fa)) - Thanks to @KazariEX!
-- fix(vscode): make sure extension is loaded immediately
-- fix(language-service): only check `globalTypesPath` for FS files
-- fix(vscode): handle fail tsserver requests to avoid memory leak
-- fix(vscode): do not delay the execution of `restartExtensionHost`
-- fix(language-core): avoid references highlight of unrelated native element tags ([64f5da2](https://github.com/vuejs/language-tools/commit/64f5da224ca4681330ae0af40edfa8e7aa9aa54a)) - Thanks to @KazariEX!
-- fix(language-core): tolerance for incomplete root template tag
-- fix(language-core): enable navigation code feature on directive modifiers - Thanks to @KazariEX!
+- **feat:** completion snippet for `v-for` ([5084123](https://github.com/vuejs/language-tools/commit/50841239eb0e2e44d35df43c363f4f8f1c467062))
+- **fix:** more responsive `.value` insertion ([3e6393b](https://github.com/vuejs/language-tools/commit/3e6393b7ecce6f3307b1872e6a6aad5ec555017d))
+- **fix:** only check `globalTypesPath` for FS files ([d407159](https://github.com/vuejs/language-tools/commit/d407159442b42bc3021b58834f829a83de3c571a))
 
-### Other Changes
+### typescript-plugin
 
-- chore(language-service): improve global types error message for JS projects ([2d51435](https://github.com/vuejs/language-tools/commit/2d51435a8bdf79adac1e77da4d506a9ed02921dd)) - Thanks to @Ciallo-Chiaki!
+- **fix:** ensure all requests do not return void ([a2b2bb3](https://github.com/vuejs/language-tools/commit/a2b2bb36cd892c6db215234ade856195fd8f736b))
+
+### vscode
+
+- **fix:** handle fail tsserver requests to avoid a memory leak ([e3aa6d1](https://github.com/vuejs/language-tools/commit/e3aa6d1dd50bf8fa22fc765aa2a7ffe841254934))
+- **fix:** make sure the extension is loaded immediately ([d80cfee](https://github.com/vuejs/language-tools/commit/d80cfee142fda34772286c1e4b7c35d92e9e7b38))
+- **fix:** do not delay the execution of `restartExtensionHost` ([fba08b3](https://github.com/vuejs/language-tools/commit/fba08b394c33295699b0ac01cd4d45d344824a6c))
+- **fix:** add `class` scope fallback for `component` semantic tokens ([dff519a](https://github.com/vuejs/language-tools/commit/dff519af4505d9935cbba80fe3ba5234571e23fa))
 
 ## 3.0.4 (2025-07-25)
 
-### Features
+### language-core
 
-- feat(language-service): check casing when dropping component into template - Thanks to @KazariEX!
-- feat(language-service): native completion experience for slot names ([2435873](https://github.com/vuejs/language-tools/commit/2435873dc4c09fbf5394d96c083b2c2d18ecd8b6)) - Thanks to @KazariEX!
+- **fix:** avoid clearing the global types path when local compiler options are present ([78fcfdd](https://github.com/vuejs/language-tools/commit/78fcfdd42827f95ccfb8e32e2a340a855c3843c6))
+- **fix:** do not evaluate `skipTemplateCodegen` when exposing `$slots` ([7953154](https://github.com/vuejs/language-tools/commit/7953154cbd48624fd9cb2a6420e7c4b053d57da7))
 
-### Bug Fixes
+### language-service
 
-- fix(language-core): avoid clearing global types path when local compiler options is present - Thanks to @KazariEX!
-- fix(language-core): do not evaluate `skipTemplateCodegen` when exposing `$slots` - Thanks to @KazariEX!
-- fix(language-service): correct kind and order of component completion items - Thanks to @KazariEX!
-- fix(component-meta): filter events out of props ([c964b32](https://github.com/vuejs/language-tools/commit/c964b327c4215ead6f18e4dfaddc5e12ab90e91e)) - Thanks to @Akryum!
+- **feat:** native completion experience for slot names ([2435873](https://github.com/vuejs/language-tools/commit/2435873dc4c09fbf5394d96c083b2c2d18ecd8b6))
+- **feat:** check casing when dropping a component into the template ([2d41b9d](https://github.com/vuejs/language-tools/commit/2d41b9d5c1ec20955fbb8384cc689e6c6edefd56))
+- **fix:** correct kind and order of component completion items ([7b55e64](https://github.com/vuejs/language-tools/commit/7b55e644815ed9a0a97377b7b3b58cd74f43fb03))
 
-### Other Changes
+### component-meta
 
-- refactor(language-core): allow configuring `checkUnknownEvents` and `checkUnknownComponents` in sfc ([26fa104](https://github.com/vuejs/language-tools/commit/26fa1044a7cf6eaad8737212954e3f06b29380fa)) - Thanks to @KazariEX!
-- chore(language-service): add restart server hint to global types warning - Thanks to @KazariEX!
+- **fix:** filter events out of props ([c964b32](https://github.com/vuejs/language-tools/commit/c964b327c4215ead6f18e4dfaddc5e12ab90e91e))
 
 ## 3.0.3 (2025-07-18)
 
-### Bug Fixes
+### language-core
 
-- fix(language-core): find `node_modules` based on file's directory ([4df0f6a](https://github.com/vuejs/language-tools/commit/4df0f6aa57981d224a4ebd4d26bc97fb00a47a01)) - Thanks to @KazariEX!
-- fix(language-core): do not spread exposed object ([945a6cd](https://github.com/vuejs/language-tools/commit/945a6cd90266499d924f81cfa8826299a4ff7905)) - Thanks to @KazariEX!
-- fix(vscode): prompt manual reload in remote envs ([5023ecf](https://github.com/vuejs/language-tools/commit/5023ecf6547fa9cbb692170dfc48c0c32103ea4d))
+- **fix:** do not spread the exposed object ([945a6cd](https://github.com/vuejs/language-tools/commit/945a6cd90266499d924f81cfa8826299a4ff7905))
+- **fix:** find `node_modules` based on the file's directory ([4df0f6a](https://github.com/vuejs/language-tools/commit/4df0f6aa57981d224a4ebd4d26bc97fb00a47a01))
 
-### Other Changes
+### vscode
 
-- refactor(tsc): return the result of runTsc ([e1095ed](https://github.com/vuejs/language-tools/commit/e1095ed38b8a67f2b58229f16f48ebf4c99b1eee)) - Thanks to @escaton!
+- **fix:** prompt manual reload in remote envs ([5023ecf](https://github.com/vuejs/language-tools/commit/5023ecf6547fa9cbb692170dfc48c0c32103ea4d))
+
+### tsc
+
+- **refactor:** return the result of `runTsc` ([e1095ed](https://github.com/vuejs/language-tools/commit/e1095ed38b8a67f2b58229f16f48ebf4c99b1eee))
 
 ## 3.0.2 (2025-07-18)
 
-### Features
+### language-core
 
-- feat(language-core): introduce `globalTypesPath` option for non-npm like environment ([9ad6714](https://github.com/vuejs/language-tools/commit/9ad6714a8be8fca0040947ffb970fffe3dba482f)) - Thanks to @KazariEX!
-- feat: forward tsserver's semantic tokens via language server ([0e917c6](https://github.com/vuejs/language-tools/commit/0e917c601bddfa748be072f409a4c37cbe6985ab)) - Thanks to @KazariEX!
+- **feat:** introduce the `globalTypesPath` option for non-npm like environments ([9ad6714](https://github.com/vuejs/language-tools/commit/9ad6714a8be8fca0040947ffb970fffe3dba482f))
+- **fix:** walk identifiers correctly within type nodes in interpolation ([ae5f778](https://github.com/vuejs/language-tools/commit/ae5f7784c09544b6b00d0198927374e0ec44746d))
+- **fix:** infer the parameter type of union slots to be a union instead of an intersection ([abb5f2b](https://github.com/vuejs/language-tools/commit/abb5f2b6c4be384d1fef0e874a128500d2024d8e))
+- **fix:** treat `<component>` without an `is` prop as a normal component ([028f573](https://github.com/vuejs/language-tools/commit/028f5731fe0c6ae74f50d3eab42a50718f8f0148))
+- **fix:** avoid early access to local types to skip unnecessary type generation ([c022037](https://github.com/vuejs/language-tools/commit/c02203757beb808b860418de1ac96ae6a6e7bacc))
+- **fix:** only keep the navigation code feature on a static `name` value of `<slot>` ([ed487f6](https://github.com/vuejs/language-tools/commit/ed487f67e233eaa354f7c22ec43dffb0f035d745))
+- **fix:** generate a placeholder comment instead of a fake reference, and avoid a redundant increment of block variable depth ([9f0aaee](https://github.com/vuejs/language-tools/commit/9f0aaee3ae06790e195e6e919f089c97b813b396)) ([08269b1](https://github.com/vuejs/language-tools/commit/08269b17dd3df78b2ed5ebf2979c6e98793ca63b))
+- **fix:** do not set the template lang to `md` for markdown ([0d5c7eb](https://github.com/vuejs/language-tools/commit/0d5c7eb3d62c437fa84f44aeaa5bc49f8e26b7bd))
+- **revert:** type support of slot children ([259eea1](https://github.com/vuejs/language-tools/commit/259eea169839ab6cf7bb0895d276f5151f04343d))
 
-### Bug Fixes
+### language-server
 
-- fix(vscode): correct syntax highlight of control directives ending with `/` or `)` - Thanks to @KazariEX!
-- fix(language-core): infer parameter type of union slots to be union instead of intersection ([abb5f2b](https://github.com/vuejs/language-tools/commit/abb5f2b6c4be384d1fef0e874a128500d2024d8e)) - Thanks to @KazariEX!
-- fix(vscode): remove `colorizedBracketPairs` config for plaintext
-- fix(language-core): avoid early access to local types to skip unnecessary type generation - Thanks to @KazariEX!
-- fix(language-core): treat `<component>` without `is` prop as normal component - Thanks to @KazariEX!
-- fix(vscode): make sure tsserver loads `@vue/typescript-plugin` last ([34b5dd2](https://github.com/vuejs/language-tools/commit/34b5dd24c42cc269af81a0ce0a61cda9d43f7bfe))
-- fix(language-core): only keep navigation code feature on static `name` value of `<slot>` - Thanks to @KazariEX!
-- fix(language-server): add `allowJs` to reactivity analyze host - Thanks to @KazariEX!
-- fix(language-core): do not set template lang to `md` for markdown ([0d5c7eb](https://github.com/vuejs/language-tools/commit/0d5c7eb3d62c437fa84f44aeaa5bc49f8e26b7bd)) - Thanks to @KazariEX!
-- fix(typescript-plugin): exclude items of kind `module` from template completion - Thanks to @KazariEX!
-- fix(language-core): walk identifiers correctly within type nodes in interpolation ([ae5f778](https://github.com/vuejs/language-tools/commit/ae5f7784c09544b6b00d0198927374e0ec44746d)) - Thanks to @KazariEX!
-- fix(language-service): correct position calculation of twoslash queries ([9ab8556](https://github.com/vuejs/language-tools/commit/9ab855601f6ab12150f39d3459a938c330fe1015)) - Thanks to @KazariEX!
-- fix(language-core): avoid redundant increment of block variable depth ([08269b1](https://github.com/vuejs/language-tools/commit/08269b17dd3df78b2ed5ebf2979c6e98793ca63b)) - Thanks to @KazariEX!
-- fix(language-service): re-implement twoslash queries in script - Thanks to @KazariEX!
+- **feat:** forward tsserver's semantic tokens via the language server ([0e917c6](https://github.com/vuejs/language-tools/commit/0e917c601bddfa748be072f409a4c37cbe6985ab))
+- **fix:** find the closest dependency handler as effect ([559c51e](https://github.com/vuejs/language-tools/commit/559c51e43acfeb277b53d92cf68b0fb0b4a9e87b))
+- **fix:** add `allowJs` to the reactivity analyze host ([5ee3ef6](https://github.com/vuejs/language-tools/commit/5ee3ef66ad6e9b3bea4049eedf755291da4522ea))
 
-### Other Changes
+### language-service
 
-- refactor(vscode): make welcome page code public - Thanks to @KazariEX!
-- refactor(vscode): add premium feature settings
-- chore: migrate from `minimatch` to `picomatch` ([211b1f7](https://github.com/vuejs/language-tools/commit/211b1f79938c067c27679ccc5f5cee1b1f10d57c)) - Thanks to @KazariEX!
-- chore: update volar to 2.4.19 ([7247cde](https://github.com/vuejs/language-tools/commit/7247cde6851c80cd8a1b6836087f0c18fbee69d7))
-  - fix(typescript): skip source file search when `.d.${ext}.ts` file exists (volarjs/volar.js#277)
-- revert: type support of slot children ([4bde3e1](https://github.com/vuejs/language-tools/commit/4bde3e1c074e8df5b856aa34d55bf62a20136dcf)) - Thanks to @KazariEX!
+- **fix:** re-implement twoslash queries in script, and correct their position calculation ([0ee2d15](https://github.com/vuejs/language-tools/commit/0ee2d1552243174fade1b8af04fb33d1332386d0)) ([9ab8556](https://github.com/vuejs/language-tools/commit/9ab855601f6ab12150f39d3459a938c330fe1015))
+
+### typescript-plugin
+
+- **fix:** exclude items of kind `module` from template completion ([7462fa9](https://github.com/vuejs/language-tools/commit/7462fa9b582d25845ccb9ce17a048d2711e9165a))
+
+### vscode
+
+- **fix:** correct syntax highlight of control directives ending with `/` or `)` ([68d98dc](https://github.com/vuejs/language-tools/commit/68d98dc57f8486c2946ae28dc86bf8e91d45da4d))
+- **fix:** remove the `colorizedBracketPairs` config for plaintext ([3000a93](https://github.com/vuejs/language-tools/commit/3000a931f204fc392def6ecd520ecf93c52a5cf8))
+- **fix:** make sure tsserver loads `@vue/typescript-plugin` last ([34b5dd2](https://github.com/vuejs/language-tools/commit/34b5dd24c42cc269af81a0ce0a61cda9d43f7bfe))
+- **fix:** use the original webview panel api instead of `useWebviewPanel` ([5b47f4f](https://github.com/vuejs/language-tools/commit/5b47f4f57332eade40e575e4ba537855a757f3fb))
+- **refactor:** make welcome page code public and add premium feature settings ([32f91d4](https://github.com/vuejs/language-tools/commit/32f91d4fe712a042bed7d6f9aa1e41badf8db0c4)) ([d91bc24](https://github.com/vuejs/language-tools/commit/d91bc24b910f01be3d96e9255939033516116e66))
 
 ## 3.0.1 (2025-07-02)
 
