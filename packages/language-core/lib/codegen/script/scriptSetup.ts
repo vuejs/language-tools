@@ -150,22 +150,37 @@ export function* generateSetupFunction(
 ): Generator<Code> {
 	const transforms: CodeTransform[] = [];
 
-	for (const { defaultPropsArg } of scriptSetupRanges.defineModel) {
-		if (defaultPropsArg) {
-			transforms.push({
-				range: [defaultPropsArg.end, defaultPropsArg.end],
-				*generate() {
-					yield `: `;
-					if (scriptSetupRanges.defineProps?.typeArg) {
-						yield names.Props;
-					}
-					else {
-						// FIXME: (props: typeof props) => ... would cause TS2502
-						yield `typeof `;
-						yield scriptSetupRanges.defineProps?.name ?? names.props;
-					}
-				},
-			});
+	const propsName = scriptSetupRanges.defineProps?.name ?? names.props;
+	for (const { defaultPropsArg, defaultValue, defaultMethod } of scriptSetupRanges.defineModel) {
+		if (!defaultPropsArg) {
+			continue;
+		}
+		// infer the parameter from the props instead of annotating it, so that
+		// `props => ...` and typed models (checked against `(props: Data) => T`) work
+		if (defaultValue) {
+			transforms.push(
+				// the leading parenthesis keeps the helper name off the mapped start of `props => ...`
+				insert(defaultValue.start, function*() {
+					yield `(${names.asDefaultFactory}(`;
+				}),
+				insert(defaultValue.end, function*() {
+					yield `, ${propsName}))`;
+				}),
+			);
+		}
+		else if (defaultMethod) {
+			// default(props) {} -> default: __VLS_asDefaultFactory(function(props) {}, props)
+			transforms.push(
+				insert(defaultMethod.start, function*() {
+					yield `default: ${names.asDefaultFactory}(`;
+				}),
+				replace(defaultMethod.name.start, defaultMethod.name.end, function*() {
+					yield `function`;
+				}),
+				insert(defaultMethod.end, function*() {
+					yield `, ${propsName})`;
+				}),
+			);
 		}
 	}
 	if (scriptSetupRanges.defineProps) {
@@ -561,8 +576,13 @@ function* generateModels(
 		}
 
 		if (defineModel.defaultValue) {
+			const defaultText = getRangeText(scriptSetup, defineModel.defaultValue);
 			defaultCodes.push(
-				`'${propName}': ${getRangeText(scriptSetup, defineModel.defaultValue)},${newLine}`,
+				`'${propName}': ${
+					defineModel.defaultPropsArg
+						? `${names.asDefaultFactory}(${defaultText}, ${scriptSetupRanges.defineProps?.name ?? names.props})`
+						: defaultText
+				},${newLine}`,
 			);
 		}
 

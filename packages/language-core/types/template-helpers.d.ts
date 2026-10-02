@@ -118,6 +118,7 @@ declare global {
 		: [T[keyof T], keyof T extends string ? keyof T : `${keyof T & (string | number)}`, number][];
 	function __VLS_vSlot<S, D extends S>(slot: S, decl?: D): D extends (...args: infer P) => any ? P : any[];
 	function __VLS_nonNull<T>(value: T): NonNullable<T>;
+	function __VLS_asDefaultFactory<P, R>(factory: (props: P) => R, props: P): (props: any) => R;
 	function __VLS_asFunctionalDirective<T, ObjectDirective>(
 		dir: T,
 		od: ObjectDirective,
