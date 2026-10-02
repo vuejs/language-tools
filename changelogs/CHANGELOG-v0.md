@@ -1,6 +1,6 @@
 ## 0.40.13 (2022/9/8)
 
-- fix: cycle reactive reference lead to memory leak
+- fix: cycle reactive reference leads to memory leak
 
 ## 0.40.12 (2022/9/8)
 
@@ -567,7 +567,7 @@ you need to install [vite-plugin-vue-component-preview](https://github.com/johns
 - perf: faster language server initialization
 - perf: simplify template script generation ([#455](https://github.com/vuejs/language-tools/issues/455))
 - perf: reduce TS language service instances ([#1108](https://github.com/vuejs/language-tools/issues/1108))
-- fix: web bundle lead to package size greatly increased ([#1084](https://github.com/vuejs/language-tools/issues/1084))
+- fix: web bundle leads to package size greatly increased ([#1084](https://github.com/vuejs/language-tools/issues/1084))
 - fix: undefined sortText break vim ([#1118](https://github.com/vuejs/language-tools/issues/1118))
 - fix: template context do not update by external .ts scripts ([#565](https://github.com/vuejs/language-tools/issues/565))
 - fix: not respect HTML completion settings ([#1139](https://github.com/vuejs/language-tools/issues/1139))

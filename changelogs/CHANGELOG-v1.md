@@ -1,6 +1,6 @@
 ## 1.8.27 (2023/12/26)
 
-- fix(language-core): remove misuse of `JSX.Element` for compatible with vue 3.4 (https://github.com/vuejs/core/issues/9923)
+- fix(language-core): remove misuse of `JSX.Element` for compatibility with vue 3.4 (https://github.com/vuejs/core/issues/9923)
 
 ## 1.8.26 (2023/12/22)
 

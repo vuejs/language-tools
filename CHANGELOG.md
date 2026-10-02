@@ -4,7 +4,7 @@
 
 ### language-core
 
-- **security:** prevent arbitrary code execution via inline `@plugins` compiler options ([GHSA-vgrw-xjpj-wh8r](https://github.com/vuejs/language-tools/security/advisories/GHSA-vgrw-xjpj-wh8r)) - Thanks to @serkodev!
+- **security:** improved handling of untrusted Vue files - Thanks to @serkodev!
 - **feat:** infer first parameter type of default factory for `defineModel` (#6210) - Thanks to @KazariEX!
 - **feat:** report duplicate CSS module names (#6198) - Thanks to @serkodev!
 - **fix:** keep union props when using withDefaults (#6180) (#6183) - Thanks to @xia-chao!
@@ -436,7 +436,7 @@
 ### Features
 
 - feat(vscode): support multiline attribute for `<script>` and `<style>` tag (#5830) - Thanks to @serkodev!
-- feat(vscode): supports format with selected range (#5761) - Thanks to @serkodev!
+- feat(vscode): support format with selected range (#5761) - Thanks to @serkodev!
 - feat(language-service): add tsconfig-based document link support for Pug
 
 ### Bug Fixes
@@ -474,12 +474,12 @@
 - feat(language-service): enhanced component auto import (#5790)
 - feat(component-meta): add component name and description fields (#5797)
 - feat(typescript-plugin): add support for template "Add Import" quick fix (#5799) - Thanks to @serkodev!
-- feat(typescript-plugin): mapping JSDoc informations from `<script setup>` (#5805)
+- feat(typescript-plugin): mapping JSDoc information from `<script setup>` (#5805)
 - feat(vscode): support tsdk path for Eclipse Theia (#5806) - Thanks to @serkodev!
 
 ### Bug Fixes
 
-- fix(language-service): ignore intrinsic elements when detect tag name casing (#5771)
+- fix(language-service): ignore intrinsic elements when detecting tag name casing (#5771)
 - fix(language-core): `createParsedCommandLineByJson` parsed incorrect options since v3.1.5 (https://github.com/vuejs/language-tools/pull/5768#issuecomment-3569623037)
 - fix(vscode): make `vue.server.path` compatible with Windows (#5772)
 - fix(vscode): analyze interpolation highlight ranges based on AST (#5777)
@@ -494,7 +494,7 @@
 - fix(language-core): infer `$el` type for generic components using `inferComponentDollarEl` (#5794)
 - fix(language-core): ensure `<script>` content generates before `<script setup>` (#5795)
 - fix(language-core): remove `bypassDefineComponent` hack for better JS support (#4876) (#5379)
-- fix(language-core): `Prettify<T>` caused generic props gets inferred as `unknown` (#5667) - Thanks to @so1ve!
+- fix(language-core): `Prettify<T>` caused generic props to get inferred as `unknown` (#5667) - Thanks to @so1ve!
 - fix(vscode): handle leading `<` as operator in SFC scripts (#5801) - Thanks to @serkodev!
 - fix(vscode): patch `isTypeScriptDocument` in VSCode for `typescript.preferences.autoImportSpecifierExcludeRegexes` config support (#5364)
 - fix(language-core): ensure type consistency for optional boolean props (#5803)
@@ -514,7 +514,7 @@
 - refactor(language-core): remove `debugger` from virtual code for tsslint compatibility
 - refactor(language-core): remove legacy navigation support in `ref="xxx"`
 - refactor(language-core): reduce codegen options (#5804)
-- refactor(component-meta): deprecated `rawType` and `__internal__.tsLs` (#5808)
+- refactor(component-meta): deprecate `rawType` and `__internal__.tsLs` (#5808)
 - chore: update volar to 2.4.26
   - feat: fallback resolution mode for `createResolveModuleName` (https://github.com/volarjs/volar.js/pull/293) (#5644) - Thanks to @serkodev!
 
@@ -660,7 +660,7 @@
 - chore(lint): enable `@typescript-eslint/no-unnecessary-condition` (#5630)
 - refactor(language-server): reimplement Reactivity Visualization in typescript plugin (#5632)
 - refactor(language-server): parsing interpolations in extension client (#5633)
-- refactor(vscode): reimplement Focus Mode base on folding ranges (#5634)
+- refactor(vscode): reimplement Focus Mode based on folding ranges (#5634)
 - chore(vscode): disable Focus Mode by default (#5578)
 - refactor(vscode): set delay of reactivity visualization updates to 250ms - Thanks to @KazariEX!
 
@@ -674,7 +674,7 @@
 - fix(component-meta): re-export `vue-component-type-helpers` to `lib/helpers` (#5600)
 - fix(language-core): remove the non-strict `configFileName` default value (#5606)
 - fix(language-core): don't look for input files during evaluation of vueCompilerOptions (#5598)
-- fix(vscode): Improved reliability of handling extension activation contention (#5588)
+- fix(vscode): improve reliability of handling extension activation contention (#5588)
 - chore: update volar to 2.4.23
   - Support `js/ts.hover.maximumLength` and `typescript.experimental.expandableHover` (#5577)
 
