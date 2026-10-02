@@ -91,6 +91,11 @@ const lock: LockItem[] = update
 			'url': 'https://raw.githubusercontent.com/microsoft/vscode/main/extensions/html/syntaxes/html.tmLanguage.json',
 		},
 		{
+			'file': 'html-derivative.tmLanguage.json',
+			'url':
+				'https://raw.githubusercontent.com/microsoft/vscode/main/extensions/html/syntaxes/html-derivative.tmLanguage.json',
+		},
+		{
 			'file': 'javascript.tmLanguage.json',
 			'url':
 				'https://raw.githubusercontent.com/microsoft/vscode/main/extensions/javascript/syntaxes/JavaScript.tmLanguage.json',
@@ -103,6 +108,16 @@ const lock: LockItem[] = update
 			'file': 'typescript.tmLanguage.json',
 			'url':
 				'https://raw.githubusercontent.com/microsoft/vscode/main/extensions/typescript-basics/syntaxes/TypeScript.tmLanguage.json',
+		},
+		{
+			'file': 'typescriptreact.tmLanguage.json',
+			'url':
+				'https://raw.githubusercontent.com/microsoft/vscode/main/extensions/typescript-basics/syntaxes/TypeScriptReact.tmLanguage.json',
+		},
+		{
+			'file': 'javascriptreact.tmLanguage.json',
+			'url':
+				'https://raw.githubusercontent.com/microsoft/vscode/main/extensions/javascript/syntaxes/JavaScriptReact.tmLanguage.json',
 		},
 	]
 	: JSON.parse(await readFile(lockPath, 'utf8'));
