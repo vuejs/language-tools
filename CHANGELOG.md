@@ -226,141 +226,143 @@
 
 ### language-core
 
-- **fix:** do not process inline markdown syntax in semantic-aware segments ([e857bfa](https://github.com/vuejs/language-tools/commit/e857bfaaa07991ddf5f09a251ec4279e13b3a6d9)) - Thanks to @KazariEX!
-- **perf:** rewrite a subset of template node transforms ([680aae5](https://github.com/vuejs/language-tools/commit/680aae5dee1e533e03151ef70a77319ec5aeb566)) - Thanks to @KazariEX!
+- **perf:** rewrite a subset of template node transforms ([680aae5](https://github.com/vuejs/language-tools/commit/680aae5dee1e533e03151ef70a77319ec5aeb566))
+- **fix:** do not process inline markdown syntax in semantic-aware segments ([e857bfa](https://github.com/vuejs/language-tools/commit/e857bfaaa07991ddf5f09a251ec4279e13b3a6d9))
 
 ### vscode
 
-- **fix:** trigger file rename edits when moving folders with Vue files ([3fb3329](https://github.com/vuejs/language-tools/commit/3fb3329dfb959ad84fb3a692acbcf0a6684fa410)) - Thanks to @KazariEX!
+- **fix:** trigger file rename edits when moving folders with Vue files ([3fb3329](https://github.com/vuejs/language-tools/commit/3fb3329dfb959ad84fb3a692acbcf0a6684fa410))
 
 ### workspace
 
-- **chore:** bump volar services to 0.0.71 ([58ee658](https://github.com/vuejs/language-tools/commit/58ee6583213394a47361c3922423157c2791288f)) - Thanks to @TRIS-H!
+- **chore:** bump volar services to 0.0.71 ([58ee658](https://github.com/vuejs/language-tools/commit/58ee6583213394a47361c3922423157c2791288f))
 
 ## 3.2.8 (2026-05-04)
 
 ### language-core
 
-- **fix:** replace inline code blocks after sfc blocks processing ([de8c2af](https://github.com/vuejs/language-tools/commit/de8c2af04c3b413de7754fb29599fca3e58aebb2)) - Thanks to @KazariEX!
-- **fix:** support navigation for kebab-case declarations in `GlobalComponents` ([e3298b6](https://github.com/vuejs/language-tools/commit/e3298b6de90c616776660112bbc6c2d063e51e2f)) - Thanks to @Gehbt!
+- **fix:** replace inline code blocks after SFC block processing ([de8c2af](https://github.com/vuejs/language-tools/commit/de8c2af04c3b413de7754fb29599fca3e58aebb2))
+- **fix:** support navigation for kebab-case declarations in `GlobalComponents` ([e3298b6](https://github.com/vuejs/language-tools/commit/e3298b6de90c616776660112bbc6c2d063e51e2f))
+- **refactor:** generate template helper names ([5a8cfa9](https://github.com/vuejs/language-tools/commit/5a8cfa9021d7b39e791bafabec3fdf3a6515972e))
 
 ### language-service
 
-- **feat:** support TS module resolution for SCSS `@import` navigation ([d1b01ec](https://github.com/vuejs/language-tools/commit/d1b01ecd11d73d690ee95924f5d4bf5f5703bc1a)) - Thanks to @KazariEX!
+- **feat:** support TS module resolution for SCSS `@import` navigation ([d1b01ec](https://github.com/vuejs/language-tools/commit/d1b01ecd11d73d690ee95924f5d4bf5f5703bc1a))
+- **refactor:** get void elements from the default html provider ([dc7fc80](https://github.com/vuejs/language-tools/commit/dc7fc8087e52e0cd310eb6af9989be208b9ac36c))
 
 ### typescript-plugin
 
-- **fix:** replace language service per-method overrides with a proxy ([d03866c](https://github.com/vuejs/language-tools/commit/d03866c3b7cb0e073b60d28c7be45af29f23d87e)) - Thanks to @KazariEX!
-
-### vscode
-
-- **chore:** upgrade `reactive-vscode` to v1.0.1 ([453aef5](https://github.com/vuejs/language-tools/commit/453aef5ee1a8fd09db390457e240ca06933e292d)) - Thanks to @kermanx!
+- **fix:** replace language service per-method overrides with a proxy ([d03866c](https://github.com/vuejs/language-tools/commit/d03866c3b7cb0e073b60d28c7be45af29f23d87e))
 
 ## 3.2.7 (2026-04-19)
 
 ### component-meta
 
-- **fix:** preserve non-ASCII characters in prop default values ([a954b9c](https://github.com/vuejs/language-tools/commit/a954b9c563ebcff9233ddf63a05e5de4485f3a8c)) - Thanks to @ef81sp!
+- **fix:** preserve non-ASCII characters in prop default values ([a954b9c](https://github.com/vuejs/language-tools/commit/a954b9c563ebcff9233ddf63a05e5de4485f3a8c))
 
 ### workspace
 
-- **chore:** bump typescript to 6.0.3 ([1e54c84](https://github.com/vuejs/language-tools/commit/1e54c84b33f7733feb54e7667ca161da6c548b85)) - Thanks to @KazariEX!
+- **chore:** bump typescript to 6.0.3 ([1e54c84](https://github.com/vuejs/language-tools/commit/1e54c84b33f7733feb54e7667ca161da6c548b85))
 
 ## 3.2.6 (2026-03-17)
 
 ### language-core
 
-- **fix:** generate `$slots` type in template correctly with `defineSlots` ([b04ff1a](https://github.com/vuejs/language-tools/commit/b04ff1a7e5ef2d51e6fbe2996cc5cfeeafaceb74)) - Thanks to @KazariEX!
-- **fix:** infer only readonly component of arrays in `v-for` ([ada2857](https://github.com/vuejs/language-tools/commit/ada28571aa6a0dad141c0d4e7b0ba1d595cce7d2)) - Thanks to @ascott18!
-- **fix:** avoid false positives for destructured props detection on binding property names ([c8dc720](https://github.com/vuejs/language-tools/commit/c8dc720b38ddec16e87d0ac58522c1ad49134f57)) - Thanks to @KazariEX!
+- **fix:** generate `$slots` type in template correctly with `defineSlots` ([b04ff1a](https://github.com/vuejs/language-tools/commit/b04ff1a7e5ef2d51e6fbe2996cc5cfeeafaceb74))
+- **fix:** infer only the readonly component of arrays in `v-for` ([ada2857](https://github.com/vuejs/language-tools/commit/ada28571aa6a0dad141c0d4e7b0ba1d595cce7d2))
+
+### language-service
+
+- **fix:** avoid false positives for destructured props detection on binding property names ([c8dc720](https://github.com/vuejs/language-tools/commit/c8dc720b38ddec16e87d0ac58522c1ad49134f57))
 
 ### vscode
 
-- **fix:** use regex for TS extension patching to support VS Code 1.110+ ([9991d43](https://github.com/vuejs/language-tools/commit/9991d432b2fb25ee4078df5a82bb3154b37fdfd8)) - Thanks to @ebiryu!
+- **fix:** use regex for TS extension patching to support VS Code 1.110+ ([9991d43](https://github.com/vuejs/language-tools/commit/9991d432b2fb25ee4078df5a82bb3154b37fdfd8))
 
 ## 3.2.5 (2026-02-21)
 
 ### language-core
 
-- **fix:** re-parse template when interpolation syntax breaks ([83ddb4b](https://github.com/vuejs/language-tools/commit/83ddb4babb0a0f3f9bcad9e7cdd040a99cb119be)) - Thanks to @Dsaquel!
+- **fix:** re-parse the template when interpolation syntax breaks ([83ddb4b](https://github.com/vuejs/language-tools/commit/83ddb4babb0a0f3f9bcad9e7cdd040a99cb119be))
 
 ### language-service
 
-- **fix:** use default html data provider for document symbols ([1932c1c](https://github.com/vuejs/language-tools/commit/1932c1c4968b2dae6d6a9eace9e53a8a68fe40dd)) - Thanks to @liangmiQwQ!
+- **fix:** use the default html data provider for document symbols ([1932c1c](https://github.com/vuejs/language-tools/commit/1932c1c4968b2dae6d6a9eace9e53a8a68fe40dd))
 
 ### language-plugin-pug
 
-- **fix:** handle backtick attributes containing both quote types ([dbaa710](https://github.com/vuejs/language-tools/commit/dbaa710eaa7330abdaf432101e5b52bfdcacda22)) - Thanks to @baptistejamin!
+- **fix:** handle backtick attributes containing both quote types ([dbaa710](https://github.com/vuejs/language-tools/commit/dbaa710eaa7330abdaf432101e5b52bfdcacda22))
 
-### workspace
+### docs
 
-- **docs:** document all packages with consistent README structure ([0c4c509](https://github.com/vuejs/language-tools/commit/0c4c50993563cbbea3f98bc3338cdfb5f86566a7))
-- **docs:** update tsconfig schema of `plugins` option - Thanks to @KazariEX!
+- **docs:** document all packages with a consistent README structure, and update the tsconfig schema of the `plugins` option ([0c4c509](https://github.com/vuejs/language-tools/commit/0c4c50993563cbbea3f98bc3338cdfb5f86566a7)) ([3ffeab3](https://github.com/vuejs/language-tools/commit/3ffeab31db946d677ba23c1e7ebd853487e80a1b))
 
 ## 3.2.4 (2026-01-26)
 
 ### language-core
 
-- **feat:** place plugin configs under `ctx.config` and support type annotation via generics ([b2d5e31](https://github.com/vuejs/language-tools/commit/b2d5e318811d7c63073ccb13908ce252f8d23364)) - Thanks to @KazariEX!
+- **feat:** place plugin configs under `ctx.config` and support type annotation via generics ([b2d5e31](https://github.com/vuejs/language-tools/commit/b2d5e318811d7c63073ccb13908ce252f8d23364))
 
 ### workspace
 
-- **chore:** publish to npm with OIDC ([b826171](https://github.com/vuejs/language-tools/commit/b8261717b6a1c2bb7072259cbd096ae4a0b33a43)) - Thanks to @ghiscoding!
+- **chore:** publish to npm with OIDC ([b826171](https://github.com/vuejs/language-tools/commit/b8261717b6a1c2bb7072259cbd096ae4a0b33a43))
 
 ## 3.2.3 (2026-01-23)
 
 ### language-core
 
-- **feat:** support configuration for language plugins ([afc069e](https://github.com/vuejs/language-tools/commit/afc069eeb3a4d299f7276830dbbf45cf74ccef80)) - Thanks to @KazariEX!
-- **fix:** avoid `defineModel` breaking ast in `lang="js"` ([a522afa](https://github.com/vuejs/language-tools/commit/a522afaecc5328b12d59dee01731e6e3d5c90e10)) - Thanks to @KazariEX!
-- **fix:** infer object keys as string if it does not extend string ([4ca24b6](https://github.com/vuejs/language-tools/commit/4ca24b66a2f91cf4742bac89c40cf771bd89fbb3)) - Thanks to @serkodev!
+- **feat:** support configuration for language plugins ([afc069e](https://github.com/vuejs/language-tools/commit/afc069eeb3a4d299f7276830dbbf45cf74ccef80))
+- **fix:** infer object keys as string if they do not extend string ([4ca24b6](https://github.com/vuejs/language-tools/commit/4ca24b66a2f91cf4742bac89c40cf771bd89fbb3))
+- **fix:** avoid `defineModel` breaking the AST in `lang="js"` ([a522afa](https://github.com/vuejs/language-tools/commit/a522afaecc5328b12d59dee01731e6e3d5c90e10))
+- **fix:** avoid `yield*` on strings, and use the builtin method from `@vue/shared` to check builtin directives ([0aa74d1](https://github.com/vuejs/language-tools/commit/0aa74d11c2be5e0863f992e8533ea1fe3a5b6316)) ([e40f116](https://github.com/vuejs/language-tools/commit/e40f1165da9b228db0c5f831ce519ffe39ff8b92))
 
 ### typescript-plugin
 
-- **feat:** correct rename behavior on same name shorthands in template ([506e5ab](https://github.com/vuejs/language-tools/commit/506e5ab84e113fed726ae530d68d4dcb7b61b112)) - Thanks to @KazariEX!
-- **fix:** only forward quick info for original results without tags ([601176e](https://github.com/vuejs/language-tools/commit/601176ef99616d916f4805ead04de22ceb12d6c3)) - Thanks to @KazariEX!
+- **feat:** correct rename behavior on same name shorthands in template ([506e5ab](https://github.com/vuejs/language-tools/commit/506e5ab84e113fed726ae530d68d4dcb7b61b112))
+- **fix:** only forward quick info for original results without tags ([601176e](https://github.com/vuejs/language-tools/commit/601176ef99616d916f4805ead04de22ceb12d6c3))
 
 ### vscode
 
-- **fix:** correct indent for `<style>` and `<script>` tags ([e76cf2e](https://github.com/vuejs/language-tools/commit/e76cf2e05246ff9e65bc974ed5021f028e922f83)) - Thanks to @serkodev!
+- **fix:** correct indent for `<style>` and `<script>` tags ([e76cf2e](https://github.com/vuejs/language-tools/commit/e76cf2e05246ff9e65bc974ed5021f028e922f83))
 
 ## 3.2.2 (2026-01-06)
 
 ### language-core
 
-- **fix:** correct code features on v-bind shorthands of special attributes - Thanks to @KazariEX!
+- **fix:** correct code features on `v-bind` shorthands of special attributes ([a5b6635](https://github.com/vuejs/language-tools/commit/a5b66358d09e457f06e7ec1b2382d5b67f0fed8c))
+
+### language-service
+
+- **feat:** strip `=""` for boolean props completion edits ([f1314ef](https://github.com/vuejs/language-tools/commit/f1314eff7ccaccfc6ff92b7fcdae01ac947a7cff))
+- **fix:** avoid duplicate directive modifiers in completion ([b7244e1](https://github.com/vuejs/language-tools/commit/b7244e1c68daa0761c0ea0e901c4b8e8f19aae2c))
+
+### typescript-plugin
+
+- **fix:** only forward quick info and suggestion diagnostics for setup bindings ([5f2d2db](https://github.com/vuejs/language-tools/commit/5f2d2dbf75e1caccd13bd9f42c6803f6aff866a7))
 
 ### language-plugin-pug
 
 - **feat:** accurate Pug shorthand mapping ([c97cf7d](https://github.com/vuejs/language-tools/commit/c97cf7d9a5482a79355a530727c4e3c84d3bd1b4))
 - **fix:** pre-map HTML to Pug offset attribute ([8fdfe99](https://github.com/vuejs/language-tools/commit/8fdfe99deb9869284fbcd45fc61de0e3aedb6c0a))
 
-### language-service
-
-- **feat:** strip `=""` for boolean props completion edits ([f1314ef](https://github.com/vuejs/language-tools/commit/f1314eff7ccaccfc6ff92b7fcdae01ac947a7cff)) - Thanks to @KazariEX!
-- **fix:** avoid duplicate directive modifiers in completion ([b7244e1](https://github.com/vuejs/language-tools/commit/b7244e1c68daa0761c0ea0e901c4b8e8f19aae2c)) - Thanks to @KazariEX!
-
-### typescript-plugin
-
-- **fix:** only forward quick info and suggestion diagnostics for setup bindings ([5f2d2db](https://github.com/vuejs/language-tools/commit/5f2d2dbf75e1caccd13bd9f42c6803f6aff866a7)) - Thanks to @KazariEX!
-
 ## 3.2.1 (2025-12-22)
 
 ### language-core
 
-- **fix:** infer array type in `v-for` ([ad127fc](https://github.com/vuejs/language-tools/commit/ad127fc3299f31890b56402098c9fe7acdb2105f)) - Thanks to @serkodev!
-
-### component-meta
-
-- **fix:** skip schema resolution correctly when `option` is `false` ([719f1bc](https://github.com/vuejs/language-tools/commit/719f1bc4c112889cbcc40baa419e870807524ec6)) - Thanks to @KazariEX!
-
-### component-type-helpers
-
-- **fix:** npm package is missing build files (#5893)
+- **fix:** infer array type in `v-for` ([ad127fc](https://github.com/vuejs/language-tools/commit/ad127fc3299f31890b56402098c9fe7acdb2105f))
+- **refactor:** remove `__VLS_InternalProps` ([2e0e5e0](https://github.com/vuejs/language-tools/commit/2e0e5e0384085b48f36d9eb85a0d82154b6346ee))
 
 ### language-service
 
-- **feat:** props completion now only suggests `:xxx` (shorthand) when no prefix is typed, instead of both `xxx` and `:xxx`
+- **feat:** only show shorthand props when no prefix is typed ([5f326e2](https://github.com/vuejs/language-tools/commit/5f326e2363084f0d00f8c3323125eccbd436ab5d))
+
+### component-meta
+
+- **fix:** skip schema resolution correctly when `option` is `false` ([719f1bc](https://github.com/vuejs/language-tools/commit/719f1bc4c112889cbcc40baa419e870807524ec6))
+
+### component-type-helpers
+
+- **fix:** add the missing tsconfig reference so the package is built and published ([e36fcbd](https://github.com/vuejs/language-tools/commit/e36fcbdd0aef916f6d43a68677086c115edc719b))
 
 ## 3.2.0 (2025-12-20)
 
