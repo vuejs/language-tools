@@ -5,3 +5,5 @@ export const SOME_CONST = {
 } as const;
 
 export const SOME_REF = ref(SOME_CONST);
+
+export const COUNT = ref(0);
