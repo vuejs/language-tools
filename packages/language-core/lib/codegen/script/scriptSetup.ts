@@ -150,23 +150,8 @@ export function* generateSetupFunction(
 ): Generator<Code> {
 	const transforms: CodeTransform[] = [];
 
-	for (const { defaultPropsArg } of scriptSetupRanges.defineModel) {
-		if (defaultPropsArg) {
-			transforms.push({
-				range: [defaultPropsArg.end, defaultPropsArg.end],
-				*generate() {
-					yield `: `;
-					if (scriptSetupRanges.defineProps?.typeArg) {
-						yield names.Props;
-					}
-					else {
-						// FIXME: (props: typeof props) => ... would cause TS2502
-						yield `typeof `;
-						yield scriptSetupRanges.defineProps?.name ?? names.props;
-					}
-				},
-			});
-		}
+	for (const defineModel of scriptSetupRanges.defineModel) {
+		transforms.push(...generateDefaultFactoryTransforms(options, scriptSetupRanges, defineModel));
 	}
 	if (scriptSetupRanges.defineProps) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
@@ -525,6 +510,47 @@ function hasSlotsType(options: ScriptCodegenOptions): boolean {
 	);
 }
 
+function generateDefaultFactoryTransforms(
+	options: ScriptCodegenOptions,
+	scriptSetupRanges: ScriptSetupRanges,
+	{ defaultPropsArg, defaultValue, type, runtimeType }: ScriptSetupRanges['defineModel'][number],
+): CodeTransform[] {
+	if (!defaultPropsArg) {
+		return [];
+	}
+	const propsType = scriptSetupRanges.defineProps?.typeArg
+		? names.Props
+		// FIXME: (props: typeof props) => ... would cause TS2502
+		: `typeof ${scriptSetupRanges.defineProps?.name ?? names.props}`;
+	if (type || runtimeType) {
+		// Vue checks the factory against `(props: Data) => T`, which rejects an annotated parameter
+		return defaultValue && isTsLang(options.scriptLang)
+			? [
+				insert(defaultValue.start, function*() {
+					// leading paren keeps the helper name off the mapped boundary of `props => ...`
+					yield `(${names.asDefaultFactory}<${propsType}>()(`;
+				}),
+				insert(defaultValue.end, function*() {
+					yield `))`;
+				}),
+			]
+			: [];
+	}
+	return [
+		insert(defaultPropsArg.start, function*() {
+			if (!defaultPropsArg.parenthesized) {
+				yield `(`;
+			}
+		}),
+		insert(defaultPropsArg.end, function*() {
+			yield `: ${propsType}`;
+			if (!defaultPropsArg.parenthesized) {
+				yield `)`;
+			}
+		}),
+	];
+}
+
 function* generateModels(
 	options: ScriptCodegenOptions,
 	scriptSetup: IRScriptSetup,
@@ -534,7 +560,7 @@ function* generateModels(
 		return;
 	}
 
-	const defaultCodes: string[] = [];
+	const defaultCodes: Code[] = [];
 	const propCodes: Generator<Code>[] = [];
 	const emitCodes: Generator<Code>[] = [];
 
@@ -555,15 +581,19 @@ function* generateModels(
 		else if (defineModel.defaultValue && propName) {
 			// Infer from defineModel({ default: T })
 			modelType = `typeof ${names.defaultModels}['${propName}']`;
+			defaultCodes.push(
+				`'${propName}': `,
+				...generateCodeWithTransforms(
+					defineModel.defaultValue.start,
+					defineModel.defaultValue.end,
+					generateDefaultFactoryTransforms(options, scriptSetupRanges, defineModel),
+					(start, end) => [scriptSetup.content.slice(start, end)],
+				),
+				`,${newLine}`,
+			);
 		}
 		else {
 			modelType = `any`;
-		}
-
-		if (defineModel.defaultValue) {
-			defaultCodes.push(
-				`'${propName}': ${getRangeText(scriptSetup, defineModel.defaultValue)},${newLine}`,
-			);
 		}
 
 		propCodes.push(generateModelProp(options, scriptSetup, defineModel, propName, modelType));

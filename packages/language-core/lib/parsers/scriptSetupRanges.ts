@@ -21,7 +21,7 @@ export interface DefineModel {
 	modifierType?: TextRange;
 	runtimeType?: TextRange;
 	defaultValue?: TextRange;
-	defaultPropsArg?: TextRange;
+	defaultPropsArg?: TextRange & { parenthesized: boolean };
 	required?: boolean;
 	comments?: TextRange;
 }
@@ -144,7 +144,7 @@ export function parseScriptSetupRanges(
 				let modifierType: TextRange | undefined;
 				let runtimeType: TextRange | undefined;
 				let defaultValue: TextRange | undefined;
-				let defaultPropsArg: TextRange | undefined;
+				let defaultPropsArg: DefineModel['defaultPropsArg'];
 				let required = false;
 
 				if (ts.isVariableDeclaration(parent) && ts.isIdentifier(parent.name)) {
@@ -201,7 +201,13 @@ export function parseScriptSetupRanges(
 								if (ts.isFunctionLike(initializer) && initializer.parameters.length) {
 									const firstArg = initializer.parameters[0]!;
 									if (!firstArg.dotDotDotToken && !firstArg.type) {
-										defaultPropsArg = _getStartEnd(firstArg);
+										defaultPropsArg = {
+											..._getStartEnd(firstArg),
+											// before the initializer of `(props = {}) => ...`
+											end: (firstArg.questionToken ?? firstArg.name).end,
+											// false for `props => ...`
+											parenthesized: text[initializer.parameters.pos - 1] === '(',
+										};
 									}
 								}
 								break;
