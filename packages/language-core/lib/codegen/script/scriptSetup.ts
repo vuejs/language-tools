@@ -150,8 +150,40 @@ export function* generateSetupFunction(
 ): Generator<Code> {
 	const transforms: CodeTransform[] = [];
 
-	for (const defineModel of scriptSetupRanges.defineModel) {
-		transforms.push(...generateDefaultFactoryTransforms(options, scriptSetupRanges, defineModel));
+	const propsName = scriptSetupRanges.defineProps?.name ?? names.props;
+	for (const { defaultPropsArg, defaultValue, type, runtimeType } of scriptSetupRanges.defineModel) {
+		if (!defaultPropsArg) {
+			continue;
+		}
+		if (defaultValue) {
+			// infer the parameter from the props instead of annotating it, so that
+			// `props => ...` and typed models (checked against `(props: Data) => T`) work
+			transforms.push(
+				insert(defaultValue.start, function*() {
+					yield `(${names.asDefaultFactory}(`;
+				}),
+				insert(defaultValue.end, function*() {
+					yield `, ${propsName}))`;
+				}),
+			);
+		}
+		else if (!type && !runtimeType) {
+			// `default(props) {}` cannot be wrapped
+			transforms.push({
+				range: [defaultPropsArg.end, defaultPropsArg.end],
+				*generate() {
+					yield `: `;
+					if (scriptSetupRanges.defineProps?.typeArg) {
+						yield names.Props;
+					}
+					else {
+						// FIXME: (props: typeof props) => ... would cause TS2502
+						yield `typeof `;
+						yield propsName;
+					}
+				},
+			});
+		}
 	}
 	if (scriptSetupRanges.defineProps) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
@@ -510,47 +542,6 @@ function hasSlotsType(options: ScriptCodegenOptions): boolean {
 	);
 }
 
-function generateDefaultFactoryTransforms(
-	options: ScriptCodegenOptions,
-	scriptSetupRanges: ScriptSetupRanges,
-	{ defaultPropsArg, defaultValue, type, runtimeType }: ScriptSetupRanges['defineModel'][number],
-): CodeTransform[] {
-	if (!defaultPropsArg) {
-		return [];
-	}
-	const propsType = scriptSetupRanges.defineProps?.typeArg
-		? names.Props
-		// FIXME: (props: typeof props) => ... would cause TS2502
-		: `typeof ${scriptSetupRanges.defineProps?.name ?? names.props}`;
-	if (type || runtimeType) {
-		// Vue checks the factory against `(props: Data) => T`, which rejects an annotated parameter
-		return defaultValue && isTsLang(options.scriptLang)
-			? [
-				insert(defaultValue.start, function*() {
-					// leading paren keeps the helper name off the mapped boundary of `props => ...`
-					yield `(${names.asDefaultFactory}<${propsType}>()(`;
-				}),
-				insert(defaultValue.end, function*() {
-					yield `))`;
-				}),
-			]
-			: [];
-	}
-	return [
-		insert(defaultPropsArg.start, function*() {
-			if (!defaultPropsArg.parenthesized) {
-				yield `(`;
-			}
-		}),
-		insert(defaultPropsArg.end, function*() {
-			yield `: ${propsType}`;
-			if (!defaultPropsArg.parenthesized) {
-				yield `)`;
-			}
-		}),
-	];
-}
-
 function* generateModels(
 	options: ScriptCodegenOptions,
 	scriptSetup: IRScriptSetup,
@@ -560,7 +551,7 @@ function* generateModels(
 		return;
 	}
 
-	const defaultCodes: Code[] = [];
+	const defaultCodes: string[] = [];
 	const propCodes: Generator<Code>[] = [];
 	const emitCodes: Generator<Code>[] = [];
 
@@ -581,19 +572,20 @@ function* generateModels(
 		else if (defineModel.defaultValue && propName) {
 			// Infer from defineModel({ default: T })
 			modelType = `typeof ${names.defaultModels}['${propName}']`;
-			defaultCodes.push(
-				`'${propName}': `,
-				...generateCodeWithTransforms(
-					defineModel.defaultValue.start,
-					defineModel.defaultValue.end,
-					generateDefaultFactoryTransforms(options, scriptSetupRanges, defineModel),
-					(start, end) => [scriptSetup.content.slice(start, end)],
-				),
-				`,${newLine}`,
-			);
 		}
 		else {
 			modelType = `any`;
+		}
+
+		if (defineModel.defaultValue) {
+			const defaultText = getRangeText(scriptSetup, defineModel.defaultValue);
+			defaultCodes.push(
+				`'${propName}': ${
+					defineModel.defaultPropsArg
+						? `${names.asDefaultFactory}(${defaultText}, ${scriptSetupRanges.defineProps?.name ?? names.props})`
+						: defaultText
+				},${newLine}`,
+			);
 		}
 
 		propCodes.push(generateModelProp(options, scriptSetup, defineModel, propName, modelType));
