@@ -166,7 +166,7 @@
 - Upgraded Volar from `v2.4.8` to `v2.4.11`:
   - fix(typescript): avoid crash when converting relatedInformation from overly large files
   - fix(typescript): fix interactive refactors (https://github.com/volarjs/volar.js/pull/244) - Thanks to @andrewbranch!
-  - fix(typescript): should not suppressing getLanguageId crashes (https://github.com/volarjs/volar.js/issues/253)
+  - fix(typescript): should not suppress getLanguageId crashes (https://github.com/volarjs/volar.js/issues/253)
   - fix(typescript): force update the opened script snapshot after the language plugin is ready (https://github.com/volarjs/volar.js/issues/254)
   - feat(typescript): add typescriptObject option to runTsc (https://github.com/volarjs/volar.js/pull/245) - Thanks to @zhiyuanzmj!
   - fix(typescript): fix issue with transpiled TypeScript files not being registered with a project at all (https://github.com/volarjs/volar.js/pull/250) - Thanks to @piotrtomiak!
@@ -365,7 +365,7 @@
 - **ci:** integrated [pkg.pr.new](https://github.com/stackblitz-labs/pkg.pr.new)
 - **tsc:** test all typecheck cases in one tsconfig (#4723)
 - **tsc:** add test for TS-next (#4724)
-- **tsc:** add tests for for #3779, #3820 (#3838) - Thanks to @so1ve!
+- **tsc:** add tests for #3779, #3820 (#3838) - Thanks to @so1ve!
 - **vscode:** add grammar test (#3861) - Thanks to @so1ve!
 - **language-service:** migrate tests to `@volar/test-utils` (#4719)
 - **language-core:** add scoped classes renaming case (#4727) - Thanks to @KazariEX!
@@ -493,7 +493,7 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 
 ### Bug Fixes
 
-- fix(typescript-plugin): TS plugin cause type checking broken in .ts files (#4453)
+- fix(typescript-plugin): TS plugin causes type checking to be broken in .ts files (#4453)
 
 ## 2.1.0-insiders.12 (2024-06-08)
 
@@ -515,7 +515,7 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 - fix(vscode): fix "as"/"instanceof" expressions syntax highlight (#4412)
 - fix(language-core): `ForIteratorExpression`'s `returns` property may be undefined (#4418) - Thanks @so1ve
 - fix(language-core): use defineEmits calls instead of type infer (#4430) - Thanks @zhiyuanzmj
-- fix(tsc): log catched errors to console (#4451) - Thanks @mik3ybark3r
+- fix(tsc): log caught errors to console (#4451) - Thanks @mik3ybark3r
 - fix(typescript-plugin): TS not working in template when tsconfig missing (#4452)
 - fix(language-core): use type infer instead of await import (#4436) - Thanks @zhiyuanzmj
 - feat(language-core): ignore type error for new functional component (#4445) - Thanks @zhiyuanzmj
@@ -763,7 +763,7 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 
 ### Other Changes
 
-- Upgrade Volar from `v2.2.0-alpha.7` to `v2.2.0-alpha.8` for a vue-tsc performance issue fixes (#4238)
+- Upgrade Volar from `v2.2.0-alpha.7` to `v2.2.0-alpha.8` for vue-tsc performance issue fixes (#4238)
 
 ## 2.1.0-insiders.4 (2024/4/10)
 
@@ -784,7 +784,7 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 
 ### Other Changes
 
-- Upgrade Volar from `v2.2.0-alpha.6` to `v2.2.0-alpha.7` for a typescript plugin bug fixes
+- Upgrade Volar from `v2.2.0-alpha.6` to `v2.2.0-alpha.7` for typescript plugin bug fixes
 
 ## 2.1.0-insiders.3 (2024/4/7)
 
@@ -819,7 +819,7 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 
 ### Other Changes
 
-- Upgrade Volar from `v2.2.0-alpha.5` to `v2.2.0-alpha.6` for a `vue-tsc` bug fixes
+- Upgrade Volar from `v2.2.0-alpha.5` to `v2.2.0-alpha.6` for `vue-tsc` bug fixes
   - [volarjs/volar.js#162](https://github.com/volarjs/volar.js/pull/162) - Thanks @wangshunnn
 - **test:** add test for #4203 (#4207) - Thanks @tinco
 
