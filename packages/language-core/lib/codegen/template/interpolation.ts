@@ -26,7 +26,7 @@ export function* generateInterpolation(
 
 	let prevEnd = 0;
 	for (
-		const [name, offset, isShorthand, isNarrowing, inTypeQuery, isNewOperand] of forEachIdentifiers(
+		const [name, offset, isShorthand, isNarrowing, isAssignmentTarget, inTypeQuery, isNewOperand] of forEachIdentifiers(
 			options.typescript,
 			ctx,
 			block,
@@ -74,6 +74,7 @@ export function* generateInterpolation(
 			start + offset,
 			start + offset + name.length,
 			isNarrowing,
+			isAssignmentTarget,
 			inTypeQuery,
 			isNewOperand,
 		);
@@ -129,6 +130,7 @@ interface IdentifierOptions {
 	setupConsts: Set<string>;
 	setupBindings: Set<string>;
 	dotValueBindings: Set<string>;
+	importBindings?: Set<string>;
 	vueCompilerOptions: VueCompilerOptions;
 	scriptLang: string;
 }
@@ -140,6 +142,7 @@ interface IdentifierOptions {
 // - template refs → direct `.value`
 // - dotValue bindings (narrowed at least once anywhere) → `.value` at
 //   every position; narrowing then works on the `.value` reference chain
+//   (imports read inside template closures fall through to `__VLS_unwrap`)
 // - other bindings → `__VLS_unwrap` (plain reads keep the original type)
 // - otherwise → `__VLS_ctx.<name>`
 export function* generateIdentifier(
@@ -151,6 +154,7 @@ export function* generateIdentifier(
 	start: number,
 	end: number,
 	isNarrowing = false,
+	isAssignmentTarget = false,
 	inTypeQuery = false,
 	isNewOperand = false,
 ): Generator<Code> {
@@ -172,7 +176,11 @@ export function* generateIdentifier(
 	else if (options.setupBindings.has(name)) {
 		// First pass records narrowing accesses here; the second pass emits from dotValueBindings.
 		ctx.accessVariable(source, name, start, inTypeQuery || isNarrowing);
-		if (inTypeQuery || options.dotValueBindings.has(name)) {
+		// The top-level assertion doesn't narrow imports inside closures; writes still need `.value`.
+		const unwrapInClosure = !isAssignmentTarget
+			&& options.importBindings?.has(name)
+			&& ctx.scopes.some(scope => scope.isFunction);
+		if (inTypeQuery || options.dotValueBindings.has(name) && !unwrapInClosure) {
 			yield* codes;
 			yield `.`;
 			const boundary = yield* Boundary.start(
@@ -229,27 +237,36 @@ function* forEachIdentifiers(
 	inNarrowing: boolean,
 ): Generator<IdentifierAccess> {
 	if (identifierRE.test(code) && !shouldIdentifierSkipped(ctx, code)) {
-		yield [code, 0, false, inNarrowing, false, false];
+		yield [code, 0, false, inNarrowing, false, false, false];
 		return;
 	}
 
 	const scope = ctx.scope();
 	const ast = getTypeScriptAST(ts, block, prefix + code + suffix);
 	for (
-		const { id, isShorthand, isNarrowing, skipped, inTypeQuery, isNewOperand } of forEachDeclarations(
-			ts,
-			ast,
-			ast,
-			ctx,
-			scope,
-			inNarrowing,
-		)
+		const { id, isShorthand, isNarrowing, isAssignmentTarget, skipped, inTypeQuery, isNewOperand }
+			of forEachDeclarations(
+				ts,
+				ast,
+				ast,
+				ctx,
+				scope,
+				inNarrowing,
+			)
 	) {
 		if (skipped) {
 			continue;
 		}
 		const text = getNodeText(ts, id, ast);
-		yield [text, getStartEnd(ts, id, ast).start - prefix.length, isShorthand, isNarrowing, inTypeQuery, isNewOperand];
+		yield [
+			text,
+			getStartEnd(ts, id, ast).start - prefix.length,
+			isShorthand,
+			isNarrowing,
+			isAssignmentTarget,
+			inTypeQuery,
+			isNewOperand,
+		];
 	}
 	scope.end();
 }
@@ -259,6 +276,7 @@ type IdentifierAccess = [
 	offset: number,
 	isShorthand: boolean,
 	isNarrowing: boolean,
+	isAssignmentTarget: boolean,
 	inTypeQuery: boolean,
 	isNewOperand: boolean,
 ];

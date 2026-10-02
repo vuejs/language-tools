@@ -199,6 +199,9 @@ function useCodegen(
 			reassertBindings: new Set(
 				[...dotValueBindings].filter(name => (getBindingFlags().get(name) ?? 0) & BindingFlag.Variable),
 			),
+			importBindings: new Set(
+				[...dotValueBindings].filter(name => (getBindingFlags().get(name) ?? 0) & BindingFlag.Import),
+			),
 			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),

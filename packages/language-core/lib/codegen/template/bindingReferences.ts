@@ -12,6 +12,7 @@ export interface DeclarationItem {
 	id: ts.Identifier;
 	isShorthand: boolean;
 	isNarrowing: boolean;
+	isAssignmentTarget: boolean;
 	skipped: boolean;
 	inTypeQuery: boolean;
 	isNewOperand: boolean;
@@ -30,6 +31,7 @@ export function* forEachDeclarations(
 			id: node,
 			isShorthand: false,
 			isNarrowing: inNarrowing,
+			isAssignmentTarget: false,
 			skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, node, ast)),
 			inTypeQuery: false,
 			isNewOperand: false,
@@ -40,6 +42,7 @@ export function* forEachDeclarations(
 			id: node.name,
 			isShorthand: true,
 			isNarrowing: inNarrowing,
+			isAssignmentTarget: false,
 			skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, node.name, ast)),
 			inTypeQuery: false,
 			isNewOperand: false,
@@ -69,6 +72,7 @@ export function* forEachDeclarations(
 				id: node.expression,
 				isShorthand: false,
 				isNarrowing: false,
+				isAssignmentTarget: false,
 				skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, node.expression, ast)),
 				inTypeQuery: false,
 				isNewOperand: true,
@@ -141,19 +145,15 @@ export function* forEachDeclarations(
 		});
 	}
 	else if (ts.isPrefixUnaryExpression(node)) {
-		yield* forEachDeclarations(
-			ts,
-			node.operand,
-			ast,
-			ctx,
-			scope,
-			node.operator === ts.SyntaxKind.ExclamationToken
-				|| node.operator === ts.SyntaxKind.PlusPlusToken
-				|| node.operator === ts.SyntaxKind.MinusMinusToken,
-		);
+		if (node.operator === ts.SyntaxKind.PlusPlusToken || node.operator === ts.SyntaxKind.MinusMinusToken) {
+			yield* forEachDeclarationsInAssignmentTarget(ts, node.operand, ast, ctx, scope);
+		}
+		else {
+			yield* forEachDeclarations(ts, node.operand, ast, ctx, scope, node.operator === ts.SyntaxKind.ExclamationToken);
+		}
 	}
 	else if (ts.isPostfixUnaryExpression(node)) {
-		yield* forEachDeclarations(ts, node.operand, ast, ctx, scope, true);
+		yield* forEachDeclarationsInAssignmentTarget(ts, node.operand, ast, ctx, scope);
 	}
 	else if (isDeleteExpression(ts, node)) {
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
@@ -409,6 +409,7 @@ function* forEachDeclarationsInAssignmentTarget(
 			id: node,
 			isShorthand: false,
 			isNarrowing: true,
+			isAssignmentTarget: true,
 			skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, node, ast)),
 			inTypeQuery: false,
 			isNewOperand: false,
@@ -427,6 +428,7 @@ function* forEachDeclarationsInAssignmentTarget(
 					id: prop.name,
 					isShorthand: true,
 					isNarrowing: true,
+					isAssignmentTarget: true,
 					skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, prop.name, ast)),
 					inTypeQuery: false,
 					isNewOperand: false,
@@ -498,7 +500,7 @@ function* forEachDeclarationsInFunction(
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
 ): Generator<DeclarationItem> {
-	const scope = ctx.scope();
+	const scope = ctx.scope(true);
 	if (ts.isFunctionExpression(node) && node.name) {
 		scope.declare(getNodeText(ts, node.name, ast));
 	}
@@ -602,6 +604,7 @@ function* forEachDeclarationsInTypeNode(
 			id,
 			isShorthand: false,
 			isNarrowing: false,
+			isAssignmentTarget: false,
 			skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, id, ast)),
 			inTypeQuery: true,
 			isNewOperand: false,
