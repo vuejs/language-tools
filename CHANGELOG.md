@@ -4,107 +4,98 @@
 
 ### language-core
 
-- **security:** improved handling of untrusted Vue files ([5604b99](https://github.com/vuejs/language-tools/commit/5604b993033f3de97a9f178bf7beae2bb4466e96)) - Thanks to @serkodev!
-- **feat:** infer first parameter type of default factory for `defineModel` ([1be73b8](https://github.com/vuejs/language-tools/commit/1be73b8f944fc4b571e2122255403f1f9b8fdad2)) - Thanks to @KazariEX!
-- **feat:** report duplicate CSS module names ([d41d919](https://github.com/vuejs/language-tools/commit/d41d919b003c541a3af26982d9509162d01b0997)) - Thanks to @serkodev!
-- **fix:** keep union props when using withDefaults ([084f30f](https://github.com/vuejs/language-tools/commit/084f30f6b764d4da97d4bc3be9ff3020d74e42d5)) - Thanks to @xia-chao!
-- **fix:** keep inference-only props string single-line with block comments ([55ca36f](https://github.com/vuejs/language-tools/commit/55ca36fa864f60a6bf0d1113e1070a5469956014)) - Thanks to @00200200!
+- **security:** improved handling of untrusted Vue files ([cea0698](https://github.com/vuejs/language-tools/commit/cea069882606d62b31199a75a3013b99d3db7144))
+- **feat:** infer first parameter type of default factory for `defineModel` ([1be73b8](https://github.com/vuejs/language-tools/commit/1be73b8f944fc4b571e2122255403f1f9b8fdad2))
+- **feat:** report duplicate CSS module names, including non-identifier names ([d41d919](https://github.com/vuejs/language-tools/commit/d41d919b003c541a3af26982d9509162d01b0997)) ([ffb85e5](https://github.com/vuejs/language-tools/commit/ffb85e57723d4a1a5107d43c0a09408814c4608a))
+- **fix:** keep union props when using withDefaults ([084f30f](https://github.com/vuejs/language-tools/commit/084f30f6b764d4da97d4bc3be9ff3020d74e42d5))
+- **fix:** keep inference-only props string single-line with block comments ([55ca36f](https://github.com/vuejs/language-tools/commit/55ca36fa864f60a6bf0d1113e1070a5469956014))
 - **fix:** support calling template bindings without `.value` ([7ad4a94](https://github.com/vuejs/language-tools/commit/7ad4a94196d856d105f57ba91683c3c54a3dbe9c))
-- **fix:** avoid type guards missing from the tsc bundle in template binding analysis ([e743e80](https://github.com/vuejs/language-tools/commit/e743e80e127400bbf57f829f880bd433756e4882)) - Thanks to @ValentinYoushkevich!
-- **fix:** pad directive hook signatures to check short-arity directive bindings ([94052b8](https://github.com/vuejs/language-tools/commit/94052b85199f8d1ea5458c02ce70c3ce99a871ee)) - Thanks to @serkodev!
-- **fix:** override `vueCompilerOptions.plugins` instead of merging ([4fa9e97](https://github.com/vuejs/language-tools/commit/4fa9e9784e4b5028c23b180839c2302d15e8a4a7))
-- **fix:** deduplicate `vueCompilerOptions.plugins` on resolve ([c0e5d2e](https://github.com/vuejs/language-tools/commit/c0e5d2ed78a01e83af648c655381b12b405860dd)) - Thanks to @camonunez!
-- **fix:** report duplicate non-identifier CSS module names ([ffb85e5](https://github.com/vuejs/language-tools/commit/ffb85e57723d4a1a5107d43c0a09408814c4608a)) - Thanks to @serkodev!
-- **fix:** eliminate synthesized ignore for style scoped classes alias ([eccb74a](https://github.com/vuejs/language-tools/commit/eccb74a5d9af138dd585f678456fb0590052e5f3)) - Thanks to @serkodev!
-- **fix:** consume synthesized `$event` in compound event handlers ([612ae32](https://github.com/vuejs/language-tools/commit/612ae323e3cd835d32dbcfadb720e8349d073361)) - Thanks to @serkodev!
-- **fix:** eliminate synthesized ignore in codegen ([dbcb7de](https://github.com/vuejs/language-tools/commit/dbcb7de7ad569057fe77d49f1d1b3ac8b4ec53d4))
-- **fix:** use `default` slot name for bare `v-slot` ([90f8207](https://github.com/vuejs/language-tools/commit/90f82073b666cce5c7480689eecb398979b973aa))
-- **fix:** eliminate unmapped codegen diagnostics ([04954dd](https://github.com/vuejs/language-tools/commit/04954ddb380b459be3d3cd593b092511bb6531af))
-- **fix:** prevent template token boundary double-mapping ([8c85e38](https://github.com/vuejs/language-tools/commit/8c85e38870010ee69246ff9f88e38d9973aadd15))
-- **fix:** correct mapping boundary of dot value accesses ([af7a194](https://github.com/vuejs/language-tools/commit/af7a1944462e5dbfce254f0102a0ee281291452c)) - Thanks to @KazariEX!
-- **fix:** stop typedef jsdoc from leaking into emitted dts ([d4d4139](https://github.com/vuejs/language-tools/commit/d4d41393fa9a5e626b65633518bb5fa5647b7224)) - Thanks to @KazariEX!
-- **perf:** precompile attribute glob matchers ([7d2e603](https://github.com/vuejs/language-tools/commit/7d2e6030c61180096ad1b8f49923fdf77d740abf)) - Thanks to @Cherry!
+- **fix:** avoid type guards missing from the tsc bundle in template binding analysis ([e743e80](https://github.com/vuejs/language-tools/commit/e743e80e127400bbf57f829f880bd433756e4882))
+- **fix:** pad directive hook signatures to check short-arity directive bindings ([94052b8](https://github.com/vuejs/language-tools/commit/94052b85199f8d1ea5458c02ce70c3ce99a871ee))
+- **fix:** `vueCompilerOptions.plugins` now overrides the inherited list instead of being deduplicated on resolve ([4fa9e97](https://github.com/vuejs/language-tools/commit/4fa9e9784e4b5028c23b180839c2302d15e8a4a7)) ([c0e5d2e](https://github.com/vuejs/language-tools/commit/c0e5d2ed78a01e83af648c655381b12b405860dd))
+- **fix:** eliminate synthesized ignore comments across codegen, scoped class aliases and compound event handlers ([dbcb7de](https://github.com/vuejs/language-tools/commit/dbcb7de7ad569057fe77d49f1d1b3ac8b4ec53d4)) ([eccb74a](https://github.com/vuejs/language-tools/commit/eccb74a5d9af138dd585f678456fb0590052e5f3)) ([612ae32](https://github.com/vuejs/language-tools/commit/612ae323e3cd835d32dbcfadb720e8349d073361))
+- **fix:** correct template mapping boundaries and eliminate unmapped diagnostics ([04954dd](https://github.com/vuejs/language-tools/commit/04954ddb380b459be3d3cd593b092511bb6531af)) ([8c85e38](https://github.com/vuejs/language-tools/commit/8c85e38870010ee69246ff9f88e38d9973aadd15)) ([af7a194](https://github.com/vuejs/language-tools/commit/af7a1944462e5dbfce254f0102a0ee281291452c)) ([90f8207](https://github.com/vuejs/language-tools/commit/90f82073b666cce5c7480689eecb398979b973aa))
+- **fix:** stop typedef JSDoc from leaking into emitted dts ([d4d4139](https://github.com/vuejs/language-tools/commit/d4d41393fa9a5e626b65633518bb5fa5647b7224))
+- **perf:** precompile attribute glob matchers ([7d2e603](https://github.com/vuejs/language-tools/commit/7d2e6030c61180096ad1b8f49923fdf77d740abf))
 
 ### component-meta
 
-- **fix:** stop checking JS Vue files as TS ([045a6a7](https://github.com/vuejs/language-tools/commit/045a6a7eb5afa987b09a85a483eef118cbdcaaf3)) - Thanks to @hungateJoseph!
+- **fix:** stop checking JS Vue files as TS ([045a6a7](https://github.com/vuejs/language-tools/commit/045a6a7eb5afa987b09a85a483eef118cbdcaaf3))
 
 ### tsc
 
-- **fix:** prevent watch mode crash on incremental build ([a59da36](https://github.com/vuejs/language-tools/commit/a59da367002ffeb530edd8371493539d5387ea33)) - Thanks to @uturnr!
+- **fix:** prevent watch mode crash on incremental build ([a59da36](https://github.com/vuejs/language-tools/commit/a59da367002ffeb530edd8371493539d5387ea33))
 
 ### typescript-plugin
 
-- **fix:** don't abort reference span fix-up at style-less files ([e46126c](https://github.com/vuejs/language-tools/commit/e46126c95682751ed2702355794563550a270edf)) - Thanks to @serkodev!
+- **fix:** don't abort reference span fix-up at style-less files ([e46126c](https://github.com/vuejs/language-tools/commit/e46126c95682751ed2702355794563550a270edf))
 
 ### vscode
 
-- **perf:** reduce focus mode overhead ([b0936d1](https://github.com/vuejs/language-tools/commit/b0936d1c77b68dcc5d888dfd670fe527c5c8ce0d)) - Thanks to @serkodev!
+- **perf:** reduce focus mode overhead ([b0936d1](https://github.com/vuejs/language-tools/commit/b0936d1c77b68dcc5d888dfd670fe527c5c8ce0d))
 
 ## 3.3.11 (2026-08-21)
 
 ### language-core
 
-- **fix:** generate full fragment props for type checking ([fd6dada](https://github.com/vuejs/language-tools/commit/fd6dadab91832f60ade8020de6c6947a1115a55f)) - Thanks to @serkodev!
+- **fix:** generate full fragment props for type checking ([fd6dada](https://github.com/vuejs/language-tools/commit/fd6dadab91832f60ade8020de6c6947a1115a55f))
 
 ### language-service
 
-- **fix:** invalidate tag and prop casing detection after template changes ([879ee9a](https://github.com/vuejs/language-tools/commit/879ee9a4dd38168224a81fe688056c692b608bb6)) - Thanks to @serkodev!
-- **refactor:** make name casing detection reactive ([851e4b0](https://github.com/vuejs/language-tools/commit/851e4b015dd7f11d1e7bb3cce137efb22dfd244f)) - Thanks to @KazariEX!
+- **fix:** invalidate tag and prop casing detection after template changes ([879ee9a](https://github.com/vuejs/language-tools/commit/879ee9a4dd38168224a81fe688056c692b608bb6))
 
 ### component-meta
 
-- **fix:** invalidate module resolution caches when deleting files ([8359c44](https://github.com/vuejs/language-tools/commit/8359c447a04091b07c6845b768defc4a5c637b24)) - Thanks to @serkodev!
+- **fix:** invalidate module resolution caches when deleting files ([8359c44](https://github.com/vuejs/language-tools/commit/8359c447a04091b07c6845b768defc4a5c637b24))
 
 ### tsc
 
-- **fix:** make extension retry errors serializable across IPC ([05ab009](https://github.com/vuejs/language-tools/commit/05ab00944825815fb5dc5e70a468893a1476fde9)) - Thanks to @KazariEX!
+- **fix:** make extension retry errors serializable across IPC ([05ab009](https://github.com/vuejs/language-tools/commit/05ab00944825815fb5dc5e70a468893a1476fde9))
 
 ### vscode
 
-- **feat:** allow disabling the welcome page ([3134351](https://github.com/vuejs/language-tools/commit/3134351eadbeedc28c8a05a80f343e3cf1d63048)) - Thanks to @pierreedbrg!
+- **feat:** make the welcome page configurable ([3134351](https://github.com/vuejs/language-tools/commit/3134351eadbeedc28c8a05a80f343e3cf1d63048)) ([317ab6a](https://github.com/vuejs/language-tools/commit/317ab6a4056a7cc7ee5b81db27f35278bb7afd23))
 
 ## 3.3.10 (2026-08-15)
 
 ### language-core
 
-- **fix:** ignore trailing whitespace after generic parameter commas ([6e3aea9](https://github.com/vuejs/language-tools/commit/6e3aea91617459a43849b146b85c15f5b8663a6d)) - Thanks to @KazariEX!
-- **fix:** resolve `v-for` item type over generic sources ([8e78c5d](https://github.com/vuejs/language-tools/commit/8e78c5dc3017a9bae511123d49ec92d5719668f5)) - Thanks to @serkodev!
-- **fix:** do not extract SFC blocks across inline Markdown code ([055b9c7](https://github.com/vuejs/language-tools/commit/055b9c7530428a15f304c9c784dc113483faaf06)) - Thanks to @lazerg!
+- **fix:** ignore trailing whitespace after generic parameter commas ([6e3aea9](https://github.com/vuejs/language-tools/commit/6e3aea91617459a43849b146b85c15f5b8663a6d))
+- **fix:** resolve `v-for` item type over generic sources ([8e78c5d](https://github.com/vuejs/language-tools/commit/8e78c5dc3017a9bae511123d49ec92d5719668f5))
+- **fix:** do not extract SFC blocks across inline Markdown code ([055b9c7](https://github.com/vuejs/language-tools/commit/055b9c7530428a15f304c9c784dc113483faaf06))
 
 ### language-service
 
-- **fix:** serialize template data provider access across concurrent requests ([2808dbe](https://github.com/vuejs/language-tools/commit/2808dbebe28d8b2d09723088c00f76bdb866dde4)) - Thanks to @serkodev!
+- **fix:** serialize template data provider access across concurrent requests ([2808dbe](https://github.com/vuejs/language-tools/commit/2808dbebe28d8b2d09723088c00f76bdb866dde4))
 
 ### tsc
 
-- **fix:** support different extension sets across project references ([cb65247](https://github.com/vuejs/language-tools/commit/cb65247aa3c8ad2e858d13c7d60d2c0de76e3777)) - Thanks to @lazerg!
+- **fix:** support different extension sets across project references ([cb65247](https://github.com/vuejs/language-tools/commit/cb65247aa3c8ad2e858d13c7d60d2c0de76e3777))
 
 ### typescript-plugin
 
-- **fix:** resolve requests against the owning project ([10c9168](https://github.com/vuejs/language-tools/commit/10c9168199db6e51c7d321492d2bdcd17c0c9fc9)) - Thanks to @serkodev!
+- **fix:** resolve requests against the owning project ([10c9168](https://github.com/vuejs/language-tools/commit/10c9168199db6e51c7d321492d2bdcd17c0c9fc9))
 
 ### vscode
 
-- **feat:** patch `typescript.js` via `--require` to support read-only file systems ([0c47258](https://github.com/vuejs/language-tools/commit/0c4725821bf5f09f288cc46e67a488d2292eb77b)) - Thanks to @serkodev!
-- **fix:** isolate custom TypeScript plugin paths between profiles ([47216a9](https://github.com/vuejs/language-tools/commit/47216a9dedfffac526d417f4fc1b1518200671e1)) - Thanks to @serkodev!
+- **feat:** patch `typescript.js` via `--require` to support read-only file systems ([0c47258](https://github.com/vuejs/language-tools/commit/0c4725821bf5f09f288cc46e67a488d2292eb77b))
+- **fix:** isolate custom TypeScript plugin paths between profiles ([47216a9](https://github.com/vuejs/language-tools/commit/47216a9dedfffac526d417f4fc1b1518200671e1))
+- **fix:** update output file name for production ([5616255](https://github.com/vuejs/language-tools/commit/5616255c475158e0b50d7b4c8828761a2d301bf3))
 
 ## 3.3.9 (2026-07-31)
 
 ### component-meta
 
-- **feat:** expose runtime values of enum members in schema ([00ce7ec](https://github.com/vuejs/language-tools/commit/00ce7ec19bd62c6ed9d8e0a3c4951d4ac23e8540)) - Thanks to @valentinpalkovic!
-- **fix:** keep `getProgramAndFile` free of side effects ([c99eb00](https://github.com/vuejs/language-tools/commit/c99eb007cc14538bc400379539c43d31ec3caced)) - Thanks to @seanogdev!
+- **feat:** expose runtime values of enum members in schema ([00ce7ec](https://github.com/vuejs/language-tools/commit/00ce7ec19bd62c6ed9d8e0a3c4951d4ac23e8540))
+- **fix:** keep `getProgramAndFile` free of side effects ([c99eb00](https://github.com/vuejs/language-tools/commit/c99eb007cc14538bc400379539c43d31ec3caced))
 
 ### language-core
 
-- **feat:** check unused generic type parameters ([9d08c43](https://github.com/vuejs/language-tools/commit/9d08c434df99a97083a1f08c149bb55621a57a31)) - Thanks to @KazariEX!
+- **feat:** check unused generic type parameters ([9d08c43](https://github.com/vuejs/language-tools/commit/9d08c434df99a97083a1f08c149bb55621a57a31))
 
 ### language-service
 
-- **fix:** preserve trailing modifiers when completing in the middle of a directive ([3e362fb](https://github.com/vuejs/language-tools/commit/3e362fbd134e30b06c1cd963f84be7c1cc28f222)) - Thanks to @lazerg!
-- **fix:** only replace current directive modifier on completion ([d8afe9e](https://github.com/vuejs/language-tools/commit/d8afe9e39d43061fb2c4b6b85a484d13ac66aa47)) - Thanks to @KazariEX!
-- **fix:** preserve current modifier when filtering completion duplicates ([f4e584b](https://github.com/vuejs/language-tools/commit/f4e584beedad23cc1d1bdb4ce8956455efd616f3)) - Thanks to @KazariEX!
+- **fix:** preserve trailing and current directive modifiers when completing inside a directive, and when filtering duplicates ([3e362fb](https://github.com/vuejs/language-tools/commit/3e362fbd134e30b06c1cd963f84be7c1cc28f222)) ([d8afe9e](https://github.com/vuejs/language-tools/commit/d8afe9e39d43061fb2c4b6b85a484d13ac66aa47)) ([f4e584b](https://github.com/vuejs/language-tools/commit/f4e584beedad23cc1d1bdb4ce8956455efd616f3))
 
 ### workspace
 
@@ -114,17 +105,19 @@
 
 ### language-core
 
-- **feat:** support vapor directives ([6a5334c](https://github.com/vuejs/language-tools/commit/6a5334ce63163009bbaede9fe8ddac627041da89)) - Thanks to @liangmiQwQ!
+- **feat:** support vapor directives ([6a5334c](https://github.com/vuejs/language-tools/commit/6a5334ce63163009bbaede9fe8ddac627041da89))
+- **refactor:** pass end offsets to `Boundary.start` and drop the unmapped string literal key generation branch ([894a2aa](https://github.com/vuejs/language-tools/commit/894a2aa9b9e52b8cfb387da8dbbb0333045817b8)) ([4e343d4](https://github.com/vuejs/language-tools/commit/4e343d44a5c10245365219736d55993994d9c8ce))
 
 ### workspace
 
-- **chore:** upgrade to TypeScript 7 and support `@typescript/typescript6` ([1ef7ecb](https://github.com/vuejs/language-tools/commit/1ef7ecbd0ab9b475e8e3aed791a1606be8bfa8d1)) - Thanks to @WaldemarEnns!
+- **chore:** upgrade to TypeScript 7 and support `@typescript/typescript6` ([1ef7ecb](https://github.com/vuejs/language-tools/commit/1ef7ecbd0ab9b475e8e3aed791a1606be8bfa8d1))
 
 ## 3.3.7 (2026-07-08)
 
 ### language-core
 
-- **fix:** wrap single expression event handlers to avoid ASI after `return` ([b1a8452](https://github.com/vuejs/language-tools/commit/b1a845257e474f1199eb6372a7189b2b9766d9cf)) - Thanks to @KazariEX!
+- **fix:** wrap single expression event handlers to avoid ASI after `return` ([b1a8452](https://github.com/vuejs/language-tools/commit/b1a845257e474f1199eb6372a7189b2b9766d9cf))
+- **refactor:** add `__VLS_StyleScopedClasses` to generated types ([8023ac4](https://github.com/vuejs/language-tools/commit/8023ac462f51e3b213e119439fe713ecc7af5e51))
 
 ### typescript-plugin
 
@@ -134,104 +127,100 @@
 
 ### language-core
 
-- **fix:** make generic component internal context inference type-safe across `.d.ts` boundary ([bff182a](https://github.com/vuejs/language-tools/commit/bff182a752f5c79fbd475513ad584cfe7ea9d423)) - Thanks to @Holiden!
-- **fix:** do not treat non-trivial property accesses as compound ([1fdd511](https://github.com/vuejs/language-tools/commit/1fdd51124720bac42fb90a1b1cbe2cf099c077cf)) - Thanks to @KazariEX!
-- **fix:** treat semicolon-terminated expressions as compound ([8440da6](https://github.com/vuejs/language-tools/commit/8440da62e14814dd5e610add5a038ef35b4cec47)) - Thanks to @KazariEX!
-- **fix:** preserve return types for compound event handlers ([9b6fb7f](https://github.com/vuejs/language-tools/commit/9b6fb7fc787f8c5fafa7a315e79431eb8d466a45)) - Thanks to @KazariEX!
-- **fix:** use `WeakMap` to cache inline TS ASTs ([c82592d](https://github.com/vuejs/language-tools/commit/c82592d40969484cc25f4ad90144d37662821c15)) - Thanks to @KazariEX!
-- **fix:** match upstream CSS `v-bind` parsing behavior ([5b450ce](https://github.com/vuejs/language-tools/commit/5b450ceb39d3e4c3af532ce84d8735317982c705)) - Thanks to @KazariEX!
-- **fix:** include setup bindings as potential component names ([c0e42fd](https://github.com/vuejs/language-tools/commit/c0e42fdc5529d6dcbe972de6a7a5e4d2b293a79f)) - Thanks to @KazariEX!
-- **perf:** reduce boundary code feature allocations ([f69712f](https://github.com/vuejs/language-tools/commit/f69712f8d1f7e705d3ae8a2ee4ef7e91eea9eb62)) - Thanks to @KazariEX!
-- **refactor:** centralize code features and deprecate `allCodeFeatures` ([5cdf4da](https://github.com/vuejs/language-tools/commit/5cdf4dae33f7503a7f934dc73fd61278bcc4506d)) - Thanks to @KazariEX!
+- **fix:** treat event handler expressions as compound more accurately, preserving return types ([1fdd511](https://github.com/vuejs/language-tools/commit/1fdd51124720bac42fb90a1b1cbe2cf099c077cf)) ([8440da6](https://github.com/vuejs/language-tools/commit/8440da62e14814dd5e610add5a038ef35b4cec47)) ([9b6fb7f](https://github.com/vuejs/language-tools/commit/9b6fb7fc787f8c5fafa7a315e79431eb8d466a45))
+- **fix:** make generic component internal context inference type-safe across the `.d.ts` boundary ([bff182a](https://github.com/vuejs/language-tools/commit/bff182a752f5c79fbd475513ad584cfe7ea9d423))
+- **fix:** match upstream CSS `v-bind` parsing behavior ([5b450ce](https://github.com/vuejs/language-tools/commit/5b450ceb39d3e4c3af532ce84d8735317982c705))
+- **fix:** include setup bindings as potential component names ([c0e42fd](https://github.com/vuejs/language-tools/commit/c0e42fdc5529d6dcbe972de6a7a5e4d2b293a79f))
+- **perf:** reduce boundary code feature allocations and cache inline TS ASTs in a `WeakMap` ([f69712f](https://github.com/vuejs/language-tools/commit/f69712f8d1f7e705d3ae8a2ee4ef7e91eea9eb62)) ([c82592d](https://github.com/vuejs/language-tools/commit/c82592d40969484cc25f4ad90144d37662821c15))
+- **refactor:** centralize code features and deprecate `allCodeFeatures` ([5cdf4da](https://github.com/vuejs/language-tools/commit/5cdf4dae33f7503a7f934dc73fd61278bcc4506d))
 
 ## 3.3.5 (2026-06-13)
 
 ### language-core
 
-- **fix:** include event modifiers in duplicate listener checks ([59ebc40](https://github.com/vuejs/language-tools/commit/59ebc402c208426a96e599d98a1bbd6a385fb292)) - Thanks to @KazariEX!
+- **fix:** include event modifiers and raw event parts in duplicate listener checks ([13b9eae](https://github.com/vuejs/language-tools/commit/13b9eae1ad4dc0cd5b638e5cd95f1a3717e55acb)) ([59ebc40](https://github.com/vuejs/language-tools/commit/59ebc402c208426a96e599d98a1bbd6a385fb292))
 
 ## 3.3.4 (2026-06-08)
 
 ### language-core
 
-- **fix:** only exclude already-set props from inherited attrs when `checkRequiredFallthroughAttributes` is enabled ([9bc36fc](https://github.com/vuejs/language-tools/commit/9bc36fc6a34622d672a02423f2b847d6bbe0932d)) - Thanks to @KazariEX!
-- **fix:** camelize slot props regardless of `htmlAttributes` option ([3adbe2c](https://github.com/vuejs/language-tools/commit/3adbe2cc5e65397edc55d103ba430a00b5941c93)) - Thanks to @KazariEX!
-- **fix:** detect duplicate event listeners across name formats ([e70cb29](https://github.com/vuejs/language-tools/commit/e70cb29379a93591d63a4e3d6c5c630d483c6d81)) - Thanks to @whysopaul!
+- **fix:** detect duplicate event listeners across name formats ([e70cb29](https://github.com/vuejs/language-tools/commit/e70cb29379a93591d63a4e3d6c5c630d483c6d81))
+- **fix:** camelize slot props regardless of the `htmlAttributes` option ([3adbe2c](https://github.com/vuejs/language-tools/commit/3adbe2cc5e65397edc55d103ba430a00b5941c93))
+- **fix:** only exclude already-set props from inherited attrs when `checkRequiredFallthroughAttributes` is enabled ([9bc36fc](https://github.com/vuejs/language-tools/commit/9bc36fc6a34622d672a02423f2b847d6bbe0932d))
 
 ### language-service
 
-- **fix:** respect var hoisting for destructured props hints ([cbd4ea0](https://github.com/vuejs/language-tools/commit/cbd4ea00db12ab6b6800987e9d22f54639aff38b)) - Thanks to @KazariEX!
+- **fix:** respect var hoisting for destructured props hints ([cbd4ea0](https://github.com/vuejs/language-tools/commit/cbd4ea00db12ab6b6800987e9d22f54639aff38b))
 
 ### typescript-plugin
 
-- **fix:** do not treat `class` and `style` as a boolean property ([f80e063](https://github.com/vuejs/language-tools/commit/f80e0633db7fbab3c584cb65d0cd8c2f8632f8a6)) - Thanks to @KazariEX!
+- **fix:** do not treat `class` and `style` as a boolean property ([f80e063](https://github.com/vuejs/language-tools/commit/f80e0633db7fbab3c584cb65d0cd8c2f8632f8a6))
 
 ## 3.3.3 (2026-05-30)
 
 ### vscode
 
-- **fix:** prevent grammar scopes leakage in capitalized tags ([cd7a6e5](https://github.com/vuejs/language-tools/commit/cd7a6e53d58111640f116d1e19f1c1cf06c7157d)) - Thanks to @KazariEX!
-- **fix:** preserve TS auto imports behavior in Vue files ([1d672b6](https://github.com/vuejs/language-tools/commit/1d672b6df8863fb45810e5480ec8ad6665b2e5da)) - Thanks to @KazariEX!
+- **fix:** preserve TS auto imports behavior in Vue files ([1d672b6](https://github.com/vuejs/language-tools/commit/1d672b6df8863fb45810e5480ec8ad6665b2e5da))
+- **fix:** prevent grammar scopes leakage in capitalized tags ([cd7a6e5](https://github.com/vuejs/language-tools/commit/cd7a6e53d58111640f116d1e19f1c1cf06c7157d))
 
-### workspace
+### ci
 
-- **fix:** read PR title from env in `auto-version` workflow to prevent injection ([b51c92d](https://github.com/vuejs/language-tools/commit/b51c92dcfbf9e015531d1fbf3a6ca3c45760fb20)) - Thanks to @arpitjain099!
+- **fix:** read PR title from env in the `auto-version` workflow to prevent injection ([b51c92d](https://github.com/vuejs/language-tools/commit/b51c92dcfbf9e015531d1fbf3a6ca3c45760fb20))
 
 ## 3.3.2 (2026-05-25)
 
 ### language-core
 
-- **feat:** preserve literal types for inline `v-for` sources ([11b390c](https://github.com/vuejs/language-tools/commit/11b390ce4e7ddf6ce3d5d01c8985280e5a57d753)) - Thanks to @kkesidis!
-- **fix:** align `v-bind` shorthand identifier skipping with interpolation ([4f50ebe](https://github.com/vuejs/language-tools/commit/4f50ebe3de53bf3c1cc2fae0475dfdd3655ca913)) - Thanks to @KazariEX!
+- **feat:** preserve literal types for inline `v-for` sources ([11b390c](https://github.com/vuejs/language-tools/commit/11b390ce4e7ddf6ce3d5d01c8985280e5a57d753))
+- **fix:** align `v-bind` shorthand identifier skipping with interpolation ([4f50ebe](https://github.com/vuejs/language-tools/commit/4f50ebe3de53bf3c1cc2fae0475dfdd3655ca913))
 
 ### vscode
 
-- **feat:** transform tsserver content ([168c7fa](https://github.com/vuejs/language-tools/commit/168c7fa952d6e3d229ba076dcc097c4cf16cd109)) - Thanks to @KazariEX!
-- **fix:** do not mark trailing slash in capitalized self-closing tags as invalid ([6f49ca0](https://github.com/vuejs/language-tools/commit/6f49ca02d41efa3b7b27918e204bc4c671a6be1a)) - Thanks to @suisanka!
+- **feat:** transform tsserver content ([168c7fa](https://github.com/vuejs/language-tools/commit/168c7fa952d6e3d229ba076dcc097c4cf16cd109))
+- **fix:** do not mark the trailing slash in capitalized self-closing tags as invalid ([6f49ca0](https://github.com/vuejs/language-tools/commit/6f49ca02d41efa3b7b27918e204bc4c671a6be1a))
+- **fix:** fall back to the original tsserver path when the proxy write fails ([7aeb5f3](https://github.com/vuejs/language-tools/commit/7aeb5f3af0ed7144d14d2ed7c53a2c7e450a356b))
 
 ## 3.3.1 (2026-05-19)
 
 ### language-core
 
-- **fix:** avoid extraneous children error for conditional slots ([846157a](https://github.com/vuejs/language-tools/commit/846157a4965e7e4f314fa3f3ae0cc21283b5bc60)) - Thanks to @KazariEX!
+- **fix:** avoid extraneous children error for conditional slots ([846157a](https://github.com/vuejs/language-tools/commit/846157a4965e7e4f314fa3f3ae0cc21283b5bc60))
 
 ### language-service
 
-- **refactor:** replace scanner-based missing props hints detection with AST traversal ([ded171f](https://github.com/vuejs/language-tools/commit/ded171f37631f25bb790747eab30422e3cb44ba8)) - Thanks to @KazariEX!
+- **refactor:** replace scanner-based missing props hints detection with AST traversal ([ded171f](https://github.com/vuejs/language-tools/commit/ded171f37631f25bb790747eab30422e3cb44ba8))
 
 ### typescript-plugin
 
-- **fix:** get component prop details from symbols ([a6476f2](https://github.com/vuejs/language-tools/commit/a6476f24caba810c5f2789194d05638721b3c640)) - Thanks to @KazariEX!
-- **fix:** skip unchecked JS identifiers in component props ([77f1849](https://github.com/vuejs/language-tools/commit/77f184943a9e1529c2ba01f94eeb30275da54104)) - Thanks to @KazariEX!
+- **fix:** get component prop details from symbols and skip unchecked JS identifiers ([a6476f2](https://github.com/vuejs/language-tools/commit/a6476f24caba810c5f2789194d05638721b3c640)) ([77f1849](https://github.com/vuejs/language-tools/commit/77f184943a9e1529c2ba01f94eeb30275da54104))
 
 ### vscode
 
-- **fix:** resolve typescript plugin path from resolved server path ([1e25954](https://github.com/vuejs/language-tools/commit/1e25954bec92d5952666003803d7eb99093054d4)) - Thanks to @KazariEX!
+- **fix:** resolve the typescript plugin path from the resolved server path ([1e25954](https://github.com/vuejs/language-tools/commit/1e25954bec92d5952666003803d7eb99093054d4))
 
 ## 3.3.0 (2026-05-18)
 
 ### language-core
 
-- **feat:** check required fallthrough attributes ([ee5e76a](https://github.com/vuejs/language-tools/commit/ee5e76a2098a21b9c2a5b706402780e6023a00e5)) - Thanks to @KazariEX!
-- **fix:** penetrate `v-if` branch fragments when collecting single root nodes ([6c13831](https://github.com/vuejs/language-tools/commit/6c138315dd686f39b05aeca6fd575b9954b76c37)) - Thanks to @KazariEX!
-- **refactor:** rename `Sfc` APIs to `IR` ([dc941c7](https://github.com/vuejs/language-tools/commit/dc941c72d2fa64ebbaa300431d475253c80a1884)) - Thanks to @KazariEX!
+- **feat:** check required fallthrough attributes ([ee5e76a](https://github.com/vuejs/language-tools/commit/ee5e76a2098a21b9c2a5b706402780e6023a00e5))
+- **fix:** penetrate `v-if` branch fragments when collecting single root nodes ([6c13831](https://github.com/vuejs/language-tools/commit/6c138315dd686f39b05aeca6fd575b9954b76c37))
+- **refactor:** rename the `Sfc` APIs to `IR` ([dc941c7](https://github.com/vuejs/language-tools/commit/dc941c72d2fa64ebbaa300431d475253c80a1884))
 
 ### language-service
 
-- **fix:** reuse ASTs for define assignment suggestions ([34beaf3](https://github.com/vuejs/language-tools/commit/34beaf3000d2f2c582d64e08826d1d541fdd2451)) - Thanks to @KazariEX!
-- **fix:** re-support `html.customData` ([94da05a](https://github.com/vuejs/language-tools/commit/94da05ae135ace74ea76999cac48e0e667991cd5)) - Thanks to @Bomberus!
-- **fix:** strip `=""` only for plain boolean props completion edits ([c224e6a](https://github.com/vuejs/language-tools/commit/c224e6ac567877c3f35d9ce8d3031177f9155d40)) - Thanks to @KazariEX!
-- **fix:** reset to default data provider after running with vue data provider ([55af099](https://github.com/vuejs/language-tools/commit/55af099dfc40fd42e23915a8568ba95c1df674f0)) - Thanks to @KazariEX!
+- **feat:** re-support `html.customData` ([94da05a](https://github.com/vuejs/language-tools/commit/94da05ae135ace74ea76999cac48e0e667991cd5))
+- **fix:** strip `=""` only for plain boolean props completion edits, and reset to the default data provider after running with the Vue data provider ([c224e6a](https://github.com/vuejs/language-tools/commit/c224e6ac567877c3f35d9ce8d3031177f9155d40)) ([55af099](https://github.com/vuejs/language-tools/commit/55af099dfc40fd42e23915a8568ba95c1df674f0))
+- **fix:** reuse ASTs for define assignment suggestions and avoid duplicate attrs and props requests ([34beaf3](https://github.com/vuejs/language-tools/commit/34beaf3000d2f2c582d64e08826d1d541fdd2451)) ([c8e435d](https://github.com/vuejs/language-tools/commit/c8e435dc0219d1d2a4be19f9a85b44801ef5f239))
 
 ### typescript-plugin
 
-- **feat:** refine props completion logic to follow TS behavior ([cc9585a](https://github.com/vuejs/language-tools/commit/cc9585aba180a3905082648c6c7bdff49a7445b6)) - Thanks to @KazariEX!
+- **feat:** refine props completion to follow TS behavior, filtering fallback global completions and only returning props for component nodes ([cc9585a](https://github.com/vuejs/language-tools/commit/cc9585aba180a3905082648c6c7bdff49a7445b6)) ([154d94d](https://github.com/vuejs/language-tools/commit/154d94daa3de6892d5e3bf2f22afc873103d0274)) ([fd53569](https://github.com/vuejs/language-tools/commit/fd53569a9558ae8ac6098b2b89da68650364a521)) ([e2181c5](https://github.com/vuejs/language-tools/commit/e2181c58e794601c3f5ce93d8c2fb0081a9a7232))
 
 ### vscode
 
-- **fix:** include `extraFileExtensions` in tsserver `configure` request payload ([818226a](https://github.com/vuejs/language-tools/commit/818226af9c5c81612a389ac544a158b7ef1e092f)) - Thanks to @KazariEX!
-- **fix:** write typescript plugins at build time ([cabd9c6](https://github.com/vuejs/language-tools/commit/cabd9c69ea13cee8bef6079a0f489b3f8f14fa67)) - Thanks to @KazariEX!
-- **fix:** avoid infinite diagnostics on Vue files when project diagnostics is enabled ([0614a53](https://github.com/vuejs/language-tools/commit/0614a53c1a0253186c5f7ec4abee6d3ca6b8d3b5)) - Thanks to @KazariEX!
+- **fix:** write typescript plugins at build time ([cabd9c6](https://github.com/vuejs/language-tools/commit/cabd9c69ea13cee8bef6079a0f489b3f8f14fa67))
+- **fix:** avoid infinite diagnostics on Vue files when project diagnostics is enabled ([0614a53](https://github.com/vuejs/language-tools/commit/0614a53c1a0253186c5f7ec4abee6d3ca6b8d3b5))
+- **fix:** include `extraFileExtensions` in the tsserver `configure` request payload ([818226a](https://github.com/vuejs/language-tools/commit/818226af9c5c81612a389ac544a158b7ef1e092f))
 
 ## 3.2.9 (2026-05-14)
 
