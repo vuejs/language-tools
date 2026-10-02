@@ -498,7 +498,7 @@ function* forEachDeclarationsInFunction(
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
 ): Generator<DeclarationItem> {
-	const scope = ctx.scope();
+	const scope = ctx.scope(true);
 	if (ts.isFunctionExpression(node) && node.name) {
 		scope.declare(getNodeText(ts, node.name, ast));
 	}

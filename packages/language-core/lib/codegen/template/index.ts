@@ -24,6 +24,8 @@ export interface TemplateCodegenOptions {
 	dotValueBindings: Set<string>;
 	// The subset of `dotValueBindings` re-asserted at closure tops (imports, `let`/`var`).
 	reassertBindings: Set<string>;
+	// The subset of `dotValueBindings` read through `__VLS_unwrap` inside template closures (imports).
+	importBindings: Set<string>;
 	hasDefineSlots?: boolean;
 	propsAssignName?: string;
 	slotsAssignName?: string;
