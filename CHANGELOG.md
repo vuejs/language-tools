@@ -1,5 +1,46 @@
 # Changelog
 
+## 3.3.12 (2026-10-02)
+
+### language-core
+
+- **security:** prevent arbitrary code execution via inline `@plugins` compiler options ([GHSA-vgrw-xjpj-wh8r](https://github.com/vuejs/language-tools/security/advisories/GHSA-vgrw-xjpj-wh8r)) - Thanks to @serkodev!
+- **feat:** infer first parameter type of default factory for `defineModel` (#6210) - Thanks to @KazariEX!
+- **feat:** report duplicate CSS module names (#6198) - Thanks to @serkodev!
+- **fix:** keep union props when using withDefaults (#6180) (#6183) - Thanks to @xia-chao!
+- **fix:** keep inference-only props string single-line with block comments (#6230) - Thanks to @00200200!
+- **fix:** support calling template bindings without `.value` (#6181)
+- **fix:** avoid type guards missing from the tsc bundle in template binding analysis (#6214) - Thanks to @ValentinYoushkevich!
+- **fix:** pad directive hook signatures to check short-arity directive bindings (#6197) - Thanks to @serkodev!
+- **fix:** override `vueCompilerOptions.plugins` instead of merging (#6208)
+- **fix:** deduplicate `vueCompilerOptions.plugins` on resolve (#6125) - Thanks to @camonunez!
+- **fix:** report duplicate non-identifier CSS module names (#6199) - Thanks to @serkodev!
+- **fix:** eliminate synthesized ignore for style scoped classes alias (#6194) - Thanks to @serkodev!
+- **fix:** consume synthesized `$event` in compound event handlers (#6193) - Thanks to @serkodev!
+- **fix:** eliminate synthesized ignore in codegen (#6191)
+- **fix:** use `default` slot name for bare `v-slot` (#6190)
+- **fix:** eliminate unmapped codegen diagnostics (#6179)
+- **fix:** prevent template token boundary double-mapping (#6178)
+- **fix:** correct mapping boundary of dot value accesses - Thanks to @KazariEX!
+- **fix:** stop typedef jsdoc from leaking into emitted dts - Thanks to @KazariEX!
+- **perf:** precompile attribute glob matchers (#6227) - Thanks to @Cherry!
+
+### component-meta
+
+- **fix:** stop checking JS Vue files as TS (#6231) - Thanks to @hungateJoseph!
+
+### tsc
+
+- **fix:** prevent watch mode crash on incremental build (#6213) - Thanks to @uturnr!
+
+### typescript-plugin
+
+- **fix:** don't abort reference span fix-up at style-less files (#6192) - Thanks to @serkodev!
+
+### vscode
+
+- **perf:** reduce focus mode overhead (#6187) - Thanks to @serkodev!
+
 ## 3.3.11 (2026-08-21)
 
 ### language-core
