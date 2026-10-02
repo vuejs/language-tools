@@ -621,66 +621,76 @@
 
 ## 3.0.8 (2025-09-23)
 
-### Features
+### language-core
 
-- feat(vscode): introduce `vue.server.path` setting ([b274db2](https://github.com/vuejs/language-tools/commit/b274db264c1083275c5c04958292f406838a71eb))
+- **fix:** initialize the properties of `VueVirtualCode` in the constructor ([9bfbfcc](https://github.com/vuejs/language-tools/commit/9bfbfcc650f1150bb238a9c2eeb9348f33b021b3))
 
-### Bug Fixes
+### language-service
 
-- fix(language-core): initialize properties of `VueVirtualCode` in constructor ([9bfbfcc](https://github.com/vuejs/language-tools/commit/9bfbfcc650f1150bb238a9c2eeb9348f33b021b3)) - Thanks to @KazariEX!
-- fix(vscode): flatten reactivity visualization decorators ([ce82fac](https://github.com/vuejs/language-tools/commit/ce82facfcea64e0eb538f1276bdd6bc7a9fd5dcc)) - Thanks to @KazariEX!
-- fix(vscode): normalize reactivity visualization ranges
-- fix(vscode): patch `typescriptServerPlugin` languages without FS hack
-- fix(language-service): do not provide semantic tokens and document highlights for non-`file` scheme files ([f7bdeaa](https://github.com/vuejs/language-tools/commit/f7bdeaa7bb476df1fc8ff46c504d75c1869b0be9)) - Thanks to @KazariEX!
+- **fix:** do not provide semantic tokens and document highlights for non-`file` scheme files ([f7bdeaa](https://github.com/vuejs/language-tools/commit/f7bdeaa7bb476df1fc8ff46c504d75c1869b0be9))
 
-### Performance
+### typescript-plugin
 
-- perf(typescript-plugin): redo single-file language service for reactivity visualization ([3bfd059](https://github.com/vuejs/language-tools/commit/3bfd059f5c3dadb2b25e1a82f52480e9d74f97bb))
+- **perf:** redo the single-file language service for Reactivity Visualization ([3bfd059](https://github.com/vuejs/language-tools/commit/3bfd059f5c3dadb2b25e1a82f52480e9d74f97bb))
+- **fix:** ensure the TS node corresponds to the mapping range ([7051894](https://github.com/vuejs/language-tools/commit/7051894571ccbe6430d67c6f16c4ce2377f4cd67))
+- **refactor:** externalize the reactivity analysis logic ([cb6eef1](https://github.com/vuejs/language-tools/commit/cb6eef1e66e85b4b4c99a3d44d152bc1b2bba5b1))
 
-### Other Changes
+### vscode
 
-- refactor(typescript-plugin): externalize reactivity analysis logic ([cb6eef1](https://github.com/vuejs/language-tools/commit/cb6eef1e66e85b4b4c99a3d44d152bc1b2bba5b1)) - Thanks to @KazariEX!
+- **feat:** introduce the `vue.server.path` setting ([b274db2](https://github.com/vuejs/language-tools/commit/b274db264c1083275c5c04958292f406838a71eb))
+- **fix:** patch `typescriptServerPlugin` languages without an FS hack ([a40c6d8](https://github.com/vuejs/language-tools/commit/a40c6d8c0ba7b2ae5fcf774098eda11242a49995))
+- **fix:** normalize Reactivity Visualization ranges and flatten its decorators ([bd201b2](https://github.com/vuejs/language-tools/commit/bd201b2b98affb45ee0dac4f7864d586b59855ab)) ([ce82fac](https://github.com/vuejs/language-tools/commit/ce82facfcea64e0eb538f1276bdd6bc7a9fd5dcc))
+- **feat:** adjust the reactivity visualization update interval ([743785b](https://github.com/vuejs/language-tools/commit/743785b55dd33e7a070d0aa9fe725c497bb867c6))
 
 ## 3.0.7 (2025-09-12)
 
-### Bug Fixes
+### language-core
 
-- fix(vscode): show welcome page only when opening a Vue file
-- fix(language-core): generate slot parameters in the same way as interpolation ([15f6feb](https://github.com/vuejs/language-tools/commit/15f6feb408ab01b23518d9dcfa891a1c1be2b5fb)) - Thanks to @KazariEX!
-- fix(language-core): do not generate variables for builtin directives - Thanks to @KazariEX!
+- **fix:** do not generate variables for builtin directives ([dfa4128](https://github.com/vuejs/language-tools/commit/dfa4128731a28009cee25f179ee3b991569e2c0a))
+- **fix:** generate slot parameters in the same way as interpolation ([15f6feb](https://github.com/vuejs/language-tools/commit/15f6feb408ab01b23518d9dcfa891a1c1be2b5fb))
+- **refactor:** transform template code features internally ([740fd20](https://github.com/vuejs/language-tools/commit/740fd20b2c90403f2aab133ca52aed532c8c0867))
 
-### Other Changes
+### language-server
 
-- docs(vscode): add descriptions for premium feature configurations ([d3be337](https://github.com/vuejs/language-tools/commit/d3be3372439252632f16061c1c8fcf5e32eb041c)) - Thanks to @KazariEX!
-- refactor(typescript-plugin): explicitly request parameters ([a66f233](https://github.com/vuejs/language-tools/commit/a66f2330b5aa6f811f571159245c46af0c36c534))
-- chore(lint): enable `@typescript-eslint/no-unnecessary-condition` ([274d3fa](https://github.com/vuejs/language-tools/commit/274d3facbf4d505f7a828633ad816e77718e7777))
-- refactor(language-server): reimplement Reactivity Visualization in typescript plugin ([b8cb0ac](https://github.com/vuejs/language-tools/commit/b8cb0ac472a17ce144cd22b6350a471b3061b764))
-- refactor(language-server): parsing interpolations in extension client ([e6cf377](https://github.com/vuejs/language-tools/commit/e6cf37796e5b6add79e26e2c3c6b897061676a26))
-- refactor(vscode): reimplement Focus Mode based on folding ranges ([541e112](https://github.com/vuejs/language-tools/commit/541e11204dc3058694bd82b6dc657a6177d4ecc7))
-- chore(vscode): disable Focus Mode by default (#5578)
-- refactor(vscode): set delay of reactivity visualization updates to 250ms - Thanks to @KazariEX!
+- **refactor:** reimplement Reactivity Visualization in the typescript plugin, and parse interpolations in the extension client ([b8cb0ac](https://github.com/vuejs/language-tools/commit/b8cb0ac472a17ce144cd22b6350a471b3061b764)) ([e6cf377](https://github.com/vuejs/language-tools/commit/e6cf37796e5b6add79e26e2c3c6b897061676a26))
+
+### typescript-plugin
+
+- **fix:** improve session handling and type safety in protocol handlers ([b96aa7c](https://github.com/vuejs/language-tools/commit/b96aa7c2c4653551bad198ba058fdd2b541434b2))
+- **fix:** enable `responseRequired` in custom requests ([72a400e](https://github.com/vuejs/language-tools/commit/72a400ea3482519b5af98605a3d51d80eb7dfbb8))
+
+### vscode
+
+- **fix:** show the welcome page only when opening a Vue file ([3bcdd35](https://github.com/vuejs/language-tools/commit/3bcdd35d35fa91476483d258c5b7c0dfabc7d098))
+- **refactor:** reimplement Focus Mode based on folding ranges ([541e112](https://github.com/vuejs/language-tools/commit/541e11204dc3058694bd82b6dc657a6177d4ecc7))
+- **refactor:** set the delay of reactivity visualization updates to 250ms ([d56d7d6](https://github.com/vuejs/language-tools/commit/d56d7d6e3e29cb256fcb0bbdc57c3bc62abbd9f5))
 
 ## 3.0.6 (2025-08-20)
 
-### Bug Fixes
+### language-core
 
-- fix(language-core): wrap `:class` expression with parens - Thanks to @KazariEX!
-- fix(vscode): revert Vue 2 versions in `target` option ([b6aad73](https://github.com/vuejs/language-tools/commit/b6aad733315b4d86f6c6378dbc49448fe8e2a44d)) - Thanks to @gxres042!
-- fix(language-service): skip document highlight from tsserver within element tags ([0154301](https://github.com/vuejs/language-tools/commit/015430124044c9667aa851ac30d10a213254f74b)) - Thanks to @KazariEX!
-- fix(component-meta): re-export `vue-component-type-helpers` to `lib/helpers` (#5600)
-- fix(language-core): remove the non-strict `configFileName` default value ([56f1267](https://github.com/vuejs/language-tools/commit/56f12671bf617f6994218d5c9165efbf9610f11f))
-- fix(language-core): don't look for input files during evaluation of vueCompilerOptions (#5598)
-- fix(vscode): improve reliability of handling extension activation contention ([c742a1c](https://github.com/vuejs/language-tools/commit/c742a1c8d29365c7b103ba22716aa8c4a5980537))
-- chore: update volar to 2.4.23 ([0ed384f](https://github.com/vuejs/language-tools/commit/0ed384f9fbe67910cbf48c28f7d9f0cf2939f76c))
-  - Support `js/ts.hover.maximumLength` and `typescript.experimental.expandableHover` (#5577)
+- **fix:** wrap the `:class` expression with parens ([bfdbaf0](https://github.com/vuejs/language-tools/commit/bfdbaf0cd62b87298292408a2f8f45b5e780366b))
+- **fix:** do not look for input files during evaluation of `vueCompilerOptions` ([b3a39de](https://github.com/vuejs/language-tools/commit/b3a39de86d46d96dc35e8b0e6f2049724b041c7a))
+- **fix:** remove the non-strict `configFileName` default value ([56f1267](https://github.com/vuejs/language-tools/commit/56f12671bf617f6994218d5c9165efbf9610f11f))
+- **refactor:** generate setup returns on demand ([882abc0](https://github.com/vuejs/language-tools/commit/882abc0726192574bf45f5b088820782b4d09206))
 
-### Other Changes
+### language-service
 
-- feat(lint): update tsslint config ([374bd7a](https://github.com/vuejs/language-tools/commit/374bd7a50e73c2abfaa014ad70df2660b827628c))
-- refactor(language-core): generate setup returns on demand - Thanks to @KazariEX!
-- chore(language-service): remove `exclude` config suggestion from global types error message ([287b0ca](https://github.com/vuejs/language-tools/commit/287b0ca8750edda9b5914a472889f1dee43880f4)) - Thanks to @Ciallo-Chiaki
-- chore(vscode): update extension display name "Vue.js" ([427eea1](https://github.com/vuejs/language-tools/commit/427eea15d58b49e6e4080da8a65b75ad1c94404c))
-- chore: update `vue-component-type-helpers` to current version ([1b98031](https://github.com/vuejs/language-tools/commit/1b98031bdfdf50265f073cec54d45cd001bc6827)) - Thanks to @kingyue737!
+- **fix:** skip document highlight from tsserver within element tags ([0154301](https://github.com/vuejs/language-tools/commit/015430124044c9667aa851ac30d10a213254f74b))
+
+### component-meta
+
+- **fix:** re-export `vue-component-type-helpers` to `lib/helpers` ([c211f3e](https://github.com/vuejs/language-tools/commit/c211f3e5da2fb8ffcca1d48de282d34810b31d0a))
+
+### vscode
+
+- **fix:** improve reliability of handling extension activation contention ([c742a1c](https://github.com/vuejs/language-tools/commit/c742a1c8d29365c7b103ba22716aa8c4a5980537))
+- **fix:** revert Vue 2 versions in the `target` option ([b6aad73](https://github.com/vuejs/language-tools/commit/b6aad733315b4d86f6c6378dbc49448fe8e2a44d))
+- **refactor:** remove the custom LanguageClient implementation ([abf45c4](https://github.com/vuejs/language-tools/commit/abf45c47c3b76ca37ce3468e567c384f57932d36))
+
+### lint
+
+- **feat:** enable the `eqeqeq` rule ([4488f64](https://github.com/vuejs/language-tools/commit/4488f64f1e5ffc3858fe216677161b3adb26361c))
 
 ## 3.0.5 (2025-08-01)
 
