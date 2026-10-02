@@ -32,7 +32,7 @@
 
 - **perf:** reduce focus mode overhead ([b0936d1](https://github.com/vuejs/language-tools/commit/b0936d1c77b68dcc5d888dfd670fe527c5c8ce0d))
 
-Contributors: @serkodev, @KazariEX, @00200200, @camonunez, @Cherry, @hungateJoseph, @KazariAI, @lazerg, @uturnr, @ValentinYoushkevich, @xia-chao
+Contributors: @johnsoncodehk, @serkodev, @KazariEX, @00200200, @camonunez, @Cherry, @hungateJoseph, @uturnr, @ValentinYoushkevich, @xia-chao
 
 ## 3.3.11 (2026-08-21)
 
@@ -56,7 +56,7 @@ Contributors: @serkodev, @KazariEX, @00200200, @camonunez, @Cherry, @hungateJose
 
 - **feat:** make the welcome page configurable ([3134351](https://github.com/vuejs/language-tools/commit/3134351eadbeedc28c8a05a80f343e3cf1d63048)) ([317ab6a](https://github.com/vuejs/language-tools/commit/317ab6a4056a7cc7ee5b81db27f35278bb7afd23))
 
-Contributors: @serkodev, @pierreedbrg, @KazariAI, @KazariEX
+Contributors: @serkodev, @pierreedbrg
 
 ## 3.3.10 (2026-08-15)
 
@@ -84,7 +84,7 @@ Contributors: @serkodev, @pierreedbrg, @KazariAI, @KazariEX
 - **fix:** isolate custom TypeScript plugin paths between profiles ([47216a9](https://github.com/vuejs/language-tools/commit/47216a9dedfffac526d417f4fc1b1518200671e1))
 - **fix:** update output file name for production ([5616255](https://github.com/vuejs/language-tools/commit/5616255c475158e0b50d7b4c8828761a2d301bf3))
 
-Contributors: @serkodev, @KazariEX, @KazariAI, @lazerg
+Contributors: @serkodev, @KazariEX, @lazerg
 
 ## 3.3.9 (2026-07-31)
 
@@ -105,7 +105,7 @@ Contributors: @serkodev, @KazariEX, @KazariAI, @lazerg
 
 - **feat:** migrate build and tests to `typescript-native-bridge` ([c4e58ea](https://github.com/vuejs/language-tools/commit/c4e58eaaa3c8eec542f161e0a3980bd9396e1c08))
 
-Contributors: @KazariEX, @lazerg, @seanogdev, @so1ve, @valentinpalkovic
+Contributors: @KazariEX, @johnsoncodehk, @lazerg, @seanogdev, @valentinpalkovic
 
 ## 3.3.8 (2026-07-22)
 
@@ -131,7 +131,7 @@ Contributors: @KazariEX, @liangmiQwQ, @WaldemarEnns
 
 - **fix:** filter const globals from template completions ([a618ad5](https://github.com/vuejs/language-tools/commit/a618ad524f5c8c50f81be2482e10f0ca248b54ef))
 
-Contributors: @KazariEX
+Contributors: @KazariEX, @johnsoncodehk
 
 ## 3.3.6 (2026-06-30)
 
@@ -280,7 +280,7 @@ Contributors: @KazariEX, @TRIS-H
 
 - **fix:** replace language service per-method overrides with a proxy ([d03866c](https://github.com/vuejs/language-tools/commit/d03866c3b7cb0e073b60d28c7be45af29f23d87e))
 
-Contributors: @KazariEX, @Gehbt, @kermanx
+Contributors: @KazariEX, @Gehbt
 
 ## 3.2.7 (2026-04-19)
 
@@ -292,7 +292,7 @@ Contributors: @KazariEX, @Gehbt, @kermanx
 
 - **chore:** bump typescript to 6.0.3 ([1e54c84](https://github.com/vuejs/language-tools/commit/1e54c84b33f7733feb54e7667ca161da6c548b85))
 
-Contributors: @KazariEX, @ef81sp
+Contributors: @ef81sp, @KazariEX
 
 ## 3.2.6 (2026-03-17)
 
@@ -309,7 +309,7 @@ Contributors: @KazariEX, @ef81sp
 
 - **fix:** use regex for TS extension patching to support VS Code 1.110+ ([9991d43](https://github.com/vuejs/language-tools/commit/9991d432b2fb25ee4078df5a82bb3154b37fdfd8))
 
-Contributors: @KazariEX, @ascott18, @ebiryu, @serkodev
+Contributors: @KazariEX, @ascott18, @ebiryu
 
 ## 3.2.5 (2026-02-21)
 
@@ -329,7 +329,7 @@ Contributors: @KazariEX, @ascott18, @ebiryu, @serkodev
 
 - **docs:** document all packages with a consistent README structure, and update the tsconfig schema of the `plugins` option ([0c4c509](https://github.com/vuejs/language-tools/commit/0c4c50993563cbbea3f98bc3338cdfb5f86566a7)) ([3ffeab3](https://github.com/vuejs/language-tools/commit/3ffeab31db946d677ba23c1e7ebd853487e80a1b))
 
-Contributors: @KazariEX, @baptistejamin, @Dsaquel, @liangmiQwQ
+Contributors: @baptistejamin, @Dsaquel, @johnsoncodehk, @KazariEX, @liangmiQwQ
 
 ## 3.2.4 (2026-01-26)
 
@@ -341,7 +341,7 @@ Contributors: @KazariEX, @baptistejamin, @Dsaquel, @liangmiQwQ
 
 - **chore:** publish to npm with OIDC ([b826171](https://github.com/vuejs/language-tools/commit/b8261717b6a1c2bb7072259cbd096ae4a0b33a43))
 
-Contributors: @KazariEX, @ghiscoding
+Contributors: @ghiscoding, @KazariEX
 
 ## 3.2.3 (2026-01-23)
 
@@ -383,7 +383,7 @@ Contributors: @KazariEX, @serkodev
 - **feat:** accurate Pug shorthand mapping ([c97cf7d](https://github.com/vuejs/language-tools/commit/c97cf7d9a5482a79355a530727c4e3c84d3bd1b4))
 - **fix:** pre-map HTML to Pug offset attribute ([8fdfe99](https://github.com/vuejs/language-tools/commit/8fdfe99deb9869284fbcd45fc61de0e3aedb6c0a))
 
-Contributors: @KazariEX
+Contributors: @KazariEX, @johnsoncodehk
 
 ## 3.2.1 (2025-12-22)
 
@@ -404,7 +404,7 @@ Contributors: @KazariEX
 
 - **fix:** add the missing tsconfig reference so the package is built and published ([e36fcbd](https://github.com/vuejs/language-tools/commit/e36fcbdd0aef916f6d43a68677086c115edc719b))
 
-Contributors: @serkodev, @KazariEX
+Contributors: @johnsoncodehk, @KazariEX, @serkodev
 
 ## 3.2.0 (2025-12-20)
 
@@ -464,7 +464,7 @@ Contributors: @serkodev, @KazariEX
 - **chore:** upgrade tsslint and vite to pre-release versions ([78f0ce8](https://github.com/vuejs/language-tools/commit/78f0ce8831716ead60de9551b3f655cb05e0f53f))
 - **chore:** delete tests for Vue 3.4 ([27772e5](https://github.com/vuejs/language-tools/commit/27772e52b747e4400b13b885677999c2976b2326))
 
-Contributors: @serkodev, @KazariEX, @aj-dev
+Contributors: @johnsoncodehk, @serkodev, @aj-dev, @KazariEX
 
 ## 3.1.8 (2025-12-09)
 
@@ -489,7 +489,7 @@ Contributors: @serkodev, @KazariEX, @aj-dev
 - **feat:** support formatting with a selected range ([f1a6b52](https://github.com/vuejs/language-tools/commit/f1a6b52b99a654eb3783bf137ac2205e42ec0f62))
 - **feat:** support multiline attribute for `<script>` and `<style>` tags ([3a84ff6](https://github.com/vuejs/language-tools/commit/3a84ff602e336316e11f4e83abfaa9d7ef909ff6))
 
-Contributors: @serkodev
+Contributors: @johnsoncodehk, @serkodev
 
 ## 3.1.7 (2025-12-08)
 
@@ -503,7 +503,7 @@ Contributors: @serkodev
 
 - **feat:** add typescript services types lint rule ([d245142](https://github.com/vuejs/language-tools/commit/d245142725c97a13d49fd4435ed56ab1d3e48245))
 
-Contributors: @serkodev
+Contributors: @johnsoncodehk, @serkodev
 
 ## 3.1.6 (2025-12-06)
 
@@ -548,7 +548,7 @@ Contributors: @serkodev
 - **fix:** patch `isTypeScriptDocument` for VSCode ([0c80460](https://github.com/vuejs/language-tools/commit/0c804608fbf264db9f09ef8d60d188a91bd1b78c))
 - **fix:** handle a leading `<` as an operator in SFC scripts ([1ab9928](https://github.com/vuejs/language-tools/commit/1ab99281bd1057e96cb5134971aa76341f44f362))
 
-Contributors: @serkodev, @KazariEX, @AlexVagrant, @so1ve
+Contributors: @johnsoncodehk, @serkodev, @KazariEX, @RayGuo-ergou
 
 ## 3.1.5 (2025-11-23)
 
@@ -587,7 +587,7 @@ Contributors: @KazariEX, @serkodev, @kada49
 
 - **fix:** prevent auto-insertion of html snippets in template interpolation, and correct the HTMLDocument structure ([4a89b6e](https://github.com/vuejs/language-tools/commit/4a89b6e8e9ad0951e18fa083a3de3f0fb31f3236)) ([66b6332](https://github.com/vuejs/language-tools/commit/66b633206c3314e235a39c8819f7418c86362372))
 
-Contributors: @serkodev, @KazariEX
+Contributors: @serkodev, @johnsoncodehk, @KazariEX
 
 ## 3.1.3 (2025-11-03)
 
@@ -604,7 +604,7 @@ Contributors: @serkodev, @KazariEX
 
 - **fix:** correct syntax highlight in templates with `lang="html"` ([84f0aa5](https://github.com/vuejs/language-tools/commit/84f0aa558d6f45995fd00a47d45632fac84a3a2e))
 
-Contributors: @KazariEX, @serkodev, @so1ve
+Contributors: @KazariEX, @serkodev
 
 ## 3.1.2 (2025-10-25)
 
@@ -621,7 +621,7 @@ Contributors: @KazariEX, @serkodev, @so1ve
 
 - **docs:** fix the `vue-tsc` broken link to the example boilerplate in `README.md` ([fd05a1c](https://github.com/vuejs/language-tools/commit/fd05a1c92c9af63e6af1eab926084efddf7c46c3))
 
-Contributors: @KazariEX, @so1ve, @heyakyra
+Contributors: @RayGuo-ergou, @heyakyra, @johnsoncodehk
 
 ## 3.1.1 (2025-10-07)
 
@@ -646,7 +646,7 @@ Contributors: @KazariEX, @so1ve, @heyakyra
 - **fix:** determine if a variable is `Ref` by the `RefSymbol` property ([49aa565](https://github.com/vuejs/language-tools/commit/49aa565410cc46df4721b14daa152be53741c7be))
 - **fix:** place `__vue__` in the project instead of the program ([7a75463](https://github.com/vuejs/language-tools/commit/7a75463eb78ade79580b83bf82015c79364ac887))
 
-Contributors: @KazariEX
+Contributors: @KazariEX, @johnsoncodehk
 
 ## 3.1.0 (2025-09-28)
 
@@ -667,7 +667,7 @@ Contributors: @KazariEX
 
 - **refactor:** drop Vue 2 support ([aaa1c68](https://github.com/vuejs/language-tools/commit/aaa1c68eab41b53a62a11767c7a290ac84e61626))
 
-Contributors: @KazariEX, @so1ve
+Contributors: @KazariEX, @johnsoncodehk
 
 ## 3.0.10 (2025-10-25)
 
@@ -675,11 +675,15 @@ Contributors: @KazariEX, @so1ve
 
 - **fix:** place `__vue__` in project instead of program ([7a75463](https://github.com/vuejs/language-tools/commit/7a75463eb78ade79580b83bf82015c79364ac887))
 
+Contributors: @johnsoncodehk
+
 ## 3.0.9 (2025-10-07)
 
 ### language-server
 
 - **feat:** support `--tsdk` command line arg ([77430b1](https://github.com/vuejs/language-tools/commit/77430b1795f9e49e7d66a11acdb58be2eb5cd993))
+
+Contributors: @johnsoncodehk
 
 ## 3.0.8 (2025-09-23)
 
@@ -704,7 +708,7 @@ Contributors: @KazariEX, @so1ve
 - **fix:** normalize Reactivity Visualization ranges and flatten its decorators ([bd201b2](https://github.com/vuejs/language-tools/commit/bd201b2b98affb45ee0dac4f7864d586b59855ab)) ([ce82fac](https://github.com/vuejs/language-tools/commit/ce82facfcea64e0eb538f1276bdd6bc7a9fd5dcc))
 - **feat:** adjust the reactivity visualization update interval ([743785b](https://github.com/vuejs/language-tools/commit/743785b55dd33e7a070d0aa9fe725c497bb867c6))
 
-Contributors: @KazariEX
+Contributors: @johnsoncodehk, @KazariEX
 
 ## 3.0.7 (2025-09-12)
 
@@ -729,7 +733,7 @@ Contributors: @KazariEX
 - **refactor:** reimplement Focus Mode based on folding ranges ([541e112](https://github.com/vuejs/language-tools/commit/541e11204dc3058694bd82b6dc657a6177d4ecc7))
 - **refactor:** set the delay of reactivity visualization updates to 250ms ([d56d7d6](https://github.com/vuejs/language-tools/commit/d56d7d6e3e29cb256fcb0bbdc57c3bc62abbd9f5))
 
-Contributors: @KazariEX
+Contributors: @johnsoncodehk, @KazariEX
 
 ## 3.0.6 (2025-08-20)
 
@@ -758,7 +762,7 @@ Contributors: @KazariEX
 
 - **feat:** enable the `eqeqeq` rule ([4488f64](https://github.com/vuejs/language-tools/commit/4488f64f1e5ffc3858fe216677161b3adb26361c))
 
-Contributors: @KazariEX, @gxres042, @kingyue737, @unsplusmn
+Contributors: @johnsoncodehk, @KazariEX, @gxres042
 
 ## 3.0.5 (2025-08-01)
 
@@ -788,7 +792,7 @@ Contributors: @KazariEX, @gxres042, @kingyue737, @unsplusmn
 - **fix:** do not delay the execution of `restartExtensionHost` ([fba08b3](https://github.com/vuejs/language-tools/commit/fba08b394c33295699b0ac01cd4d45d344824a6c))
 - **fix:** add `class` scope fallback for `component` semantic tokens ([dff519a](https://github.com/vuejs/language-tools/commit/dff519af4505d9935cbba80fe3ba5234571e23fa))
 
-Contributors: @KazariEX, @unsplusmn
+Contributors: @KazariEX, @johnsoncodehk
 
 ## 3.0.4 (2025-07-25)
 
@@ -824,7 +828,7 @@ Contributors: @KazariEX, @Akryum
 
 - **fix:** prompt manual reload in remote envs ([5023ecf](https://github.com/vuejs/language-tools/commit/5023ecf6547fa9cbb692170dfc48c0c32103ea4d))
 
-Contributors: @KazariEX, @escaton
+Contributors: @KazariEX, @escaton, @johnsoncodehk
 
 ## 3.0.2 (2025-07-18)
 
@@ -862,7 +866,7 @@ Contributors: @KazariEX, @escaton
 - **fix:** use the original webview panel api instead of `useWebviewPanel` ([5b47f4f](https://github.com/vuejs/language-tools/commit/5b47f4f57332eade40e575e4ba537855a757f3fb))
 - **refactor:** make welcome page code public and add premium feature settings ([32f91d4](https://github.com/vuejs/language-tools/commit/32f91d4fe712a042bed7d6f9aa1e41badf8db0c4)) ([d91bc24](https://github.com/vuejs/language-tools/commit/d91bc24b910f01be3d96e9255939033516116e66))
 
-Contributors: @KazariEX
+Contributors: @KazariEX, @johnsoncodehk
 
 ## 3.0.1 (2025-07-02)
 
@@ -879,7 +883,7 @@ Contributors: @KazariEX
 
 - **chore:** update volar to 2.4.17 ([8540bef](https://github.com/vuejs/language-tools/commit/8540bef1cf8b8ad16dc94c02e2142b9e520a1633))
 
-Contributors: @KazariEX, @AndreyYolkin
+Contributors: @KazariEX, @AndreyYolkin, @johnsoncodehk
 
 ## 3.0.0 (2025-07-01)
 
@@ -928,4 +932,4 @@ Contributors: @KazariEX, @AndreyYolkin
 - **refactor:** rename configuration keys from `complete` to `suggest` for clarity ([d494495](https://github.com/vuejs/language-tools/commit/d49449538788826cefa81e15266e7635b415d382))
 - **chore:** change the display name to "Vue (Official)" ([8fbef72](https://github.com/vuejs/language-tools/commit/8fbef726719c71965ade61d2f5ab3b1d6873c6e8))
 
-Contributors: @KazariEX, @Akryum, @alex-snezhko, @brc-dd, @Dylancyclone, @Eazash, @kshksdrt, @lukashass, @marktlinn, @menuRivera, @RayGuo-ergou, @so1ve, @tomblachut, @violet-miku, @zhiyuanzmj, @zyoshoka
+Contributors: @KazariEX, @johnsoncodehk, @alex-snezhko, @Dylancyclone, @RayGuo-ergou, @violet-miku, @zhiyuanzmj
