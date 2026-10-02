@@ -31,6 +31,19 @@ defineModel('quux', {
 	},
 });
 
+const grault = defineModel<string>('grault', {
+	default(props) {
+		exactType(props.foo, {} as string);
+		return props.foo;
+	},
+});
+
+defineModel('garply', {
+	async default(props) {
+		exactType(props.foo, {} as string);
+	},
+});
+
 defineModel<number>('corge', {
 	// @ts-expect-error the return type is checked since vuejs/core#14968
 	default: (props) => props.foo,
@@ -39,4 +52,5 @@ defineModel<number>('corge', {
 exactType(bar.value, {} as string);
 exactType(baz.value, {} as string);
 exactType(qux.value, {} as string);
+exactType(grault.value, {} as string);
 </script>
