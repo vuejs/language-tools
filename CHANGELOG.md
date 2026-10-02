@@ -1,3 +1,5 @@
+# Changelog
+
 ## 3.3.12 (2026-10-02)
 
 ### language-core
