@@ -1,0 +1,13 @@
+import { describe, expect, it } from 'vitest';
+import { formatComponentMeta } from '../../lib/plugins/vue-template/componentHoverDocs';
+import { mockComponentMeta } from './mock-component-meta';
+
+describe('componentHoverDocs.ts', () => {
+	describe('snapshots', () => {
+		it.each(['table', 'markdown', 'jsdoc'] as const)('%s', format => {
+			const result = formatComponentMeta(mockComponentMeta, format);
+
+			expect(result).toMatchSnapshot();
+		});
+	});
+});
