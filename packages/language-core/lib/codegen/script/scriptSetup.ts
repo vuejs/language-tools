@@ -159,6 +159,7 @@ export function* generateSetupFunction(
 		// `props => ...` and typed models (checked against `(props: Data) => T`) work
 		if (defaultValue) {
 			transforms.push(
+				// the leading parenthesis keeps the helper name off the mapped start of `props => ...`
 				insert(defaultValue.start, function*() {
 					yield `(${names.asDefaultFactory}(`;
 				}),
@@ -168,16 +169,16 @@ export function* generateSetupFunction(
 			);
 		}
 		else if (defaultMethod) {
-			// default(props) {} -> default: (__VLS_asDefaultFactory(function(props) {}, props))
+			// default(props) {} -> default: __VLS_asDefaultFactory(function(props) {}, props)
 			transforms.push(
 				insert(defaultMethod.start, function*() {
-					yield `default: (${names.asDefaultFactory}(`;
+					yield `default: ${names.asDefaultFactory}(`;
 				}),
 				replace(defaultMethod.name.start, defaultMethod.name.end, function*() {
 					yield `function`;
 				}),
 				insert(defaultMethod.end, function*() {
-					yield `, ${propsName}))`;
+					yield `, ${propsName})`;
 				}),
 			);
 		}
