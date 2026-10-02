@@ -424,183 +424,188 @@
 
 ## 3.1.8 (2025-12-09)
 
-### Features
+### language-core
 
-- feat(vscode): support multiline attribute for `<script>` and `<style>` tag ([3a84ff6](https://github.com/vuejs/language-tools/commit/3a84ff602e336316e11f4e83abfaa9d7ef909ff6)) - Thanks to @serkodev!
-- feat(vscode): support format with selected range ([f1a6b52](https://github.com/vuejs/language-tools/commit/f1a6b52b99a654eb3783bf137ac2205e42ec0f62)) - Thanks to @serkodev!
-- feat(language-service): add tsconfig-based document link support for Pug
+- **fix:** restore default import bindings for template scope ([7d642d1](https://github.com/vuejs/language-tools/commit/7d642d193442d77050edfda6408a37330e36b302))
+- **fix:** limit the range of parseDiagnostics checks ([4688357](https://github.com/vuejs/language-tools/commit/4688357a98101d5af148d2822275301f3e623d12))
+- **fix:** avoid generating component options within the setup scope ([85c5cf0](https://github.com/vuejs/language-tools/commit/85c5cf092ad9cc3ec1ef3b3f8466ee824632754a))
+- **fix:** fault-tolerant complex export expressions ([fe687a6](https://github.com/vuejs/language-tools/commit/fe687a63639a013d7776b2f0922f87a0a012923d))
+- **perf:** dedupe component options generation ([b071638](https://github.com/vuejs/language-tools/commit/b0716386da76786c637f36b8391cec3491255ae0))
 
-### Bug Fixes
+### language-service
 
-- fix(language-core): limit the range of parseDiagnostics checks (#5823)
-- fix(language-core): restore default import bindings for template scope ([7d642d1](https://github.com/vuejs/language-tools/commit/7d642d193442d77050edfda6408a37330e36b302)) - Thanks to @serkodev!
-- fix(typescript-plugin): get `preferences` and `formatOptions` in tsserver ([8b9d74c](https://github.com/vuejs/language-tools/commit/8b9d74cab507a4781d3e61459f5f44b701eebf32))
-- fix(language-core): avoid generating component options within the setup scope ([85c5cf0](https://github.com/vuejs/language-tools/commit/85c5cf092ad9cc3ec1ef3b3f8466ee824632754a))
+- **feat:** add tsconfig-based document link support for Pug ([283e4f1](https://github.com/vuejs/language-tools/commit/283e4f10137439bd03df289bf1f20067cf969960))
 
-### Other Changes
+### typescript-plugin
 
-- perf(language-core): dedupe component options generation ([b071638](https://github.com/vuejs/language-tools/commit/b0716386da76786c637f36b8391cec3491255ae0))
+- **fix:** get `preferences` and `formatOptions` in tsserver ([8b9d74c](https://github.com/vuejs/language-tools/commit/8b9d74cab507a4781d3e61459f5f44b701eebf32))
+
+### vscode
+
+- **feat:** support formatting with a selected range ([f1a6b52](https://github.com/vuejs/language-tools/commit/f1a6b52b99a654eb3783bf137ac2205e42ec0f62))
+- **feat:** support multiline attribute for `<script>` and `<style>` tags ([3a84ff6](https://github.com/vuejs/language-tools/commit/3a84ff602e336316e11f4e83abfaa9d7ef909ff6))
 
 ## 3.1.7 (2025-12-08)
 
-### Features
+### language-core
 
-- feat(language-core): cache virtual code by `scriptId` ([b05c012](https://github.com/vuejs/language-tools/commit/b05c0123fb3525622103db826bad5ca3177b2a9a)) - Thanks to @serkodev!
+- **feat:** cache virtual code by `scriptId` ([b05c012](https://github.com/vuejs/language-tools/commit/b05c0123fb3525622103db826bad5ca3177b2a9a))
+- **fix:** avoid invalid `__VLS_Slots` generation and generate the script separator on demand ([9608709](https://github.com/vuejs/language-tools/commit/9608709b12e5a67b8c2457d75705b0eaddd03fb4)) ([c65e5a5](https://github.com/vuejs/language-tools/commit/c65e5a5bf3b47a401b2129ad5451998d691b4a66))
+- **fix:** avoid using the `Identifier.text` property ([4a947ef](https://github.com/vuejs/language-tools/commit/4a947ef450df169287142364f85727177ed242e6))
 
-### Bug Fixes
+### lint
 
-- fix(language-core): avoid using `Identifier.text` property (#5810)
-- fix(language-core): generate script separator on demand ([c65e5a5](https://github.com/vuejs/language-tools/commit/c65e5a5bf3b47a401b2129ad5451998d691b4a66))
-- fix(language-core): avoid invalid `__VLS_Slots` generation
-
-### Other Changes
-
-- feat(lint): add typescript services types lint rule ([d245142](https://github.com/vuejs/language-tools/commit/d245142725c97a13d49fd4435ed56ab1d3e48245)) - Thanks to @serkodev!
+- **feat:** add typescript services types lint rule ([d245142](https://github.com/vuejs/language-tools/commit/d245142725c97a13d49fd4435ed56ab1d3e48245))
 
 ## 3.1.6 (2025-12-06)
 
-### Features
+### language-core
 
-- feat(vscode): add settings to enable per-block formatting ([56ae259](https://github.com/vuejs/language-tools/commit/56ae259dbf4c3d1dd07cf73097b06363114d50bb)) - Thanks to @serkodev!
-- feat(language-service): enhanced component auto import ([15cc24e](https://github.com/vuejs/language-tools/commit/15cc24e74a70f11897605633320edfd48223e1ae))
-- feat(component-meta): add component name and description fields ([a1b8b71](https://github.com/vuejs/language-tools/commit/a1b8b71e49befbb928ea340f9e20a2eee349fbc6))
-- feat(typescript-plugin): add support for template "Add Import" quick fix ([b8503cd](https://github.com/vuejs/language-tools/commit/b8503cdb0b922427caf7e0ff874d6e956f57a12e)) - Thanks to @serkodev!
-- feat(typescript-plugin): mapping JSDoc information from `<script setup>` ([732cb86](https://github.com/vuejs/language-tools/commit/732cb8673acb3d9c487ef74b20f77b6e9e26c67a))
-- feat(vscode): support tsdk path for Eclipse Theia ([5bf90db](https://github.com/vuejs/language-tools/commit/5bf90db643405c942042d3c03ec3db97d443c6b3)) - Thanks to @serkodev!
+- **fix:** `Prettify<T>` caused generic props to be inferred as `unknown` ([adeba0a](https://github.com/vuejs/language-tools/commit/adeba0a746f3fa5a058733388a563dff754394b4))
+- **fix:** infer the `$el` type for generic components using `inferComponentDollarEl` ([54a19d4](https://github.com/vuejs/language-tools/commit/54a19d46f12e93bf1fc55b6c2a98a9ce5794dd15))
+- **fix:** ensure `<script>` content generates before `<script setup>`, and generate `__VLS_TypePropsToOption` on demand ([15c3005](https://github.com/vuejs/language-tools/commit/15c30055f14736f7e664dff9d59a2f6f1a26e823)) ([2f2352d](https://github.com/vuejs/language-tools/commit/2f2352db84effb998b26636c7010e20342efa117))
+- **fix:** support `v-bind="$attrs"` navigation when `inferTemplateDollarAttrs` is disabled ([d747456](https://github.com/vuejs/language-tools/commit/d7474566e8f1c4edd49023c634e638c280b57433))
+- **fix:** generate `{}` instead of its string value for `style="..."` ([97c239d](https://github.com/vuejs/language-tools/commit/97c239dd757289b5481f35d5aecd4179d311ca7b))
+- **fix:** completion for the second scoped class name ([9fc27c5](https://github.com/vuejs/language-tools/commit/9fc27c5b56d9cf3e6abf4d74030564c7bd9c98ff))
+- **fix:** remove the `bypassDefineComponent` hack for better JS support ([14f63fd](https://github.com/vuejs/language-tools/commit/14f63fda91b176ee855f2be3e3b7df73f4689e0d))
+- **fix:** add compatibility for the `vapor` attr ([b2ebfe0](https://github.com/vuejs/language-tools/commit/b2ebfe0834631603792fa797c02da3ccd18d1929))
+- **fix:** ensure type consistency for optional boolean props ([b2ca816](https://github.com/vuejs/language-tools/commit/b2ca816fb9442daa795ab9dd37fe0322b54e5bba))
+- **fix:** AST fault tolerance for key binding on template, and correct inheritance of combine tokens ([9f3d8cc](https://github.com/vuejs/language-tools/commit/9f3d8cc0cf2c795782eb0ea4a28742a12d4f1151)) ([97e5d01](https://github.com/vuejs/language-tools/commit/97e5d01507606071937b884110bf0e39d345574b))
+- **refactor:** normalize the template AST, split style codegen and trim codegen options ([147c69a](https://github.com/vuejs/language-tools/commit/147c69accba237e26950d0c94d14be90e09a4253)) ([343743f](https://github.com/vuejs/language-tools/commit/343743f475a44e0cba88abdd3412d9a74a866690)) ([f4a9c50](https://github.com/vuejs/language-tools/commit/f4a9c507b317c9fc4b710b28ba152a5029851235))
+- **refactor:** remove legacy template ref navigation support and the `__VLS_unref` helper ([748a658](https://github.com/vuejs/language-tools/commit/748a658e68ed0cb20ffa525f8df13adcc8984d9f)) ([05dd36a](https://github.com/vuejs/language-tools/commit/05dd36a617fbe1699d58371018aefb7d915878d1))
 
-### Bug Fixes
+### component-meta
 
-- fix(language-service): ignore intrinsic elements when detecting tag name casing ([522f237](https://github.com/vuejs/language-tools/commit/522f237f7ac8f91873259bc3db5e14228b789e64))
-- fix(language-core): `createParsedCommandLineByJson` parsed incorrect options since v3.1.5 (https://github.com/vuejs/language-tools/pull/5768#issuecomment-3569623037)
-- fix(vscode): make `vue.server.path` compatible with Windows ([39ef351](https://github.com/vuejs/language-tools/commit/39ef35143863d7493f32eb009092d27da5286549))
-- fix(vscode): analyze interpolation highlight ranges based on AST ([a732962](https://github.com/vuejs/language-tools/commit/a7329627e4faa03d289ef657418ca4f36319f575))
-- fix(vscode): sync latest vscode html language configuration ([bab2162](https://github.com/vuejs/language-tools/commit/bab2162d845cb36c3398f7d13fda6545af244bb4))
-- fix(language-core): enhance `getVIfNode` to support `v-else-if` directives ([5548db0](https://github.com/vuejs/language-tools/commit/5548db0f54bab65f311f375b313da96a565525d3)) - Thanks to @serkodev!
-- fix(language-core): generate `{}` instead of its string value for `style="..."` ([97c239d](https://github.com/vuejs/language-tools/commit/97c239dd757289b5481f35d5aecd4179d311ca7b)) - Thanks to @KazariEX!
-- fix(language-core): `v-bind="$attrs"` loses navigation when `inferTemplateDollarAttrs` is disabled ([d747456](https://github.com/vuejs/language-tools/commit/d7474566e8f1c4edd49023c634e638c280b57433))
-- fix(language-service): skip `const props =` completion in StringLiteral ([4a16e57](https://github.com/vuejs/language-tools/commit/4a16e575015446f7ba67f82266827771d417ec24))
-- fix(language-core): unable to get completion for the second scoped class name
-- fix(language-service): format components with HTML void-element names ([52e3d5e](https://github.com/vuejs/language-tools/commit/52e3d5ecc1c71ce790d357466da52ba7315b5bf4)) - Thanks to @serkodev!
-- fix(language-service): properly handle promise when resolving CSS links (#5785)
-- fix(language-core): infer `$el` type for generic components using `inferComponentDollarEl` ([54a19d4](https://github.com/vuejs/language-tools/commit/54a19d46f12e93bf1fc55b6c2a98a9ce5794dd15))
-- fix(language-core): ensure `<script>` content generates before `<script setup>` ([15c3005](https://github.com/vuejs/language-tools/commit/15c30055f14736f7e664dff9d59a2f6f1a26e823))
-- fix(language-core): remove `bypassDefineComponent` hack for better JS support (#4876) (#5379)
-- fix(language-core): `Prettify<T>` caused generic props to get inferred as `unknown` ([adeba0a](https://github.com/vuejs/language-tools/commit/adeba0a746f3fa5a058733388a563dff754394b4)) - Thanks to @so1ve!
-- fix(vscode): handle leading `<` as operator in SFC scripts ([1ab9928](https://github.com/vuejs/language-tools/commit/1ab99281bd1057e96cb5134971aa76341f44f362)) - Thanks to @serkodev!
-- fix(vscode): patch `isTypeScriptDocument` in VSCode for `typescript.preferences.autoImportSpecifierExcludeRegexes` config support (#5364)
-- fix(language-core): ensure type consistency for optional boolean props ([b2ca816](https://github.com/vuejs/language-tools/commit/b2ca816fb9442daa795ab9dd37fe0322b54e5bba))
-- fix(language-core): add compatibility for `vapor` attr (#5496)
-- fix(language-core): AST fault tolerance for key binding on template ([9f3d8cc](https://github.com/vuejs/language-tools/commit/9f3d8cc0cf2c795782eb0ea4a28742a12d4f1151))
+- **feat:** add component name and description fields ([a1b8b71](https://github.com/vuejs/language-tools/commit/a1b8b71e49befbb928ea340f9e20a2eee349fbc6))
+- **refactor:** deprecate the `rawType` and `__internal__.tsLs` fields ([487dc29](https://github.com/vuejs/language-tools/commit/487dc29ec82923676bb028f933e8e5f919fa5e2a))
 
-### Performance
+### language-service
 
-- perf(language-core): reuse ts asts for `:class` - Thanks to @KazariEX!
+- **feat:** enhanced component auto import ([15cc24e](https://github.com/vuejs/language-tools/commit/15cc24e74a70f11897605633320edfd48223e1ae))
+- **fix:** format components with HTML void-element names ([52e3d5e](https://github.com/vuejs/language-tools/commit/52e3d5ecc1c71ce790d357466da52ba7315b5bf4))
+- **fix:** properly handle the promise when resolving CSS links ([07db66a](https://github.com/vuejs/language-tools/commit/07db66a23f57842622c21b55972cacfeb071d0c3))
+- **fix:** skip `const props =` completion in StringLiteral ([4a16e57](https://github.com/vuejs/language-tools/commit/4a16e575015446f7ba67f82266827771d417ec24))
 
-### Other Changes
+### typescript-plugin
 
-- Revert "refactor(typescript-plugin): remove go to definition trick for auto imported components ([71115fb](https://github.com/vuejs/language-tools/commit/71115fbed08db8b294295733ffdf7549ee2cc0aa))"
-- docs(typescript-plugin): update Neovim configuration link ([5b0b97e](https://github.com/vuejs/language-tools/commit/5b0b97edba017e499ad66b6cd529bcc30a32854c)) - Thanks to @AlexVagrant!
-- refactor(language-core): normalize template AST ([147c69a](https://github.com/vuejs/language-tools/commit/147c69accba237e26950d0c94d14be90e09a4253))
-- refactor(language-core): split style codegen ([343743f](https://github.com/vuejs/language-tools/commit/343743f475a44e0cba88abdd3412d9a74a866690))
-- refactor(language-core): remove `debugger` from virtual code for tsslint compatibility
-- refactor(language-core): remove legacy navigation support in `ref="xxx"`
-- refactor(language-core): reduce codegen options ([f4a9c50](https://github.com/vuejs/language-tools/commit/f4a9c507b317c9fc4b710b28ba152a5029851235))
-- refactor(component-meta): deprecate `rawType` and `__internal__.tsLs` ([487dc29](https://github.com/vuejs/language-tools/commit/487dc29ec82923676bb028f933e8e5f919fa5e2a))
-- chore: update volar to 2.4.26 ([9acb5b0](https://github.com/vuejs/language-tools/commit/9acb5b01f9f15bbfdae4d9a0971c13f3068b7347))
-  - feat: fallback resolution mode for `createResolveModuleName` (https://github.com/volarjs/volar.js/pull/293) (#5644) - Thanks to @serkodev!
+- **feat:** map JSDoc information from `<script setup>` ([732cb86](https://github.com/vuejs/language-tools/commit/732cb8673acb3d9c487ef74b20f77b6e9e26c67a))
+- **feat:** add support for the template "Add Import" quick fix ([b8503cd](https://github.com/vuejs/language-tools/commit/b8503cdb0b922427caf7e0ff874d6e956f57a12e))
+- **fix:** add nullish guards before accessing `ts.CompletionEntryData` ([e768518](https://github.com/vuejs/language-tools/commit/e76851828659137e47f303a086620023d3151fc8))
+- **fix:** resolve the component type without `__VLS_components` ([b6254ec](https://github.com/vuejs/language-tools/commit/b6254ec47c617b498e4033b6d372c7081f04dfaa))
+
+### vscode
+
+- **feat:** add settings to enable per-block formatting ([56ae259](https://github.com/vuejs/language-tools/commit/56ae259dbf4c3d1dd07cf73097b06363114d50bb))
+- **feat:** support the tsdk path for Eclipse Theia ([5bf90db](https://github.com/vuejs/language-tools/commit/5bf90db643405c942042d3c03ec3db97d443c6b3))
+- **fix:** patch `isTypeScriptDocument` for VSCode ([0c80460](https://github.com/vuejs/language-tools/commit/0c804608fbf264db9f09ef8d60d188a91bd1b78c))
+- **fix:** handle a leading `<` as an operator in SFC scripts ([1ab9928](https://github.com/vuejs/language-tools/commit/1ab99281bd1057e96cb5134971aa76341f44f362))
 
 ## 3.1.5 (2025-11-23)
 
-### Features
+### language-core
 
-- feat(language-service): support tsconfig path alias resolution for document links ([d007a9c](https://github.com/vuejs/language-tools/commit/d007a9c98826348ff8b7d45fd4a40d3505b1e3de)) - Thanks to @KazariEX!
-- feat(language-server): add `serverInfo` to initialized result ([0b8a880](https://github.com/vuejs/language-tools/commit/0b8a8803d56a5c18f224590efa15e8319b5f3ea2)) - Thanks to @kada49!
+- **fix:** `defineModel` for generic component types ([5d841f4](https://github.com/vuejs/language-tools/commit/5d841f4209fef36314f77e2cd057fafd57cce02a))
+- **fix:** avoid a `vue-tsc` crash during single file checks ([11a448c](https://github.com/vuejs/language-tools/commit/11a448c419e4dcacf7d7263c78d72029202eb190))
+- **fix:** dispose virtual code correctly ([060e8fa](https://github.com/vuejs/language-tools/commit/060e8fa89d378fc90fa731ff61be3b820fac4be5))
+- **fix:** get updated template content from the correct source, and dedupe single root element types ([b38301d](https://github.com/vuejs/language-tools/commit/b38301d6250a4dfa114d52747b0c80129f03ed0d)) ([45557c9](https://github.com/vuejs/language-tools/commit/45557c9b63cf9d6184025fa8b63da1fc70527797))
+- **fix:** do not generate variable accesses for template refs used in `v-bind` shorthand, and remove special codegen logic for the `style` attribute ([26b464f](https://github.com/vuejs/language-tools/commit/26b464f1c0e3439b367246d3ec9c793cb59cda0e)) ([41f1ffc](https://github.com/vuejs/language-tools/commit/41f1ffcd2f090aef6addd0c4955d629f0b9514ac))
+- **perf:** skip unnecessary runtime codegen steps ([4a9932c](https://github.com/vuejs/language-tools/commit/4a9932c531cec8c23b7d5d1e6f24bbb113b838b5))
 
-### Bug Fixes
+### language-server
 
-- fix(vscode): correct highlighting of tags starting with `template` ([d937a84](https://github.com/vuejs/language-tools/commit/d937a84e41bdf3b64b6f0330dc2ddf1e3240c09d)) - Thanks to @serkodev and @KazariEX!
-- fix(language-core): allow loose props checks on generic components ([5d841f4](https://github.com/vuejs/language-tools/commit/5d841f4209fef36314f77e2cd057fafd57cce02a)) - Thanks to @serkodev!
-- fix(language-core): avoid `vue-tsc` crash during single file checks ([11a448c](https://github.com/vuejs/language-tools/commit/11a448c419e4dcacf7d7263c78d72029202eb190)) - Thanks to @KazariEX!
-- fix(language-core): dispose virtual code correctly - Thanks to @KazariEX!
+- **feat:** add `serverInfo` to the initialized result ([0b8a880](https://github.com/vuejs/language-tools/commit/0b8a8803d56a5c18f224590efa15e8319b5f3ea2))
 
-### Performance
+### language-service
 
-- perf(language-core): skip unnecessary runtime codegen step ([4a9932c](https://github.com/vuejs/language-tools/commit/4a9932c531cec8c23b7d5d1e6f24bbb113b838b5)) - Thanks to @KazariEX!
+- **feat:** support tsconfig path alias resolution for document links ([d007a9c](https://github.com/vuejs/language-tools/commit/d007a9c98826348ff8b7d45fd4a40d3505b1e3de))
+
+### vscode
+
+- **fix:** correct highlighting of tags starting with `template` ([d937a84](https://github.com/vuejs/language-tools/commit/d937a84e41bdf3b64b6f0330dc2ddf1e3240c09d))
 
 ## 3.1.4 (2025-11-16)
 
-### Bug Fixes
+### language-core
 
-- fix(language-service): prevent auto-insertion of html snippets in template interpolation ([4a89b6e](https://github.com/vuejs/language-tools/commit/4a89b6e8e9ad0951e18fa083a3de3f0fb31f3236)) - Thanks to @serkodev!
-- fix(language-service): strip interpolations from document passed to html service - Thanks to @KazariEX!
-- fix(language-core): report unused `@ts-expect-error` directive on components with loose props checks ([6646704](https://github.com/vuejs/language-tools/commit/66467047ab3fe652140e24200e20cdbc9659b7b4)) - Thanks to @serkodev and @KazariEX!
-- fix(language-core): respect directive comments before `v-else` ([2abec30](https://github.com/vuejs/language-tools/commit/2abec30f3a0d75a6ddda10537320f9f9d5bd1898)) - Thanks to @serkodev and @KazariEX!
+- **fix:** report the unused `@vue-expect-error` directive on components with loose props checks, including in `v-else` branches ([6646704](https://github.com/vuejs/language-tools/commit/66467047ab3fe652140e24200e20cdbc9659b7b4)) ([f66d3d1](https://github.com/vuejs/language-tools/commit/f66d3d18f5d2fd7feab8ec0338254c146c17ee93))
+- **fix:** respect directive comments before `v-else` ([2abec30](https://github.com/vuejs/language-tools/commit/2abec30f3a0d75a6ddda10537320f9f9d5bd1898))
+- **refactor:** re-implement component references by codegen ([6ccf06c](https://github.com/vuejs/language-tools/commit/6ccf06c58bae28cf94d7ba77c484e1ed8160d90c))
 
-### Other Changes
+### language-service
 
-- refactor(language-core): re-implement component references by codegen ([6ccf06c](https://github.com/vuejs/language-tools/commit/6ccf06c58bae28cf94d7ba77c484e1ed8160d90c)) - Thanks to @KazariEX!
-- refactor(language-core): simplify calculation of full interpolation content - Thanks to @KazariEX!
+- **fix:** prevent auto-insertion of html snippets in template interpolation, and correct the HTMLDocument structure ([4a89b6e](https://github.com/vuejs/language-tools/commit/4a89b6e8e9ad0951e18fa083a3de3f0fb31f3236)) ([66b6332](https://github.com/vuejs/language-tools/commit/66b633206c3314e235a39c8819f7418c86362372))
 
 ## 3.1.3 (2025-11-03)
 
-### Features
+### language-core
 
-- feat(typescript-plugin): allow triggering file references on `<template>` ([1e7fe05](https://github.com/vuejs/language-tools/commit/1e7fe05f6bdce74740b916a47975e8cce519cc75)) - Thanks to @KazariEX!
+- **refactor:** generate `__VLS_elements` into global types and rename it to `__VLS_intrinsics` ([9a2857e](https://github.com/vuejs/language-tools/commit/9a2857e63430f2f50c0744fd2efc5ab715701f2f)) ([50a00f6](https://github.com/vuejs/language-tools/commit/50a00f678cfd69af2c03d5d9361013b9e28aeebb))
 
-### Bug Fixes
+### typescript-plugin
 
-- fix(vscode): correct syntax highlight in template with `lang="html"` ([84f0aa5](https://github.com/vuejs/language-tools/commit/84f0aa558d6f45995fd00a47d45632fac84a3a2e)) - Thanks to @serkodev!
+- **feat:** allow triggering file references on `<template>` ([1e7fe05](https://github.com/vuejs/language-tools/commit/1e7fe05f6bdce74740b916a47975e8cce519cc75))
+- **refactor:** remove the go to definition trick for auto imported components ([71115fb](https://github.com/vuejs/language-tools/commit/71115fbed08db8b294295733ffdf7549ee2cc0aa))
 
-### Other Changes
+### vscode
 
-- refactor(language-core): generate intrinsic elements variable into global types ([9a2857e](https://github.com/vuejs/language-tools/commit/9a2857e63430f2f50c0744fd2efc5ab715701f2f)) - Thanks to @KazariEX!
-- refactor(typescript-plugin): remove go to definition trick for auto imported components ([71115fb](https://github.com/vuejs/language-tools/commit/71115fbed08db8b294295733ffdf7549ee2cc0aa)) - Thanks to @KazariEX!
+- **fix:** correct syntax highlight in templates with `lang="html"` ([84f0aa5](https://github.com/vuejs/language-tools/commit/84f0aa558d6f45995fd00a47d45632fac84a3a2e))
 
 ## 3.1.2 (2025-10-25)
 
-### Bug Fixes
+### language-core
 
-- fix(component-meta): import type helpers by relative path
-- fix(language-core): fix syntax error when `propTypes` has no elements ([426f8d5](https://github.com/vuejs/language-tools/commit/426f8d54c9aa36c4397f6cbe0c89f2077bd4a4ff)) - Thanks to @so1ve!
-- fix(language-core): omit defined emit props only ([d45228a](https://github.com/vuejs/language-tools/commit/d45228a288341bf2d7174e93c84955626a1c9850)) - Thanks to @so1ve!
+- **fix:** fix a syntax error when `propTypes` has no elements ([426f8d5](https://github.com/vuejs/language-tools/commit/426f8d54c9aa36c4397f6cbe0c89f2077bd4a4ff))
+- **fix:** omit defined emit props only ([d45228a](https://github.com/vuejs/language-tools/commit/d45228a288341bf2d7174e93c84955626a1c9850))
 
-### Other Changes
+### component-meta
 
-- docs: fix `vue-tsc` broken link to example boilerplate in `README.md` ([fd05a1c](https://github.com/vuejs/language-tools/commit/fd05a1c92c9af63e6af1eab926084efddf7c46c3)) - Thanks to @heyakyra!
+- **fix:** import type helpers by relative path ([8697068](https://github.com/vuejs/language-tools/commit/86970687ba78e8ac78325810640bc33a23687680))
+
+### docs
+
+- **docs:** fix the `vue-tsc` broken link to the example boilerplate in `README.md` ([fd05a1c](https://github.com/vuejs/language-tools/commit/fd05a1c92c9af63e6af1eab926084efddf7c46c3))
 
 ## 3.1.1 (2025-10-07)
 
-### Features
+### language-core
 
-- feat(language-server): support `--tsdk` command line arg ([77430b1](https://github.com/vuejs/language-tools/commit/77430b1795f9e49e7d66a11acdb58be2eb5cd993))
+- **fix:** use component instance props as fallthrough attributes ([dbe8b53](https://github.com/vuejs/language-tools/commit/dbe8b537c55a17ed5e44ce04a255791eff89ea73))
+- **fix:** tolerate non-literal export default ([5080fd9](https://github.com/vuejs/language-tools/commit/5080fd9d425f0e6f6145cac7eb690e5bec6169ca))
+- **fix:** exclude the effect of comments on the root node ([a7e820a](https://github.com/vuejs/language-tools/commit/a7e820ab4eac1c3d069215688114511ec9813359))
+- **fix:** do not report the unused error on `__VLS_export`, and replace markdown links after SFC block processing ([52a6fc4](https://github.com/vuejs/language-tools/commit/52a6fc466b8057cab0c223431b5ec0ca036dfee7)) ([9835ea7](https://github.com/vuejs/language-tools/commit/9835ea78a7418c58229bc8dc011f2ace0c4209e0))
+- **refactor:** reimplement `writeGlobalTypes` without side effects ([335eca3](https://github.com/vuejs/language-tools/commit/335eca3911c5ca1c76803cf5a2380c06ef71389a)) ([c99b0ab](https://github.com/vuejs/language-tools/commit/c99b0ab2f540b60d5a1027466a09d43699ad0ee2))
 
-### Bug Fixes
+### language-server
 
-- fix(language-core): tolerate non-literal export default ([5080fd9](https://github.com/vuejs/language-tools/commit/5080fd9d425f0e6f6145cac7eb690e5bec6169ca)) - Thanks to @KazariEX!
-- fix(language-core): use component instance props as fallthrough attributes ([dbe8b53](https://github.com/vuejs/language-tools/commit/dbe8b537c55a17ed5e44ce04a255791eff89ea73)) - Thanks to @KazariEX!
-- fix(typescript-plugin): determine if variable is `Ref` by `RefSymbol` property ([49aa565](https://github.com/vuejs/language-tools/commit/49aa565410cc46df4721b14daa152be53741c7be)) - Thanks to @KazariEX!
-- fix(language-core): exclude effect of comments on root node ([a7e820a](https://github.com/vuejs/language-tools/commit/a7e820ab4eac1c3d069215688114511ec9813359)) - Thanks to @KazariEX!
-- fix(typescript-plugin): place `__vue__` in project instead of program ([7a75463](https://github.com/vuejs/language-tools/commit/7a75463eb78ade79580b83bf82015c79364ac887))
-- fix(component-type-helpers): remove deprecated `$scopedSlots` support for Vue 2
-- fix(language-core): replace markdown links after sfc blocks processing ([9835ea7](https://github.com/vuejs/language-tools/commit/9835ea78a7418c58229bc8dc011f2ace0c4209e0)) - Thanks to @KazariEX!
-- fix(language-core): do not report unused error on `__VLS_export` (#5696) - Thanks to @KazariEX!
+- **feat:** support the `--tsdk` command line arg ([77430b1](https://github.com/vuejs/language-tools/commit/77430b1795f9e49e7d66a11acdb58be2eb5cd993))
 
-### Other Changes
+### typescript-plugin
 
-- refactor(language-core): reimplement `writeGlobalTypes` without side effects
+- **fix:** determine if a variable is `Ref` by the `RefSymbol` property ([49aa565](https://github.com/vuejs/language-tools/commit/49aa565410cc46df4721b14daa152be53741c7be))
+- **fix:** place `__vue__` in the project instead of the program ([7a75463](https://github.com/vuejs/language-tools/commit/7a75463eb78ade79580b83bf82015c79364ac887))
+
+### component-type-helpers
+
+- **fix:** remove deprecated `$scopedSlots` support for Vue 2 ([7f65ebb](https://github.com/vuejs/language-tools/commit/7f65ebb9aac07196e4845652612dd035513afe94))
 
 ## 3.1.0 (2025-09-28)
 
-### Performance
+### workspace
 
-- perf(language-core): drop internal component ([39eb65c](https://github.com/vuejs/language-tools/commit/39eb65cedde0d6170df8e8e27093074454614e5a)) - Thanks to @KazariEX!
+- **refactor:** drop Vue 2 support ([aaa1c68](https://github.com/vuejs/language-tools/commit/aaa1c68eab41b53a62a11767c7a290ac84e61626))
 
-### Other Changes
+### language-core
 
-- refactor: drop Vue 2 support ([aaa1c68](https://github.com/vuejs/language-tools/commit/aaa1c68eab41b53a62a11767c7a290ac84e61626)) - Thanks to @KazariEX!
-- chore(lint): enforce use of type-only imports ([aa0d842](https://github.com/vuejs/language-tools/commit/aa0d8424c9a83989546f70ae8fbfe7801fb8ae84)) - Thanks to @so1ve!
-- ci: upgrade node version ([ecf6f2f](https://github.com/vuejs/language-tools/commit/ecf6f2f0eb3d1c044372ae665a5a6c394b44ebbc)) - Thanks to @so1ve!
-- refactor(typescript-plugin): move reactivity analysis logic to a seperate typescript plugin ([9066601](https://github.com/vuejs/language-tools/commit/9066601e9ff166796389f1624ce44410f1df7ea9)) - Thanks to @KazariEX!
+- **perf:** drop internal components ([39eb65c](https://github.com/vuejs/language-tools/commit/39eb65cedde0d6170df8e8e27093074454614e5a))
+
+### typescript-plugin
+
+- **refactor:** move reactivity analysis logic to a separate typescript plugin ([9066601](https://github.com/vuejs/language-tools/commit/9066601e9ff166796389f1624ce44410f1df7ea9))
+
+### vscode
+
+- **feat:** update the welcome page ([e20d0c5](https://github.com/vuejs/language-tools/commit/e20d0c5fa1f25bfa6a2da21fa7f60d6d9bc0be65))
+- **feat:** enhance custom Vue server path handling with user feedback ([507377c](https://github.com/vuejs/language-tools/commit/507377cee8ee2fa19982d321402d697ba74b5088))
 
 ## 3.0.10 (2025-10-25)
 
