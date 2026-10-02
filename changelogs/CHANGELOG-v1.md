@@ -47,7 +47,7 @@
 - feat: enforce `v-bind` argument to be an object ([#3666](https://github.com/vuejs/language-tools/issues/3666)) - thanks @so1ve
 - fix: JSDoc comments not emitted when using type-only defineProps macro ([#3645](https://github.com/vuejs/language-tools/issues/3645))
 - fix: autocomplete for directive comments without a space ([#3665](https://github.com/vuejs/language-tools/issues/3665)) - thanks @so1ve
-- fix: fix slot type when using a interpolation in template string ([#3657](https://github.com/vuejs/language-tools/issues/3657)) - thanks @so1ve
+- fix: fix slot type when using an interpolation in template string ([#3657](https://github.com/vuejs/language-tools/issues/3657)) - thanks @so1ve
 - fix: add autocomplete for v-slot parameters ([#3661](https://github.com/vuejs/language-tools/issues/3661)) - thanks @so1ve
 - fix: export correct SlotsPropertyName for vue2 ([#3669](https://github.com/vuejs/language-tools/issues/3669)) - thanks @zhiyuanzmj
 - fix(types): infer discriminated unions in child component props ([#3672](https://github.com/vuejs/language-tools/issues/3669)) - thanks @davidmatter
@@ -166,10 +166,10 @@
 - fix: remove invalid `volar.action.serverStats` command ([#3366](https://github.com/vuejs/language-tools/issues/3366)) - thanks @yaegassy
 - fix: don't remove comments when comment is in the first line ([#3365](https://github.com/vuejs/language-tools/issues/3365)) - thanks @so1ve
 - fix: allow slots to have no arguments ([#3376](https://github.com/vuejs/language-tools/issues/3376)) - thanks @so1ve
-- fix: camel case components is not recognized as used ([#3377](https://github.com/vuejs/language-tools/issues/3377)) - thanks @so1ve
+- fix: camel case components are not recognized as used ([#3377](https://github.com/vuejs/language-tools/issues/3377)) - thanks @so1ve
 - perf: hoist regexp if possible ([#3378](https://github.com/vuejs/language-tools/issues/3378)) - thanks @so1ve
 - fix: non scoped classes resolution regression ([#3381](https://github.com/vuejs/language-tools/issues/3381)) - thanks @maIIady
-- feat: don't to request reload editor when server options changed ([#3393](https://github.com/vuejs/language-tools/issues/3393)) - thanks @zardoy
+- feat: don't request reload editor when server options changed ([#3393](https://github.com/vuejs/language-tools/issues/3393)) - thanks @zardoy
 - feat: don't hide output channel on server restart ([#3401](https://github.com/vuejs/language-tools/issues/3401)) - thanks @zardoy
 
 **Breaking changes**
@@ -190,7 +190,7 @@
 
 ## 1.8.2 (2023/6/27)
 
-- fix: should not auto closing `<img>` tag ([#3217](https://github.com/vuejs/language-tools/issues/3217))
+- fix: should not auto-close `<img>` tag ([#3217](https://github.com/vuejs/language-tools/issues/3217))
 - fix: allow passing undefined as events ([#3122](https://github.com/vuejs/language-tools/issues/3122)) ([#3217](https://github.com/vuejs/language-tools/issues/3217)) - thanks @so1ve
 - fix: fixes object literal parsing for <component :is> ([#3324](https://github.com/vuejs/language-tools/issues/3324)) ([#3171](https://github.com/vuejs/language-tools/issues/3171)) - thanks @so1ve
 - fix: symbol types are lost ([#3300](https://github.com/vuejs/language-tools/issues/3300)) ([#3295](https://github.com/vuejs/language-tools/issues/3295)) - thanks @so1ve
@@ -304,7 +304,7 @@
 **Breaking changes**
 
 - rename packages from `@volar/vue-*` to `@vue/*` ([#3134](https://github.com/vuejs/language-tools/issues/3134))
-- `volar.config.js` specification update (base on Volar.js v1.5)
+- `volar.config.js` specification update (based on Volar.js v1.5)
 
 ## 1.6.4 (2023/5/4)
 
@@ -327,7 +327,7 @@
 - feat: expose custom blocks attrs ([#3099](https://github.com/vuejs/language-tools/issues/3099)) - thanks @HunYan-io
 - fix: event "@update:" syntax causes TS error ([#3100](https://github.com/vuejs/language-tools/issues/3100))
 - fix: generic attr unexpectedly trimmed when formatting if attr value includes "<" ([#3101](https://github.com/vuejs/language-tools/issues/3101))
-- fix: required event props always shows in missing props hint
+- fix: required event props always show in missing props hint
 - fix: exclude null / undefined from `v-for` source type ([#3102](https://github.com/vuejs/language-tools/issues/3102))
 
 ## 1.6.2 (2023/5/1)
@@ -427,14 +427,14 @@
 - fix: generic slot props type not incorrect ([#2639](https://github.com/vuejs/language-tools/issues/2639))
 - fix: third-party library components cannot accept unknown props ([#2636](https://github.com/vuejs/language-tools/issues/2636))
 - fix: allow props less functional component ([#2638](https://github.com/vuejs/language-tools/issues/2638))
-- fix: native tags event type become never ([#2640](https://github.com/vuejs/language-tools/issues/2640))
+- fix: native tags event type becomes never ([#2640](https://github.com/vuejs/language-tools/issues/2640))
 - fix: cannot resolve tsdk on windows ([#2637](https://github.com/vuejs/language-tools/issues/2637))
 
 ## 1.4.0 (2023/4/21)
 
 - feat: support intellisense for directive arg expression ([#2588](https://github.com/vuejs/language-tools/issues/2588))
 - feat: asking disable codeActions if saving time is too long
-- feat: file definition cross file mapping result fall back to 0:0
+- feat: file definition cross file mapping result falls back to 0:0
 - fix: fixed dynamic slot arg expression virtual code ([#2586](https://github.com/vuejs/language-tools/issues/2586)) ([#2617](https://github.com/vuejs/language-tools/issues/2617)) ([#2592](https://github.com/vuejs/language-tools/issues/2592))
 - fix: add hack support for v-if + v-slot template ([#625](https://github.com/vuejs/language-tools/issues/625))
 - fix: goto definition not working for alias path without script setup ([#2600](https://github.com/vuejs/language-tools/issues/2600))
@@ -458,17 +458,17 @@
 Extension settings refactoring
 
 - `codeActions` disabled by default
-- `updateImportsOnFileMove` disable by default
+- `updateImportsOnFileMove` disabled by default
 - missing props hint, event argument hint disabled by default
 
 For more details, see [#2620](https://github.com/vuejs/language-tools/issues/2620).
 
 ## 1.3.17 (2023/4/17) - pre-release
 
-- feat: support document links for tsconfig when takeover mode is actived ([#2467](https://github.com/vuejs/language-tools/issues/2467))
+- feat: support document links for tsconfig when takeover mode is activated ([#2467](https://github.com/vuejs/language-tools/issues/2467))
 - fix: avoid server crash when tsconfig extends path invalid
-- fix: auto import should not appending `.js` ([#1763](https://github.com/vuejs/language-tools/issues/1763)) ([#2518](https://github.com/vuejs/language-tools/issues/2518))
-- fix: inhibit unknown props error when if `strictTemplates` is disabled
+- fix: auto import should not append `.js` ([#1763](https://github.com/vuejs/language-tools/issues/1763)) ([#2518](https://github.com/vuejs/language-tools/issues/2518))
+- fix: inhibit unknown props error when `strictTemplates` is disabled
 - fix: absolute SCSS import resolving inconsistency ([#2517](https://github.com/vuejs/language-tools/issues/2517))
 - fix: `<template>` multi-line comments shift with each format ([#2505](https://github.com/vuejs/language-tools/issues/2505))
 
@@ -478,7 +478,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 - perf: fixed TS auto import performance regression since v1.13.11 (https://github.com/volarjs/typescript-auto-import-cache/pull/2)
 - fix(language-server): show component meta command not working
 - fix: `v-for` item adds spaces if enabled `insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets` ([#2571](https://github.com/vuejs/language-tools/issues/2571))
-- fix: when the takeover mode is enabled, json documents shows duplicate outline ([#2573](https://github.com/vuejs/language-tools/issues/2573))
+- fix: when the takeover mode is enabled, json documents show duplicate outline ([#2573](https://github.com/vuejs/language-tools/issues/2573))
 
 ## 1.3.14 (2023/4/10) - pre-release
 
@@ -509,7 +509,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 - feat(vue-tsc): prettify script setup props, emits type in emit
 - fix: `plugins`, `hooks`, `experimentalAdditionalLanguageModules` options of `vueCompilerOptions` not working ([#2558](https://github.com/vuejs/language-tools/issues/2558)) - thanks @rchl
 - fix(vue-tsc): fixed typescript 5 support ([#2555](https://github.com/vuejs/language-tools/issues/2555)) - thanks @blake-newman
-- fix: incorrectly incremented end offset when deleting the last text in an directive expression
+- fix: incorrectly incremented end offset when deleting the last text in a directive expression
 - fix: `"typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": true` caused formatting issues with v-bind expressions ([#2507](https://github.com/vuejs/language-tools/issues/2507))
 - fix: `normalizeComponentAutoImportName` not working for import statement completion ([#2511](https://github.com/vuejs/language-tools/issues/2511))
 - fix: ignore `null` type for dynamic argument ([#2514](https://github.com/vuejs/language-tools/issues/2514))
@@ -524,7 +524,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 
 ## 1.3.8 (2023/3/27) - pre-release
 
-- fix: missing props type check stop working
+- fix: missing props type check stops working
 
 ## 1.3.7 (2023/3/26) - pre-release
 
@@ -535,8 +535,8 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 - feat: support slot required checking when enabled `strictTemplates` ([#1820](https://github.com/vuejs/language-tools/issues/1820))
 - fix: handle edge tag name casing `<xxx--yyy>` ([#2463](https://github.com/vuejs/language-tools/issues/2463))
 - fix: incremental update causes multi-line style node damage ([#2519](https://github.com/vuejs/language-tools/issues/2519))
-- fix: formatting break multi-line attribute value indent ([#2519](https://github.com/vuejs/language-tools/issues/2519))
-- fix: formatting break `<pre>` tag contents indent ([#2520](https://github.com/vuejs/language-tools/issues/2520))
+- fix: formatting breaks multi-line attribute value indent ([#2519](https://github.com/vuejs/language-tools/issues/2519))
+- fix: formatting breaks `<pre>` tag contents indent ([#2520](https://github.com/vuejs/language-tools/issues/2520))
 - fix: typescript `labelDetails` in completions not processed (https://github.com/volarjs/plugins/issues/31) - thanks @zardoy
 
 **Breaking changes**
@@ -553,7 +553,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 
 ## 1.3.4 (2023/3/20) - pre-release
 
-- fix: some environments throws `Failed to resolve tsconfig path` (https://github.com/vuejs/language-tools/pull/2471#issuecomment-1475350770)
+- fix: some environments throw `Failed to resolve tsconfig path` (https://github.com/vuejs/language-tools/pull/2471#issuecomment-1475350770)
 - fix: diagnostics break when changing code (https://github.com/yaegassy/coc-volar/pull/262#issuecomment-1475468100)
 - fix: all server capabilities loss in IDEs other than VSCode ([#2526](https://github.com/vuejs/language-tools/issues/2526))
 
@@ -583,7 +583,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 - feat: add description link for `$event =>` hint ([#2445](https://github.com/vuejs/language-tools/issues/2445))
 - feat(language-server): support for `ServerMode.PartialSemantic`
 - fix: `Show Component Meta` command not working
-- fix: name casing status do not update with changed settings ([#2460](https://github.com/vuejs/language-tools/issues/2460))
+- fix: name casing status does not update with changed settings ([#2460](https://github.com/vuejs/language-tools/issues/2460))
 - fix: component auto import not working with kebab case ([#2458](https://github.com/vuejs/language-tools/issues/2458))
 - fix: missing props hints do not recognize `@xxx` ([#4568](https://github.com/vuejs/language-tools/issues/4568))
 - fix: code action document version incorrect (https://github.com/yaegassy/coc-volar/issues/254)
@@ -659,7 +659,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 - fix: format adding unnecessary newline to CRLF document ([#2385](https://github.com/vuejs/language-tools/issues/2385))
 - fix: incidentally inserting indents when inserting new lines when if `editor.formatOnType` ([#2394](https://github.com/vuejs/language-tools/issues/2394))
 - fix: template formatting last line indent incorrect ([#2393](https://github.com/vuejs/language-tools/issues/2393))
-- fix: template start tag got deleting if first line is comment ([#2390](https://github.com/vuejs/language-tools/issues/2390))
+- fix: template start tag got deleted if first line is comment ([#2390](https://github.com/vuejs/language-tools/issues/2390))
 - fix: takeover mode status incorrect in display ([#2389](https://github.com/vuejs/language-tools/issues/2389))
 - fix: diff window's document was unexpectedly diagnosed ([#2391](https://github.com/vuejs/language-tools/issues/2391))
 - fix: emmet completions appear inside open tag ([#1329](https://github.com/vuejs/language-tools/issues/1329))
@@ -749,7 +749,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 - feat: check deprecated properties for `vueCompilerOptions` in tsconfig
 - fix: auto add spaces for `{{}}` not working if template block not at the top
 - fix: remove duplicate file watchers for .vue files
-- fix: auto complete randomly report `[TS Error] { }` and failed ([#2190](https://github.com/vuejs/language-tools/issues/2190))
+- fix: auto complete randomly reports `[TS Error] { }` and fails ([#2190](https://github.com/vuejs/language-tools/issues/2190))
 - fix: cross-file renaming cannot be performed consecutively
 - fix: should not report unknown tag error without `strictTemplates` enabled ([#2255](https://github.com/vuejs/language-tools/issues/2255))
 
@@ -808,7 +808,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 - feat(web-ide): support node_modules types via CDN
 - feat(web-ide): support locale typescript diagnostic messages
 - fix(web-ide): cannot use default typescript lib types
-- fix(web-ide): cannot found match tsconfig
+- fix(web-ide): cannot find matching tsconfig
 - fix: `volar.config.js` plugins dirty cache between different tsconfig projects
 
 ## 1.0.12 (2022/12/9)
@@ -823,7 +823,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 
 ## 1.0.11 (2022/12/3)
 
-- fix(vue-tsc): dts emit do not generated `DefineComponent` type ([#2161](https://github.com/vuejs/language-tools/issues/2161))
+- fix(vue-tsc): dts emit does not generate `DefineComponent` type ([#2161](https://github.com/vuejs/language-tools/issues/2161))
 - fix: global components types loss in vue 2 projects ([#2157](https://github.com/vuejs/language-tools/issues/2157))
 - fix: Vite / Nuxt app preview crash when template includes `<html>` tag
 
@@ -896,9 +896,9 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 - feat: add `volar.vueserver.noProjectReferences` setting for support jump to source files from reference projects ([#1344](https://github.com/vuejs/language-tools/issues/1344))
 - fix: SFC parse failed if script content including `<script>` ([#1982](https://github.com/vuejs/language-tools/issues/1982))
 - fix: avoid report type error for invalid component without enable `jsxTemplates` ([#2007](https://github.com/vuejs/language-tools/issues/2007))
-- fix: intrinsic tag highlight should only including open tag and close tag ([#2009](https://github.com/vuejs/language-tools/issues/2009))
+- fix: intrinsic tag highlight should only include open tag and close tag ([#2009](https://github.com/vuejs/language-tools/issues/2009))
 - fix: component type should take capitalize property takes precedence over camelize property from context ([#2010](https://github.com/vuejs/language-tools/issues/2010))
-- fix: references codeLens should not including sources on display (https://github.com/vuejs/language-tools/issues/1989#issuecomment-1277585337)
+- fix: references codeLens should not include sources on display (https://github.com/vuejs/language-tools/issues/1989#issuecomment-1277585337)
 
 ## 1.0.7 (2022/10/13)
 
@@ -923,7 +923,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 - fix: `@volar-examples/svelte-tsc`, `@volar-examples/svelte-typescript` released empty dist
 - fix: component syntax minor defect when enabled `experimentalRfc436`
 - fix: force use VSCode display language in language server ([#1959](https://github.com/vuejs/language-tools/issues/1959))
-- fix: don't hoisting defineProps type arg when disabled `experimentalRfc436` ([#1994](https://github.com/vuejs/language-tools/issues/1994))
+- fix: don't hoist defineProps type arg when disabled `experimentalRfc436` ([#1994](https://github.com/vuejs/language-tools/issues/1994))
 
 ## 1.0.4 (2022/10/12)
 
@@ -977,7 +977,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 
 [[Download](https://github.com/vuejs/language-tools/issues/1880)]
 
-- fix: "Reload Project" command do not update diagnostics
+- fix: "Reload Project" command does not update diagnostics
 - feat: use svelte2tsx for svelte language server example ([#1940](https://github.com/vuejs/language-tools/issues/1940))
 
 ## 1.0.0-rc.4 (2022/10/6)
@@ -1132,7 +1132,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 **Breaking changes**
 
 - Remove Alpine extension ([#1858](https://github.com/vuejs/language-tools/issues/1858))
-- No built-in support for pug template anymore, if you have use pug with vue-tsc before, please follow below changes:
+- No built-in support for pug template anymore, if you have used pug with vue-tsc before, please follow below changes:
 
 `package.json`
 ```

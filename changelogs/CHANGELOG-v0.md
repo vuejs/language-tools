@@ -23,7 +23,7 @@
 - fix: "Format Selection" should not format whole language block ([#1833](https://github.com/vuejs/language-tools/issues/1833))
 - fix: formatting break document content randomly ([#1827](https://github.com/vuejs/language-tools/issues/1827)) ([#1832](https://github.com/vuejs/language-tools/issues/1832))
 - fix: pug syntax highlighting confuses element id with interpolation ([#1826](https://github.com/vuejs/language-tools/issues/1826))
-- fix: don't cache IDE settings if IDE do not support config change notification
+- fix: don't cache IDE settings if IDE does not support config change notification
 
 ## 0.40.9 (2022/9/6)
 
@@ -44,7 +44,7 @@
 - feat: add `vueCompilerOptions.experimentalComponentOptionsWrapper` option for custom component options warpper ([#1517](https://github.com/vuejs/language-tools/issues/1517))
 - fix: add missing surrounding pair "`" ([#1659](https://github.com/vuejs/language-tools/issues/1659))
 - fix: formatting edit range incorrect edge case ([#1814](https://github.com/vuejs/language-tools/issues/1814))
-- fix: typescript onType format do not respect `typescript.format.enable`
+- fix: typescript onType format does not respect `typescript.format.enable`
 - fix: document features stop working for script block ([#1813](https://github.com/vuejs/language-tools/issues/1813))
 - fix: pug formatter extra spaces in `{{ }}` ([#1784](https://github.com/vuejs/language-tools/issues/1784))
 - fix: template incremental parser broken when typing slot name
@@ -64,7 +64,7 @@
 
 - feat: suppor add or switch workspaces without restart server ([#1574](https://github.com/vuejs/language-tools/issues/1574))
 - fix: sfc offset incremental update broken when input at block start
-- fix: document incremental update break document content on Sublime LSP (https://github.com/sublimelsp/LSP-volar/issues/120)
+- fix: document incremental update breaks document content on Sublime LSP (https://github.com/sublimelsp/LSP-volar/issues/120)
 - fix: unexpected prop types behavior with `compilerOptions.exactOptionalPropertyTypes` (https://github.com/vuejs/core/issues/6532)
 - fix: false positive error on `<input typeof="radio" value="...">` ([#1775](https://github.com/vuejs/language-tools/issues/1775))
 - fix: false positive style attribute inconsistent string type error ([#1781](https://github.com/vuejs/language-tools/issues/1781))
@@ -160,13 +160,13 @@
 - fix: tsx, jsx syntax break by vue directives syntax inject ([#1617](https://github.com/vuejs/language-tools/issues/1617))
 - fix: any type components missing in template when use script setup ([#1608](https://github.com/vuejs/language-tools/issues/1608))
 - fix: ignore X_V_IF_SAME_KEY error in vue 2 ([#1638](https://github.com/vuejs/language-tools/issues/1638))
-- perf: fix `fileExists` is always calculate for .ts on each time update (https://github.com/vuejs/language-tools/commit/07f3bd55b6bdf3875a60796f7c9eb9a838eed463)
+- perf: fix `fileExists` is always calculated for .ts on each time update (https://github.com/vuejs/language-tools/commit/07f3bd55b6bdf3875a60796f7c9eb9a838eed463)
 - perf: cache `fileExists`, `directoryExists` result in language server (https://github.com/vuejs/language-tools/commit/34a4435284311c88248a44222f49c017a6b408a9)
 
 ## 0.39.1 (2022/7/23)
 
-- fix: typescript-vue-plugin break TS server ([#1624](https://github.com/vuejs/language-tools/issues/1624))
-- fix: make `takeOverMode.enabled: true` behavior same with `takeOverMode.enabled: 'auto'`
+- fix: typescript-vue-plugin breaks TS server ([#1624](https://github.com/vuejs/language-tools/issues/1624))
+- fix: make `takeOverMode.enabled: true` behavior same as `takeOverMode.enabled: 'auto'`
 
 ## 0.39.0 (2022/7/23)
 
@@ -235,7 +235,7 @@
 
 **Breaking changes**
 
-- `experimentalSuppressUnknownJsxPropertyErrors`, `experimentalSuppressInvalidJsxElementTypeErrors` is replaced by `strictTemplates`.
+- `experimentalSuppressUnknownJsxPropertyErrors`, `experimentalSuppressInvalidJsxElementTypeErrors` are replaced by `strictTemplates`.
 
 	```diff
 	{
@@ -306,8 +306,8 @@ you need to install [vite-plugin-vue-component-preview](https://github.com/johns
 ## 0.37.5 (2022/6/13)
 
 - feat: support petite-vue
-- fix: don't active VitePress intellisense for `.md` if file path in not include by tsconfig ([#1430](https://github.com/vuejs/language-tools/issues/1430))
-- fix: cannot direct execution of fileReferences command ([#1419](https://github.com/vuejs/language-tools/issues/1419))
+- fix: don't activate VitePress intellisense for `.md` if file path is not included by tsconfig ([#1430](https://github.com/vuejs/language-tools/issues/1430))
+- fix: cannot directly execute the fileReferences command ([#1419](https://github.com/vuejs/language-tools/issues/1419))
 - fix: avoid "`" auto close break markdown code block input ([#1428](https://github.com/vuejs/language-tools/issues/1428))
 - fix: component props completion info box missing in template
 - fix: false positive props type error when JS component usage in TS component ([#1426](https://github.com/vuejs/language-tools/issues/1426))
@@ -393,7 +393,7 @@ you need to install [vite-plugin-vue-component-preview](https://github.com/johns
 - feat: add tsc problemMatchers settings ([#1277](https://github.com/vuejs/language-tools/issues/1277))
 - fix: cannot watch external .d.ts file changes ([#1343](https://github.com/vuejs/language-tools/issues/1343))
 - fix: incorrect typescript error report with hgroup in template ([#1340](https://github.com/vuejs/language-tools/issues/1340))
-- fix: style variable injection syntax highlight not working for style languages other then `css` ([#1365](https://github.com/vuejs/language-tools/issues/1365))
+- fix: style variable injection syntax highlight not working for style languages other than `css` ([#1365](https://github.com/vuejs/language-tools/issues/1365))
 - fix: false positive type check for method arguments with `defineExpose` ([#1364](https://github.com/vuejs/language-tools/issues/1364))
 - fix: avoid html emmet active in style block ([#1358](https://github.com/vuejs/language-tools/issues/1358))
 - fix: unable to recognize the type of parameters as alongside `<script setup>` ([#1324](https://github.com/vuejs/language-tools/issues/1324))
@@ -526,7 +526,7 @@ you need to install [vite-plugin-vue-component-preview](https://github.com/johns
 
 **Breaking changes**
 
-- `@volar/pug-language-service` now is a optional depend on vue-tsc, you need to install it additionally to support pug template type-checking on vue-tsc ([#1092](https://github.com/vuejs/language-tools/issues/1092))
+- `@volar/pug-language-service` now is an optional dependency of vue-tsc, you need to install it additionally to support pug template type-checking on vue-tsc ([#1092](https://github.com/vuejs/language-tools/issues/1092))
 
 ## 0.34.4 (2022/4/12)
 
@@ -536,7 +536,7 @@ you need to install [vite-plugin-vue-component-preview](https://github.com/johns
 
 ## 0.34.3 (...)
 
-- feat: release `@volar/preview` for support vite, nuxt 3 app preview features other then vscode IDEs ([#1115](https://github.com/vuejs/language-tools/issues/1115))
+- feat: release `@volar/preview` for support vite, nuxt 3 app preview features other than vscode IDEs ([#1115](https://github.com/vuejs/language-tools/issues/1115))
 - fix: `require()` should not report error in template ([#1161](https://github.com/vuejs/language-tools/issues/1161))
 - fix: template interpolations syntax broken with inline block comments ([#1143](https://github.com/vuejs/language-tools/issues/1143))
 - fix: vue-tsc emit declaration diagnostics incomplete ([#1127](https://github.com/vuejs/language-tools/issues/1127))
@@ -555,7 +555,7 @@ you need to install [vite-plugin-vue-component-preview](https://github.com/johns
 ## 0.34.2 (2022/4/10)
 
 - fix: add missing depend for vue-tsc ([#1154](https://github.com/vuejs/language-tools/issues/1154))
-- fix: css format should not trimmed new lines ([#1155](https://github.com/vuejs/language-tools/issues/1155))
+- fix: css format should not trim new lines ([#1155](https://github.com/vuejs/language-tools/issues/1155))
 
 ## 0.34.1 (2022/4/10)
 
@@ -583,13 +583,13 @@ you need to install [vite-plugin-vue-component-preview](https://github.com/johns
 - Changed built-in CSS formatter from `prettier` to `vscode-css-languageservice` ([#1131](https://github.com/vuejs/language-tools/issues/1131))
   - If you would like to use `Prettier`, see `Prettier` section in https://github.com/vuejs/language-tools/discussions/1027
 - Changed setting `volar.lowPowerMode` to `volar.vueserver.useSecondServer` and disabled by default
-  - When disabled, language service instance reduce a half of memory usage, but auto-complete should be slower in expected
+  - When disabled, language service instance reduces a half of memory usage, but auto-complete should be slower than expected
 - `"jsx": "preserve"` now is required for template type-checking ([#1153](https://github.com/vuejs/language-tools/issues/1153))
 
 ## 0.33.10 (2022/3/27)
 
 - feat: support preview features on external browser
-  - press `Alt` key to activating go to code feature
+  - press `Alt` key to activate go to code feature
 - fix: can't open multiple preview windows
 
 ## 0.33.9 (2022/3/25)
@@ -665,7 +665,7 @@ you need to install [vite-plugin-vue-component-preview](https://github.com/johns
   - change built-in formatters
   - add language support for custom block with any other language yourself
 - feat: support vue-tsc watch ([#1030](https://github.com/vuejs/language-tools/pull/1030))
-- feat: preview features not longer needed authentication
+- feat: preview features no longer need authentication
 - fix: pug formatting broken ([#1002](https://github.com/vuejs/language-tools/issues/1002))
 - fix: vite app preview not working on windows ([#1013](https://github.com/vuejs/language-tools/issues/1013))
 - fix: fallback event type behavior for invalid type components ([#1001](https://github.com/vuejs/language-tools/issues/1001)) ([#1026](https://github.com/vuejs/language-tools/issues/1026))
@@ -687,7 +687,7 @@ you need to install [vite-plugin-vue-component-preview](https://github.com/johns
 - fix: language server broken if TS version \< 4.4 ([#962](https://github.com/vuejs/language-tools/issues/962))
 - fix: pug outline element level incorrect ([#969](https://github.com/vuejs/language-tools/issues/969))
 - fix: document symbols confusion between `<script>` and `<script setup>` ([#994](https://github.com/vuejs/language-tools/issues/994))
-- fix: vite icon do not show with first editor
+- fix: vite icon does not show with first editor
 
 ## 0.32.0 (2022/2/25)
 
@@ -797,7 +797,7 @@ you need to install [vite-plugin-vue-component-preview](https://github.com/johns
 - fix: `typescript.preferences.importModuleSpecifier` setting not working for component auto import ([#793](https://github.com/vuejs/language-tools/issues/793))
 - fix: `Organize Imports` commmand not always working ([#798](https://github.com/vuejs/language-tools/issues/798))
 - fix: css variable injection virtual code cannot update ([#777](https://github.com/vuejs/language-tools/issues/777))
-- fix: should not initializes new language service when create a new file ([#802](https://github.com/vuejs/language-tools/issues/802))
+- fix: should not initialize new language service when create a new file ([#802](https://github.com/vuejs/language-tools/issues/802))
 - fix: new file first diagnostics incorrect 
 
 **Breaking changes**
@@ -845,7 +845,7 @@ you need to install [vite-plugin-vue-component-preview](https://github.com/johns
 ## 0.29.4 (2021/11/12)
 
 - feat: syntax highlight support for Web IDE ([#612](https://github.com/vuejs/language-tools/issues/612))
-- fix: semantic highlight can't update if project have no tsconfig or jsconfig ([#685](https://github.com/vuejs/language-tools/issues/685))
+- fix: semantic highlight can't update if project has no tsconfig or jsconfig ([#685](https://github.com/vuejs/language-tools/issues/685))
 
 ## 0.29.3 (2021/11/27)
 
@@ -860,7 +860,7 @@ you need to install [vite-plugin-vue-component-preview](https://github.com/johns
 ## 0.29.1 (2021/11/9)
 
 - fix: template AST broken by empty line in pug ([#676](https://github.com/vuejs/language-tools/issues/676))
-- fix: intellisense not working if project have no jsconfig / tsconfig ([#680](https://github.com/vuejs/language-tools/issues/680)) ([#681](https://github.com/vuejs/language-tools/issues/681))
+- fix: intellisense not working if project has no jsconfig / tsconfig ([#680](https://github.com/vuejs/language-tools/issues/680)) ([#681](https://github.com/vuejs/language-tools/issues/681))
 
 ## 0.29.0 (2021/11/7)
 
@@ -1118,7 +1118,7 @@ do not force config `compatConfig: { Mode: 2 }` to template compiler with `"expe
 ## 0.27.11 (2021/9/1)
 
 - feat: unused dynamic registration to adapt nvim LSP [#441#issuecomment-895019036](https://github.com/vuejs/language-tools/discussions/441#discussioncomment-1258701)
-- fix: can't not find template context properties if `<script>` block missing ([#437](https://github.com/vuejs/language-tools/issues/437))
+- fix: can't find template context properties if `<script>` block missing ([#437](https://github.com/vuejs/language-tools/issues/437))
 - fix: import completion incorrectly append `$1` ([#371](https://github.com/vuejs/language-tools/issues/371))
 - fix: completion should retrigger by space
 - fix: json types cannot update in *.vue on editing
@@ -1199,7 +1199,7 @@ do not force config `compatConfig: { Mode: 2 }` to template compiler with `"expe
 ## 0.27.1 (2021/8/15)
 
 - fix: remove `vscode-emmet-helper` rename warning for vue-tsc
-- fix: components option should be remove when convert to setup sugar
+- fix: components option should be removed when convert to setup sugar
 - fix: fixed sometime throw error when convert setup sugar
 - fix: prevent top level await error in `<script>` block
 
@@ -1356,7 +1356,7 @@ do not force config `compatConfig: { Mode: 2 }` to template compiler with `"expe
 
 - feat: split TS language service to script TS language service and template TS language service ([#94](https://github.com/vuejs/language-tools/issues/94)) ([#253](https://github.com/vuejs/language-tools/issues/253))
 - fix: optional props type incorrect in `<script setup>` ([#302](https://github.com/vuejs/language-tools/issues/302))
-- fix: formatting make double spacing in empty pug template block ([#304](https://github.com/vuejs/language-tools/issues/304))
+- fix: formatting makes double spacing in empty pug template block ([#304](https://github.com/vuejs/language-tools/issues/304))
 - fix: fixed callHierarchy request failed if skip prepare request
 
 ## 0.25.28 (2021/7/6)
@@ -1400,7 +1400,7 @@ do not force config `compatConfig: { Mode: 2 }` to template compiler with `"expe
 
 - feat: improve TS diagnostic message ([#259](https://github.com/vuejs/language-tools/issues/259))
 - fix: incorrect unescaping of literal strings ([#262](https://github.com/vuejs/language-tools/issues/262))
-- fix: dynamic slot name do not consume variable ([#263](https://github.com/vuejs/language-tools/issues/263))
+- fix: dynamic slot name does not consume variable ([#263](https://github.com/vuejs/language-tools/issues/263))
 - fix: temporary html completion info leak to hover info
 - fix: TS definition result duplicate
 
@@ -1453,7 +1453,7 @@ do not force config `compatConfig: { Mode: 2 }` to template compiler with `"expe
 - fix: don't report `lang="ts"` missing if script content is empty ([#215](https://github.com/vuejs/language-tools/issues/215))
 - fix: ts plugin features broken with json script kind [0386094](https://github.com/vuejs/language-tools/commit/038609477093911674cf842e3650bc8daf4d733d)
 - fix: component rename breaks the component source file ([#206](https://github.com/vuejs/language-tools/issues/206))
-- fix: emmet should not working in template expression interpolations
+- fix: emmet should not work in template expression interpolations
 
 ## 0.25.13 (2021/5/26)
 
@@ -1504,7 +1504,7 @@ do not force config `compatConfig: { Mode: 2 }` to template compiler with `"expe
 - fix: fix template syntax highlighting broken edge cases
 - fix: fix auto-import not working edge cases
 - fix: should not have auto-import from virtual files
-- fix: native events types incorrect if component do not have emits option ([#180](https://github.com/vuejs/language-tools/issues/180))
+- fix: native events types incorrect if component does not have emits option ([#180](https://github.com/vuejs/language-tools/issues/180))
 
 ## 0.25.4 (2021/5/12)
 
@@ -1609,7 +1609,7 @@ See: https://github.com/vuejs/language-tools/discussions/134
 ## 0.23.6 (2021/4/9)
 
 - feat: event modifiers auto-complete [#126](https://github.com/vuejs/language-tools/issues/126)
-- fix: `v-else-if` type narrowing not works in last branch [#130](https://github.com/vuejs/language-tools/issues/130)
+- fix: `v-else-if` type narrowing not working in last branch [#130](https://github.com/vuejs/language-tools/issues/130)
 
 ## 0.23.5 (2021/4/7)
 
@@ -2081,7 +2081,7 @@ See: https://github.com/vuejs/language-tools/discussions/134
 
 - feat: unsupported workspaceExtensions formatter
 - feat: unsupported old `<script setup>`
-- fix: references codeLens should not counting itself
+- fix: references codeLens should not count itself
 - fix: hyphenate format slot name have duplicate references codeLens
 - fix: `<script setup>` unused checking not working for `"noUnusedLocals": true`
 
