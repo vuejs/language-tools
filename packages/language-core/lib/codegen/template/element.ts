@@ -197,7 +197,7 @@ export function* generateComponent(
 	yield `// @ts-ignore${newLine}`;
 	yield propsStr
 		.replace(
-			/(["'`])(?:\\[\s\S]|(?!\1)[^\\])*\1|\/\/(.*)$/gm,
+			/\/\*[\s\S]*?\*\/|(["'`])(?:\\[\s\S]|(?!\1)[^\\])*\1|\/\/(.*)$/gm,
 			(match, _, body) => body === undefined ? match : `/*${body.replaceAll('*/', '*\\/')} */`,
 		)
 		.replace(/\n/g, ' ');
