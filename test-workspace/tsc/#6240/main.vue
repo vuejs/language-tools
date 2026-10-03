@@ -7,6 +7,11 @@ const ids = [1, 2];
 <template>
 	<template v-for="id in ids">
 		<Child :foo="`https://example.com/${id}`" />
+		<Child
+			:foo="
+				/* don't */ 'x' // it's a comment
+			"
+		/>
 		{{ id }}
 	</template>
 </template>
