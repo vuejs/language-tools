@@ -130,7 +130,7 @@ interface IdentifierOptions {
 	setupConsts: Set<string>;
 	setupBindings: Set<string>;
 	dotValueBindings: Set<string>;
-	importBindings?: Set<string>;
+	reassertBindings?: Set<string>;
 	vueCompilerOptions: VueCompilerOptions;
 	scriptLang: string;
 }
@@ -142,7 +142,7 @@ interface IdentifierOptions {
 // - template refs → direct `.value`
 // - dotValue bindings (narrowed at least once anywhere) → `.value` at
 //   every position; narrowing then works on the `.value` reference chain
-//   (imports read inside template closures fall through to `__VLS_unwrap`)
+//   (imports and `let`/`var` read inside template closures fall through to `__VLS_unwrap`)
 // - other bindings → `__VLS_unwrap` (plain reads keep the original type)
 // - otherwise → `__VLS_ctx.<name>`
 export function* generateIdentifier(
@@ -176,9 +176,9 @@ export function* generateIdentifier(
 	else if (options.setupBindings.has(name)) {
 		// First pass records narrowing accesses here; the second pass emits from dotValueBindings.
 		ctx.accessVariable(source, name, start, inTypeQuery || isNarrowing);
-		// The top-level assertion doesn't narrow imports inside closures; writes still need `.value`.
+		// The top-level assertion doesn't narrow imports and `let`/`var` inside closures; writes still need `.value`.
 		const unwrapInClosure = !isAssignmentTarget
-			&& options.importBindings?.has(name)
+			&& options.reassertBindings?.has(name)
 			&& ctx.scopes.some(scope => scope.isFunction);
 		if (inTypeQuery || options.dotValueBindings.has(name) && !unwrapInClosure) {
 			yield* codes;

@@ -9,7 +9,6 @@ export const enum BindingFlag {
 	Variable,
 	Const = 1 << 1,
 	Component = 1 << 2,
-	Import = 1 << 3,
 }
 
 export function parseBindings(
@@ -55,7 +54,7 @@ export function parseBindings(
 						bindings.set(_getNodeText(name), BindingFlag.Const | BindingFlag.Component);
 					}
 					else {
-						bindings.set(_getNodeText(name), BindingFlag.Variable | BindingFlag.Import);
+						bindings.set(_getNodeText(name), BindingFlag.Variable);
 					}
 				}
 				if (namedBindings) {
@@ -72,12 +71,12 @@ export function parseBindings(
 								bindings.set(_getNodeText(element.name), BindingFlag.Const | BindingFlag.Component);
 							}
 							else {
-								bindings.set(_getNodeText(element.name), BindingFlag.Variable | BindingFlag.Import);
+								bindings.set(_getNodeText(element.name), BindingFlag.Variable);
 							}
 						}
 					}
 					else {
-						bindings.set(_getNodeText(namedBindings.name), BindingFlag.Variable | BindingFlag.Import);
+						bindings.set(_getNodeText(namedBindings.name), BindingFlag.Variable);
 					}
 				}
 			}
