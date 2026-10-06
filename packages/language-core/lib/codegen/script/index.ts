@@ -76,6 +76,7 @@ function* generateWorker(
 	// <script> + <script setup>
 	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
 		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
+		yield* generateMacros(options);
 
 		// <script>
 		let selfType: string | undefined;
@@ -130,6 +131,7 @@ function* generateWorker(
 	// only <script setup>
 	else if (scriptSetup && scriptSetupRanges) {
 		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
+		yield* generateMacros(options);
 
 		if (scriptSetup.generic) {
 			yield* generateExportDeclareEqual(scriptSetup, names.export);
@@ -186,12 +188,6 @@ function* generateWorker(
 	}
 
 	yield* ctx.localTypes.generate();
-
-	// The <script src> branch never embeds the script setup content, so no
-	// macro references can appear and the import would be unused.
-	if (scriptSetup && scriptSetupRanges && typeof script?.src !== 'object') {
-		yield* generateMacros(options);
-	}
 }
 
 function* generateScriptWithExportDefault(
