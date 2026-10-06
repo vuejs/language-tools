@@ -153,7 +153,7 @@ declare global {
 	function __VLS_asFunctionalSlot<S>(
 		slot: S,
 	): S extends (...args: any) => any ? (S extends () => infer R ? (props: {}) => R : S)
-		: (S extends null | undefined ? never : (props: S) => any);
+		: (S extends null | undefined ? never : S & ((props: S) => any));
 	function __VLS_omit<T, K>(target: T, props: K): Omit<T, keyof K>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
 	// Rewrites the binding so codegen's appended `.value` resolves with the
