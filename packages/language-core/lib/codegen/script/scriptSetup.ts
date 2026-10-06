@@ -410,11 +410,13 @@ export function* generateMacros(options: ScriptCodegenOptions): Generator<Code> 
 		const toImport = usedMacros.filter(({ alias }) => !options.setupBindings.has(alias));
 
 		if (toImport.length) {
-			yield `import { `;
+			yield `const { `;
 			for (const { canonical, alias } of toImport) {
-				yield alias === canonical ? `${canonical}, ` : `${canonical} as ${alias}, `;
+				yield alias === canonical ? `${canonical}, ` : `${canonical}: ${alias}, `;
 			}
-			yield `} from '${options.vueCompilerOptions.lib}'${endOfLine}`;
+			yield `} = `;
+			yield asType(`typeof import('${options.vueCompilerOptions.lib}')`, options.scriptLang);
+			yield endOfLine;
 		}
 	}
 }
