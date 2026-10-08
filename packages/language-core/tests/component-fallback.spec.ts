@@ -23,7 +23,7 @@ test.each([false, true])('component fallback preserves known types (strict=%s)',
 	const options: ts.CompilerOptions = { strict: true, noEmit: true, skipLibCheck: true };
 	const host = ts.createCompilerHost(options);
 	const getSourceFile = host.getSourceFile;
-	host.getSourceFile = (name, languageVersion, onError, shouldCreateNewSourceFile) => name === file
+	host.getSourceFile = (name, languageVersion, onError, shouldCreateNewSourceFile) => path.resolve(name) === file
 		? ts.createSourceFile(name, source, languageVersion, true)
 		: getSourceFile(name, languageVersion, onError, shouldCreateNewSourceFile);
 	const program = ts.createProgram([file, helpers], options, host);
