@@ -5,16 +5,17 @@ import { expect, test } from 'vitest';
 test.each([false, true])('component fallback preserves known types (strict=%s)', strict => {
 	const file = path.resolve(__dirname, 'component-fallback.ts');
 	const helpers = path.resolve(__dirname, '../types/template-helpers.d.ts');
-	const fallback = strict ? '{}' : 'Record<string, any>';
+	const directive = strict ? '' : '// @ts-ignore';
 	const source = `
 		export {};
 		type Local = { LocalChild: { count: number } };
 		type Global = { GlobalChild: { count: number } };
 		type Self = { count: number };
-		type LocalMatch = __VLS_WithComponent<'local-child', Local, Global, void, ${fallback}, 'LocalChild'>['local-child'];
-		type GlobalMatch = __VLS_WithComponent<'global-child', Local, Global, void, ${fallback}, 'GlobalChild'>['global-child'];
-		type SelfMatch = __VLS_WithComponent<'Self', Local, Global, Self, ${fallback}, 'Self'>['Self'];
-		type UnknownMatch = __VLS_WithComponent<'Unknown', Local, Global, void, ${fallback}, 'Unknown'>['Unknown'];
+		type LocalMatch = __VLS_WithComponent<'local-child', Local, Global, void, 'LocalChild'>['local-child'];
+		type GlobalMatch = __VLS_WithComponent<'global-child', Local, Global, void, 'GlobalChild'>['global-child'];
+		type SelfMatch = __VLS_WithComponent<'Self', Local, Global, Self, 'Self'>['Self'];
+		${directive}
+		type UnknownMatch = __VLS_WithComponent<'Unknown', Local, Global, void, 'Unknown'>['Unknown'];
 		const local: LocalMatch = { count: 'wrong' };
 		const global: GlobalMatch = { count: 'wrong' };
 		const self: SelfMatch = { count: 'wrong' };

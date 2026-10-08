@@ -118,12 +118,14 @@ export function* generateComponent(
 			yield endOfLine;
 		}
 		else {
+			if (!options.vueCompilerOptions.checkUnknownComponents) {
+				yield `// @ts-ignore${newLine}`;
+			}
 			yield* generateTypedVar('let', componentVar, options.scriptLang, function*() {
 				yield `${names.WithComponent}<'${tag}', ${names.LocalComponents}, ${names.GlobalComponents}`;
 				yield originalNames.has(options.componentName)
 					? `, typeof ${names.export}`
 					: `, void`;
-				yield options.vueCompilerOptions.checkUnknownComponents ? `, {}` : `, Record<string, any>`;
 				for (const name of originalNames) {
 					yield `, '${name}'`;
 				}
