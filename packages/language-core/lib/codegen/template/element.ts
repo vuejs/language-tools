@@ -123,6 +123,7 @@ export function* generateComponent(
 				yield originalNames.has(options.componentName)
 					? `, typeof ${names.export}`
 					: `, void`;
+				yield options.vueCompilerOptions.checkUnknownComponents ? `, {}` : `, Record<string, any>`;
 				for (const name of originalNames) {
 					yield `, '${name}'`;
 				}

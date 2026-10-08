@@ -10,6 +10,7 @@ declare global {
 		LocalComponents,
 		GlobalComponents,
 		Self,
+		Fallback,
 		N1 extends string,
 		N2 extends string = N1,
 		N3 extends string = N1,
@@ -20,7 +21,7 @@ declare global {
 		: N1 extends keyof GlobalComponents ? { [K in N0]: GlobalComponents[N1] }
 		: N2 extends keyof GlobalComponents ? { [K in N0]: GlobalComponents[N2] }
 		: N3 extends keyof GlobalComponents ? { [K in N0]: GlobalComponents[N3] }
-		: {};
+		: Fallback;
 	type __VLS_ExtractComponentContext<T, K> = __VLS_PickNotAny<
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? NonNullable<Ctx> : never : any,
 		T extends (props: any, ctx: infer Ctx) => any ? (unknown extends Ctx ? any : Ctx) : any
