@@ -21,7 +21,6 @@ export interface DefineModel {
 	modifierType?: TextRange;
 	runtimeType?: TextRange;
 	defaultValue?: TextRange;
-	defaultPropsArg?: TextRange;
 	defaultMethod?: TextRange & { name: TextRange };
 	required?: boolean;
 	comments?: TextRange;
@@ -145,7 +144,6 @@ export function parseScriptSetupRanges(
 				let modifierType: TextRange | undefined;
 				let runtimeType: TextRange | undefined;
 				let defaultValue: TextRange | undefined;
-				let defaultPropsArg: TextRange | undefined;
 				let defaultMethod: DefineModel['defaultMethod'];
 				let required = false;
 
@@ -203,12 +201,6 @@ export function parseScriptSetupRanges(
 								else if (ts.isMethodDeclaration(property) && !property.asteriskToken) {
 									defaultMethod = { ..._getStartEnd(property), name: _getStartEnd(property.name) };
 								}
-								if (ts.isFunctionLike(initializer) && initializer.parameters.length) {
-									const firstArg = initializer.parameters[0]!;
-									if (!firstArg.dotDotDotToken && !firstArg.type) {
-										defaultPropsArg = _getStartEnd(firstArg);
-									}
-								}
 								break;
 							}
 							case 'required': {
@@ -233,7 +225,6 @@ export function parseScriptSetupRanges(
 					modifierType,
 					runtimeType,
 					defaultValue,
-					defaultPropsArg,
 					defaultMethod,
 					required,
 					comments: getClosestMultiLineCommentRange(ts, node, parents, sourceFile),

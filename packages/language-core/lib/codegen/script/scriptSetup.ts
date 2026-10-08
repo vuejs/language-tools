@@ -150,45 +150,41 @@ export function* generateSetupFunction(
 ): Generator<Code> {
 	const transforms: CodeTransform[] = [];
 
-	const propsName = scriptSetupRanges.defineProps?.name ?? names.props;
-	for (const { defaultPropsArg, defaultValue, defaultMethod } of scriptSetupRanges.defineModel) {
-		if (!defaultPropsArg) {
-			continue;
-		}
-		// infer the parameter from the props instead of annotating it, so that
-		// `props => ...` and typed models (checked against `(props: Data) => T`) work
-		if (defaultValue) {
-			transforms.push(
-				// the leading parenthesis keeps the helper name off the mapped start of `props => ...`
-				insert(defaultValue.start, function*() {
-					yield `(${names.asDefaultFactory}(`;
-				}),
-				insert(defaultValue.end, function*() {
-					yield `, ${propsName}))`;
-				}),
-			);
-		}
-		else if (defaultMethod) {
-			// default(props) {} -> default: __VLS_asDefaultFactory(function(props) {}, props)
-			transforms.push(
-				insert(defaultMethod.start, function*() {
-					yield `default: ${names.asDefaultFactory}(`;
-				}),
-				replace(defaultMethod.name.start, defaultMethod.name.end, function*() {
-					yield `function`;
-				}),
-				insert(defaultMethod.end, function*() {
-					yield `, ${propsName})`;
-				}),
-			);
-		}
-	}
 	if (scriptSetupRanges.defineProps) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
 		const _callExp = scriptSetupRanges.withDefaults?.callExp ?? callExp;
 		transforms.push(
 			...generateDefineWithTypeTransforms(scriptSetup, statement, _callExp, typeArg, name, names.props, names.Props),
 		);
+		for (const { defaultValue, defaultMethod } of scriptSetupRanges.defineModel) {
+			// infer the parameter from the props instead of annotating it, so that
+			// `props => ...` and typed models (checked against `(props: Data) => T`) work
+			if (defaultValue) {
+				transforms.push(
+					// the leading parenthesis keeps the helper name off the mapped start of `props => ...`
+					insert(defaultValue.start, function*() {
+						yield `(${names.asDefaultFactory}(`;
+					}),
+					insert(defaultValue.end, function*() {
+						yield `, ${name ?? names.props}))`;
+					}),
+				);
+			}
+			else if (defaultMethod) {
+				// default(props) {} -> default: __VLS_asDefaultFactory(function(props) {}, props)
+				transforms.push(
+					insert(defaultMethod.start, function*() {
+						yield `default: ${names.asDefaultFactory}(`;
+					}),
+					replace(defaultMethod.name.start, defaultMethod.name.end, function*() {
+						yield `function`;
+					}),
+					insert(defaultMethod.end, function*() {
+						yield `, ${name ?? names.props})`;
+					}),
+				);
+			}
+		}
 	}
 	if (scriptSetupRanges.defineEmits) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineEmits;
@@ -581,8 +577,8 @@ function* generateModels(
 			const defaultText = getRangeText(scriptSetup, defineModel.defaultValue);
 			defaultCodes.push(
 				`'${propName}': ${
-					defineModel.defaultPropsArg
-						? `${names.asDefaultFactory}(${defaultText}, ${scriptSetupRanges.defineProps?.name ?? names.props})`
+					scriptSetupRanges.defineProps
+						? `${names.asDefaultFactory}(${defaultText}, ${scriptSetupRanges.defineProps.name ?? names.props})`
 						: defaultText
 				},${newLine}`,
 			);

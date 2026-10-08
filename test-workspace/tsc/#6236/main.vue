@@ -49,8 +49,18 @@ defineModel<number>('corge', {
 	default: (props) => props.foo,
 });
 
+const waldo = defineModel<string>('waldo', {
+	default: 'waldo',
+});
+
+const fred = defineModel<() => void>('fred', {
+	default: () => {},
+});
+
 exactType(bar.value, {} as string);
 exactType(baz.value, {} as string);
 exactType(qux.value, {} as string);
 exactType(grault.value, {} as string);
+exactType(waldo.value, {} as string);
+exactType(fred.value, {} as () => void);
 </script>
