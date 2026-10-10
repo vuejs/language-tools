@@ -1283,6 +1283,40 @@ test('#6110', async () => {
 	);
 });
 
+test('#6259', async () => {
+	const item = await requestCompletionItemToTsServer(
+		'fixture.vue',
+		'vue',
+		`
+		<script setup lang="ts">
+		const obj = { 'foo-bar': 1 };
+		</script>
+
+		<template>{{ obj.| }}</template>
+	`,
+		'foo-bar',
+	);
+	expect(item).toMatchInlineSnapshot(`
+		{
+		  "insertText": "['foo-bar']",
+		  "kind": "property",
+		  "kindModifiers": "",
+		  "name": "foo-bar",
+		  "replacementSpan": {
+		    "end": {
+		      "line": 6,
+		      "offset": 20,
+		    },
+		    "start": {
+		      "line": 6,
+		      "offset": 19,
+		    },
+		  },
+		  "sortText": "11",
+		}
+	`);
+});
+
 const openedDocuments: TextDocument[] = [];
 
 afterEach(async () => {
