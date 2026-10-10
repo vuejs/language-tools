@@ -1,10 +1,10 @@
 import * as path from 'path-browserify';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
-import type { Code, IRBlock, IRScript, IRScriptSetup, VueCompilerOptions } from '../../types';
+import type { Code, IRScript, IRScriptSetup, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { asType, endOfLine, generateExportDeclareEqual, generateSfcBlockSection, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateGeneric, generateMacros, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
@@ -123,7 +123,7 @@ function* generateWorker(
 				scriptSetup,
 				scriptSetupRanges,
 				generateTemplate(options, selfType),
-				[`return `],
+				'return',
 			);
 			yield `})()${endOfLine}`;
 		}
@@ -149,19 +149,20 @@ function* generateWorker(
 					generateTemplate(options),
 				),
 			);
+			yield `export default ${exportExpression}${endOfLine}`;
 		}
 		else {
-			// no script block, generate script setup code at root
+			// no script block, generate script setup code at root;
+			// `export default` is emitted by `generateSetupFunction`
 			yield* generateSetupFunction(
 				options,
 				ctx,
 				scriptSetup,
 				scriptSetupRanges,
 				generateTemplate(options),
-				generateExportDeclareEqual(scriptSetup, names.export),
+				'export',
 			);
 		}
-		yield `export default ${exportExpression}${endOfLine}`;
 	}
 	// only <script>
 	else if (script && scriptRanges) {
@@ -273,12 +274,4 @@ function* generateGlobalTypesReference(
 	if (lib === 'vue' && target < 3.5) {
 		yield `/// <reference types=${JSON.stringify(typesPath + '/vue-3.4-shims.d.ts')} />${newLine}`;
 	}
-}
-
-function* generateExportDeclareEqual(block: IRBlock, name: string): Generator<Code> {
-	yield `const `;
-	const boundary = yield* Boundary.start(block.name, 0, block.content.length, codeFeatures.doNotReportTs6133);
-	yield name;
-	yield boundary.end();
-	yield ` = `;
 }

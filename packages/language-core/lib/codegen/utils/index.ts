@@ -1,6 +1,7 @@
 import type * as ts from 'typescript';
 import type { Code, IRBlock, IRScript, IRScriptSetup, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
+import { Boundary } from './boundary';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
@@ -51,6 +52,14 @@ export function* generateTypeAlias(
 		yield* type();
 		yield `} ${name} */${endOfLine}`;
 	}
+}
+
+export function* generateExportDeclareEqual(block: IRBlock, name: string): Generator<Code> {
+	yield `const `;
+	const boundary = yield* Boundary.start(block.name, 0, block.content.length, codeFeatures.doNotReportTs6133);
+	yield name;
+	yield boundary.end();
+	yield ` = `;
 }
 
 // The phantom argument that carries the component library's `Ref` brand into
