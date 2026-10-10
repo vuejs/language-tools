@@ -196,7 +196,10 @@ export function* generateComponent(
 	}(${componentVar}, new ${componentVar}({${newLine}`;
 	yield `// @ts-ignore${newLine}`;
 	yield propsStr
-		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
+		.replace(
+			/\/\*[\s\S]*?\*\/|(["'`])(?:\\[\s\S]|(?!\1)[^\\])*\1|\/\/(.*)$/gm,
+			(match, _, body) => body === undefined ? match : `/*${body.replaceAll('*/', '*\\/')} */`,
+		)
 		.replace(/\n/g, ' ');
 	yield `}))${endOfLine}`;
 
