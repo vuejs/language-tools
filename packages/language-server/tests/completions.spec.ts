@@ -1317,6 +1317,75 @@ test('#6259', async () => {
 	`);
 });
 
+test('#6259 (partially typed member)', async () => {
+	const item = await requestCompletionItemToTsServer(
+		'fixture.vue',
+		'vue',
+		`
+		<script setup lang="ts">
+		const obj = { 'foo-bar': 1 };
+		</script>
+
+		<template>{{ obj.fo| }}</template>
+	`,
+		'foo-bar',
+	);
+	expect(item).toMatchInlineSnapshot(`
+		{
+		  "insertText": "['foo-bar']",
+		  "kind": "property",
+		  "kindModifiers": "",
+		  "name": "foo-bar",
+		  "replacementSpan": {
+		    "end": {
+		      "line": 6,
+		      "offset": 22,
+		    },
+		    "start": {
+		      "line": 6,
+		      "offset": 19,
+		    },
+		  },
+		  "sortText": "11",
+		}
+	`);
+});
+
+test('#6259 (ref binding)', async () => {
+	const item = await requestCompletionItemToTsServer(
+		'fixture.vue',
+		'vue',
+		`
+		<script setup lang="ts">
+		import { ref } from 'vue';
+		const error = ref<Error>();
+		</script>
+
+		<template>{{ error.| ?? 'Unknown Error' }}</template>
+	`,
+		'message',
+	);
+	expect(item).toMatchInlineSnapshot(`
+		{
+		  "insertText": "?.message",
+		  "kind": "property",
+		  "kindModifiers": "declare",
+		  "name": "message",
+		  "replacementSpan": {
+		    "end": {
+		      "line": 7,
+		      "offset": 22,
+		    },
+		    "start": {
+		      "line": 7,
+		      "offset": 21,
+		    },
+		  },
+		  "sortText": "11",
+		}
+	`);
+});
+
 const openedDocuments: TextDocument[] = [];
 
 afterEach(async () => {
