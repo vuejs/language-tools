@@ -103,6 +103,11 @@ export function* generateInterpolation(
  * neighbouring token's end and this chunk's start claim the same source offset.
  * Downgrading the boundary character to verification-only keeps content-sensitive
  * features (rename / navigation) from firing on the neighbouring chunk.
+ *
+ * Completion is mapped separately as one range over the whole chunk: TypeScript's
+ * replacement spans can start at the boundary character (e.g. the `.` replaced
+ * by `?.foo`, or `.fo` replaced by `['foo-bar']`), and Volar only maps a span back
+ * when both of its ends fall inside a single completion-enabled mapping.
  */
 function* generateNonIdentifierCode(
 	code: string,
@@ -118,9 +123,18 @@ function* generateNonIdentifierCode(
 		yield [code, source, offset, data];
 		return;
 	}
+	const completionRange = data.completion
+		? yield* Boundary.start(source, offset, offset + code.length, {
+			completion: data.completion,
+			__combineRange: true,
+		})
+		: undefined;
 	yield [code.slice(0, 1), source, offset, { verification: data.verification }];
 	if (code.length > 1) {
-		yield [code.slice(1), source, offset + 1, data];
+		yield [code.slice(1), source, offset + 1, { ...data, completion: false }];
+	}
+	if (completionRange) {
+		yield completionRange.end();
 	}
 }
 
