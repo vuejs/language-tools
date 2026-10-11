@@ -191,6 +191,10 @@ export function createTemplateCodegenContext() {
 	// scopes ---------------------------------------------------------------------
 
 	class Scope extends Set<string> {
+		constructor(readonly isFunction: boolean) {
+			super();
+		}
+
 		declare(...variables: string[]) {
 			for (const name of variables) {
 				this.add(name);
@@ -205,8 +209,8 @@ export function createTemplateCodegenContext() {
 
 	const scopes: Scope[] = [];
 
-	function scope() {
-		const scope = new Scope();
+	function scope(isFunction = false) {
+		const scope = new Scope(isFunction);
 		scopes.push(scope);
 		return scope;
 	}
