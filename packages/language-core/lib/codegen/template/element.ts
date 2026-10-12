@@ -194,10 +194,9 @@ export function* generateComponent(
 	yield `const ${functionalVar} = ${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
-	yield `// @ts-ignore${newLine}`;
-	yield propsStr
-		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
-		.replace(/\n/g, ' ');
+	for (const code of propCodes) {
+		yield typeof code === 'string' ? code : [code[0], code[1], code[2], {}];
+	}
 	yield `}))${endOfLine}`;
 
 	yield `const `;
