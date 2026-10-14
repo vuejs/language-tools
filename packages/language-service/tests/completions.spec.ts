@@ -14,6 +14,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { URI } from 'vscode-uri';
 
 type CompletionProvider = NonNullable<LanguageServicePluginInstance['provideCompletionItems']>;
+type CompletionResolver = NonNullable<LanguageServicePluginInstance['resolveCompletionItem']>;
 
 function deferred<T>() {
 	let resolve!: (value: T) => void;
@@ -43,9 +44,13 @@ function queuedProvider(...providers: CompletionProvider[]) {
 	return provide;
 }
 
-function completionPlugin(provide: CompletionProvider, isAdditionalCompletion = false): LanguageServicePlugin {
+function completionPlugin(
+	provide: CompletionProvider,
+	isAdditionalCompletion = false,
+	resolve?: CompletionResolver,
+): LanguageServicePlugin {
 	return {
-		capabilities: { completionProvider: {} },
+		capabilities: { completionProvider: { resolveProvider: !!resolve } },
 		create: () => ({
 			isAdditionalCompletion,
 			provideCompletionItems: (...args) => {
@@ -53,6 +58,7 @@ function completionPlugin(provide: CompletionProvider, isAdditionalCompletion = 
 					return provide(...args);
 				}
 			},
+			...(resolve && { resolveCompletionItem: resolve }),
 		}),
 	};
 }
@@ -72,13 +78,14 @@ function createTestService(plugins: LanguageServicePlugin[], vue = false) {
 	};
 }
 
-function completionList(label: string, isIncomplete = false, position?: Position): CompletionList {
+function completionList(label: string, isIncomplete = false, position?: Position, data?: unknown): CompletionList {
 	return {
 		isIncomplete,
 		// Same-label alternatives must both survive; deduplication must not hide lost entries.
 		items: ['one', 'two'].map(suffix => ({
 			label,
 			insertText: `${label}:${suffix}`,
+			...(data !== undefined && { data }),
 			...(position && {
 				textEdit: { range: { start: position, end: position }, newText: `${label}:${suffix}` },
 			}),
@@ -211,6 +218,118 @@ describe('completion request isolation (#6225)', () => {
 			expect(additional).toHaveBeenCalledTimes(1);
 		},
 	);
+
+	it('isolates a refresh cancelled after another refresh starts', async () => {
+		const cancelled = completionGate();
+		const next = completionGate();
+		const main = queuedProvider(() => completionList('seed', true), cancelled.provide, next.provide);
+		const stable = queuedProvider(() => completionList('stable'));
+		const { service, setDocument } = createTestService([
+			completionPlugin(main),
+			completionPlugin(stable, true),
+		]);
+		const uri = URI.parse('file:///cancel-after-next.ts');
+		const token = cancellationToken();
+		setDocument(uri, 'old');
+		expectItems(await service.getCompletionItems(uri, position), 'seed', 'stable');
+
+		const cancelledRequest = service.getCompletionItems(uri, position, incomplete, token).then(
+			() => {},
+			() => {},
+		);
+		await cancelled.entered;
+		setDocument(uri, 'next');
+		const nextRequest = service.getCompletionItems(uri, position, incomplete);
+		await next.entered;
+		token.isCancellationRequested = true;
+		next.resolve(completionList('next'));
+		expectItems(await nextRequest, 'next', 'stable');
+		cancelled.resolve(completionList('cancelled'));
+		await cancelledRequest;
+
+		expectItems(await service.getCompletionItems(uri, position, incomplete), 'next', 'stable');
+		expect(main).toHaveBeenCalledTimes(3);
+		expect(stable).toHaveBeenCalledTimes(1);
+	});
+
+	it('resolves an item from an older request using its own data', async () => {
+		const older = completionGate();
+		const newer = completionGate();
+		const provide = queuedProvider(older.provide, newer.provide);
+		const receivedData: unknown[] = [];
+		const resolve = vi.fn<CompletionResolver>(item => {
+			receivedData.push(item.data);
+			return { ...item, detail: `resolved:${(item.data as { request: string }).request}` };
+		});
+		const { service, setDocument } = createTestService([completionPlugin(provide, false, resolve)]);
+		const uri = URI.parse('file:///resolve-old.ts');
+		setDocument(uri, 'old');
+
+		const olderRequest = service.getCompletionItems(uri, position);
+		await older.entered;
+		setDocument(uri, 'new');
+		const newerRequest = service.getCompletionItems(uri, position);
+		await newer.entered;
+		newer.resolve(completionList('same', false, undefined, { request: 'newer' }));
+		const newerResult = await newerRequest;
+		older.resolve(completionList('same', false, undefined, { request: 'older' }));
+		const olderResult = await olderRequest;
+
+		// A resolve request is a JSON round-trip, not the cached item's object reference.
+		const resolved = await service.resolveCompletionItem(structuredClone(olderResult.items[0]!));
+		expect(receivedData).toEqual([{ request: 'older' }]);
+		expect(resolved.detail).toBe('resolved:older');
+		expect(resolved.data).toBeUndefined();
+		expect(newerResult.items[0]!.data).toEqual(expect.objectContaining({ original: expect.anything() }));
+		const cached = await service.getCompletionItems(uri, position, incomplete);
+		expectItems(cached, 'same');
+		expect(cached).toEqual(newerResult);
+		expect((await service.resolveCompletionItem(structuredClone(cached.items[0]!))).detail).toBe('resolved:newer');
+		expect(receivedData).toEqual([{ request: 'older' }, { request: 'newer' }]);
+	});
+
+	it.each(['in order', 'in reverse'])('isolates a file refresh from another file completing %s', async order => {
+		const refresh = completionGate();
+		const otherFile = completionGate();
+		const main = queuedProvider(
+			() => completionList('a:seed', true),
+			refresh.provide,
+			otherFile.provide,
+			() => completionList('a:recomputed'),
+		);
+		const stable = vi.fn<CompletionProvider>(document => completionList(`${document.getText()}:stable`));
+		const { service, setDocument } = createTestService([
+			completionPlugin(main),
+			completionPlugin(stable, true),
+		]);
+		const aUri = URI.parse('file:///a.ts');
+		const bUri = URI.parse('file:///b.ts');
+		setDocument(aUri, 'a');
+		setDocument(bUri, 'b');
+		expectItems(await service.getCompletionItems(aUri, position), 'a:seed', 'a:stable');
+		const refreshRequest = service.getCompletionItems(aUri, position, incomplete);
+		expect((await refresh.entered)[0].uri).toBe(aUri.toString());
+		const otherRequest = service.getCompletionItems(bUri, position);
+		expect((await otherFile.entered)[0].uri).toBe(bUri.toString());
+		if (order === 'in order') {
+			refresh.resolve(completionList('a:refresh'));
+			await refreshRequest;
+			otherFile.resolve(completionList('b:main'));
+		}
+		else {
+			otherFile.resolve(completionList('b:main'));
+			await otherRequest;
+			refresh.resolve(completionList('a:refresh'));
+		}
+		expectItems(await refreshRequest, 'a:refresh', 'a:stable');
+		expectItems(await otherRequest, 'b:main', 'b:stable');
+		expect(stable).toHaveBeenCalledTimes(2);
+		expectItems(await service.getCompletionItems(bUri, position, incomplete), 'b:main', 'b:stable');
+		// Switching files misses the single-entry cache, but must never reuse B's entries for A.
+		expectItems(await service.getCompletionItems(aUri, position, incomplete), 'a:recomputed', 'a:stable');
+		expect(main).toHaveBeenCalledTimes(4);
+		expect(stable).toHaveBeenCalledTimes(3);
+	});
 
 	describe.each(['TypeScript', 'embedded Vue'])('%s incomplete completions', language => {
 		it.each(['in order', 'in reverse'])('isolates concurrent refreshes completing %s', async order => {
