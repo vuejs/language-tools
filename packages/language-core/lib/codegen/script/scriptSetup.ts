@@ -410,7 +410,7 @@ export function* generateMacros(options: ScriptCodegenOptions): Generator<Code> 
 		const toImport = usedMacros.filter(({ alias }) => !options.setupBindings.has(alias));
 
 		if (toImport.length) {
-			yield `const { `;
+			yield `${newLine}const { `;
 			for (const { canonical, alias } of toImport) {
 				yield alias === canonical ? `${canonical}, ` : `${canonical}: ${alias}, `;
 			}

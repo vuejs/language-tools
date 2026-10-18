@@ -76,7 +76,6 @@ function* generateWorker(
 	// <script> + <script setup>
 	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
 		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
-		yield* generateMacros(options);
 
 		// <script>
 		let selfType: string | undefined;
@@ -98,6 +97,7 @@ function* generateWorker(
 		}
 
 		// <script setup>
+		yield* generateMacros(options);
 		yield* generateExportDeclareEqual(scriptSetup, names.export);
 		if (scriptSetup.generic) {
 			yield* generateGeneric(
