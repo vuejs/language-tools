@@ -81,7 +81,7 @@ function* generateWorker(
 	if (template.ast) {
 		yield* generateTemplateChild(options, ctx, template.ast);
 	}
-	yield* ctx.generateHoistVariables();
+	yield* ctx.generateHoistVariables(options.scriptLang);
 	yield* generateSlotsType(options, ctx);
 	yield* generateInheritedAttrsType(options, ctx);
 	yield* generateTemplateRefsType(options, ctx);

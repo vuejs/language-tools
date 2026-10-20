@@ -228,6 +228,24 @@ declare namespace __VLS_1 {
 "
 `;
 
+exports[`Input: js-component/template-ref.vue, Output: js-component/template-ref.vue.d.ts 1`] = `
+"declare const _default: typeof __VLS_export;
+export default _default;
+export type __VLS_LocalComponents = import("vue").ShallowUnwrapRef<{
+    Child: typeof Child;
+}>;
+export type __VLS_GlobalComponents = import("vue").GlobalComponents;
+export type __VLS_LocalDirectives = {};
+export type __VLS_TemplateRefs = {} & {
+    child: typeof __VLS_6 | null;
+};
+declare const __VLS_export: import("vue").DefineComponent<{}, {
+    child: Readonly<import("vue").ShallowRef<any, any>>;
+}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+declare var __VLS_6: any;
+"
+`;
+
 exports[`Input: jsx-slots/generic-slots.vue, Output: jsx-slots/generic-slots.vue.d.ts 1`] = `
 "declare const __VLS_export: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_exposed?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
     props: import("vue").PublicProps & __VLS_PrettifyLocal<__VLS_PropsChildren<{
