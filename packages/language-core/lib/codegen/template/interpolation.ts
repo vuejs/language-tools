@@ -69,7 +69,7 @@ function* generateNonIdentifierCode(
 	shouldCut = true,
 	shouldCutEnd = false,
 ): Generator<Code> {
-	if (!code.length) {return;}
+	if (!code.length) return;
 	if (shouldCutEnd) {
 		yield* generateNonIdentifierCode(code.slice(0, -1), source, offset, data, shouldCut);
 		yield [code.slice(-1), source, offset + code.length - 1, { verification: data.verification }];
