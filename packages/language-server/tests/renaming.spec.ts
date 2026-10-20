@@ -1497,7 +1497,8 @@ import { options } from './constants';
 	expect(
 		locations.map(({ file, locs }) => ({
 			file,
-			ranges: locs.map(({ start, end }) => [start.line, start.offset, end.line, end.offset]),
+			ranges: locs.map(({ start, end }) => [start.line, start.offset, end.line, end.offset] as const)
+				.sort((a, b) => a[0] - b[0] || a[1] - b[1]),
 		})).sort((a, b) => a.file.localeCompare(b.file)),
 	).toEqual([
 		{

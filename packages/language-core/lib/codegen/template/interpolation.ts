@@ -29,7 +29,7 @@ export function* generateInterpolation(
 				prevEnd > 0,
 				true,
 			);
-			yield [name, block.name, start + offset, { verification: features.verification }];
+			yield [name, block.name, start + offset, features];
 			yield `: `;
 		}
 		else if (prevEnd < offset) {
@@ -114,6 +114,7 @@ export function* generateIdentifier(
 				Object.assign(features, code[3], { navigation: false });
 				references.push([code[0], code[1], code[2], {
 					navigation: code[3].navigation,
+					__combineToken: code[3].__combineToken,
 					__shorthandExpression: code[3].__shorthandExpression,
 				}]);
 			}
