@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import Child from './child.vue';
+import GenericChild from './generic.vue';
+import { exactType } from '../shared';
 
 const url = 'a/b';
+const member = {} as { name: string } | undefined;
 </script>
 
 <template>
@@ -20,6 +23,16 @@ const url = 'a/b';
 			'x'
 		"
 	/>
+	<Child :foo="`first
+second`" />
+	<Child :foo="`first\\
+`" />
+	<GenericChild :foo="`$\
+{missing}`" :check="value => exactType(value, '${missing}' as const)" />
+	<template v-if="member">
+		<Child :foo="`https://example.com/${member.name}`" />
+		{{ member.name }}
+	</template>
 	<!-- @vue-expect-error -->
 	<Child
 		:foo="

@@ -187,14 +187,15 @@ export function* generateComponent(
 		options.vueCompilerOptions.checkUnknownProps,
 		failedPropExps,
 	)];
+	const inferencePropCodes: Code[] = propCodes.map(code =>
+		typeof code === 'string' ? code : [code[0], code[1], code[2], {}]
+	);
 
 	yield `// @ts-ignore${newLine}`;
 	yield `const ${functionalVar} = ${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
-	for (const code of propCodes) {
-		yield typeof code === 'string' ? code : [code[0], code[1], code[2], {}];
-	}
+	yield* inferencePropCodes;
 	yield `}))${endOfLine}`;
 
 	yield `const `;
@@ -283,7 +284,7 @@ export function* generateComponent(
 		if (options.vueCompilerOptions.checkRequiredFallthroughAttributes) {
 			const restsVar = ctx.getInternalVariable();
 			yield `var ${restsVar} = ${names.omit}(${getPropsVar()}, {${newLine}`;
-			yield* propCodes;
+			yield* inferencePropCodes;
 			yield `})${endOfLine}`;
 			ctx.inheritedAttrVars.add(restsVar);
 		}
