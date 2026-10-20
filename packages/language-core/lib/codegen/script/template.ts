@@ -18,16 +18,17 @@ export function* generateTemplate(
 	selfType?: string,
 ): Generator<Code> {
 	if (options.templateBindings.size) {
-		yield `const ${names.getTemplateBindings} = () => (`;
-		yield isTsLang(options.scriptLang) ? `{} as {` : `/** @type {{`;
+		// Separate getters avoid inference cycles through component template refs.
 		for (const name of options.templateBindings) {
+			yield `const ${names.getTemplateBindings}_${name} = () => (`;
+			yield isTsLang(options.scriptLang) ? `{} as {` : `/** @type {{`;
 			yield `${name}: typeof ${name}${endOfLine}`;
+			yield isTsLang(options.scriptLang) ? `})${endOfLine}` : `}} */ ({}))${endOfLine}`;
 		}
-		yield isTsLang(options.scriptLang) ? `})${endOfLine}` : `}} */ ({}))${endOfLine}`;
 		yield* generateTypedVar('let', names.templateBindings, options.scriptLang, function*() {
 			yield `{${newLine}`;
 			for (const name of options.templateBindings) {
-				yield `${name}: ${names.TemplateBinding}<ReturnType<typeof ${names.getTemplateBindings}>['${name}'], import('${options.vueCompilerOptions.lib}').Ref<unknown>>${endOfLine}`;
+				yield `${name}: ${names.TemplateBinding}<ReturnType<typeof ${names.getTemplateBindings}_${name}>['${name}'], import('${options.vueCompilerOptions.lib}').Ref<unknown>>${endOfLine}`;
 			}
 			yield `}`;
 		});
