@@ -156,9 +156,11 @@ declare global {
 		: (S extends null | undefined ? never : (props: S) => any);
 	function __VLS_omit<T, K>(target: T, props: K): Omit<T, keyof K>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
-	// Preserve a ref's original getter, setter and readonly modifiers. Non-refs
-	// receive the same access shape without changing the original binding's type.
-	type __VLS_TemplateBinding<T, Ref> = T extends Ref ? T : { value: T };
+	// Capture non-ref unions before distributing so narrowing does not restrict writes.
+	// Keep refs unchanged to preserve their getters, setters and readonly modifiers.
+	type __VLS_TemplateBinding<T, Ref, NonRef = Exclude<T, Ref>> = [T] extends [never] ? { value: never }
+		: T extends Ref ? T
+		: { value: NonRef };
 }
 
 export {};
