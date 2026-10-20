@@ -69,7 +69,9 @@ function* generateNonIdentifierCode(
 	shouldCut = true,
 	shouldCutEnd = false,
 ): Generator<Code> {
-	if (!code.length) return;
+	if (!code.length) {
+		return;
+	}
 	if (shouldCutEnd) {
 		yield* generateNonIdentifierCode(code.slice(0, -1), source, offset, data, shouldCut);
 		yield [code.slice(-1), source, offset + code.length - 1, { verification: data.verification }];
@@ -114,6 +116,7 @@ export function* generateIdentifier(
 				Object.assign(features, code[3], { navigation: false });
 				references.push([code[0], code[1], code[2], {
 					navigation: code[3].navigation,
+					__importCompletion: true,
 					__combineToken: code[3].__combineToken,
 					__shorthandExpression: code[3].__shorthandExpression,
 				}]);
@@ -121,7 +124,12 @@ export function* generateIdentifier(
 		}
 		ctx.bindingReferences.push(references);
 		yield ['', source, start, { verification: features.verification }];
-		yield `${names.templateBindings}.${name}.`;
+		// Keep completions in the current scope, before the synthetic property access.
+		const completionBoundary = yield* Boundary.start(source, start, end, { completion: features.completion });
+		yield names.templateBindings;
+		yield completionBoundary.end();
+		yield `.${name}.`;
+		features.completion = false;
 		const boundary = yield* Boundary.start(source, start, end, features);
 		yield 'value';
 		yield boundary.end();
