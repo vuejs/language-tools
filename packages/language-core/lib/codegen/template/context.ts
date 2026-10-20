@@ -3,7 +3,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
-import { endOfLine, newLine } from '../utils';
+import { endOfLine, isTsLang, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
@@ -214,13 +214,24 @@ export function createTemplateCodegenContext() {
 	// context accesses -----------------------------------------------------------
 
 	const contextAccesses = new Map<string, Map<string, Set<number>>>();
-	const dotValueAccesses = new Set<string>();
+	const bindingReferences: Code[][] = [];
 
-	// Ordered log of accessed names; event-handler closures slice from a mark
-	// to find the names accessed within their body.
+	function* generateBindingReferences(lang: string): Generator<Code> {
+		if (!bindingReferences.length) return;
+		yield isTsLang(lang) ? `void ({} as [` : `void /** @type {[`;
+		for (const reference of bindingReferences) {
+			yield `typeof `;
+			yield* reference;
+			yield `,`;
+		}
+		yield isTsLang(lang) ? `])${endOfLine}` : `]} */ ({})${endOfLine}`;
+	}
+
+	// Conditions record their accessed names so handlers can skip a replayed
+	// guard when its bindings are shadowed by template locals.
 	const accessLog: string[] = [];
 
-	function accessVariable(source: string, name: string, offset?: number, dotValue = false) {
+	function accessVariable(source: string, name: string, offset?: number) {
 		accessLog.push(name);
 		let map = contextAccesses.get(name);
 		if (!map) {
@@ -232,9 +243,6 @@ export function createTemplateCodegenContext() {
 		}
 		if (offset !== undefined) {
 			arr.add(offset);
-		}
-		if (dotValue) {
-			dotValueAccesses.add(name);
 		}
 	}
 
@@ -340,7 +348,8 @@ export function createTemplateCodegenContext() {
 		scopes,
 		scope,
 		contextAccesses,
-		dotValueAccesses,
+		bindingReferences,
+		generateBindingReferences,
 		accessLog,
 		accessVariable,
 		generateAutoImport,

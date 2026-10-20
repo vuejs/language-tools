@@ -7,7 +7,7 @@ import {
 	generateSfcBlockSection,
 	generateTypeAlias,
 	generateTypedVar,
-	getRefBrandArgument,
+	isTsLang,
 	newLine,
 } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
@@ -17,18 +17,27 @@ export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	selfType?: string,
 ): Generator<Code> {
+	if (options.templateBindings.size) {
+		yield `const ${names.getTemplateBindings} = () => (`;
+		yield isTsLang(options.scriptLang) ? `{} as {` : `/** @type {{`;
+		for (const name of options.templateBindings) {
+			yield `${name}: typeof ${name}${endOfLine}`;
+		}
+		yield isTsLang(options.scriptLang) ? `})${endOfLine}` : `}} */ ({}))${endOfLine}`;
+		yield* generateTypedVar('let', names.templateBindings, options.scriptLang, function*() {
+			yield `{${newLine}`;
+			for (const name of options.templateBindings) {
+				yield `${name}: ${names.TemplateBinding}<ReturnType<typeof ${names.getTemplateBindings}>['${name}'], import('${options.vueCompilerOptions.lib}').Ref<unknown>>${endOfLine}`;
+			}
+			yield `}`;
+		});
+		yield `void ${names.templateBindings}${endOfLine}`;
+	}
 	yield* generateTemplateCtx(options, selfType);
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 
 	yield `void ${names.ctx}, ${names.components}, ${names.intrinsics}, ${names.directives}${endOfLine}`;
-
-	for (const name of options.dotValueBindings) {
-		yield `// @ts-ignore${newLine}`;
-		yield `${names.withDotValue}(${name}, ${
-			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
-		})${endOfLine}`;
-	}
 
 	if (options.templateAndStyleCodes.length) {
 		yield* options.templateAndStyleCodes;

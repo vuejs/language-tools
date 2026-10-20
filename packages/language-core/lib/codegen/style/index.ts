@@ -12,10 +12,8 @@ export interface StyleCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	styles: readonly IRStyle[];
 	scriptLang: string;
-	setupRefs: Set<string>;
-	setupConsts: Set<string>;
 	setupBindings: Set<string>;
-	dotValueBindings: Set<string>;
+	setupConsts: Set<string>;
 }
 
 export { generate as generateStyle };
@@ -46,6 +44,7 @@ function* generateWorker(
 	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);
 	yield* scope.end();
+	yield* ctx.generateBindingReferences(options.scriptLang);
 }
 
 function* generateCssVars(

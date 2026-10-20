@@ -17,6 +17,8 @@ const raw = {
 	propsOption: '',
 	self: '',
 	setup: '',
+	templateBindings: '',
+	getTemplateBindings: '',
 	slots: '',
 	src: '',
 
@@ -48,10 +50,8 @@ const raw = {
 	nonNull: '',
 	omit: '',
 	tryAsConstant: '',
-	unwrap: '',
 	vFor: '',
 	vSlot: '',
-	withDotValue: '',
 
 	ConstructorOverloads: '',
 	Elements: '',
@@ -72,6 +72,7 @@ const raw = {
 	ShortEmits: '',
 	ShortEmitsToObject: '',
 	SpreadMerge: '',
+	TemplateBinding: '',
 	UnionToIntersection: '',
 	WithComponent: '',
 	// #endregion
