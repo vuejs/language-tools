@@ -217,7 +217,9 @@ export function createTemplateCodegenContext() {
 	const bindingReferences: Code[][] = [];
 
 	function* generateBindingReferences(lang: string): Generator<Code> {
-		if (!bindingReferences.length) return;
+		if (!bindingReferences.length) {
+			return;
+		}
 		yield isTsLang(lang) ? `void ({} as [` : `void /** @type {[`;
 		for (const reference of bindingReferences) {
 			yield `typeof `;
