@@ -661,8 +661,9 @@ export function resolveCompletionResult<T>(
 				if (item.source.endsWith(vueExt) && item.name.endsWith(suffix)) {
 					item.name = capitalize(item.name.slice(0, -suffix.length));
 					if (item.insertText) {
-						// #2286
-						item.insertText = item.insertText.replace(`${suffix}$1`, '$1');
+						// #2286, #6283: import statement completions carry the whole statement,
+						// so the name TypeScript derived from the file name has to be swapped out
+						item.insertText = item.insertText.replace(oldName, item.name);
 					}
 					if (data) {
 						data.__vue__componentAutoImport = {
