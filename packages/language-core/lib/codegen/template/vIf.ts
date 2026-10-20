@@ -41,7 +41,6 @@ export function* generateVIf(
 				branch.condition.loc.start.offset,
 				`(`,
 				`)`,
-				true,
 			)];
 			yield* codes;
 			ctx.conditions.push({ text: toString(codes), accesses: ctx.accessLog.slice(accessMark) });

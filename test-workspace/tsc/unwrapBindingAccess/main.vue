@@ -67,7 +67,7 @@
 	<!-- && right operand narrowing (regression): b should be narrowed to string -->
 	<div>{{ a && b && exactType(b, {} as string) }}</div>
 
-	<!-- withDotValue nullish collapse: v-else narrows to undefined -->
+	<!-- A nullable function narrows to undefined in v-else. -->
 	<div v-if="maybeFn">{{ exactType(maybeFn, {} as (_e: Event) => void) }}</div>
 	<div v-else>{{ exactType(maybeFn, undefined) }}</div>
 
@@ -248,11 +248,11 @@
 	<div>{{ exactType(box2.value, {} as number) }}</div>
 	<div v-if="box2.value">{{ exactType(box2.value, {} as number) }}</div>
 
-	<!-- ref-or-nullish union (inject): `.value` resolves; the ref's own `value` absorbs the nullish member -->
-	<div>{{ exactType(injected, {} as number) }}</div>
+	<!-- Unwrapping an optional injected ref preserves its undefined member. -->
+	<div>{{ exactType(injected, {} as number | undefined) }}</div>
 	<div v-if="injected">{{ exactType(injected, {} as number) }}</div>
 
-	<!-- logical right operand is a plain read, not a narrowing position: `box` stays unmarked -->
+	<!-- The right operand of && retains the plain object's type. -->
 	<div>{{ exactType(flag && box, {} as false | { value: number }) }}</div>
 
 	<!-- v-for: inline literal sources keep their literal types (#6067) -->

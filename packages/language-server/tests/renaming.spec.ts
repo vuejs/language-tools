@@ -1,4 +1,5 @@
 import type { TextDocument } from '@volar/language-server';
+import type * as ts from 'typescript';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server';
@@ -1476,6 +1477,38 @@ test('Same Name Shorthand', async () => {
 		  ],
 		}
 	`);
+});
+
+test('#6237', async () => {
+	await prepareDocument('tsconfigProject/constants.ts', 'typescript', 'export const options = { mode: 0 };');
+	const result = await requestRenameToTsServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`<script setup lang="ts">
+import { options } from './constants';
+</script>
+<template>
+<button @click="() => opt|ions.mode" />
+<button @click="() => { options.mode; }" />
+</template>`,
+	);
+	expect(result.info.canRename).toBe(true);
+	const locations: ts.server.protocol.SpanGroup[] = result.locs;
+	expect(
+		locations.map(({ file, locs }) => ({
+			file,
+			ranges: locs.map(({ start, end }) => [start.line, start.offset, end.line, end.offset]),
+		})).sort((a, b) => a.file.localeCompare(b.file)),
+	).toEqual([
+		{
+			file: '${testWorkspacePath}/tsconfigProject/constants.ts',
+			ranges: [[1, 14, 1, 21]],
+		},
+		{
+			file: '${testWorkspacePath}/tsconfigProject/fixture.vue',
+			ranges: [[2, 10, 2, 17], [5, 23, 5, 30], [6, 25, 6, 32]],
+		},
+	]);
 });
 
 const openedDocuments: TextDocument[] = [];

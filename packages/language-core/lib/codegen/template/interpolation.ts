@@ -1,49 +1,35 @@
-import type { Code, IRBlock, VueCodeInformation, VueCompilerOptions } from '../../types';
+import type { Code, IRBlock, VueCodeInformation } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { getRefBrandArgument, getTypeScriptAST, identifierRE } from '../utils';
+import { getTypeScriptAST, identifierRE } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { forEachDeclarations, shouldIdentifierSkipped } from './bindingReferences';
 import type { TemplateCodegenContext } from './context';
 
 export function* generateInterpolation(
-	options: IdentifierOptions & {
-		typescript: typeof import('typescript');
-	},
+	options: IdentifierOptions & { typescript: typeof import('typescript') },
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
 	features: VueCodeInformation,
 	code: string,
 	start: number,
-	prefix: string = '',
-	suffix: string = '',
-	inNarrowing: boolean = false,
+	prefix = '',
+	suffix = '',
 ): Generator<Code> {
-	if (prefix) {
-		yield prefix;
-	}
-
+	yield prefix;
 	let prevEnd = 0;
-	for (
-		const [name, offset, isShorthand, isNarrowing, inTypeQuery, isNewOperand] of forEachIdentifiers(
-			options.typescript,
-			ctx,
-			block,
-			code,
-			prefix,
-			suffix,
-			inNarrowing,
-		)
-	) {
+	for (const [name, offset, isShorthand] of forEachIdentifiers(options.typescript, ctx, block, code, prefix, suffix)) {
 		if (isShorthand) {
 			yield* generateNonIdentifierCode(
-				code.slice(prevEnd, offset + name.length),
+				code.slice(prevEnd, offset),
 				block.name,
 				start + prevEnd,
 				features,
 				prevEnd > 0,
+				true,
 			);
+			yield [name, block.name, start + offset, { verification: features.verification }];
 			yield `: `;
 		}
 		else if (prevEnd < offset) {
@@ -53,65 +39,40 @@ export function* generateInterpolation(
 				start + prevEnd,
 				features,
 				prevEnd > 0,
+				true,
 			);
 		}
-
-		const codes: Code[] = [[
-			name,
-			block.name,
-			start + offset,
-			isShorthand
-				? { ...features, __shorthandExpression: 'js' as const }
-				: features,
-		]];
-
 		yield* generateIdentifier(
 			options,
 			ctx,
-			codes,
+			[[name, block.name, start + offset, isShorthand ? { ...features, __shorthandExpression: 'js' } : features]],
 			name,
 			block.name,
 			start + offset,
 			start + offset + name.length,
-			isNarrowing,
-			inTypeQuery,
-			isNewOperand,
 		);
-
 		prevEnd = offset + name.length;
 	}
-
 	if (prevEnd < code.length) {
-		yield* generateNonIdentifierCode(
-			code.slice(prevEnd),
-			block.name,
-			start + prevEnd,
-			features,
-			prevEnd > 0,
-		);
+		yield* generateNonIdentifierCode(code.slice(prevEnd), block.name, start + prevEnd, features, prevEnd > 0);
 	}
-
-	if (suffix) {
-		yield suffix;
-	}
+	yield suffix;
 }
 
-/**
- * Yield a code chunk, cutting the boundary character off as verification-only.
- *
- * Adjacent mappings share the boundary offset (closed interval), so both the
- * neighbouring token's end and this chunk's start claim the same source offset.
- * Downgrading the boundary character to verification-only keeps content-sensitive
- * features (rename / navigation) from firing on the neighbouring chunk.
- */
+// Adjacent mappings share their boundary offset. Keep punctuation from claiming
+// the preceding identifier's navigation position.
 function* generateNonIdentifierCode(
 	code: string,
 	source: string,
 	offset: number,
 	data: VueCodeInformation,
 	shouldCut = true,
+	shouldCutEnd = false,
 ): Generator<Code> {
-	if (!code.length) {
+	if (!code.length) {return;}
+	if (shouldCutEnd) {
+		yield* generateNonIdentifierCode(code.slice(0, -1), source, offset, data, shouldCut);
+		yield [code.slice(-1), source, offset + code.length - 1, { verification: data.verification }];
 		return;
 	}
 	if (!shouldCut) {
@@ -125,23 +86,10 @@ function* generateNonIdentifierCode(
 }
 
 interface IdentifierOptions {
-	setupRefs: Set<string>;
-	setupConsts: Set<string>;
 	setupBindings: Set<string>;
-	dotValueBindings: Set<string>;
-	vueCompilerOptions: VueCompilerOptions;
-	scriptLang: string;
+	setupConsts: Set<string>;
 }
 
-// Access strategy, in precedence order:
-// - setup consts → direct reference
-// - local-scope / global names → direct reference (the interpolation path
-//   filters these earlier; the v-bind shorthand path relies on this branch)
-// - template refs → direct `.value`
-// - dotValue bindings (narrowed at least once anywhere) → `.value` at
-//   every position; narrowing then works on the `.value` reference chain
-// - other bindings → `__VLS_unwrap` (plain reads keep the original type)
-// - otherwise → `__VLS_ctx.<name>`
 export function* generateIdentifier(
 	options: IdentifierOptions,
 	ctx: TemplateCodegenContext,
@@ -150,62 +98,35 @@ export function* generateIdentifier(
 	source: string,
 	start: number,
 	end: number,
-	isNarrowing = false,
-	inTypeQuery = false,
-	isNewOperand = false,
 ): Generator<Code> {
 	if (options.setupConsts.has(name) || shouldIdentifierSkipped(ctx, name)) {
 		yield* codes;
 	}
-	else if (options.setupRefs.has(name)) {
-		yield* codes;
-		yield `.`;
-		const boundary = yield* Boundary.start(
-			source,
-			start,
-			end,
-			codeFeatures.verification,
-		);
-		yield `value`;
+	else if (options.setupBindings.has(name)) {
+		ctx.accessVariable(source, name);
+		const features: VueCodeInformation = {};
+		const references: Code[] = [];
+		for (const code of codes) {
+			if (typeof code === 'string') {
+				references.push(code);
+			}
+			else {
+				Object.assign(features, code[3], { navigation: false });
+				references.push([code[0], code[1], code[2], {
+					navigation: code[3].navigation,
+					__shorthandExpression: code[3].__shorthandExpression,
+				}]);
+			}
+		}
+		ctx.bindingReferences.push(references);
+		yield ['', source, start, { verification: features.verification }];
+		yield `${names.templateBindings}.${name}.`;
+		const boundary = yield* Boundary.start(source, start, end, features);
+		yield 'value';
 		yield boundary.end();
 	}
-	else if (options.setupBindings.has(name)) {
-		// First pass records narrowing accesses here; the second pass emits from dotValueBindings.
-		ctx.accessVariable(source, name, start, inTypeQuery || isNarrowing);
-		if (inTypeQuery || options.dotValueBindings.has(name)) {
-			yield* codes;
-			yield `.`;
-			const boundary = yield* Boundary.start(
-				source,
-				start,
-				end,
-				codeFeatures.verification,
-			);
-			yield `value`;
-			yield boundary.end();
-		}
-		else {
-			// `new __VLS_unwrap(Foo)()` parses as `new (__VLS_unwrap(Foo)())`,
-			// whose target lacks a construct signature; keep the operand parenthesized.
-			if (isNewOperand) {
-				yield `(`;
-			}
-			yield `${names.unwrap}(`;
-			yield* codes;
-			yield `, ${getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)})`;
-			if (isNewOperand) {
-				yield `)`;
-			}
-		}
-	}
 	else {
-		// #1205, #1264
-		const boundary = yield* Boundary.start(
-			source,
-			start,
-			end,
-			codeFeatures.verification,
-		);
+		const boundary = yield* Boundary.start(source, start, end, codeFeatures.verification);
 		if (ctx.dollarVars.has(name)) {
 			yield names.dollars;
 		}
@@ -226,39 +147,17 @@ function* forEachIdentifiers(
 	code: string,
 	prefix: string,
 	suffix: string,
-	inNarrowing: boolean,
-): Generator<IdentifierAccess> {
+): Generator<[name: string, offset: number, isShorthand: boolean]> {
 	if (identifierRE.test(code) && !shouldIdentifierSkipped(ctx, code)) {
-		yield [code, 0, false, inNarrowing, false, false];
+		yield [code, 0, false];
 		return;
 	}
-
 	const scope = ctx.scope();
 	const ast = getTypeScriptAST(ts, block, prefix + code + suffix);
-	for (
-		const { id, isShorthand, isNarrowing, skipped, inTypeQuery, isNewOperand } of forEachDeclarations(
-			ts,
-			ast,
-			ast,
-			ctx,
-			scope,
-			inNarrowing,
-		)
-	) {
-		if (skipped) {
-			continue;
+	for (const { id, isShorthand, skipped } of forEachDeclarations(ts, ast, ast, ctx, scope)) {
+		if (!skipped) {
+			yield [getNodeText(ts, id, ast), getStartEnd(ts, id, ast).start - prefix.length, isShorthand];
 		}
-		const text = getNodeText(ts, id, ast);
-		yield [text, getStartEnd(ts, id, ast).start - prefix.length, isShorthand, isNarrowing, inTypeQuery, isNewOperand];
 	}
 	scope.end();
 }
-
-type IdentifierAccess = [
-	name: string,
-	offset: number,
-	isShorthand: boolean,
-	isNarrowing: boolean,
-	inTypeQuery: boolean,
-	isNewOperand: boolean,
-];

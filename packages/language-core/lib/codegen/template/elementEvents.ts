@@ -5,15 +5,7 @@ import { getUnwrappedExpression } from '../../parsers/utils';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import {
-	endOfLine,
-	generateTypedVar,
-	getRefBrandArgument,
-	getTypeScriptAST,
-	identifierRE,
-	isTsLang,
-	newLine,
-} from '../utils';
+import { endOfLine, generateTypedVar, getTypeScriptAST, identifierRE, isTsLang, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
@@ -187,7 +179,6 @@ export function* generateEventExpression(
 			const scope = ctx.scope();
 			scope.declare('$event');
 
-			const accessMark = ctx.accessLog.length;
 			const codes: Code[] = [];
 			for (const code of interpolation) {
 				codes.push(code);
@@ -198,7 +189,6 @@ export function* generateEventExpression(
 			// consume $event to avoid TS6133 when the expression doesn't use it
 			yield `void $event${endOfLine}`;
 
-			yield* generateReasserts(options, ctx, accessMark);
 			yield* ctx.generateConditionGuards();
 
 			if (isSingleExpression(options.typescript, ast)) {
@@ -241,7 +231,6 @@ export function* generateModelEventExpression(
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		const accessMark = ctx.accessLog.length;
 		const codes = [...generateInterpolation(
 			options,
 			ctx,
@@ -251,11 +240,9 @@ export function* generateModelEventExpression(
 			prop.exp.loc.start.offset,
 			undefined,
 			undefined,
-			true,
 		)];
 		yield `// @ts-ignore${newLine}`;
 		yield `(...[$event]) => {${newLine}`;
-		yield* generateReasserts(options, ctx, accessMark);
 		yield* ctx.generateConditionGuards();
 		yield* codes;
 		yield ` = $event${endOfLine}`;
@@ -263,34 +250,6 @@ export function* generateModelEventExpression(
 	}
 	else {
 		yield `() => {}`;
-	}
-}
-
-// Assertion narrowing does not flow into nested closures for imports and
-// `let`/`var` bindings (TS limitation), so re-assert those bindings at closure tops.
-function* generateReasserts(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-	accessMark: number,
-): Generator<Code> {
-	const reasserts = new Set<string>();
-	const collect = (name: string) => {
-		if (options.reassertBindings.has(name) && !ctx.scopes.some(scope => scope.has(name))) {
-			reasserts.add(name);
-		}
-	};
-	for (const name of ctx.accessLog.slice(accessMark)) {
-		collect(name);
-	}
-	for (const condition of ctx.conditions) {
-		for (const name of condition.accesses) {
-			collect(name);
-		}
-	}
-	for (const name of reasserts) {
-		yield `${names.withDotValue}(${name}, ${
-			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
-		})${endOfLine}`;
 	}
 }
 

@@ -186,7 +186,7 @@ export function useEmbeddedCodes(
 			];
 		}));
 		const newMappings: typeof mappings = [];
-		const tokenMappings = new Map<symbol, Mapping>();
+		const tokenMappings = new Map<symbol, Mapping<VueCodeInformation>>();
 
 		for (let i = 0; i < mappings.length; i++) {
 			const mapping = mappings[i]!;
@@ -205,6 +205,21 @@ export function useEmbeddedCodes(
 				continue;
 			}
 			newMappings.push(mapping);
+		}
+
+		for (const mapping of tokenMappings.values()) {
+			if (
+				mapping.lengths.length < 2
+				|| mapping.lengths.some(length => length !== 0)
+				|| !(mapping.data.semantic || mapping.data.navigation || mapping.data.completion)
+			) {
+				continue;
+			}
+			const last = mapping.lengths.length - 1;
+			mapping.lengths = [mapping.sourceOffsets[last]! - mapping.sourceOffsets[0]!];
+			mapping.generatedLengths = [mapping.generatedOffsets[last]! - mapping.generatedOffsets[0]!];
+			mapping.sourceOffsets.length = 1;
+			mapping.generatedOffsets.length = 1;
 		}
 
 		return newMappings;

@@ -5,8 +5,6 @@ import { getNodeText } from '../utils/shared';
 
 export const enum BindingFlag {
 	None,
-	// Bindings re-asserted per closure by the template codegen (imports, `let`/`var`).
-	Variable,
 	Const = 1 << 1,
 	Component = 1 << 2,
 }
@@ -20,12 +18,9 @@ export function parseBindings(
 
 	ts.forEachChild(ast, node => {
 		if (ts.isVariableStatement(node)) {
-			const flags = (node.declarationList.flags & ts.NodeFlags.Const)
-				? BindingFlag.None
-				: BindingFlag.Variable;
 			for (const decl of node.declarationList.declarations) {
 				for (const { start, end } of collectBindingRanges(ts, decl.name, ast)) {
-					bindings.set(ast.text.slice(start, end), flags);
+					bindings.set(ast.text.slice(start, end), BindingFlag.None);
 				}
 			}
 		}
@@ -54,7 +49,7 @@ export function parseBindings(
 						bindings.set(_getNodeText(name), BindingFlag.Const | BindingFlag.Component);
 					}
 					else {
-						bindings.set(_getNodeText(name), BindingFlag.Variable);
+						bindings.set(_getNodeText(name), BindingFlag.None);
 					}
 				}
 				if (namedBindings) {
@@ -71,12 +66,12 @@ export function parseBindings(
 								bindings.set(_getNodeText(element.name), BindingFlag.Const | BindingFlag.Component);
 							}
 							else {
-								bindings.set(_getNodeText(element.name), BindingFlag.Variable);
+								bindings.set(_getNodeText(element.name), BindingFlag.None);
 							}
 						}
 					}
 					else {
-						bindings.set(_getNodeText(namedBindings.name), BindingFlag.Variable);
+						bindings.set(_getNodeText(namedBindings.name), BindingFlag.None);
 					}
 				}
 			}

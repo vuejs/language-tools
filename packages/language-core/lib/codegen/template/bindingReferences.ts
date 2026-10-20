@@ -11,10 +11,7 @@ const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 export interface DeclarationItem {
 	id: ts.Identifier;
 	isShorthand: boolean;
-	isNarrowing: boolean;
 	skipped: boolean;
-	inTypeQuery: boolean;
-	isNewOperand: boolean;
 }
 
 export function* forEachDeclarations(
@@ -23,143 +20,58 @@ export function* forEachDeclarations(
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
-	inNarrowing: boolean,
 ): Generator<DeclarationItem> {
 	if (ts.isIdentifier(node)) {
 		yield {
 			id: node,
 			isShorthand: false,
-			isNarrowing: inNarrowing,
 			skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, node, ast)),
-			inTypeQuery: false,
-			isNewOperand: false,
 		};
 	}
 	else if (ts.isShorthandPropertyAssignment(node)) {
 		yield {
 			id: node.name,
 			isShorthand: true,
-			isNarrowing: inNarrowing,
 			skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, node.name, ast)),
-			inTypeQuery: false,
-			isNewOperand: false,
 		};
 	}
 	else if (ts.isPropertyAccessExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope);
 	}
 	else if (ts.isElementAccessExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
-		yield* forEachDeclarations(ts, node.argumentExpression, ast, ctx, scope, false);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope);
+		yield* forEachDeclarations(ts, node.argumentExpression, ast, ctx, scope);
 	}
-	else if (ts.isCallExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, false);
-		if (node.typeArguments) {
-			for (const typeArg of node.typeArguments) {
-				yield* forEachDeclarationsInTypeNode(ts, typeArg, ast, ctx, scope);
-			}
-		}
-		for (const arg of node.arguments) {
-			yield* forEachDeclarations(ts, arg, ast, ctx, scope, inNarrowing);
-		}
-	}
-	else if (ts.isNewExpression(node)) {
-		if (ts.isIdentifier(node.expression)) {
-			yield {
-				id: node.expression,
-				isShorthand: false,
-				isNarrowing: false,
-				skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, node.expression, ast)),
-				inTypeQuery: false,
-				isNewOperand: true,
-			};
-		}
-		else {
-			yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, false);
-		}
+	else if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope);
 		if (node.typeArguments) {
 			for (const typeArg of node.typeArguments) {
 				yield* forEachDeclarationsInTypeNode(ts, typeArg, ast, ctx, scope);
 			}
 		}
 		for (const arg of node.arguments ?? []) {
-			yield* forEachDeclarations(ts, arg, ast, ctx, scope, inNarrowing);
+			yield* forEachDeclarations(ts, arg, ast, ctx, scope);
 		}
-	}
-	else if (ts.isTaggedTemplateExpression(node)) {
-		yield* forEachDeclarations(ts, node.tag, ast, ctx, scope, false);
-		yield* forEachDeclarations(ts, node.template, ast, ctx, scope, inNarrowing);
-	}
-	else if (ts.isParenthesizedExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
-	}
-	else if (ts.isNonNullExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 	}
 	else if (ts.isTypeAssertionExpression(node)) {
 		yield* forEachDeclarationsInTypeNode(ts, node.type, ast, ctx, scope);
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope);
 	}
 	else if (ts.isAsExpression(node) || ts.isSatisfiesExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope);
 		yield* forEachDeclarationsInTypeNode(ts, node.type, ast, ctx, scope);
 	}
 	else if (ts.isBinaryExpression(node)) {
-		const isLogical = node.operatorToken.kind === ts.SyntaxKind.BarBarToken
-			|| node.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken
-			|| node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken;
-		const isAssignment = node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment
-			&& node.operatorToken.kind <= ts.SyntaxKind.LastAssignment;
-		const isEquality = node.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken
-			|| node.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsEqualsToken
-			|| node.operatorToken.kind === ts.SyntaxKind.EqualsEqualsToken
-			|| node.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsToken;
-		const isInstanceof = node.operatorToken.kind === ts.SyntaxKind.InstanceOfKeyword;
-		const isIn = node.operatorToken.kind === ts.SyntaxKind.InKeyword;
-		if (node.operatorToken.kind === ts.SyntaxKind.CommaToken) {
-			yield* forEachDeclarations(ts, node.left, ast, ctx, scope, false);
-			yield* forEachDeclarations(ts, node.right, ast, ctx, scope, inNarrowing);
-		}
-		else if (isLogical) {
-			yield* forEachNarrowedBy(ts, node.left, ast, ctx, scope, function*() {
-				yield* forEachDeclarations(ts, node.right, ast, ctx, scope, inNarrowing);
-			});
-		}
-		else if (isAssignment) {
+		if (
+			node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment
+			&& node.operatorToken.kind <= ts.SyntaxKind.LastAssignment
+		) {
 			yield* forEachDeclarationsInAssignmentTarget(ts, node.left, ast, ctx, scope);
-			yield* forEachDeclarations(ts, node.right, ast, ctx, scope, false);
 		}
 		else {
-			yield* forEachDeclarations(ts, node.left, ast, ctx, scope, isEquality || isInstanceof);
-			yield* forEachDeclarations(ts, node.right, ast, ctx, scope, isEquality || isIn);
+			yield* forEachDeclarations(ts, node.left, ast, ctx, scope);
 		}
-	}
-	else if (ts.isConditionalExpression(node)) {
-		yield* forEachNarrowedBy(ts, node.condition, ast, ctx, scope, function*() {
-			yield* forEachDeclarations(ts, node.whenTrue, ast, ctx, scope, false);
-			yield* forEachDeclarations(ts, node.whenFalse, ast, ctx, scope, false);
-		});
-	}
-	else if (ts.isPrefixUnaryExpression(node)) {
-		yield* forEachDeclarations(
-			ts,
-			node.operand,
-			ast,
-			ctx,
-			scope,
-			node.operator === ts.SyntaxKind.ExclamationToken
-				|| node.operator === ts.SyntaxKind.PlusPlusToken
-				|| node.operator === ts.SyntaxKind.MinusMinusToken,
-		);
-	}
-	else if (ts.isPostfixUnaryExpression(node)) {
-		yield* forEachDeclarations(ts, node.operand, ast, ctx, scope, true);
-	}
-	else if (isDeleteExpression(ts, node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
-	}
-	else if (ts.isTypeOfExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
+		yield* forEachDeclarations(ts, node.right, ast, ctx, scope);
 	}
 	else if (ts.isVariableDeclaration(node)) {
 		scope.declare(...collectBindingNames(ts, node.name, ast));
@@ -200,23 +112,23 @@ export function* forEachDeclarations(
 			if (ts.isPropertyAssignment(prop)) {
 				// fix https://github.com/vuejs/language-tools/issues/1176
 				if (ts.isComputedPropertyName(prop.name)) {
-					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx, scope, false);
+					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx, scope);
 				}
-				yield* forEachDeclarations(ts, prop.initializer, ast, ctx, scope, false);
+				yield* forEachDeclarations(ts, prop.initializer, ast, ctx, scope);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1156
 			else if (ts.isShorthandPropertyAssignment(prop)) {
-				yield* forEachDeclarations(ts, prop, ast, ctx, scope, false);
+				yield* forEachDeclarations(ts, prop, ast, ctx, scope);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1148#issuecomment-1094378126
 			else if (ts.isSpreadAssignment(prop)) {
 				// TODO: cannot report "Spread types may only be created from object types.ts(2698)"
-				yield* forEachDeclarations(ts, prop.expression, ast, ctx, scope, false);
+				yield* forEachDeclarations(ts, prop.expression, ast, ctx, scope);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/4604
 			else if (ts.isFunctionLike(prop) && prop.body) {
 				if (prop.name && ts.isComputedPropertyName(prop.name)) {
-					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx, scope, false);
+					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx, scope);
 				}
 				yield* forEachDeclarationsInFunction(ts, prop, ast, ctx);
 			}
@@ -230,7 +142,7 @@ export function* forEachDeclarations(
 		const scope = ctx.scope();
 		predeclareFunctionDeclarations(ts, node.statements, ast, scope);
 		for (const child of forEachNode(ts, node)) {
-			yield* forEachDeclarations(ts, child, ast, ctx, scope, false);
+			yield* forEachDeclarations(ts, child, ast, ctx, scope);
 		}
 		scope.end();
 	}
@@ -240,7 +152,7 @@ export function* forEachDeclarations(
 		if (declarations) {
 			for (const decl of declarations) {
 				if (decl.initializer) {
-					yield* forEachDeclarations(ts, decl.initializer, ast, ctx, scope, false);
+					yield* forEachDeclarations(ts, decl.initializer, ast, ctx, scope);
 				}
 			}
 		}
@@ -248,31 +160,14 @@ export function* forEachDeclarations(
 			yield* forEachDeclarationsInAssignmentTarget(ts, node.initializer, ast, ctx, scope);
 		}
 		// The source resolves before the loop bindings are in scope (`for (const x of x)` reads the outer `x`).
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, false);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope);
 		if (declarations) {
 			for (const decl of declarations) {
 				scope.declare(...collectBindingNames(ts, decl.name, ast));
 			}
 		}
-		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
+		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope);
 		scope.end();
-	}
-	else if (ts.isIfStatement(node)) {
-		yield* forEachNarrowedBy(ts, node.expression, ast, ctx, scope, function*() {
-			yield* forEachDeclarations(ts, node.thenStatement, ast, ctx, scope, false);
-			if (node.elseStatement) {
-				yield* forEachDeclarations(ts, node.elseStatement, ast, ctx, scope, false);
-			}
-		});
-	}
-	else if (isWhileStatement(ts, node)) {
-		yield* forEachNarrowedBy(ts, node.expression, ast, ctx, scope, function*() {
-			yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
-		});
-	}
-	else if (isDoStatement(ts, node)) {
-		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, true);
 	}
 	else if (ts.isForStatement(node)) {
 		const scope = ctx.scope();
@@ -281,37 +176,37 @@ export function* forEachDeclarations(
 				for (const decl of node.initializer.declarations) {
 					scope.declare(...collectBindingNames(ts, decl.name, ast));
 					if (decl.initializer) {
-						yield* forEachDeclarations(ts, decl.initializer, ast, ctx, scope, false);
+						yield* forEachDeclarations(ts, decl.initializer, ast, ctx, scope);
 					}
 				}
 			}
 			else {
-				yield* forEachDeclarations(ts, node.initializer, ast, ctx, scope, false);
+				yield* forEachDeclarations(ts, node.initializer, ast, ctx, scope);
 			}
 		}
-		yield* forEachNarrowedBy(ts, node.condition, ast, ctx, scope, function*() {
-			if (node.incrementor) {
-				yield* forEachDeclarations(ts, node.incrementor, ast, ctx, scope, false);
-			}
-			yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
-		});
+		if (node.condition) {
+			yield* forEachDeclarations(ts, node.condition, ast, ctx, scope);
+		}
+		if (node.incrementor) {
+			yield* forEachDeclarations(ts, node.incrementor, ast, ctx, scope);
+		}
+		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope);
 		scope.end();
 	}
 	else if (ts.isSwitchStatement(node)) {
 		predeclareFunctionDeclarations(ts, node.caseBlock.clauses.flatMap(clause => [...clause.statements]), ast, scope);
-		yield* forEachNarrowedBy(ts, node.expression, ast, ctx, scope, function*() {
-			for (const clause of node.caseBlock.clauses) {
-				if (ts.isCaseClause(clause)) {
-					yield* forEachDeclarations(ts, clause.expression, ast, ctx, scope, false);
-				}
-				for (const statement of clause.statements) {
-					yield* forEachDeclarations(ts, statement, ast, ctx, scope, false);
-				}
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope);
+		for (const clause of node.caseBlock.clauses) {
+			if (ts.isCaseClause(clause)) {
+				yield* forEachDeclarations(ts, clause.expression, ast, ctx, scope);
 			}
-		});
+			for (const statement of clause.statements) {
+				yield* forEachDeclarations(ts, statement, ast, ctx, scope);
+			}
+		}
 	}
 	else if (ts.isLabeledStatement(node)) {
-		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope, false);
+		yield* forEachDeclarations(ts, node.statement, ast, ctx, scope);
 	}
 	else if (isBreakOrContinueStatement(ts, node)) {
 		// break/continue labels are not bindings.
@@ -326,7 +221,7 @@ export function* forEachDeclarations(
 		scope.declare(getNodeText(ts, node.name, ast));
 		for (const member of node.members) {
 			if (member.initializer) {
-				yield* forEachDeclarations(ts, member.initializer, ast, ctx, scope, false);
+				yield* forEachDeclarations(ts, member.initializer, ast, ctx, scope);
 			}
 		}
 	}
@@ -335,53 +230,35 @@ export function* forEachDeclarations(
 			const scope = ctx.scope();
 			predeclareFunctionDeclarations(ts, node.body.statements, ast, scope);
 			for (const statement of node.body.statements) {
-				yield* forEachDeclarations(ts, statement, ast, ctx, scope, false);
+				yield* forEachDeclarations(ts, statement, ast, ctx, scope);
 			}
 			scope.end();
 		}
 		else if (node.body && ts.isModuleDeclaration(node.body)) {
-			yield* forEachDeclarations(ts, node.body, ast, ctx, scope, false);
+			yield* forEachDeclarations(ts, node.body, ast, ctx, scope);
 		}
 	}
 	else if (ts.isCatchClause(node)) {
 		const scope = ctx.scope();
 		if (node.variableDeclaration) {
-			yield* forEachDeclarations(ts, node.variableDeclaration, ast, ctx, scope, false);
+			yield* forEachDeclarations(ts, node.variableDeclaration, ast, ctx, scope);
 		}
 		if (node.block) {
-			yield* forEachDeclarations(ts, node.block, ast, ctx, scope, false);
+			yield* forEachDeclarations(ts, node.block, ast, ctx, scope);
 		}
 		scope.end();
 	}
 	else if (ts.isSourceFile(node)) {
 		predeclareFunctionDeclarations(ts, node.statements, ast, scope);
 		for (const statement of node.statements) {
-			yield* forEachDeclarations(ts, statement, ast, ctx, scope, inNarrowing);
+			yield* forEachDeclarations(ts, statement, ast, ctx, scope);
 		}
-	}
-	else if (ts.isExpressionStatement(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 	}
 	else {
 		for (const child of forEachNode(ts, node)) {
-			yield* forEachDeclarations(ts, child, ast, ctx, scope, false);
+			yield* forEachDeclarations(ts, child, ast, ctx, scope);
 		}
 	}
-}
-
-function* forEachNarrowedBy(
-	ts: typeof import('typescript'),
-	condition: ts.Expression | undefined,
-	ast: ts.SourceFile,
-	ctx: TemplateCodegenContext,
-	scope: ReturnType<TemplateCodegenContext['scope']>,
-	body: () => Generator<DeclarationItem>,
-): Generator<DeclarationItem> {
-	// The condition's declarations come first (narrowing positions), then the body.
-	if (condition) {
-		yield* forEachDeclarations(ts, condition, ast, ctx, scope, true);
-	}
-	yield* body();
 }
 
 function predeclareFunctionDeclarations(
@@ -408,17 +285,14 @@ function* forEachDeclarationsInAssignmentTarget(
 		yield {
 			id: node,
 			isShorthand: false,
-			isNarrowing: true,
 			skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, node, ast)),
-			inTypeQuery: false,
-			isNewOperand: false,
 		};
 	}
 	else if (ts.isObjectLiteralExpression(node)) {
 		for (const prop of node.properties) {
 			if (ts.isPropertyAssignment(prop)) {
 				if (ts.isComputedPropertyName(prop.name)) {
-					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx, scope, false);
+					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx, scope);
 				}
 				yield* forEachDeclarationsInAssignmentTarget(ts, prop.initializer, ast, ctx, scope);
 			}
@@ -426,13 +300,10 @@ function* forEachDeclarationsInAssignmentTarget(
 				yield {
 					id: prop.name,
 					isShorthand: true,
-					isNarrowing: true,
 					skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, prop.name, ast)),
-					inTypeQuery: false,
-					isNewOperand: false,
 				};
 				if (prop.objectAssignmentInitializer) {
-					yield* forEachDeclarations(ts, prop.objectAssignmentInitializer, ast, ctx, scope, false);
+					yield* forEachDeclarations(ts, prop.objectAssignmentInitializer, ast, ctx, scope);
 				}
 			}
 			else if (ts.isSpreadAssignment(prop)) {
@@ -450,7 +321,7 @@ function* forEachDeclarationsInAssignmentTarget(
 			}
 			else if (ts.isBinaryExpression(element)) {
 				yield* forEachDeclarationsInAssignmentTarget(ts, element.left, ast, ctx, scope);
-				yield* forEachDeclarations(ts, element.right, ast, ctx, scope, false);
+				yield* forEachDeclarations(ts, element.right, ast, ctx, scope);
 			}
 			else {
 				yield* forEachDeclarationsInAssignmentTarget(ts, element, ast, ctx, scope);
@@ -461,7 +332,7 @@ function* forEachDeclarationsInAssignmentTarget(
 		yield* forEachDeclarationsInAssignmentTarget(ts, node.expression, ast, ctx, scope);
 	}
 	else {
-		yield* forEachDeclarations(ts, node, ast, ctx, scope, true);
+		yield* forEachDeclarations(ts, node, ast, ctx, scope);
 	}
 }
 
@@ -473,16 +344,16 @@ function* forEachDeclarationsInBinding(
 	scope: ReturnType<TemplateCodegenContext['scope']>,
 ): Generator<DeclarationItem> {
 	if ('propertyName' in node && node.propertyName && ts.isComputedPropertyName(node.propertyName)) {
-		yield* forEachDeclarations(ts, node.propertyName.expression, ast, ctx, scope, true);
+		yield* forEachDeclarations(ts, node.propertyName.expression, ast, ctx, scope);
 	}
 	if (!ts.isIdentifier(node.name)) {
-		yield* forEachDeclarations(ts, node.name, ast, ctx, scope, false);
+		yield* forEachDeclarations(ts, node.name, ast, ctx, scope);
 	}
 	if ('type' in node && node.type) {
 		yield* forEachDeclarationsInTypeNode(ts, node.type, ast, ctx, scope);
 	}
 	if (node.initializer) {
-		yield* forEachDeclarations(ts, node.initializer, ast, ctx, scope, false);
+		yield* forEachDeclarations(ts, node.initializer, ast, ctx, scope);
 	}
 }
 
@@ -517,7 +388,7 @@ function* forEachDeclarationsInFunction(
 		yield* forEachDeclarationsInTypeNode(ts, node.type, ast, ctx, scope);
 	}
 	if (node.body) {
-		yield* forEachDeclarations(ts, node.body, ast, ctx, scope, false);
+		yield* forEachDeclarations(ts, node.body, ast, ctx, scope);
 	}
 	scope.end();
 }
@@ -535,7 +406,7 @@ function* forEachDeclarationsInClass(
 	for (const clause of node.heritageClauses ?? []) {
 		if (clause.token === ts.SyntaxKind.ExtendsKeyword) {
 			for (const type of clause.types) {
-				yield* forEachDeclarations(ts, type.expression, ast, ctx, scope, false);
+				yield* forEachDeclarations(ts, type.expression, ast, ctx, scope);
 				if (type.typeArguments) {
 					for (const typeArg of type.typeArguments) {
 						yield* forEachDeclarationsInTypeNode(ts, typeArg, ast, ctx, scope);
@@ -555,8 +426,7 @@ function* forEachDeclarationsInClass(
 			|| ts.isSetAccessorDeclaration(member)
 		) {
 			if (member.name && ts.isComputedPropertyName(member.name)) {
-				// A computed name in a class property must be an entity name (grammar rule): no `__VLS_unwrap` call allowed.
-				yield* forEachDeclarations(ts, member.name.expression, ast, ctx, scope, true);
+				yield* forEachDeclarations(ts, member.name.expression, ast, ctx, scope);
 			}
 		}
 		if (
@@ -572,14 +442,14 @@ function* forEachDeclarationsInClass(
 				yield* forEachDeclarationsInTypeNode(ts, member.type, ast, ctx, scope);
 			}
 			if (member.initializer) {
-				yield* forEachDeclarations(ts, member.initializer, ast, ctx, scope, false);
+				yield* forEachDeclarations(ts, member.initializer, ast, ctx, scope);
 			}
 		}
 		else if (ts.isClassStaticBlockDeclaration(member)) {
 			const blockScope = ctx.scope();
 			predeclareFunctionDeclarations(ts, member.body.statements, ast, blockScope);
 			for (const statement of member.body.statements) {
-				yield* forEachDeclarations(ts, statement, ast, ctx, blockScope, false);
+				yield* forEachDeclarations(ts, statement, ast, ctx, blockScope);
 			}
 			blockScope.end();
 		}
@@ -601,18 +471,11 @@ function* forEachDeclarationsInTypeNode(
 		yield {
 			id,
 			isShorthand: false,
-			isNarrowing: false,
 			skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, id, ast)),
-			inTypeQuery: true,
-			isNewOperand: false,
 		};
 	}
 	else if (ts.isComputedPropertyName(node)) {
-		// TS1170: a computed name in a type literal must be an entity-name expression (no calls).
-		for (const item of forEachDeclarations(ts, node.expression, ast, ctx, scope, false)) {
-			item.inTypeQuery = true;
-			yield item;
-		}
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope);
 	}
 	else {
 		for (const child of forEachNode(ts, node)) {
@@ -635,18 +498,6 @@ export function shouldIdentifierSkipped(
 
 // vue-tsc runs against TypeScript's tsc bundle, which does not include
 // type guards that the compiler itself never uses, so check `kind` directly.
-
-function isDeleteExpression(ts: typeof import('typescript'), node: ts.Node): node is ts.DeleteExpression {
-	return node.kind === ts.SyntaxKind.DeleteExpression;
-}
-
-function isWhileStatement(ts: typeof import('typescript'), node: ts.Node): node is ts.WhileStatement {
-	return node.kind === ts.SyntaxKind.WhileStatement;
-}
-
-function isDoStatement(ts: typeof import('typescript'), node: ts.Node): node is ts.DoStatement {
-	return node.kind === ts.SyntaxKind.DoStatement;
-}
 
 function isBreakOrContinueStatement(
 	ts: typeof import('typescript'),
