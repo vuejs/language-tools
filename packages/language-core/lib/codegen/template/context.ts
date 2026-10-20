@@ -191,6 +191,9 @@ export function createTemplateCodegenContext() {
 	// scopes ---------------------------------------------------------------------
 
 	class Scope extends Set<string> {
+		functionBody?: { start: number; end: number; isBlock: boolean };
+		readonly reasserts = new Set<string>();
+
 		declare(...variables: string[]) {
 			for (const name of variables) {
 				this.add(name);
@@ -199,11 +202,15 @@ export function createTemplateCodegenContext() {
 
 		end() {
 			scopes.pop();
+			if (this.functionBody && this.reasserts.size) {
+				functionScopes.push(this);
+			}
 			return generateAutoImport();
 		}
 	}
 
 	const scopes: Scope[] = [];
+	const functionScopes: Scope[] = [];
 
 	function scope() {
 		const scope = new Scope();
@@ -339,6 +346,7 @@ export function createTemplateCodegenContext() {
 		getInternalVariable,
 		scopes,
 		scope,
+		functionScopes,
 		contextAccesses,
 		dotValueAccesses,
 		accessLog,
