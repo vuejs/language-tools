@@ -96,6 +96,9 @@ export function preprocessLanguageService(
 					if (codegen?.getUsedSetupBindings().has(variableName)) {
 						const extraInfo = getQuickInfoAtPosition(fileName, generateRange2[0], ...rests);
 						result.tags = extraInfo?.tags;
+						if (!result.documentation?.length) {
+							result.documentation = extraInfo?.documentation;
+						}
 					}
 				}
 			}
