@@ -3,7 +3,8 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
-import { endOfLine, newLine } from '../utils';
+import { names } from '../names';
+import { asType, endOfLine, isTsLang, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
@@ -286,7 +287,7 @@ export function createTemplateCodegenContext() {
 		return name;
 	}
 
-	function* generateHoistVariables() {
+	function* generateHoistVariables(lang: string) {
 		// trick to avoid TS 4081 (#5186)
 		if (hoistVars.size) {
 			yield `var `;
@@ -296,7 +297,11 @@ export function createTemplateCodegenContext() {
 					yield `, `;
 				}
 				first = false;
-				yield `${hoistVar} = ${originalVar}!`;
+				yield `${hoistVar} = `;
+				// In JS, use the type without reading a possibly unassigned conditional variable.
+				yield isTsLang(lang)
+					? `${originalVar}!`
+					: `${names.nonNull}(${asType(`typeof ${originalVar}`, lang)})`;
 			}
 			yield endOfLine;
 		}
