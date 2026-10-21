@@ -1,4 +1,4 @@
 {
 	"extends": "./base.json",
-	"include": ["*"]
+	"include": ["**/*"]
 }
