@@ -6,6 +6,23 @@ import { codeFeatures } from '../codegen/codeFeatures';
 import type { IR, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
 import { useEmbeddedCodes } from './embeddedCodes';
 import { useIR } from './ir';
+import { petiteVueParser } from './parsers/petiteVue';
+import { sfcParser } from './parsers/sfc';
+import { vitePressParser } from './parsers/vitepress';
+
+type SfcParser = Pick<VueLanguagePluginReturn, 'parseSFC' | 'updateSFC'>;
+
+const builtInParsers: Record<VueCompilerOptions['format'], SfcParser> = {
+	sfc: sfcParser,
+	vitepress: vitePressParser,
+	'petite-vue': petiteVueParser,
+};
+
+const rootLanguageIds: Record<VueCompilerOptions['format'], string> = {
+	sfc: 'vue',
+	vitepress: 'markdown',
+	'petite-vue': 'html',
+};
 
 export class VueVirtualCode implements VirtualCode {
 	readonly id = 'main';
@@ -19,6 +36,9 @@ export class VueVirtualCode implements VirtualCode {
 	private _embeddedCodes: () => VirtualCode[];
 	private _mappings: () => CodeMapping[];
 
+	get languageId() {
+		return rootLanguageIds[this.vueCompilerOptions.format] ?? 'vue';
+	}
 	get snapshot() {
 		return this._snapshot();
 	}
@@ -41,7 +61,6 @@ export class VueVirtualCode implements VirtualCode {
 
 	constructor(
 		public fileName: string,
-		public languageId: string,
 		public initSnapshot: ts.IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
 		plugins: VueLanguagePluginReturn[],
@@ -76,7 +95,7 @@ export class VueVirtualCode implements VirtualCode {
 		lastResult?: {
 			snapshot: ts.IScriptSnapshot;
 			result: SFCParseResult;
-			plugin: VueLanguagePluginReturn;
+			plugin: SfcParser;
 		},
 	) {
 		const snapshot = this.snapshot;
@@ -101,9 +120,9 @@ export class VueVirtualCode implements VirtualCode {
 			}
 		}
 
-		for (const plugin of plugins) {
-			const sfc = plugin.parseSFC2?.(this.fileName, this.languageId, snapshot.getText(0, snapshot.getLength()))
-				?? plugin.parseSFC?.(this.fileName, snapshot.getText(0, snapshot.getLength()));
+		const content = snapshot.getText(0, snapshot.getLength());
+		for (const plugin of [...plugins, builtInParsers[this.vueCompilerOptions.format] ?? sfcParser]) {
+			const sfc = plugin.parseSFC?.(this.fileName, content);
 			if (sfc) {
 				return {
 					snapshot,

@@ -259,6 +259,7 @@ export function getDefaultCompilerOptions(
 		lib,
 		typesRoot,
 		extensions: ['.vue'],
+		format: 'sfc',
 		globalTemplateContext: false,
 		jsxSlots: false,
 		strictCssModules: false,

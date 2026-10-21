@@ -34,9 +34,15 @@ export function createCheckerBase(
 		vueOptions,
 		id => id,
 	);
+	const isVueFile = (fileName: string) => vueOptions.extensions.some(ext => fileName.endsWith(ext));
 	const language = core.createLanguage(
 		[
-			vueLanguagePlugin,
+			{
+				...vueLanguagePlugin,
+				getLanguageId: fileName => isVueFile(fileName) ? 'vue' : undefined,
+				createVirtualCode: (fileName, languageId, snapshot, ctx) =>
+					isVueFile(fileName) ? vueLanguagePlugin.createVirtualCode!(fileName, languageId, snapshot, ctx) : undefined,
+			},
 			{
 				getLanguageId(fileName) {
 					return resolveFileLanguageId(fileName);

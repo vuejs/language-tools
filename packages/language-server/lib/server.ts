@@ -184,8 +184,23 @@ export function startServer(ts: typeof import('typescript')) {
 			const entries = (configFileName ? projectResolver.getContentMappers(configFileName) : inferredContentMappers)
 				?.filter(entry => entry.package === '@vue/content-mapper');
 			const vuePlugins = entries?.length
-				? entries.map(createContentMapperPlugin)
-				: [createVueLanguagePlugin(ts, commonLine.options, commonLine.vueOptions, asFileName)];
+				? entries.map(entry =>
+					routeByExtensions(
+						createVueLanguagePlugin(
+							ts,
+							commonLine.options,
+							resolveVueCompilerOptions(ts, ts.sys, configFileName, entry.options).vueOptions,
+							asFileName,
+						),
+						entry.extensions,
+					)
+				)
+				: [
+					routeByExtensions(
+						createVueLanguagePlugin(ts, commonLine.options, commonLine.vueOptions, asFileName),
+						commonLine.vueOptions.extensions,
+					),
+				];
 			const language = createLanguage<URI>(
 				[
 					{
@@ -211,24 +226,14 @@ export function startServer(ts: typeof import('typescript')) {
 				{},
 			);
 
-			/**
-			 * Builds the same Vue options as the content mapper does for this entry, and like the TypeScript
-			 * host, routes a file by the entry's `extensions` and parses it by the entry's `format`.
-			 */
-			function createContentMapperPlugin(entry: ContentMapperEntry): LanguagePlugin<URI> {
-				const { vueOptions, languageId } = resolveVueCompilerOptions(ts, ts.sys, configFileName, entry.options);
-				const plugin = createVueLanguagePlugin(ts, commonLine.options, vueOptions, asFileName);
-				const getLanguageId = (uri: URI) =>
-					entry.extensions.some(extension => asFileName(uri).endsWith(extension))
-						? languageId ?? plugin.getLanguageId(uri) ?? 'vue'
-						: undefined;
+			/** Like the TypeScript host, hands the Vue plugin only the files matching `extensions`. */
+			function routeByExtensions(plugin: LanguagePlugin<URI>, extensions: string[]): LanguagePlugin<URI> {
+				const isVueFile = (uri: URI) => extensions.some(extension => asFileName(uri).endsWith(extension));
 				return {
 					...plugin,
-					getLanguageId,
-					createVirtualCode(uri, _languageId, snapshot, ctx) {
-						const languageId = getLanguageId(uri);
-						return languageId ? plugin.createVirtualCode!(uri, languageId, snapshot, ctx) : undefined;
-					},
+					getLanguageId: uri => isVueFile(uri) ? 'vue' : undefined,
+					createVirtualCode: (uri, languageId, snapshot, ctx) =>
+						isVueFile(uri) ? plugin.createVirtualCode!(uri, languageId, snapshot, ctx) : undefined,
 				};
 			}
 		}

@@ -45,6 +45,8 @@ export interface VueCompilerOptions {
 	lib: string;
 	typesRoot: string;
 	extensions: string[];
+	/** Selects the built-in parser: a Vue SFC, VitePress markdown or a petite-vue HTML page. */
+	format: 'sfc' | 'vitepress' | 'petite-vue';
 	/** Exposes `globalThis` in the template context, as petite-vue templates read globals directly. */
 	globalTemplateContext: boolean;
 	jsxSlots: boolean;
@@ -91,17 +93,19 @@ export interface VueCompilerOptions {
 	>;
 }
 
-export const validVersions = [2, 2.1, 2.2] as const;
+export const validVersions = [3] as const;
 
 export interface VueLanguagePluginReturn {
 	version: typeof validVersions[number];
 	name?: string;
 	order?: number;
 	requiredCompilerOptions?: string[];
-	getLanguageId?(fileName: string): string | undefined;
-	isValidFile?(fileName: string, languageId: string): boolean;
+	/**
+	 * Parses a file into SFC blocks. The first plugin returning a result wins; otherwise the built-in
+	 * parser of `vueCompilerOptions.format` is used. Which files reach it is decided by the host
+	 * (e.g. the content mapper entry's `extensions`).
+	 */
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
-	parseSFC2?(fileName: string, languageId: string, content: string): SFCParseResult | undefined;
 	updateSFC?(
 		oldResult: SFCParseResult,
 		textChange: { start: number; end: number; newText: string },

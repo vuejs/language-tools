@@ -29,12 +29,19 @@ export = createLanguageServicePlugin(
 		projectToOriginalLanguageService.set(info.project, info.languageService);
 
 		const vueOptions = getVueCompilerOptions();
-		const languagePlugin = core.createVueLanguagePlugin<string>(
+		const vuePlugin = core.createVueLanguagePlugin<string>(
 			ts,
 			info.languageServiceHost.getCompilationSettings(),
 			vueOptions,
 			id => id,
 		);
+		const isVueFile = (fileName: string) => vueOptions.extensions.some(ext => fileName.endsWith(ext));
+		const languagePlugin: core.LanguagePlugin<string> = {
+			...vuePlugin,
+			getLanguageId: fileName => isVueFile(fileName) ? 'vue' : undefined,
+			createVirtualCode: (fileName, languageId, snapshot, ctx) =>
+				isVueFile(fileName) ? vuePlugin.createVirtualCode!(fileName, languageId, snapshot, ctx) : undefined,
+		};
 		addVueCommands();
 
 		let _language: core.Language<string> | undefined;

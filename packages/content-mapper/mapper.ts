@@ -18,8 +18,6 @@ const ts = loadTypeScript();
 
 interface ProjectConfiguration {
 	plugin: ReturnType<typeof vue.createVueLanguagePlugin<string>>;
-	/** Set by `format: "vitepress"`, which parses every file as VitePress markdown regardless of its extension. */
-	languageId?: string;
 	languageFeatures: boolean;
 	virtualCodes: Map<string, NonNullable<ReturnType<NonNullable<ProjectConfiguration['plugin']['createVirtualCode']>>>>;
 }
@@ -97,10 +95,9 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			? getConfiguration(state)
 			: createStandaloneConfiguration(params);
 		const snapshot = ts.ScriptSnapshot.fromString(params.content);
-		const languageId = configuration.languageId ?? configuration.plugin.getLanguageId(params.fileName) ?? 'vue';
 		const root = configuration.plugin.createVirtualCode?.(
 			params.fileName,
-			languageId,
+			'vue',
 			snapshot,
 			{ getAssociatedScript: () => undefined },
 		);
@@ -199,7 +196,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		}
 		const { languageFeatures, ...mapperOptions } = state.params.options ?? {};
 		const watchedBefore = watchedFiles ? new Set(watchedFiles) : undefined;
-		const { parsed, vueOptions, languageId } = resolveVueCompilerOptions(
+		const { parsed, vueOptions } = resolveVueCompilerOptions(
 			ts,
 			host,
 			configFileName || undefined,
@@ -223,7 +220,6 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 				vueOptions,
 				fileName => fileName,
 			),
-			languageId,
 			languageFeatures: languageFeatures !== false,
 			virtualCodes: new Map(),
 		};

@@ -236,7 +236,7 @@ function createWorkspace() {
 		path.join(pluginDir, 'package.json'),
 		JSON.stringify({ name: 'vue-test-plugin', version: '1.0.0', main: 'index.js' }),
 	);
-	fs.writeFileSync(pluginEntry(workspace), `module.exports = () => ({ name: 'vue-test-plugin', version: 2 });\n`);
+	fs.writeFileSync(pluginEntry(workspace), `module.exports = () => ({ name: 'vue-test-plugin', version: 3 });\n`);
 	return workspace;
 }
 
@@ -267,7 +267,7 @@ test('tracks dynamic configuration for inferred projects', () => {
 
 		fs.writeFileSync(
 			pluginEntry(workspace),
-			`module.exports = () => ({ name: 'vue-test-plugin', version: 2, order: 3 });\n`,
+			`module.exports = () => ({ name: 'vue-test-plugin', version: 3, order: 3 });\n`,
 		);
 		const withNewerPlugin = openInferredProject('inferred-project');
 		closeProject('inferred-project');
@@ -301,7 +301,7 @@ test('watches plugins declared in the tsconfig vueCompilerOptions', () => {
 
 		fs.writeFileSync(
 			pluginEntry(workspace),
-			`module.exports = () => ({ name: 'vue-test-plugin', version: 2, order: 3 });\n`,
+			`module.exports = () => ({ name: 'vue-test-plugin', version: 3, order: 3 });\n`,
 		);
 		const second = openProject({
 			configFileName,

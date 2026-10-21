@@ -32,6 +32,8 @@ const plugin: LanguagePlugin<string> = createVueLanguagePlugin(
 );
 ```
 
+The plugin parses every file it is given as `vueCompilerOptions.format`; the host decides which files are Vue files, e.g. by file extension.
+
 ### `createParsedCommandLine`
 
 Parses TypeScript and Vue compiler options from `tsconfig.json`.
@@ -87,6 +89,7 @@ Configure Vue compiler behavior through the `vueCompilerOptions` field in `tscon
 | :--- | :--- | :--- | :--- |
 | `target` | `number \| 'auto'` | `'auto'` | Vue version. `'auto'` reads from `node_modules/vue/package.json`. |
 | `extensions` | `string[]` | `['.vue']` | File extensions to be treated as Vue SFCs. |
+| `format` | `'sfc' \| 'vitepress' \| 'petite-vue'` | `'sfc'` | Built-in parser: a Vue SFC, VitePress markdown or a petite-vue HTML page. |
 | `plugins` | `string[]` | `[]` | Custom language plugins, e.g., [`@vue/language-plugin-pug`](../language-plugin-pug). |
 
 ### Type Checking Options
@@ -112,13 +115,19 @@ Configure Vue compiler behavior through the `vueCompilerOptions` field in `tscon
 
 ## Built-in Plugins
 
-This package includes the following built-in plugins to handle different file types and blocks:
+This package includes the following built-in plugins to handle different file types and blocks.
 
-### File Parsing Plugins
+### File Parsing
 
-| Plugin | Function | Controlled By |
-| :--- | :--- | :--- |
-| `file-vue` | Parses `.vue` files into an SFC structure. | `extensions` |
+A plugin's `parseSFC(fileName, content)` hook can parse a file into SFC blocks; the first plugin returning a result wins. Otherwise the built-in parser of `format` is used:
+
+| `format` | Parses |
+| :--- | :--- |
+| `sfc` | A Vue SFC. |
+| `vitepress` | VitePress markdown: `<script>` / `<style>` blocks are lifted out and the rest becomes the template. |
+| `petite-vue` | A petite-vue HTML page: `<script>` / `<style>` blocks are lifted out and the rest becomes the template. |
+
+Plugins must declare `version: 3`. Version 3 removed the `getLanguageId`, `isValidFile` and `parseSFC2` hooks: a plugin that only parses some files checks the file name in `parseSFC` and returns `undefined` for the others.
 
 ### Virtual Code Generation Plugins
 

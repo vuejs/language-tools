@@ -52,36 +52,21 @@ export function createVueLanguagePlugin<T>(
 	const fileRegistry = getVueFileRegistry(compilerOptions, vueCompilerOptions, plugins);
 
 	return {
-		getLanguageId(scriptId) {
-			const fileName = asFileName(scriptId);
-			for (const plugin of plugins) {
-				const languageId = plugin.getLanguageId?.(fileName);
-				if (languageId) {
-					return languageId;
-				}
-			}
+		// Every file passed in is parsed as `vueCompilerOptions.format`; the host decides which files
+		// are Vue files (e.g. by the content mapper entry's `extensions`).
+		getLanguageId() {
+			return undefined;
 		},
-		createVirtualCode(scriptId, languageId, snapshot) {
-			const fileName = asFileName(scriptId);
-			if (plugins.some(plugin => plugin.isValidFile?.(fileName, languageId))) {
-				const code = fileRegistry.get(String(scriptId));
-				if (code) {
-					code.update(snapshot);
-					return code;
-				}
-				else {
-					const code = new VueVirtualCode(
-						fileName,
-						languageId,
-						snapshot,
-						vueCompilerOptions,
-						plugins,
-						ts,
-					);
-					fileRegistry.set(String(scriptId), code);
-					return code;
-				}
+		createVirtualCode(scriptId, _languageId, snapshot) {
+			let code = fileRegistry.get(String(scriptId));
+			if (code) {
+				code.update(snapshot);
 			}
+			else {
+				code = new VueVirtualCode(asFileName(scriptId), snapshot, vueCompilerOptions, plugins, ts);
+				fileRegistry.set(String(scriptId), code);
+			}
+			return code;
 		},
 		updateVirtualCode(_scriptId, code, snapshot) {
 			code.update(snapshot);
