@@ -43,6 +43,7 @@ const raw = {
 	asFunctionalElement0: '',
 	asFunctionalSlot: '',
 	directiveBindingRestFields: '',
+	directiveHookArgsRest: '',
 	functionalComponentArgsRest: '',
 	nonNull: '',
 	omit: '',
