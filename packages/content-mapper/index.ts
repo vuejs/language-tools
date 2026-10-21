@@ -3,3 +3,4 @@ export * from './optionDiagnostics';
 export * from './protocol';
 export * from './runtime';
 export * from './workerPool';
+export * from './vueOptions';

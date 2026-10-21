@@ -194,6 +194,9 @@ importers:
       '@volar/language-server':
         specifier: 2.4.28
         version: 2.4.28
+      '@vue/content-mapper':
+        specifier: workspace:*
+        version: link:../content-mapper
       '@vue/language-core':
         specifier: workspace:*
         version: link:../language-core

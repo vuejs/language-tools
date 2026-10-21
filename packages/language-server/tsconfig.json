@@ -1,6 +1,7 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"references": [
+		{ "path": "../content-mapper/tsconfig.json" },
 		{ "path": "../language-core/tsconfig.json" },
 		{ "path": "../language-service/tsconfig.json" },
 		{ "path": "../typescript-plugin/tsconfig.json" }

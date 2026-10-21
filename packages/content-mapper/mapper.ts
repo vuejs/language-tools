@@ -2,7 +2,6 @@ import * as vue from '@vue/language-core';
 import { createHash } from 'node:crypto';
 import * as path from 'node:path';
 import { toDiagnosticDirectives, withSynthesizedDiagnosticIgnores } from './diagnosticDirectives';
-import { vitePressPlugin } from './vitepress';
 import type {
 	OpenProjectParams,
 	OpenProjectResult,
@@ -13,6 +12,7 @@ import type {
 } from './protocol';
 import { toSpanMappings } from './spanMappings';
 import { loadTypeScript } from './typescript';
+import { resolveVueCompilerOptions } from './vueOptions';
 
 const ts = loadTypeScript();
 
@@ -197,14 +197,16 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		if (watchedFiles && configFileName) {
 			watchedFiles.add(path.normalize(configFileName));
 		}
-		const { languageFeatures, format, ...mapperOptions } = state.params.options ?? {};
-		const vitePress = format === 'vitepress';
+		const { languageFeatures, ...mapperOptions } = state.params.options ?? {};
 		const watchedBefore = watchedFiles ? new Set(watchedFiles) : undefined;
-		const parsed = configFileName
-			? vue.createParsedCommandLine(ts, host, normalizePath(configFileName))
-			: undefined;
-		// `createParsedCommandLine` is the only reader of the tsconfig `extends` chain, so the files it
-		// added are exactly the configs that may declare legacy Vue options.
+		const { parsed, vueOptions, languageId } = resolveVueCompilerOptions(
+			ts,
+			host,
+			configFileName || undefined,
+			state.params.options,
+		);
+		// The tsconfig `extends` chain is only read while resolving, so the files it added include every
+		// config that may declare legacy Vue options; files without `vueCompilerOptions` are skipped.
 		const configFileNames = configFileName
 			? [
 				normalizePath(configFileName),
@@ -213,23 +215,6 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 					: []),
 			]
 			: [];
-		// v4 moves the Vue compiler options from the tsconfig's `vueCompilerOptions` field to the mapper
-		// entry's `options`; apply the entry options on top of any options a tsconfig still carries.
-		const baseVueOptions = parsed?.vueOptions ?? vue.getDefaultCompilerOptions();
-		const resolver = new vue.CompilerOptionsResolver(ts, host.readFile);
-		resolver.addConfig(mapperOptions as vue.RawVueCompilerOptions, normalizePath(rootDir));
-		const vueOptions = resolver.build({
-			...baseVueOptions,
-			target: resolver.target ?? baseVueOptions.target,
-			typesRoot: resolver.typesRoot ?? baseVueOptions.typesRoot,
-		});
-		vueOptions.plugins = [
-			...new Set([
-				...vitePress ? [vitePressPlugin] : [],
-				...baseVueOptions.plugins,
-				...resolver.plugins,
-			]),
-		];
 		const compilerOptions = normalizeCompilerOptions(state.params.compilerOptions);
 		const configuration = {
 			plugin: vue.createVueLanguagePlugin<string>(
@@ -238,7 +223,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 				vueOptions,
 				fileName => fileName,
 			),
-			languageId: vitePress ? 'markdown' : undefined,
+			languageId,
 			languageFeatures: languageFeatures !== false,
 			virtualCodes: new Map(),
 		};

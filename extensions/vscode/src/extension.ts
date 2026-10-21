@@ -23,6 +23,23 @@ import { registerModuleTransform } from './registerModuleTransform';
 import * as welcome from './welcome';
 
 let serverPath = resolveServerPath();
+
+/**
+ * Content mappers for files outside any tsconfig, registered with TypeScript and passed to the language
+ * server. Each contribution runs its own mapper process, since the host keys processes by contribution.
+ */
+const inferredContentMappers = [
+	{
+		package: '@vue/content-mapper',
+		extensions: ['.vue'],
+		options: { languageFeatures: true, target: 99, format: 'sfc' },
+	},
+	{
+		package: '@vue/content-mapper',
+		extensions: ['.md'],
+		options: { languageFeatures: true, target: 99, format: 'vitepress' },
+	},
+];
 const neededRestart = !patchTypeScriptExtension();
 
 interface TypeScriptNativePreviewAPI {
@@ -226,6 +243,7 @@ function launch(serverPath: string, tsdk: string) {
 				},
 			},
 			documentSelector: config.server.includeLanguages,
+			initializationOptions: { contentMappers: inferredContentMappers },
 			markdown: {
 				isTrusted: true,
 				supportHtml: true,
@@ -284,17 +302,10 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 			return;
 		}
 		const typescriptPath = path.join(tsdk, 'typescript.js');
-		const createContribution = (
-			extensions: string[],
-			format: 'sfc' | 'vitepress',
-		) => ({
+		const createContribution = ({ extensions, options }: typeof inferredContentMappers[number]) => ({
 			extensions,
 			inferredProjectContribution: {
-				options: {
-					languageFeatures: true,
-					target: 99,
-					format,
-				},
+				options,
 				manifest: {
 					name: '@vue/content-mapper',
 					version: require('../package.json').version,
@@ -311,11 +322,7 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 		});
 		context.subscriptions.push(api.registerContentMappers(
 			'Vue.volar',
-			[
-				// Each contribution runs its own mapper process, since the host keys processes by contribution.
-				createContribution(['.vue'], 'sfc'),
-				createContribution(['.md'], 'vitepress'),
-			],
+			inferredContentMappers.map(createContribution),
 		));
 	}, error => logger.logger.value?.error(String(error)));
 }

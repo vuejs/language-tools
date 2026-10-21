@@ -29,6 +29,29 @@ test('follows project references of a solution-style tsconfig', () => {
 	resolver.dispose();
 });
 
+test('reads contentMappers through extends and routes ownership by their extensions', () => {
+	const resolver = createProjectResolver(ts);
+	const configFileName = resolver.getConfigFileName(path.join(testWorkspacePath, 'tsconfigContentMappers/fixture.md'))!;
+
+	expect(normalize(configFileName)).toMatch(/tsconfigContentMappers\/tsconfig\.json$/);
+	expect(resolver.getContentMappers(configFileName)).toEqual([
+		{ package: '@vue/content-mapper', extensions: ['.vue'] },
+		{ package: '@vue/content-mapper', extensions: ['.md'], options: { format: 'vitepress' } },
+	]);
+
+	// an own `contentMappers` replaces the inherited array, so `.md` is no longer owned
+	const overrideConfigFileName = path.join(testWorkspacePath, 'tsconfigContentMappers/override/tsconfig.json');
+	expect(resolver.getContentMappers(overrideConfigFileName)).toEqual([
+		{ package: '@vue/content-mapper', extensions: ['.vue'] },
+	]);
+	expect(normalize(resolver.getConfigFileName(path.join(testWorkspacePath, 'tsconfigContentMappers/override/fixture.md'))!))
+		.toMatch(/tsconfigContentMappers\/tsconfig\.json$/);
+
+	expect(resolver.getContentMappers(path.join(testWorkspacePath, 'tsconfigProject/tsconfig.json'))).toBeUndefined();
+
+	resolver.dispose();
+});
+
 test('resolves module names with the owning project options', () => {
 	const resolver = createProjectResolver(ts);
 	const firstOptions = resolver.getCommandLine(firstProjectFile)!.options;

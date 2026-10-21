@@ -23,6 +23,7 @@
 	},
 	"dependencies": {
 		"@volar/language-server": "2.4.28",
+		"@vue/content-mapper": "workspace:*",
 		"@vue/language-core": "workspace:*",
 		"@vue/language-service": "workspace:*",
 		"@vue/typescript-plugin": "workspace:*",

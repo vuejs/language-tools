@@ -1,0 +1,7 @@
+{
+	"extends": "../tsconfig.json",
+	"contentMappers": [
+		{ "package": "@vue/content-mapper", "extensions": [".vue"] }
+	],
+	"include": ["*"]
+}

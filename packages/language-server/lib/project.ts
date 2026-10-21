@@ -1,11 +1,21 @@
+import type { MapperOptions } from '@vue/content-mapper/protocol';
 import * as path from 'node:path';
 import type * as ts from 'typescript';
+
+/** A `contentMappers[]` entry, as written in a tsconfig or contributed for inferred projects. */
+export interface ContentMapperEntry {
+	package: string;
+	extensions: string[];
+	options?: MapperOptions;
+}
 
 export interface ProjectResolver {
 	/** The tsconfig that owns `fileName`, or undefined when no tsconfig includes it. */
 	getConfigFileName(fileName: string): string | undefined;
 	/** The parsed command line of `fileName`'s owning tsconfig, or undefined. */
 	getCommandLine(fileName: string): ts.ParsedCommandLine | undefined;
+	/** The effective `contentMappers` of a tsconfig, or undefined when neither it nor its bases declare any. */
+	getContentMappers(configFileName: string): ContentMapperEntry[] | undefined;
 	dispose(): void;
 }
 
@@ -16,13 +26,22 @@ export interface ProjectResolver {
  */
 export function createProjectResolver(ts: typeof import('typescript')): ProjectResolver {
 	const commandLines = new Map<string, ts.ParsedCommandLine | undefined>();
+	const contentMappers = new Map<string, ContentMapperEntry[] | undefined>();
 	const fileToConfig = new Map<string, string | undefined>();
 
 	function getCommandLine(configFileName: string) {
 		if (!commandLines.has(configFileName)) {
-			commandLines.set(configFileName, parseCommandLine(ts, configFileName));
+			const extensions = getContentMappers(configFileName)?.flatMap(entry => entry.extensions) ?? ['.vue'];
+			commandLines.set(configFileName, parseCommandLine(ts, configFileName, extensions));
 		}
 		return commandLines.get(configFileName);
+	}
+
+	function getContentMappers(configFileName: string) {
+		if (!contentMappers.has(configFileName)) {
+			contentMappers.set(configFileName, readContentMappers(ts, configFileName, new Set()));
+		}
+		return contentMappers.get(configFileName);
 	}
 
 	function isOwned(configFileName: string, fileName: string) {
@@ -84,8 +103,10 @@ export function createProjectResolver(ts: typeof import('typescript')): ProjectR
 			const configFileName = resolver.getConfigFileName(fileName);
 			return configFileName ? getCommandLine(configFileName) : undefined;
 		},
+		getContentMappers,
 		dispose() {
 			commandLines.clear();
+			contentMappers.clear();
 			fileToConfig.clear();
 		},
 	};
@@ -93,10 +114,14 @@ export function createProjectResolver(ts: typeof import('typescript')): ProjectR
 }
 
 /**
- * `.vue` files are not part of TypeScript's supported extensions, so a plain parse never lists them;
- * pass the extension explicitly to get a `fileNames` list that can decide ownership.
+ * Content-mapped extensions are not part of TypeScript's supported extensions, so a plain parse never
+ * lists them; pass them explicitly to get a `fileNames` list that can decide ownership.
  */
-function parseCommandLine(ts: typeof import('typescript'), configFileName: string): ts.ParsedCommandLine | undefined {
+function parseCommandLine(
+	ts: typeof import('typescript'),
+	configFileName: string,
+	extensions: string[],
+): ts.ParsedCommandLine | undefined {
 	try {
 		return ts.parseJsonSourceFileConfigFileContent(
 			ts.readJsonConfigFile(configFileName, ts.sys.readFile),
@@ -105,12 +130,60 @@ function parseCommandLine(ts: typeof import('typescript'), configFileName: strin
 			{},
 			configFileName,
 			undefined,
-			[{ extension: 'vue', isMixedContent: true, scriptKind: ts.ScriptKind.Deferred }],
+			extensions.map(extension => ({
+				extension: extension.slice(1),
+				isMixedContent: true,
+				scriptKind: ts.ScriptKind.Deferred,
+			})),
 		);
 	}
 	catch {
 		return undefined;
 	}
+}
+
+/**
+ * Mirrors how TypeScript 7 inherits `contentMappers`: a config's own array replaces the inherited one
+ * entirely, and among several `extends`, the last base that has one wins.
+ */
+function readContentMappers(
+	ts: typeof import('typescript'),
+	configFileName: string,
+	visited: Set<string>,
+): ContentMapperEntry[] | undefined {
+	if (visited.has(configFileName)) {
+		return;
+	}
+	visited.add(configFileName);
+	const config = ts.readConfigFile(configFileName, ts.sys.readFile).config;
+	if (config?.contentMappers !== undefined) {
+		return Array.isArray(config.contentMappers) ? config.contentMappers : undefined;
+	}
+	let result: ContentMapperEntry[] | undefined;
+	for (const specifier of [config?.extends].flat()) {
+		if (typeof specifier !== 'string') {
+			continue;
+		}
+		const extendedConfigFileName = resolveExtends(ts, configFileName, specifier);
+		const inherited = extendedConfigFileName && readContentMappers(ts, extendedConfigFileName, visited);
+		if (inherited) {
+			result = inherited;
+		}
+	}
+	return result;
+}
+
+/** Resolves an `extends` specifier the way TypeScript does, including package specifiers. */
+function resolveExtends(ts: typeof import('typescript'), configFileName: string, specifier: string) {
+	const sourceFile = ts.readJsonConfigFile(configFileName, () => JSON.stringify({ extends: specifier }));
+	ts.parseJsonSourceFileConfigFileContent(
+		sourceFile,
+		{ ...ts.sys, readDirectory: () => [] },
+		path.dirname(configFileName),
+		{},
+		configFileName,
+	);
+	return sourceFile.extendedSourceFiles?.[0];
 }
 
 function sameFile(a: string, b: string) {
