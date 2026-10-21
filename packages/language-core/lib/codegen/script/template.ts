@@ -1,3 +1,4 @@
+import { BindingFlag } from '../../parsers/utils';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
@@ -8,7 +9,7 @@ import {
 	generateTypeAlias,
 	generateTypedVar,
 	getRefBrandArgument,
-	newLine,
+	isTsLang,
 } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenOptions } from './index';
@@ -24,8 +25,18 @@ export function* generateTemplate(
 	yield `void ${names.ctx}, ${names.components}, ${names.intrinsics}, ${names.directives}${endOfLine}`;
 
 	for (const name of options.dotValueBindings) {
-		yield `// @ts-ignore${newLine}`;
-		yield `${names.withDotValue}(${name}, ${
+		const flags = options.scriptSetupRanges?.bindings.get(name) ?? options.scriptRanges?.bindings.get(name) ?? 0;
+		// an assignment is not a read, so it cannot raise TS2454; the assertion
+		// still narrows `name` through the assignment target. The `unknown` step
+		// avoids TS2352 when `typeof name` is `undefined` (an untyped `let`).
+		const target = flags & BindingFlag.Uninitialized
+			? `${name} = ${
+				isTsLang(options.scriptLang)
+					? `{} as unknown as typeof ${name}`
+					: `/** @type {typeof ${name}} */ (/** @type {unknown} */ ({}))`
+			}`
+			: name;
+		yield `${names.withDotValue}(${target}, ${
 			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
 		})${endOfLine}`;
 	}
