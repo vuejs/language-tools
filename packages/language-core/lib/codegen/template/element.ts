@@ -296,11 +296,11 @@ export function* generateComponent(
 	yield* generateStyleScopedClassReferences(options, node);
 
 	const slotDir = node.props.find(CompilerDOM.isVSlot);
-	if (slotDir || node.children.length) {
-		yield* generateVSlot(options, ctx, node, slotDir, getCtxVar());
-	}
+	const hasSlots = !!slotDir || node.children.length > 0;
 
-	if (isCtxVarUsed) {
+	// declared ahead of the slot code that reads them: JS has no `var x!: T`,
+	// so a later declaration would be read before assignment (TS2454)
+	if (isCtxVarUsed || hasSlots) {
 		yield* generateTypedVar('var', ctxVar, options.scriptLang, function*() {
 			yield `${names.ExtractComponentContext}<typeof ${componentVar}, typeof ${vnodeVar}>`;
 		});
@@ -309,6 +309,10 @@ export function* generateComponent(
 		yield* generateTypedVar('var', propsVar, options.scriptLang, function*() {
 			yield `${names.ExtractComponentProps}<typeof ${componentVar}, typeof ${vnodeVar}>`;
 		});
+	}
+
+	if (hasSlots) {
+		yield* generateVSlot(options, ctx, node, slotDir, ctxVar);
 	}
 	ctx.components.pop();
 }
