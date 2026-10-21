@@ -45,7 +45,6 @@ const plugins = createVueLanguageServicePlugins(ts);
 | `vue-format-per-block` | Formatting per block |
 | `vue-compiler-dom-errors` | Vue compiler error diagnostics |
 | `vue-directive-comments` | Directive comment support (`<!-- @vue-skip -->`, etc.) |
-| `vue-component-semantic-tokens` | Component semantic tokens |
 | `vue-inlayhints` | Inlay hints (destructured props, inline handlers, etc.) |
 | `vue-missing-props-hints` | Hints for missing required props |
 | `vue-autoinsert-dotvalue` | Auto-insertion of `.value` for ref variables |
@@ -58,7 +57,6 @@ const plugins = createVueLanguageServicePlugins(ts);
 | `vue-suggest-define-assignment` | Assignment suggestions for `defineProps`, etc. |
 | `vue-twoslash-queries` | Twoslash query support (`// ^?`) |
 | `css` | CSS language service, supporting v-bind and CSS Modules |
-| `typescript-semantic-tokens` | TypeScript semantic tokens |
 
 ## Usage with @volar/kit
 

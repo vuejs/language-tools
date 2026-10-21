@@ -226,35 +226,6 @@
 				]
 			}
 		],
-		"semanticTokenScopes": [
-			{
-				"language": "vue",
-				"scopes": {
-					"component": [
-						"support.class.component.vue",
-						"entity.name.type.class.vue"
-					]
-				}
-			},
-			{
-				"language": "markdown",
-				"scopes": {
-					"component": [
-						"support.class.component.vue",
-						"entity.name.type.class.vue"
-					]
-				}
-			},
-			{
-				"language": "html",
-				"scopes": {
-					"component": [
-						"support.class.component.vue",
-						"entity.name.type.class.vue"
-					]
-				}
-			}
-		],
 		"breakpoints": [
 			{
 				"language": "vue"

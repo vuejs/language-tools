@@ -96,9 +96,6 @@ export = createLanguageServicePlugin(
 			session.addProtocolHandler('_vue:documentHighlights-full', request => {
 				return handlers.get('documentHighlights-full')!(request);
 			});
-			session.addProtocolHandler('_vue:encodedSemanticClassifications-full', request => {
-				return handlers.get('encodedSemanticClassifications-full')!(request);
-			});
 			session.addProtocolHandler('_vue:quickinfo', request => {
 				return handlers.get('quickinfo')!(request);
 			});

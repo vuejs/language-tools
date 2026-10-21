@@ -49,10 +49,6 @@ export interface Requests {
 		fileName: string,
 		position: number,
 	): Response<ts.DocumentHighlights[]>;
-	getEncodedSemanticClassifications(
-		fileName: string,
-		span: ts.TextSpan,
-	): Response<ts.Classifications>;
 	getQuickInfoAtPosition(
 		fileName: string,
 		position: ts.LineAndCharacter,

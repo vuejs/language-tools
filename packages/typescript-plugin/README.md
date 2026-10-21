@@ -59,7 +59,6 @@ This plugin registers the following Vue-specific commands for `tsserver`:
 | `_vue:getElementNames` | Get element name list |
 | `_vue:resolveModuleName` | Resolve module name |
 | `_vue:documentHighlights-full` | Document highlights |
-| `_vue:encodedSemanticClassifications-full` | Semantic classifications |
 | `_vue:quickinfo` | Quick info |
 
 ## How it Works

@@ -1,5 +1,10 @@
 import { launchServer } from '@typescript/server-harness';
-import { ConfigurationRequest, PublishDiagnosticsNotification, type TextDocument } from '@volar/language-server';
+import {
+	ConfigurationRequest,
+	type InitializeResult,
+	PublishDiagnosticsNotification,
+	type TextDocument,
+} from '@volar/language-server';
 import type { LanguageServerHandle } from '@volar/test-utils';
 import { startLanguageServer } from '@volar/test-utils';
 import * as path from 'node:path';
@@ -7,12 +12,14 @@ import { URI } from 'vscode-uri';
 
 let serverHandle: LanguageServerHandle | undefined;
 let tsserver: import('@typescript/server-harness').Server;
+let initializeResult: InitializeResult;
 let seq = 1;
 
 export const testWorkspacePath = path.resolve(__dirname, '../../../test-workspace');
 
 export async function getLanguageServer(): Promise<{
 	vueserver: LanguageServerHandle;
+	initializeResult: InitializeResult;
 	tsserver: import('@typescript/server-harness').Server;
 	nextSeq: () => number;
 	open: (uri: string, languageId: string, content: string) => Promise<TextDocument>;
@@ -59,7 +66,7 @@ export async function getLanguageServer(): Promise<{
 			);
 		});
 
-		await serverHandle.initialize(
+		initializeResult = await serverHandle.initialize(
 			URI.file(testWorkspacePath).toString(),
 			{},
 			{
@@ -71,6 +78,7 @@ export async function getLanguageServer(): Promise<{
 	}
 	return {
 		vueserver: serverHandle,
+		initializeResult,
 		tsserver: tsserver,
 		nextSeq: () => seq++,
 		open: async (uri, languageId, content) => {

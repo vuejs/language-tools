@@ -11,11 +11,9 @@ import { create as createPugFormatPlugin } from 'volar-service-pug-beautify';
 import { create as createTypeScriptDocCommentTemplatePlugin } from 'volar-service-typescript/lib/plugins/docCommentTemplate';
 import { create as createTypeScriptSyntacticPlugin } from 'volar-service-typescript/lib/plugins/syntactic';
 import { create as createCssPlugin } from './lib/plugins/css';
-import { create as createTypescriptSemanticTokensPlugin } from './lib/plugins/typescript-semantic-tokens';
 import { create as createVueAutoDotValuePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
 import { create as createVueAutoSpacePlugin } from './lib/plugins/vue-autoinsert-space';
 import { create as createVueCompilerDomErrorsPlugin } from './lib/plugins/vue-compiler-dom-errors';
-import { create as createVueComponentSemanticTokensPlugin } from './lib/plugins/vue-component-semantic-tokens';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
 import { create as createVueDocumentHighlightsPlugin } from './lib/plugins/vue-document-highlights';
@@ -65,9 +63,7 @@ export function createVueLanguageServicePlugins(
 
 		// type aware plugins
 		createCssPlugin(client),
-		createTypescriptSemanticTokensPlugin(client),
 		createVueAutoDotValuePlugin(ts, client),
-		createVueComponentSemanticTokensPlugin(client),
 		createVueDocumentDropPlugin(ts, client),
 		createVueDocumentHighlightsPlugin(client),
 		createVueExtractFilePlugin(ts, client),
