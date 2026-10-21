@@ -67,7 +67,7 @@ type __VLS_PropsChildren<S> = {
 `.trimStart()
 				// The single-line form lets the preceding @ts-ignore cover the whole typedef,
 				// mirroring the inline @ts-ignore guards of the TS form.
-				: `// @ts-ignore${newLine}/** @template S @typedef {{ [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; }} __VLS_PropsChildren */${newLine}`,
+				: `// @ts-ignore${newLine}/** @template S @typedef {{ [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; }} __VLS_PropsChildren */${endOfLine}`,
 	);
 	const TypePropsToOption = defineHelper(
 		`__VLS_TypePropsToOption`,

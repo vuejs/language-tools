@@ -53,8 +53,10 @@ export function* generateElementDirectives(
 			yield* generateModifiers(options, ctx, prop);
 			yield* generateValue(options, ctx, prop);
 			// Vue invokes hooks with all four arguments regardless of the declared
-			// arity; the padded hook keeps the declared params checked, so the
-			// synthetic vnode args are `never` to stay assignable to whatever they declare.
+			// arity; the padded hook keeps the declared params of a single non-generic
+			// signature checked, so the synthetic vnode args are `never` to stay assignable
+			// to whatever they declare. Generic or overloaded hooks fall back to a permissive
+			// overload, so their bindings are currently unchecked.
 			yield `},${newLine}${names.nonNull}(null), ${names.nonNull}(null))`;
 		}
 		yield boundary.end();
