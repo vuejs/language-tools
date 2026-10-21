@@ -1,4 +1,5 @@
 import type { MapperOptions } from '@vue/content-mapper/protocol';
+import { resolveContentMappers } from '@vue/language-core';
 import * as path from 'node:path';
 import type * as ts from 'typescript';
 
@@ -39,7 +40,10 @@ export function createProjectResolver(ts: typeof import('typescript')): ProjectR
 
 	function getContentMappers(configFileName: string) {
 		if (!contentMappers.has(configFileName)) {
-			contentMappers.set(configFileName, readContentMappers(ts, configFileName, new Set()));
+			contentMappers.set(
+				configFileName,
+				resolveContentMappers(ts, ts.sys, configFileName) as ContentMapperEntry[] | undefined,
+			);
 		}
 		return contentMappers.get(configFileName);
 	}
@@ -140,50 +144,6 @@ function parseCommandLine(
 	catch {
 		return undefined;
 	}
-}
-
-/**
- * Mirrors how TypeScript 7 inherits `contentMappers`: a config's own array replaces the inherited one
- * entirely, and among several `extends`, the last base that has one wins.
- */
-function readContentMappers(
-	ts: typeof import('typescript'),
-	configFileName: string,
-	visited: Set<string>,
-): ContentMapperEntry[] | undefined {
-	if (visited.has(configFileName)) {
-		return;
-	}
-	visited.add(configFileName);
-	const config = ts.readConfigFile(configFileName, ts.sys.readFile).config;
-	if (config?.contentMappers !== undefined) {
-		return Array.isArray(config.contentMappers) ? config.contentMappers : undefined;
-	}
-	let result: ContentMapperEntry[] | undefined;
-	for (const specifier of [config?.extends].flat()) {
-		if (typeof specifier !== 'string') {
-			continue;
-		}
-		const extendedConfigFileName = resolveExtends(ts, configFileName, specifier);
-		const inherited = extendedConfigFileName && readContentMappers(ts, extendedConfigFileName, visited);
-		if (inherited) {
-			result = inherited;
-		}
-	}
-	return result;
-}
-
-/** Resolves an `extends` specifier the way TypeScript does, including package specifiers. */
-function resolveExtends(ts: typeof import('typescript'), configFileName: string, specifier: string) {
-	const sourceFile = ts.readJsonConfigFile(configFileName, () => JSON.stringify({ extends: specifier }));
-	ts.parseJsonSourceFileConfigFileContent(
-		sourceFile,
-		{ ...ts.sys, readDirectory: () => [] },
-		path.dirname(configFileName),
-		{},
-		configFileName,
-	);
-	return sourceFile.extendedSourceFiles?.[0];
 }
 
 function sameFile(a: string, b: string) {
