@@ -99,8 +99,10 @@ declare global {
 	};
 	type __VLS_PrettifyGlobal<T> = (T extends any ? { [K in keyof T]: T[K] } : { [K in keyof T as K]: T[K] }) & {};
 
-	// Vue invokes hooks with all four args regardless of the declared arity
-	// make the generated 4-arg call legal for short hooks while their declared params stay checked.
+	// Vue invokes hooks with all four args regardless of the declared arity.
+	// Hooks are called as declared with `(el, binding, ...rest)` sized to their arity, so generic and
+	// overloaded hooks are resolved against their own signatures; when no single arity fits (unions
+	// of hooks, `this` params, overloads disagreeing on the count) the hook is padded instead.
 	type __VLS_IsRebuildable<A, B> = (<G>() => G extends A ? 1 : 2) extends (<G>() => G extends B ? 1 : 2) ? true : false;
 	type __VLS_PadDirectiveHook<F> = F extends (...args: infer A) => infer R
 		// full arity: nothing to pad
@@ -110,6 +112,37 @@ declare global {
 			// not rebuildable (generic/overloaded): add a permissive overload for the call
 		: F & ((...args: any[]) => R)
 		: F;
+	// erased params of (up to the last 8) overloads; only their arity is used
+	type __VLS_OverloadParams<F> = F extends {
+		(...args: infer A1): any;
+		(...args: infer A2): any;
+		(...args: infer A3): any;
+		(...args: infer A4): any;
+		(...args: infer A5): any;
+		(...args: infer A6): any;
+		(...args: infer A7): any;
+		(...args: infer A8): any;
+	} ? A1 | A2 | A3 | A4 | A5 | A6 | A7 | A8
+		: never;
+	type __VLS_DirectiveHookArgs<A extends any[]> = A extends [any, ...infer Rest]
+		? [never, ...__VLS_DirectiveHookArgs<Rest>]
+		: [];
+	type __VLS_DirectiveHookArgsRestOf<A> = __VLS_IsAny<A> extends true ? false
+		: A extends any[] ? __VLS_DirectiveHookArgs<A> extends [any, any, ...infer Rest] ? Rest
+			: 2 extends A['length'] ? []
+			: false
+		: false;
+	// the trailing args that let every overload of F accept `(el, binding, ...rest)`, or never if none fit
+	type __VLS_DirectiveHookArgsRest<F> = __VLS_IsAny<F> extends true ? never
+		: [F] extends [__VLS_UnionToIntersection<F>]
+			? unknown extends ThisParameterType<F>
+				? __VLS_DirectiveHookArgsRestOf<__VLS_OverloadParams<F>> extends infer R
+					? [R] extends [any[]] ? [R] extends [__VLS_UnionToIntersection<R>] ? R : never
+					: never
+				: never
+			: never
+		: never;
+	type __VLS_DirectiveHook<F> = [__VLS_DirectiveHookArgsRest<F>] extends [never] ? __VLS_PadDirectiveHook<F> : F;
 
 	function __VLS_vFor<const T>(source: T): T extends number ? [number, number][]
 		: T extends string ? [string, number][]
@@ -121,7 +154,7 @@ declare global {
 	function __VLS_asFunctionalDirective<T, ObjectDirective>(
 		dir: T,
 		od: ObjectDirective,
-	): __VLS_PadDirectiveHook<
+	): __VLS_DirectiveHook<
 		T extends ObjectDirective ? NonNullable<
 				T[
 					keyof T & ('created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted')
@@ -130,6 +163,9 @@ declare global {
 			: T extends (...args: any) => any ? T
 			: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void
 	>;
+	function __VLS_directiveHookArgsRest<F>(
+		hook: F,
+	): [__VLS_DirectiveHookArgsRest<F>] extends [never] ? [never, never] : __VLS_DirectiveHookArgsRest<F>;
 	function __VLS_asFunctionalComponent0<T, K>(
 		t: T,
 		instance: K,
