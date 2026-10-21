@@ -344,7 +344,7 @@ export function createTemplateCodegenContext() {
 	function* generateHoistVariables(scriptLang: string) {
 		// trick to avoid TS 4081 (#5186)
 		if (hoistVars.size) {
-			// non-null assertions are TS-only syntax (TS8013 in JS virtual code)
+			// non-null assertions are TS-only syntax (TS8013 in JS)
 			const isTs = isTsLang(scriptLang);
 			yield `var `;
 			let first = true;
@@ -353,7 +353,9 @@ export function createTemplateCodegenContext() {
 					yield `, `;
 				}
 				first = false;
-				yield isTs ? `${hoistVar} = ${originalVar}!` : `${hoistVar} = ${names.nonNull}(${originalVar})`;
+				yield isTs
+					? `${hoistVar} = ${originalVar}!`
+					: `${hoistVar} = ${names.nonNull}(${originalVar})`;
 			}
 			yield endOfLine;
 		}
