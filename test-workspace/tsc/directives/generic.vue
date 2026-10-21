@@ -37,6 +37,5 @@ function vOverArity(_el: HTMLElement, _binding: DirectiveBinding<string | number
 	<div v-over="1"></div>
 	<div v-over-gen="[1, (_a: 1) => {}]"></div>
 	<div v-over-gen="'a'"></div>
-	<div v-over-arity="'a'"></div>
 	<div v-over-arity="1"></div>
 </template>

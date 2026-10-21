@@ -9,6 +9,11 @@ const vObjGen = {
 function vOver(el: HTMLElement, binding: DirectiveBinding<string>): void;
 function vOver(el: HTMLElement, binding: DirectiveBinding<number>): void;
 function vOver(_el: HTMLElement, _binding: DirectiveBinding<string | number>) {}
+
+// only the last overload's arity is used, so earlier overloads with a different arity are skipped
+function vOverArity(el: HTMLElement, binding: DirectiveBinding<string>): void;
+function vOverArity(el: HTMLElement, binding: DirectiveBinding<number>, vnode: unknown): void;
+function vOverArity(_el: HTMLElement, _binding: DirectiveBinding<string | number>, _vnode?: unknown) {}
 </script>
 
 <template>
@@ -16,4 +21,5 @@ function vOver(_el: HTMLElement, _binding: DirectiveBinding<string | number>) {}
 	<div v-gen="['x', (_a: string) => {}]"></div>
 	<div v-obj-gen="[1, (_a: string) => {}]"></div>
 	<div v-over="true"></div>
+	<div v-over-arity="'a'"></div>
 </template>
