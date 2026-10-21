@@ -3,7 +3,7 @@ import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
 	return {
-		version: 3,
+		version: 4,
 
 		getEmbeddedCodes(_fileName, ir) {
 			if (ir.template?.lang === 'html') {

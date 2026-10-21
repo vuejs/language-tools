@@ -11,7 +11,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 	return {
 		name: require('./package.json').name,
 
-		version: 3,
+		version: 4,
 
 		getEmbeddedCodes(_fileName, ir) {
 			if (ir.template?.lang === 'pug') {

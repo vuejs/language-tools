@@ -3,7 +3,7 @@ import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
 	return {
-		version: 3,
+		version: 4,
 
 		compileSFCScript(lang, script) {
 			if (lang === 'js' || lang === 'ts' || lang === 'jsx' || lang === 'tsx') {

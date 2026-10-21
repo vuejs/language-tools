@@ -93,7 +93,7 @@ export interface VueCompilerOptions {
 	>;
 }
 
-export const validVersions = [3] as const;
+export const validVersions = [4] as const;
 
 export interface VueLanguagePluginReturn {
 	version: typeof validVersions[number];

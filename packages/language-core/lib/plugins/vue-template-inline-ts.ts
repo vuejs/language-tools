@@ -25,7 +25,7 @@ const plugin: VueLanguagePlugin = ({ modules: { typescript: ts } }) => {
 	const parseds = new WeakMap<IR, ReturnType<typeof parse>>();
 
 	return {
-		version: 3,
+		version: 4,
 
 		getEmbeddedCodes(_fileName, ir) {
 			if (!ir.template?.ast) {

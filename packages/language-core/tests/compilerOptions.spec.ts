@@ -19,7 +19,7 @@ function writePluginPackage(rootDir: string, tag: string) {
 		path.join(packageDir, 'index.js'),
 		`module.exports = () => ({
 			name: ${JSON.stringify(PLUGIN_NAME)},
-			version: 3,
+			version: 4,
 			compileSFCTemplate(lang) {
 				if (lang === 'pug') {
 					return {
@@ -41,7 +41,7 @@ function writeNamedPluginPackage(rootDir: string, specifier: string, factoryName
 		JSON.stringify({ name: specifier, main: 'index.js' }),
 	);
 	const factories = factoryNames
-		.map(name => `function ${name}() {\n\treturn { name: ${JSON.stringify(name)}, version: 3 };\n}`)
+		.map(name => `function ${name}() {\n\treturn { name: ${JSON.stringify(name)}, version: 4 };\n}`)
 		.join(',\n');
 	fs.writeFileSync(
 		path.join(packageDir, 'index.js'),

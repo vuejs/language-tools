@@ -127,7 +127,7 @@ A plugin's `parseSFC(fileName, content)` hook can parse a file into SFC blocks; 
 | `vitepress` | VitePress markdown: `<script>` / `<style>` blocks are lifted out and the rest becomes the template. |
 | `petite-vue` | A petite-vue HTML page: `<script>` / `<style>` blocks are lifted out and the rest becomes the template. |
 
-Plugins must declare `version: 3`. Version 3 removed the `getLanguageId`, `isValidFile` and `parseSFC2` hooks: a plugin that only parses some files checks the file name in `parseSFC` and returns `undefined` for the others.
+Plugins must declare `version: 4`. Version 4 removed the `getLanguageId`, `isValidFile` and `parseSFC2` hooks: a plugin that only parses some files checks the file name in `parseSFC` and returns `undefined` for the others.
 
 ### Virtual Code Generation Plugins
 

@@ -2,7 +2,7 @@ import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
 	return {
-		version: 3,
+		version: 4,
 
 		compileSFCStyle(_lang, style) {
 			return {
