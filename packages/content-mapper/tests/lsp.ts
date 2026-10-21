@@ -96,7 +96,11 @@ export class LspDocument {
 	readonly text: string;
 
 	constructor(readonly fileName: string) {
-		this.uri = pathToFileURL(fileName).href;
+		// tsgo filters document highlights by comparing its own URI form (`file:///c%3A/...`) to the request's as strings.
+		this.uri = pathToFileURL(fileName).href.replace(
+			/^file:\/\/\/([A-Za-z]):/,
+			(_, drive: string) => `file:///${drive.toLowerCase()}%3A`,
+		);
 		this.text = fs.readFileSync(fileName, 'utf8');
 	}
 
