@@ -260,3 +260,42 @@ test('keeps single-use combine tokens as individual spans', () => {
 		[0, 5, 0, 5, SpanMapKind.Atom, navigationBits],
 	]);
 });
+
+test('lets segments inside a feature-less merged token win and fills around them', () => {
+	const boundary = { verification: true, __combineToken: Symbol() };
+	// generated: {a: b}   (boundary 0..6 mapped to `C`, `b` at 4..5)
+	// original:  C b
+	expect(toSpanMappings(
+		[
+			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [0], data: boundary },
+			{ sourceOffsets: [2], generatedOffsets: [4], lengths: [1], data: { navigation: true } },
+			{ sourceOffsets: [1], generatedOffsets: [6], lengths: [0], data: boundary },
+		],
+		'{a: b}',
+		'C b',
+	)).toEqual([
+		[0, 4, 0, 1, SpanMapKind.Atom, 0],
+		[4, 1, 2, 1, SpanMapKind.Verbatim, navigationBits],
+		[5, 1, 0, 1, SpanMapKind.Atom, 0],
+	]);
+});
+
+test('maps both sides of a shorthand as atoms so rename never edits them', () => {
+	// generated: {a: a}   original: {a}
+	expect(toSpanMappings(
+		[
+			{ sourceOffsets: [1], generatedOffsets: [1], lengths: [1], data: { navigation: true } },
+			{
+				sourceOffsets: [1],
+				generatedOffsets: [4],
+				lengths: [1],
+				data: { navigation: true, __shorthandExpression: 'js' },
+			},
+		],
+		'{a: a}',
+		'{a}',
+	)).toEqual([
+		[1, 1, 1, 1, SpanMapKind.Atom, navigationBits],
+		[4, 1, 1, 1, SpanMapKind.Atom, navigationBits],
+	]);
+});

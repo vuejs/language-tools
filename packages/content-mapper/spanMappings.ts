@@ -96,6 +96,7 @@ export function toSpanMappings(
 		}
 	}
 	const combineGroups = new Map<symbol, typeof entries>();
+	const merged = new Set<RawEntry>();
 	for (const entry of entries) {
 		if (entry.token !== undefined && tokenCounts.get(entry.token)! > 1) {
 			const group = combineGroups.get(entry.token);
@@ -111,15 +112,24 @@ export function toSpanMappings(
 		group.sort((left, right) => left.generatedStart - right.generatedStart);
 		const first = group[0]!;
 		const last = group[group.length - 1]!;
-		entries.push({
+		const entry: RawEntry = {
 			generatedStart: first.generatedStart,
 			generatedLength: last.generatedStart + last.generatedLength - first.generatedStart,
 			originalStart: first.originalStart,
 			originalLength: last.originalStart + last.originalLength - first.originalStart,
 			data: first.data,
-		});
+		};
+		entries.push(entry);
+		merged.add(entry);
 	}
 	const grouped = new Set([...combineGroups.values()].flat());
+	const shorthandRanges = new Set<string>();
+	for (const entry of entries) {
+		if (typeof entry.data === 'object' && entry.data !== null && '__shorthandExpression' in entry.data) {
+			shorthandRanges.add(toKey(entry.originalStart, entry.originalStart + entry.originalLength));
+		}
+	}
+	const fills: Candidate[] = [];
 
 	for (const entry of entries) {
 		if (grouped.has(entry)) {
@@ -150,14 +160,25 @@ export function toSpanMappings(
 				continue;
 			}
 		}
-		candidates.push({
+		// Renaming a shorthand (`:foo`, `{ foo }`) would have to expand it, which the
+		// host cannot do; atoms keep its key and value navigable but never edited.
+		const shorthand = shorthandRanges.has(toKey(originalStart, originalEnd));
+		const candidate: Candidate = {
 			generatedStart,
 			generatedEnd,
 			originalStart,
 			originalEnd,
-			kind: verbatim ? SpanMapKind.Verbatim : SpanMapKind.Atom,
+			kind: verbatim && !shorthand ? SpanMapKind.Verbatim : SpanMapKind.Atom,
 			features,
-		});
+		};
+		// A feature-less merged token (e.g. a verification boundary around a
+		// props object) only carries diagnostics; let the segments inside it win.
+		if (languageFeatures && !features && !verbatim && merged.has(entry)) {
+			fills.push(candidate);
+		}
+		else {
+			candidates.push(candidate);
+		}
 	}
 
 	candidates.sort((left, right) =>
@@ -179,6 +200,36 @@ export function toSpanMappings(
 		generatedIntervals.add(candidate.generatedStart, candidate.generatedEnd);
 		originalIntervals.add(candidate.originalStart, candidate.originalEnd);
 		selected.push(candidate);
+	}
+
+	// Fill the uncovered parts of each feature-less token with pieces of the
+	// same original span, innermost first, so diagnostics still map to it.
+	fills.sort((left, right) => (left.generatedEnd - left.generatedStart) - (right.generatedEnd - right.generatedStart));
+	for (const fill of fills) {
+		if (!originalIntervals.canAdd(fill.originalStart, fill.originalEnd)) {
+			continue;
+		}
+		const inner = selected
+			.filter(mapping =>
+				rangesOverlap(fill.generatedStart, fill.generatedEnd, mapping.generatedStart, mapping.generatedEnd)
+			)
+			.sort((left, right) => left.generatedStart - right.generatedStart);
+		const pieces: Candidate[] = [];
+		let start = fill.generatedStart;
+		for (const mapping of [...inner, { generatedStart: fill.generatedEnd, generatedEnd: fill.generatedEnd }]) {
+			if (start < mapping.generatedStart) {
+				pieces.push({ ...fill, generatedStart: start, generatedEnd: mapping.generatedStart });
+			}
+			start = Math.max(start, mapping.generatedEnd);
+		}
+		if (!pieces.length) {
+			continue;
+		}
+		for (const piece of pieces) {
+			generatedIntervals.add(piece.generatedStart, piece.generatedEnd);
+			selected.push(piece);
+		}
+		originalIntervals.add(fill.originalStart, fill.originalEnd);
 	}
 
 	selected.sort((left, right) => left.generatedStart - right.generatedStart);

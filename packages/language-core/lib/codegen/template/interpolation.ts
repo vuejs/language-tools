@@ -36,17 +36,7 @@ export function* generateInterpolation(
 			inNarrowing,
 		)
 	) {
-		if (isShorthand) {
-			yield* generateNonIdentifierCode(
-				code.slice(prevEnd, offset + name.length),
-				block.name,
-				start + prevEnd,
-				features,
-				prevEnd > 0,
-			);
-			yield `: `;
-		}
-		else if (prevEnd < offset) {
+		if (prevEnd < offset) {
 			yield* generateNonIdentifierCode(
 				code.slice(prevEnd, offset),
 				block.name,
@@ -54,6 +44,10 @@ export function* generateInterpolation(
 				features,
 				prevEnd > 0,
 			);
+		}
+		if (isShorthand) {
+			yield [name, block.name, start + offset, features];
+			yield `: `;
 		}
 
 		const codes: Code[] = [[
