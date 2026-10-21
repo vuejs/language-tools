@@ -67,6 +67,8 @@ export function* generateComponent(
 			options.template,
 			isIsShorthand
 				? codeFeatures.withoutHighlightAndCompletion
+				: tag === node.tag
+				? { ...codeFeatures.all, ...codeFeatures.navigationWithoutHighlight }
 				: codeFeatures.all,
 			tag,
 			startTagOffset,
@@ -79,7 +81,7 @@ export function* generateComponent(
 				options,
 				ctx,
 				options.template,
-				codeFeatures.withoutCompletion,
+				{ ...codeFeatures.withoutCompletion, ...codeFeatures.navigationWithoutHighlight },
 				tag,
 				endTagOffset,
 				`(`,
@@ -103,7 +105,7 @@ export function* generateComponent(
 				'template',
 				startTagOffset,
 				{
-					...codeFeatures.withoutHighlightAndCompletion,
+					...codeFeatures.tagName,
 					...codeFeatures.importCompletionOnly,
 				},
 			);
@@ -113,7 +115,7 @@ export function* generateComponent(
 					matchedImportedComponent[0]! + tag.slice(1),
 					'template',
 					endTagOffset,
-					codeFeatures.withoutHighlightAndCompletion,
+					codeFeatures.tagName,
 				);
 			}
 			yield endOfLine;
@@ -147,14 +149,14 @@ export function* generateComponent(
 						continue;
 					}
 					yield ` | typeof ${names.components}.`;
-					yield* generateCamelized(tag, 'template', offset, codeFeatures.navigation);
+					yield* generateCamelized(tag, 'template', offset, codeFeatures.navigationWithoutHighlight);
 					if (tag[0] !== tag[0]!.toUpperCase()) {
 						yield ` | typeof ${names.components}.`;
-						yield* generateCamelized(capitalize(tag), 'template', offset, codeFeatures.navigation);
+						yield* generateCamelized(capitalize(tag), 'template', offset, codeFeatures.navigationWithoutHighlight);
 					}
 					if (tag.includes('-')) {
 						yield ` | typeof ${names.components}[`;
-						yield* generateStringLiteralKey(tag, offset, codeFeatures.navigation);
+						yield* generateStringLiteralKey(tag, offset, codeFeatures.navigationWithoutHighlight);
 						yield `]`;
 					}
 				}
@@ -320,7 +322,7 @@ export function* generateElement(
 		ctx,
 		node.tag,
 		startTagOffset,
-		codeFeatures.withoutHighlightAndCompletion,
+		codeFeatures.tagName,
 	);
 	if (endTagOffset !== undefined) {
 		yield `, `;
@@ -330,7 +332,7 @@ export function* generateElement(
 			ctx,
 			node.tag,
 			endTagOffset,
-			codeFeatures.withoutHighlightAndCompletion,
+			codeFeatures.tagName,
 		);
 	}
 	yield `)(`;

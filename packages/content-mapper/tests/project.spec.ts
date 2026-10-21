@@ -145,6 +145,38 @@ test('maps the synthetic default export to the top of the SFC', () => {
 	expect(anchor![5] & SpanMapFeature.Rename).toBeFalsy();
 });
 
+test('leaves document highlights on tag names to the matching-tag pair', () => {
+	const projectHandle = 'tag-highlight-project';
+	openProject({
+		configFileName: '',
+		projectHandle,
+		compilerOptions: {},
+	});
+
+	const content = `<script setup lang="ts">import Comp from './Comp.vue';\nconst msg = 'hi';</script>\n`
+		+ `<template><div><Comp /></div><Comp></Comp><my-el></my-el>{{ msg }}</template>\n`;
+	const result = transformVue({
+		projectHandle,
+		fileName: path.resolve(__dirname, 'TagHighlight.vue'),
+		content,
+	});
+	closeProject(projectHandle);
+
+	const highlightable = (offset: number) =>
+		result.mappings.some(([, , originalStart, originalLength, , features]) =>
+			offset >= originalStart && offset < originalStart + originalLength
+			&& (features & SpanMapFeature.DocumentHighlights) !== 0
+		);
+	for (const tag of ['<div', '</div', '<Comp', '</Comp', '<my-el', '</my-el']) {
+		let offset = content.indexOf(tag);
+		while (offset !== -1) {
+			expect(highlightable(offset + tag.indexOf('<') + (tag[1] === '/' ? 2 : 1)), tag).toBe(false);
+			offset = content.indexOf(tag, offset + 1);
+		}
+	}
+	expect(highlightable(content.lastIndexOf('msg'))).toBe(true);
+});
+
 test('maps Vue diagnostic directives to virtual regions', () => {
 	const projectHandle = 'directive-project';
 	const configFileName = path.resolve(
