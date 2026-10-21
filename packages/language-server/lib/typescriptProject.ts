@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
+import type * as ts from 'typescript';
 
 /** The parts of `typescript/async` used here; the module is loaded at runtime from the TS 7 installation. */
 interface API {
@@ -9,20 +10,26 @@ interface API {
 }
 
 interface Snapshot {
-	getDefaultProjectForFile(file: string): Promise<{ configFileName?: string } | undefined>;
+	getDefaultProjectForFile(file: string): Promise<TypeScriptProject | undefined>;
 	dispose(): Promise<void>;
 }
 
+export interface TypeScriptProject {
+	/** Undefined for the TypeScript language server's inferred project. */
+	configFileName: string | undefined;
+	parsedCommandLine: { options: ts.CompilerOptions };
+}
+
 export interface TypeScriptProjectResolver {
-	/** The tsconfig of the file's default project in the running TypeScript language server, or undefined for inferred projects. */
-	getConfigFileName(fileName: string): Promise<string | undefined>;
-	/** Releases the file opened by `getConfigFileName`. */
+	/** The file's default project in the running TypeScript language server, or undefined when it has none for it. */
+	getProject(fileName: string): Promise<TypeScriptProject | undefined>;
+	/** Releases the file opened by `getProject`. */
 	closeFile(fileName: string): void;
 	dispose(): void;
 }
 
 /**
- * Asks the editor's TypeScript language server which project owns a file, over the API pipe it opened for us.
+ * Asks the editor's TypeScript language server which project owns a file, over an API pipe the client opened.
  * `packageJsonPath` is the manifest of the TS 7 installation that server runs, so the client matches it.
  */
 export async function connectTypeScriptProjectResolver(
@@ -34,33 +41,44 @@ export async function connectTypeScriptProjectResolver(
 	const modulePath = createRequire(manifestPath).resolve(`${name}/async`);
 	const { API } = await import(pathToFileURL(modulePath).href);
 	const api: API = new API({ pipe });
-	const configFileNames = new Map<string, Promise<string | undefined>>();
+	const projects = new Map<string, Promise<TypeScriptProject | undefined>>();
+
+	async function openSnapshot(fileName: string) {
+		try {
+			// Opening the file makes the TypeScript language server load its default project even if the editor's didOpen has not reached it yet.
+			return await api.getCurrentLanguageServerSnapshot({ openFiles: [fileName] });
+		}
+		catch {
+			// The TypeScript language server refuses to open files no project can hold (e.g. `.vue` without a content mapper); asking the current
+			// snapshot then answers "no project", while a broken connection still throws.
+			return await api.getCurrentLanguageServerSnapshot();
+		}
+	}
 
 	return {
-		getConfigFileName(fileName) {
-			let result = configFileNames.get(fileName);
+		getProject(fileName) {
+			let result = projects.get(fileName);
 			if (!result) {
-				// Opening the file makes the TypeScript language server load its default project even if the editor's didOpen has not reached it yet.
-				result = api.getCurrentLanguageServerSnapshot({ openFiles: [fileName] }).then(async snapshot => {
+				result = openSnapshot(fileName).then(async snapshot => {
 					try {
-						return (await snapshot.getDefaultProjectForFile(fileName))?.configFileName;
+						return await snapshot.getDefaultProjectForFile(fileName);
 					}
 					finally {
 						await snapshot.dispose();
 					}
 				});
-				configFileNames.set(fileName, result);
-				result.catch(() => configFileNames.delete(fileName));
+				projects.set(fileName, result);
+				result.catch(() => projects.delete(fileName));
 			}
 			return result;
 		},
 		closeFile(fileName) {
-			if (configFileNames.delete(fileName)) {
+			if (projects.delete(fileName)) {
 				api.getCurrentLanguageServerSnapshot({ closeFiles: [fileName] }).then(snapshot => snapshot.dispose(), () => {});
 			}
 		},
 		dispose() {
-			configFileNames.clear();
+			projects.clear();
 			api.close().catch(() => {});
 		},
 	};

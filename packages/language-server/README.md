@@ -46,6 +46,8 @@ Configure via [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig):
 require('lspconfig').volar.setup({})
 ```
 
+The client must also implement the [Client Requirements](#client-requirements).
+
 ### Sublime Text
 
 See [sublimelsp/LSP-volar](https://github.com/sublimelsp/LSP-volar).
@@ -67,11 +69,48 @@ import * as ts from 'typescript';
 startServer(ts);
 ```
 
-> **Note**: `startServer` creates a stdio-based LSP connection and communicates with `@vue/typescript-plugin` through `tsserver/request` and `tsserver/response` notifications.
+> **Note**: `startServer` creates a stdio-based LSP connection. The client must implement the requests described in [Client Requirements](#client-requirements).
 
-## Collaboration with TypeScript Plugin
+## Client Requirements
 
-This language server communicates with `@vue/typescript-plugin` through custom `tsserver/request` and `tsserver/response` notifications. This architecture allows the language server to leverage the capabilities of the TypeScript language service for complex type inference and code analysis.
+Besides LSP, the client that starts this server must connect it to the editor's TypeScript servers. VS Code does this in the Vue (Official) extension; other editors must implement both of the following.
+
+### `vue/typescriptApiConnection` (required)
+
+The server asks which project owns a file from the editor's TypeScript 7 language server (`tsc --lsp --stdio` of the `typescript@7` package), through its API pipe. It sends this request to the client on first use, and again whenever the previous pipe stops working (e.g. after the TypeScript server restarted):
+
+- Request (server → client): `vue/typescriptApiConnection`, no params.
+- The client forwards `custom/initializeAPISession` with params `{}` to the TypeScript 7 language server, which replies `{ pipe }`.
+- Response: `{ pipe: string, packageJsonPath: string }`, where `packageJsonPath` is the `package.json` of the `typescript@7` package that language server runs from. The server loads the matching `typescript/async` API client from it.
+
+There is no fallback: until the client answers, requests wait, and if it fails, the server shows the error and requests fail.
+
+Neovim sketch, assuming the TypeScript 7 client is named `typescript` and runs from the project's `node_modules/typescript`:
+
+```lua
+vim.lsp.config('vue_ls', {
+  handlers = {
+    ['vue/typescriptApiConnection'] = function()
+      local typescript = vim.lsp.get_clients({ name = 'typescript' })[1]
+      if not typescript then
+        return nil, vim.lsp.rpc.rpc_response_error(-32603, 'TypeScript 7 language server is not running')
+      end
+      local response = typescript:request_sync('custom/initializeAPISession', {}, 10000)
+      if not response or response.err then
+        return nil, response and response.err or vim.lsp.rpc.rpc_response_error(-32603, 'timeout')
+      end
+      return {
+        pipe = response.result.pipe,
+        packageJsonPath = vim.fs.joinpath(typescript.config.root_dir, 'node_modules/typescript/package.json'),
+      }
+    end,
+  },
+})
+```
+
+### `tsserver/request` (required)
+
+Component and template features still query `@vue/typescript-plugin` running in tsserver. The server sends `tsserver/request` notifications with `[id, command, args]`; the client runs the command in tsserver and replies with a `tsserver/response` notification carrying `[id, body]` (`body` is `undefined` on failure).
 
 ## Related Packages
 

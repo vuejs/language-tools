@@ -9,13 +9,16 @@ import type { LanguageServerHandle } from '@volar/test-utils';
 import { startLanguageServer } from '@volar/test-utils';
 import * as path from 'node:path';
 import { URI } from 'vscode-uri';
+import { type LspServer, startLspServer } from '../../content-mapper/tests/lsp';
 
 let serverHandle: LanguageServerHandle | undefined;
 let tsserver: import('@typescript/server-harness').Server;
+let typescriptServer: Promise<LspServer> | undefined;
 let initializeResult: InitializeResult;
 let seq = 1;
 
 export const testWorkspacePath = path.resolve(__dirname, '../../../test-workspace');
+export const typescriptPackageJsonPath = path.resolve(__dirname, '../../../node_modules/typescript-7/package.json');
 
 export async function getLanguageServer(): Promise<{
 	vueserver: LanguageServerHandle;
@@ -54,6 +57,12 @@ export async function getLanguageServer(): Promise<{
 				}
 				return null;
 			});
+		});
+		// What an editor does for the Vue language server: forward the request to its TypeScript language server.
+		serverHandle.connection.onRequest('vue/typescriptApiConnection', async () => {
+			const server = await (typescriptServer ??= startLspServer(testWorkspacePath));
+			const { pipe } = await server.request<{ pipe: string }>('custom/initializeAPISession', {});
+			return { pipe, packageJsonPath: typescriptPackageJsonPath };
 		});
 		serverHandle.connection.onNotification('tsserver/request', ([id, command, args]) => {
 			tsserver.message({

@@ -42,23 +42,20 @@ const inferredContentMappers = [
 ];
 const neededRestart = !patchTypeScriptExtension();
 
-let typescriptSdk: TypeScriptSDK | undefined;
-let vueClient: lsp.BaseLanguageClient | undefined;
+/** Resolves with the first TypeScript SDK; `latestTypeScriptSdk` follows later TypeScript language server restarts. */
+let typescriptSdk: Promise<TypeScriptSDK> = Promise.reject(new Error('TypeScript (Native Preview) is not installed.'));
+let latestTypeScriptSdk: TypeScriptSDK | undefined;
+typescriptSdk.catch(() => {});
 
-/** Opens a fresh TypeScript API pipe for the running Vue language server, so it can ask the TypeScript language server which project owns a file. */
-async function sendTypeScriptApiConnection() {
-	const sdk = typescriptSdk;
-	const client = vueClient;
-	if (!sdk?.packageJsonPath || !client?.isRunning()) {
-		return;
+/** Answers the Vue language server's `vue/typescriptApiConnection` request with a fresh pipe to the TypeScript API. */
+async function getTypeScriptApiConnection() {
+	const sdk = latestTypeScriptSdk ?? await typescriptSdk;
+	if (!sdk.packageJsonPath) {
+		throw new Error(
+			'The selected TypeScript 7 installation has no API package. Select a `typescript` package installation in TypeScript (Native Preview).',
+		);
 	}
-	try {
-		const pipe = await sdk.initializeAPIConnection();
-		await client.sendNotification('vue/typescriptApiConnection', { pipe, packageJsonPath: sdk.packageJsonPath });
-	}
-	catch (error) {
-		logger.logger.value?.error(String(error));
-	}
+	return { pipe: await sdk.initializeAPIConnection(), packageJsonPath: sdk.packageJsonPath };
 }
 
 /** The subset of `typescript/vscode`'s `TypeScriptSDK` used to connect the Vue language server to the TypeScript API. */
@@ -289,12 +286,7 @@ function launch(serverPath: string, tsdk: string) {
 			() => client.sendNotification('tsserver/response', [seq, undefined]),
 		);
 	});
-	client.onDidChangeState(({ newState }) => {
-		if (newState === lsp.State.Running) {
-			void sendTypeScriptApiConnection();
-		}
-	});
-	vueClient = client;
+	client.onRequest('vue/typescriptApiConnection', getTypeScriptApiConnection);
 	client.start();
 
 	return client;
@@ -325,14 +317,23 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 		return;
 	}
 
-	void nativePreview.activate().then(api => {
-		if (api?.onLanguageServerInitialized) {
-			// Fires after every TypeScript language server (re)start; earlier API connections stop working then.
-			context.subscriptions.push(api.onLanguageServerInitialized(sdk => {
-				typescriptSdk = sdk;
-				void sendTypeScriptApiConnection();
-			}));
+	const activated = Promise.resolve(nativePreview.activate());
+	typescriptSdk = activated.then(api => {
+		const onLanguageServerInitialized = api?.onLanguageServerInitialized?.bind(api);
+		if (!onLanguageServerInitialized) {
+			throw new Error('TypeScript (Native Preview) is too old to provide its API to other extensions.');
 		}
+		return new Promise(resolve => {
+			// Fires after every TypeScript language server (re)start
+			context.subscriptions.push(onLanguageServerInitialized(sdk => {
+				latestTypeScriptSdk = sdk;
+				resolve(sdk);
+			}));
+		});
+	});
+	typescriptSdk.catch(() => {});
+
+	void activated.then(api => {
 		if (!api?.registerContentMappers) {
 			return;
 		}

@@ -1,6 +1,7 @@
 import type { LanguageServer } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createConnection, createServer } from '@volar/language-server/node';
+import type { MapperOptions } from '@vue/content-mapper/protocol';
 import { resolveVueCompilerOptions } from '@vue/content-mapper/vueOptions';
 import {
 	createLanguage,
@@ -9,6 +10,7 @@ import {
 	createVueLanguagePlugin,
 	getAllExtensions,
 	type LanguagePlugin,
+	resolveContentMappers,
 } from '@vue/language-core';
 import {
 	createLanguageService,
@@ -18,8 +20,25 @@ import {
 } from '@vue/language-service';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import { type ContentMapperEntry, createProjectResolver, resolveModuleName } from './project';
+import { resolveModuleName } from './moduleResolution';
 import { connectTypeScriptProjectResolver, type TypeScriptProjectResolver } from './typescriptProject';
+
+/** A `contentMappers[]` entry, as written in a tsconfig or contributed for inferred projects. */
+interface ContentMapperEntry {
+	package: string;
+	extensions: string[];
+	options?: MapperOptions;
+}
+
+/**
+ * Result of the `vue/typescriptApiConnection` request the server sends to the client. The client forwards
+ * `custom/initializeAPISession` to the editor's TypeScript language server and returns the pipe it opened,
+ * along with the `package.json` of the TS 7 installation that server runs.
+ */
+interface TypeScriptApiConnection {
+	pipe: string;
+	packageJsonPath: string;
+}
 
 export function startServer(ts: typeof import('typescript')) {
 	const connection = createConnection();
@@ -27,7 +46,7 @@ export function startServer(ts: typeof import('typescript')) {
 	const tsserverRequestHandlers = new Map<number, (res: any) => void>();
 
 	let tsserverRequestId = 0;
-	let typescriptProjectResolver: Promise<TypeScriptProjectResolver | undefined> | undefined;
+	let typescriptApi: Promise<TypeScriptProjectResolver> | undefined;
 
 	connection.listen();
 
@@ -36,18 +55,36 @@ export function startServer(ts: typeof import('typescript')) {
 		tsserverRequestHandlers.delete(id);
 	});
 
-	// Sent by the client on every TypeScript language server (re)start; without it, projects are resolved locally.
-	connection.onNotification('vue/typescriptApiConnection', ({ pipe, packageJsonPath }) => {
-		void typescriptProjectResolver?.then(resolver => resolver?.dispose());
-		typescriptProjectResolver = connectTypeScriptProjectResolver(pipe, packageJsonPath).catch(error => {
-			console.warn('[Vue] Failed to connect to the TypeScript API:', error);
-			return undefined;
+	function connectTypeScriptApi() {
+		return typescriptApi ??= connection.sendRequest<TypeScriptApiConnection>('vue/typescriptApiConnection').then(
+			({ pipe, packageJsonPath }) => connectTypeScriptProjectResolver(pipe, packageJsonPath),
+		).catch(error => {
+			connection.window.showErrorMessage(
+				`Vue: cannot connect to the TypeScript 7 language server (${error?.message ?? error}). `
+					+ 'Restart the Vue language server once it is available.',
+			);
+			throw error;
 		});
-	});
+	}
+
+	/** The file's default project in the TypeScript language server; asks the client for a new pipe once if the current one stopped working. */
+	async function getTypeScriptProject(fileName: string) {
+		const current = connectTypeScriptApi();
+		try {
+			return await (await current).getProject(fileName);
+		}
+		catch {
+			// the TypeScript language server restarted or went away
+			if (typescriptApi === current) {
+				typescriptApi = undefined;
+				void current.then(resolver => resolver.dispose(), () => {});
+			}
+			return await (await connectTypeScriptApi()).getProject(fileName);
+		}
+	}
 
 	connection.onInitialize(params => {
 		const tsconfigProjects = createUriMap<LanguageService>();
-		const projectResolver = createProjectResolver(ts);
 		// The content mappers the client registers for files outside any tsconfig.
 		const inferredContentMappers: ContentMapperEntry[] | undefined = params.initializationOptions?.contentMappers;
 
@@ -57,7 +94,6 @@ export function startServer(ts: typeof import('typescript')) {
 				if (tsconfigProjects.has(changeUri)) {
 					tsconfigProjects.get(changeUri)!.dispose();
 					tsconfigProjects.delete(changeUri);
-					projectResolver.dispose();
 				}
 			}
 		});
@@ -65,24 +101,11 @@ export function startServer(ts: typeof import('typescript')) {
 		server.documents.onDidClose(({ document }) => {
 			const uri = URI.parse(document.uri);
 			if (uri.scheme === 'file') {
-				void typescriptProjectResolver?.then(resolver => resolver?.closeFile(uri.fsPath.replace(/\\/g, '/')));
+				void typescriptApi?.then(resolver => resolver.closeFile(uri.fsPath.replace(/\\/g, '/')), () => {});
 			}
 		});
 
 		let simpleLanguageService: LanguageService | undefined;
-
-		async function getConfigFileName(fileName: string) {
-			const resolver = await typescriptProjectResolver;
-			if (resolver) {
-				try {
-					return await resolver.getConfigFileName(fileName);
-				}
-				catch {
-					// e.g. the TypeScript language server has no project for the file, or its server went away before the client sent a new pipe
-				}
-			}
-			return projectResolver.getConfigFileName(fileName);
-		}
 
 		const result = server.initialize(
 			params,
@@ -91,7 +114,7 @@ export function startServer(ts: typeof import('typescript')) {
 				async getLanguageService(uri) {
 					if (uri.scheme === 'file') {
 						const fileName = uri.fsPath.replace(/\\/g, '/');
-						const configFileName = await getConfigFileName(fileName);
+						const configFileName = (await getTypeScriptProject(fileName))?.configFileName;
 						if (configFileName) {
 							let languageService = tsconfigProjects.get(URI.file(configFileName));
 							if (!languageService) {
@@ -158,10 +181,10 @@ export function startServer(ts: typeof import('typescript')) {
 				isRefAtPosition(...args) {
 					return sendTsServerRequest('_vue:isRefAtPosition', args);
 				},
-				resolveModuleName(fileName, moduleName, allowNonExistent) {
+				async resolveModuleName(fileName, moduleName, allowNonExistent) {
 					return resolveModuleName(
 						ts,
-						projectResolver.getCommandLine(fileName)?.options ?? {},
+						(await getTypeScriptProject(fileName))?.parsedCommandLine.options ?? {},
 						fileName,
 						moduleName,
 						allowNonExistent,
@@ -213,7 +236,9 @@ export function startServer(ts: typeof import('typescript')) {
 				? createParsedCommandLine(ts, ts.sys, configFileName)
 				: createParsedCommandLineByJson(ts, ts.sys, ts.sys.getCurrentDirectory(), {});
 			const asFileName = (uri: URI) => uri.fsPath.replace(/\\/g, '/');
-			const entries = (configFileName ? projectResolver.getContentMappers(configFileName) : inferredContentMappers)
+			const entries = (configFileName
+				? resolveContentMappers(ts, ts.sys, configFileName) as ContentMapperEntry[] | undefined
+				: inferredContentMappers)
 				?.filter(entry => entry.package === '@vue/content-mapper');
 			const vuePlugins = entries?.length
 				? entries.map(entry =>
