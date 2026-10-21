@@ -169,7 +169,10 @@ declare global {
 		ref: Ref,
 	): asserts t is [T] extends [Ref] ? T
 		: NonNullable<T> & Ref & { value: T extends Ref & { value: infer V } ? V : T };
-	function __VLS_unwrap<T, Ref>(t: T, ref: Ref): T extends Ref & { value: infer V } ? V
+	// `const` keeps literal bindings (`const n = 1`) from widening: since TS 7.1
+	// the false-branch `T` is the distributed type parameter, which no longer
+	// counts as `T` appearing at the top level of the return type.
+	function __VLS_unwrap<const T, Ref>(t: T, ref: Ref): T extends Ref & { value: infer V } ? V
 		: T;
 }
 
