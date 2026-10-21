@@ -44,7 +44,9 @@ test('reads contentMappers through extends and routes ownership by their extensi
 	expect(resolver.getContentMappers(overrideConfigFileName)).toEqual([
 		{ package: '@vue/content-mapper', extensions: ['.vue'] },
 	]);
-	expect(normalize(resolver.getConfigFileName(path.join(testWorkspacePath, 'tsconfigContentMappers/override/fixture.md'))!))
+	expect(
+		normalize(resolver.getConfigFileName(path.join(testWorkspacePath, 'tsconfigContentMappers/override/fixture.md'))!),
+	)
 		.toMatch(/tsconfigContentMappers\/tsconfig\.json$/);
 
 	expect(resolver.getContentMappers(path.join(testWorkspacePath, 'tsconfigProject/tsconfig.json'))).toBeUndefined();
