@@ -4,6 +4,7 @@ import { OptionDiagnosticCode, toOptionDiagnostics } from '../optionDiagnostics'
 test('accepts every documented option', () => {
 	expect(toOptionDiagnostics(undefined)).toEqual([]);
 	expect(toOptionDiagnostics({})).toEqual([]);
+	expect(toOptionDiagnostics({ format: 'petite-vue' })).toEqual([]);
 	expect(toOptionDiagnostics({
 		languageFeatures: false,
 		format: 'vitepress',
@@ -37,9 +38,11 @@ test('reports unknown options and the removed vueCompilerOptions wrapper', () =>
 		messageText: `Unknown option 'unknownOption'.`,
 		code: OptionDiagnosticCode.UnknownOption,
 	}]);
-	expect(toOptionDiagnostics({ isDataAttribute: true }).map(diagnostic => diagnostic.code)).toEqual([
-		OptionDiagnosticCode.UnknownOption,
-	]);
+	expect(toOptionDiagnostics({ isDataAttribute: true, globalTemplateContext: true }).map(diagnostic => diagnostic.code))
+		.toEqual([
+			OptionDiagnosticCode.UnknownOption,
+			OptionDiagnosticCode.UnknownOption,
+		]);
 	expect(toOptionDiagnostics({ vueCompilerOptions: { target: 3.5 } })).toEqual([{
 		path: ['vueCompilerOptions'],
 		messageText:
@@ -51,7 +54,7 @@ test('reports unknown options and the removed vueCompilerOptions wrapper', () =>
 test('reports invalid option values with their path', () => {
 	expect(toOptionDiagnostics({ format: 'md' })).toEqual([{
 		path: ['format'],
-		messageText: `Option 'format' requires 'sfc' or 'vitepress'.`,
+		messageText: `Option 'format' requires 'sfc', 'vitepress' or 'petite-vue'.`,
 		code: OptionDiagnosticCode.InvalidOptionType,
 	}]);
 	expect(toOptionDiagnostics({

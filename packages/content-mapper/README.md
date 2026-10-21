@@ -33,7 +33,8 @@ count. The default is the smaller of four and the host's available parallelism.
 An entry's `format` option decides how its files are parsed, whatever their extension: `"sfc"`
 (the default) for single-file components, or `"vitepress"` for VitePress markdown — frontmatter,
 fenced code blocks and `<<<` snippet imports blanked, `<script>` / `<style>` blocks lifted out, the
-remaining markdown as the template. Register the same package once per format:
+remaining markdown as the template — or `"petite-vue"` for petite-vue HTML pages, where the page
+outside `<script>` / `<style>` is the template and its expressions can also read globals. Register the same package once per format:
 
 ```jsonc
 {

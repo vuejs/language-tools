@@ -25,8 +25,8 @@ const removedOptions: Record<string, string> = {
 	checkUnknownProps: `Unknown props are always reported, so this option has no equivalent.`,
 };
 
-/** Resolved fields computed from other options (e.g. precompiled glob matchers); not user-settable. */
-const derivedOptions = new Set(['isDataAttribute', 'isHtmlAttribute']);
+/** Resolved fields computed from other options (e.g. precompiled glob matchers, or the template context set by `format: "petite-vue"`); not user-settable. */
+const derivedOptions = new Set(['isDataAttribute', 'isHtmlAttribute', 'globalTemplateContext']);
 
 /**
  * Validates the mapper entry's `options` object and returns diagnostics for options the mapper does not
@@ -46,8 +46,8 @@ export function toOptionDiagnostics(options: Record<string, unknown> | undefined
 		const value = options[key];
 		const path = [key];
 		if (key === 'format') {
-			if (value !== 'sfc' && value !== 'vitepress') {
-				diagnostics.push(invalid(path, `Option 'format' requires 'sfc' or 'vitepress'.`));
+			if (value !== 'sfc' && value !== 'vitepress' && value !== 'petite-vue') {
+				diagnostics.push(invalid(path, `Option 'format' requires 'sfc', 'vitepress' or 'petite-vue'.`));
 			}
 			continue;
 		}

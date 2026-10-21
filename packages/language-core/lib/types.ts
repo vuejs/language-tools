@@ -45,6 +45,8 @@ export interface VueCompilerOptions {
 	lib: string;
 	typesRoot: string;
 	extensions: string[];
+	/** Exposes `globalThis` in the template context, as petite-vue templates read globals directly. */
+	globalTemplateContext: boolean;
 	jsxSlots: boolean;
 	strictCssModules: boolean;
 	inferComponentDollarEl: boolean;

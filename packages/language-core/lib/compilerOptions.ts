@@ -259,6 +259,7 @@ export function getDefaultCompilerOptions(
 		lib,
 		typesRoot,
 		extensions: ['.vue'],
+		globalTemplateContext: false,
 		jsxSlots: false,
 		strictCssModules: false,
 		inferComponentDollarEl: false,

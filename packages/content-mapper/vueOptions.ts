@@ -1,6 +1,7 @@
 import * as vue from '@vue/language-core';
 import * as path from 'node:path';
 import type * as ts from 'typescript';
+import { petiteVuePlugin } from './petiteVue';
 import type { MapperOptions } from './protocol';
 import { vitePressPlugin } from './vitepress';
 
@@ -17,7 +18,11 @@ export function resolveVueCompilerOptions(
 ) {
 	const rootDir = normalizePath(configFileName ? path.dirname(configFileName) : process.cwd());
 	const { languageFeatures, format, ...mapperOptions } = options ?? {};
-	const vitePress = format === 'vitepress';
+	const frontend = format === 'vitepress'
+		? { plugin: vitePressPlugin, languageId: 'markdown' }
+		: format === 'petite-vue'
+		? { plugin: petiteVuePlugin, languageId: 'html' }
+		: undefined;
 	const parsed = configFileName
 		? vue.createParsedCommandLine(ts, host, normalizePath(configFileName))
 		: undefined;
@@ -33,16 +38,22 @@ export function resolveVueCompilerOptions(
 	});
 	vueOptions.plugins = [
 		...new Set([
-			...vitePress ? [vitePressPlugin] : [],
+			...frontend ? [frontend.plugin] : [],
 			...baseVueOptions.plugins,
 			...resolver.plugins,
 		]),
 	];
+	if (format === 'petite-vue') {
+		vueOptions.globalTemplateContext = true;
+	}
 	return {
 		parsed,
 		vueOptions,
-		/** Set by `format: "vitepress"`, which parses every file as VitePress markdown regardless of its extension. */
-		languageId: vitePress ? 'markdown' : undefined,
+		/**
+		 * Set by `format: "vitepress"` / `"petite-vue"`, which parse every file as VitePress markdown /
+		 * a petite-vue HTML page regardless of its extension.
+		 */
+		languageId: frontend?.languageId,
 	};
 }
 

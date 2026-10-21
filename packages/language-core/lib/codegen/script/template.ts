@@ -54,6 +54,9 @@ function* generateTemplateCtx(
 	const emitTypes: string[] = [];
 	const propTypes: string[] = [];
 
+	if (vueCompilerOptions.globalTemplateContext) {
+		exps.push(`globalThis`);
+	}
 	if (selfType) {
 		exps.push(asType(`InstanceType<${names.PickNotAny}<typeof ${selfType}, new () => {}>>`, scriptLang));
 	}

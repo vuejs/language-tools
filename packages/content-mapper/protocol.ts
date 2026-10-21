@@ -47,7 +47,7 @@ export interface TransformResult {
 
 export interface MapperOptions {
 	languageFeatures?: boolean;
-	format?: 'sfc' | 'vitepress';
+	format?: 'sfc' | 'vitepress' | 'petite-vue';
 	[option: string]: unknown;
 }
 
