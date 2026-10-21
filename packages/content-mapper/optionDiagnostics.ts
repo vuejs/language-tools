@@ -31,7 +31,7 @@ const derivedOptions = new Set(['isDataAttribute', 'isHtmlAttribute']);
 /**
  * Validates the mapper entry's `options` object and returns diagnostics for options the mapper does not
  * understand. Paths are relative to that object, matching the host's `optionDiagnostics` contract.
- * `languageFeatures` is consumed by the mapper itself and is skipped.
+ * `languageFeatures` and `format` are consumed by the mapper itself, not by the Vue compiler options.
  */
 export function toOptionDiagnostics(options: Record<string, unknown> | undefined): OptionDiagnostic[] {
 	if (!options) {
@@ -45,6 +45,12 @@ export function toOptionDiagnostics(options: Record<string, unknown> | undefined
 		}
 		const value = options[key];
 		const path = [key];
+		if (key === 'format') {
+			if (value !== 'sfc' && value !== 'vitepress') {
+				diagnostics.push(invalid(path, `Option 'format' requires 'sfc' or 'vitepress'.`));
+			}
+			continue;
+		}
 		if (key === 'vueCompilerOptions') {
 			diagnostics.push({
 				path,

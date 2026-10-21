@@ -6,6 +6,7 @@ test('accepts every documented option', () => {
 	expect(toOptionDiagnostics({})).toEqual([]);
 	expect(toOptionDiagnostics({
 		languageFeatures: false,
+		format: 'vitepress',
 		target: 'auto',
 		lib: 'vue',
 		typesRoot: 'types',
@@ -48,6 +49,11 @@ test('reports unknown options and the removed vueCompilerOptions wrapper', () =>
 });
 
 test('reports invalid option values with their path', () => {
+	expect(toOptionDiagnostics({ format: 'md' })).toEqual([{
+		path: ['format'],
+		messageText: `Option 'format' requires 'sfc' or 'vitepress'.`,
+		code: OptionDiagnosticCode.InvalidOptionType,
+	}]);
 	expect(toOptionDiagnostics({
 		target: '3.5',
 		resolveStyleClassNames: 1,

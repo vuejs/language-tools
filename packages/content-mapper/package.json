@@ -27,10 +27,13 @@
 		"typescript": ">=5.0.0"
 	},
 	"dependencies": {
-		"@vue/language-core": "workspace:*"
+		"@volar/language-core": "2.4.28",
+		"@vue/language-core": "workspace:*",
+		"muggle-string": "^0.4.1"
 	},
 	"devDependencies": {
 		"@types/node": "^26.0.1",
+		"@vue/compiler-sfc": "^3.5.0",
 		"typescript": "<7"
 	}
 }

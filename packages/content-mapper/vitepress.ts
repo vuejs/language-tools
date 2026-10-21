@@ -18,10 +18,10 @@ const angleBracketRE = /<[^\s:]*:\S*>/g;
  * markdown becomes the template. The SFC block offsets are mapped back to the markdown source, so
  * everything downstream stays in original file coordinates.
  *
- * Which files reach this plugin is decided by the mapper registration (`contentMappers[].extensions`),
- * not by a Vue compiler option, so the plugin claims every file it is asked for.
+ * It is selected by the mapper entry's `format: "vitepress"`, not by file extension, so the plugin
+ * claims every file it is asked for.
  */
-export const markdownPlugin: VueLanguagePlugin = () => {
+export const vitePressPlugin: VueLanguagePlugin = () => {
 	return {
 		version: 2.2,
 

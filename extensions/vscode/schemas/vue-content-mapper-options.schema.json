@@ -9,6 +9,11 @@
 			"type": "boolean",
 			"default": true,
 			"markdownDescription": "Include static language-feature capabilities in source mappings. Set to `false` for CLI-only projects to reduce mapping work while preserving diagnostic spans."
+		},
+		"format": {
+			"enum": ["sfc", "vitepress"],
+			"default": "sfc",
+			"markdownDescription": "How this entry's files are parsed, regardless of their extension: `sfc` for Vue single-file components, `vitepress` for VitePress markdown."
 		}
 	}
 }

@@ -286,23 +286,22 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 		const typescriptPath = path.join(tsdk, 'typescript.js');
 		const createContribution = (
 			extensions: string[],
-			name: string,
-			server: string,
-			worker: string,
+			format: 'sfc' | 'vitepress',
 		) => ({
 			extensions,
 			inferredProjectContribution: {
 				options: {
 					languageFeatures: true,
 					target: 99,
+					format,
 				},
 				manifest: {
-					name,
+					name: '@vue/content-mapper',
 					version: require('../package.json').version,
 					exec: [
 						process.execPath,
-						path.join(context.extensionPath, 'dist', server),
-						`--worker=${path.join(context.extensionPath, 'dist', worker)}`,
+						path.join(context.extensionPath, 'dist', 'content-mapper-server.js'),
+						`--worker=${path.join(context.extensionPath, 'dist', 'content-mapper-worker.js')}`,
 						`--typescript=${typescriptPath}`,
 					],
 					cwd: vscode.Uri.file(context.extensionPath),
@@ -313,18 +312,9 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 		context.subscriptions.push(api.registerContentMappers(
 			'Vue.volar',
 			[
-				createContribution(
-					['.vue'],
-					'@vue/content-mapper',
-					'content-mapper-server.js',
-					'content-mapper-worker.js',
-				),
-				createContribution(
-					['.md'],
-					'@vue/content-mapper-vitepress',
-					'content-mapper-vitepress-server.js',
-					'content-mapper-vitepress-worker.js',
-				),
+				// Each contribution runs its own mapper process, since the host keys processes by contribution.
+				createContribution(['.vue'], 'sfc'),
+				createContribution(['.md'], 'vitepress'),
 			],
 		));
 	}, error => logger.logger.value?.error(String(error)));

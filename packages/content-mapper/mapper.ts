@@ -2,6 +2,7 @@ import * as vue from '@vue/language-core';
 import { createHash } from 'node:crypto';
 import * as path from 'node:path';
 import { toDiagnosticDirectives, withSynthesizedDiagnosticIgnores } from './diagnosticDirectives';
+import { vitePressPlugin } from './vitepress';
 import type {
 	OpenProjectParams,
 	OpenProjectResult,
@@ -17,6 +18,8 @@ const ts = loadTypeScript();
 
 interface ProjectConfiguration {
 	plugin: ReturnType<typeof vue.createVueLanguagePlugin<string>>;
+	/** Set by `format: "vitepress"`, which parses every file as VitePress markdown regardless of its extension. */
+	languageId?: string;
 	languageFeatures: boolean;
 	virtualCodes: Map<string, NonNullable<ReturnType<NonNullable<ProjectConfiguration['plugin']['createVirtualCode']>>>>;
 }
@@ -26,18 +29,9 @@ interface ProjectState {
 	configurations: Map<string, ProjectConfiguration>;
 }
 
-/**
- * The parts that differ between Vue content mappers: which extensions and syntaxes a mapper claims
- * is decided by its registration, so a mapper only contributes the language plugins that make its
- * files understandable to the shared Vue codegen.
- */
 export interface ContentMapperFrontend {
 	/** Human-readable mapper name, used in internal error messages. */
 	name: string;
-	/** Language plugins that every project of this mapper activates, ahead of user plugins. */
-	plugins?: (context: { rootDir: string }) => vue.VueLanguagePlugin[];
-	/** Language id used when no plugin claims the transformed file. */
-	defaultLanguageId?: string;
 	/** Prefix for mapper-authored diagnostics, e.g. `error vue@1.0.0(1): ...`. */
 	diagnosticSource?: string;
 	/** Validates the mapper entry's `options`, reported to the host as `optionDiagnostics`. */
@@ -53,13 +47,12 @@ export interface ContentMapper {
 }
 
 /**
- * Creates the project configuration and transform pipeline shared by every Vue content mapper.
- * Files reach a mapper because the host registered its extensions, so the front-end only decides
- * how a file is understood, not which files arrive.
+ * Creates the project configuration and transform pipeline of the Vue content mapper. Files reach
+ * it because the host registered their extensions; the entry's `format` option decides how they are
+ * parsed (`"sfc"` by default, or `"vitepress"` for VitePress markdown).
  */
 export function createContentMapper(frontend: ContentMapperFrontend): ContentMapper {
 	const projects = new Map<string, ProjectState>();
-	const defaultLanguageId = frontend.defaultLanguageId ?? 'vue';
 
 	function openProject(params: OpenProjectParams): OpenProjectResult {
 		const state: ProjectState = {
@@ -104,7 +97,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			? getConfiguration(state)
 			: createStandaloneConfiguration(params);
 		const snapshot = ts.ScriptSnapshot.fromString(params.content);
-		const languageId = configuration.plugin.getLanguageId(params.fileName) ?? defaultLanguageId;
+		const languageId = configuration.languageId ?? configuration.plugin.getLanguageId(params.fileName) ?? 'vue';
 		const root = configuration.plugin.createVirtualCode?.(
 			params.fileName,
 			languageId,
@@ -204,7 +197,8 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		if (watchedFiles && configFileName) {
 			watchedFiles.add(path.normalize(configFileName));
 		}
-		const { languageFeatures, ...mapperOptions } = state.params.options ?? {};
+		const { languageFeatures, format, ...mapperOptions } = state.params.options ?? {};
+		const vitePress = format === 'vitepress';
 		const watchedBefore = watchedFiles ? new Set(watchedFiles) : undefined;
 		const parsed = configFileName
 			? vue.createParsedCommandLine(ts, host, normalizePath(configFileName))
@@ -231,7 +225,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		});
 		vueOptions.plugins = [
 			...new Set([
-				...frontend.plugins?.({ rootDir: normalizePath(rootDir) }) ?? [],
+				...vitePress ? [vitePressPlugin] : [],
 				...baseVueOptions.plugins,
 				...resolver.plugins,
 			]),
@@ -244,6 +238,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 				vueOptions,
 				fileName => fileName,
 			),
+			languageId: vitePress ? 'markdown' : undefined,
 			languageFeatures: languageFeatures !== false,
 			virtualCodes: new Map(),
 		};
@@ -260,20 +255,11 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		const parsed = configFileName
 			? vue.createParsedCommandLine(ts, ts.sys, normalizePath(configFileName))
 			: vue.createParsedCommandLineByJson(ts, ts.sys, normalizePath(path.dirname(params.fileName)), {});
-		const vueOptions = {
-			...parsed.vueOptions,
-			plugins: [
-				...new Set([
-					...frontend.plugins?.({ rootDir: normalizePath(path.dirname(params.fileName)) }) ?? [],
-					...parsed.vueOptions.plugins,
-				]),
-			],
-		};
 		return {
 			plugin: vue.createVueLanguagePlugin<string>(
 				ts,
 				parsed.options,
-				vueOptions,
+				parsed.vueOptions,
 				fileName => fileName,
 			),
 			languageFeatures: true,

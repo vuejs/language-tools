@@ -14,9 +14,10 @@
 			}
 		},
 		{
-			"package": "@vue/content-mapper-vitepress",
+			"package": "@vue/content-mapper",
 			"extensions": [".md"],
 			"options": {
+				"format": "vitepress",
 				"languageFeatures": false
 			}
 		}

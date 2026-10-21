@@ -10,8 +10,7 @@
 					"properties": {
 						"package": {
 							"enum": [
-								"@vue/content-mapper",
-								"@vue/content-mapper-vitepress"
+								"@vue/content-mapper"
 							]
 						}
 					}
