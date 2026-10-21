@@ -47,7 +47,7 @@ export interface ContentMapper {
 /**
  * Creates the project configuration and transform pipeline of the Vue content mapper. Files reach
  * it because the host registered their extensions; the entry's `format` option decides how they are
- * parsed (`"sfc"` by default, or `"vitepress"` for VitePress markdown).
+ * parsed (`"sfc"` by default, `"vitepress"` for VitePress markdown, or `"petite-vue"` for petite-vue HTML).
  */
 export function createContentMapper(frontend: ContentMapperFrontend): ContentMapper {
 	const projects = new Map<string, ProjectState>();

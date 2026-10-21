@@ -107,3 +107,7 @@ export function createVueLanguagePlugin<T>(
 export function getAllExtensions(options: VueCompilerOptions) {
 	return Object.keys(options.extensionFormats);
 }
+
+export function isContentMapperFile(options: VueCompilerOptions, fileName: string) {
+	return getAllExtensions(options).some(ext => fileName.endsWith(ext));
+}

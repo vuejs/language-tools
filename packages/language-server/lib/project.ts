@@ -1,5 +1,5 @@
 import type { MapperOptions } from '@vue/content-mapper/protocol';
-import { resolveContentMappers } from '@vue/language-core';
+import { getAllExtensions, getDefaultCompilerOptions, resolveContentMappers } from '@vue/language-core';
 import * as path from 'node:path';
 import type * as ts from 'typescript';
 
@@ -32,7 +32,8 @@ export function createProjectResolver(ts: typeof import('typescript')): ProjectR
 
 	function getCommandLine(configFileName: string) {
 		if (!commandLines.has(configFileName)) {
-			const extensions = getContentMappers(configFileName)?.flatMap(entry => entry.extensions) ?? ['.vue'];
+			const extensions = getContentMappers(configFileName)?.flatMap(entry => entry.extensions)
+				?? getAllExtensions(getDefaultCompilerOptions());
 			commandLines.set(configFileName, parseCommandLine(ts, configFileName, extensions));
 		}
 		return commandLines.get(configFileName);

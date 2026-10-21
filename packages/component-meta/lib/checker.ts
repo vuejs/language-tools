@@ -34,16 +34,14 @@ export function createCheckerBase(
 		vueOptions,
 		id => id,
 	);
-	const isContentMapperFile = (fileName: string) =>
-		core.getAllExtensions(vueOptions).some(ext => fileName.endsWith(ext));
 	const language = core.createLanguage(
 		[
 			{
 				...vueLanguagePlugin,
 				getLanguageId: fileName =>
-					isContentMapperFile(fileName) ? vueLanguagePlugin.getLanguageId(fileName) : undefined,
+					core.isContentMapperFile(vueOptions, fileName) ? vueLanguagePlugin.getLanguageId(fileName) : undefined,
 				createVirtualCode: (fileName, languageId, snapshot, ctx) =>
-					isContentMapperFile(fileName)
+					core.isContentMapperFile(vueOptions, fileName)
 						? vueLanguagePlugin.createVirtualCode!(fileName, languageId, snapshot, ctx)
 						: undefined,
 			},

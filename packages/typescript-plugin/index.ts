@@ -35,13 +35,14 @@ export = createLanguageServicePlugin(
 			vueOptions,
 			id => id,
 		);
-		const isContentMapperFile = (fileName: string) =>
-			core.getAllExtensions(vueOptions).some(ext => fileName.endsWith(ext));
 		const languagePlugin: core.LanguagePlugin<string> = {
 			...vuePlugin,
-			getLanguageId: fileName => isContentMapperFile(fileName) ? vuePlugin.getLanguageId(fileName) : undefined,
+			getLanguageId: fileName =>
+				core.isContentMapperFile(vueOptions, fileName) ? vuePlugin.getLanguageId(fileName) : undefined,
 			createVirtualCode: (fileName, languageId, snapshot, ctx) =>
-				isContentMapperFile(fileName) ? vuePlugin.createVirtualCode!(fileName, languageId, snapshot, ctx) : undefined,
+				core.isContentMapperFile(vueOptions, fileName)
+					? vuePlugin.createVirtualCode!(fileName, languageId, snapshot, ctx)
+					: undefined,
 		};
 		addVueCommands();
 
