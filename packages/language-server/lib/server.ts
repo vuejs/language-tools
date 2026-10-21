@@ -19,6 +19,7 @@ import {
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 import { type ContentMapperEntry, createProjectResolver, resolveModuleName } from './project';
+import { connectTypeScriptProjectResolver, type TypeScriptProjectResolver } from './typescriptProject';
 
 export function startServer(ts: typeof import('typescript')) {
 	const connection = createConnection();
@@ -26,12 +27,22 @@ export function startServer(ts: typeof import('typescript')) {
 	const tsserverRequestHandlers = new Map<number, (res: any) => void>();
 
 	let tsserverRequestId = 0;
+	let typescriptProjectResolver: Promise<TypeScriptProjectResolver | undefined> | undefined;
 
 	connection.listen();
 
 	connection.onNotification('tsserver/response', ([id, res]) => {
 		tsserverRequestHandlers.get(id)?.(res);
 		tsserverRequestHandlers.delete(id);
+	});
+
+	// Sent by the client on every TypeScript language server (re)start; without it, projects are resolved locally.
+	connection.onNotification('vue/typescriptApiConnection', ({ pipe, packageJsonPath }) => {
+		void typescriptProjectResolver?.then(resolver => resolver?.dispose());
+		typescriptProjectResolver = connectTypeScriptProjectResolver(pipe, packageJsonPath).catch(error => {
+			console.warn('[Vue] Failed to connect to the TypeScript API:', error);
+			return undefined;
+		});
 	});
 
 	connection.onInitialize(params => {
@@ -51,16 +62,36 @@ export function startServer(ts: typeof import('typescript')) {
 			}
 		});
 
+		server.documents.onDidClose(({ document }) => {
+			const uri = URI.parse(document.uri);
+			if (uri.scheme === 'file') {
+				void typescriptProjectResolver?.then(resolver => resolver?.closeFile(uri.fsPath.replace(/\\/g, '/')));
+			}
+		});
+
 		let simpleLanguageService: LanguageService | undefined;
+
+		async function getConfigFileName(fileName: string) {
+			const resolver = await typescriptProjectResolver;
+			if (resolver) {
+				try {
+					return await resolver.getConfigFileName(fileName);
+				}
+				catch {
+					// e.g. the TypeScript language server has no project for the file, or its server went away before the client sent a new pipe
+				}
+			}
+			return projectResolver.getConfigFileName(fileName);
+		}
 
 		const result = server.initialize(
 			params,
 			{
 				setup() {},
-				getLanguageService(uri) {
+				async getLanguageService(uri) {
 					if (uri.scheme === 'file') {
 						const fileName = uri.fsPath.replace(/\\/g, '/');
-						const configFileName = projectResolver.getConfigFileName(fileName);
+						const configFileName = await getConfigFileName(fileName);
 						if (configFileName) {
 							let languageService = tsconfigProjects.get(URI.file(configFileName));
 							if (!languageService) {

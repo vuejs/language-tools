@@ -42,7 +42,33 @@ const inferredContentMappers = [
 ];
 const neededRestart = !patchTypeScriptExtension();
 
+let typescriptSdk: TypeScriptSDK | undefined;
+let vueClient: lsp.BaseLanguageClient | undefined;
+
+/** Opens a fresh TypeScript API pipe for the running Vue language server, so it can ask the TypeScript language server which project owns a file. */
+async function sendTypeScriptApiConnection() {
+	const sdk = typescriptSdk;
+	const client = vueClient;
+	if (!sdk?.packageJsonPath || !client?.isRunning()) {
+		return;
+	}
+	try {
+		const pipe = await sdk.initializeAPIConnection();
+		await client.sendNotification('vue/typescriptApiConnection', { pipe, packageJsonPath: sdk.packageJsonPath });
+	}
+	catch (error) {
+		logger.logger.value?.error(String(error));
+	}
+}
+
+/** The subset of `typescript/vscode`'s `TypeScriptSDK` used to connect the Vue language server to the TypeScript API. */
+interface TypeScriptSDK {
+	readonly packageJsonPath: string | undefined;
+	initializeAPIConnection(pipe?: string): Promise<string>;
+}
+
 interface TypeScriptNativePreviewAPI {
+	onLanguageServerInitialized?(listener: (sdk: TypeScriptSDK) => unknown): vscode.Disposable;
 	registerContentMappers(
 		contributorId: string,
 		contributions: readonly {
@@ -263,6 +289,12 @@ function launch(serverPath: string, tsdk: string) {
 			() => client.sendNotification('tsserver/response', [seq, undefined]),
 		);
 	});
+	client.onDidChangeState(({ newState }) => {
+		if (newState === lsp.State.Running) {
+			void sendTypeScriptApiConnection();
+		}
+	});
+	vueClient = client;
 	client.start();
 
 	return client;
@@ -294,6 +326,13 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 	}
 
 	void nativePreview.activate().then(api => {
+		if (api?.onLanguageServerInitialized) {
+			// Fires after every TypeScript language server (re)start; earlier API connections stop working then.
+			context.subscriptions.push(api.onLanguageServerInitialized(sdk => {
+				typescriptSdk = sdk;
+				void sendTypeScriptApiConnection();
+			}));
+		}
 		if (!api?.registerContentMappers) {
 			return;
 		}
