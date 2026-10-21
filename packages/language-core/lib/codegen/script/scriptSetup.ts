@@ -146,6 +146,24 @@ export function* generateSetupFunction(
 ): Generator<Code> {
 	const transforms: CodeTransform[] = [];
 
+	for (const { defaultPropsArg } of scriptSetupRanges.defineModel) {
+		if (defaultPropsArg) {
+			transforms.push({
+				range: [defaultPropsArg.end, defaultPropsArg.end],
+				*generate() {
+					yield `: `;
+					if (scriptSetupRanges.defineProps?.typeArg) {
+						yield names.Props;
+					}
+					else {
+						// FIXME: (props: typeof props) => ... would cause TS2502
+						yield `typeof `;
+						yield scriptSetupRanges.defineProps?.name ?? names.props;
+					}
+				},
+			});
+		}
+	}
 	if (scriptSetupRanges.defineProps) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
 		const _callExp = scriptSetupRanges.withDefaults?.callExp ?? callExp;
@@ -388,11 +406,13 @@ export function* generateMacros(options: ScriptCodegenOptions): Generator<Code> 
 		const toImport = usedMacros.filter(({ alias }) => !options.setupBindings.has(alias));
 
 		if (toImport.length) {
-			yield `import { `;
+			yield `const { `;
 			for (const { canonical, alias } of toImport) {
-				yield alias === canonical ? `${canonical}, ` : `${canonical} as ${alias}, `;
+				yield alias === canonical ? `${canonical}, ` : `${canonical}: ${alias}, `;
 			}
-			yield `} from '${options.vueCompilerOptions.lib}'${endOfLine}`;
+			yield `} = `;
+			yield asType(`typeof import('${options.vueCompilerOptions.lib}')`, options.scriptLang);
+			yield endOfLine;
 		}
 	}
 }

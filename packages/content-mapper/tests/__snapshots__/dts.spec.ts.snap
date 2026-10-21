@@ -122,6 +122,8 @@ exports[`content mapper declaration emit: component-meta > declaration output fi
   "empty-component/component.d.vue.ts",
   "generic/component.d.vue.ts",
   "generic/main.d.vue.ts",
+  "js-component/component-options.d.vue.ts",
+  "js-component/component.d.vue.ts",
   "non-component/component.d.ts",
   "options-api/component.d.ts",
   "reference-type-events/component.d.vue.ts",
@@ -190,6 +192,76 @@ exports[`content mapper declaration emit: component-meta > generic/main.d.vue.ts
 "declare const __VLS_export: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 declare const _default: typeof __VLS_export;
 export default _default;
+"
+`;
+
+exports[`content mapper declaration emit: component-meta > js-component/component.d.vue.ts 1`] = `
+"export type __VLS_LocalComponents = {};
+export type __VLS_GlobalComponents = import('vue').GlobalComponents;
+export type __VLS_LocalDirectives = {};
+declare var __VLS_1: {
+    count: number;
+};
+export type __VLS_Slots = {} & {
+    header?: (props: typeof __VLS_1) => any;
+};
+declare const __VLS_base: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
+    foo: {
+        type: StringConstructor;
+        required: true;
+    };
+    bar: {
+        type: NumberConstructor;
+        default: number;
+    };
+}>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
+    foo: {
+        type: StringConstructor;
+        required: true;
+    };
+    bar: {
+        type: NumberConstructor;
+        default: number;
+    };
+}>> & Readonly<{}>, {
+    bar: number;
+}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
+declare const _default: typeof __VLS_export;
+export default _default;
+export type __VLS_WithSlots<T, S> = T & {
+    new (): {
+        $slots: S;
+    };
+};
+"
+`;
+
+exports[`content mapper declaration emit: component-meta > js-component/component-options.d.vue.ts 1`] = `
+"declare const _default: typeof __VLS_export;
+export default _default;
+export type __VLS_LocalComponents = {};
+export type __VLS_GlobalComponents = import('vue').GlobalComponents;
+export type __VLS_LocalDirectives = {};
+declare var __VLS_1: {
+    count: number;
+};
+export type __VLS_Slots = {} & {
+    header?: (props: typeof __VLS_1) => any;
+};
+declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
+    foo: {
+        type: StringConstructor;
+        required: true;
+    };
+}>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, "change"[], "change", import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
+    foo: {
+        type: StringConstructor;
+        required: true;
+    };
+}>> & Readonly<{
+    onChange?: ((...args: any[]) => any) | undefined;
+}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 "
 `;
 

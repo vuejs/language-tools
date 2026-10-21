@@ -11,7 +11,7 @@ export function getLocalTypesGenerator(vueCompilerOptions: VueCompilerOptions, l
 			isTs
 				? `
 type __VLS_WithDefaults<P, D> = {
-	[K in keyof Pick<P, keyof P>]: K extends keyof D
+	[K in keyof P & string]: K extends keyof D
 		? ${PrettifyLocal.name}<P[K] & { default: D[K] }>
 		: P[K]
 };
@@ -75,7 +75,7 @@ type __VLS_PropsChildren<S> = {
 			isTs
 				? `
 type __VLS_TypePropsToOption<T> = {
-	[K in keyof T]-?: {} extends Pick<T, K>
+	[K in keyof T & string]-?: {} extends Pick<T, K>
 		? { type: import('${vueCompilerOptions.lib}').PropType<Required<T>[K]> }
 		: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }
 };
@@ -137,7 +137,8 @@ type __VLS_TypePropsToOption<T> = {
 	}
 
 	function jsTypedef(params: string, name: string, body: string) {
-		return `/**${newLine} * @template ${params}${newLine} * @typedef {${body}} ${name}${newLine} */${newLine}`;
+		// the trailing `;` keeps the typedef jsdoc from attaching to (and leaking with) the next declaration
+		return `/**${newLine} * @template ${params}${newLine} * @typedef {${body}} ${name}${newLine} */${endOfLine}`;
 	}
 
 	function defineHelper(name: string, generate: () => string) {

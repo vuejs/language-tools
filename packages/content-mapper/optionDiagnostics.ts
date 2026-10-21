@@ -25,6 +25,9 @@ const removedOptions: Record<string, string> = {
 	checkUnknownProps: `Unknown props are always reported, so this option has no equivalent.`,
 };
 
+/** Resolved fields computed from other options (e.g. precompiled glob matchers); not user-settable. */
+const derivedOptions = new Set(['isDataAttribute', 'isHtmlAttribute']);
+
 /**
  * Validates the mapper entry's `options` object and returns diagnostics for options the mapper does not
  * understand. Paths are relative to that object, matching the host's `optionDiagnostics` contract.
@@ -59,7 +62,7 @@ export function toOptionDiagnostics(options: Record<string, unknown> | undefined
 			});
 			continue;
 		}
-		if (!(key in defaults)) {
+		if (!(key in defaults) || derivedOptions.has(key)) {
 			diagnostics.push({
 				path,
 				messageText: `Unknown option '${key}'.`,

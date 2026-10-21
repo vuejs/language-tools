@@ -53,10 +53,9 @@ export function* generateElementDirectives(
 			yield* generateModifiers(options, ctx, prop);
 			yield* generateValue(options, ctx, prop);
 			// Vue invokes hooks with all four arguments regardless of the declared
-			// signature. The synthetic trailing vnode arguments are not assignable
-			// to object-form directive hooks, so they get their own @ts-ignore'd
-			// line; functional directives are widened by __VLS_asFunctionalDirective.
-			yield `},${newLine}// @ts-ignore${newLine}null, null)`;
+			// arity; the padded hook keeps the declared params checked, so the
+			// synthetic vnode args are `never` to stay assignable to whatever they declare.
+			yield `},${newLine}${names.nonNull}(null), ${names.nonNull}(null))`;
 		}
 		yield boundary.end();
 		yield endOfLine;

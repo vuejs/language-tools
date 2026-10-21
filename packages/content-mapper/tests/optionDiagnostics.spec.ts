@@ -36,6 +36,9 @@ test('reports unknown options and the removed vueCompilerOptions wrapper', () =>
 		messageText: `Unknown option 'unknownOption'.`,
 		code: OptionDiagnosticCode.UnknownOption,
 	}]);
+	expect(toOptionDiagnostics({ isDataAttribute: true }).map(diagnostic => diagnostic.code)).toEqual([
+		OptionDiagnosticCode.UnknownOption,
+	]);
 	expect(toOptionDiagnostics({ vueCompilerOptions: { target: 3.5 } })).toEqual([{
 		path: ['vueCompilerOptions'],
 		messageText:

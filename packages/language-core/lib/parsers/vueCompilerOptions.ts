@@ -9,6 +9,9 @@ export function parseVueCompilerOptions(comments: string[]): RawVueCompilerOptio
 				const match = text.match(syntaxRE);
 				if (match) {
 					const { key, value } = match.groups ?? {};
+					if (key === 'plugins') {
+						return;
+					}
 					return [key, JSON.parse(value!)] as const;
 				}
 			}

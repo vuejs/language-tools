@@ -191,7 +191,9 @@ export function* generateComponent(
 	yield `// @ts-ignore${newLine}`;
 	yield `const ${functionalVar} = ${names.asFunctionalComponent0}(${componentVar}, new ${componentVar}({${newLine}`;
 	yield `// @ts-ignore${newLine}`;
-	yield propsStr.replace(/\n/g, ' ');
+	yield propsStr
+		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
+		.replace(/\n/g, ' ');
 	yield `}))${endOfLine}`;
 
 	yield* generateExportDeclareEqual(options.template, vnodeVar, node.loc.start.offset, node.loc.end.offset);

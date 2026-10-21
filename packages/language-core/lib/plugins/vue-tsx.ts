@@ -7,6 +7,7 @@ import { generateTemplate } from '../codegen/template';
 import { CompilerOptionsResolver } from '../compilerOptions';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
+import { BindingFlag } from '../parsers/utils';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
 import type { IR, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { computedSet } from '../utils/signals';
@@ -91,74 +92,48 @@ function useCodegen(
 			: undefined
 	);
 
+	const getBindingFlags = computed(() => {
+		const flags = new Map<string, BindingFlag>(getScriptSetupRanges()?.bindings);
+		const scriptRanges = getScriptRanges();
+		if (ir.scriptSetup && scriptRanges) {
+			for (const [name, flag] of scriptRanges.bindings) {
+				if (!flags.has(name)) {
+					flags.set(name, flag);
+				}
+			}
+		}
+		return flags;
+	});
+
 	const getImportedComponents = computedSet(() => {
 		const names = new Set<string>();
-		const scriptSetupRanges = getScriptSetupRanges();
-		if (ir.scriptSetup && scriptSetupRanges) {
-			for (const range of scriptSetupRanges.components) {
-				names.add(ir.scriptSetup.content.slice(range.start, range.end));
-			}
-			const scriptRange = getScriptRanges();
-			if (ir.script && scriptRange) {
-				for (const range of scriptRange.components) {
-					names.add(ir.script.content.slice(range.start, range.end));
-				}
+		for (const [name, flags] of getBindingFlags()) {
+			if (flags & BindingFlag.Component) {
+				names.add(name);
 			}
 		}
 		return names;
 	});
 
-	const getSetupBindings = computedSet(() => {
+	const getSetupBindings = computedSet(() => new Set(getBindingFlags().keys()));
+
+	const getScriptSetupBindings = computedSet(() => new Set(getScriptSetupRanges()?.bindings.keys()));
+
+	const getSetupConsts = computedSet(() => {
 		const names = new Set<string>();
-		const scriptSetupRanges = getScriptSetupRanges();
-		if (ir.scriptSetup && scriptSetupRanges) {
-			for (const range of scriptSetupRanges.bindings) {
-				names.add(ir.scriptSetup.content.slice(range.start, range.end));
-			}
-			const scriptRanges = getScriptRanges();
-			if (ir.script && scriptRanges) {
-				for (const range of scriptRanges.bindings) {
-					names.add(ir.script.content.slice(range.start, range.end));
-				}
+		for (const [name, flags] of getBindingFlags()) {
+			if (flags & BindingFlag.Const) {
+				names.add(name);
 			}
 		}
-		return names;
-	});
-
-	const getNonFlowingBindings = computedSet(() => {
-		const names = new Set<string>();
-		const scriptSetupRanges = getScriptSetupRanges();
-		if (ir.scriptSetup && scriptSetupRanges) {
-			for (const range of scriptSetupRanges.nonFlowingBindings) {
-				names.add(ir.scriptSetup.content.slice(range.start, range.end));
+		const { defineProps } = getScriptSetupRanges() ?? {};
+		if (defineProps?.destructured) {
+			for (const name of defineProps.destructured.keys()) {
+				names.add(name);
 			}
-			const scriptRanges = getScriptRanges();
-			if (ir.script && scriptRanges) {
-				for (const range of scriptRanges.nonFlowingBindings) {
-					names.add(ir.script.content.slice(range.start, range.end));
-				}
+			if (defineProps.destructuredRest) {
+				names.add(defineProps.destructuredRest);
 			}
-		}
-		return names;
-	});
-
-	const getScriptSetupBindings = computedSet(() => {
-		const names = new Set<string>();
-		const scriptSetupRanges = getScriptSetupRanges();
-		if (ir.scriptSetup && scriptSetupRanges) {
-			for (const range of scriptSetupRanges.bindings) {
-				names.add(ir.scriptSetup.content.slice(range.start, range.end));
-			}
-		}
-		return names;
-	});
-
-	const getDestructuredProps = computedSet(() => {
-		const scriptSetupRanges = getScriptSetupRanges();
-		const names = new Set(scriptSetupRanges?.defineProps?.destructured?.keys() ?? []);
-		const rest = scriptSetupRanges?.defineProps?.destructuredRest;
-		if (rest) {
-			names.add(rest);
 		}
 		return names;
 	});
@@ -216,12 +191,14 @@ function useCodegen(
 			isVapor: getIsVapor(),
 			scriptLang: computeLang(ir),
 			componentName: getComponentName(),
-			destructuredProps: getDestructuredProps(),
 			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
+			setupConsts: getSetupConsts(),
 			setupBindings: getSetupBindings(),
 			dotValueBindings,
-			reassertBindings: new Set([...dotValueBindings].filter(name => getNonFlowingBindings().has(name))),
+			reassertBindings: new Set(
+				[...dotValueBindings].filter(name => (getBindingFlags().get(name) ?? 0) & BindingFlag.Variable),
+			),
 			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
@@ -238,9 +215,8 @@ function useCodegen(
 			vueCompilerOptions: getResolvedOptions(),
 			styles: ir.styles,
 			scriptLang: computeLang(ir),
-			destructuredProps: getDestructuredProps(),
-			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
+			setupConsts: getSetupConsts(),
 			setupBindings: getSetupBindings(),
 			dotValueBindings,
 		});
@@ -252,7 +228,7 @@ function useCodegen(
 			return bindings;
 		}
 		return new Set(
-			(ir.template?.ast?.components ?? [])
+			ir.template?.ast?.components
 				.flatMap(name => [camelize(name), capitalize(camelize(name))])
 				.filter(name => bindings.has(name)),
 		);

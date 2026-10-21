@@ -1,21 +1,19 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
-import { isMatch } from 'picomatch';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { asType, getRefBrandArgument, identifierRE, newLine } from '../utils';
+import { asType, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
-import { shouldIdentifierSkipped } from './bindingReferences';
 import type { TemplateCodegenContext } from './context';
 import { generateModifiers } from './elementDirectives';
 import { generateEventArg, generateEventExpression } from './elementEvents';
 import type { TemplateCodegenOptions } from './index';
-import { generateInterpolation } from './interpolation';
+import { generateIdentifier, generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 
 export interface FailedPropExpressions {
@@ -95,7 +93,7 @@ export function* generateElementProps(
 
 			if (
 				propName === undefined
-				|| options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(propName!, pattern))
+				|| options.vueCompilerOptions.isDataAttribute(propName)
 			) {
 				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
 					failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
@@ -170,7 +168,7 @@ export function* generateElementProps(
 			}
 		}
 		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
-			if (options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(prop.name, pattern))) {
+			if (options.vueCompilerOptions.isDataAttribute(prop.name)) {
 				continue;
 			}
 
@@ -283,36 +281,15 @@ export function* generatePropExp(
 					__shorthandExpression: 'html',
 				},
 			);
-
-			// Keep in sync with the access strategy in interpolation.ts.
-			if (options.destructuredProps.has(propVariableName) || options.importedComponents.has(propVariableName)) {
-				yield* codes;
-			}
-			else if (shouldIdentifierSkipped(ctx, propVariableName)) {
-				yield* codes;
-			}
-			else if (options.setupRefs.has(propVariableName)) {
-				yield* codes;
-				yield [`.value`, 'template', exp.loc.start.offset, codeFeatures.verification];
-			}
-			else if (options.setupBindings.has(propVariableName)) {
-				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
-				if (options.dotValueBindings.has(propVariableName)) {
-					yield* codes;
-					yield [`.value`, 'template', exp.loc.start.offset, codeFeatures.verification];
-				}
-				else {
-					yield `${names.unwrap}(`;
-					yield* codes;
-					yield `, ${getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)})`;
-				}
-			}
-			else {
-				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
-				yield names.ctx;
-				yield `.`;
-				yield* codes;
-			}
+			yield* generateIdentifier(
+				options,
+				ctx,
+				codes,
+				propVariableName,
+				'template',
+				exp.loc.start.offset,
+				exp.loc.end.offset,
+			);
 
 			ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
 		}
@@ -346,7 +323,7 @@ function getShouldCamelize(
 		&& hyphenateAttr(propName) === propName
 		&& (
 			node.tagType === CompilerDOM.ElementTypes.SLOT
-			|| !options.vueCompilerOptions.htmlAttributes.some(pattern => isMatch(propName, pattern))
+			|| !options.vueCompilerOptions.isHtmlAttribute(propName)
 		);
 }
 

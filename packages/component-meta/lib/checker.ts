@@ -73,22 +73,6 @@ export function createCheckerBase(
 		// @ts-expect-error internal option to prevent unicode-escaping non-ASCII characters
 		neverAsciiEscape: true,
 	});
-	const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
-
-	if (checkerOptions.forceUseTs ?? true) {
-		languageServiceHost.getScriptKind = fileName => {
-			const scriptKind = getScriptKind!(fileName);
-			if (vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
-				if (scriptKind === ts.ScriptKind.JS) {
-					return ts.ScriptKind.TS;
-				}
-				if (scriptKind === ts.ScriptKind.JSX) {
-					return ts.ScriptKind.TSX;
-				}
-			}
-			return scriptKind;
-		};
-	}
 
 	return {
 		getExportNames,

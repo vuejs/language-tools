@@ -527,6 +527,12 @@
 			"path": "./#6094/tsconfig.json"
 		},
 		{
+			"path": "./#6180/tsconfig.json"
+		},
+		{
+			"path": "./#6228/tsconfig.json"
+		},
+		{
 			"path": "./#625/tsconfig.json"
 		},
 		{
@@ -543,6 +549,9 @@
 		},
 		{
 			"path": "./_failed_cssModuleDuplicate/tsconfig.json"
+		},
+		{
+			"path": "./_failed_directive_arity/tsconfig.json"
 		},
 		{
 			"path": "./_failed_directives/tsconfig.json"
@@ -633,6 +642,9 @@
 		},
 		{
 			"path": "./reference-type-in-template/tsconfig.json"
+		},
+		{
+			"path": "./rfcs#836/tsconfig.json"
 		},
 		{
 			"path": "./rootEl/tsconfig.json"

@@ -1,7 +1,8 @@
 import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
+import picomatch from 'picomatch';
 import type * as ts from 'typescript';
-import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from './types';
+import type { RawPlugin, RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from './types';
 import { hyphenateTag } from './utils/shared';
 
 interface ParseConfigHost extends Omit<ts.ParseConfigHost, 'readDirectory'> {}
@@ -144,26 +145,9 @@ export class CompilerOptionsResolver {
 					}
 					break;
 				case 'plugins':
-					for (let raw of options.plugins ?? []) {
-						raw = typeof raw === 'string' ? { name: raw } : raw;
-						try {
-							const resolve = (require as NodeJS.Require | undefined)?.resolve;
-							const resolvedPath = resolve?.(raw.name, { paths: [rootDir] });
-							if (resolvedPath) {
-								const plugin = require(resolvedPath);
-								const plugins = Array.isArray(plugin) ? plugin : [plugin];
-								for (const plugin of plugins) {
-									plugin.__moduleConfig = raw;
-									this.plugins.push(plugin);
-								}
-							}
-							else {
-								console.warn('[Vue] Load plugin failed:', raw.name);
-							}
-						}
-						catch (error) {
-							console.warn('[Vue] Resolve plugin path failed:', raw.name, error);
-						}
+					// A config that declares `plugins` replaces the inherited list; `[]` clears it
+					if (options.plugins) {
+						this.plugins = resolvePlugins(options.plugins, rootDir);
 					}
 					break;
 				default:
@@ -208,6 +192,9 @@ export class CompilerOptionsResolver {
 				).map(([k, v]) => [camelize(k), v]),
 			),
 		};
+		// Compiling a glob costs far more than testing it, and codegen tests every prop against these
+		resolvedOptions.isDataAttribute = picomatch(resolvedOptions.dataAttributes);
+		resolvedOptions.isHtmlAttribute = picomatch(resolvedOptions.htmlAttributes);
 
 		return resolvedOptions;
 	}
@@ -232,6 +219,31 @@ export class CompilerOptionsResolver {
 	}
 }
 
+function resolvePlugins(list: RawPlugin[], rootDir: string): VueLanguagePlugin[] {
+	const plugins: VueLanguagePlugin[] = [];
+	for (let raw of list) {
+		raw = typeof raw === 'string' ? { name: raw } : raw;
+		try {
+			const resolve = (require as NodeJS.Require | undefined)?.resolve;
+			const resolvedPath = resolve?.(raw.name, { paths: [rootDir] });
+			if (resolvedPath) {
+				const moduleExports = require(resolvedPath);
+				for (const plugin of Array.isArray(moduleExports) ? moduleExports : [moduleExports]) {
+					plugin.__moduleConfig = raw;
+					plugins.push(plugin);
+				}
+			}
+			else {
+				console.warn('[Vue] Load plugin failed:', raw.name);
+			}
+		}
+		catch (error) {
+			console.warn('[Vue] Resolve plugin path failed:', raw.name, error);
+		}
+	}
+	return plugins;
+}
+
 export function getDefaultCompilerOptions(
 	target = 99,
 	lib = 'vue',
@@ -239,6 +251,9 @@ export function getDefaultCompilerOptions(
 		? path.join(__dirname.replace(/\\/g, '/'), '..', 'types')
 		: '@vue/language-core/types',
 ): VueCompilerOptions {
+	const dataAttributes: string[] = [];
+	const htmlAttributes = ['aria-*'];
+
 	return {
 		target,
 		lib,
@@ -264,8 +279,10 @@ export function getDefaultCompilerOptions(
 			'Teleport',
 			'Suspense',
 		],
-		dataAttributes: [],
-		htmlAttributes: ['aria-*'],
+		dataAttributes,
+		htmlAttributes,
+		isDataAttribute: picomatch(dataAttributes),
+		isHtmlAttribute: picomatch(htmlAttributes),
 		optionsWrapper: [`(await import('${lib}')).defineComponent(`, `)`],
 		macros: {
 			defineProps: ['defineProps'],

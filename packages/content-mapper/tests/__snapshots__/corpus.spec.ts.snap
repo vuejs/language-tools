@@ -15,9 +15,6 @@ exports[`content mapper full corpus 1`] = `
   "test-workspace/tsc/#3718/main.vue(2,27): error TS2353: Object literal may only specify known properties, and 'onEventDoesNotExist' does not exist in type 'Partial<NonNullable<Partial<{}> & Omit<{ readonly to: string | RendererElement | null | undefined; readonly disabled?: boolean | undefined; readonly defer?: boolean | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps, undefined>>>'.",
   "test-workspace/tsc/#4646/parent.vue(15,25): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | null'.
   Type 'undefined' is not assignable to type 'string | null'.",
-  "test-workspace/tsc/#4682/main.vue(4,24): error TS2322: Type '(_a: 1) => void' is not assignable to type '(a: number) => void'.
-  Types of parameters '_a' and 'a' are incompatible.
-    Type 'number' is not assignable to type '1'.",
   "test-workspace/tsc/#4785/main.vue(6,20): error TS2353: Object literal may only specify known properties, and ''aria-atomic'' does not exist in type 'VNodeProps & AllowedComponentProps & ComponentCustomProps & { foo: number; }'.",
   "test-workspace/tsc/#4822/main.vue(18,62): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
   Type 'undefined' is not assignable to type 'number'.",
@@ -27,7 +24,7 @@ exports[`content mapper full corpus 1`] = `
   "test-workspace/tsc/_failed_#3632/both.vue(7,1): error TS1109: Expression expected.",
   "test-workspace/tsc/_failed_#3632/script.vue(3,1): error TS1109: Expression expected.",
   "test-workspace/tsc/_failed_#3632/scriptSetup.vue(3,1): error TS1109: Expression expected.",
-  "test-workspace/tsc/_failed_#4569/main.vue(3,7): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.
+  "test-workspace/tsc/_failed_#4569/main.vue(4,7): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.
   This location is in virtual code produced by the content mapper '@vue/content-mapper@3.3.9' and has no corresponding location in the original file.",
   "test-workspace/tsc/_failed_#5071/withScript.vue(1,19): error TS1005: ';' expected.",
   "test-workspace/tsc/_failed_#5071/withoutScript.vue(2,26): error TS1005: ';' expected.",
@@ -43,6 +40,8 @@ exports[`content mapper full corpus 1`] = `
   "test-workspace/tsc/_failed_cssModuleDuplicate/kebab.vue(5,16): error TS2717: Subsequent property declarations must have the same type.  Property ''a-b'' must be of type 'Record<string, string> & { a: string; }', but here has type 'Record<string, string> & { b: string; }'.",
   "test-workspace/tsc/_failed_cssModuleDuplicate/named.vue(1,16): error TS2300: Duplicate identifier 'foo'.",
   "test-workspace/tsc/_failed_cssModuleDuplicate/named.vue(5,16): error TS2300: Duplicate identifier 'foo'.",
+  "test-workspace/tsc/_failed_directive_arity/main.vue(10,17): error TS2322: Type 'string' is not assignable to type 'number'.",
+  "test-workspace/tsc/_failed_directive_arity/main.vue(11,16): error TS2353: Object literal may only specify known properties, and 'unknown' does not exist in type 'Partial<Record<"attr" | "prop", boolean>>'.",
   "test-workspace/tsc/_failed_directives/main.vue(14,6): error TS2339: Property 'notExist' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.",
   "test-workspace/tsc/_failed_directives/main.vue(17,2): error TS2578: Unused '@ts-expect-error' directive.",
   "test-workspace/tsc/_failed_directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.",

@@ -12,9 +12,8 @@ export interface StyleCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	styles: readonly IRStyle[];
 	scriptLang: string;
-	destructuredProps: Set<string>;
-	importedComponents: Set<string>;
 	setupRefs: Set<string>;
+	setupConsts: Set<string>;
 	setupBindings: Set<string>;
 	dotValueBindings: Set<string>;
 }

@@ -15,9 +15,9 @@ export interface TemplateCodegenOptions {
 	template: IRTemplate;
 	isVapor: boolean;
 	scriptLang: string;
-	destructuredProps: Set<string>;
 	importedComponents: Set<string>;
 	setupRefs: Set<string>;
+	setupConsts: Set<string>;
 	setupBindings: Set<string>;
 	// Bindings narrowed at least once anywhere in the template/styles; every
 	// access of these is emitted with `.value`. Collected by a first codegen pass.
@@ -81,7 +81,7 @@ function* generateWorker(
 	if (template.ast) {
 		yield* generateTemplateChild(options, ctx, template.ast);
 	}
-	yield* ctx.generateHoistVariables();
+	yield* ctx.generateHoistVariables(options.scriptLang);
 	yield* generateSlotsType(options, ctx);
 	yield* generateInheritedAttrsType(options, ctx);
 	yield* generateTemplateRefsType(options, ctx);
