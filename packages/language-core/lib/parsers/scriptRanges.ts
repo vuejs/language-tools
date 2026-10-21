@@ -42,7 +42,13 @@ export function parseScriptRanges(
 	});
 
 	return {
-		bindings: parseBindings(ts, sourceFile, Object.keys(vueCompilerOptions.extensionFormats)),
+		bindings: parseBindings(
+			ts,
+			sourceFile,
+			Object.keys(vueCompilerOptions.extensionFormats).filter(ext =>
+				vueCompilerOptions.extensionFormats[ext] === 'sfc'
+			),
+		),
 		exportDefault,
 	};
 }
