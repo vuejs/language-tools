@@ -102,8 +102,8 @@ test('CSS', async () => {
 		{
 		  "info": {
 		    "canRename": true,
-		    "displayName": "'foo'",
-		    "fullDisplayName": "'foo'",
+		    "displayName": "foo",
+		    "fullDisplayName": "foo",
 		    "kind": "property",
 		    "kindModifiers": "",
 		    "triggerSpan": {
@@ -164,8 +164,8 @@ test('CSS', async () => {
 		{
 		  "info": {
 		    "canRename": true,
-		    "displayName": "'foo'",
-		    "fullDisplayName": "__type.'foo'",
+		    "displayName": "foo",
+		    "fullDisplayName": "__type.foo",
 		    "kind": "property",
 		    "kindModifiers": "",
 		    "triggerSpan": {
@@ -1163,8 +1163,8 @@ test('Scoped Classes', async () => {
 		{
 		  "info": {
 		    "canRename": true,
-		    "displayName": "'foo'",
-		    "fullDisplayName": "__type.'foo'",
+		    "displayName": "foo",
+		    "fullDisplayName": "__type.foo",
 		    "kind": "property",
 		    "kindModifiers": "",
 		    "triggerSpan": {

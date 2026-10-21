@@ -1,6 +1,6 @@
 import type { Code, IRStyle } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { newLine } from '../utils';
+import { identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 
 export function* generateClassProperty(
@@ -10,16 +10,23 @@ export function* generateClassProperty(
 	propertyType: string,
 ): Generator<Code> {
 	yield `${newLine} & { `;
-	const boundary = yield* Boundary.start(
-		source,
-		offset,
-		offset + classNameWithDot.length,
-		codeFeatures.navigation,
-	);
-	yield `'`;
-	yield [classNameWithDot.slice(1), source, offset + 1, boundary.features];
-	yield `'`;
-	yield boundary.end();
+	const className = classNameWithDot.slice(1);
+	// An unquoted name maps verbatim, so it can be both a definition and renamed.
+	if (identifierRE.test(className)) {
+		yield [className, source, offset + 1, codeFeatures.navigation];
+	}
+	else {
+		const boundary = yield* Boundary.start(
+			source,
+			offset,
+			offset + classNameWithDot.length,
+			codeFeatures.navigation,
+		);
+		yield `'`;
+		yield [className, source, offset + 1, boundary.features];
+		yield `'`;
+		yield boundary.end();
+	}
 	yield `: ${propertyType}`;
 	yield ` }`;
 }

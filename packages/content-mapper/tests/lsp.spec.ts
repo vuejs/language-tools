@@ -84,4 +84,5 @@ test('CSS module classes rename from either side', async () => {
 	const expected = ['1:21 foo -> NEW', '5:1 foo -> NEW'];
 	expect(await rename(cssModule, cssModule.at('$style.foo', 0, 7))).toEqual(expected);
 	expect(await rename(cssModule, cssModule.at('.foo', 0, 1))).toEqual(expected);
+	expect(await definition(cssModule, cssModule.at('$style.foo', 0, 7))).toEqual(['5:1 foo']);
 });
