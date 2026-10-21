@@ -7,7 +7,7 @@ import * as LanguageCore from '../index';
 import { createPlugins } from './plugins';
 import { serviceScriptRE } from './plugins/vue-tsx';
 import type { VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
-import { VueVirtualCode } from './virtualCode';
+import { getRootLanguageId, VueVirtualCode } from './virtualCode';
 
 const fileRegistries: Record<string, Map<string, VueVirtualCode>> = {};
 
@@ -55,7 +55,7 @@ export function createVueLanguagePlugin<T>(
 		// Every file passed in is parsed as `vueCompilerOptions.format`; the host decides which files
 		// are Vue files (e.g. by the content mapper entry's `extensions`).
 		getLanguageId() {
-			return undefined;
+			return getRootLanguageId(vueCompilerOptions);
 		},
 		createVirtualCode(scriptId, _languageId, snapshot) {
 			let code = fileRegistry.get(String(scriptId));

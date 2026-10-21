@@ -39,7 +39,7 @@ export function createCheckerBase(
 		[
 			{
 				...vueLanguagePlugin,
-				getLanguageId: fileName => isVueFile(fileName) ? 'vue' : undefined,
+				getLanguageId: fileName => isVueFile(fileName) ? vueLanguagePlugin.getLanguageId(fileName) : undefined,
 				createVirtualCode: (fileName, languageId, snapshot, ctx) =>
 					isVueFile(fileName) ? vueLanguagePlugin.createVirtualCode!(fileName, languageId, snapshot, ctx) : undefined,
 			},

@@ -38,7 +38,7 @@ export = createLanguageServicePlugin(
 		const isVueFile = (fileName: string) => vueOptions.extensions.some(ext => fileName.endsWith(ext));
 		const languagePlugin: core.LanguagePlugin<string> = {
 			...vuePlugin,
-			getLanguageId: fileName => isVueFile(fileName) ? 'vue' : undefined,
+			getLanguageId: fileName => isVueFile(fileName) ? vuePlugin.getLanguageId(fileName) : undefined,
 			createVirtualCode: (fileName, languageId, snapshot, ctx) =>
 				isVueFile(fileName) ? vuePlugin.createVirtualCode!(fileName, languageId, snapshot, ctx) : undefined,
 		};

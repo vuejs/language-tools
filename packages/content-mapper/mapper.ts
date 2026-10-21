@@ -97,7 +97,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		const snapshot = ts.ScriptSnapshot.fromString(params.content);
 		const root = configuration.plugin.createVirtualCode?.(
 			params.fileName,
-			'vue',
+			configuration.plugin.getLanguageId(params.fileName)!,
 			snapshot,
 			{ getAssociatedScript: () => undefined },
 		);

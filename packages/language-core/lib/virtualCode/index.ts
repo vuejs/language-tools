@@ -24,6 +24,10 @@ const rootLanguageIds: Record<VueCompilerOptions['format'], string> = {
 	'petite-vue': 'html',
 };
 
+export function getRootLanguageId(vueCompilerOptions: VueCompilerOptions) {
+	return rootLanguageIds[vueCompilerOptions.format] ?? 'vue';
+}
+
 export class VueVirtualCode implements VirtualCode {
 	readonly id = 'main';
 
@@ -37,7 +41,7 @@ export class VueVirtualCode implements VirtualCode {
 	private _mappings: () => CodeMapping[];
 
 	get languageId() {
-		return rootLanguageIds[this.vueCompilerOptions.format] ?? 'vue';
+		return getRootLanguageId(this.vueCompilerOptions);
 	}
 	get snapshot() {
 		return this._snapshot();

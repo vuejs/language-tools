@@ -231,7 +231,7 @@ export function startServer(ts: typeof import('typescript')) {
 				const isVueFile = (uri: URI) => extensions.some(extension => asFileName(uri).endsWith(extension));
 				return {
 					...plugin,
-					getLanguageId: uri => isVueFile(uri) ? 'vue' : undefined,
+					getLanguageId: uri => isVueFile(uri) ? plugin.getLanguageId(uri) : undefined,
 					createVirtualCode: (uri, languageId, snapshot, ctx) =>
 						isVueFile(uri) ? plugin.createVirtualCode!(uri, languageId, snapshot, ctx) : undefined,
 				};
