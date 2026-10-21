@@ -99,17 +99,13 @@ declare global {
 	};
 	type __VLS_PrettifyGlobal<T> = (T extends any ? { [K in keyof T]: T[K] } : { [K in keyof T as K]: T[K] }) & {};
 
-	// Vue invokes hooks with all four args regardless of the declared arity
-	// make the generated 4-arg call legal for short hooks while their declared params stay checked.
-	type __VLS_IsRebuildable<A, B> = (<G>() => G extends A ? 1 : 2) extends (<G>() => G extends B ? 1 : 2) ? true : false;
-	type __VLS_PadDirectiveHook<F> = F extends (...args: infer A) => infer R
-		// full arity: nothing to pad
-		? A extends [any, any, any, any, ...any[]] ? F
-			// losslessly rebuildable: pad with a trailing `any` rest
-		: __VLS_IsRebuildable<F, (...args: A) => R> extends true ? (...args: [...A, ...any[]]) => R
-			// not rebuildable (generic/overloaded): add a permissive overload for the call
-		: F & ((...args: any[]) => R)
+	// hooks are called with their own arity; those taking fewer than (el, binding) are padded so the binding can be passed
+	type __VLS_DirectiveHook<F> = F extends (...args: infer A) => infer R
+		? A['length'] extends 0 | 1 ? (el: A[0], binding: unknown) => R : OmitThisParameter<F>
 		: F;
+	type __VLS_DirectiveHookArgsRest<F> = F extends (...args: [any, any, ...infer Rest]) => any
+		? { [K in keyof Rest]: never }
+		: [];
 
 	function __VLS_vFor<const T>(source: T): T extends number ? [number, number][]
 		: T extends string ? [string, number][]
@@ -121,7 +117,7 @@ declare global {
 	function __VLS_asFunctionalDirective<T, ObjectDirective>(
 		dir: T,
 		od: ObjectDirective,
-	): __VLS_PadDirectiveHook<
+	): __VLS_DirectiveHook<
 		T extends ObjectDirective ? NonNullable<
 				T[
 					keyof T & ('created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted')
@@ -130,6 +126,12 @@ declare global {
 			: T extends (...args: any) => any ? T
 			: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void
 	>;
+	// the longest rest among a union of hooks
+	function __VLS_directiveHookArgsRest<F>(
+		hook: F,
+	): [never, never] extends __VLS_DirectiveHookArgsRest<F> ? [never, never]
+		: [never] extends __VLS_DirectiveHookArgsRest<F> ? [never]
+		: [];
 	function __VLS_asFunctionalComponent0<T, K>(
 		t: T,
 		instance: K,
