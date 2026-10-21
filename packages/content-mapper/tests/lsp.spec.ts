@@ -26,7 +26,7 @@ afterAll(() => server?.close());
 
 /** Locations in workspace documents; those in another document than `doc` are prefixed with its name. */
 function describe(doc: LspDocument, uri: string, range: any) {
-	const target = documents.find(document => document.uri === uri);
+	const target = documents.find(document => document.is(uri));
 	if (!target) {
 		return [];
 	}

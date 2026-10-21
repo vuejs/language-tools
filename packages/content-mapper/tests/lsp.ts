@@ -1,7 +1,7 @@
 import { type ChildProcess, spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { repositoryRoot } from './utils';
 
 interface Position {
@@ -98,6 +98,11 @@ export class LspDocument {
 	constructor(readonly fileName: string) {
 		this.uri = pathToFileURL(fileName).href;
 		this.text = fs.readFileSync(fileName, 'utf8');
+	}
+
+	/** Compares paths, as tsgo encodes Windows drives differently (`file:///c%3A/...`) from `pathToFileURL`. */
+	is(uri: string) {
+		return uri.startsWith('file:') && path.relative(fileURLToPath(uri), this.fileName) === '';
 	}
 
 	open(server: LspServer) {
