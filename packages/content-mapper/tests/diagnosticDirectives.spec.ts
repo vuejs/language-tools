@@ -18,6 +18,17 @@ test('ignores synthesized virtual regions without overlapping explicit directive
 	]);
 });
 
+test('ignores mapped regions that are not verified', () => {
+	const mappings: SpanMapping[] = [
+		[0, 2, 0, 2, SpanMapKind.Verbatim, 0],
+		[4, 2, 0, 2, SpanMapKind.Verbatim, 0],
+	];
+
+	expect(withSynthesizedDiagnosticIgnores(6, mappings, [], [[4, 6]])).toEqual([
+		[0, 0, 2, 6, DiagnosticDirectivePolicy.Ignore],
+	]);
+});
+
 test('starts expectations at the node anchor', () => {
 	const directive = {
 		policy: 'expect' as const,

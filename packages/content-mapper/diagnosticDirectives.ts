@@ -115,7 +115,9 @@ export function withSynthesizedDiagnosticIgnores(
 	virtualLength: number,
 	mappings: readonly SpanMapping[],
 	directives: readonly DiagnosticDirectiveMapping[],
+	unverifiedRanges: readonly [start: number, end: number][] = [],
 ) {
+	const unverified = new Set(unverifiedRanges.map(([start, end]) => `${start}:${end}`));
 	const result = [...directives];
 	const blocked = [...directives].sort(
 		(left, right) => left[2] - right[2],
@@ -124,6 +126,9 @@ export function withSynthesizedDiagnosticIgnores(
 	let blockedIndex = 0;
 
 	for (const mapping of mappings) {
+		if (unverified.has(`${mapping[0]}:${mapping[0] + mapping[1]}`)) {
+			continue;
+		}
 		addIgnoreRanges(virtualStart, mapping[0]);
 		virtualStart = mapping[0] + mapping[1];
 	}

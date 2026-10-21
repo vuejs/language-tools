@@ -299,3 +299,25 @@ test('maps both sides of a shorthand as atoms so rename never edits them', () =>
 		[4, 1, 1, 1, SpanMapKind.Atom, navigationBits],
 	]);
 });
+
+test('cuts a verbatim section at a navigation-only copy of its content', () => {
+	// generated: f(x); x   (`x` copied from the section at 2..3 to 6..7)
+	// original:  f(x);
+	const unverifiedRanges: [number, number][] = [];
+	expect(toSpanMappings(
+		[
+			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [5], data: { navigation: true, verification: true } },
+			{ sourceOffsets: [2], generatedOffsets: [6], lengths: [1], data: { navigation: true } },
+		],
+		'f(x); x',
+		'f(x);',
+		true,
+		unverifiedRanges,
+	)).toEqual([
+		[0, 2, 0, 2, SpanMapKind.Verbatim, navigationBits],
+		[2, 1, 2, 1, SpanMapKind.Verbatim, navigationBits],
+		[3, 2, 3, 2, SpanMapKind.Verbatim, navigationBits],
+		[6, 1, 2, 1, SpanMapKind.Verbatim, navigationBits],
+	]);
+	expect(unverifiedRanges).toEqual([[6, 7]]);
+});

@@ -28,6 +28,7 @@ interface Candidate {
 	originalEnd: number;
 	kind: SpanMapKind;
 	features: number;
+	verified: boolean;
 }
 
 interface RawEntry {
@@ -52,6 +53,8 @@ export function toSpanMappings(
 	generatedText: string,
 	originalText: string,
 	languageFeatures = true,
+	/** Receives virtual ranges that are mapped for navigation only and must not report diagnostics. */
+	unverifiedRanges: [start: number, end: number][] = [],
 ): SpanMapping[] {
 	const candidates: Candidate[] = [];
 	const entries: (RawEntry & { token?: symbol })[] = [];
@@ -170,6 +173,7 @@ export function toSpanMappings(
 			originalEnd,
 			kind: verbatim && !shorthand ? SpanMapKind.Verbatim : SpanMapKind.Atom,
 			features,
+			verified: isCodeInformation(data) && !!data.verification,
 		};
 		// A feature-less merged token (e.g. a verification boundary around a
 		// props object) only carries diagnostics; let the segments inside it win.
@@ -180,6 +184,8 @@ export function toSpanMappings(
 			candidates.push(candidate);
 		}
 	}
+
+	const copies = splitAtNavigationCopies(candidates);
 
 	candidates.sort((left, right) =>
 		left.kind - right.kind
@@ -200,6 +206,9 @@ export function toSpanMappings(
 		generatedIntervals.add(candidate.generatedStart, candidate.generatedEnd);
 		originalIntervals.add(candidate.originalStart, candidate.originalEnd);
 		selected.push(candidate);
+		if (copies.has(candidate) && !candidate.verified) {
+			unverifiedRanges.push([candidate.generatedStart, candidate.generatedEnd]);
+		}
 	}
 
 	// Fill the uncovered parts of each feature-less token with pieces of the
@@ -241,6 +250,57 @@ export function toSpanMappings(
 		mapping.kind,
 		mapping.features,
 	]);
+}
+
+// Navigation-only copies of script code (the runtime props object repeated in
+// `defineComponent`, a `defineModel` name in the model props type) lie inside the
+// verbatim section they were copied from. Original spans may not contain one
+// another, so cut that section at each copy's bounds to make the spans identical.
+function splitAtNavigationCopies(candidates: Candidate[]) {
+	const copies = candidates.filter(candidate =>
+		candidate.kind === SpanMapKind.Verbatim
+		&& candidate.originalStart < candidate.originalEnd
+		&& candidate.features
+		&& !(candidate.features & ~navigationFeatures)
+	);
+	const cutters = new Set<Candidate>();
+	if (!copies.length) {
+		return cutters;
+	}
+	for (let index = candidates.length - 1; index >= 0; index--) {
+		const section = candidates[index]!;
+		if (section.kind !== SpanMapKind.Verbatim) {
+			continue;
+		}
+		const cuts = new Set<number>();
+		for (const copy of copies) {
+			if (
+				copy.originalStart >= section.originalStart
+				&& copy.originalEnd <= section.originalEnd
+				&& copy.originalEnd - copy.originalStart < section.originalEnd - section.originalStart
+			) {
+				cuts.add(copy.originalStart);
+				cuts.add(copy.originalEnd);
+				cutters.add(copy);
+			}
+		}
+		cuts.delete(section.originalStart);
+		cuts.delete(section.originalEnd);
+		if (!cuts.size) {
+			continue;
+		}
+		const offset = section.generatedStart - section.originalStart;
+		const bounds = [section.originalStart, ...[...cuts].sort((left, right) => left - right), section.originalEnd];
+		const pieces = bounds.slice(1).map((end, i): Candidate => ({
+			...section,
+			generatedStart: bounds[i]! + offset,
+			generatedEnd: end + offset,
+			originalStart: bounds[i]!,
+			originalEnd: end,
+		}));
+		candidates.splice(index, 1, ...pieces);
+	}
+	return cutters;
 }
 
 function getCombineToken(data: Mapping['data']): symbol | undefined {
@@ -301,6 +361,7 @@ function isCodeInformation(value: unknown): value is {
 	};
 	structure?: unknown;
 	format?: unknown;
+	verification?: unknown;
 } {
 	return typeof value === 'object' && value !== null;
 }

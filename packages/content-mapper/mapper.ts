@@ -116,11 +116,13 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 
 		const text = serviceScript.code.snapshot.getText(0, serviceScript.code.snapshot.getLength());
 		const extension = getVirtualExtension(serviceScript.extension);
+		const unverifiedRanges: [number, number][] = [];
 		const mappings = toSpanMappings(
 			serviceScript.code.mappings,
 			text,
 			params.content,
 			configuration.languageFeatures,
+			unverifiedRanges,
 		);
 		const diagnosticDirectives = toDiagnosticDirectives(serviceScript.code.mappings);
 		return {
@@ -135,6 +137,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 					text.length,
 					mappings,
 					diagnosticDirectives,
+					unverifiedRanges,
 				),
 			},
 			mappings,
