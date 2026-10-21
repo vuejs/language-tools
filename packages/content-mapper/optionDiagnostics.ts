@@ -23,10 +23,11 @@ const removedOptions: Record<string, string> = {
 		`Unknown directives are always reported; declare them in the \`GlobalDirectives\` interface instead.`,
 	checkUnknownEvents: `Unknown events are always reported, so this option has no equivalent.`,
 	checkUnknownProps: `Unknown props are always reported, so this option has no equivalent.`,
+	extensions: `Set \`extensions\` on the \`contentMappers\` entry instead.`,
 };
 
-/** Resolved fields computed from other options (e.g. precompiled glob matchers, or the template context set by `format: "petite-vue"`); not user-settable. */
-const derivedOptions = new Set(['isDataAttribute', 'isHtmlAttribute', 'globalTemplateContext']);
+/** Resolved fields computed from other options (e.g. precompiled glob matchers, the template context set by `format: "petite-vue"`, or the formats of the `contentMappers` extensions); not user-settable. */
+const derivedOptions = new Set(['isDataAttribute', 'isHtmlAttribute', 'globalTemplateContext', 'extensionFormats']);
 
 /**
  * Validates the mapper entry's `options` object and returns diagnostics for options the mapper does not

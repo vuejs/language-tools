@@ -6,6 +6,7 @@ import {
 } from '@volar/typescript/lib/node/transform';
 import { getServiceScript } from '@volar/typescript/lib/node/utils';
 import {
+	getAllExtensions,
 	type Language,
 	tsCodegen,
 	type VueCodeInformation,
@@ -538,7 +539,7 @@ export function postprocessLanguageService<T>(
 			}
 
 			for (const definition of result.definitions) {
-				if (vueOptions.extensions.some(ext => definition.fileName.endsWith(ext))) {
+				if (getAllExtensions(vueOptions).some(ext => definition.fileName.endsWith(ext))) {
 					continue;
 				}
 
@@ -656,7 +657,7 @@ export function resolveCompletionResult<T>(
 		if (item.source) {
 			const data = item.data as VueCompletionData;
 			const oldName = item.name;
-			for (const vueExt of vueOptions.extensions) {
+			for (const vueExt of getAllExtensions(vueOptions)) {
 				const suffix = capitalize(vueExt.slice(1)); // .vue -> Vue
 				if (item.source.endsWith(vueExt) && item.name.endsWith(suffix)) {
 					item.name = capitalize(item.name.slice(0, -suffix.length));

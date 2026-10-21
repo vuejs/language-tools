@@ -40,6 +40,7 @@ export function createParsedCommandLineByJson(
 		configFileName,
 	);
 	const resolver = new CompilerOptionsResolver(ts, host.readFile);
+	let contentMappers: unknown;
 
 	for (const extendPath of [...extendedPaths].reverse()) {
 		try {
@@ -47,15 +48,17 @@ export function createParsedCommandLineByJson(
 			const obj = ts.convertToObject(configFile, []);
 			const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
 			resolver.addConfig(rawOptions, path.dirname(configFile.fileName));
+			contentMappers = obj?.contentMappers ?? contentMappers;
 		}
 		catch {}
 	}
 
 	resolver.addConfig(json?.vueCompilerOptions ?? {}, rootDir);
+	contentMappers = json?.contentMappers ?? contentMappers;
 
 	return {
 		...parsed,
-		vueOptions: resolver.build(),
+		vueOptions: withExtensionFormats(resolver.build(), contentMappers),
 	};
 }
 
@@ -87,6 +90,7 @@ export function createParsedCommandLine(
 			configFileName,
 		);
 		const resolver = new CompilerOptionsResolver(ts, host.readFile);
+		let contentMappers: unknown;
 
 		for (const extendPath of [...extendedPaths].reverse()) {
 			try {
@@ -94,13 +98,14 @@ export function createParsedCommandLine(
 				const obj = ts.convertToObject(configFile, []);
 				const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
 				resolver.addConfig(rawOptions, path.dirname(configFile.fileName));
+				contentMappers = obj?.contentMappers ?? contentMappers;
 			}
 			catch {}
 		}
 
 		return {
 			...parsed,
-			vueOptions: resolver.build(),
+			vueOptions: withExtensionFormats(resolver.build(), contentMappers),
 		};
 	}
 	catch {}
@@ -110,6 +115,21 @@ export function createParsedCommandLine(
 		errors: [],
 		vueOptions: getDefaultCompilerOptions(),
 	};
+}
+
+/** Derives `extensionFormats` from the `@vue/content-mapper` entries of a raw `contentMappers` option. */
+function withExtensionFormats(vueOptions: VueCompilerOptions, contentMappers: unknown) {
+	if (Array.isArray(contentMappers)) {
+		vueOptions.extensionFormats = {};
+		for (const entry of contentMappers) {
+			if (entry?.package === '@vue/content-mapper' && Array.isArray(entry.extensions)) {
+				for (const extension of entry.extensions) {
+					vueOptions.extensionFormats[extension] = entry.options?.format ?? 'sfc';
+				}
+			}
+		}
+	}
+	return vueOptions;
 }
 
 export class CompilerOptionsResolver {
@@ -258,8 +278,8 @@ export function getDefaultCompilerOptions(
 		target,
 		lib,
 		typesRoot,
-		extensions: ['.vue'],
 		format: 'sfc',
+		extensionFormats: { '.vue': 'sfc' },
 		globalTemplateContext: false,
 		jsxSlots: false,
 		strictCssModules: false,

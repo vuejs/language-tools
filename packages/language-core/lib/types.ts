@@ -11,7 +11,7 @@ export { VueEmbeddedCode };
 
 export type RawVueCompilerOptions =
 	& Partial<
-		Omit<VueCompilerOptions, 'target' | 'plugins' | 'isDataAttribute' | 'isHtmlAttribute'>
+		Omit<VueCompilerOptions, 'target' | 'plugins' | 'isDataAttribute' | 'isHtmlAttribute' | 'extensionFormats'>
 	>
 	& {
 		target?: 'auto' | 3.3 | 3.5 | 3.6 | 99 | number;
@@ -44,9 +44,13 @@ export interface VueCompilerOptions {
 	target: number;
 	lib: string;
 	typesRoot: string;
-	extensions: string[];
 	/** Selects the built-in parser: a Vue SFC, VitePress markdown or a petite-vue HTML page. */
 	format: 'sfc' | 'vitepress' | 'petite-vue';
+	/**
+	 * The format of each extension registered by the tsconfig's `@vue/content-mapper` entries
+	 * (`contentMappers`), or `{ '.vue': 'sfc' }` without any. Derived, not user-settable.
+	 */
+	extensionFormats: Record<string, VueCompilerOptions['format']>;
 	/** Exposes `globalThis` in the template context, as petite-vue templates read globals directly. */
 	globalTemplateContext: boolean;
 	jsxSlots: boolean;
@@ -102,8 +106,8 @@ export interface VueLanguagePluginReturn {
 	requiredCompilerOptions?: string[];
 	/**
 	 * Parses a file into SFC blocks. The first plugin returning a result wins; otherwise the built-in
-	 * parser of `vueCompilerOptions.format` is used. Which files reach it is decided by the host
-	 * (e.g. the content mapper entry's `extensions`).
+	 * parser of the file's format is used. Which files reach it is decided by the host
+	 * (the extensions of `vueCompilerOptions.extensionFormats`).
 	 */
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
 	updateSFC?(

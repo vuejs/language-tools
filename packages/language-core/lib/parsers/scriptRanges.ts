@@ -42,7 +42,7 @@ export function parseScriptRanges(
 	});
 
 	return {
-		bindings: parseBindings(ts, sourceFile, vueCompilerOptions.extensions),
+		bindings: parseBindings(ts, sourceFile, Object.keys(vueCompilerOptions.extensionFormats)),
 		exportDefault,
 	};
 }

@@ -7,6 +7,7 @@ import {
 	createParsedCommandLine,
 	createParsedCommandLineByJson,
 	createVueLanguagePlugin,
+	getAllExtensions,
 	type LanguagePlugin,
 } from '@vue/language-core';
 import {
@@ -198,7 +199,7 @@ export function startServer(ts: typeof import('typescript')) {
 				: [
 					routeByExtensions(
 						createVueLanguagePlugin(ts, commonLine.options, commonLine.vueOptions, asFileName),
-						commonLine.vueOptions.extensions,
+						getAllExtensions(commonLine.vueOptions),
 					),
 				];
 			const language = createLanguage<URI>(
@@ -228,12 +229,12 @@ export function startServer(ts: typeof import('typescript')) {
 
 			/** Like the TypeScript host, hands the Vue plugin only the files matching `extensions`. */
 			function routeByExtensions(plugin: LanguagePlugin<URI>, extensions: string[]): LanguagePlugin<URI> {
-				const isVueFile = (uri: URI) => extensions.some(extension => asFileName(uri).endsWith(extension));
+				const isContentMapperFile = (uri: URI) => extensions.some(extension => asFileName(uri).endsWith(extension));
 				return {
 					...plugin,
-					getLanguageId: uri => isVueFile(uri) ? plugin.getLanguageId(uri) : undefined,
+					getLanguageId: uri => isContentMapperFile(uri) ? plugin.getLanguageId(uri) : undefined,
 					createVirtualCode: (uri, languageId, snapshot, ctx) =>
-						isVueFile(uri) ? plugin.createVirtualCode!(uri, languageId, snapshot, ctx) : undefined,
+						isContentMapperFile(uri) ? plugin.createVirtualCode!(uri, languageId, snapshot, ctx) : undefined,
 				};
 			}
 		}

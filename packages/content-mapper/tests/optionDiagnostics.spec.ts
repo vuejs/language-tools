@@ -11,7 +11,6 @@ test('accepts every documented option', () => {
 		target: 'auto',
 		lib: 'vue',
 		typesRoot: 'types',
-		extensions: ['.vue'],
 		jsxSlots: true,
 		resolveStyleClassNames: 'scoped',
 		optionsWrapper: ['a', 'b'],

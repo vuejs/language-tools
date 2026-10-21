@@ -1,5 +1,5 @@
 import type { InsertTextFormat, LanguageServicePlugin, WorkspaceEdit } from '@volar/language-service';
-import { forEachEmbeddedCode } from '@vue/language-core';
+import { forEachEmbeddedCode, getAllExtensions } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import { URI } from 'vscode-uri';
@@ -33,7 +33,7 @@ export function create(
 							importUri = item.value as string;
 						}
 					}
-					if (!importUri || !info.root.vueCompilerOptions.extensions.some(ext => importUri.endsWith(ext))) {
+					if (!importUri || !getAllExtensions(info.root.vueCompilerOptions).some(ext => importUri.endsWith(ext))) {
 						return;
 					}
 

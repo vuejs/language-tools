@@ -52,10 +52,10 @@ export function createVueLanguagePlugin<T>(
 	const fileRegistry = getVueFileRegistry(compilerOptions, vueCompilerOptions, plugins);
 
 	return {
-		// Every file passed in is parsed as `vueCompilerOptions.format`; the host decides which files
-		// are Vue files (e.g. by the content mapper entry's `extensions`).
-		getLanguageId() {
-			return getRootLanguageId(vueCompilerOptions);
+		// Every file passed in is parsed by the format of its extension in `extensionFormats`, falling back
+		// to `vueCompilerOptions.format`; the host decides which files are content mapper files.
+		getLanguageId(scriptId) {
+			return getRootLanguageId(vueCompilerOptions, asFileName(scriptId));
 		},
 		createVirtualCode(scriptId, _languageId, snapshot) {
 			let code = fileRegistry.get(String(scriptId));
@@ -105,5 +105,5 @@ export function createVueLanguagePlugin<T>(
 }
 
 export function getAllExtensions(options: VueCompilerOptions) {
-	return [...new Set(options.extensions)];
+	return Object.keys(options.extensionFormats);
 }

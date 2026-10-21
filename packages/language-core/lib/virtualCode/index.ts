@@ -24,8 +24,17 @@ const rootLanguageIds: Record<VueCompilerOptions['format'], string> = {
 	'petite-vue': 'html',
 };
 
-export function getRootLanguageId(vueCompilerOptions: VueCompilerOptions) {
-	return rootLanguageIds[vueCompilerOptions.format] ?? 'vue';
+export function getFormat(vueCompilerOptions: VueCompilerOptions, fileName: string) {
+	for (const extension in vueCompilerOptions.extensionFormats) {
+		if (fileName.endsWith(extension)) {
+			return vueCompilerOptions.extensionFormats[extension]!;
+		}
+	}
+	return vueCompilerOptions.format;
+}
+
+export function getRootLanguageId(vueCompilerOptions: VueCompilerOptions, fileName: string) {
+	return rootLanguageIds[getFormat(vueCompilerOptions, fileName)] ?? 'vue';
 }
 
 export class VueVirtualCode implements VirtualCode {
@@ -41,7 +50,7 @@ export class VueVirtualCode implements VirtualCode {
 	private _mappings: () => CodeMapping[];
 
 	get languageId() {
-		return getRootLanguageId(this.vueCompilerOptions);
+		return getRootLanguageId(this.vueCompilerOptions, this.fileName);
 	}
 	get snapshot() {
 		return this._snapshot();
@@ -125,7 +134,7 @@ export class VueVirtualCode implements VirtualCode {
 		}
 
 		const content = snapshot.getText(0, snapshot.getLength());
-		for (const plugin of [...plugins, builtInParsers[this.vueCompilerOptions.format] ?? sfcParser]) {
+		for (const plugin of [...plugins, builtInParsers[getFormat(this.vueCompilerOptions, this.fileName)] ?? sfcParser]) {
 			const sfc = plugin.parseSFC?.(this.fileName, content);
 			if (sfc) {
 				return {

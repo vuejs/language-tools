@@ -32,7 +32,9 @@ const plugin: LanguagePlugin<string> = createVueLanguagePlugin(
 );
 ```
 
-The plugin parses every file it is given as `vueCompilerOptions.format`; the host decides which files are Vue files, e.g. by file extension.
+The plugin parses every file it is given by the format of its extension in `vueCompilerOptions.extensionFormats`, falling back to `vueCompilerOptions.format`; the host decides which files are content mapper files, e.g. by those extensions.
+
+`createParsedCommandLine` derives `extensionFormats` from the tsconfig's `contentMappers`: each `@vue/content-mapper` entry maps its `extensions` to its `format` (default `'sfc'`). Without `contentMappers` it is `{ '.vue': 'sfc' }`.
 
 ### `createParsedCommandLine`
 
@@ -88,7 +90,6 @@ Configure Vue compiler behavior through the `vueCompilerOptions` field in `tscon
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `target` | `number \| 'auto'` | `'auto'` | Vue version. `'auto'` reads from `node_modules/vue/package.json`. |
-| `extensions` | `string[]` | `['.vue']` | File extensions to be treated as Vue SFCs. |
 | `format` | `'sfc' \| 'vitepress' \| 'petite-vue'` | `'sfc'` | Built-in parser: a Vue SFC, VitePress markdown or a petite-vue HTML page. |
 | `plugins` | `string[]` | `[]` | Custom language plugins, e.g., [`@vue/language-plugin-pug`](../language-plugin-pug). |
 
@@ -119,7 +120,7 @@ This package includes the following built-in plugins to handle different file ty
 
 ### File Parsing
 
-A plugin's `parseSFC(fileName, content)` hook can parse a file into SFC blocks; the first plugin returning a result wins. Otherwise the built-in parser of `format` is used:
+A plugin's `parseSFC(fileName, content)` hook can parse a file into SFC blocks; the first plugin returning a result wins. Otherwise the built-in parser of the file's format is used:
 
 | `format` | Parses |
 | :--- | :--- |

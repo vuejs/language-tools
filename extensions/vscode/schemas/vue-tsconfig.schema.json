@@ -23,11 +23,6 @@
 					"default": "@vue/language-core/types",
 					"markdownDescription": "Root path for helper type definitions. See: https://github.com/vuejs/language-tools/pull/5872"
 				},
-				"extensions": {
-					"type": "array",
-					"default": [".vue"],
-					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/vuejs/language-tools/tree/master/extensions/vscode/README.md#custom-file-extensions."
-				},
 				"jsxSlots": {
 					"type": "boolean",
 					"default": false,
