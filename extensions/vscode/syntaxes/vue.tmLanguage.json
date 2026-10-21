@@ -1079,35 +1079,54 @@
 				}
 			]
 		},
-		"capitalized-tag": {
-			"begin": "(<)([A-Z][a-zA-Z0-9:-]*)(?=\\s|/?>)",
-			"beginCaptures": {
-				"1": {
-					"name": "punctuation.definition.tag.begin.html.vue"
-				},
-				"2": {
-					"name": "entity.name.tag.html.vue"
-				}
-			},
-			"end": "/?>",
-			"endCaptures": {
-				"0": {
-					"name": "punctuation.definition.tag.end.html.vue"
-				}
-			},
-			"name": "meta.tag.structure.$2.start.html.vue",
+		"component-tag": {
 			"patterns": [
 				{
-					"begin": "\\G",
-					"end": "(?=/?>)",
+					"begin": "(<)((?!(?:feComponentTransfer|feSpecularLighting|feDiffuseLighting|feDisplacementMap|animateTransform|feConvolveMatrix|annotation-xml|feDistantLight|feGaussianBlur|linearGradient|radialGradient|animateMotion|color-profile|feColorMatrix|foreignObject|mmultiscripts|feDropShadow|feMorphology|fePointLight|feTurbulence|meshgradient|feComposite|feMergeNode|feSpotLight|maligngroup|mprescripts|annotation|blockquote|figcaption|malignmark|mlabeledtr|munderover|solidcolor|hatchpath|meshpatch|mfraction|mscarries|semantics|clipPath|colgroup|datalist|feOffset|fieldset|menclose|metadata|mlongdiv|mphantom|noscript|optgroup|polyline|progress|template|textPath|textarea|address|animate|article|caption|details|discard|ellipse|feBlend|feFlood|feFuncA|feFuncB|feFuncG|feFuncR|feImage|feMerge|maction|meshrow|mfenced|mpadded|mscarry|msgroup|msubsup|pattern|picture|polygon|section|summary|unknown|button|canvas|circle|dialog|feTile|figure|filter|footer|header|hgroup|iframe|legend|marker|merror|mglyph|msline|mspace|mstack|mstyle|mtable|munder|object|option|output|script|select|source|strong|switch|symbol|aside|audio|embed|hatch|image|input|label|meter|mfrac|mover|mpath|mroot|msqrt|msrow|mtext|param|small|style|table|tbody|tfoot|thead|title|track|tspan|video|abbr|area|base|body|cite|code|data|defs|desc|form|head|html|line|link|main|mark|mask|math|menu|mesh|meta|mrow|msub|msup|none|path|rect|ruby|samp|slot|span|stop|text|time|view|bdi|bdo|col|del|dfn|div|img|ins|kbd|map|mtd|mtr|nav|pre|set|sub|sup|svg|use|var|wbr|br|dd|dl|dt|em|h1|h2|h3|h4|h5|h6|hr|li|mi|mn|mo|ms|ol|rp|rt|td|th|tr|ul|a|b|g|i|p|q|s|u)(?![^\\s/>]))[a-zA-Z][^\\s/>]*)(?=[\\s/>]|$)",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.definition.tag.begin.html.vue"
+						},
+						"2": {
+							"name": "entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue"
+						}
+					},
+					"end": "/?>",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.tag.end.html.vue"
+						}
+					},
+					"name": "meta.tag.structure.$2.start.html.vue",
 					"patterns": [
 						{
-							"include": "#vue-directives"
-						},
-						{
-							"include": "text.html.basic#attribute"
+							"begin": "\\G",
+							"end": "(?=/?>)",
+							"patterns": [
+								{
+									"include": "#vue-directives"
+								},
+								{
+									"include": "text.html.basic#attribute"
+								}
+							]
 						}
 					]
+				},
+				{
+					"match": "(</)((?!(?:feComponentTransfer|feSpecularLighting|feDiffuseLighting|feDisplacementMap|animateTransform|feConvolveMatrix|annotation-xml|feDistantLight|feGaussianBlur|linearGradient|radialGradient|animateMotion|color-profile|feColorMatrix|foreignObject|mmultiscripts|feDropShadow|feMorphology|fePointLight|feTurbulence|meshgradient|feComposite|feMergeNode|feSpotLight|maligngroup|mprescripts|annotation|blockquote|figcaption|malignmark|mlabeledtr|munderover|solidcolor|hatchpath|meshpatch|mfraction|mscarries|semantics|clipPath|colgroup|datalist|feOffset|fieldset|menclose|metadata|mlongdiv|mphantom|noscript|optgroup|polyline|progress|template|textPath|textarea|address|animate|article|caption|details|discard|ellipse|feBlend|feFlood|feFuncA|feFuncB|feFuncG|feFuncR|feImage|feMerge|maction|meshrow|mfenced|mpadded|mscarry|msgroup|msubsup|pattern|picture|polygon|section|summary|unknown|button|canvas|circle|dialog|feTile|figure|filter|footer|header|hgroup|iframe|legend|marker|merror|mglyph|msline|mspace|mstack|mstyle|mtable|munder|object|option|output|script|select|source|strong|switch|symbol|aside|audio|embed|hatch|image|input|label|meter|mfrac|mover|mpath|mroot|msqrt|msrow|mtext|param|small|style|table|tbody|tfoot|thead|title|track|tspan|video|abbr|area|base|body|cite|code|data|defs|desc|form|head|html|line|link|main|mark|mask|math|menu|mesh|meta|mrow|msub|msup|none|path|rect|ruby|samp|slot|span|stop|text|time|view|bdi|bdo|col|del|dfn|div|img|ins|kbd|map|mtd|mtr|nav|pre|set|sub|sup|svg|use|var|wbr|br|dd|dl|dt|em|h1|h2|h3|h4|h5|h6|hr|li|mi|mn|mo|ms|ol|rp|rt|td|th|tr|ul|a|b|g|i|p|q|s|u)(?![^\\s/>]))[a-zA-Z][^\\s/>]*)\\s*(>)",
+					"captures": {
+						"1": {
+							"name": "punctuation.definition.tag.begin.html.vue"
+						},
+						"2": {
+							"name": "entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue"
+						},
+						"3": {
+							"name": "punctuation.definition.tag.end.html.vue"
+						}
+					},
+					"name": "meta.tag.structure.$2.end.html.vue"
 				}
 			]
 		},
@@ -1209,7 +1228,7 @@
 					"include": "#template-tag"
 				},
 				{
-					"include": "#capitalized-tag"
+					"include": "#component-tag"
 				},
 				{
 					"include": "text.html.derivative"
