@@ -5,7 +5,7 @@ import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { formatLocations, getLanguageServer, testWorkspacePath } from './server';
 
-test.fails('TS to vue: default import name', async () => {
+test('TS to vue: default import name', async () => {
 	expect(
 		await requestDefinition('tsconfigProject/fixture1.ts', 'typescript', `import C|omponent from './empty.vue';`),
 	).toEqual(['tsconfigProject/empty.vue:0:0-0:0']);

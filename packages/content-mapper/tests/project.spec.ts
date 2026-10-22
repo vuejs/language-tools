@@ -172,8 +172,10 @@ test('maps the synthetic default export to the top of the SFC', () => {
 
 	const exportStart = result.text.indexOf('export default');
 	expect(exportStart).toBeGreaterThanOrEqual(0);
-	const anchor = result.mappings.find(mapping => mapping[0] === exportStart && mapping[1] === 0);
+	const exportEnd = result.text.indexOf(';', exportStart) + 1;
+	const anchor = result.mappings.find(mapping => mapping[0] === exportStart);
 	expect(anchor).toBeDefined();
+	expect(anchor![1]).toBe(exportEnd - exportStart);
 	expect(anchor![2]).toBe(0);
 	expect(anchor![3]).toBe(0);
 	expect(anchor![5] & SpanMapFeature.Definition).toBeTruthy();

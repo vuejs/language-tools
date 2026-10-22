@@ -32,9 +32,11 @@ export { generate as generateScript };
 
 function* generateSyntheticDefaultExport(exportedExpression: string): Generator<Code> {
 	// keep the synthetic default export navigable: go-to-definition on
-	// `import Foo from './Foo.vue'` lands on this zero-length anchor at the SFC top
-	yield [``, 'main', 0, codeFeatures.navigationWithoutRename];
-	yield `export default ${exportedExpression}${endOfLine}`;
+	// `import Foo from './Foo.vue'` targets the whole statement, which maps to the SFC top
+	const boundary = yield* Boundary.start('main', 0, 0, codeFeatures.navigationWithoutRename);
+	yield `export default ${exportedExpression};`;
+	yield boundary.end();
+	yield newLine;
 }
 
 function generate(options: ScriptCodegenOptions) {
