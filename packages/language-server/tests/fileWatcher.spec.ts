@@ -1,7 +1,7 @@
 import { ConfigurationRequest, DidChangeWatchedFilesNotification, RegistrationRequest } from '@volar/language-server';
 import { type LanguageServerHandle, startLanguageServer } from '@volar/test-utils';
-import { URI } from 'vscode-uri';
 import { afterAll, expect, test } from 'vitest';
+import { URI } from 'vscode-uri';
 import { testWorkspacePath } from './server';
 
 let vueServer: LanguageServerHandle | undefined;
