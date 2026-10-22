@@ -1,9 +1,10 @@
 import * as path from 'path-browserify';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
-import type { Code, IRBlock, IRScript, IRScriptSetup, VueCompilerOptions } from '../../types';
+import type { Code, IRBlock, IRScript, IRScriptSetup, IRStyle, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
+import { generateStyleModuleImports } from '../style/modules';
 import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
@@ -14,6 +15,7 @@ export interface ScriptCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	script: IRScript | undefined;
 	scriptSetup: IRScriptSetup | undefined;
+	styles: readonly IRStyle[];
 	fileName: string;
 	scriptLang: string;
 	scriptRanges: ScriptRanges | undefined;
@@ -195,6 +197,8 @@ function* generateWorker(
 	}
 
 	yield* ctx.localTypes.generate();
+	// after the user's code, which may start with `/// <reference>` or `// @ts-nocheck`
+	yield* generateStyleModuleImports(options.styles);
 }
 
 function* generateScriptWithExportDefault(

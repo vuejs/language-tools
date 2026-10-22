@@ -287,6 +287,7 @@ function useCodegen(
 			fileName,
 			script: ir.script,
 			scriptSetup: ir.scriptSetup,
+			styles: ir.styles,
 			scriptLang: computeLang(ir),
 			setupBindings: getScriptSetupBindings(),
 			localComponents: getLocalComponents(),

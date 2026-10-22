@@ -6,12 +6,13 @@ import { repositoryRoot } from './utils';
 const workspace = path.join(repositoryRoot, 'test-workspace/content-mapper-lsp');
 const shorthand = new LspDocument(path.join(workspace, 'Shorthand.vue'));
 const cssModule = new LspDocument(path.join(workspace, 'CssModule.vue'));
+const cssModuleSrc = new LspDocument(path.join(workspace, 'CssModuleSrc.vue'));
 const runtimeProps = new LspDocument(path.join(workspace, 'RuntimeProps.vue'));
 const typeProps = new LspDocument(path.join(workspace, 'TypeProps.vue'));
 const propsParent = new LspDocument(path.join(workspace, 'PropsParent.vue'));
 const model = new LspDocument(path.join(workspace, 'Model.vue'));
 const modelParent = new LspDocument(path.join(workspace, 'ModelParent.vue'));
-const documents = [shorthand, cssModule, runtimeProps, typeProps, propsParent, model, modelParent];
+const documents = [shorthand, cssModule, cssModuleSrc, runtimeProps, typeProps, propsParent, model, modelParent];
 
 let server: LspServer;
 
@@ -106,6 +107,24 @@ test('CSS module classes rename from either side', async () => {
 	expect(await rename(cssModule, cssModule.at('$style.foo', 0, 7))).toEqual(expected);
 	expect(await rename(cssModule, cssModule.at('.foo', 0, 1))).toEqual(expected);
 	expect(await definition(cssModule, cssModule.at('$style.foo', 0, 7))).toEqual(['5:1 foo']);
+});
+
+test('<style module src> imports the src, which types $style', async () => {
+	const definitionFiles = async (position: ReturnType<LspDocument['at']>) => {
+		const locations: any[] = await server.request('textDocument/definition', {
+			textDocument: { uri: cssModuleSrc.uri },
+			position,
+		}) ?? [];
+		return locations.map(location => {
+			const uri: string = location.uri ?? location.targetUri;
+			const { start } = location.range ?? location.targetSelectionRange;
+			return `${decodeURIComponent(uri).split('/').pop()} ${start.line}:${start.character}`;
+		});
+	};
+	expect(await definitionFiles(cssModuleSrc.at('./CssModuleSrc.module.css', 0, 2))).toEqual([
+		'CssModuleSrc.module.d.css.ts 0:0',
+	]);
+	expect(await definitionFiles(cssModuleSrc.at('$style.a', 0, 7))).toEqual(['CssModuleSrc.module.d.css.ts 1:1']);
 });
 
 test('runtime props link the declaration and the parent usages like type-based props', async () => {

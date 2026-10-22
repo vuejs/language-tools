@@ -110,7 +110,7 @@ Configure Vue compiler behavior through the `vueCompilerOptions` field in `tscon
 | `jsxSlots` | `boolean` | `false` | Use JSX-style slots types. |
 | `dataAttributes` | `string[]` | `[]` | Allowed data-* attribute patterns. |
 | `htmlAttributes` | `string[]` | `['aria-*']` | Allowed HTML attribute patterns. |
-| `resolveStyleImports` | `boolean` | `false` | Resolve import statements in styles. |
+| `resolveStyleImports` | `boolean` | `false` | Resolve `@import` statements and `src` in styles (`<style module src>` is always resolved). |
 | `resolveStyleClassNames` | `boolean \| 'scoped'` | `'scoped'` | Resolve class names in styles. |
 
 ## Built-in Plugins
