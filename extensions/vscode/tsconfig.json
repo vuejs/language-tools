@@ -7,7 +7,6 @@
 		"module": "CommonJS"
 	},
 	"references": [
-		{ "path": "../../packages/language-server/tsconfig.json" },
-		{ "path": "../../packages/typescript-plugin/tsconfig.json" }
+		{ "path": "../../packages/language-server/tsconfig.json" }
 	]
 }

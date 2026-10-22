@@ -50,9 +50,6 @@ importers:
       '@vue/language-server':
         specifier: workspace:*
         version: link:../../packages/language-server
-      '@vue/typescript-plugin':
-        specifier: workspace:*
-        version: link:../../packages/typescript-plugin
       reactive-vscode:
         specifier: ^1.0.2
         version: 1.0.2(@types/vscode@1.88.0)

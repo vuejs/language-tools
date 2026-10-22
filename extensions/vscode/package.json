@@ -447,40 +447,23 @@
 		"menus": {
 			"editor/context": [
 				{
-					"command": "typescript.goToSourceDefinition",
-					"when": "tsSupportsSourceDefinition && resourceLangId == vue",
-					"group": "navigation@9"
-				}
-			],
-			"explorer/context": [
-				{
-					"command": "typescript.findAllFileReferences",
-					"when": "tsSupportsFileReferences && resourceLangId == vue",
-					"group": "4_search"
-				}
-			],
-			"editor/title/context": [
-				{
-					"command": "typescript.findAllFileReferences",
-					"when": "tsSupportsFileReferences && resourceLangId == vue"
+					"command": "typescript.native-preview.goToSourceDefinition",
+					"when": "typescript.native-preview.serverRunning && tsSupportsSourceDefinition && resourceLangId == vue",
+					"group": "navigation@1.41"
 				}
 			],
 			"commandPalette": [
 				{
-					"command": "typescript.reloadProjects",
-					"when": "editorLangId == vue && typescript.isManagedFile"
+					"command": "typescript.native-preview.goToSourceDefinition",
+					"when": "typescript.native-preview.serverRunning && tsSupportsSourceDefinition && editorLangId == vue"
 				},
 				{
-					"command": "typescript.goToProjectConfig",
-					"when": "editorLangId == vue && typescript.isManagedFile"
+					"command": "typescript.native-preview.sortImports",
+					"when": "typescript.native-preview.serverRunning && supportedCodeAction =~ /(\\s|^)source\\.sortImports\\b/ && editorLangId == vue"
 				},
 				{
-					"command": "typescript.sortImports",
-					"when": "supportedCodeAction =~ /(\\s|^)source\\.sortImports\\b/ && editorLangId =~ /^vue$/"
-				},
-				{
-					"command": "typescript.removeUnusedImports",
-					"when": "supportedCodeAction =~ /(\\s|^)source\\.removeUnusedImports\\b/ && editorLangId =~ /^vue$/"
+					"command": "typescript.native-preview.removeUnusedImports",
+					"when": "typescript.native-preview.serverRunning && supportedCodeAction =~ /(\\s|^)source\\.removeUnusedImports\\b/ && editorLangId == vue"
 				}
 			]
 		}
@@ -495,7 +478,6 @@
 		"@types/vscode": "1.88.0",
 		"@volar/vscode": "2.4.28",
 		"@vue/language-server": "workspace:*",
-		"@vue/typescript-plugin": "workspace:*",
 		"reactive-vscode": "^1.0.2",
 		"rolldown": "latest",
 		"vscode-ext-gen": "latest",
