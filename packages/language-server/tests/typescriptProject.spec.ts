@@ -148,6 +148,25 @@ test('auto-import components are reused across edits to the requesting file unti
 	}
 });
 
+test('a change to a file that cannot export components keeps the auto-import components', async () => {
+	const dir = fs.mkdtempSync(path.join(testWorkspacePath, 'auto-import-cache-'));
+	try {
+		const toFileName = (file: string) => path.join(dir, file).replace(/\\/g, '/');
+		fs.writeFileSync(path.join(dir, 'tsconfig.json'), JSON.stringify({ include: ['*.ts'] }));
+		fs.writeFileSync(path.join(dir, 'a.ts'), 'export {};\n');
+		const components = await resolver.getAutoImportComponents(toFileName('a.ts'));
+		expect(components).toBeDefined();
+
+		resolver.fileChanged(toFileName('notes.md'));
+		expect(await resolver.getAutoImportComponents(toFileName('a.ts'))).toBe(components);
+		resolver.fileChanged(toFileName('b.ts'));
+		expect(await resolver.getAutoImportComponents(toFileName('a.ts'))).not.toBe(components);
+	}
+	finally {
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+});
+
 test('a .vue file no content mapper covers has no project', async () => {
 	expect(await resolver.getProject(fileName('fixture.vue'))).toBeUndefined();
 });

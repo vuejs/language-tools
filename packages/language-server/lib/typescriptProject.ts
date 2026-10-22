@@ -32,6 +32,15 @@ type Project = import('typescript-7/async', { with: { 'resolution-mode': 'import
 
 const directiveRE = /^v[A-Z]/;
 const defaultImportRE = /\bimport\s+[\w$]+(?=\s*(?:,|from\b))/;
+const scriptExtensions = ['.ts', '.tsx', '.js', '.jsx', '.mts', '.cts', '.mjs', '.cjs'];
+
+/** The extensions of the files that can export components: script modules and the files of `contentMappers`. */
+export function getComponentModuleExtensions(contentMappers: unknown[] | undefined) {
+	return [
+		...scriptExtensions,
+		...(contentMappers as { extensions?: string[] }[] | undefined)?.flatMap(entry => entry.extensions ?? []) ?? [],
+	];
+}
 
 export interface TypeScriptProject {
 	/** Undefined for the TypeScript language server's inferred project. */
@@ -96,7 +105,7 @@ export interface TypeScriptProjectResolver {
 	isRefAtOffset(fileName: string, offset: number): Promise<boolean | undefined>;
 	/** Releases the file opened by `getProject`. */
 	closeFile(fileName: string): void;
-	/** Forgets the cached auto-import exports that a change to `fileName` may affect. */
+	/** Forgets the cached auto-import exports that a change to `fileName`, if it can export components, may affect. */
 	fileChanged(fileName: string): void;
 	/** Forgets the cached answers, e.g. after a config file changed. */
 	invalidate(): void;
@@ -106,10 +115,12 @@ export interface TypeScriptProjectResolver {
 /**
  * Asks the editor's TypeScript language server which project owns a file, over an API pipe the client opened.
  * `packageJsonPath` is the manifest of the TS 7 installation that server runs, so the client matches it.
+ * `inferredContentMappers` are the content mappers the client registers for files outside any config.
  */
 export async function connectTypeScriptProjectResolver(
 	pipe: string,
 	packageJsonPath: string,
+	inferredContentMappers?: unknown[],
 ): Promise<TypeScriptProjectResolver> {
 	const manifestPath = fs.realpathSync(packageJsonPath);
 	const { name } = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
@@ -120,9 +131,10 @@ export async function connectTypeScriptProjectResolver(
 	};
 	const api = await ts.API.fromLSPConnection({ pipe });
 	const projects = new Map<string, Promise<TypeScriptProject | undefined>>();
-	/** Per project id, the auto-import exports and the file they were enumerated for. */
+	/** Per project id, the auto-import exports, the file they were enumerated for and the extensions of the files they come from. */
 	const autoImportExports = new Map<string, {
 		fileName: string;
+		extensions: string[];
 		components: Promise<AutoImportComponent[]>;
 		values: Promise<AutoImportExport[]>;
 	}>();
@@ -156,6 +168,11 @@ export async function connectTypeScriptProjectResolver(
 			const exports = getProjectValueExports(ts, project.program, project.checker);
 			cached = {
 				fileName,
+				extensions: getComponentModuleExtensions(
+					project.configFileName
+						? (project.parsedCommandLine.raw as { contentMappers?: unknown[] } | undefined)?.contentMappers
+						: inferredContentMappers,
+				),
 				components: exports.then(entries => entries.filter(entry => entry.isComponent)),
 				values: exports.then(entries => entries.filter(entry => entry.exportName !== 'default')),
 			};
@@ -318,8 +335,8 @@ export async function connectTypeScriptProjectResolver(
 			}
 		},
 		fileChanged(fileName) {
-			for (const [id, { fileName: requester }] of autoImportExports) {
-				if (requester !== fileName) {
+			for (const [id, { fileName: requester, extensions }] of autoImportExports) {
+				if (requester !== fileName && extensions.some(extension => fileName.endsWith(extension))) {
 					autoImportExports.delete(id);
 				}
 			}

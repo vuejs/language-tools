@@ -26,6 +26,7 @@ import { getComponentPropsOffset, toServiceScriptOffset, toSourceOffset } from '
 import { createReactivityAnalyzer, getInterpolationRanges, type ReactivityAnalysisParams } from './reactivity';
 import {
 	connectTypeScriptProjectResolver,
+	getComponentModuleExtensions,
 	type TypeScriptProject,
 	type TypeScriptProjectResolver,
 } from './typescriptProject';
@@ -54,14 +55,30 @@ export function startServer(ts: typeof import('typescript')) {
 	const server = createServer(connection);
 
 	let typescriptApi: Promise<TypeScriptProjectResolver> | undefined;
+	// The content mappers the client registers for files outside any tsconfig.
+	let inferredContentMappers: ContentMapperEntry[] | undefined;
+	const watchedExtensions = new Set<string>();
+	let initialized = false;
 
 	connection.listen();
+
+	/** Config files rebuild the project services; files with these extensions may add, change or remove a component. */
+	function watchExtensions(extensions: string[]) {
+		const added = extensions.filter(extension => !watchedExtensions.has(extension));
+		for (const extension of added) {
+			watchedExtensions.add(extension);
+		}
+		// before initialization, `onInitialized` watches the whole set
+		if (initialized && added.length) {
+			void server.fileWatcher.watchFiles(added.map(extension => `**/*${extension}`));
+		}
+	}
 
 	/** A failed acquisition is reported once and not cached, so the next request asks the client again. */
 	function connectTypeScriptApi() {
 		if (!typescriptApi) {
 			const connecting = connection.sendRequest<TypeScriptApiConnection>('vue/typescriptApiConnection').then(
-				({ pipe, packageJsonPath }) => connectTypeScriptProjectResolver(pipe, packageJsonPath),
+				({ pipe, packageJsonPath }) => connectTypeScriptProjectResolver(pipe, packageJsonPath, inferredContentMappers),
 			);
 			typescriptApi = connecting;
 			connecting.catch(error => {
@@ -98,8 +115,8 @@ export function startServer(ts: typeof import('typescript')) {
 
 	connection.onInitialize(params => {
 		const tsconfigProjects = createUriMap<LanguageService>();
-		// The content mappers the client registers for files outside any tsconfig.
-		const inferredContentMappers: ContentMapperEntry[] | undefined = params.initializationOptions?.contentMappers;
+		inferredContentMappers = params.initializationOptions?.contentMappers;
+		watchExtensions(getComponentModuleExtensions(inferredContentMappers));
 
 		// Any JSON file may be a config or one it extends. The rebuilt services ask again with `openFiles`, which
 		// makes the TypeScript language server apply the change notifications the editor already sent it.
@@ -404,6 +421,7 @@ export function startServer(ts: typeof import('typescript')) {
 			const contentMappers = configFileName
 				? project!.contentMappers as ContentMapperEntry[] | undefined
 				: inferredContentMappers;
+			watchExtensions(getComponentModuleExtensions(contentMappers));
 			const vuePlugins = (contentMappers ?? [])
 				.filter(entry => entry.package === '@vue/content-mapper')
 				.map(entry =>
@@ -456,8 +474,8 @@ export function startServer(ts: typeof import('typescript')) {
 
 	connection.onInitialized(() => {
 		server.initialized();
-		// Config files rebuild the project services; any project file may add, change or remove a component.
-		void server.fileWatcher.watchFiles(['**/*']);
+		initialized = true;
+		void server.fileWatcher.watchFiles(['**/*.json', ...[...watchedExtensions].map(extension => `**/*${extension}`)]);
 	});
 
 	connection.onShutdown(server.shutdown);
