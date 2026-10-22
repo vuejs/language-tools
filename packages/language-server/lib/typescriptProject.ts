@@ -2,9 +2,9 @@ import type { VueVirtualCode } from '@vue/language-core';
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-import type { ComponentMeta, TypeScript } from 'vue-component-meta';
-import { getComponentMeta } from 'vue-component-meta/lib/componentMeta';
-import { getComponentType } from './componentMeta';
+import { type ComponentMeta, getComponentMeta } from 'vue-component-meta';
+import type { TypeScript } from 'vue-component-meta/lib/typescript';
+import { getComponentExport } from './componentMeta';
 
 /** An edit in UTF-16 offsets of the file's own text (for a content-mapped file, its source text). */
 export interface TextEdit {
@@ -28,10 +28,7 @@ export interface TypeScriptProjectResolver {
 	 * undefined when `incomingFileName` has no default export in `fileName`'s project.
 	 */
 	getDefaultImportEdits(fileName: string, incomingFileName: string): Promise<readonly TextEdit[] | undefined>;
-	/**
-	 * The metadata of the component that `tag` refers to in the template of the Vue file `fileName`. Its
-	 * `getDeclarations()` and `getTypeObject()` refer to a snapshot that is released before this returns.
-	 */
+	/** The metadata of the component that `tag` refers to in the template of the Vue file `fileName`. */
 	getComponentMeta(fileName: string, virtualCode: VueVirtualCode, tag: string): Promise<ComponentMeta | undefined>;
 	/** Releases the file opened by `getProject`. */
 	closeFile(fileName: string): void;
@@ -112,8 +109,9 @@ export async function connectTypeScriptProjectResolver(
 				const project = await snapshot.getDefaultProjectForFile(fileName);
 				const sourceFile = await project?.program.getSourceFile(fileName);
 				const component = sourceFile
-					&& await getComponentType(ts, project!.checker, sourceFile, virtualCode, tag);
-				return component && await getComponentMeta(ts, project!, api.printer, component.node, component.type);
+					&& await getComponentExport(ts, project!.checker, sourceFile, virtualCode, tag);
+				return component
+					&& await getComponentMeta(project!, component.fileName, component.exportName, { printer: api.printer });
 			}
 			finally {
 				await snapshot.dispose();

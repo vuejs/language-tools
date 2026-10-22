@@ -2,25 +2,14 @@ import { names } from '@vue/language-core';
 import type { Expression, Node, ObjectLiteralExpression, SourceFile } from 'typescript-7/ast' with {
 	'resolution-mode': 'import',
 };
-import type { TypeScript } from './types';
+import type { TypeScript } from './typescript';
 
-export async function getDefaultsFromScriptSetup(
-	ts: TypeScript,
-	print: (node: Node) => Promise<string>,
-	sourceFile: SourceFile,
-) {
+export function getDefaultsFromScriptSetup(ts: TypeScript, sourceFile: SourceFile) {
 	const result = new Map<string, string>();
 	if (!sourceFile.contentMapper) {
 		return result;
 	}
-
-	const pending: [string, Promise<string>][] = [];
-
 	visit(sourceFile);
-
-	for (const [name, text] of pending) {
-		result.set(name, await text);
-	}
 	return result;
 
 	function visit(node: Node) {
@@ -58,7 +47,7 @@ export async function getDefaultsFromScriptSetup(
 	}
 
 	function add(name: string, expression: Node) {
-		pending.push([name, print(expression)]);
+		result.set(name, expression.getText(sourceFile));
 	}
 }
 

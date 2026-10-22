@@ -20,24 +20,61 @@ npm install vue-component-meta
 ```typescript
 import { createChecker } from 'vue-component-meta';
 
-const checker = await createChecker('/path/to/tsconfig.json', {
+await using checker = await createChecker('/path/to/tsconfig.json', {
   schema: true, // Enable schema parsing
 });
 
 const meta = await checker.getComponentMeta('/path/to/MyComponent.vue');
-
-await checker.close();
 ```
 
-The checker runs the TypeScript 7 API (`tsc --api`) in a child process. Vue files are type-checked through the content mappers configured in the tsconfig (`contentMappers`), and only files matched by its `include` are part of the project.
+The checker runs the TypeScript 7 API (`tsc --api`) in a child process, which is stopped when the checker is disposed (`await using`) or closed (`checker.close()`). Vue files are type-checked through the content mappers configured in the tsconfig (`contentMappers`), and only files matched by its `include` are part of the project.
+
+Every query reads the project from disk into a new snapshot that is released when the query completes, so the results always reflect the files on disk. Virtual files and in-memory content are not supported. Creating a snapshot rebuilds the project, so use `getComponentMetas` to query several components at once.
+
+### Use an existing TypeScript 7 project
+
+```typescript
+import { getComponentMeta, getExportNames } from 'vue-component-meta';
+
+const snapshot = await api.createSnapshot({ openProjects: [tsconfig] });
+try {
+  const project = snapshot.getConfiguredProject(tsconfig)!;
+  const meta = await getComponentMeta(project, '/path/to/MyComponent.vue', 'default', { printer: api.printer });
+}
+finally {
+  await snapshot.dispose();
+}
+```
+
+`getComponentMeta` and `getExportNames` take a `Project` of the TypeScript 7 API; the caller owns the snapshot of the project.
 
 ## API
 
+### `getComponentMeta(project, filePath, exportName?, options?)`
+
+Get the metadata of a component exported from a file of `project`. `exportName` defaults to `'default'`. Returns a `Promise<ComponentMeta>` and rejects if the file is not part of the project or has no such export. `options` accepts the checker options and `printer`, the `printer` of the `API` that created the snapshot; without it, `EventMeta.signature` and the `type` of `event` schemas are empty strings.
+
+### `getExportNames(project, filePath)`
+
+Get all export names of a file of `project`. Returns a `Promise<string[]>`.
+
 ### `checker.getComponentMeta(filePath, exportName?)`
 
-Get the metadata of a component. `exportName` defaults to `'default'`. Returns a `Promise<ComponentMeta>`.
+Same as `getComponentMeta`, in a new snapshot of the checker's project.
 
-The returned `ComponentMeta` object contains:
+### `checker.getComponentMetas(filePaths)`
+
+Get the metadata of the default exports of several files in a single snapshot. Returns a `Promise<ComponentMeta[]>`.
+
+### `checker.getExportNames(filePath)`
+
+Same as `getExportNames`, in a new snapshot of the checker's project.
+
+### `checker.close()` / `checker[Symbol.asyncDispose]()`
+
+Stop the TypeScript 7 API process.
+
+The returned `ComponentMeta` object contains plain data that can be serialized as JSON:
 
 ```typescript
 interface ComponentMeta {
@@ -51,34 +88,6 @@ interface ComponentMeta {
 }
 ```
 
-### `checker.getExportNames(filePath)`
-
-Get all export names of a file. Returns a `Promise<string[]>`.
-
-### `checker.updateFile(filePath, content)`
-
-Update file content (for virtual files or live editing). The file must be matched by the tsconfig's `include`.
-
-### `checker.deleteFile(filePath)`
-
-Remove a file from the project, including files on disk.
-
-### `checker.reload()`
-
-Reload the tsconfig.json configuration.
-
-### `checker.clearCache()`
-
-Clear cached file content.
-
-### `checker.getProgram()`
-
-Get the underlying TypeScript 7 `Program` instance. Returns a `Promise`.
-
-### `checker.close()`
-
-Stop the TypeScript 7 API process.
-
 ## Metadata Structures
 
 ### PropertyMeta (Props)
@@ -88,13 +97,12 @@ interface PropertyMeta {
   name: string;
   description: string;      // Read from JSDoc
   type: string;             // Type string
-  default?: string;         // Default value
+  default?: string;         // Default value, as written in the source
   required: boolean;
   global: boolean;          // Whether it's a global prop
   tags: { name: string; text?: string }[];  // JSDoc tags
   schema: PropertyMetaSchema;
-  getDeclarations(): Promise<Declaration[]>;
-  getTypeObject(): Type;
+  declarations: Declaration[];
 }
 ```
 
@@ -108,8 +116,7 @@ interface EventMeta {
   signature: string;
   tags: { name: string; text?: string }[];
   schema: PropertyMetaSchema[];
-  getDeclarations(): Promise<Declaration[]>;
-  getTypeObject(): Type | undefined;
+  declarations: Declaration[];
 }
 ```
 
@@ -122,8 +129,7 @@ interface SlotMeta {
   type: string;
   tags: { name: string; text?: string }[];
   schema: PropertyMetaSchema;
-  getDeclarations(): Promise<Declaration[]>;
-  getTypeObject(): Type;
+  declarations: Declaration[];
 }
 ```
 
@@ -136,8 +142,17 @@ interface ExposeMeta {
   type: string;
   tags: { name: string; text?: string }[];
   schema: PropertyMetaSchema;
-  getDeclarations(): Promise<Declaration[]>;
-  getTypeObject(): Type;
+  declarations: Declaration[];
+}
+```
+
+### Declaration
+
+```typescript
+interface Declaration {
+  file: string;
+  start: number; // UTF-16 offset in the file's source text (for a Vue file, its `.vue` text)
+  end: number;
 }
 ```
 
@@ -148,18 +163,17 @@ interface MetaCheckerOptions {
   schema?: boolean | {
     ignore?: (string | ((name: string, type: Type, typeChecker: Checker) => boolean | Promise<boolean>))[];
   };
-  printer?: PrintNodeOptions;
 }
 ```
 
-`Type`, `Checker` and `PrintNodeOptions` are the types of `typescript/async` from TypeScript 7.
+`Type` and `Checker` are the types of `typescript/async` from TypeScript 7. They are only valid while the query runs.
 
 ### `schema`
 
 Controls whether to parse the schema structure of types. Set to `true` to enable, or pass an object to configure types to ignore.
 
 ```typescript
-const checker = createChecker(tsconfig, {
+await using checker = await createChecker(tsconfig, {
   schema: {
     ignore: ['HTMLElement', (name) => name.startsWith('Internal')],
   },

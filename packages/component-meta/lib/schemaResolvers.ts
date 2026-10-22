@@ -1,5 +1,5 @@
 import type { Node } from 'typescript-7/ast' with { 'resolution-mode': 'import' };
-import type { Checker, NodeHandle, Signature, Symbol, Type } from 'typescript-7/async' with {
+import type { Checker, NodeHandle, Printer, Signature, Symbol, Type } from 'typescript-7/async' with {
 	'resolution-mode': 'import',
 };
 import { resolveDefaultOptionExpression } from './scriptSetup';
@@ -11,8 +11,8 @@ import type {
 	PropertyMeta,
 	PropertyMetaSchema,
 	SlotMeta,
-	TypeScript,
 } from './types';
+import type { TypeScript } from './typescript';
 
 const publicPropsInterfaces = new Set([
 	'PublicProps',
@@ -24,12 +24,11 @@ const publicPropsInterfaces = new Set([
 export interface SchemaResolverContext {
 	ts: TypeScript;
 	checker: Checker;
-	print: (node: Node) => Promise<string>;
+	printer: Printer | undefined;
 	options: MetaCheckerSchemaOptions;
-	deprecatedOptions: { noDeclarations: boolean; rawType: boolean };
 }
 
-export function createSchemaResolvers({ ts, checker, print, options, deprecatedOptions }: SchemaResolverContext) {
+export function createSchemaResolvers({ ts, checker, printer, options }: SchemaResolverContext) {
 	const visited = new Set<number>();
 
 	async function shouldIgnore(name: string, subtype: Type) {
@@ -73,10 +72,6 @@ export function createSchemaResolvers({ ts, checker, print, options, deprecatedO
 		};
 	}
 
-	async function getEagerDeclarations(handles: readonly NodeHandle[]) {
-		return deprecatedOptions.noDeclarations ? [] : await getDeclarations(handles);
-	}
-
 	async function resolveNestedProperties(propSymbol: Symbol, subtype: Type): Promise<PropertyMeta> {
 		let global = false;
 		let _default: string | undefined;
@@ -91,7 +86,7 @@ export function createSchemaResolvers({ ts, checker, print, options, deprecatedO
 					if (ts.isPropertyAssignment(option)) {
 						const key = option.name.getText();
 						if (key === 'default') {
-							_default = await print(resolveDefaultOptionExpression(ts, option.initializer));
+							_default = resolveDefaultOptionExpression(ts, option.initializer).getText();
 						}
 						else if (key === 'required') {
 							if (option.initializer.getText() === 'true') {
@@ -106,7 +101,7 @@ export function createSchemaResolvers({ ts, checker, print, options, deprecatedO
 		const [type, docs, declarations] = await Promise.all([
 			getFullyQualifiedName(subtype),
 			getDocs(propSymbol),
-			getEagerDeclarations(propSymbol.declarations),
+			getDeclarations(propSymbol.declarations),
 		]);
 
 		return {
@@ -118,9 +113,6 @@ export function createSchemaResolvers({ ts, checker, print, options, deprecatedO
 			type,
 			schema: await resolveSchema(subtype, type),
 			declarations,
-			rawType: deprecatedOptions.rawType ? subtype : undefined,
-			getDeclarations: () => getDeclarations(propSymbol.declarations),
-			getTypeObject: () => subtype,
 		};
 	}
 
@@ -145,7 +137,7 @@ export function createSchemaResolvers({ ts, checker, print, options, deprecatedO
 		const [type, docs, declarations] = await Promise.all([
 			getFullyQualifiedName(subtype),
 			getDocs(prop),
-			getEagerDeclarations(prop.declarations),
+			getDeclarations(prop.declarations),
 		]);
 
 		return {
@@ -154,9 +146,6 @@ export function createSchemaResolvers({ ts, checker, print, options, deprecatedO
 			...docs,
 			schema: await resolveSchema(subtype, type),
 			declarations,
-			rawType: deprecatedOptions.rawType ? subtype : undefined,
-			getDeclarations: () => getDeclarations(prop.declarations),
-			getTypeObject: () => subtype,
 		};
 	}
 
@@ -165,7 +154,7 @@ export function createSchemaResolvers({ ts, checker, print, options, deprecatedO
 		const [type, docs, declarations] = await Promise.all([
 			getFullyQualifiedName(subtype),
 			getDocs(expose),
-			getEagerDeclarations(expose.declarations),
+			getDeclarations(expose.declarations),
 		]);
 
 		return {
@@ -174,9 +163,6 @@ export function createSchemaResolvers({ ts, checker, print, options, deprecatedO
 			...docs,
 			schema: await resolveSchema(subtype, type),
 			declarations,
-			rawType: deprecatedOptions.rawType ? subtype : undefined,
-			getDeclarations: () => getDeclarations(expose.declarations),
-			getTypeObject: () => subtype,
 		};
 	}
 
@@ -190,24 +176,20 @@ export function createSchemaResolvers({ ts, checker, print, options, deprecatedO
 			return;
 		}
 
-		let subtype: Type | undefined;
 		let type = '[]';
 		let schema: PropertyMetaSchema[] = [];
 
 		if (argSymbols.length) {
 			const argTypes = await checker.getTypeOfSymbol(argSymbols);
-			subtype = argTypes[0]!;
 			if (argSymbols.length === 1 && call.hasRestParameter) {
-				type = await getFullyQualifiedName(subtype);
-				schema = await resolveSchemas(await getTypeArguments(subtype));
+				type = await getFullyQualifiedName(argTypes[0]!);
+				schema = await resolveSchemas(await getTypeArguments(argTypes[0]!));
 			}
 			else {
 				type = `[${(await Promise.all(argTypes.map(getFullyQualifiedName))).join(', ')}]`;
 				schema = await resolveSchemas(argTypes);
 			}
 		}
-
-		const handles = call.declaration ? [call.declaration] : [];
 
 		return {
 			name: nameType.value,
@@ -217,10 +199,7 @@ export function createSchemaResolvers({ ts, checker, print, options, deprecatedO
 			type,
 			signature: await signatureToString(call),
 			schema,
-			declarations: await getEagerDeclarations(handles),
-			rawType: deprecatedOptions.rawType ? subtype : undefined,
-			getDeclarations: () => getDeclarations(handles),
-			getTypeObject: () => subtype,
+			declarations: await getDeclarations(call.declaration ? [call.declaration] : []),
 		};
 	}
 
@@ -312,8 +291,11 @@ export function createSchemaResolvers({ ts, checker, print, options, deprecatedO
 	}
 
 	async function signatureToString(signature: Signature) {
+		if (!printer) {
+			return '';
+		}
 		const node = await checker.signatureToSignatureDeclaration(signature, ts.SyntaxKind.CallSignature);
-		return node ? await print(node) : '';
+		return node ? await printer.printNode(node, { neverAsciiEscape: true }) : '';
 	}
 
 	async function getFullyQualifiedName(type: Type) {
@@ -349,12 +331,14 @@ export function createSchemaResolvers({ ts, checker, print, options, deprecatedO
 			}
 			return {
 				file: sourceFile.fileName,
-				range: [range.pos, range.end],
+				start: range.pos,
+				end: range.end,
 			};
 		}
 		return {
 			file: sourceFile.fileName,
-			range: [start, node.end],
+			start,
+			end: node.end,
 		};
 	}
 

@@ -1,6 +1,6 @@
 import { names } from '@vue/language-core';
 import type { Node, SourceFile } from 'typescript-7/ast' with { 'resolution-mode': 'import' };
-import type { Printer, Project, Type } from 'typescript-7/async' with { 'resolution-mode': 'import' };
+import type { Project } from 'typescript-7/async' with { 'resolution-mode': 'import' };
 import {
 	inferComponentEmit,
 	inferComponentExposed,
@@ -10,30 +10,57 @@ import {
 } from './helpers';
 import { createSchemaResolvers, type SchemaResolverContext } from './schemaResolvers';
 import { getDefaultsFromScriptSetup } from './scriptSetup';
-import type { ComponentMeta, EventMeta, MetaCheckerOptions, PropertyMeta, TypeScript } from './types';
+import type { ComponentMeta, ComponentMetaOptions, EventMeta, PropertyMeta } from './types';
+import { loadTypeScript, type TypeScript } from './typescript';
 
 const vnodeEventRE = /^onVnode[A-Z]/;
 
+/** The names of a file's exports. Throws if the file is not part of `project`. */
+export async function getExportNames(project: Project, fileName: string): Promise<string[]> {
+	return (await getExports(project, fileName)).map(e => e.name);
+}
+
+/** The metadata of a component exported from a file. Throws if the file or the export is not found in `project`. */
 export async function getComponentMeta(
+	project: Project,
+	fileName: string,
+	exportName = 'default',
+	options: ComponentMetaOptions = {},
+): Promise<ComponentMeta> {
+	const ts = await loadTypeScript();
+	const symbol = (await getExports(project, fileName)).find(e => e.name === exportName);
+	const declaration = await symbol?.valueDeclaration?.resolve();
+	const componentNode = declaration && (
+		ts.isExportAssignment(declaration)
+			? declaration.expression
+			: ts.isVariableDeclaration(declaration)
+			? declaration.initializer
+			: undefined
+	);
+	if (!componentNode) {
+		throw new Error(`Export '${exportName}' not found in '${fileName}'.`);
+	}
+	return await resolveComponentMeta(ts, project, componentNode, options);
+}
+
+async function getExports(project: Project, fileName: string) {
+	const { checker, program } = project;
+	fileName = fileName.replace(/\\/g, '/');
+	if (!await program.getSourceFile(fileName)) {
+		throw new Error(`'${fileName}' is not part of the project.`);
+	}
+	const moduleSymbol = await checker.getSymbolOfSourceFile(fileName);
+	return moduleSymbol ? await checker.getExportsOfModule(moduleSymbol) : [];
+}
+
+async function resolveComponentMeta(
 	ts: TypeScript,
 	project: Project,
-	printer: Printer,
 	componentNode: Node,
-	componentType: Type,
-	checkerOptions: MetaCheckerOptions = {},
+	options: ComponentMetaOptions,
 ): Promise<ComponentMeta> {
 	const { checker } = project;
-	const context: SchemaResolverContext = {
-		ts,
-		checker,
-		print: node => printer.printNode(node, { ...checkerOptions.printer, neverAsciiEscape: true }),
-		options: checkerOptions.schema ?? false,
-		deprecatedOptions: {
-			noDeclarations: checkerOptions.noDeclarations ?? true,
-			rawType: checkerOptions.rawType ?? false,
-		},
-	};
-
+	const componentType = await checker.getTypeAtLocation(componentNode);
 	const componentSymbol = await checker.getSymbolAtLocation(componentNode);
 	if (componentSymbol) {
 		const symbol = componentSymbol.flags & ts.SymbolFlags.Alias
@@ -45,6 +72,12 @@ export async function getComponentMeta(
 		}
 	}
 	const componentFile = componentNode.getSourceFile();
+	const context: SchemaResolverContext = {
+		ts,
+		checker,
+		printer: options.printer,
+		options: options.schema ?? false,
+	};
 
 	const [type, events, slots, exposed, description] = await Promise.all([
 		inferComponentType(componentType),
@@ -75,12 +108,10 @@ export async function getComponentMeta(
 		const eventProps = new Set(
 			events.map(event => `on${event.name.charAt(0).toUpperCase()}${event.name.slice(1)}`),
 		);
-		const [props, defaults] = await Promise.all([
-			Promise.all(
-				properties.map((prop, i) => createSchemaResolvers(context).resolveNestedProperties(prop, types[i]!)),
-			),
-			getDefaultsFromScriptSetup(ts, context.print, componentFile),
-		]);
+		const props = await Promise.all(
+			properties.map((prop, i) => createSchemaResolvers(context).resolveNestedProperties(prop, types[i]!)),
+		);
+		const defaults = getDefaultsFromScriptSetup(ts, componentFile);
 		const result: PropertyMeta[] = props.filter(prop => !eventProps.has(prop.name));
 
 		for (const prop of result) {

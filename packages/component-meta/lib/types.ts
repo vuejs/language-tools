@@ -1,15 +1,12 @@
-import type { Checker, PrintNodeOptions, Type } from 'typescript-7/async' with { 'resolution-mode': 'import' };
+import type { Checker, Printer, Type } from 'typescript-7/async' with { 'resolution-mode': 'import' };
 
-/** The runtime values used from a TypeScript 7 installation: its `typescript/ast` and `typescript/async` modules merged. */
-export type TypeScript =
-	& typeof import('typescript-7/ast', { with: { 'resolution-mode': 'import' }})
-	& typeof import('typescript-7/async', { with: { 'resolution-mode': 'import' }});
+export type ComponentMetaChecker = Awaited<ReturnType<typeof import('../index')['createChecker']>>;
 
-export type ComponentMetaChecker = Awaited<ReturnType<typeof import('./checker')['createCheckerBase']>>;
-
+/** A declaration's range in UTF-16 offsets of the file's source text (for a Vue file, its `.vue` text). */
 export interface Declaration {
 	file: string;
-	range: [number, number];
+	start: number;
+	end: number;
 }
 
 export interface ComponentMeta {
@@ -37,16 +34,7 @@ export interface PropertyMeta {
 	required: boolean;
 	tags: { name: string; text?: string }[];
 	schema: PropertyMetaSchema;
-	/**
-	 * @deprecated use `getDeclarations()` instead
-	 */
 	declarations: Declaration[];
-	/**
-	 * @deprecated use `getTypeObject()` instead
-	 */
-	rawType?: Type;
-	getDeclarations(): Promise<Declaration[]>;
-	getTypeObject(): Type;
 }
 
 export interface EventMeta {
@@ -56,16 +44,7 @@ export interface EventMeta {
 	signature: string;
 	tags: { name: string; text?: string }[];
 	schema: PropertyMetaSchema[];
-	/**
-	 * @deprecated use `getDeclarations()` instead
-	 */
 	declarations: Declaration[];
-	/**
-	 * @deprecated use `getTypeObject()` instead
-	 */
-	rawType?: Type;
-	getDeclarations(): Promise<Declaration[]>;
-	getTypeObject(): Type | undefined;
 }
 
 export interface SlotMeta {
@@ -74,16 +53,7 @@ export interface SlotMeta {
 	type: string;
 	tags: { name: string; text?: string }[];
 	schema: PropertyMetaSchema;
-	/**
-	 * @deprecated use `getDeclarations()` instead
-	 */
 	declarations: Declaration[];
-	/**
-	 * @deprecated use `getTypeObject()` instead
-	 */
-	rawType?: Type;
-	getDeclarations(): Promise<Declaration[]>;
-	getTypeObject(): Type;
 }
 
 export interface ExposeMeta {
@@ -92,16 +62,7 @@ export interface ExposeMeta {
 	type: string;
 	tags: { name: string; text?: string }[];
 	schema: PropertyMetaSchema;
-	/**
-	 * @deprecated use `getDeclarations()` instead
-	 */
 	declarations: Declaration[];
-	/**
-	 * @deprecated use `getTypeObject()` instead
-	 */
-	rawType?: Type;
-	getDeclarations(): Promise<Declaration[]>;
-	getTypeObject(): Type;
 }
 
 export type PropertyMetaSchema =
@@ -129,17 +90,12 @@ export type MetaCheckerSchemaOptions = boolean | {
 
 export interface MetaCheckerOptions {
 	schema?: MetaCheckerSchemaOptions;
-	printer?: PrintNodeOptions;
+}
+
+export interface ComponentMetaOptions extends MetaCheckerOptions {
 	/**
-	 * @deprecated No longer needed, this is default behavior now
+	 * The `printer` of the `API` that created the project's snapshot, used to print event signatures.
+	 * Without it, `EventMeta.signature` and the `type` of `event` schemas are empty strings.
 	 */
-	noDeclarations?: boolean;
-	/**
-	 * @deprecated No longer needed, this is default behavior now
-	 */
-	forceUseTs?: boolean;
-	/**
-	 * @deprecated No longer needed, use `getTypeObject()` instead
-	 */
-	rawType?: boolean;
+	printer?: Printer;
 }
