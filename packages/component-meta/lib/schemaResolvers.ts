@@ -11,8 +11,8 @@ import type {
 	PropertyMeta,
 	PropertyMetaSchema,
 	SlotMeta,
+	TypeScript,
 } from './types';
-import type { TypeScript } from './typescript';
 
 const publicPropsInterfaces = new Set([
 	'PublicProps',
@@ -24,7 +24,7 @@ const publicPropsInterfaces = new Set([
 export interface SchemaResolverContext {
 	ts: TypeScript;
 	checker: Checker;
-	printer: Printer | undefined;
+	printer: Printer;
 	options: MetaCheckerSchemaOptions;
 }
 
@@ -291,9 +291,6 @@ export function createSchemaResolvers({ ts, checker, printer, options }: SchemaR
 	}
 
 	async function signatureToString(signature: Signature) {
-		if (!printer) {
-			return '';
-		}
 		const node = await checker.signatureToSignatureDeclaration(signature, ts.SyntaxKind.CallSignature);
 		return node ? await printer.printNode(node, { neverAsciiEscape: true }) : '';
 	}

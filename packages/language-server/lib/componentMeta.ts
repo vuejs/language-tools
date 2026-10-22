@@ -1,26 +1,23 @@
 import { names, tsCodegen, type VueVirtualCode } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { getSelfComponentName } from '@vue/typescript-plugin/lib/requests/utils';
-import type { TypeScript } from 'vue-component-meta/lib/typescript';
+import type { TypeScript } from 'vue-component-meta';
 
 type Node = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).Node;
 type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
+type TypeNode = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).TypeNode;
 type Checker = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Checker;
 type Symbol = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Symbol;
+type Type = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Type;
 
-export interface ComponentExport {
-	fileName: string;
-	exportName: string;
-}
-
-/** The export of the component that `tag` refers to in a Vue file's template. */
-export async function getComponentExport(
+/** The type of the component that `tag` refers to in a Vue file's template, and its declaration when known. */
+export async function getComponentType(
 	ts: TypeScript,
 	checker: Checker,
 	sourceFile: SourceFile,
 	virtualCode: VueVirtualCode,
 	tag: string,
-): Promise<ComponentExport | undefined> {
+): Promise<{ node: Node | undefined; type: Type } | undefined> {
 	const testNames = new Set([
 		tag,
 		camelize(tag),
@@ -31,67 +28,63 @@ export async function getComponentExport(
 	for (const importedName of codegen?.getImportedComponents() ?? []) {
 		if (testNames.has(importedName)) {
 			const node = searchDefaultImportIdentifier(ts, sourceFile, importedName);
-			const symbol = node && await checker.getSymbolAtLocation(node);
-			if (symbol) {
-				return await findExport(ts, checker, symbol);
+			if (node) {
+				return {
+					node,
+					type: await checker.getTypeAtLocation(node),
+				};
 			}
 		}
 	}
 
 	const selfName = getSelfComponentName(virtualCode);
-	const self = { fileName: sourceFile.fileName, exportName: 'default' };
-	const components = findNode(
-		sourceFile,
-		node => ts.isVariableDeclaration(node) && node.name.getText() === names.components,
-	);
+	const components = findVariable(ts, sourceFile, names.components);
 	if (components) {
-		const type = await checker.getTypeAtLocation(components);
 		const [firstName, ...restNames] = tag.split('.') as [string, ...string[]];
-		let componentSymbol = await type.getProperty(firstName)
-			?? await type.getProperty(camelize(firstName))
-			?? await type.getProperty(capitalize(camelize(firstName)));
-		for (const name of restNames) {
-			componentSymbol = componentSymbol
-				&& await (await checker.getTypeOfSymbolAtLocation(componentSymbol, components)).getProperty(name);
+		const componentsType = await checker.getTypeAtLocation(components);
+		let symbol = await componentsType.getProperty(firstName)
+			?? await componentsType.getProperty(camelize(firstName))
+			?? await componentsType.getProperty(capitalize(camelize(firstName)));
+		if (!symbol && restNames.length) {
+			// namespaced tags (e.g. `<Foo.Bar>`) refer to bindings of the script setup scope
+			symbol = await checker.resolveName(firstName, ts.SymbolFlags.Value, components);
 		}
-		if (componentSymbol) {
-			const target = await getRegisteredComponent(ts, checker, componentSymbol);
-			return target && await findExport(ts, checker, target);
+		for (const name of restNames) {
+			symbol = symbol && await (await getTypeOfSymbol(ts, checker, symbol, components)).getProperty(name);
+		}
+		if (symbol) {
+			return {
+				node: await getComponentDeclaration(ts, checker, symbol),
+				type: await getTypeOfSymbol(ts, checker, symbol, components),
+			};
 		}
 		else if (selfName === capitalize(camelize(tag))) {
-			return self;
+			return getSelf();
 		}
 	}
 
 	if (testNames.has(selfName)) {
-		return self;
+		return getSelf();
+	}
+
+	async function getSelf() {
+		const node = findVariable(ts, sourceFile, names.export);
+		return node && {
+			node,
+			type: await checker.getTypeAtLocation(node),
+		};
 	}
 }
 
-/** The symbol that a `__VLS_components` property is registered with. */
-async function getRegisteredComponent(ts: TypeScript, checker: Checker, property: Symbol) {
-	for (const declaration of await Promise.all(property.declarations.map(handle => handle.resolve()))) {
-		if (!declaration) {
-			continue;
-		}
-		if (ts.isShorthandPropertyAssignment(declaration)) {
-			return await checker.getShorthandAssignmentValueSymbol(declaration);
-		}
-		if (ts.isPropertyAssignment(declaration)) {
-			return await checker.getSymbolAtLocation(declaration.initializer);
-		}
-		if (
-			(ts.isPropertySignatureDeclaration(declaration) || ts.isPropertyDeclaration(declaration))
-			&& declaration.type
-			&& ts.isTypeQueryNode(declaration.type)
-		) {
-			return await checker.getSymbolAtLocation(declaration.type.exprName);
-		}
+async function getTypeOfSymbol(ts: TypeScript, checker: Checker, symbol: Symbol, location: Node) {
+	if (symbol.flags & ts.SymbolFlags.Alias) {
+		symbol = await checker.getAliasedSymbol(symbol);
 	}
+	return await checker.getTypeOfSymbolAtLocation(symbol, location);
 }
 
-/** The module export that `symbol` (or the symbol it aliases) is exported as. */
-async function findExport(ts: TypeScript, checker: Checker, symbol: Symbol): Promise<ComponentExport | undefined> {
+/** Follows aliases and the registrations of `__VLS_components` to the declaration of a component. */
+async function getComponentDeclaration(ts: TypeScript, checker: Checker, symbol: Symbol): Promise<Node | undefined> {
 	if (symbol.flags & ts.SymbolFlags.Alias) {
 		symbol = await checker.getAliasedSymbol(symbol);
 	}
@@ -99,14 +92,39 @@ async function findExport(ts: TypeScript, checker: Checker, symbol: Symbol): Pro
 	if (!declaration) {
 		return;
 	}
-	const fileName = declaration.getSourceFile().fileName;
-	const moduleSymbol = await checker.getSymbolOfSourceFile(fileName);
-	for (const exported of moduleSymbol ? await checker.getExportsOfModule(moduleSymbol) : []) {
-		const target = exported.flags & ts.SymbolFlags.Alias ? await checker.getAliasedSymbol(exported) : exported;
-		if (target.id === symbol.id) {
-			return { fileName, exportName: exported.name };
-		}
+	let target: Symbol | undefined;
+	if (ts.isShorthandPropertyAssignment(declaration)) {
+		target = await checker.getShorthandAssignmentValueSymbol(declaration);
 	}
+	else if (ts.isPropertyAssignment(declaration)) {
+		target = await checker.getSymbolAtLocation(declaration.initializer);
+	}
+	else if (
+		(ts.isPropertySignatureDeclaration(declaration) || ts.isPropertyDeclaration(declaration))
+		&& declaration.type
+	) {
+		target = await getSymbolOfTypeNode(ts, checker, declaration.type);
+	}
+	return target ? await getComponentDeclaration(ts, checker, target) : declaration;
+}
+
+/** The symbol whose type `typeof X` or `typeof import('./X.vue')['default']` refers to. */
+async function getSymbolOfTypeNode(ts: TypeScript, checker: Checker, node: TypeNode) {
+	if (ts.isTypeQueryNode(node)) {
+		return await checker.getSymbolAtLocation(node.exprName);
+	}
+	if (
+		ts.isIndexedAccessTypeNode(node)
+		&& ts.isLiteralTypeNode(node.indexType)
+		&& ts.isStringLiteral(node.indexType.literal)
+	) {
+		const objectType = await checker.getTypeFromTypeNode(node.objectType);
+		return await objectType.getProperty(node.indexType.literal.text);
+	}
+}
+
+function findVariable(ts: TypeScript, sourceFile: SourceFile, name: string) {
+	return findNode(sourceFile, node => ts.isVariableDeclaration(node) && node.name.getText() === name);
 }
 
 function searchDefaultImportIdentifier(ts: TypeScript, sourceFile: SourceFile, name: string) {

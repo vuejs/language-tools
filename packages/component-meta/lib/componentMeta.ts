@@ -1,6 +1,6 @@
 import { names } from '@vue/language-core';
 import type { Node, SourceFile } from 'typescript-7/ast' with { 'resolution-mode': 'import' };
-import type { Project } from 'typescript-7/async' with { 'resolution-mode': 'import' };
+import type { Project, Type } from 'typescript-7/async' with { 'resolution-mode': 'import' };
 import {
 	inferComponentEmit,
 	inferComponentExposed,
@@ -10,8 +10,7 @@ import {
 } from './helpers';
 import { createSchemaResolvers, type SchemaResolverContext } from './schemaResolvers';
 import { getDefaultsFromScriptSetup } from './scriptSetup';
-import type { ComponentMeta, ComponentMetaOptions, EventMeta, PropertyMeta } from './types';
-import { loadTypeScript, type TypeScript } from './typescript';
+import type { ComponentMeta, ComponentMetaContext, EventMeta, MetaCheckerOptions, PropertyMeta } from './types';
 
 const vnodeEventRE = /^onVnode[A-Z]/;
 
@@ -22,25 +21,20 @@ export async function getExportNames(project: Project, fileName: string): Promis
 
 /** The metadata of a component exported from a file. Throws if the file or the export is not found in `project`. */
 export async function getComponentMeta(
+	context: ComponentMetaContext,
 	project: Project,
 	fileName: string,
 	exportName = 'default',
-	options: ComponentMetaOptions = {},
+	options: MetaCheckerOptions = {},
 ): Promise<ComponentMeta> {
-	const ts = await loadTypeScript();
 	const symbol = (await getExports(project, fileName)).find(e => e.name === exportName);
 	const declaration = await symbol?.valueDeclaration?.resolve();
-	const componentNode = declaration && (
-		ts.isExportAssignment(declaration)
-			? declaration.expression
-			: ts.isVariableDeclaration(declaration)
-			? declaration.initializer
-			: undefined
-	);
+	const componentNode = declaration && getComponentExpression(context, declaration);
 	if (!componentNode) {
 		throw new Error(`Export '${exportName}' not found in '${fileName}'.`);
 	}
-	return await resolveComponentMeta(ts, project, componentNode, options);
+	const componentType = await project.checker.getTypeAtLocation(componentNode);
+	return await getComponentMetaOfType(context, project, componentType, componentNode, options);
 }
 
 async function getExports(project: Project, fileName: string) {
@@ -53,29 +47,32 @@ async function getExports(project: Project, fileName: string) {
 	return moduleSymbol ? await checker.getExportsOfModule(moduleSymbol) : [];
 }
 
-async function resolveComponentMeta(
-	ts: TypeScript,
+function getComponentExpression({ ts }: ComponentMetaContext, node: Node) {
+	return ts.isExportAssignment(node)
+		? node.expression
+		: ts.isVariableDeclaration(node)
+		? node.initializer
+		: node;
+}
+
+/**
+ * The metadata of a component of type `componentType`. `componentNode` is the component's declaration, or a node
+ * referring to it, from which the name, description and script setup defaults are read.
+ */
+export async function getComponentMetaOfType(
+	context: ComponentMetaContext,
 	project: Project,
-	componentNode: Node,
-	options: ComponentMetaOptions,
+	componentType: Type,
+	componentNode: Node | undefined,
+	options: MetaCheckerOptions = {},
 ): Promise<ComponentMeta> {
+	const { ts, printer } = context;
 	const { checker } = project;
-	const componentType = await checker.getTypeAtLocation(componentNode);
-	const componentSymbol = await checker.getSymbolAtLocation(componentNode);
-	if (componentSymbol) {
-		const symbol = componentSymbol.flags & ts.SymbolFlags.Alias
-			? await checker.getAliasedSymbol(componentSymbol)
-			: await componentType.getSymbol();
-		const declaration = await (symbol?.valueDeclaration ?? symbol?.declarations[0])?.resolve();
-		if (declaration) {
-			componentNode = declaration;
-		}
-	}
-	const componentFile = componentNode.getSourceFile();
-	const context: SchemaResolverContext = {
+	const declaration = componentNode && await resolveDeclaration(componentNode);
+	const schemaContext: SchemaResolverContext = {
 		ts,
 		checker,
-		printer: options.printer,
+		printer,
 		options: options.schema ?? false,
 	};
 
@@ -109,9 +106,12 @@ async function resolveComponentMeta(
 			events.map(event => `on${event.name.charAt(0).toUpperCase()}${event.name.slice(1)}`),
 		);
 		const props = await Promise.all(
-			properties.map((prop, i) => createSchemaResolvers(context).resolveNestedProperties(prop, types[i]!)),
+			properties.map((prop, i) => createSchemaResolvers(schemaContext).resolveNestedProperties(prop, types[i]!)),
 		);
-		const defaults = getDefaultsFromScriptSetup(ts, componentFile);
+		// script setup defaults belong to the component a Vue file exports, not to other components declared in it
+		const defaults = declaration && isVueFileExport(declaration)
+			? getDefaultsFromScriptSetup(ts, declaration.getSourceFile())
+			: new Map<string, string>();
 		const result: PropertyMeta[] = props.filter(prop => !eventProps.has(prop.name));
 
 		for (const prop of result) {
@@ -130,7 +130,9 @@ async function resolveComponentMeta(
 			return [];
 		}
 		const events = await Promise.all(
-			(await emitType.getCallSignatures()).map(call => createSchemaResolvers(context).resolveEventSignature(call)),
+			(await emitType.getCallSignatures()).map(call =>
+				createSchemaResolvers(schemaContext).resolveEventSignature(call)
+			),
 		);
 		return events.filter(event => !!event);
 	}
@@ -141,7 +143,7 @@ async function resolveComponentMeta(
 			return [];
 		}
 		return await Promise.all(
-			(await slotsType.getProperties()).map(prop => createSchemaResolvers(context).resolveSlotProperties(prop)),
+			(await slotsType.getProperties()).map(prop => createSchemaResolvers(schemaContext).resolveSlotProperties(prop)),
 		);
 	}
 
@@ -162,15 +164,34 @@ async function resolveComponentMeta(
 			&& prop.name !== '$slots'
 		);
 		return await Promise.all(
-			properties.map(prop => createSchemaResolvers(context).resolveExposedProperties(prop)),
+			properties.map(prop => createSchemaResolvers(schemaContext).resolveExposedProperties(prop)),
 		);
 	}
 
+	async function resolveDeclaration(node: Node) {
+		const componentSymbol = await checker.getSymbolAtLocation(node);
+		if (componentSymbol) {
+			const symbol = componentSymbol.flags & ts.SymbolFlags.Alias
+				? await checker.getAliasedSymbol(componentSymbol)
+				: await componentType.getSymbol();
+			node = await (symbol?.valueDeclaration ?? symbol?.declarations[0])?.resolve() ?? node;
+		}
+		return getComponentExpression(context, node);
+	}
+
+	function isVueFileExport(node: Node) {
+		return node.getSourceFile().text.slice(node.pos, node.end).includes(names.export);
+	}
+
 	function getName() {
-		let decl = componentNode;
+		if (!declaration) {
+			return;
+		}
+		const componentFile = declaration.getSourceFile();
+		let decl = declaration;
 
 		// const __VLS_export = ...
-		if (componentFile.text.slice(decl.pos, decl.end).includes(names.export)) {
+		if (isVueFileExport(decl)) {
 			for (const statement of componentFile.statements) {
 				if (ts.isVariableStatement(statement)) {
 					for (const { name, initializer } of statement.declarationList.declarations) {
@@ -186,13 +207,16 @@ async function resolveComponentMeta(
 	}
 
 	async function getDescription() {
-		for (const jsDoc of ts.getJSDocCommentsAndTags(componentNode)) {
+		if (!declaration) {
+			return;
+		}
+		for (const jsDoc of ts.getJSDocCommentsAndTags(declaration)) {
 			if (ts.isJSDoc(jsDoc) && jsDoc.comment) {
 				return ts.getTextOfJSDocComment(jsDoc.comment);
 			}
 		}
 
-		const symbol = await checker.getSymbolAtLocation(componentNode);
+		const symbol = await checker.getSymbolAtLocation(declaration);
 		if (symbol) {
 			return await checker.getDocumentationCommentOfSymbol(symbol) || undefined;
 		}

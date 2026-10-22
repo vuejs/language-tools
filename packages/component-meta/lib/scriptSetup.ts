@@ -2,7 +2,7 @@ import { names } from '@vue/language-core';
 import type { Expression, Node, ObjectLiteralExpression, SourceFile } from 'typescript-7/ast' with {
 	'resolution-mode': 'import',
 };
-import type { TypeScript } from './typescript';
+import type { TypeScript } from './types';
 
 export function getDefaultsFromScriptSetup(ts: TypeScript, sourceFile: SourceFile) {
 	const result = new Map<string, string>();

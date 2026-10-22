@@ -37,7 +37,40 @@ const foo = 1;
 });
 
 test('rich hover of a component tag shows its meta from the TypeScript language server', async () => {
-	const fileName = path.join(testWorkspacePath, 'hoverComponentMeta', 'Parent.vue');
+	const value = await getRichHover('Parent.vue', 'Child');
+
+	expect(value).toContain('label');
+	expect(value).toContain('The label');
+	expect(value).toContain(`<code>'hello'</code>`);
+	expect(value).toContain('change');
+});
+
+test('rich hover of a global component declared with typeof import()', async () => {
+	const value = await getRichHover('ParentGlobal.vue', 'GlobalChild');
+
+	expect(value).toContain('The label');
+	expect(value).toContain(`<code>'hello'</code>`);
+	expect(value).toContain('change');
+});
+
+test('rich hover of a namespaced component', async () => {
+	const value = await getRichHover('ParentNamespace.vue', 'Foo.Bar');
+
+	expect(value).toContain('The label');
+	expect(value).toContain(`<code>'hello'</code>`);
+	expect(value).toContain('change');
+});
+
+test('rich hover of a component that is not exported', async () => {
+	const value = await getRichHover('ParentLocal.vue', 'Local');
+
+	expect(value).toContain('The local label');
+	expect(value).toContain(`<code>'local'</code>`);
+	expect(value).toContain('change');
+});
+
+async function getRichHover(file: string, tag: string) {
+	const fileName = path.join(testWorkspacePath, 'hoverComponentMeta', file);
 	// The TypeScript language server reads the file from disk, so the document must match it.
 	const content = fs.readFileSync(fileName, 'utf8');
 
@@ -46,17 +79,13 @@ test('rich hover of a component tag shows its meta from the TypeScript language 
 	try {
 		const hover = await server.vueserver.sendHoverRequest(
 			document.uri,
-			document.positionAt(content.indexOf('<Child') + '<Ch'.length),
+			document.positionAt(content.indexOf('<' + tag) + 2),
 		);
 		const contents = hover?.contents as { kind: string; value: string } | undefined;
-
 		expect(contents?.kind).toBe('markdown');
-		expect(contents?.value).toContain('label');
-		expect(contents?.value).toContain('The label');
-		expect(contents?.value).toContain(`<code>'hello'</code>`);
-		expect(contents?.value).toContain('change');
+		return contents?.value;
 	}
 	finally {
 		await server.close(document.uri);
 	}
-});
+}

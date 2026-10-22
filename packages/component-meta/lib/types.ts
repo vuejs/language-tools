@@ -1,5 +1,15 @@
 import type { Checker, Printer, Type } from 'typescript-7/async' with { 'resolution-mode': 'import' };
 
+export type TypeScript =
+	& typeof import('typescript-7/ast', { with: { 'resolution-mode': 'import' }})
+	& typeof import('typescript-7/async', { with: { 'resolution-mode': 'import' }});
+
+/** The TypeScript 7 module and the printer of the `API` instance that created the project's snapshot. */
+export interface ComponentMetaContext {
+	ts: TypeScript;
+	printer: Printer;
+}
+
 export type ComponentMetaChecker = Awaited<ReturnType<typeof import('../index')['createChecker']>>;
 
 /** A declaration's range in UTF-16 offsets of the file's source text (for a Vue file, its `.vue` text). */
@@ -90,12 +100,4 @@ export type MetaCheckerSchemaOptions = boolean | {
 
 export interface MetaCheckerOptions {
 	schema?: MetaCheckerSchemaOptions;
-}
-
-export interface ComponentMetaOptions extends MetaCheckerOptions {
-	/**
-	 * The `printer` of the `API` that created the project's snapshot, used to print event signatures.
-	 * Without it, `EventMeta.signature` and the `type` of `event` schemas are empty strings.
-	 */
-	printer?: Printer;
 }

@@ -34,25 +34,29 @@ Every query reads the project from disk into a new snapshot that is released whe
 ### Use an existing TypeScript 7 project
 
 ```typescript
-import { getComponentMeta, getExportNames } from 'vue-component-meta';
+import * as ts from 'typescript/async';
+import * as tsAst from 'typescript/ast';
+import { getComponentMeta } from 'vue-component-meta';
 
+const api = new ts.API({ cwd });
+const context = { ts: { ...tsAst, ...ts }, printer: api.printer };
 const snapshot = await api.createSnapshot({ openProjects: [tsconfig] });
 try {
   const project = snapshot.getConfiguredProject(tsconfig)!;
-  const meta = await getComponentMeta(project, '/path/to/MyComponent.vue', 'default', { printer: api.printer });
+  const meta = await getComponentMeta(context, project, '/path/to/MyComponent.vue');
 }
 finally {
   await snapshot.dispose();
 }
 ```
 
-`getComponentMeta` and `getExportNames` take a `Project` of the TypeScript 7 API; the caller owns the snapshot of the project.
+`getComponentMeta` and `getExportNames` take a `Project` of the TypeScript 7 API; the caller owns the snapshot of the project. `getComponentMeta` also takes a context of the same TypeScript 7 installation: its modules (`typescript/ast` and `typescript/async`, merged) and the `printer` of the `API` that created the snapshot.
 
 ## API
 
-### `getComponentMeta(project, filePath, exportName?, options?)`
+### `getComponentMeta(context, project, filePath, exportName?, options?)`
 
-Get the metadata of a component exported from a file of `project`. `exportName` defaults to `'default'`. Returns a `Promise<ComponentMeta>` and rejects if the file is not part of the project or has no such export. `options` accepts the checker options and `printer`, the `printer` of the `API` that created the snapshot; without it, `EventMeta.signature` and the `type` of `event` schemas are empty strings.
+Get the metadata of a component exported from a file of `project`. `context` is `{ ts, printer }` as above, `exportName` defaults to `'default'`, and `options` are the checker options. Returns a `Promise<ComponentMeta>` and rejects if the file is not part of the project or has no such export.
 
 ### `getExportNames(project, filePath)`
 

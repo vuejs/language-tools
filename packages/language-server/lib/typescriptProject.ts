@@ -2,9 +2,9 @@ import type { VueVirtualCode } from '@vue/language-core';
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-import { type ComponentMeta, getComponentMeta } from 'vue-component-meta';
-import type { TypeScript } from 'vue-component-meta/lib/typescript';
-import { getComponentExport } from './componentMeta';
+import type { ComponentMeta, ComponentMetaContext, TypeScript } from 'vue-component-meta';
+import { getComponentMetaOfType } from 'vue-component-meta/lib/componentMeta';
+import { getComponentType } from './componentMeta';
 
 /** An edit in UTF-16 offsets of the file's own text (for a content-mapped file, its source text). */
 export interface TextEdit {
@@ -53,6 +53,7 @@ export async function connectTypeScriptProjectResolver(
 		...await import(pathToFileURL(require.resolve(`${name}/async`)).href),
 	};
 	const api = await ts.API.fromLSPConnection({ pipe });
+	const context: ComponentMetaContext = { ts, printer: api.printer };
 	const projects = new Map<string, Promise<TypeScriptProject | undefined>>();
 
 	async function openSnapshot(fileName: string) {
@@ -109,9 +110,8 @@ export async function connectTypeScriptProjectResolver(
 				const project = await snapshot.getDefaultProjectForFile(fileName);
 				const sourceFile = await project?.program.getSourceFile(fileName);
 				const component = sourceFile
-					&& await getComponentExport(ts, project!.checker, sourceFile, virtualCode, tag);
-				return component
-					&& await getComponentMeta(project!, component.fileName, component.exportName, { printer: api.printer });
+					&& await getComponentType(ts, project!.checker, sourceFile, virtualCode, tag);
+				return component && await getComponentMetaOfType(context, project!, component.type, component.node);
 			}
 			finally {
 				await snapshot.dispose();

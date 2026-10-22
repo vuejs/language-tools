@@ -9,6 +9,7 @@ import {
 	type MetaCheckerOptions,
 	TypeMeta,
 } from '..';
+import { getComponentMetaOfType } from '../lib/componentMeta';
 
 const checkerOptions: MetaCheckerOptions = {
 	schema: { ignore: ['MyIgnoredNestedProps'] },
@@ -1801,21 +1802,31 @@ describe('checker', () => {
 describe('project', async () => {
 	const tsconfig = path.join(workspace, 'tsconfig.json').replace(/\\/g, '/');
 	const eventsPath = path.join(workspace, 'reference-type-events/component.vue');
-	const { API } = await import('typescript-7/async');
+	const ts = { ...await import('typescript-7/ast'), ...await import('typescript-7/async') };
 
-	test('getComponentMeta / getExportNames', async () => {
+	test('getComponentMeta / getExportNames / getComponentMetaOfType', async () => {
 		await using checker = await createChecker(tsconfig, checkerOptions);
-		const api = new API({ cwd: workspace, runExternalCode: true });
+		const api = new ts.API({ cwd: workspace, runExternalCode: true });
+		const context = { ts, printer: api.printer };
 		const snapshot = await api.createSnapshot({ openProjects: [tsconfig] });
 		try {
 			const project = snapshot.getConfiguredProject(tsconfig)!;
 			expect(await getExportNames(project, eventsPath)).toEqual(['default']);
-			expect(await getComponentMeta(project, eventsPath, 'default', { ...checkerOptions, printer: api.printer }))
-				.toEqual(await checker.getComponentMeta(eventsPath));
 
-			const withoutPrinter = await getComponentMeta(project, eventsPath, 'default', checkerOptions);
-			expect(withoutPrinter.events.length).toBeGreaterThan(0);
-			expect(withoutPrinter.events.every(event => event.signature === '')).toBe(true);
+			const meta = await getComponentMeta(context, project, eventsPath, 'default', checkerOptions);
+			expect(meta).toEqual(await checker.getComponentMeta(eventsPath));
+			expect(meta.events.length).toBeGreaterThan(0);
+			expect(meta.events.every(event => event.signature)).toBe(true);
+
+			// a component known only by its type has no declaration to read the name, description and defaults from
+			const moduleSymbol = await project.checker.getSymbolOfSourceFile(eventsPath.replace(/\\/g, '/'));
+			const defaultExport = await project.checker.getMemberInModuleExports(moduleSymbol!, 'default');
+			const type = await project.checker.getTypeOfSymbol(defaultExport!);
+			expect(await getComponentMetaOfType(context, project, type, undefined, checkerOptions)).toEqual({
+				...meta,
+				name: undefined,
+				description: undefined,
+			});
 		}
 		finally {
 			await snapshot.dispose();

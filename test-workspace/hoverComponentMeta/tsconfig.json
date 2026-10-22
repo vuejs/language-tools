@@ -3,5 +3,5 @@
 	"contentMappers": [
 		{ "package": "@vue/content-mapper", "extensions": [".vue"] }
 	],
-	"include": ["*.vue"]
+	"include": ["*.vue", "*.ts"]
 }
