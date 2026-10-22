@@ -1,4 +1,4 @@
-import type { Checker, Type } from 'typescript-7/async' with { 'resolution-mode': 'import' };
+import type { Checker, Type } from 'typescript/async' with { 'resolution-mode': 'import' };
 
 export async function inferComponentType(componentType: Type) {
 	if ((await componentType.getConstructSignatures()).length) {

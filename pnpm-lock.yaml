@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  typescript: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+  typescript@<7: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
 
 importers:
 
@@ -83,9 +83,6 @@ importers:
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
-      typescript-7:
-        specifier: npm:typescript@7.1.0-beta
-        version: typescript@7.1.0-beta
     devDependencies:
       '@types/node':
         specifier: ^26.0.1
@@ -93,6 +90,9 @@ importers:
       '@types/path-browserify':
         specifier: ^1.0.3
         version: 1.0.3
+      typescript:
+        specifier: npm:typescript@7.1.0-beta
+        version: 7.1.0-beta
 
   packages/component-type-helpers: {}
 
@@ -286,6 +286,9 @@ importers:
       '@vue/typescript-plugin':
         specifier: workspace:*
         version: link:../typescript-plugin
+      typescript:
+        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
       vscode-css-languageservice:
         specifier: ^6.3.10
         version: 6.3.10

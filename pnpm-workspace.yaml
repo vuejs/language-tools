@@ -21,4 +21,5 @@ allowBuilds:
   keytar: true
 
 overrides:
-  typescript: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+  # TypeScript 7 (e.g. vue-component-meta, built against its API) is not replaced
+  typescript@<7: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2

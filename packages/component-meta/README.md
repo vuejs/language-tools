@@ -10,8 +10,10 @@ Statically extract metadata such as props, events, slots, and exposed from Vue c
 ## Installation
 
 ```bash
-npm install vue-component-meta
+npm install vue-component-meta typescript@^7.1.0-beta
 ```
+
+`typescript` (7.1 or later) is a peer dependency: `createChecker` loads `typescript/async` and `typescript/ast` of the installed version, and `getComponentMeta` takes the modules of the caller.
 
 ## Usage
 

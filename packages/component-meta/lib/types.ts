@@ -1,6 +1,6 @@
 export type TypeScript =
-	& typeof import('typescript-7/ast', { with: { 'resolution-mode': 'import' }})
-	& typeof import('typescript-7/async', { with: { 'resolution-mode': 'import' }});
+	& typeof import('typescript/ast', { with: { 'resolution-mode': 'import' }})
+	& typeof import('typescript/async', { with: { 'resolution-mode': 'import' }});
 
 export type ComponentMetaChecker = Awaited<ReturnType<typeof import('../index')['createChecker']>>;
 

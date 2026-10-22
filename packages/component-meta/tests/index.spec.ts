@@ -887,7 +887,7 @@ describe('checker', () => {
 describe('project', async () => {
 	const tsconfig = path.join(workspace, 'tsconfig.json').replace(/\\/g, '/');
 	const eventsPath = path.join(workspace, 'reference-type-events/component.vue');
-	const ts = { ...await import('typescript-7/ast'), ...await import('typescript-7/async') };
+	const ts = { ...await import('typescript/ast'), ...await import('typescript/async') };
 
 	test('getComponentMeta / getExportNames / getComponentMetaOfType', async () => {
 		await using checker = await createChecker(tsconfig);

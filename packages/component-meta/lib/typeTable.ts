@@ -1,5 +1,5 @@
-import type { Node } from 'typescript-7/ast' with { 'resolution-mode': 'import' };
-import type { NodeHandle, Project, Signature, Symbol, Type } from 'typescript-7/async' with {
+import type { Node } from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type { NodeHandle, Project, Signature, Symbol, Type } from 'typescript/async' with {
 	'resolution-mode': 'import',
 };
 import type { Declaration, ParameterNode, TypeId, TypeNode, TypeScript } from './types';

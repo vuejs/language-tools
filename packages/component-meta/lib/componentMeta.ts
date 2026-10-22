@@ -1,6 +1,6 @@
 import { names } from '@vue/language-core';
-import type { Node, SourceFile } from 'typescript-7/ast' with { 'resolution-mode': 'import' };
-import type { Project, Symbol, Type } from 'typescript-7/async' with { 'resolution-mode': 'import' };
+import type { Node, SourceFile } from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type { Project, Symbol, Type } from 'typescript/async' with { 'resolution-mode': 'import' };
 import { inferComponentEmit, inferComponentExposed, inferComponentProps, inferComponentSlots } from './helpers';
 import { getDefaultsFromScriptSetup, resolveDefaultOptionExpression } from './scriptSetup';
 import type { ComponentMeta, EventMeta, ExposeMeta, PropMeta, SlotMeta, TypeScript } from './types';

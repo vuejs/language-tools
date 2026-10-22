@@ -1,5 +1,5 @@
 import { posix as path } from 'path-browserify';
-import type { Project } from 'typescript-7/async' with { 'resolution-mode': 'import' };
+import type { Project } from 'typescript/async' with { 'resolution-mode': 'import' };
 import { getComponentMeta, getExportNames } from './lib/componentMeta';
 
 export { getComponentMeta, getExportNames };
@@ -13,8 +13,8 @@ export async function createChecker(tsconfig: string) {
 	tsconfig = tsconfig.replace(/\\/g, '/');
 
 	const ts = {
-		...await import('typescript-7/ast'),
-		...await import('typescript-7/async'),
+		...await import('typescript/ast'),
+		...await import('typescript/async'),
 	};
 	const api = new ts.API({ cwd: path.dirname(tsconfig), runExternalCode: true });
 

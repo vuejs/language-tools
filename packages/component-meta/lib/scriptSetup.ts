@@ -1,5 +1,5 @@
 import { names } from '@vue/language-core';
-import type { Expression, Node, ObjectLiteralExpression, SourceFile } from 'typescript-7/ast' with {
+import type { Expression, Node, ObjectLiteralExpression, SourceFile } from 'typescript/ast' with {
 	'resolution-mode': 'import',
 };
 import type { TypeScript } from './types';
