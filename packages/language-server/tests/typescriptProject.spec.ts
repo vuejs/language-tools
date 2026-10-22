@@ -1,3 +1,5 @@
+import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, beforeAll, expect, test } from 'vitest';
 import { type LspServer, startLspServer } from '../../content-mapper/tests/lsp';
@@ -51,6 +53,32 @@ test('an own contentMappers array replaces the inherited one', async () => {
 	await expectConfigFileName('tsconfigContentMappers/fixture.md', 'tsconfigContentMappers/tsconfig.json');
 	// the override config only maps `.vue`, so the TypeScript language server hands its `.md` file to the parent config
 	await expectConfigFileName('tsconfigContentMappers/override/fixture.md', 'tsconfigContentMappers/tsconfig.json');
+});
+
+test('options are merged across extends, raw only carries the resolved contentMappers', async () => {
+	const { parsedCommandLine } = (await resolver.getProject(fileName('tsconfigContentMappers/fixture.md')))!;
+	expect(parsedCommandLine.options.strict).toBe(true);
+	expect(parsedCommandLine.raw?.contentMappers).toEqual([
+		{ package: '@vue/content-mapper', extensions: ['.vue'] },
+		{ package: '@vue/content-mapper', extensions: ['.md'], options: { format: 'vitepress' } },
+	]);
+	// the language server reads `vueCompilerOptions` locally because of this
+	expect(parsedCommandLine.raw).not.toHaveProperty('vueCompilerOptions');
+});
+
+test('an inferred project has compiler options but no config file', async () => {
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-inferred-'));
+	try {
+		const file = path.join(dir, 'a.ts');
+		fs.writeFileSync(file, 'export {};');
+		const project = await resolver.getProject(file.replace(/\\/g, '/'));
+		expect(project).toBeDefined();
+		expect(project!.configFileName).toBeUndefined();
+		expect(project!.parsedCommandLine.options).toMatchObject({ allowJs: true });
+	}
+	finally {
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
 });
 
 test('a .vue file no content mapper covers has no project', async () => {

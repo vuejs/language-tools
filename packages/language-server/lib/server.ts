@@ -10,7 +10,6 @@ import {
 	createVueLanguagePlugin,
 	getAllExtensions,
 	type LanguagePlugin,
-	resolveContentMappers,
 } from '@vue/language-core';
 import {
 	createLanguageService,
@@ -21,7 +20,11 @@ import {
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 import { resolveModuleName } from './moduleResolution';
-import { connectTypeScriptProjectResolver, type TypeScriptProjectResolver } from './typescriptProject';
+import {
+	connectTypeScriptProjectResolver,
+	type TypeScriptProject,
+	type TypeScriptProjectResolver,
+} from './typescriptProject';
 
 /** A `contentMappers[]` entry, as written in a tsconfig or contributed for inferred projects. */
 interface ContentMapperEntry {
@@ -94,6 +97,7 @@ export function startServer(ts: typeof import('typescript')) {
 				if (tsconfigProjects.has(changeUri)) {
 					tsconfigProjects.get(changeUri)!.dispose();
 					tsconfigProjects.delete(changeUri);
+					void typescriptApi?.then(resolver => resolver.invalidate(), () => {});
 				}
 			}
 		});
@@ -112,19 +116,19 @@ export function startServer(ts: typeof import('typescript')) {
 			{
 				setup() {},
 				async getLanguageService(uri) {
-					if (uri.scheme === 'file') {
-						const fileName = uri.fsPath.replace(/\\/g, '/');
-						const configFileName = (await getTypeScriptProject(fileName))?.configFileName;
-						if (configFileName) {
-							let languageService = tsconfigProjects.get(URI.file(configFileName));
-							if (!languageService) {
-								languageService = createProjectLanguageService(server, configFileName);
-								tsconfigProjects.set(URI.file(configFileName), languageService);
-							}
-							return languageService;
+					const project = uri.scheme === 'file'
+						? await getTypeScriptProject(uri.fsPath.replace(/\\/g, '/'))
+						: undefined;
+					if (project?.configFileName) {
+						let languageService = tsconfigProjects.get(URI.file(project.configFileName));
+						if (!languageService) {
+							languageService = createProjectLanguageService(server, project);
+							tsconfigProjects.set(URI.file(project.configFileName), languageService);
 						}
+						return languageService;
 					}
-					return simpleLanguageService ??= createProjectLanguageService(server, undefined);
+					// Inferred projects share the compiler options the TypeScript language server infers for all of them.
+					return simpleLanguageService ??= createProjectLanguageService(server, project);
 				},
 				getExistingLanguageServices() {
 					const projects = [...tsconfigProjects.values()];
@@ -202,7 +206,7 @@ export function startServer(ts: typeof import('typescript')) {
 				},
 				async getQuickInfoAtPosition(fileName, { line, character }) {
 					const result = await sendTsServerRequest<ts.server.protocol.QuickInfoResponseBody>(
-						'_vue:' + ts.server.protocol.CommandTypes.Quickinfo,
+						'_vue:quickinfo' satisfies `_vue:${ts.server.protocol.CommandTypes.Quickinfo}`,
 						{
 							file: fileName,
 							line: line + 1,
@@ -230,34 +234,40 @@ export function startServer(ts: typeof import('typescript')) {
 			});
 		}
 
-		function createProjectLanguageService(server: LanguageServer, tsconfig: string | undefined) {
-			const configFileName = tsconfig && !ts.server.isInferredProjectName(tsconfig) ? tsconfig : undefined;
-			const commonLine = configFileName
-				? createParsedCommandLine(ts, ts.sys, configFileName)
-				: createParsedCommandLineByJson(ts, ts.sys, ts.sys.getCurrentDirectory(), {});
+		function createProjectLanguageService(server: LanguageServer, project: TypeScriptProject | undefined) {
+			const configFileName = project?.configFileName;
+			const compilerOptions = project?.parsedCommandLine.options ?? {};
 			const asFileName = (uri: URI) => uri.fsPath.replace(/\\/g, '/');
 			const entries = (configFileName
-				? resolveContentMappers(ts, ts.sys, configFileName) as ContentMapperEntry[] | undefined
+				? project!.parsedCommandLine.raw?.contentMappers as ContentMapperEntry[] | undefined
 				: inferredContentMappers)
 				?.filter(entry => entry.package === '@vue/content-mapper');
-			const vuePlugins = entries?.length
-				? entries.map(entry =>
+			// `vueCompilerOptions` is still read locally: the TypeScript API does not merge it across `extends`.
+			let vuePlugins: LanguagePlugin<URI>[];
+			if (entries?.length) {
+				vuePlugins = entries.map(entry =>
 					routeByExtensions(
 						createVueLanguagePlugin(
 							ts,
-							commonLine.options,
+							compilerOptions,
 							resolveVueCompilerOptions(ts, ts.sys, configFileName, entry.options).vueOptions,
 							asFileName,
 						),
 						entry.extensions,
 					)
-				)
-				: [
+				);
+			}
+			else {
+				const { vueOptions } = configFileName
+					? createParsedCommandLine(ts, ts.sys, configFileName)
+					: createParsedCommandLineByJson(ts, ts.sys, ts.sys.getCurrentDirectory(), {});
+				vuePlugins = [
 					routeByExtensions(
-						createVueLanguagePlugin(ts, commonLine.options, commonLine.vueOptions, asFileName),
-						getAllExtensions(commonLine.vueOptions),
+						createVueLanguagePlugin(ts, compilerOptions, vueOptions, asFileName),
+						getAllExtensions(vueOptions),
 					),
 				];
+			}
 			const language = createLanguage<URI>(
 				[
 					{

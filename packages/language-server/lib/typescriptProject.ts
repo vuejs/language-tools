@@ -17,7 +17,14 @@ interface Snapshot {
 export interface TypeScriptProject {
 	/** Undefined for the TypeScript language server's inferred project. */
 	configFileName: string | undefined;
-	parsedCommandLine: { options: ts.CompilerOptions };
+	parsedCommandLine: {
+		options: ts.CompilerOptions;
+		/**
+		 * The config file's own JSON, not merged with `extends`, except that `contentMappers` is replaced by
+		 * the resolved (possibly inherited) array. Undefined for inferred projects.
+		 */
+		raw?: { contentMappers?: unknown[] };
+	};
 }
 
 export interface TypeScriptProjectResolver {
@@ -25,6 +32,8 @@ export interface TypeScriptProjectResolver {
 	getProject(fileName: string): Promise<TypeScriptProject | undefined>;
 	/** Releases the file opened by `getProject`. */
 	closeFile(fileName: string): void;
+	/** Forgets the cached answers, e.g. after a config file changed. */
+	invalidate(): void;
 	dispose(): void;
 }
 
@@ -76,6 +85,9 @@ export async function connectTypeScriptProjectResolver(
 			if (projects.delete(fileName)) {
 				api.getCurrentLanguageServerSnapshot({ closeFiles: [fileName] }).then(snapshot => snapshot.dispose(), () => {});
 			}
+		},
+		invalidate() {
+			projects.clear();
 		},
 		dispose() {
 			projects.clear();
