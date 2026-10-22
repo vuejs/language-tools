@@ -58,29 +58,38 @@ export function startServer(ts: typeof import('typescript')) {
 		tsserverRequestHandlers.delete(id);
 	});
 
+	/** A failed acquisition is reported once and not cached, so the next request asks the client again. */
 	function connectTypeScriptApi() {
-		return typescriptApi ??= connection.sendRequest<TypeScriptApiConnection>('vue/typescriptApiConnection').then(
-			({ pipe, packageJsonPath }) => connectTypeScriptProjectResolver(pipe, packageJsonPath),
-		).catch(error => {
-			connection.window.showErrorMessage(
-				`Vue: cannot connect to the TypeScript 7 language server (${error?.message ?? error}). `
-					+ 'Restart the Vue language server once it is available.',
+		if (!typescriptApi) {
+			const connecting = connection.sendRequest<TypeScriptApiConnection>('vue/typescriptApiConnection').then(
+				({ pipe, packageJsonPath }) => connectTypeScriptProjectResolver(pipe, packageJsonPath),
 			);
-			throw error;
-		});
+			typescriptApi = connecting;
+			connecting.catch(error => {
+				if (typescriptApi === connecting) {
+					typescriptApi = undefined;
+				}
+				connection.window.showErrorMessage(
+					`Vue: cannot connect to the TypeScript 7 language server (${error?.message ?? error}). `
+						+ 'Vue will try again on the next request.',
+				);
+			});
+		}
+		return typescriptApi;
 	}
 
 	/** The file's default project in the TypeScript language server; asks the client for a new pipe once if the current one stopped working. */
 	async function getTypeScriptProject(fileName: string) {
 		const current = connectTypeScriptApi();
+		const resolver = await current;
 		try {
-			return await (await current).getProject(fileName);
+			return await resolver.getProject(fileName);
 		}
 		catch {
 			// the TypeScript language server restarted or went away
 			if (typescriptApi === current) {
 				typescriptApi = undefined;
-				void current.then(resolver => resolver.dispose(), () => {});
+				resolver.dispose();
 			}
 			return await (await connectTypeScriptApi()).getProject(fileName);
 		}
