@@ -15,7 +15,6 @@ export interface TemplateCodegenOptions {
 	template: IRTemplate;
 	isVapor: boolean;
 	scriptLang: string;
-	importedComponents: Set<string>;
 	setupRefs: Set<string>;
 	setupConsts: Set<string>;
 	setupBindings: Set<string>;

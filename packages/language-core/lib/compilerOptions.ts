@@ -55,10 +55,7 @@ export function createParsedCommandLineByJson(
 
 	return {
 		...parsed,
-		vueOptions: withExtensionFormats(
-			resolver.build(),
-			resolveContentMappers(ts, host, configFileName ?? path.join(rootDir, 'tsconfig.json'), json),
-		),
+		vueOptions: resolver.build(),
 	};
 }
 
@@ -103,7 +100,7 @@ export function createParsedCommandLine(
 
 		return {
 			...parsed,
-			vueOptions: withExtensionFormats(resolver.build(), resolveContentMappers(ts, host, configFileName)),
+			vueOptions: resolver.build(),
 		};
 	}
 	catch {}
@@ -113,68 +110,6 @@ export function createParsedCommandLine(
 		errors: [],
 		vueOptions: getDefaultCompilerOptions(),
 	};
-}
-
-/**
- * Resolves a tsconfig's `contentMappers` the way TS 7 does: the array is never merged; the config's own
- * array wins (even an empty one), otherwise the last `extends` entry that resolves to one wins.
- */
-export function resolveContentMappers(
-	ts: typeof import('typescript'),
-	host: ParseConfigHost,
-	configFileName: string,
-	json: any = ts.readConfigFile(configFileName, host.readFile).config,
-	ancestors = new Set<string>(),
-): unknown[] | undefined {
-	if (json?.contentMappers !== undefined) {
-		return Array.isArray(json.contentMappers) ? json.contentMappers : undefined;
-	}
-	let result: unknown[] | undefined;
-	ancestors.add(configFileName);
-	for (const specifier of [json?.extends].flat()) {
-		if (typeof specifier !== 'string') {
-			continue;
-		}
-		const extendedConfigFileName = resolveExtends(ts, host, configFileName, specifier);
-		if (extendedConfigFileName && !ancestors.has(extendedConfigFileName)) {
-			result = resolveContentMappers(ts, host, extendedConfigFileName, undefined, ancestors) ?? result;
-		}
-	}
-	ancestors.delete(configFileName);
-	return result;
-}
-
-/** Resolves an `extends` specifier with TypeScript's own resolution, including package specifiers. */
-function resolveExtends(
-	ts: typeof import('typescript'),
-	host: ParseConfigHost,
-	configFileName: string,
-	specifier: string,
-) {
-	const sourceFile = ts.readJsonConfigFile(configFileName, () => JSON.stringify({ extends: specifier }));
-	ts.parseJsonSourceFileConfigFileContent(
-		sourceFile,
-		{ ...host, readDirectory: () => [] },
-		path.dirname(configFileName),
-		{},
-		configFileName,
-	);
-	return sourceFile.extendedSourceFiles?.[0];
-}
-
-/** Derives `extensionFormats` from the `@vue/content-mapper` entries of a raw `contentMappers` option. */
-export function withExtensionFormats(vueOptions: VueCompilerOptions, contentMappers: unknown) {
-	if (Array.isArray(contentMappers)) {
-		vueOptions.extensionFormats = {};
-		for (const entry of contentMappers) {
-			if (entry?.package === '@vue/content-mapper' && Array.isArray(entry.extensions)) {
-				for (const extension of entry.extensions) {
-					vueOptions.extensionFormats[extension] = entry.options?.format ?? 'sfc';
-				}
-			}
-		}
-	}
-	return vueOptions;
 }
 
 export class CompilerOptionsResolver {
@@ -324,7 +259,6 @@ export function getDefaultCompilerOptions(
 		lib,
 		typesRoot,
 		format: 'sfc',
-		extensionFormats: { '.vue': 'sfc' },
 		globalTemplateContext: false,
 		jsxSlots: false,
 		strictCssModules: false,

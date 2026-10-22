@@ -15,7 +15,7 @@ test('generates a Vue service script with source mappings', () => {
 	});
 
 	expect(opened.configIdentity).toHaveLength(64);
-	expect(opened.watchedFiles).toContain(configFileName);
+	expect(opened.watchedFiles).not.toContain(configFileName);
 	expect(opened.watchedFiles).not.toContain(
 		path.resolve(__dirname, '../../../test-workspace/tsconfig.base.json'),
 	);

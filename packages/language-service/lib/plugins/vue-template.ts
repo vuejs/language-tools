@@ -127,10 +127,7 @@ export function create(
 					const info = resolveEmbeddedCode(context, document.uri);
 					const codegen = info && tsCodegen.get(info.root.ir);
 					if (codegen) {
-						const componentNames = new Set([
-							...codegen.getImportedComponents(),
-							...codegen.getLocalComponents(),
-						]);
+						const componentNames = codegen.getLocalComponents();
 						voidElements = defaultDataProvider.provideTags()
 							.filter(tag => tag.void)
 							.map(tag => tag.name)
@@ -593,12 +590,7 @@ export function create(
 							names.add(tag);
 						}
 						if (codegen) {
-							for (
-								const name of [
-									...codegen.getImportedComponents(),
-									...codegen.getLocalComponents(),
-								]
-							) {
+							for (const name of codegen.getLocalComponents()) {
 								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name);
 							}
 						}

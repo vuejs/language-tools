@@ -25,9 +25,9 @@ export async function getComponentType(
 	]);
 	const codegen = tsCodegen.get(virtualCode.ir);
 
-	for (const importedName of codegen?.getImportedComponents() ?? []) {
-		if (testNames.has(importedName)) {
-			const node = searchDefaultImportIdentifier(ts, sourceFile, importedName);
+	for (const binding of codegen?.getSetupBindings() ?? []) {
+		if (testNames.has(binding)) {
+			const node = searchDefaultImportIdentifier(ts, sourceFile, binding);
 			if (node) {
 				return {
 					node,

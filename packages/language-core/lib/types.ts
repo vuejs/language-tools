@@ -11,7 +11,7 @@ export { VueEmbeddedCode };
 
 export type RawVueCompilerOptions =
 	& Partial<
-		Omit<VueCompilerOptions, 'target' | 'plugins' | 'isDataAttribute' | 'isHtmlAttribute' | 'extensionFormats'>
+		Omit<VueCompilerOptions, 'target' | 'plugins' | 'isDataAttribute' | 'isHtmlAttribute'>
 	>
 	& {
 		target?: 'auto' | 3.3 | 3.5 | 3.6 | 99 | number;
@@ -49,12 +49,6 @@ export interface VueCompilerOptions {
 	 * petite-vue HTML page. Each `@vue/content-mapper` entry sets it through its `format` option.
 	 */
 	format: 'sfc' | 'vitepress' | 'petite-vue';
-	/**
-	 * The format of each extension registered by the tsconfig's `@vue/content-mapper` entries
-	 * (`contentMappers`), or `{ '.vue': 'sfc' }` without any. Derived, not user-settable. It tells which
-	 * imports are SFC components and which extension to strip from a file's own component name.
-	 */
-	extensionFormats: Record<string, VueCompilerOptions['format']>;
 	/** Exposes `globalThis` in the template context, as petite-vue templates read globals directly. */
 	globalTemplateContext: boolean;
 	jsxSlots: boolean;

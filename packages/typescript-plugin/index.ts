@@ -9,6 +9,7 @@ import {
 	resolveCompletionResult,
 	type VueCompletionData,
 } from './lib/common';
+import { getExtensionFormats } from './lib/contentMappers';
 import type { Requests } from './lib/requests';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
 import { getComponentDirectives } from './lib/requests/getComponentDirectives';
@@ -24,10 +25,16 @@ export = createLanguageServicePlugin(
 	(ts, info) => {
 		projectToOriginalLanguageService.set(info.project, info.languageService);
 
-		const vueOptions = getVueCompilerOptions();
-		// tsserver hands every content-mapped file to this one host, so each file goes to the plugin of its
-		// longest matching extension, parsed by that extension's format.
-		const languagePlugins = Object.entries(vueOptions.extensionFormats)
+		const configFileName = info.project.projectKind === ts.server.ProjectKind.Configured
+			? info.project.getProjectName().replace(/\\/g, '/')
+			: undefined;
+		const vueOptions = configFileName
+			? core.createParsedCommandLine(ts, ts.sys, configFileName).vueOptions
+			: core.createParsedCommandLineByJson(ts, ts.sys, info.languageServiceHost.getCurrentDirectory(), {}).vueOptions;
+		const extensionFormats = getExtensionFormats(ts, ts.sys, configFileName);
+		const extensions = Object.keys(extensionFormats);
+		// Each file goes to the plugin of its longest matching extension, parsed by that extension's format.
+		const languagePlugins = Object.entries(extensionFormats)
 			.sort(([a], [b]) => b.length - a.length)
 			.map(([extension, format]): core.LanguagePlugin<string> => {
 				const vuePlugin = core.createVueLanguagePlugin<string>(ts, { ...vueOptions, format }, id => id);
@@ -38,6 +45,14 @@ export = createLanguageServicePlugin(
 						fileName.endsWith(extension)
 							? vuePlugin.createVirtualCode!(fileName, languageId, snapshot, ctx)
 							: undefined,
+					typescript: {
+						...vuePlugin.typescript!,
+						extraFileExtensions: [{
+							extension: extension.slice(1),
+							isMixedContent: true,
+							scriptKind: 7 satisfies ts.ScriptKind.Deferred,
+						}],
+					},
 				};
 			});
 		addVueCommands();
@@ -54,22 +69,12 @@ export = createLanguageServicePlugin(
 					language,
 					info.languageService,
 					vueOptions,
+					extensions,
 					fileName => fileName,
 				);
-				(info.project as any).__vue__ = { language, vueOptions };
+				(info.project as any).__vue__ = { language, vueOptions, extensions };
 			},
 		};
-
-		function getVueCompilerOptions() {
-			if (info.project.projectKind === ts.server.ProjectKind.Configured) {
-				const tsconfig = info.project.getProjectName();
-				return core.createParsedCommandLine(ts, ts.sys, tsconfig.replace(/\\/g, '/')).vueOptions;
-			}
-			else {
-				return core.createParsedCommandLineByJson(ts, ts.sys, info.languageServiceHost.getCurrentDirectory(), {})
-					.vueOptions;
-			}
-		}
 
 		// https://github.com/JetBrains/intellij-plugins/blob/6435723ad88fa296b41144162ebe3b8513f4949b/Angular/src-js/angular-service/src/index.ts#L69
 		function addVueCommands() {
@@ -115,7 +120,9 @@ export = createLanguageServicePlugin(
 			);
 			session.addProtocolHandler('_vue:getAutoImportSuggestions', request => {
 				const [fileName, position]: Parameters<Requests['getAutoImportSuggestions']> = request.arguments;
-				const { project, language, vueOptions, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
+				const { project, language, vueOptions, extensions, sourceScript, virtualCode } = getProjectAndVirtualCode(
+					fileName,
+				);
 				const tsLanguageService = projectToOriginalLanguageService.get(project);
 				if (!tsLanguageService) {
 					return createResponse(undefined);
@@ -142,6 +149,7 @@ export = createLanguageServicePlugin(
 								language,
 								fileName => fileName,
 								vueOptions,
+								extensions,
 								fileName,
 								position,
 								result,
@@ -178,6 +186,7 @@ export = createLanguageServicePlugin(
 							language,
 							fileName => fileName,
 							vueOptions,
+							extensions,
 							fileName,
 							position,
 							result,
@@ -333,6 +342,7 @@ export = createLanguageServicePlugin(
 					program: project.getLanguageService().getProgram()!,
 					language: (project as any).__vue__.language as core.Language<string>,
 					vueOptions: (project as any).__vue__.vueOptions as core.VueCompilerOptions,
+					extensions: (project as any).__vue__.extensions as string[],
 				};
 			}
 		}

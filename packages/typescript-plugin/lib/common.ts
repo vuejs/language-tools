@@ -6,7 +6,6 @@ import {
 } from '@volar/typescript/lib/node/transform';
 import { getServiceScript } from '@volar/typescript/lib/node/utils';
 import {
-	getAllExtensions,
 	type Language,
 	tsCodegen,
 	type VueCodeInformation,
@@ -387,6 +386,8 @@ export function postprocessLanguageService<T>(
 	language: Language<T>,
 	languageService: ts.LanguageService,
 	vueOptions: VueCompilerOptions,
+	/** The extensions of the content-mapped files. */
+	extensions: string[],
 	asScriptId: (fileName: string) => T,
 ) {
 	const proxyCache = new Map<string | symbol, Function | undefined>();
@@ -468,6 +469,7 @@ export function postprocessLanguageService<T>(
 					language,
 					asScriptId,
 					vueOptions,
+					extensions,
 					fileName,
 					position,
 					result,
@@ -539,7 +541,7 @@ export function postprocessLanguageService<T>(
 			}
 
 			for (const definition of result.definitions) {
-				if (getAllExtensions(vueOptions).some(ext => definition.fileName.endsWith(ext))) {
+				if (extensions.some(ext => definition.fileName.endsWith(ext))) {
 					continue;
 				}
 
@@ -607,6 +609,7 @@ export function resolveCompletionResult<T>(
 	language: Language<T>,
 	asScriptId: (fileName: string) => T,
 	vueOptions: VueCompilerOptions,
+	extensions: string[],
 	fileName: string,
 	position: number,
 	result: ts.CompletionInfo,
@@ -657,7 +660,7 @@ export function resolveCompletionResult<T>(
 		if (item.source) {
 			const data = item.data as VueCompletionData;
 			const oldName = item.name;
-			for (const vueExt of getAllExtensions(vueOptions)) {
+			for (const vueExt of extensions) {
 				const suffix = capitalize(vueExt.slice(1)); // .vue -> Vue
 				if (item.source.endsWith(vueExt) && item.name.endsWith(suffix)) {
 					item.name = capitalize(item.name.slice(0, -suffix.length));

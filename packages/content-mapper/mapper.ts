@@ -59,9 +59,8 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		};
 		projects.set(params.projectHandle, state);
 
-		// Inferred projects have no tsconfig, but resolving `target: 'auto'` and the mapper entry's
-		// `plugins` still reads dynamic inputs, so the configuration is always created through the
-		// watching host.
+		// The entry's options arrive in `params`, but resolving `target: 'auto'` and the entry's `plugins`
+		// still reads dynamic inputs, so the configuration is always created through the watching host.
 		const watchedFiles = new Set<string>();
 		createConfiguration(state, params.configFileName, watchedFiles);
 		return {
@@ -190,17 +189,8 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		const rootDir = configFileName
 			? path.dirname(configFileName)
 			: process.cwd();
-		if (watchedFiles && configFileName) {
-			watchedFiles.add(path.normalize(configFileName));
-		}
 		const { languageFeatures, ...mapperOptions } = state.params.options ?? {};
-		const vueOptions = resolveVueCompilerOptions(
-			ts,
-			host,
-			configFileName || undefined,
-			state.params.options,
-			configFileName ? vue.resolveContentMappers(ts, host, normalizePath(configFileName)) : undefined,
-		);
+		const vueOptions = resolveVueCompilerOptions(ts, host, configFileName || undefined, state.params.options);
 		const configuration = {
 			plugin: vue.createVueLanguagePlugin<string>(
 				ts,
@@ -250,8 +240,4 @@ function addPluginWatchFiles(watchedFiles: Set<string>, plugins: unknown, rootDi
 		}
 		catch {}
 	}
-}
-
-function normalizePath(fileName: string) {
-	return fileName.replace(/\\/g, '/');
 }

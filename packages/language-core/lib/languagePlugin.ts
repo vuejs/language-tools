@@ -2,7 +2,6 @@
 
 import { forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
-import type * as ts from 'typescript';
 import * as LanguageCore from '../index';
 import { createPlugins } from './plugins';
 import { serviceScriptRE } from './plugins/vue-tsx';
@@ -67,12 +66,8 @@ export function createVueLanguagePlugin<T>(
 			fileRegistry.delete(String(scriptId));
 		},
 		typescript: {
-			extraFileExtensions: getAllExtensions(vueCompilerOptions)
-				.map<ts.FileExtensionInfo>(ext => ({
-					extension: ext.slice(1),
-					isMixedContent: true,
-					scriptKind: 7 satisfies ts.ScriptKind.Deferred,
-				})),
+			// A TypeScript host registers the extensions of the files it routes to this plugin.
+			extraFileExtensions: [],
 			getServiceScript(root) {
 				for (const code of forEachEmbeddedCode(root)) {
 					if (serviceScriptRE.test(code.id)) {
@@ -93,8 +88,4 @@ export function createVueLanguagePlugin<T>(
 			},
 		},
 	};
-}
-
-export function getAllExtensions(options: VueCompilerOptions) {
-	return Object.keys(options.extensionFormats);
 }

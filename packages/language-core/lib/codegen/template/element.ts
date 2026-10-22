@@ -16,7 +16,7 @@ import { generateElementDirectives } from './elementDirectives';
 import { generateElementEvents } from './elementEvents';
 import { type FailedPropExpressions, generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
-import { generateInterpolation } from './interpolation';
+import { generateIdentifier, generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
@@ -94,26 +94,34 @@ export function* generateComponent(
 			camelize(tag),
 			tag,
 		]);
-		const matchedImportedComponent = [...originalNames].find(name => options.importedComponents.has(name));
-		if (matchedImportedComponent) {
-			// navigation & auto import support
+		// Like `@vue/compiler-sfc`, a tag refers to the setup binding of its name, whatever it is imported from;
+		// referencing it like a template expression keeps navigation and auto import support.
+		const matchedBinding = [...originalNames].find(name => options.setupBindings.has(name));
+		if (matchedBinding) {
+			const camelizedTag = matchedBinding[0]! + tag.slice(1);
 			yield `const ${componentVar} = `;
-			yield* generateCamelized(
-				matchedImportedComponent[0]! + tag.slice(1),
-				'template',
-				startTagOffset,
-				{
+			yield* generateIdentifier(
+				options,
+				ctx,
+				generateCamelized(camelizedTag, 'template', startTagOffset, {
 					...codeFeatures.tagName,
 					...codeFeatures.importCompletionOnly,
-				},
+				}),
+				matchedBinding,
+				'template',
+				startTagOffset,
+				startTagOffset + tag.length,
 			);
 			if (endTagOffset !== undefined) {
 				yield ` || `;
-				yield* generateCamelized(
-					matchedImportedComponent[0]! + tag.slice(1),
+				yield* generateIdentifier(
+					options,
+					ctx,
+					generateCamelized(camelizedTag, 'template', endTagOffset, codeFeatures.tagName),
+					matchedBinding,
 					'template',
 					endTagOffset,
-					codeFeatures.tagName,
+					endTagOffset + tag.length,
 				);
 			}
 			yield endOfLine;

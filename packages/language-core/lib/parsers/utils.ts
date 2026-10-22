@@ -8,15 +8,13 @@ export const enum BindingFlag {
 	// Bindings re-asserted per closure by the template codegen (imports, `let`/`var`).
 	Variable,
 	Const = 1 << 1,
-	Component = 1 << 2,
 	// `let`/`var` without an initializer; reading these may raise TS2454.
-	Uninitialized = 1 << 3,
+	Uninitialized = 1 << 2,
 }
 
 export function parseBindings(
 	ts: typeof import('typescript'),
 	ast: ts.SourceFile,
-	componentExtsensions: string[],
 ) {
 	const bindings = new Map<string, BindingFlag>();
 
@@ -49,33 +47,16 @@ export function parseBindings(
 		}
 
 		if (ts.isImportDeclaration(node)) {
-			const moduleName = _getNodeText(node.moduleSpecifier).slice(1, -1);
-
 			if (node.importClause && !node.importClause.isTypeOnly) {
 				const { name, namedBindings } = node.importClause;
 
 				if (name) {
-					if (componentExtsensions.some(ext => moduleName.endsWith(ext))) {
-						bindings.set(_getNodeText(name), BindingFlag.Const | BindingFlag.Component);
-					}
-					else {
-						bindings.set(_getNodeText(name), BindingFlag.Variable);
-					}
+					bindings.set(_getNodeText(name), BindingFlag.Variable);
 				}
 				if (namedBindings) {
 					if (ts.isNamedImports(namedBindings)) {
 						for (const element of namedBindings.elements) {
-							if (element.isTypeOnly) {
-								continue;
-							}
-							if (
-								element.propertyName
-								&& _getNodeText(element.propertyName) === 'default'
-								&& componentExtsensions.some(ext => moduleName.endsWith(ext))
-							) {
-								bindings.set(_getNodeText(element.name), BindingFlag.Const | BindingFlag.Component);
-							}
-							else {
+							if (!element.isTypeOnly) {
 								bindings.set(_getNodeText(element.name), BindingFlag.Variable);
 							}
 						}

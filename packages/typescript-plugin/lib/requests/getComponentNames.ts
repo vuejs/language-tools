@@ -23,7 +23,6 @@ export function getComponentNames(
 	const codegen = tsCodegen.get(virtualCode.ir);
 	componentNames.push(
 		getSelfComponentName(virtualCode),
-		...codegen?.getImportedComponents() ?? [],
 		...codegen?.getSetupBindings() ?? [],
 	);
 

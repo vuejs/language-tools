@@ -2,7 +2,7 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import { hyphenate } from '@vue/shared';
 import * as path from 'path-browserify';
 import type * as ts from 'typescript';
-import type { IRTemplate, TextRange, VueCompilerOptions } from '../types';
+import type { IRTemplate, TextRange } from '../types';
 
 export { hyphenate as hyphenateTag } from '@vue/shared';
 
@@ -63,17 +63,8 @@ export function getNodeText(
 	return ast.text.slice(start, end);
 }
 
-/**
- * Strips the longest key of `extensionFormats` the file name ends with (e.g. `.vue.md` over `.md`), or else
- * the last extension.
- */
-export function getBaseNameWithoutExtension(fileName: string, vueCompilerOptions: VueCompilerOptions) {
+/** Strips the last extension, as `@vue/compiler-core` does to derive a component's self-reference name. */
+export function getBaseNameWithoutExtension(fileName: string) {
 	const baseName = path.basename(fileName);
-	let matched: string | undefined;
-	for (const extension in vueCompilerOptions.extensionFormats) {
-		if (baseName.endsWith(extension) && extension.length > (matched?.length ?? 0)) {
-			matched = extension;
-		}
-	}
-	return baseName.slice(0, matched ? baseName.length - matched.length : baseName.lastIndexOf('.'));
+	return baseName.slice(0, baseName.lastIndexOf('.'));
 }

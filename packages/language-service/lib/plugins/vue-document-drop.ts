@@ -1,5 +1,4 @@
 import type { InsertTextFormat, LanguageServicePlugin, TextEdit } from '@volar/language-service';
-import { getAllExtensions } from '@vue/language-core';
 import { hyphenate } from '@vue/shared';
 import { URI } from 'vscode-uri';
 import { getTagNameCasing, TagNameCasing } from '../nameCasing';
@@ -32,7 +31,7 @@ export function create(
 							importUri = item.value as string;
 						}
 					}
-					if (!importUri || !getAllExtensions(info.root.vueCompilerOptions).some(ext => importUri.endsWith(ext))) {
+					if (!importUri) {
 						return;
 					}
 

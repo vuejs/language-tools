@@ -2,8 +2,8 @@ import { getBaseNameWithoutExtension, type VueVirtualCode } from '@vue/language-
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 
-export function getSelfComponentName({ fileName, vueCompilerOptions }: VueVirtualCode) {
-	return capitalize(camelize(getBaseNameWithoutExtension(fileName, vueCompilerOptions)));
+export function getSelfComponentName({ fileName }: VueVirtualCode) {
+	return capitalize(camelize(getBaseNameWithoutExtension(fileName)));
 }
 
 export function getVariableType(

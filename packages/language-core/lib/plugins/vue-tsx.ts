@@ -83,7 +83,7 @@ function useCodegen(
 
 	const getScriptRanges = computed(() =>
 		ir.script && validLangs.has(ir.script.lang)
-			? parseScriptRanges(ts, ir.script.ast, getResolvedOptions())
+			? parseScriptRanges(ts, ir.script.ast)
 			: undefined
 	);
 
@@ -104,16 +104,6 @@ function useCodegen(
 			}
 		}
 		return flags;
-	});
-
-	const getImportedComponents = computedSet(() => {
-		const names = new Set<string>();
-		for (const [name, flags] of getBindingFlags()) {
-			if (flags & BindingFlag.Component) {
-				names.add(name);
-			}
-		}
-		return names;
 	});
 
 	const getSetupBindings = computedSet(() => new Set(getBindingFlags().keys()));
@@ -174,7 +164,7 @@ function useCodegen(
 				name = defineOptions.name;
 			}
 			else {
-				name = getBaseNameWithoutExtension(fileName, vueCompilerOptions);
+				name = getBaseNameWithoutExtension(fileName);
 			}
 		}
 		return capitalize(camelize(name));
@@ -191,7 +181,6 @@ function useCodegen(
 			isVapor: getIsVapor(),
 			scriptLang: computeLang(ir),
 			componentName: getComponentName(),
-			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
 			setupConsts: getSetupConsts(),
 			setupBindings: getSetupBindings(),
@@ -311,7 +300,6 @@ function useCodegen(
 		getScriptSetupRanges,
 		getGeneratedScript,
 		getGeneratedTemplate,
-		getImportedComponents,
 		getSetupBindings,
 		getLocalComponents,
 		getUsedSetupBindings,

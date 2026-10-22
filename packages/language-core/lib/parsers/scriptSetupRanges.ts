@@ -113,13 +113,7 @@ export function parseScriptSetupRanges(
 	ts.forEachChild(sourceFile, node => visitNode(node, [sourceFile]));
 
 	return {
-		bindings: parseBindings(
-			ts,
-			sourceFile,
-			Object.keys(vueCompilerOptions.extensionFormats).filter(ext =>
-				vueCompilerOptions.extensionFormats[ext] === 'sfc'
-			),
-		),
+		bindings: parseBindings(ts, sourceFile),
 		leadingCommentEndOffset,
 		importSectionEndOffset,
 		defineModel,
