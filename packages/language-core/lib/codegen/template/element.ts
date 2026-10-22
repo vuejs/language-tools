@@ -190,8 +190,7 @@ export function* generateComponent(
 
 	yield `// @ts-ignore${newLine}`;
 	yield `const ${functionalVar} = ${names.asFunctionalComponent0}(${componentVar}, new ${componentVar}({${newLine}`;
-	// an unmapped copy for inference only, whose diagnostics the content mapper ignores;
-	// joining it onto one line would break line comments and automatic semicolons
+	// unmapped copy for inference only
 	yield propsStr;
 	yield `}))${endOfLine}`;
 

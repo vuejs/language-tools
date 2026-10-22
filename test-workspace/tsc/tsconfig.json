@@ -569,6 +569,9 @@
 			"path": "./_failed_directives/tsconfig.json"
 		},
 		{
+			"path": "./_failed_expect_error_props_copy/tsconfig.json"
+		},
+		{
 			"path": "./_failed_fragment_props/tsconfig.json"
 		},
 		{
