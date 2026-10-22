@@ -1,7 +1,18 @@
-import type * as core from '@vue/language-core';
-import type * as ts from 'typescript-native-bridge';
+import type { Node } from 'typescript-7/ast' with { 'resolution-mode': 'import' };
+import type { Checker, NodeHandle, Signature, Symbol, Type } from 'typescript-7/async' with {
+	'resolution-mode': 'import',
+};
 import { resolveDefaultOptionExpression } from './scriptSetup';
-import type { Declaration, EventMeta, ExposeMeta, PropertyMeta, PropertyMetaSchema, SlotMeta } from './types';
+import type {
+	Declaration,
+	EventMeta,
+	ExposeMeta,
+	MetaCheckerSchemaOptions,
+	PropertyMeta,
+	PropertyMetaSchema,
+	SlotMeta,
+	TypeScript,
+} from './types';
 
 const publicPropsInterfaces = new Set([
 	'PublicProps',
@@ -10,24 +21,23 @@ const publicPropsInterfaces = new Set([
 	'ComponentCustomProps',
 ]);
 
-export function createSchemaResolvers(
-	ts: typeof import('typescript'),
-	typeChecker: ts.TypeChecker,
-	printer: ts.Printer,
-	language: core.Language,
-	getSourceScript: (fileName: string) => core.SourceScript | undefined,
-	options: import('./types').MetaCheckerSchemaOptions,
-	deprecatedOptions: { noDeclarations: boolean; rawType: boolean },
-) {
-	const visited = new Set<ts.Type>();
+export interface SchemaResolverContext {
+	ts: TypeScript;
+	checker: Checker;
+	print: (node: Node) => Promise<string>;
+	options: MetaCheckerSchemaOptions;
+	deprecatedOptions: { noDeclarations: boolean; rawType: boolean };
+}
 
-	function shouldIgnore(subtype: ts.Type) {
-		const name = getFullyQualifiedName(subtype);
+export function createSchemaResolvers({ ts, checker, print, options, deprecatedOptions }: SchemaResolverContext) {
+	const visited = new Set<number>();
+
+	async function shouldIgnore(name: string, subtype: Type) {
 		if (name === 'any') {
 			return true;
 		}
 
-		if (visited.has(subtype)) {
+		if (visited.has(subtype.id)) {
 			return true;
 		}
 
@@ -38,7 +48,7 @@ export function createSchemaResolvers(
 		if (typeof options === 'object') {
 			for (const item of options.ignore ?? []) {
 				if (typeof item === 'function') {
-					const result = item(name, subtype, typeChecker);
+					const result = await item(name, subtype, checker);
 					if (typeof result === 'boolean') {
 						return result;
 					}
@@ -52,27 +62,27 @@ export function createSchemaResolvers(
 		return false;
 	}
 
-	function reducer(acc: any, cur: any) {
-		acc[cur.name] = cur;
-		return acc;
+	async function getDocs(symbol: Symbol) {
+		const [description, tags] = await Promise.all([
+			checker.getDocumentationCommentOfSymbol(symbol),
+			checker.getJsDocTagsOfSymbol(symbol),
+		]);
+		return {
+			description,
+			tags: tags.map(tag => ({ name: tag.name, text: tag.text })),
+		};
 	}
 
-	function getJsDocTags(target: ts.Symbol | ts.Signature) {
-		return target.getJsDocTags(typeChecker).map(tag => ({
-			name: tag.name,
-			text: tag.text !== undefined ? ts.displayPartsToString(tag.text) : undefined,
-		}));
+	async function getEagerDeclarations(handles: readonly NodeHandle[]) {
+		return deprecatedOptions.noDeclarations ? [] : await getDeclarations(handles);
 	}
 
-	function resolveNestedProperties(propSymbol: ts.Symbol): PropertyMeta {
-		const subtype = typeChecker.getTypeOfSymbol(propSymbol);
-		let schema: PropertyMetaSchema | undefined;
-		let declarations: Declaration[] | undefined;
+	async function resolveNestedProperties(propSymbol: Symbol, subtype: Type): Promise<PropertyMeta> {
 		let global = false;
 		let _default: string | undefined;
 		let required = !(propSymbol.flags & ts.SymbolFlags.Optional);
 
-		for (const decl of propSymbol.declarations ?? []) {
+		for (const decl of await resolveNodes(propSymbol.declarations)) {
 			if (isPublicProp(decl)) {
 				global = true;
 			}
@@ -81,8 +91,7 @@ export function createSchemaResolvers(
 					if (ts.isPropertyAssignment(option)) {
 						const key = option.name.getText();
 						if (key === 'default') {
-							const defaultExp = resolveDefaultOptionExpression(ts, option.initializer);
-							_default = printer.printNode(ts.EmitHint.Expression, defaultExp, decl.getSourceFile());
+							_default = await print(resolveDefaultOptionExpression(ts, option.initializer));
 						}
 						else if (key === 'required') {
 							if (option.initializer.getText() === 'true') {
@@ -94,244 +103,194 @@ export function createSchemaResolvers(
 			}
 		}
 
+		const [type, docs, declarations] = await Promise.all([
+			getFullyQualifiedName(subtype),
+			getDocs(propSymbol),
+			getEagerDeclarations(propSymbol.declarations),
+		]);
+
 		return {
-			name: propSymbol.getEscapedName().toString(),
+			name: propSymbol.escapedName,
 			global,
 			default: _default,
-			description: ts.displayPartsToString(propSymbol.getDocumentationComment(typeChecker)),
-			tags: getJsDocTags(propSymbol),
+			...docs,
 			required,
-			type: getFullyQualifiedName(subtype),
-			get schema() {
-				return schema ??= resolveSchema(subtype);
-			},
-			get declarations() {
-				if (deprecatedOptions.noDeclarations) {
-					return [];
-				}
-				return this.getDeclarations();
-			},
-			get rawType() {
-				if (deprecatedOptions.rawType) {
-					return this.getTypeObject();
-				}
-			},
-			getDeclarations() {
-				return declarations ??= getDeclarations(propSymbol.declarations ?? []);
-			},
-			getTypeObject() {
-				return subtype;
-			},
+			type,
+			schema: await resolveSchema(subtype, type),
+			declarations,
+			rawType: deprecatedOptions.rawType ? subtype : undefined,
+			getDeclarations: () => getDeclarations(propSymbol.declarations),
+			getTypeObject: () => subtype,
 		};
 	}
 
-	function isPublicProp(declaration: ts.Declaration): boolean {
+	function isPublicProp(declaration: Node): boolean {
 		let parent = declaration.parent;
 		while (parent) {
 			if (ts.isInterfaceDeclaration(parent) || ts.isTypeAliasDeclaration(parent)) {
-				if (publicPropsInterfaces.has(parent.name.text)) {
-					return true;
-				}
-				return false;
+				return publicPropsInterfaces.has(parent.name.text);
 			}
 			parent = parent.parent;
 		}
 		return false;
 	}
 
-	function resolveSlotProperties(prop: ts.Symbol): SlotMeta {
-		const propType = typeChecker.getNonNullableType(typeChecker.getTypeOfSymbol(prop));
-		const signatures = propType.getCallSignatures();
-		const paramType = signatures[0]?.parameters[0];
-		const subtype = paramType
-			? typeChecker.getTypeOfSymbol(paramType)
-			: typeChecker.getAnyType();
-		let schema: PropertyMetaSchema | undefined;
-		let declarations: Declaration[] | undefined;
+	async function resolveSlotProperties(prop: Symbol): Promise<SlotMeta> {
+		const propType = await checker.getNonNullableType(await checker.getTypeOfSymbol(prop));
+		const [signature] = await propType.getCallSignatures();
+		const paramSymbol = signature ? (await signature.getParameters())[0] : undefined;
+		const subtype = paramSymbol
+			? await checker.getTypeOfSymbol(paramSymbol)
+			: await checker.getAnyType();
+		const [type, docs, declarations] = await Promise.all([
+			getFullyQualifiedName(subtype),
+			getDocs(prop),
+			getEagerDeclarations(prop.declarations),
+		]);
 
 		return {
-			name: prop.getName(),
-			type: getFullyQualifiedName(subtype),
-			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
-			tags: getJsDocTags(prop),
-			get schema() {
-				return schema ??= resolveSchema(subtype);
-			},
-			get declarations() {
-				if (deprecatedOptions.noDeclarations) {
-					return [];
-				}
-				return this.getDeclarations();
-			},
-			get rawType() {
-				if (deprecatedOptions.rawType) {
-					return this.getTypeObject();
-				}
-			},
-			getDeclarations() {
-				return declarations ??= getDeclarations(prop.declarations ?? []);
-			},
-			getTypeObject() {
-				return subtype;
-			},
+			name: prop.name,
+			type,
+			...docs,
+			schema: await resolveSchema(subtype, type),
+			declarations,
+			rawType: deprecatedOptions.rawType ? subtype : undefined,
+			getDeclarations: () => getDeclarations(prop.declarations),
+			getTypeObject: () => subtype,
 		};
 	}
-	function resolveExposedProperties(expose: ts.Symbol): ExposeMeta {
-		const subtype = typeChecker.getTypeOfSymbol(expose);
-		let schema: PropertyMetaSchema | undefined;
-		let declarations: Declaration[] | undefined;
+
+	async function resolveExposedProperties(expose: Symbol): Promise<ExposeMeta> {
+		const subtype = await checker.getTypeOfSymbol(expose);
+		const [type, docs, declarations] = await Promise.all([
+			getFullyQualifiedName(subtype),
+			getDocs(expose),
+			getEagerDeclarations(expose.declarations),
+		]);
 
 		return {
-			name: expose.getName(),
-			type: getFullyQualifiedName(subtype),
-			description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
-			tags: getJsDocTags(expose),
-			get schema() {
-				return schema ??= resolveSchema(subtype);
-			},
-			get declarations() {
-				if (deprecatedOptions.noDeclarations) {
-					return [];
-				}
-				return this.getDeclarations();
-			},
-			get rawType() {
-				if (deprecatedOptions.rawType) {
-					return this.getTypeObject();
-				}
-			},
-			getDeclarations() {
-				return declarations ??= getDeclarations(expose.declarations ?? []);
-			},
-			getTypeObject() {
-				return subtype;
-			},
+			name: expose.name,
+			type,
+			...docs,
+			schema: await resolveSchema(subtype, type),
+			declarations,
+			rawType: deprecatedOptions.rawType ? subtype : undefined,
+			getDeclarations: () => getDeclarations(expose.declarations),
+			getTypeObject: () => subtype,
 		};
 	}
-	function resolveEventSignature(call: ts.Signature): EventMeta {
-		let schema: PropertyMetaSchema[] | undefined;
-		let declarations: Declaration[] | undefined;
-		let subtype: ts.Type | undefined;
-		let symbol: ts.Symbol | undefined;
-		let subtypeStr = '[]';
-		let getSchema = () => [] as PropertyMetaSchema[];
 
-		if (call.parameters.length >= 2) {
-			symbol = call.parameters[1]!;
-			subtype = typeChecker.getTypeOfSymbol(symbol);
-			if ((call.parameters[1]!.valueDeclaration as any)?.dotDotDotToken) {
-				subtypeStr = getFullyQualifiedName(subtype);
-				getSchema = () => typeChecker.getTypeArguments(subtype! as ts.TypeReference).map(resolveSchema);
+	async function resolveEventSignature(call: Signature): Promise<EventMeta | undefined> {
+		const [nameSymbol, ...argSymbols] = await call.getParameters();
+		if (!nameSymbol) {
+			return;
+		}
+		const nameType = await checker.getTypeOfSymbol(nameSymbol);
+		if (!nameType.isStringLiteralType() || !nameType.value) {
+			return;
+		}
+
+		let subtype: Type | undefined;
+		let type = '[]';
+		let schema: PropertyMetaSchema[] = [];
+
+		if (argSymbols.length) {
+			const argTypes = await checker.getTypeOfSymbol(argSymbols);
+			subtype = argTypes[0]!;
+			if (argSymbols.length === 1 && call.hasRestParameter) {
+				type = await getFullyQualifiedName(subtype);
+				schema = await resolveSchemas(await getTypeArguments(subtype));
 			}
 			else {
-				subtypeStr = '[';
-				for (let i = 1; i < call.parameters.length; i++) {
-					subtypeStr += getFullyQualifiedName(typeChecker.getTypeOfSymbol(call.parameters[i]!))
-						+ ', ';
-				}
-				subtypeStr = subtypeStr.slice(0, -2) + ']';
-				getSchema = () => {
-					const result: PropertyMetaSchema[] = [];
-					for (let i = 1; i < call.parameters.length; i++) {
-						result.push(resolveSchema(typeChecker.getTypeOfSymbol(call.parameters[i]!)));
-					}
-					return result;
-				};
+				type = `[${(await Promise.all(argTypes.map(getFullyQualifiedName))).join(', ')}]`;
+				schema = await resolveSchemas(argTypes);
 			}
 		}
 
+		const handles = call.declaration ? [call.declaration] : [];
+
 		return {
-			name: (typeChecker.getTypeOfSymbol(call.parameters[0]!) as ts.StringLiteralType).value,
-			description: ts.displayPartsToString(call.getDocumentationComment(typeChecker)),
-			tags: getJsDocTags(call),
-			type: subtypeStr,
-			signature: typeChecker.signatureToString(call),
-			get schema() {
-				return schema ??= getSchema();
-			},
-			get declarations() {
-				if (deprecatedOptions.noDeclarations) {
-					return [];
-				}
-				return this.getDeclarations();
-			},
-			get rawType() {
-				if (deprecatedOptions.rawType) {
-					return this.getTypeObject();
-				}
-			},
-			getDeclarations() {
-				return declarations ??= call.declaration ? getDeclarations([call.declaration]) : [];
-			},
-			getTypeObject() {
-				return subtype;
-			},
+			name: nameType.value,
+			// TypeScript 7 does not expose the documentation of signatures
+			description: '',
+			tags: [],
+			type,
+			signature: await signatureToString(call),
+			schema,
+			declarations: await getEagerDeclarations(handles),
+			rawType: deprecatedOptions.rawType ? subtype : undefined,
+			getDeclarations: () => getDeclarations(handles),
+			getTypeObject: () => subtype,
 		};
 	}
-	function resolveCallbackSchema(signature: ts.Signature): PropertyMetaSchema {
-		let schema: PropertyMetaSchema[] | undefined;
 
+	async function resolveCallbackSchema(signature: Signature): Promise<PropertyMetaSchema> {
+		const [param] = await signature.getParameters();
 		return {
 			kind: 'event',
-			type: typeChecker.signatureToString(signature),
-			get schema() {
-				return schema ??= signature.parameters.length
-					? typeChecker
-						.getTypeArguments(
-							typeChecker.getTypeOfSymbol(signature.parameters[0]!) as ts.TypeReference,
-						)
-						.map(resolveSchema)
-					: undefined;
-			},
+			type: await signatureToString(signature),
+			schema: param
+				? await resolveSchemas(await getTypeArguments(await checker.getTypeOfSymbol(param)))
+				: undefined,
 		};
 	}
-	function resolveSchema(subtype: ts.Type): PropertyMetaSchema {
-		const type = getFullyQualifiedName(subtype);
 
-		if (shouldIgnore(subtype)) {
+	async function resolveSchemas(types: readonly Type[]) {
+		const result: PropertyMetaSchema[] = [];
+		for (const type of types) {
+			result.push(await resolveSchema(type));
+		}
+		return result;
+	}
+
+	async function resolveSchema(subtype: Type, type?: string): Promise<PropertyMetaSchema> {
+		type ??= await getFullyQualifiedName(subtype);
+
+		if (await shouldIgnore(type, subtype)) {
 			return type;
 		}
 
-		visited.add(subtype);
+		visited.add(subtype.id);
 
-		if (subtype.isUnion()) {
-			let schema: PropertyMetaSchema[] | undefined;
+		if (subtype.isUnionType()) {
 			return {
 				kind: 'enum',
 				type,
-				get schema() {
-					return schema ??= subtype.types.map(resolveSchema);
-				},
+				schema: await resolveSchemas(await subtype.getTypes() ?? []),
 			};
 		}
-		else if (typeChecker.isArrayLikeType(subtype)) {
-			let schema: PropertyMetaSchema[] | undefined;
+		else if (await checker.isArrayLikeType(subtype)) {
 			return {
 				kind: 'array',
 				type,
-				get schema() {
-					return schema ??= typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema);
-				},
+				schema: await resolveSchemas(await getTypeArguments(subtype)),
 			};
 		}
-		else if (
-			subtype.getCallSignatures().length === 0
-			&& (subtype.isClassOrInterface() || subtype.isIntersection()
-				|| (subtype as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous)
+
+		const callSignatures = await subtype.getCallSignatures();
+
+		if (
+			callSignatures.length === 0
+			&& (subtype.isClassOrInterface() || subtype.isIntersectionType()
+				|| (subtype.isObjectType() && subtype.objectFlags & ts.ObjectFlags.Anonymous))
 		) {
-			let schema: Record<string, PropertyMeta> | undefined;
+			const properties = await subtype.getProperties();
+			const types = properties.length ? await checker.getTypeOfSymbol(properties) : [];
+			const schema: Record<string, PropertyMeta> = {};
+			for (let i = 0; i < properties.length; i++) {
+				const prop = await resolveNestedProperties(properties[i]!, types[i]!);
+				schema[prop.name] = prop;
+			}
 			return {
 				kind: 'object',
 				type,
-				get schema() {
-					return schema ??= subtype.getProperties().map(resolveNestedProperties).reduce(reducer, {});
-				},
+				schema,
 			};
 		}
-		else if (subtype.getCallSignatures().length === 1) {
-			return resolveCallbackSchema(subtype.getCallSignatures()[0]!);
+		else if (callSignatures.length === 1) {
+			return await resolveCallbackSchema(callSignatures[0]!);
 		}
-		else if (subtype.flags & ts.TypeFlags.EnumLiteral && subtype.isLiteral()) {
+		else if (subtype.flags & ts.TypeFlags.EnumLiteral && subtype.isLiteralType()) {
 			// enum members stringify to their qualified name (e.g. "MyEnum.Small"), which
 			// hides the runtime value from consumers such as docs generators; expose the
 			// value alongside, printed like any other literal
@@ -347,8 +306,18 @@ export function createSchemaResolvers(
 
 		return type;
 	}
-	function getFullyQualifiedName(type: ts.Type) {
-		const str = typeChecker.typeToString(
+
+	async function getTypeArguments(type: Type) {
+		return type.isTypeReference() ? await checker.getTypeArguments(type) : [];
+	}
+
+	async function signatureToString(signature: Signature) {
+		const node = await checker.signatureToSignatureDeclaration(signature, ts.SyntaxKind.CallSignature);
+		return node ? await print(node) : '';
+	}
+
+	async function getFullyQualifiedName(type: Type) {
+		const str = await checker.typeToString(
 			type,
 			undefined,
 			ts.TypeFormatFlags.UseFullyQualifiedType | ts.TypeFormatFlags.NoTruncation,
@@ -358,32 +327,34 @@ export function createSchemaResolvers(
 		}
 		return str;
 	}
-	function getDeclarations(declaration: ts.Declaration[]) {
-		return declaration.map(getDeclaration).filter(d => !!d);
-	}
-	function getDeclaration(declaration: ts.Declaration): Declaration | undefined {
-		const fileName = declaration.getSourceFile().fileName;
-		const sourceScript = getSourceScript(fileName);
-		if (sourceScript?.generated) {
-			const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(
-				sourceScript.generated.root,
-			);
-			if (serviceScript) {
-				const map = language.maps.get(serviceScript.code, sourceScript);
-				for (const [start] of map.toSourceLocation(declaration.getStart())) {
-					for (const [end] of map.toSourceLocation(declaration.getEnd())) {
-						return {
-							file: String(sourceScript.id),
-							range: [start, end],
-						};
-					}
-				}
+
+	async function getDeclarations(handles: readonly NodeHandle[]) {
+		const result: Declaration[] = [];
+		for (const node of await resolveNodes(handles)) {
+			const declaration = getDeclaration(node);
+			if (declaration) {
+				result.push(declaration);
 			}
-			return;
+		}
+		return result;
+	}
+
+	function getDeclaration(node: Node): Declaration | undefined {
+		const sourceFile = node.getSourceFile();
+		const start = node.getStart(sourceFile);
+		if (sourceFile.spanMap) {
+			const { range, fidelity } = sourceFile.spanMap.virtualToOriginalSpan({ pos: start, end: node.end });
+			if (ts.SpanMap.isNone(fidelity)) {
+				return;
+			}
+			return {
+				file: sourceFile.fileName,
+				range: [range.pos, range.end],
+			};
 		}
 		return {
-			file: declaration.getSourceFile().fileName,
-			range: [declaration.getStart(), declaration.getEnd()],
+			file: sourceFile.fileName,
+			range: [start, node.end],
 		};
 	}
 
@@ -394,4 +365,9 @@ export function createSchemaResolvers(
 		resolveExposedProperties,
 		resolveSchema,
 	};
+}
+
+async function resolveNodes(handles: readonly NodeHandle[]) {
+	const nodes = await Promise.all(handles.map(handle => handle.resolve()));
+	return nodes.filter(node => !!node);
 }

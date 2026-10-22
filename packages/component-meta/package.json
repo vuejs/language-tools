@@ -15,10 +15,9 @@
 		"directory": "packages/component-meta"
 	},
 	"dependencies": {
-		"@volar/typescript": "2.4.28",
 		"@vue/language-core": "workspace:*",
 		"path-browserify": "^1.0.1",
-		"typescript-native-bridge": "6.0.3-bridge.16.tsgo.7.0.2"
+		"typescript-7": "npm:typescript@7.1.0-beta"
 	},
 	"devDependencies": {
 		"@types/node": "^26.0.1",

@@ -1,18 +1,25 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { describe, expect, test } from 'vitest';
-import { type ComponentMetaChecker, createChecker, createCheckerByJson, type MetaCheckerOptions, TypeMeta } from '..';
+import { afterAll, describe, expect, test } from 'vitest';
+import { createChecker, type MetaCheckerOptions, TypeMeta } from '..';
 
-const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
-	describe(`vue-component-meta ${withTsconfig ? 'w/ tsconfig' : 'w/o tsconfig'}`, () => {
-		test('empty-component', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/empty-component/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
+const checkerOptions: MetaCheckerOptions = {
+	schema: { ignore: ['MyIgnoredNestedProps'] },
+};
+const workspace = path.resolve(__dirname, '../../../test-workspace/component-meta');
 
-			expect(meta.props.map(prop => prop.name)).toMatchInlineSnapshot(`
+describe('vue-component-meta', async () => {
+	const checker = await createChecker(path.join(workspace, 'tsconfig.json'), checkerOptions);
+	afterAll(() => checker.close());
+
+	test('empty-component', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/empty-component/component.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
+
+		expect(meta.props.map(prop => prop.name)).toMatchInlineSnapshot(`
 				[
 				  "key",
 				  "ref",
@@ -28,22 +35,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "style",
 				]
 			`);
-			expect(meta.props.filter(prop => !prop.global)).toEqual([]);
-		});
+		expect(meta.props.filter(prop => !prop.global)).toEqual([]);
+	});
 
-		test('reference-type-model', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-model/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
+	test('reference-type-model', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/reference-type-model/component.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Class);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
-			const modelValue = meta.props.find(prop => prop.name === 'modelValue');
-			const onUpdateModelValue = meta.events.find(event => event.name === 'update:modelValue');
+		const modelValue = meta.props.find(prop => prop.name === 'modelValue');
+		const onUpdateModelValue = meta.events.find(event => event.name === 'update:modelValue');
 
-			expect(modelValue).toMatchInlineSnapshot(`
+		expect(modelValue).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -59,12 +66,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "type": "number",
 				}
 			`);
-			expect(onUpdateModelValue).toBeDefined();
+		expect(onUpdateModelValue).toBeDefined();
 
-			const foo = meta.props.find(prop => prop.name === 'foo');
-			const onUpdateFoo = meta.events.find(event => event.name === 'update:foo');
+		const foo = meta.props.find(prop => prop.name === 'foo');
+		const onUpdateFoo = meta.events.find(event => event.name === 'update:foo');
 
-			expect(foo).toMatchInlineSnapshot(`
+		expect(foo).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": "false",
@@ -88,13 +95,13 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "type": "boolean | undefined",
 				}
 			`);
-			expect(onUpdateFoo).toBeDefined();
+		expect(onUpdateFoo).toBeDefined();
 
-			const bar = meta.props.find(prop => prop.name === 'bar');
-			const barModifiers = meta.props.find(prop => prop.name === 'barModifiers');
-			const onUpdateBaz = meta.events.find(event => event.name === 'update:bar');
+		const bar = meta.props.find(prop => prop.name === 'bar');
+		const barModifiers = meta.props.find(prop => prop.name === 'barModifiers');
+		const onUpdateBaz = meta.events.find(event => event.name === 'update:bar');
 
-			expect(bar).toMatchInlineSnapshot(`
+		expect(bar).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -117,70 +124,43 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "type": "string | undefined",
 				}
 			`);
-			if (withTsconfig) {
-				expect(barModifiers).toMatchInlineSnapshot(`
-					{
-					  "declarations": [],
-					  "default": undefined,
-					  "description": "",
-					  "getDeclarations": [Function],
-					  "getTypeObject": [Function],
-					  "global": false,
-					  "name": "barModifiers",
-					  "rawType": undefined,
-					  "required": false,
-					  "schema": {
-					    "kind": "enum",
-					    "schema": [
-					      "undefined",
-					      "Partial<Record<"lazy" | "trim", true>>",
-					    ],
-					    "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
-					  },
-					  "tags": [],
-					  "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
-					}
-				`);
-			}
-			else {
-				expect(barModifiers).toMatchInlineSnapshot(`
-					{
-					  "declarations": [],
-					  "default": undefined,
-					  "description": "",
-					  "getDeclarations": [Function],
-					  "getTypeObject": [Function],
-					  "global": false,
-					  "name": "barModifiers",
-					  "rawType": undefined,
-					  "required": false,
-					  "schema": {
-					    "kind": "enum",
-					    "schema": [
-					      "undefined",
-					      "Partial<Record<"lazy" | "trim", true>>",
-					    ],
-					    "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
-					  },
-					  "tags": [],
-					  "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
-					}
-				`);
-			}
-			expect(onUpdateBaz).toBeDefined();
-		});
+		expect(barModifiers).toMatchInlineSnapshot(`
+				{
+				  "declarations": [],
+				  "default": undefined,
+				  "description": "",
+				  "getDeclarations": [Function],
+				  "getTypeObject": [Function],
+				  "global": false,
+				  "name": "barModifiers",
+				  "rawType": undefined,
+				  "required": false,
+				  "schema": {
+				    "kind": "enum",
+				    "schema": [
+				      "undefined",
+				      "Partial<Record<"lazy" | "trim", true>>",
+				    ],
+				    "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
+				  },
+				  "tags": [],
+				  "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
+				}
+			`);
+		expect(onUpdateBaz).toBeDefined();
+	});
 
-		test('reference-type-props', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-props/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
+	test('reference-type-props', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/reference-type-props/component.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Class);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
-			const foo = meta.props.find(prop => prop.name === 'foo');
-			expect(foo).toMatchInlineSnapshot(`
+		const foo = meta.props.find(prop => prop.name === 'foo');
+		expect(foo).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -218,8 +198,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const bar = meta.props.find(prop => prop.name === 'bar');
-			expect(bar).toMatchInlineSnapshot(`
+		const bar = meta.props.find(prop => prop.name === 'bar');
+		expect(bar).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": "1",
@@ -243,39 +223,39 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const baz = meta.props.find(prop => prop.name === 'baz');
-			expect(baz).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": "["foo", "bar"]",
-				  "description": "string array baz",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "baz",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      {
-				        "kind": "array",
-				        "schema": [
-				          "string",
-				        ],
-				        "type": "string[]",
-				      },
-				    ],
-				    "type": "string[] | undefined",
-				  },
-				  "tags": [],
-				  "type": "string[] | undefined",
-				}
-			`);
+		const baz = meta.props.find(prop => prop.name === 'baz');
+		expect(baz).toMatchInlineSnapshot(`
+			{
+			  "declarations": [],
+			  "default": "['foo', 'bar']",
+			  "description": "string array baz",
+			  "getDeclarations": [Function],
+			  "getTypeObject": [Function],
+			  "global": false,
+			  "name": "baz",
+			  "rawType": undefined,
+			  "required": false,
+			  "schema": {
+			    "kind": "enum",
+			    "schema": [
+			      "undefined",
+			      {
+			        "kind": "array",
+			        "schema": [
+			          "string",
+			        ],
+			        "type": "string[]",
+			      },
+			    ],
+			    "type": "string[] | undefined",
+			  },
+			  "tags": [],
+			  "type": "string[] | undefined",
+			}
+		`);
 
-			const union = meta.props.find(prop => prop.name === 'union');
-			expect(union).toMatchInlineSnapshot(`
+		const union = meta.props.find(prop => prop.name === 'union');
+		expect(union).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -299,8 +279,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const unionOptional = meta.props.find(prop => prop.name === 'unionOptional');
-			expect(unionOptional).toMatchInlineSnapshot(`
+		const unionOptional = meta.props.find(prop => prop.name === 'unionOptional');
+		expect(unionOptional).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -325,8 +305,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const nested = meta.props.find(prop => prop.name === 'nested');
-			expect(nested).toMatchInlineSnapshot(`
+		const nested = meta.props.find(prop => prop.name === 'nested');
+		expect(nested).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -362,8 +342,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const nestedIntersection = meta.props.find(prop => prop.name === 'nestedIntersection');
-			expect(nestedIntersection).toMatchInlineSnapshot(`
+		const nestedIntersection = meta.props.find(prop => prop.name === 'nestedIntersection');
+		expect(nestedIntersection).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -413,100 +393,53 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const nestedOptional = meta.props.find(prop => prop.name === 'nestedOptional');
-			if (withTsconfig) {
-				expect(nestedOptional).toMatchInlineSnapshot(`
-					{
-					  "declarations": [],
-					  "default": undefined,
-					  "description": "optional nested object",
-					  "getDeclarations": [Function],
-					  "getTypeObject": [Function],
-					  "global": false,
-					  "name": "nestedOptional",
-					  "rawType": undefined,
-					  "required": false,
-					  "schema": {
-					    "kind": "enum",
-					    "schema": [
-					      "undefined",
-					      "MyIgnoredNestedProps",
-					      {
-					        "kind": "object",
-					        "schema": {
-					          "nestedProp": {
-					            "declarations": [],
-					            "default": undefined,
-					            "description": "nested prop documentation",
-					            "getDeclarations": [Function],
-					            "getTypeObject": [Function],
-					            "global": false,
-					            "name": "nestedProp",
-					            "rawType": undefined,
-					            "required": true,
-					            "schema": "string",
-					            "tags": [],
-					            "type": "string",
-					          },
-					        },
-					        "type": "MyNestedProps",
-					      },
-					    ],
-					    "type": "MyIgnoredNestedProps | MyNestedProps | undefined",
-					  },
-					  "tags": [],
-					  "type": "MyIgnoredNestedProps | MyNestedProps | undefined",
-					}
-				`);
-			}
-			else {
-				expect(nestedOptional).toMatchInlineSnapshot(`
-					{
-					  "declarations": [],
-					  "default": undefined,
-					  "description": "optional nested object",
-					  "getDeclarations": [Function],
-					  "getTypeObject": [Function],
-					  "global": false,
-					  "name": "nestedOptional",
-					  "rawType": undefined,
-					  "required": false,
-					  "schema": {
-					    "kind": "enum",
-					    "schema": [
-					      "undefined",
-					      {
-					        "kind": "object",
-					        "schema": {
-					          "nestedProp": {
-					            "declarations": [],
-					            "default": undefined,
-					            "description": "nested prop documentation",
-					            "getDeclarations": [Function],
-					            "getTypeObject": [Function],
-					            "global": false,
-					            "name": "nestedProp",
-					            "rawType": undefined,
-					            "required": true,
-					            "schema": "string",
-					            "tags": [],
-					            "type": "string",
-					          },
-					        },
-					        "type": "MyNestedProps",
-					      },
-					      "MyIgnoredNestedProps",
-					    ],
-					    "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
-					  },
-					  "tags": [],
-					  "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
-					}
-				`);
-			}
+		const nestedOptional = meta.props.find(prop => prop.name === 'nestedOptional');
+		expect(nestedOptional).toMatchInlineSnapshot(`
+				{
+				  "declarations": [],
+				  "default": undefined,
+				  "description": "optional nested object",
+				  "getDeclarations": [Function],
+				  "getTypeObject": [Function],
+				  "global": false,
+				  "name": "nestedOptional",
+				  "rawType": undefined,
+				  "required": false,
+				  "schema": {
+				    "kind": "enum",
+				    "schema": [
+				      "undefined",
+				      "MyIgnoredNestedProps",
+				      {
+				        "kind": "object",
+				        "schema": {
+				          "nestedProp": {
+				            "declarations": [],
+				            "default": undefined,
+				            "description": "nested prop documentation",
+				            "getDeclarations": [Function],
+				            "getTypeObject": [Function],
+				            "global": false,
+				            "name": "nestedProp",
+				            "rawType": undefined,
+				            "required": true,
+				            "schema": "string",
+				            "tags": [],
+				            "type": "string",
+				          },
+				        },
+				        "type": "MyNestedProps",
+				      },
+				    ],
+				    "type": "MyIgnoredNestedProps | MyNestedProps | undefined",
+				  },
+				  "tags": [],
+				  "type": "MyIgnoredNestedProps | MyNestedProps | undefined",
+				}
+			`);
 
-			const array = meta.props.find(prop => prop.name === 'array');
-			expect(array).toMatchInlineSnapshot(`
+		const array = meta.props.find(prop => prop.name === 'array');
+		expect(array).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -548,8 +481,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const arrayOptional = meta.props.find(prop => prop.name === 'arrayOptional');
-			expect(arrayOptional).toMatchInlineSnapshot(`
+		const arrayOptional = meta.props.find(prop => prop.name === 'arrayOptional');
+		expect(arrayOptional).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -598,8 +531,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const enumValue = meta.props.find(prop => prop.name === 'enumValue');
-			expect(enumValue).toMatchInlineSnapshot(`
+		const enumValue = meta.props.find(prop => prop.name === 'enumValue');
+		expect(enumValue).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -636,8 +569,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const stringEnumValue = meta.props.find(prop => prop.name === 'stringEnumValue');
-			expect(stringEnumValue).toMatchInlineSnapshot(`
+		const stringEnumValue = meta.props.find(prop => prop.name === 'stringEnumValue');
+		expect(stringEnumValue).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -674,8 +607,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const namespaceType = meta.props.find(prop => prop.name === 'namespaceType');
-			expect(namespaceType).toMatchInlineSnapshot(`
+		const namespaceType = meta.props.find(prop => prop.name === 'namespaceType');
+		expect(namespaceType).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -696,68 +629,37 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const literalFromContext = meta.props.find(prop => prop.name === 'literalFromContext');
-			if (withTsconfig) {
-				expect(literalFromContext).toMatchInlineSnapshot(`
-					{
-					  "declarations": [],
-					  "default": undefined,
-					  "description": "literal type alias that require context",
-					  "getDeclarations": [Function],
-					  "getTypeObject": [Function],
-					  "global": false,
-					  "name": "literalFromContext",
-					  "rawType": undefined,
-					  "required": true,
-					  "schema": {
-					    "kind": "enum",
-					    "schema": [
-					      ""Addons"",
-					      ""Content"",
-					      ""Display"",
-					      ""Forms"",
-					      ""Interaction"",
-					      ""Uncategorized"",
-					    ],
-					    "type": ""Addons" | "Content" | "Display" | "Forms" | "Interaction" | "Uncategorized"",
-					  },
-					  "tags": [],
-					  "type": ""Addons" | "Content" | "Display" | "Forms" | "Interaction" | "Uncategorized"",
-					}
-				`);
-			}
-			else {
-				expect(literalFromContext).toMatchInlineSnapshot(`
-					{
-					  "declarations": [],
-					  "default": undefined,
-					  "description": "literal type alias that require context",
-					  "getDeclarations": [Function],
-					  "getTypeObject": [Function],
-					  "global": false,
-					  "name": "literalFromContext",
-					  "rawType": undefined,
-					  "required": true,
-					  "schema": {
-					    "kind": "enum",
-					    "schema": [
-					      ""Uncategorized"",
-					      ""Content"",
-					      ""Interaction"",
-					      ""Display"",
-					      ""Forms"",
-					      ""Addons"",
-					    ],
-					    "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
-					  },
-					  "tags": [],
-					  "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
-					}
-				`);
-			}
+		const literalFromContext = meta.props.find(prop => prop.name === 'literalFromContext');
+		expect(literalFromContext).toMatchInlineSnapshot(`
+				{
+				  "declarations": [],
+				  "default": undefined,
+				  "description": "literal type alias that require context",
+				  "getDeclarations": [Function],
+				  "getTypeObject": [Function],
+				  "global": false,
+				  "name": "literalFromContext",
+				  "rawType": undefined,
+				  "required": true,
+				  "schema": {
+				    "kind": "enum",
+				    "schema": [
+				      ""Addons"",
+				      ""Content"",
+				      ""Display"",
+				      ""Forms"",
+				      ""Interaction"",
+				      ""Uncategorized"",
+				    ],
+				    "type": ""Addons" | "Content" | "Display" | "Forms" | "Interaction" | "Uncategorized"",
+				  },
+				  "tags": [],
+				  "type": ""Addons" | "Content" | "Display" | "Forms" | "Interaction" | "Uncategorized"",
+				}
+			`);
 
-			const inlined = meta.props.find(prop => prop.name === 'inlined');
-			expect(inlined).toMatchInlineSnapshot(`
+		const inlined = meta.props.find(prop => prop.name === 'inlined');
+		expect(inlined).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -793,8 +695,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const recursive = meta.props.find(prop => prop.name === 'recursive');
-			expect(recursive).toMatchInlineSnapshot(`
+		const recursive = meta.props.find(prop => prop.name === 'recursive');
+		expect(recursive).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -829,45 +731,51 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "type": "MyNestedRecursiveProps",
 				}
 			`);
-		});
+	});
 
-		test('reference-type-props-destructured', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-props/component-destructure.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
+	test('reference-type-props-destructured', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/reference-type-props/component-destructure.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Class);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
-			const text = meta.props.find(prop => prop.name === 'text');
-			expect(text?.default).toEqual('"foobar"');
-		});
+		const text = meta.props.find(prop => prop.name === 'text');
+		expect(text?.default).toEqual("'foobar'");
 
-		test('reference-type-props-non-ascii-default', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-props/component-non-ascii.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
+		const declarations = await text!.getDeclarations();
+		expect(declarations.length).toBe(1);
+		const [{ file, range }] = declarations as [typeof declarations[0]];
+		expect(path.relative(workspace, file)).toBe(path.join('reference-type-props', 'component-destructure.vue'));
+		expect(fs.readFileSync(componentPath, 'utf8').slice(...range)).toBe('text: string;');
+	});
 
-			expect(meta.type).toEqual(TypeMeta.Class);
+	test('reference-type-props-non-ascii-default', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/reference-type-props/component-non-ascii.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-			const label = meta.props.find(prop => prop.name === 'label');
-			expect(label?.default).toEqual('"こんにちは"');
-		});
+		expect(meta.type).toEqual(TypeMeta.Class);
 
-		test('reference-type-props-js', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-props/component-js.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
+		const label = meta.props.find(prop => prop.name === 'label');
+		expect(label?.default).toEqual("'こんにちは'");
+	});
 
-			expect(meta.type).toEqual(TypeMeta.Class);
+	test('reference-type-props-js', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/reference-type-props/component-js.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-			const foo = meta.props.find(prop => prop.name === 'foo');
-			expect(foo).toMatchInlineSnapshot(`
+		expect(meta.type).toEqual(TypeMeta.Class);
+
+		const foo = meta.props.find(prop => prop.name === 'foo');
+		expect(foo).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -884,8 +792,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const bar = meta.props.find(prop => prop.name === 'bar');
-			expect(bar).toMatchInlineSnapshot(`
+		const bar = meta.props.find(prop => prop.name === 'bar');
+		expect(bar).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": "'BAR'",
@@ -909,8 +817,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const baz = meta.props.find(prop => prop.name === 'baz');
-			expect(baz).toMatchInlineSnapshot(`
+		const baz = meta.props.find(prop => prop.name === 'baz');
+		expect(baz).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -934,8 +842,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const xfoo = meta.props.find(prop => prop.name === 'xfoo');
-			expect(xfoo).toMatchInlineSnapshot(`
+		const xfoo = meta.props.find(prop => prop.name === 'xfoo');
+		expect(xfoo).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -952,8 +860,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const xbar = meta.props.find(prop => prop.name === 'xbar');
-			expect(xbar).toMatchInlineSnapshot(`
+		const xbar = meta.props.find(prop => prop.name === 'xbar');
+		expect(xbar).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -977,8 +885,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const xbaz = meta.props.find(prop => prop.name === 'xbaz');
-			expect(xbaz).toMatchInlineSnapshot(`
+		const xbaz = meta.props.find(prop => prop.name === 'xbaz');
+		expect(xbaz).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -1001,19 +909,19 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "type": "string | undefined",
 				}
 			`);
-		});
+	});
 
-		test('reference-type-props-js-setup', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-props/component-js-setup.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
+	test('reference-type-props-js-setup', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/reference-type-props/component-js-setup.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Class);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
-			const foo = meta.props.find(prop => prop.name === 'foo');
-			expect(foo).toMatchInlineSnapshot(`
+		const foo = meta.props.find(prop => prop.name === 'foo');
+		expect(foo).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -1030,8 +938,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const bar = meta.props.find(prop => prop.name === 'bar');
-			expect(bar).toMatchInlineSnapshot(`
+		const bar = meta.props.find(prop => prop.name === 'bar');
+		expect(bar).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": "'BAR'",
@@ -1055,8 +963,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const baz = meta.props.find(prop => prop.name === 'baz');
-			expect(baz).toMatchInlineSnapshot(`
+		const baz = meta.props.find(prop => prop.name === 'baz');
+		expect(baz).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -1080,8 +988,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const xfoo = meta.props.find(prop => prop.name === 'xfoo');
-			expect(xfoo).toMatchInlineSnapshot(`
+		const xfoo = meta.props.find(prop => prop.name === 'xfoo');
+		expect(xfoo).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -1098,8 +1006,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const xbar = meta.props.find(prop => prop.name === 'xbar');
-			expect(xbar).toMatchInlineSnapshot(`
+		const xbar = meta.props.find(prop => prop.name === 'xbar');
+		expect(xbar).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -1123,8 +1031,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const xbaz = meta.props.find(prop => prop.name === 'xbaz');
-			expect(xbaz).toMatchInlineSnapshot(`
+		const xbaz = meta.props.find(prop => prop.name === 'xbaz');
+		expect(xbaz).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": undefined,
@@ -1148,8 +1056,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const hello = meta.props.find(prop => prop.name === 'hello');
-			expect(hello).toMatchInlineSnapshot(`
+		const hello = meta.props.find(prop => prop.name === 'hello');
+		expect(hello).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": "'Hello'",
@@ -1178,8 +1086,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const numberOrStringProp = meta.props.find(prop => prop.name === 'numberOrStringProp');
-			expect(numberOrStringProp).toMatchInlineSnapshot(`
+		const numberOrStringProp = meta.props.find(prop => prop.name === 'numberOrStringProp');
+		expect(numberOrStringProp).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": "42",
@@ -1204,8 +1112,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const arrayProps = meta.props.find(prop => prop.name === 'arrayProps');
-			expect(arrayProps).toMatchInlineSnapshot(`
+		const arrayProps = meta.props.find(prop => prop.name === 'arrayProps');
+		expect(arrayProps).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": "[42, 43, 44]",
@@ -1234,249 +1142,254 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "type": "unknown[] | undefined",
 				}
 			`);
-		});
+	});
 
-		test('reference-type-events', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-events/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
+	test('reference-type-events', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/reference-type-events/component.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Class);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
-			const onFoo = meta.events.find(event => event.name === 'foo');
-			expect(onFoo).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "name": "foo",
-				  "rawType": undefined,
-				  "schema": [
-				    {
-				      "kind": "enum",
-				      "schema": [
-				        "undefined",
-				        {
-				          "kind": "object",
-				          "schema": {
-				            "foo": {
-				              "declarations": [],
-				              "default": undefined,
-				              "description": "",
-				              "getDeclarations": [Function],
-				              "getTypeObject": [Function],
-				              "global": false,
-				              "name": "foo",
-				              "rawType": undefined,
-				              "required": true,
-				              "schema": "string",
-				              "tags": [],
-				              "type": "string",
-				            },
-				          },
-				          "type": "{ foo: string; }",
-				        },
-				      ],
-				      "type": "{ foo: string; } | undefined",
-				    },
-				  ],
-				  "signature": "(event: "foo", data?: { foo: string; } | undefined): void",
-				  "tags": [],
-				  "type": "[data?: { foo: string; } | undefined]",
-				}
-			`);
+		const onFoo = meta.events.find(event => event.name === 'foo');
+		expect(onFoo).toMatchInlineSnapshot(`
+			{
+			  "declarations": [],
+			  "description": "",
+			  "getDeclarations": [Function],
+			  "getTypeObject": [Function],
+			  "name": "foo",
+			  "rawType": undefined,
+			  "schema": [
+			    {
+			      "kind": "enum",
+			      "schema": [
+			        "undefined",
+			        {
+			          "kind": "object",
+			          "schema": {
+			            "foo": {
+			              "declarations": [],
+			              "default": undefined,
+			              "description": "",
+			              "getDeclarations": [Function],
+			              "getTypeObject": [Function],
+			              "global": false,
+			              "name": "foo",
+			              "rawType": undefined,
+			              "required": true,
+			              "schema": "string",
+			              "tags": [],
+			              "type": "string",
+			            },
+			          },
+			          "type": "{ foo: string; }",
+			        },
+			      ],
+			      "type": "{ foo: string; } | undefined",
+			    },
+			  ],
+			  "signature": "(event: "foo", data?: {
+			    foo: string;
+			} | undefined): void;",
+			  "tags": [],
+			  "type": "[data?: { foo: string; } | undefined]",
+			}
+		`);
 
-			const onBar = meta.events.find(event => event.name === 'bar');
-			expect(onBar).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "name": "bar",
-				  "rawType": undefined,
-				  "schema": [
-				    {
-				      "kind": "object",
-				      "schema": {
-				        "arg1": {
-				          "declarations": [],
-				          "default": undefined,
-				          "description": "",
-				          "getDeclarations": [Function],
-				          "getTypeObject": [Function],
-				          "global": false,
-				          "name": "arg1",
-				          "rawType": undefined,
-				          "required": true,
-				          "schema": "number",
-				          "tags": [],
-				          "type": "number",
-				        },
-				        "arg2": {
-				          "declarations": [],
-				          "default": undefined,
-				          "description": "",
-				          "getDeclarations": [Function],
-				          "getTypeObject": [Function],
-				          "global": false,
-				          "name": "arg2",
-				          "rawType": undefined,
-				          "required": false,
-				          "schema": "any",
-				          "tags": [],
-				          "type": "any",
-				        },
-				      },
-				      "type": "{ arg1: number; arg2?: any; }",
-				    },
-				  ],
-				  "signature": "(event: "bar", value: { arg1: number; arg2?: any; }): void",
-				  "tags": [],
-				  "type": "[value: { arg1: number; arg2?: any; }]",
-				}
-			`);
+		const onBar = meta.events.find(event => event.name === 'bar');
+		expect(onBar).toMatchInlineSnapshot(`
+			{
+			  "declarations": [],
+			  "description": "",
+			  "getDeclarations": [Function],
+			  "getTypeObject": [Function],
+			  "name": "bar",
+			  "rawType": undefined,
+			  "schema": [
+			    {
+			      "kind": "object",
+			      "schema": {
+			        "arg1": {
+			          "declarations": [],
+			          "default": undefined,
+			          "description": "",
+			          "getDeclarations": [Function],
+			          "getTypeObject": [Function],
+			          "global": false,
+			          "name": "arg1",
+			          "rawType": undefined,
+			          "required": true,
+			          "schema": "number",
+			          "tags": [],
+			          "type": "number",
+			        },
+			        "arg2": {
+			          "declarations": [],
+			          "default": undefined,
+			          "description": "",
+			          "getDeclarations": [Function],
+			          "getTypeObject": [Function],
+			          "global": false,
+			          "name": "arg2",
+			          "rawType": undefined,
+			          "required": false,
+			          "schema": "any",
+			          "tags": [],
+			          "type": "any",
+			        },
+			      },
+			      "type": "{ arg1: number; arg2?: any; }",
+			    },
+			  ],
+			  "signature": "(event: "bar", value: {
+			    arg1: number;
+			    arg2?: any;
+			}): void;",
+			  "tags": [],
+			  "type": "[value: { arg1: number; arg2?: any; }]",
+			}
+		`);
 
-			const onBaz = meta.events.find(event => event.name === 'baz');
-			expect(onBaz).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "name": "baz",
-				  "rawType": undefined,
-				  "schema": [],
-				  "signature": "(event: "baz"): void",
-				  "tags": [],
-				  "type": "[]",
-				}
-			`);
-		});
+		const onBaz = meta.events.find(event => event.name === 'baz');
+		expect(onBaz).toMatchInlineSnapshot(`
+			{
+			  "declarations": [],
+			  "description": "",
+			  "getDeclarations": [Function],
+			  "getTypeObject": [Function],
+			  "name": "baz",
+			  "rawType": undefined,
+			  "schema": [],
+			  "signature": "(event: "baz"): void;",
+			  "tags": [],
+			  "type": "[]",
+			}
+		`);
+	});
 
-		test('reference-type-events w/ generic', () => {
-			const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/generic/component.vue');
-			const meta = checker.getComponentMeta(componentPath);
+	test('reference-type-events w/ generic', async () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/generic/component.vue');
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Function);
+		expect(meta.type).toEqual(TypeMeta.Function);
 
-			const onBar = meta.events.find(event => event.name === 'bar');
-			expect(onBar).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "name": "bar",
-				  "rawType": undefined,
-				  "schema": [
-				    "number",
-				  ],
-				  "signature": "(e: "bar", data: number): void",
-				  "tags": [],
-				  "type": "[number]",
-				}
-			`);
-		});
+		const onBar = meta.events.find(event => event.name === 'bar');
+		expect(onBar).toMatchInlineSnapshot(`
+			{
+			  "declarations": [],
+			  "description": "",
+			  "getDeclarations": [Function],
+			  "getTypeObject": [Function],
+			  "name": "bar",
+			  "rawType": undefined,
+			  "schema": [
+			    "number",
+			  ],
+			  "signature": "(e: "bar", data: number): void;",
+			  "tags": [],
+			  "type": "[number]",
+			}
+		`);
+	});
 
-		test('reference-type-slots', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-slots/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
+	test('reference-type-slots', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/reference-type-slots/component.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Class);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
-			const a = meta.slots.find(slot =>
-				slot.name === 'default'
-				&& slot.type === '{ num: number; }'
-			);
-			const b = meta.slots.find(slot =>
-				slot.name === 'named-slot'
-				&& slot.type === '{ str: string; }'
-			);
-			const c = meta.slots.find(slot =>
-				slot.name === 'vbind'
-				&& slot.type === '{ num: number; str: string; }'
-			);
-			const d = meta.slots.find(slot => slot.name === 'no-bind');
+		const a = meta.slots.find(slot =>
+			slot.name === 'default'
+			&& slot.type === '{ num: number; }'
+		);
+		const b = meta.slots.find(slot =>
+			slot.name === 'named-slot'
+			&& slot.type === '{ str: string; }'
+		);
+		const c = meta.slots.find(slot =>
+			slot.name === 'vbind'
+			&& slot.type === '{ num: number; str: string; }'
+		);
+		const d = meta.slots.find(slot => slot.name === 'no-bind');
 
-			expect(a).toBeDefined();
-			expect(b).toBeDefined();
-			expect(c).toBeDefined();
-			expect(d).toBeDefined();
-		});
+		expect(a).toBeDefined();
+		expect(b).toBeDefined();
+		expect(c).toBeDefined();
+		expect(d).toBeDefined();
+	});
 
-		test('reference-type-slots w/ defineSlots', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-slots/component-define-slots.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
+	test('reference-type-slots w/ defineSlots', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/reference-type-slots/component-define-slots.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Class);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
-			const a = meta.slots.find(slot =>
-				slot.name === 'default'
-				&& slot.type === '{ num: number; }'
-			);
-			const b = meta.slots.find(slot =>
-				slot.name === 'named-slot'
-				&& slot.type === '{ str: string; }'
-			);
-			const c = meta.slots.find(slot =>
-				slot.name === 'vbind'
-				&& slot.type === '{ num: number; str: string; }'
-			);
-			const d = meta.slots.find(slot => slot.name === 'no-bind');
+		const a = meta.slots.find(slot =>
+			slot.name === 'default'
+			&& slot.type === '{ num: number; }'
+		);
+		const b = meta.slots.find(slot =>
+			slot.name === 'named-slot'
+			&& slot.type === '{ str: string; }'
+		);
+		const c = meta.slots.find(slot =>
+			slot.name === 'vbind'
+			&& slot.type === '{ num: number; str: string; }'
+		);
+		const d = meta.slots.find(slot => slot.name === 'no-bind');
 
-			expect(a).toBeDefined();
-			expect(b).toBeDefined();
-			expect(c).toBeDefined();
-			expect(d).toBeDefined();
+		expect(a).toBeDefined();
+		expect(b).toBeDefined();
+		expect(c).toBeDefined();
+		expect(d).toBeDefined();
 
-			expect(c).toStrictEqual(expect.objectContaining(
-				{
-					description: 'Slot with tags',
-					tags: [
-						{
-							name: 'deprecated',
-							text: 'do not use',
-						},
-					],
-				},
-			));
-		});
+		expect(c).toStrictEqual(expect.objectContaining(
+			{
+				description: 'Slot with tags',
+				tags: [
+					{
+						name: 'deprecated',
+						text: 'do not use',
+					},
+				],
+			},
+		));
+	});
 
-		test('reference-type-slots w/ generic', () => {
-			const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/generic/component.vue');
-			const meta = checker.getComponentMeta(componentPath);
+	test('reference-type-slots w/ generic', async () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/generic/component.vue');
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Function);
+		expect(meta.type).toEqual(TypeMeta.Function);
 
-			expect(meta.slots.find(slot =>
-				slot.name === 'default'
-				&& slot.type === '{ foo: number; }'
-			)).toBeDefined();
-		});
+		expect(meta.slots.find(slot =>
+			slot.name === 'default'
+			&& slot.type === '{ foo: number; }'
+		)).toBeDefined();
+	});
 
-		test('reference-type-exposed', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-exposed/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
+	test('reference-type-exposed', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/reference-type-exposed/component.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Class);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
-			const counter = meta.exposed.find(exposed => exposed.name === 'counter');
-			const oldCounter = meta.exposed.find(exposed => exposed.name === 'oldCounter');
+		const counter = meta.exposed.find(exposed => exposed.name === 'counter');
+		const oldCounter = meta.exposed.find(exposed => exposed.name === 'oldCounter');
 
-			expect(counter).toMatchInlineSnapshot(`
+		expect(counter).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "description": "a counter string",
@@ -1489,213 +1402,213 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "type": "string",
 				}
 			`);
-			expect(oldCounter).toStrictEqual(expect.objectContaining(
-				{
-					description: 'an oldCounter string',
-					tags: [
-						{
-							name: 'deprecated',
-							text: 'use counter instead',
-						},
-					],
-				},
-			));
-			expect(meta.exposed.find(({ name }) => ['label', 'click', 'default'].includes(name))).toBeUndefined();
-			expect(meta.props.find(({ name }) => name === 'label')).toBeDefined();
-			expect(meta.events.find(({ name }) => name === 'click')).toBeDefined();
-			expect(meta.slots.find(({ name }) => name === 'default')).toBeDefined();
-		});
+		expect(oldCounter).toStrictEqual(expect.objectContaining(
+			{
+				description: 'an oldCounter string',
+				tags: [
+					{
+						name: 'deprecated',
+						text: 'use counter instead',
+					},
+				],
+			},
+		));
+		expect(meta.exposed.find(({ name }) => ['label', 'click', 'default'].includes(name))).toBeUndefined();
+		expect(meta.props.find(({ name }) => name === 'label')).toBeDefined();
+		expect(meta.events.find(({ name }) => name === 'click')).toBeDefined();
+		expect(meta.slots.find(({ name }) => name === 'default')).toBeDefined();
+	});
 
-		test('options-api expose array', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-exposed/component-options-api.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
+	test('options-api expose array', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/reference-type-exposed/component-options-api.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Class);
-			expect(meta.exposed.map(({ name }) => name)).toStrictEqual(expect.arrayContaining(['increment', 'reset']));
+		expect(meta.type).toEqual(TypeMeta.Class);
+		expect(meta.exposed.map(({ name }) => name)).toStrictEqual(expect.arrayContaining(['increment', 'reset']));
 
-			const reset = meta.exposed.find(exposed => exposed.name === 'reset');
+		const reset = meta.exposed.find(exposed => exposed.name === 'reset');
 
-			expect(reset).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "description": "Resets the counter to zero",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "name": "reset",
-				  "rawType": undefined,
-				  "schema": {
-				    "kind": "event",
-				    "schema": undefined,
-				    "type": "(): void",
-				  },
-				  "tags": [],
-				  "type": "() => void",
-				}
-			`);
-		});
+		expect(reset).toMatchInlineSnapshot(`
+			{
+			  "declarations": [],
+			  "description": "Resets the counter to zero",
+			  "getDeclarations": [Function],
+			  "getTypeObject": [Function],
+			  "name": "reset",
+			  "rawType": undefined,
+			  "schema": {
+			    "kind": "event",
+			    "schema": undefined,
+			    "type": "(): void;",
+			  },
+			  "tags": [],
+			  "type": "() => void",
+			}
+		`);
+	});
 
-		test('component with both props and events', () => {
-			const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/#5546/main.vue');
-			const meta = checker.getComponentMeta(componentPath);
+	test('component with both props and events', async () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/#5546/main.vue');
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Class);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
-			// Nothing special about this prop
-			expect(meta.props.find(prop => prop.name === 'title')).toBeDefined();
-			// Event
-			expect(meta.props.find(prop => prop.name === 'onClose')).toBeUndefined();
-			expect(meta.events.find(event => event.name === 'close')).toBeDefined();
-			// Prop that starts with `on`
-			expect(meta.props.find(prop => prop.name === 'onCompleted')).toBeDefined();
-		});
+		// Nothing special about this prop
+		expect(meta.props.find(prop => prop.name === 'title')).toBeDefined();
+		// Event
+		expect(meta.props.find(prop => prop.name === 'onClose')).toBeUndefined();
+		expect(meta.events.find(event => event.name === 'close')).toBeDefined();
+		// Prop that starts with `on`
+		expect(meta.props.find(prop => prop.name === 'onCompleted')).toBeDefined();
+	});
 
-		test('non-component', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/non-component/component.ts',
-			);
-			const meta = checker.getComponentMeta(componentPath);
+	test('non-component', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/non-component/component.ts',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Unknown);
-		});
+		expect(meta.type).toEqual(TypeMeta.Unknown);
+	});
 
-		test('ts-component', () => {
-			const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/ts-component/component.ts');
-			const meta = checker.getComponentMeta(componentPath);
+	test('ts-component', async () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/ts-component/component.ts');
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Class);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
-			const a = meta.props.find(prop =>
-				prop.name === 'foo'
-				&& prop.required
-				&& prop.type === 'string'
-			);
-			const b = meta.props.find(prop =>
-				prop.name === 'bar'
-				&& !prop.required
-				&& prop.type === 'number | undefined'
-			);
+		const a = meta.props.find(prop =>
+			prop.name === 'foo'
+			&& prop.required
+			&& prop.type === 'string'
+		);
+		const b = meta.props.find(prop =>
+			prop.name === 'bar'
+			&& !prop.required
+			&& prop.type === 'number | undefined'
+		);
 
-			expect(a).toBeDefined();
-			expect(b).toBeDefined();
-		});
+		expect(a).toBeDefined();
+		expect(b).toBeDefined();
+	});
 
-		test('ts-component.tsx', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/ts-component/component-tsx.tsx',
-			);
-			const meta = checker.getComponentMeta(componentPath);
+	test('ts-component.tsx', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/ts-component/component-tsx.tsx',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Class);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
-			const a = meta.props.find(prop =>
-				prop.name === 'foo'
-				&& prop.required
-				&& prop.type === 'string'
-			);
-			const b = meta.props.find(prop =>
-				prop.name === 'bar'
-				&& !prop.required
-				&& prop.type === 'number | undefined'
-			);
+		const a = meta.props.find(prop =>
+			prop.name === 'foo'
+			&& prop.required
+			&& prop.type === 'string'
+		);
+		const b = meta.props.find(prop =>
+			prop.name === 'bar'
+			&& !prop.required
+			&& prop.type === 'number | undefined'
+		);
 
-			expect(a).toBeDefined();
-			expect(b).toBeDefined();
-		});
+		expect(a).toBeDefined();
+		expect(b).toBeDefined();
+	});
 
-		test('ts-named-exports', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/ts-named-export/component.ts',
-			);
+	test('ts-named-exports', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/ts-named-export/component.ts',
+		);
 
-			const exportNames = checker.getExportNames(componentPath);
-			expect(exportNames).toEqual(['Foo', 'Bar']);
+		const exportNames = await checker.getExportNames(componentPath);
+		expect(exportNames).toEqual(['Foo', 'Bar']);
 
-			const Foo = checker.getComponentMeta(componentPath, 'Foo');
-			const Bar = checker.getComponentMeta(componentPath, 'Bar');
+		const Foo = await checker.getComponentMeta(componentPath, 'Foo');
+		const Bar = await checker.getComponentMeta(componentPath, 'Bar');
 
-			expect(Foo.type).toEqual(TypeMeta.Class);
-			expect(Bar.type).toEqual(TypeMeta.Class);
+		expect(Foo.type).toEqual(TypeMeta.Class);
+		expect(Bar.type).toEqual(TypeMeta.Class);
 
-			const a = Foo.props.find(prop =>
-				prop.name === 'foo'
-				&& prop.required
-				&& prop.type === 'string'
-			);
-			const b = Bar.props.find(prop =>
-				prop.name === 'bar'
-				&& !prop.required
-				&& prop.type === 'number | undefined'
-			);
+		const a = Foo.props.find(prop =>
+			prop.name === 'foo'
+			&& prop.required
+			&& prop.type === 'string'
+		);
+		const b = Bar.props.find(prop =>
+			prop.name === 'bar'
+			&& !prop.required
+			&& prop.type === 'number | undefined'
+		);
 
-			expect(a).toBeDefined();
-			expect(b).toBeDefined();
-		});
+		expect(a).toBeDefined();
+		expect(b).toBeDefined();
+	});
 
-		test('options-api', () => {
-			const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/options-api/component.ts');
-			const meta = checker.getComponentMeta(componentPath);
+	test('options-api', async () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/options-api/component.ts');
+		const meta = await checker.getComponentMeta(componentPath);
 
-			expect(meta.type).toEqual(TypeMeta.Class);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
-			const submitEvent = meta.events.find(evt => evt.name === 'submit');
-			expect(submitEvent).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "name": "submit",
-				  "rawType": undefined,
-				  "schema": [
-				    {
-				      "kind": "object",
-				      "schema": {
-				        "email": {
-				          "declarations": [],
-				          "default": undefined,
-				          "description": "email of user",
-				          "getDeclarations": [Function],
-				          "getTypeObject": [Function],
-				          "global": false,
-				          "name": "email",
-				          "rawType": undefined,
-				          "required": true,
-				          "schema": "string",
-				          "tags": [],
-				          "type": "string",
-				        },
-				        "password": {
-				          "declarations": [],
-				          "default": undefined,
-				          "description": "password of same user",
-				          "getDeclarations": [Function],
-				          "getTypeObject": [Function],
-				          "global": false,
-				          "name": "password",
-				          "rawType": undefined,
-				          "required": true,
-				          "schema": "string",
-				          "tags": [],
-				          "type": "string",
-				        },
-				      },
-				      "type": "SubmitPayload",
-				    },
-				  ],
-				  "signature": "(event: "submit", args_0: SubmitPayload): void",
-				  "tags": [],
-				  "type": "[SubmitPayload]",
-				}
-			`);
+		const submitEvent = meta.events.find(evt => evt.name === 'submit');
+		expect(submitEvent).toMatchInlineSnapshot(`
+			{
+			  "declarations": [],
+			  "description": "",
+			  "getDeclarations": [Function],
+			  "getTypeObject": [Function],
+			  "name": "submit",
+			  "rawType": undefined,
+			  "schema": [
+			    {
+			      "kind": "object",
+			      "schema": {
+			        "email": {
+			          "declarations": [],
+			          "default": undefined,
+			          "description": "email of user",
+			          "getDeclarations": [Function],
+			          "getTypeObject": [Function],
+			          "global": false,
+			          "name": "email",
+			          "rawType": undefined,
+			          "required": true,
+			          "schema": "string",
+			          "tags": [],
+			          "type": "string",
+			        },
+			        "password": {
+			          "declarations": [],
+			          "default": undefined,
+			          "description": "password of same user",
+			          "getDeclarations": [Function],
+			          "getTypeObject": [Function],
+			          "global": false,
+			          "name": "password",
+			          "rawType": undefined,
+			          "required": true,
+			          "schema": "string",
+			          "tags": [],
+			          "type": "string",
+			        },
+			      },
+			      "type": "SubmitPayload",
+			    },
+			  ],
+			  "signature": "(event: "submit", args_0: SubmitPayload): void;",
+			  "tags": [],
+			  "type": "[SubmitPayload]",
+			}
+		`);
 
-			const propNumberDefault = meta.props.find(prop => prop.name === 'numberDefault');
-			expect(propNumberDefault).toMatchInlineSnapshot(`
+		const propNumberDefault = meta.props.find(prop => prop.name === 'numberDefault');
+		expect(propNumberDefault).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": "42",
@@ -1719,35 +1632,35 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				}
 			`);
 
-			const propObjectDefault = meta.props.find(prop => prop.name === 'objectDefault');
-			expect(propObjectDefault).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": "{
-				    foo: 'bar',
-				}",
-				  "description": "Default function Object",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "objectDefault",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "Record<string, any>",
-				    ],
-				    "type": "Record<string, any> | undefined",
-				  },
-				  "tags": [],
-				  "type": "Record<string, any> | undefined",
-				}
-			`);
+		const propObjectDefault = meta.props.find(prop => prop.name === 'objectDefault');
+		expect(propObjectDefault).toMatchInlineSnapshot(`
+			{
+			  "declarations": [],
+			  "default": "{
+			    foo: 'bar'
+			}",
+			  "description": "Default function Object",
+			  "getDeclarations": [Function],
+			  "getTypeObject": [Function],
+			  "global": false,
+			  "name": "objectDefault",
+			  "rawType": undefined,
+			  "required": false,
+			  "schema": {
+			    "kind": "enum",
+			    "schema": [
+			      "undefined",
+			      "Record<string, any>",
+			    ],
+			    "type": "Record<string, any> | undefined",
+			  },
+			  "tags": [],
+			  "type": "Record<string, any> | undefined",
+			}
+		`);
 
-			const propArrayDefault = meta.props.find(prop => prop.name === 'arrayDefault');
-			expect(propArrayDefault).toMatchInlineSnapshot(`
+		const propArrayDefault = meta.props.find(prop => prop.name === 'arrayDefault');
+		expect(propArrayDefault).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
 				  "default": "[1, 2, 3]",
@@ -1776,153 +1689,113 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "type": "unknown[] | undefined",
 				}
 			`);
-		});
-
-		test('js-component (script setup)', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/js-component/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-			expect(
-				meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.type, prop.required]),
-			).toEqual([
-				['bar', 'number | undefined', false],
-				['foo', 'string', true],
-			]);
-			expect(meta.slots.map(slot => [slot.name, slot.type])).toEqual([['header', '{ count: number; }']]);
-		});
-
-		test('js-component (options api)', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/js-component/component-options.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-			expect(
-				meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.type, prop.required]),
-			).toEqual([
-				['foo', 'string', true],
-			]);
-			expect(meta.events.map(event => event.name)).toEqual(['change']);
-		});
-
-		test('component-name-description (vue)', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/component-name-description/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.name).toBe('MyComponent');
-			expect(meta.description).toBe('My awesome component description');
-			expect(meta.type).toEqual(TypeMeta.Class);
-		});
-
-		test('component-name-description (ts)', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/component-name-description/component-ts.ts',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.name).toBe('TsComponent');
-			expect(meta.description).toBe('TypeScript component with description');
-			expect(meta.type).toEqual(TypeMeta.Class);
-		});
-
-		test('component-no-name (vue)', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/component-name-description/component-no-name.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.name).toBeUndefined();
-			expect(meta.description).toBeUndefined();
-			expect(meta.type).toEqual(TypeMeta.Class);
-		});
 	});
 
-const checkerOptions: MetaCheckerOptions = {
-	schema: { ignore: ['MyIgnoredNestedProps'] },
-	printer: { newLine: 1 },
-};
-const tsconfigChecker = createChecker(
-	path.resolve(__dirname, '../../../test-workspace/component-meta/tsconfig.json'),
-	checkerOptions,
-);
-const noTsConfigChecker = createCheckerByJson(
-	path.resolve(__dirname, '../../../test-workspace/component-meta'),
-	{
-		'extends': '../tsconfig.base.json',
-		'include': [
-			'**/*',
-		],
-	},
-	checkerOptions,
-);
+	test('js-component (script setup)', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/js-component/component.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-worker(tsconfigChecker, true);
-worker(noTsConfigChecker, false);
-
-describe('project scope', () => {
-	const scopedChecker = createCheckerByJson(
-		path.resolve(__dirname, '../../../test-workspace/component-meta'),
-		{
-			'extends': '../tsconfig.base.json',
-			'include': [
-				'empty-component/**/*',
-			],
-		},
-		checkerOptions,
-	);
-	const outsidePath = path.resolve(
-		__dirname,
-		'../../../test-workspace/component-meta/reference-type-props/component.vue',
-	);
-
-	test('component outside the project', () => {
-		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow();
-		expect(() => scopedChecker.getComponentMeta(outsidePath)).toThrow();
+		expect(meta.type).toEqual(TypeMeta.Class);
+		expect(
+			meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.type, prop.required]),
+		).toEqual([
+			['bar', 'number | undefined', false],
+			['foo', 'string', true],
+		]);
+		expect(meta.slots.map(slot => [slot.name, slot.type])).toEqual([['header', '{ count: number; }']]);
 	});
 
-	test('component outside the project (program unchanged)', () => {
-		const before = scopedChecker.getProgram()!.getRootFileNames();
+	test('js-component (options api)', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/js-component/component-options.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow();
-		expect(scopedChecker.getProgram()!.getRootFileNames()).toEqual(before);
+		expect(meta.type).toEqual(TypeMeta.Class);
+		expect(
+			meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.type, prop.required]),
+		).toEqual([
+			['foo', 'string', true],
+		]);
+		expect(meta.events.map(event => event.name)).toEqual(['change']);
 	});
 
-	test('component outside the project w/ updateFile', () => {
-		scopedChecker.updateFile(outsidePath, fs.readFileSync(outsidePath, 'utf8'));
+	test('component-name-description (vue)', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/component-name-description/component.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
 
-		expect(scopedChecker.getExportNames(outsidePath)).toContain('default');
+		expect(meta.name).toBe('MyComponent');
+		expect(meta.description).toBe('My awesome component description');
+		expect(meta.type).toEqual(TypeMeta.Class);
+	});
+
+	test('component-name-description (ts)', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/component-name-description/component-ts.ts',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
+
+		expect(meta.name).toBe('TsComponent');
+		expect(meta.description).toBe('TypeScript component with description');
+		expect(meta.type).toEqual(TypeMeta.Class);
+	});
+
+	test('component-no-name (vue)', async () => {
+		const componentPath = path.resolve(
+			__dirname,
+			'../../../test-workspace/component-meta/component-name-description/component-no-name.vue',
+		);
+		const meta = await checker.getComponentMeta(componentPath);
+
+		expect(meta.name).toBeUndefined();
+		expect(meta.description).toBeUndefined();
+		expect(meta.type).toEqual(TypeMeta.Class);
 	});
 });
 
-describe('checker deleteFile', () => {
-	const rootDir = path.resolve(__dirname, '../../../test-workspace/component-meta');
-	const checker = createCheckerByJson(
-		rootDir,
-		{
-			'extends': '../tsconfig.base.json',
-			'include': [
-				'empty-component/**/*',
-			],
-		},
-		checkerOptions,
-	);
+describe('project scope', async () => {
+	const scopedChecker = await createChecker(path.join(workspace, 'tsconfig.scope.json'), checkerOptions);
+	afterAll(() => scopedChecker.close());
+
+	const outsidePath = path.join(workspace, 'reference-type-props/component.vue');
+
+	test('component outside the project', async () => {
+		await expect(scopedChecker.getExportNames(outsidePath)).rejects.toThrow();
+		await expect(scopedChecker.getComponentMeta(outsidePath)).rejects.toThrow();
+	});
+
+	test('component outside the project (program unchanged)', async () => {
+		const before = await (await scopedChecker.getProgram()).getSourceFileNames();
+
+		await expect(scopedChecker.getExportNames(outsidePath)).rejects.toThrow();
+		expect(await (await scopedChecker.getProgram()).getSourceFileNames()).toEqual(before);
+	});
+
+	test('component outside the project w/ updateFile', async () => {
+		scopedChecker.updateFile(outsidePath, fs.readFileSync(outsidePath, 'utf8'));
+
+		// files outside the tsconfig `include` cannot be added to a configured project
+		await expect(scopedChecker.getExportNames(outsidePath)).rejects.toThrow();
+	});
+});
+
+describe('checker deleteFile', async () => {
+	const checker = await createChecker(path.join(workspace, 'tsconfig.scope.json'), checkerOptions);
+	afterAll(() => checker.close());
 
 	// in-memory files
-	const consumerPath = path.join(rootDir, 'empty-component/delete-file-consumer.vue');
-	const depPath = path.join(rootDir, 'empty-component/delete-file-dep.ts');
+	const consumerPath = path.join(workspace, 'empty-component/delete-file-consumer.vue');
+	const depPath = path.join(workspace, 'empty-component/delete-file-dep.ts');
 
-	test('deleted in-memory file no longer resolves', () => {
+	test('deleted in-memory file no longer resolves', async () => {
 		checker.updateFile(depPath, `export interface DepProps { foo: string }`);
 		checker.updateFile(
 			consumerPath,
@@ -1932,15 +1805,15 @@ defineProps<DepProps>();
 </script>`,
 		);
 
-		const propNames = (p: string) => checker.getComponentMeta(p).props.map(prop => prop.name);
-		expect(propNames(consumerPath)).toContain('foo');
+		const propNames = async (p: string) => (await checker.getComponentMeta(p)).props.map(prop => prop.name);
+		expect(await propNames(consumerPath)).toContain('foo');
 
 		checker.deleteFile(depPath);
 
-		expect(propNames(consumerPath)).not.toContain('foo');
+		expect(await propNames(consumerPath)).not.toContain('foo');
 
 		checker.deleteFile(consumerPath);
 
-		expect(() => checker.getComponentMeta(consumerPath)).toThrow();
+		await expect(checker.getComponentMeta(consumerPath)).rejects.toThrow();
 	});
 });

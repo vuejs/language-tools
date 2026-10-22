@@ -12,7 +12,6 @@ import {
 import type { Requests } from './lib/requests';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
 import { getComponentDirectives } from './lib/requests/getComponentDirectives';
-import { getComponentMeta } from './lib/requests/getComponentMeta';
 import { getComponentNames } from './lib/requests/getComponentNames';
 import { getComponentProps } from './lib/requests/getComponentProps';
 import { getComponentSlots } from './lib/requests/getComponentSlots';
@@ -242,21 +241,6 @@ export = createLanguageServicePlugin(
 				const [fileName]: Parameters<Requests['getComponentDirectives']> = request.arguments;
 				const { program } = getProject(fileName);
 				return createResponse(getComponentDirectives(ts, program, fileName));
-			});
-			session.addProtocolHandler('_vue:getComponentMeta', request => {
-				const [fileName, tag]: Parameters<Requests['getComponentMeta']> = request.arguments;
-				const { program, virtualCode, language } = getProjectAndVirtualCode(fileName);
-				return createResponse(
-					getComponentMeta(
-						ts,
-						program,
-						language,
-						fileName => language.scripts.get(fileName),
-						program.getSourceFile(virtualCode.fileName)!,
-						virtualCode,
-						tag,
-					),
-				);
 			});
 			session.addProtocolHandler('_vue:getComponentNames', request => {
 				const [fileName]: Parameters<Requests['getComponentNames']> = request.arguments;

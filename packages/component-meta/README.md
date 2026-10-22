@@ -10,7 +10,7 @@ Statically extract metadata such as props, events, slots, and exposed from Vue c
 ## Installation
 
 ```bash
-npm install vue-component-meta typescript
+npm install vue-component-meta
 ```
 
 ## Usage
@@ -20,30 +20,22 @@ npm install vue-component-meta typescript
 ```typescript
 import { createChecker } from 'vue-component-meta';
 
-const checker = createChecker('/path/to/tsconfig.json', {
+const checker = await createChecker('/path/to/tsconfig.json', {
   schema: true, // Enable schema parsing
 });
 
-const meta = checker.getComponentMeta('/path/to/MyComponent.vue');
+const meta = await checker.getComponentMeta('/path/to/MyComponent.vue');
+
+await checker.close();
 ```
 
-### Create a Checker from JSON Configuration
-
-```typescript
-import { createCheckerByJson } from 'vue-component-meta';
-
-const checker = createCheckerByJson('/project/root', {
-  include: ['src/**/*.vue'],
-  compilerOptions: { /* ... */ },
-  vueCompilerOptions: { /* ... */ },
-});
-```
+The checker runs the TypeScript 7 API (`tsc --api`) in a child process. Vue files are type-checked through the content mappers configured in the tsconfig (`contentMappers`), and only files matched by its `include` are part of the project.
 
 ## API
 
 ### `checker.getComponentMeta(filePath, exportName?)`
 
-Get the metadata of a component. `exportName` defaults to `'default'`.
+Get the metadata of a component. `exportName` defaults to `'default'`. Returns a `Promise<ComponentMeta>`.
 
 The returned `ComponentMeta` object contains:
 
@@ -61,15 +53,15 @@ interface ComponentMeta {
 
 ### `checker.getExportNames(filePath)`
 
-Get all export names of a file.
+Get all export names of a file. Returns a `Promise<string[]>`.
 
 ### `checker.updateFile(filePath, content)`
 
-Update file content (for virtual files or live editing).
+Update file content (for virtual files or live editing). The file must be matched by the tsconfig's `include`.
 
 ### `checker.deleteFile(filePath)`
 
-Remove a file from the project.
+Remove a file from the project, including files on disk.
 
 ### `checker.reload()`
 
@@ -81,7 +73,11 @@ Clear cached file content.
 
 ### `checker.getProgram()`
 
-Get the underlying TypeScript Program instance.
+Get the underlying TypeScript 7 `Program` instance. Returns a `Promise`.
+
+### `checker.close()`
+
+Stop the TypeScript 7 API process.
 
 ## Metadata Structures
 
@@ -97,8 +93,8 @@ interface PropertyMeta {
   global: boolean;          // Whether it's a global prop
   tags: { name: string; text?: string }[];  // JSDoc tags
   schema: PropertyMetaSchema;
-  getDeclarations(): Declaration[];
-  getTypeObject(): ts.Type;
+  getDeclarations(): Promise<Declaration[]>;
+  getTypeObject(): Type;
 }
 ```
 
@@ -112,8 +108,8 @@ interface EventMeta {
   signature: string;
   tags: { name: string; text?: string }[];
   schema: PropertyMetaSchema[];
-  getDeclarations(): Declaration[];
-  getTypeObject(): ts.Type | undefined;
+  getDeclarations(): Promise<Declaration[]>;
+  getTypeObject(): Type | undefined;
 }
 ```
 
@@ -126,8 +122,8 @@ interface SlotMeta {
   type: string;
   tags: { name: string; text?: string }[];
   schema: PropertyMetaSchema;
-  getDeclarations(): Declaration[];
-  getTypeObject(): ts.Type;
+  getDeclarations(): Promise<Declaration[]>;
+  getTypeObject(): Type;
 }
 ```
 
@@ -140,8 +136,8 @@ interface ExposeMeta {
   type: string;
   tags: { name: string; text?: string }[];
   schema: PropertyMetaSchema;
-  getDeclarations(): Declaration[];
-  getTypeObject(): ts.Type;
+  getDeclarations(): Promise<Declaration[]>;
+  getTypeObject(): Type;
 }
 ```
 
@@ -150,11 +146,13 @@ interface ExposeMeta {
 ```typescript
 interface MetaCheckerOptions {
   schema?: boolean | {
-    ignore?: (string | ((name: string, type: ts.Type, typeChecker: ts.TypeChecker) => boolean))[];
+    ignore?: (string | ((name: string, type: Type, typeChecker: Checker) => boolean | Promise<boolean>))[];
   };
-  printer?: ts.PrinterOptions;
+  printer?: PrintNodeOptions;
 }
 ```
+
+`Type`, `Checker` and `PrintNodeOptions` are the types of `typescript/async` from TypeScript 7.
 
 ### `schema`
 

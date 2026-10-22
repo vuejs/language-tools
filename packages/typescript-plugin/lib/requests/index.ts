@@ -23,7 +23,7 @@ export interface Requests {
 	getComponentMeta(
 		fileName: string,
 		tag: string,
-	): Response<ReturnType<typeof import('./getComponentMeta.js')['getComponentMeta']>>;
+	): Response<import('vue-component-meta').ComponentMeta>;
 	getComponentNames(
 		fileName: string,
 	): Response<ReturnType<typeof import('./getComponentNames.js')['getComponentNames']>>;

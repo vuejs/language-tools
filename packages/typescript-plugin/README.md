@@ -49,7 +49,6 @@ This plugin registers the following Vue-specific commands for `tsserver`:
 | `_vue:resolveAutoImportCompletionEntry` | Resolve auto-import completion entry |
 | `_vue:isRefAtPosition` | Check if position is a ref |
 | `_vue:getComponentDirectives` | Get component directives |
-| `_vue:getComponentMeta` | Get component metadata |
 | `_vue:getComponentNames` | Get component name list |
 | `_vue:getComponentProps` | Get component props |
 | `_vue:getComponentSlots` | Get component slots |

@@ -1,36 +1,10 @@
+import type { VueVirtualCode } from '@vue/language-core';
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-
-/** The parts of `typescript/async` used here; the module is loaded at runtime from the TS 7 installation. */
-interface API {
-	getCurrentLanguageServerSnapshot(changes?: { openFiles?: string[]; closeFiles?: string[] }): Promise<Snapshot>;
-	close(): Promise<void>;
-}
-
-interface Snapshot {
-	getDefaultProjectForFile(file: string): Promise<
-		| {
-			configFileName: string | undefined;
-			parsedCommandLine: {
-				/**
-				 * The config file's own JSON, not merged with `extends`, except that `contentMappers` is replaced by
-				 * the resolved (possibly inherited) array. Undefined for inferred projects.
-				 */
-				raw?: { contentMappers?: unknown[] };
-			};
-			checker: {
-				getSymbolOfSourceFile(file: string): Promise<object | undefined>;
-				getMemberInModuleExports(symbol: object, name: string): Promise<object | undefined>;
-			};
-			languageService: {
-				getImportEditsForSymbols(file: string, symbols: readonly object[]): Promise<readonly TextEdit[]>;
-			};
-		}
-		| undefined
-	>;
-	dispose(): Promise<void>;
-}
+import type { ComponentMeta, TypeScript } from 'vue-component-meta';
+import { getComponentMeta } from 'vue-component-meta/lib/componentMeta';
+import { getComponentType } from './componentMeta';
 
 /** An edit in UTF-16 offsets of the file's own text (for a content-mapped file, its source text). */
 export interface TextEdit {
@@ -54,6 +28,11 @@ export interface TypeScriptProjectResolver {
 	 * undefined when `incomingFileName` has no default export in `fileName`'s project.
 	 */
 	getDefaultImportEdits(fileName: string, incomingFileName: string): Promise<readonly TextEdit[] | undefined>;
+	/**
+	 * The metadata of the component that `tag` refers to in the template of the Vue file `fileName`. Its
+	 * `getDeclarations()` and `getTypeObject()` refer to a snapshot that is released before this returns.
+	 */
+	getComponentMeta(fileName: string, virtualCode: VueVirtualCode, tag: string): Promise<ComponentMeta | undefined>;
 	/** Releases the file opened by `getProject`. */
 	closeFile(fileName: string): void;
 	/** Forgets the cached answers, e.g. after a config file changed. */
@@ -71,9 +50,12 @@ export async function connectTypeScriptProjectResolver(
 ): Promise<TypeScriptProjectResolver> {
 	const manifestPath = fs.realpathSync(packageJsonPath);
 	const { name } = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-	const modulePath = createRequire(manifestPath).resolve(`${name}/async`);
-	const { API } = await import(pathToFileURL(modulePath).href);
-	const api: API = new API({ pipe });
+	const require = createRequire(manifestPath);
+	const ts: TypeScript = {
+		...await import(pathToFileURL(require.resolve(`${name}/ast`)).href),
+		...await import(pathToFileURL(require.resolve(`${name}/async`)).href),
+	};
+	const api = await ts.API.fromLSPConnection({ pipe });
 	const projects = new Map<string, Promise<TypeScriptProject | undefined>>();
 
 	async function openSnapshot(fileName: string) {
@@ -97,7 +79,10 @@ export async function connectTypeScriptProjectResolver(
 						const project = await snapshot.getDefaultProjectForFile(fileName);
 						return project && {
 							configFileName: project.configFileName,
-							contentMappers: project.parsedCommandLine.raw?.contentMappers,
+							// The config file's own JSON, not merged with `extends`, except that `contentMappers` is replaced by
+							// the resolved (possibly inherited) array. Undefined for inferred projects.
+							contentMappers: (project.parsedCommandLine.raw as { contentMappers?: unknown[] } | undefined)
+								?.contentMappers,
 						};
 					}
 					finally {
@@ -116,6 +101,19 @@ export async function connectTypeScriptProjectResolver(
 				const moduleSymbol = await project?.checker.getSymbolOfSourceFile(incomingFileName);
 				const defaultExport = moduleSymbol && await project!.checker.getMemberInModuleExports(moduleSymbol, 'default');
 				return defaultExport && await project!.languageService.getImportEditsForSymbols(fileName, [defaultExport]);
+			}
+			finally {
+				await snapshot.dispose();
+			}
+		},
+		async getComponentMeta(fileName, virtualCode, tag) {
+			const snapshot = await api.getCurrentLanguageServerSnapshot({ openFiles: [fileName] });
+			try {
+				const project = await snapshot.getDefaultProjectForFile(fileName);
+				const sourceFile = await project?.program.getSourceFile(fileName);
+				const component = sourceFile
+					&& await getComponentType(ts, project!.checker, sourceFile, virtualCode, tag);
+				return component && await getComponentMeta(ts, project!, api.printer, component.node, component.type);
 			}
 			finally {
 				await snapshot.dispose();

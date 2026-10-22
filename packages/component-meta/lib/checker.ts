@@ -1,179 +1,111 @@
-import { createLanguageServiceHost, resolveFileLanguageId, type TypeScriptProjectHost } from '@volar/typescript';
-import * as core from '@vue/language-core';
-import type * as ts from 'typescript-native-bridge';
+import { posix as path } from 'path-browserify';
+import type { Node } from 'typescript-7/ast' with { 'resolution-mode': 'import' };
+import type { Project, Snapshot } from 'typescript-7/async' with { 'resolution-mode': 'import' };
 import { getComponentMeta } from './componentMeta';
-import type { MetaCheckerOptions } from './types';
+import type { MetaCheckerOptions, TypeScript } from './types';
 
 export function createCheckerBase(
-	ts: typeof import('typescript'),
-	getConfigAndFiles: () => [
-		commandLine: core.ParsedCommandLine,
-		fileNames: string[],
-	],
+	ts: TypeScript,
+	tsconfig: string,
 	checkerOptions: MetaCheckerOptions,
-	rootPath: string,
 ) {
-	let [{ vueOptions, options, projectReferences }, fileNames] = getConfigAndFiles();
-	/**
-	 * Used to lookup if a file is referenced.
-	 */
-	let fileNamesSet = new Set(fileNames.map(path => path.replace(/\\/g, '/')));
-	let projectVersion = 0;
+	tsconfig = tsconfig.replace(/\\/g, '/');
 
-	const projectHost: TypeScriptProjectHost = {
-		getCurrentDirectory: () => rootPath,
-		getProjectVersion: () => projectVersion.toString(),
-		getCompilationSettings: () => options,
-		getScriptFileNames: () => [...fileNamesSet],
-		getProjectReferences: () => projectReferences,
-	};
-	const scriptSnapshots = new Map<string, ts.IScriptSnapshot | undefined>();
-	const vueLanguagePlugin = core.createVueLanguagePlugin<string>(
-		ts,
-		vueOptions,
-		id => id,
-	);
-	const language = core.createLanguage(
-		[
-			{
-				...vueLanguagePlugin,
-				getLanguageId: fileName =>
-					core.isContentMapperFile(vueOptions, fileName) ? vueLanguagePlugin.getLanguageId(fileName) : undefined,
-				createVirtualCode: (fileName, languageId, snapshot, ctx) =>
-					core.isContentMapperFile(vueOptions, fileName)
-						? vueLanguagePlugin.createVirtualCode!(fileName, languageId, snapshot, ctx)
-						: undefined,
-			},
-			{
-				getLanguageId(fileName) {
-					return resolveFileLanguageId(fileName);
-				},
-			},
-		],
-		new core.FileMap(ts.sys.useCaseSensitiveFileNames),
-		fileName => {
-			let snapshot = scriptSnapshots.get(fileName);
+	const api = new ts.API({ cwd: path.dirname(tsconfig), runExternalCode: true });
+	const files = new Map<string, string>();
+	const removedPaths = new Set<string>();
 
-			if (!scriptSnapshots.has(fileName)) {
-				const fileText = ts.sys.readFile(fileName);
-				if (fileText !== undefined) {
-					scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(fileText));
-				}
-				else {
-					scriptSnapshots.set(fileName, undefined);
-				}
-			}
-			snapshot = scriptSnapshots.get(fileName);
-
-			if (snapshot) {
-				language.scripts.set(fileName, snapshot);
-			}
-			else {
-				language.scripts.delete(fileName);
-			}
-		},
-	);
-	const { languageServiceHost } = createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost);
-	const tsLs = ts.createLanguageService(languageServiceHost);
-	const printer = ts.createPrinter({
-		...checkerOptions.printer,
-		// @ts-expect-error internal option to prevent unicode-escaping non-ASCII characters
-		neverAsciiEscape: true,
-	});
+	let snapshot: Snapshot | undefined;
+	let project: Project | undefined;
+	let invalidateAll = false;
 
 	return {
-		getExportNames,
-		getComponentMeta(fileName: string, exportName = 'default') {
-			fileName = fileName.replace(/\\/g, '/');
-			const [program, sourceFile] = getProgramAndFile(fileName);
-			const componentNode = getExport(ts, program, sourceFile, exportName)!;
+		async getExportNames(componentPath: string) {
+			return (await getExports(componentPath)).map(e => e.name);
+		},
+		async getComponentMeta(componentPath: string, exportName = 'default') {
+			const project = await getProject();
+			const componentNode = await getExport(componentPath, exportName);
 			if (!componentNode) {
-				throw new Error(`Export '${exportName}' not found in '${sourceFile.fileName}'.`);
+				throw new Error(`Export '${exportName}' not found in '${componentPath}'.`);
 			}
-			const checker = program.getTypeChecker();
-			const componentType = checker.getTypeAtLocation(componentNode);
-			return getComponentMeta(
-				ts,
-				checker,
-				printer,
-				language,
-				fileName => language.scripts.get(fileName),
-				componentNode,
-				componentType,
-				checkerOptions.schema ?? false,
-				{
-					noDeclarations: checkerOptions.noDeclarations ?? true,
-					rawType: checkerOptions.rawType ?? false,
-				},
-			);
+			const componentType = await project.checker.getTypeAtLocation(componentNode);
+			return await getComponentMeta(ts, project, api.printer, componentNode, componentType, checkerOptions);
 		},
 		updateFile(fileName: string, text: string) {
 			fileName = fileName.replace(/\\/g, '/');
-			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
-			// Ensure the file is referenced
-			fileNamesSet.add(fileName);
-			projectVersion++;
+			files.set(fileName, text);
+			removedPaths.delete(fileName);
+			project = undefined;
 		},
 		deleteFile(fileName: string) {
 			fileName = fileName.replace(/\\/g, '/');
-			fileNamesSet.delete(fileName);
-			scriptSnapshots.delete(fileName);
-			language.scripts.delete(fileName);
-			projectVersion++;
+			files.delete(fileName);
+			removedPaths.add(fileName);
+			project = undefined;
 		},
 		reload() {
-			[{ vueOptions, options, projectReferences }, fileNames] = getConfigAndFiles();
-			fileNamesSet = new Set(fileNames.map(path => path.replace(/\\/g, '/')));
-			this.clearCache();
+			invalidateAll = true;
+			project = undefined;
 		},
 		clearCache() {
-			scriptSnapshots.clear();
-			projectVersion++;
+			files.clear();
+			removedPaths.clear();
+			this.reload();
 		},
-		getProgram() {
-			return tsLs.getProgram();
+		async getProgram() {
+			return (await getProject()).program;
+		},
+		async close() {
+			await api.close();
 		},
 	};
 
-	function getProgramAndFile(componentPath: string) {
-		const program = tsLs.getProgram()!;
-		const sourceFile = program.getSourceFile(componentPath);
-		if (!sourceFile) {
+	async function getProject() {
+		if (!project) {
+			const previous = snapshot;
+			snapshot = await api.createSnapshot({
+				openProjects: [tsconfig],
+				fileSystem: {
+					kind: 'layer',
+					files: Object.fromEntries(files),
+					removedPaths: [...removedPaths],
+				},
+				fileNotifications: invalidateAll ? { invalidateAll: true } : undefined,
+			});
+			invalidateAll = false;
+			await previous?.dispose();
+			project = snapshot.getConfiguredProject(tsconfig);
+			if (!project) {
+				throw new Error(`Failed to open project '${tsconfig}'.`);
+			}
+		}
+		return project;
+	}
+
+	async function getExports(componentPath: string) {
+		const { checker, program } = await getProject();
+		componentPath = componentPath.replace(/\\/g, '/');
+		if (!await program.getSourceFile(componentPath)) {
 			throw new Error(
 				`'${componentPath}' is not part of the project. `
 					+ `Use a tsconfig that includes it, or call \`updateFile()\` to add it.`,
 			);
 		}
-		return [program, sourceFile] as const;
+		const moduleSymbol = await checker.getSymbolOfSourceFile(componentPath);
+		return moduleSymbol ? await checker.getExportsOfModule(moduleSymbol) : [];
 	}
 
-	function getExportNames(componentPath: string) {
-		const [program, sourceFile] = getProgramAndFile(componentPath);
-		return getExports(program, sourceFile).map(e => e.getName());
-	}
-}
-
-export function getExport(
-	ts: typeof import('typescript'),
-	program: ts.Program,
-	sourceFile: ts.SourceFile,
-	exportName: string,
-) {
-	const exports = getExports(program, sourceFile);
-	const symbol = exports.find(e => e.getName() === exportName);
-	if (symbol?.valueDeclaration) {
-		const decl = symbol.valueDeclaration;
-		if (ts.isExportAssignment(decl)) {
-			return decl.expression;
-		}
-		if (ts.isVariableDeclaration(decl)) {
-			return decl.initializer;
+	async function getExport(componentPath: string, exportName: string): Promise<Node | undefined> {
+		const symbol = (await getExports(componentPath)).find(e => e.name === exportName);
+		const decl = await symbol?.valueDeclaration?.resolve();
+		if (decl) {
+			if (ts.isExportAssignment(decl)) {
+				return decl.expression;
+			}
+			if (ts.isVariableDeclaration(decl)) {
+				return decl.initializer;
+			}
 		}
 	}
-}
-
-function getExports(program: ts.Program, sourceFile: ts.SourceFile) {
-	const typeChecker = program.getTypeChecker();
-	const moduleSymbol = typeChecker.getSymbolAtLocation(sourceFile);
-	return moduleSymbol ? typeChecker.getExportsOfModule(moduleSymbol) : [];
 }

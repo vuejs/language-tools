@@ -3,7 +3,7 @@ import { createLanguageServiceEnvironment } from '@volar/language-server/lib/pro
 import { createConnection, createServer } from '@volar/language-server/node';
 import type { MapperOptions } from '@vue/content-mapper/protocol';
 import { resolveVueCompilerOptions } from '@vue/content-mapper/vueOptions';
-import { createLanguage, createVueLanguagePlugin, type LanguagePlugin } from '@vue/language-core';
+import { createLanguage, createVueLanguagePlugin, type LanguagePlugin, VueVirtualCode } from '@vue/language-core';
 import {
 	createLanguageService,
 	createUriMap,
@@ -157,8 +157,16 @@ export function startServer(ts: typeof import('typescript')) {
 				getComponentDirectives(...args) {
 					return sendTsServerRequest('_vue:getComponentDirectives', args);
 				},
-				getComponentMeta(...args) {
-					return sendTsServerRequest('_vue:getComponentMeta', args);
+				async getComponentMeta(fileName, tag) {
+					try {
+						const uri = URI.file(fileName);
+						const languageService = await server.project.getLanguageService(uri);
+						const virtualCode = languageService.context.language.scripts.get(uri)?.generated?.root;
+						if (virtualCode instanceof VueVirtualCode) {
+							return await (await connectTypeScriptApi()).getComponentMeta(fileName, virtualCode, tag);
+						}
+					}
+					catch {}
 				},
 				getComponentNames(...args) {
 					return sendTsServerRequest('_vue:getComponentNames', args);

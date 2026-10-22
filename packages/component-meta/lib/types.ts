@@ -1,6 +1,11 @@
-import type * as ts from 'typescript-native-bridge';
+import type { Checker, PrintNodeOptions, Type } from 'typescript-7/async' with { 'resolution-mode': 'import' };
 
-export type ComponentMetaChecker = ReturnType<typeof import('./checker')['createCheckerBase']>;
+/** The runtime values used from a TypeScript 7 installation: its `typescript/ast` and `typescript/async` modules merged. */
+export type TypeScript =
+	& typeof import('typescript-7/ast', { with: { 'resolution-mode': 'import' }})
+	& typeof import('typescript-7/async', { with: { 'resolution-mode': 'import' }});
+
+export type ComponentMetaChecker = Awaited<ReturnType<typeof import('./checker')['createCheckerBase']>>;
 
 export interface Declaration {
 	file: string;
@@ -39,9 +44,9 @@ export interface PropertyMeta {
 	/**
 	 * @deprecated use `getTypeObject()` instead
 	 */
-	rawType?: ts.Type;
-	getDeclarations(): Declaration[];
-	getTypeObject(): ts.Type;
+	rawType?: Type;
+	getDeclarations(): Promise<Declaration[]>;
+	getTypeObject(): Type;
 }
 
 export interface EventMeta {
@@ -58,9 +63,9 @@ export interface EventMeta {
 	/**
 	 * @deprecated use `getTypeObject()` instead
 	 */
-	rawType?: ts.Type;
-	getDeclarations(): Declaration[];
-	getTypeObject(): ts.Type | undefined;
+	rawType?: Type;
+	getDeclarations(): Promise<Declaration[]>;
+	getTypeObject(): Type | undefined;
 }
 
 export interface SlotMeta {
@@ -76,9 +81,9 @@ export interface SlotMeta {
 	/**
 	 * @deprecated use `getTypeObject()` instead
 	 */
-	rawType?: ts.Type;
-	getDeclarations(): Declaration[];
-	getTypeObject(): ts.Type;
+	rawType?: Type;
+	getDeclarations(): Promise<Declaration[]>;
+	getTypeObject(): Type;
 }
 
 export interface ExposeMeta {
@@ -94,9 +99,9 @@ export interface ExposeMeta {
 	/**
 	 * @deprecated use `getTypeObject()` instead
 	 */
-	rawType?: ts.Type;
-	getDeclarations(): Declaration[];
-	getTypeObject(): ts.Type;
+	rawType?: Type;
+	getDeclarations(): Promise<Declaration[]>;
+	getTypeObject(): Type;
 }
 
 export type PropertyMetaSchema =
@@ -112,13 +117,19 @@ export type MetaCheckerSchemaOptions = boolean | {
 	 * A list of type names to be ignored in expending in schema.
 	 * Can be functions to ignore types dynamically.
 	 */
-	ignore?:
-		(string | ((name: string, type: ts.Type, typeChecker: ts.TypeChecker) => boolean | void | undefined | null))[];
+	ignore?: (
+		| string
+		| ((
+			name: string,
+			type: Type,
+			typeChecker: Checker,
+		) => boolean | void | undefined | null | Promise<boolean | void | undefined | null>)
+	)[];
 };
 
 export interface MetaCheckerOptions {
 	schema?: MetaCheckerSchemaOptions;
-	printer?: ts.PrinterOptions;
+	printer?: PrintNodeOptions;
 	/**
 	 * @deprecated No longer needed, this is default behavior now
 	 */

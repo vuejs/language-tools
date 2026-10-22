@@ -1,5 +1,6 @@
-import * as core from '@vue/language-core';
-import type * as ts from 'typescript-native-bridge';
+import { names } from '@vue/language-core';
+import type { Node, SourceFile } from 'typescript-7/ast' with { 'resolution-mode': 'import' };
+import type { Printer, Project, Type } from 'typescript-7/async' with { 'resolution-mode': 'import' };
 import {
 	inferComponentEmit,
 	inferComponentExposed,
@@ -7,215 +8,192 @@ import {
 	inferComponentSlots,
 	inferComponentType,
 } from './helpers';
-import { createSchemaResolvers } from './schemaResolvers';
+import { createSchemaResolvers, type SchemaResolverContext } from './schemaResolvers';
 import { getDefaultsFromScriptSetup } from './scriptSetup';
-import type { ComponentMeta, MetaCheckerSchemaOptions, PropertyMeta } from './types';
+import type { ComponentMeta, EventMeta, MetaCheckerOptions, PropertyMeta, TypeScript } from './types';
 
 const vnodeEventRE = /^onVnode[A-Z]/;
 
-export function getComponentMeta(
-	ts: typeof import('typescript'),
-	typeChecker: ts.TypeChecker,
-	printer: ts.Printer,
-	language: core.Language,
-	getSourceScript: (fileName: string) => core.SourceScript | undefined,
-	componentNode: ts.Node,
-	componentType: ts.Type,
-	options: MetaCheckerSchemaOptions,
-	deprecatedOptions: { noDeclarations: boolean; rawType: boolean } = { noDeclarations: true, rawType: false },
-): ComponentMeta {
-	const componentSymbol = typeChecker.getSymbolAtLocation(componentNode);
-
-	let componentFile = componentNode.getSourceFile();
-
-	if (componentSymbol) {
-		const symbol = componentSymbol.flags & ts.SymbolFlags.Alias
-			? typeChecker.getAliasedSymbol(componentSymbol)
-			: componentType.symbol;
-		const declaration = symbol?.valueDeclaration ?? symbol?.declarations?.[0];
-
-		if (declaration) {
-			componentFile = declaration.getSourceFile();
-			componentNode = declaration;
-		}
-	}
-
-	let name: string | undefined;
-	let description: string | undefined;
-	let type: ReturnType<typeof getType> | undefined;
-	let props: ReturnType<typeof getProps> | undefined;
-	let events: ReturnType<typeof getEvents> | undefined;
-	let slots: ReturnType<typeof getSlots> | undefined;
-	let exposed: ReturnType<typeof getExposed> | undefined;
-
-	const meta = {
-		get name() {
-			return name ?? (name = getName());
-		},
-		get description() {
-			return description ?? (description = getDescription());
-		},
-		get type() {
-			return type ?? (type = getType());
-		},
-		get props() {
-			return props ?? (props = getProps());
-		},
-		get events() {
-			return events ?? (events = getEvents());
-		},
-		get slots() {
-			return slots ?? (slots = getSlots());
-		},
-		get exposed() {
-			return exposed ?? (exposed = getExposed());
+export async function getComponentMeta(
+	ts: TypeScript,
+	project: Project,
+	printer: Printer,
+	componentNode: Node,
+	componentType: Type,
+	checkerOptions: MetaCheckerOptions = {},
+): Promise<ComponentMeta> {
+	const { checker } = project;
+	const context: SchemaResolverContext = {
+		ts,
+		checker,
+		print: node => printer.printNode(node, { ...checkerOptions.printer, neverAsciiEscape: true }),
+		options: checkerOptions.schema ?? false,
+		deprecatedOptions: {
+			noDeclarations: checkerOptions.noDeclarations ?? true,
+			rawType: checkerOptions.rawType ?? false,
 		},
 	};
 
-	return meta;
-
-	function getType() {
-		return inferComponentType(componentType) ?? 0;
+	const componentSymbol = await checker.getSymbolAtLocation(componentNode);
+	if (componentSymbol) {
+		const symbol = componentSymbol.flags & ts.SymbolFlags.Alias
+			? await checker.getAliasedSymbol(componentSymbol)
+			: await componentType.getSymbol();
+		const declaration = await (symbol?.valueDeclaration ?? symbol?.declarations[0])?.resolve();
+		if (declaration) {
+			componentNode = declaration;
+		}
 	}
+	const componentFile = componentNode.getSourceFile();
 
-	function getProps() {
-		const propsType = inferComponentProps(typeChecker, componentType);
+	const [type, events, slots, exposed, description] = await Promise.all([
+		inferComponentType(componentType),
+		getEvents(),
+		getSlots(),
+		getExposed(),
+		getDescription(),
+	]);
+
+	return {
+		name: getName(),
+		description,
+		type: type ?? 0,
+		props: await getProps(events),
+		events,
+		slots,
+		exposed,
+	};
+
+	async function getProps(events: EventMeta[]) {
+		const propsType = await inferComponentProps(checker, componentType);
 		if (!propsType) {
 			return [];
 		}
-		let result: PropertyMeta[] = [];
 
-		const properties = propsType.getProperties();
+		const properties = await propsType.getProperties();
+		const types = properties.length ? await checker.getTypeOfSymbol(properties) : [];
 		const eventProps = new Set(
-			meta.events.map(event => `on${event.name.charAt(0).toUpperCase()}${event.name.slice(1)}`),
+			events.map(event => `on${event.name.charAt(0).toUpperCase()}${event.name.slice(1)}`),
 		);
-
-		result = properties
-			.map(prop => {
-				const {
-					resolveNestedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
-
-				return resolveNestedProperties(prop);
-			})
-			.filter((prop): prop is PropertyMeta => !!prop && !eventProps.has(prop.name));
-
-		const defaults = getDefaultsFromScriptSetup(ts, printer, getSourceScript(componentFile.fileName));
+		const [props, defaults] = await Promise.all([
+			Promise.all(
+				properties.map((prop, i) => createSchemaResolvers(context).resolveNestedProperties(prop, types[i]!)),
+			),
+			getDefaultsFromScriptSetup(ts, context.print, componentFile),
+		]);
+		const result: PropertyMeta[] = props.filter(prop => !eventProps.has(prop.name));
 
 		for (const prop of result) {
 			if (vnodeEventRE.test(prop.name)) {
 				prop.name = 'onVue:' + prop.name['onVnode'.length]?.toLowerCase() + prop.name.slice('onVnode'.length + 1);
 			}
-			prop.default ??= defaults?.get(prop.name);
+			prop.default ??= defaults.get(prop.name);
 		}
 
 		return result;
 	}
 
-	function getEvents() {
-		const emitType = inferComponentEmit(typeChecker, componentType);
-
-		if (emitType) {
-			const calls = emitType.getCallSignatures();
-
-			return calls.map(call => {
-				const {
-					resolveEventSignature,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
-
-				return resolveEventSignature(call);
-			}).filter(event => event.name);
+	async function getEvents() {
+		const emitType = await inferComponentEmit(checker, componentType);
+		if (!emitType) {
+			return [];
 		}
-
-		return [];
+		const events = await Promise.all(
+			(await emitType.getCallSignatures()).map(call => createSchemaResolvers(context).resolveEventSignature(call)),
+		);
+		return events.filter(event => !!event);
 	}
 
-	function getSlots() {
-		const slotsType = inferComponentSlots(typeChecker, componentType);
-
-		if (slotsType) {
-			const properties = slotsType.getProperties();
-
-			return properties.map(prop => {
-				const {
-					resolveSlotProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
-
-				return resolveSlotProperties(prop);
-			});
+	async function getSlots() {
+		const slotsType = await inferComponentSlots(checker, componentType);
+		if (!slotsType) {
+			return [];
 		}
-
-		return [];
+		return await Promise.all(
+			(await slotsType.getProperties()).map(prop => createSchemaResolvers(context).resolveSlotProperties(prop)),
+		);
 	}
 
-	function getExposed() {
-		const exposedType = inferComponentExposed(typeChecker, componentType);
-
-		if (exposedType) {
-			const propsType = inferComponentProps(typeChecker, componentType);
-			const propsProperties = propsType?.getProperties() ?? [];
-			const properties = exposedType.getProperties().filter(prop =>
-				// only exposed props will have at least one declaration and no valueDeclaration
-				prop.declarations?.length
-				&& !prop.valueDeclaration
-				// Cross-check with props to avoid including props here
-				&& (!propsProperties.length || !propsProperties.some(({ name }) => name === prop.name))
-				// Exclude $slots
-				&& prop.name !== '$slots'
-			);
-
-			return properties.map(prop => {
-				const {
-					resolveExposedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
-
-				return resolveExposedProperties(prop);
-			});
+	async function getExposed() {
+		const exposedType = await inferComponentExposed(checker, componentType);
+		if (!exposedType) {
+			return [];
 		}
-
-		return [];
+		const propsType = await inferComponentProps(checker, componentType);
+		const propsProperties = await propsType?.getProperties() ?? [];
+		const properties = (await exposedType.getProperties()).filter(prop =>
+			// only exposed props will have at least one declaration and no valueDeclaration
+			prop.declarations.length
+			&& !prop.valueDeclaration
+			// Cross-check with props to avoid including props here
+			&& !propsProperties.some(({ name }) => name === prop.name)
+			// Exclude $slots
+			&& prop.name !== '$slots'
+		);
+		return await Promise.all(
+			properties.map(prop => createSchemaResolvers(context).resolveExposedProperties(prop)),
+		);
 	}
 
 	function getName() {
 		let decl = componentNode;
 
 		// const __VLS_export = ...
-		const text = componentFile.text.slice(decl.pos, decl.end);
-		if (text.includes(core.names.export)) {
-			ts.forEachChild(componentFile, child2 => {
-				if (ts.isVariableStatement(child2)) {
-					for (const { name, initializer } of child2.declarationList.declarations) {
-						if (name.getText() === core.names.export && initializer) {
+		if (componentFile.text.slice(decl.pos, decl.end).includes(names.export)) {
+			for (const statement of componentFile.statements) {
+				if (ts.isVariableStatement(statement)) {
+					for (const { name, initializer } of statement.declarationList.declarations) {
+						if (name.getText() === names.export && initializer) {
 							decl = initializer;
 						}
 					}
 				}
-			});
-		}
-
-		return core.parseOptionsFromExtression(ts, decl, componentFile)?.name?.node.text;
-	}
-
-	function getDescription() {
-		// Try to get JSDoc comments from the node using TypeScript API
-		const jsDocComments = ts.getJSDocCommentsAndTags(componentNode);
-		for (const jsDoc of jsDocComments) {
-			if (ts.isJSDoc(jsDoc) && jsDoc.comment) {
-				// Handle both string and array of comment parts
-				if (typeof jsDoc.comment === 'string') {
-					return jsDoc.comment;
-				}
-				else if (Array.isArray(jsDoc.comment)) {
-					return jsDoc.comment.map(part => (part as any).text || '').join('');
-				}
 			}
 		}
 
-		// Fallback to symbol documentation
-		const symbol = typeChecker.getSymbolAtLocation(componentNode);
-		if (symbol) {
-			const description = ts.displayPartsToString(symbol.getDocumentationComment(typeChecker));
-			return description || undefined;
+		return getNameOption(decl, componentFile);
+	}
+
+	async function getDescription() {
+		for (const jsDoc of ts.getJSDocCommentsAndTags(componentNode)) {
+			if (ts.isJSDoc(jsDoc) && jsDoc.comment) {
+				return ts.getTextOfJSDocComment(jsDoc.comment);
+			}
 		}
+
+		const symbol = await checker.getSymbolAtLocation(componentNode);
+		if (symbol) {
+			return await checker.getDocumentationCommentOfSymbol(symbol) || undefined;
+		}
+	}
+
+	function getNameOption(exp: Node, sourceFile: SourceFile) {
+		while (
+			ts.isParenthesizedExpression(exp)
+			|| ts.isAssertionExpression(exp)
+			|| ts.isNonNullExpression(exp)
+			|| ts.isSatisfiesExpression(exp)
+		) {
+			exp = exp.expression;
+		}
+
+		const obj = ts.isObjectLiteralExpression(exp)
+			? exp
+			: ts.isCallExpression(exp) && exp.arguments[0] && ts.isObjectLiteralExpression(exp.arguments[0])
+			? exp.arguments[0]
+			: undefined;
+
+		let name: string | undefined;
+		for (const prop of obj?.properties ?? []) {
+			if (
+				ts.isPropertyAssignment(prop)
+				&& ts.isIdentifier(prop.name)
+				&& prop.name.getText(sourceFile) === 'name'
+				&& ts.isStringLiteral(prop.initializer)
+			) {
+				name = prop.initializer.text;
+			}
+		}
+		return name;
 	}
 }

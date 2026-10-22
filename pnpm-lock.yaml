@@ -77,18 +77,15 @@ importers:
 
   packages/component-meta:
     dependencies:
-      '@volar/typescript':
-        specifier: 2.4.28
-        version: 2.4.28
       '@vue/language-core':
         specifier: workspace:*
         version: link:../language-core
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
-      typescript-native-bridge:
-        specifier: 6.0.3-bridge.16.tsgo.7.0.2
-        version: 6.0.3-bridge.16.tsgo.7.0.2
+      typescript-7:
+        specifier: npm:typescript@7.1.0-beta
+        version: typescript@7.1.0-beta
     devDependencies:
       '@types/node':
         specifier: ^26.0.1
@@ -203,6 +200,9 @@ importers:
       '@vue/language-service':
         specifier: workspace:*
         version: link:../language-service
+      '@vue/shared':
+        specifier: ^3.5.0
+        version: 3.5.40
       '@vue/typescript-plugin':
         specifier: workspace:*
         version: link:../typescript-plugin
@@ -212,6 +212,9 @@ importers:
       vscode-uri:
         specifier: ^3.1.0
         version: 3.1.0
+      vue-component-meta:
+        specifier: workspace:*
+        version: link:../component-meta
     devDependencies:
       '@typescript/server-harness':
         specifier: latest
@@ -219,6 +222,9 @@ importers:
       '@volar/test-utils':
         specifier: 2.4.28
         version: 2.4.28
+      typescript-7:
+        specifier: npm:typescript@7.1.0-beta
+        version: typescript@7.1.0-beta
 
   packages/language-service:
     dependencies:
@@ -301,9 +307,6 @@ importers:
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
-      vue-component-meta:
-        specifier: workspace:*
-        version: link:../component-meta
     devDependencies:
       '@types/node':
         specifier: ^26.0.1
@@ -314,6 +317,9 @@ importers:
       '@vue/compiler-dom':
         specifier: ^3.5.0
         version: 3.5.40
+      vue-component-meta:
+        specifier: workspace:*
+        version: link:../component-meta
 
   test-workspace:
     devDependencies:

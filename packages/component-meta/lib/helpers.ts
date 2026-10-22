@@ -1,143 +1,111 @@
-import type * as ts from 'typescript-native-bridge';
+import type { Checker, Type } from 'typescript-7/async' with { 'resolution-mode': 'import' };
 
-export function inferComponentType(
-	componentType: ts.Type,
-) {
-	const constructSignatures = componentType.getConstructSignatures();
-	const callSignatures = componentType.getCallSignatures();
-
-	for (const _sig of constructSignatures) {
+export async function inferComponentType(componentType: Type) {
+	if ((await componentType.getConstructSignatures()).length) {
 		return 1;
 	}
-
-	for (const _sig of callSignatures) {
+	if ((await componentType.getCallSignatures()).length) {
 		return 2;
 	}
 }
 
-export function inferComponentProps(
-	typeChecker: ts.TypeChecker,
-	componentType: ts.Type,
-): ts.Type | undefined {
-	const constructSignatures = componentType.getConstructSignatures();
-	const callSignatures = componentType.getCallSignatures();
-
-	for (const sig of constructSignatures) {
-		const retType = sig.getReturnType();
-		const props = findProperty(typeChecker, retType, '$props');
+export async function inferComponentProps(
+	checker: Checker,
+	componentType: Type,
+): Promise<Type | undefined> {
+	for (const sig of await componentType.getConstructSignatures()) {
+		const props = await findProperty(checker, await sig.getReturnType(), '$props');
 		if (props) {
 			return props;
 		}
 	}
 
-	for (const sig of callSignatures) {
-		if (sig.parameters.length > 0) {
-			const props = sig.parameters[0];
-			if (props) {
-				return typeChecker.getTypeOfSymbol(props);
-			}
+	for (const sig of await componentType.getCallSignatures()) {
+		const [props] = await sig.getParameters();
+		if (props) {
+			return await checker.getTypeOfSymbol(props);
 		}
 	}
 }
 
-export function inferComponentSlots(
-	typeChecker: ts.TypeChecker,
-	componentType: ts.Type,
-): ts.Type | undefined {
-	const constructSignatures = componentType.getConstructSignatures();
-	const callSignatures = componentType.getCallSignatures();
-
-	for (const sig of constructSignatures) {
-		const retType = sig.getReturnType();
-		const slots = findProperty(typeChecker, retType, '$slots');
+export async function inferComponentSlots(
+	checker: Checker,
+	componentType: Type,
+): Promise<Type | undefined> {
+	for (const sig of await componentType.getConstructSignatures()) {
+		const slots = await findProperty(checker, await sig.getReturnType(), '$slots');
 		if (slots) {
 			return slots;
 		}
 	}
 
-	for (const sig of callSignatures) {
-		if (sig.parameters.length > 1) {
-			const ctxParam = sig.parameters[1];
-			if (ctxParam) {
-				const ctxType = typeChecker.getTypeOfSymbol(ctxParam);
-				const slots = findProperty(typeChecker, ctxType, 'slots');
-				if (slots) {
-					return slots;
-				}
+	for (const sig of await componentType.getCallSignatures()) {
+		const ctxParam = (await sig.getParameters())[1];
+		if (ctxParam) {
+			const slots = await findProperty(checker, await checker.getTypeOfSymbol(ctxParam), 'slots');
+			if (slots) {
+				return slots;
 			}
 		}
 	}
 }
 
-export function inferComponentEmit(
-	typeChecker: ts.TypeChecker,
-	componentType: ts.Type,
-): ts.Type | undefined {
-	const constructSignatures = componentType.getConstructSignatures();
-	const callSignatures = componentType.getCallSignatures();
-
-	for (const sig of constructSignatures) {
-		const retType = sig.getReturnType();
-		const emit = findProperty(typeChecker, retType, '$emit');
+export async function inferComponentEmit(
+	checker: Checker,
+	componentType: Type,
+): Promise<Type | undefined> {
+	for (const sig of await componentType.getConstructSignatures()) {
+		const emit = await findProperty(checker, await sig.getReturnType(), '$emit');
 		if (emit) {
 			return emit;
 		}
 	}
 
-	for (const sig of callSignatures) {
-		if (sig.parameters.length > 1) {
-			const ctxParam = sig.parameters[1];
-			if (ctxParam) {
-				const ctxType = typeChecker.getTypeOfSymbol(ctxParam);
-				const emitType = findProperty(typeChecker, ctxType, 'emit');
-				if (emitType) {
-					return emitType;
+	for (const sig of await componentType.getCallSignatures()) {
+		const ctxParam = (await sig.getParameters())[1];
+		if (ctxParam) {
+			const emit = await findProperty(checker, await checker.getTypeOfSymbol(ctxParam), 'emit');
+			if (emit) {
+				return emit;
+			}
+		}
+	}
+}
+
+export async function inferComponentExposed(
+	checker: Checker,
+	componentType: Type,
+): Promise<Type | undefined> {
+	for (const sig of await componentType.getConstructSignatures()) {
+		return await sig.getReturnType();
+	}
+
+	for (const sig of await componentType.getCallSignatures()) {
+		const exposeParam = (await sig.getParameters())[2];
+		if (exposeParam) {
+			const exposeType = await checker.getTypeOfSymbol(exposeParam);
+			for (const callSig of await exposeType.getCallSignatures()) {
+				const [param] = await callSig.getParameters();
+				if (param) {
+					return await checker.getTypeOfSymbol(param);
 				}
 			}
 		}
 	}
 }
 
-export function inferComponentExposed(
-	typeChecker: ts.TypeChecker,
-	componentType: ts.Type,
-): ts.Type | undefined {
-	const constructSignatures = componentType.getConstructSignatures();
-	const callSignatures = componentType.getCallSignatures();
-
-	for (const sig of constructSignatures) {
-		return sig.getReturnType();
-	}
-
-	for (const sig of callSignatures) {
-		if (sig.parameters.length > 2) {
-			const exposeParam = sig.parameters[2];
-			if (exposeParam) {
-				const exposeType = typeChecker.getTypeOfSymbol(exposeParam);
-				const callSignatures = exposeType.getCallSignatures();
-				for (const callSig of callSignatures) {
-					const params = callSig.getParameters();
-					if (params.length > 0) {
-						return typeChecker.getTypeOfSymbol(params[0]!);
-					}
-				}
-			}
-		}
-	}
-}
-
-function findProperty(
-	typeChecker: ts.TypeChecker,
-	type: ts.Type,
+async function findProperty(
+	checker: Checker,
+	type: Type,
 	property: string,
-): ts.Type | undefined {
-	const symbol = type.getProperty(property);
+): Promise<Type | undefined> {
+	const symbol = await type.getProperty(property);
 	if (symbol) {
-		return typeChecker.getTypeOfSymbol(symbol);
+		return await checker.getTypeOfSymbol(symbol);
 	}
-	if (type.isUnionOrIntersection()) {
-		for (const sub of type.types) {
-			const found = findProperty(typeChecker, sub, property);
+	if (type.isUnionType() || type.isIntersectionType()) {
+		for (const sub of await type.getTypes() ?? []) {
+			const found = await findProperty(checker, sub, property);
 			if (found) {
 				return found;
 			}
