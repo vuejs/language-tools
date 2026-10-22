@@ -25,7 +25,6 @@ import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
 import { create as createVueSuggestDefineAssignmentPlugin } from './lib/plugins/vue-suggest-define-assignment';
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
 import { create as createVueTemplateRefLinksPlugin } from './lib/plugins/vue-template-ref-links';
-import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
 
 const noop = () => {};
 
@@ -68,6 +67,5 @@ export function createVueLanguageServicePlugins(
 		createVueMissingPropsHintsPlugin(client),
 		createVueTemplatePlugin(ts, 'html', client),
 		createVueTemplatePlugin(ts, 'jade', client),
-		createVueTwoslashQueriesPlugin(client),
 	];
 }

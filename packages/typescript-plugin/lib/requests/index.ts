@@ -40,10 +40,6 @@ export interface Requests {
 	getElementNames(
 		fileName: string,
 	): Response<ReturnType<typeof import('./getElementNames.js')['getElementNames']>>;
-	getQuickInfoAtPosition(
-		fileName: string,
-		position: ts.LineAndCharacter,
-	): Response<string>;
 	getAutoImportSuggestions(
 		fileName: string,
 		position: number,

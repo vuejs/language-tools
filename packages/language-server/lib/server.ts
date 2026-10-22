@@ -10,7 +10,6 @@ import {
 	createVueLanguageServicePlugins,
 	type LanguageService,
 } from '@vue/language-service';
-import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 import {
 	connectTypeScriptProjectResolver,
@@ -187,17 +186,6 @@ export function startServer(ts: typeof import('typescript')) {
 				},
 				isRefAtPosition(...args) {
 					return sendTsServerRequest('_vue:isRefAtPosition', args);
-				},
-				async getQuickInfoAtPosition(fileName, { line, character }) {
-					const result = await sendTsServerRequest<ts.server.protocol.QuickInfoResponseBody>(
-						'_vue:quickinfo' satisfies `_vue:${ts.server.protocol.CommandTypes.Quickinfo}`,
-						{
-							file: fileName,
-							line: line + 1,
-							offset: character + 1,
-						} satisfies ts.server.protocol.FileLocationRequestArgs,
-					);
-					return result?.displayString;
 				},
 			}),
 		);

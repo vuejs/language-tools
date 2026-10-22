@@ -54,7 +54,6 @@ const plugins = createVueLanguageServicePlugins(ts);
 | `vue-extract-file` | Extract component refactoring |
 | `vue-document-drop` | Auto-generation of import on file drop |
 | `vue-suggest-define-assignment` | Assignment suggestions for `defineProps`, etc. |
-| `vue-twoslash-queries` | Twoslash query support (`// ^?`) |
 | `css` | CSS language service, supporting v-bind and CSS Modules |
 
 ## Usage with @volar/kit

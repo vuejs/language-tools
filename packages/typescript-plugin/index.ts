@@ -93,13 +93,10 @@ export = createLanguageServicePlugin(
 				string,
 				(request: ts.server.protocol.Request) => ts.server.HandlerResponse
 			>;
-			if (handlers.has('_vue:quickinfo')) {
+			if (handlers.has('_vue:collectExtractProps')) {
 				return;
 			}
 
-			session.addProtocolHandler('_vue:quickinfo', request => {
-				return handlers.get('quickinfo')!(request);
-			});
 			session.addProtocolHandler(
 				'_vue:collectExtractProps',
 				request => {
