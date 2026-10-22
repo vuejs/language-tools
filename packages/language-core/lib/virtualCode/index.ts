@@ -4,6 +4,7 @@ import { computed, signal } from 'alien-signals';
 import type * as ts from 'typescript';
 import { codeFeatures } from '../codegen/codeFeatures';
 import type { IR, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
+import { getMatchedExtension } from '../utils/shared';
 import { useEmbeddedCodes } from './embeddedCodes';
 import { useIR } from './ir';
 import { petiteVueParser } from './parsers/petiteVue';
@@ -25,12 +26,8 @@ const rootLanguageIds: Record<VueCompilerOptions['format'], string> = {
 };
 
 export function getFormat(vueCompilerOptions: VueCompilerOptions, fileName: string) {
-	for (const extension in vueCompilerOptions.extensionFormats) {
-		if (fileName.endsWith(extension)) {
-			return vueCompilerOptions.extensionFormats[extension]!;
-		}
-	}
-	return vueCompilerOptions.format;
+	const extension = getMatchedExtension(fileName, vueCompilerOptions);
+	return extension ? vueCompilerOptions.extensionFormats[extension]! : vueCompilerOptions.format;
 }
 
 export function getRootLanguageId(vueCompilerOptions: VueCompilerOptions, fileName: string) {

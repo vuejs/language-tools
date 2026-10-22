@@ -63,14 +63,20 @@ export function getNodeText(
 	return ast.text.slice(start, end);
 }
 
-/** Strips the longest matching key of `extensionFormats` (e.g. `.vue.md`), or else the last extension. */
-export function getBaseNameWithoutExtension(fileName: string, vueCompilerOptions: VueCompilerOptions) {
-	const baseName = path.basename(fileName);
-	let end = baseName.lastIndexOf('.');
+/** Returns the longest key of `extensionFormats` that the file name ends with (e.g. `.vue.md` over `.md`). */
+export function getMatchedExtension(fileName: string, vueCompilerOptions: VueCompilerOptions) {
+	let matched: string | undefined;
 	for (const extension in vueCompilerOptions.extensionFormats) {
-		if (baseName.endsWith(extension) && baseName.length - extension.length < end) {
-			end = baseName.length - extension.length;
+		if (fileName.endsWith(extension) && extension.length > (matched?.length ?? 0)) {
+			matched = extension;
 		}
 	}
-	return baseName.slice(0, end);
+	return matched;
+}
+
+/** Strips the extension matched by `getMatchedExtension`, or else the last extension. */
+export function getBaseNameWithoutExtension(fileName: string, vueCompilerOptions: VueCompilerOptions) {
+	const baseName = path.basename(fileName);
+	const extension = getMatchedExtension(baseName, vueCompilerOptions);
+	return baseName.slice(0, extension ? baseName.length - extension.length : baseName.lastIndexOf('.'));
 }
