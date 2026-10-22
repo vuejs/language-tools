@@ -4,6 +4,7 @@ import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
+import { generateCamelized } from '../utils/camelized';
 import { isLiteralWhitelisted } from './bindingReferences';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
@@ -197,7 +198,8 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		block = false;
 		/** Locals the generated code always reads, so listing them hides no unused diagnostic. */
 		read = new Set<string>();
-		members: [name: string, source: string, offset: number, features: VueCodeInformation][] = [];
+		/** The source name may be the hyphenated form of `name`. */
+		members: [name: string, source: string, offset: number, features: VueCodeInformation, sourceName: string][] = [];
 
 		declare(...variables: string[]) {
 			for (const name of variables) {
@@ -230,7 +232,13 @@ export function createTemplateCodegenContext(scriptLang: string) {
 	 * Returns false when the name is a local of the expression itself, which
 	 * keeps its own completion.
 	 */
-	function recordScopeMember(name: string, source: string, offset: number, features: VueCodeInformation) {
+	function recordScopeMember(
+		name: string,
+		source: string,
+		offset: number,
+		features: VueCodeInformation,
+		sourceName = name,
+	) {
 		if (isLiteralWhitelisted(name) || name === 'require' || name.startsWith('__VLS_')) {
 			return false;
 		}
@@ -238,7 +246,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 			const scope = scopes[i]!;
 			if (scope.block) {
 				if (!scope.members.some(member => member[1] === source && member[2] === offset)) {
-					scope.members.push([name, source, offset, features]);
+					scope.members.push([name, source, offset, features, sourceName]);
 					scopeMemberNames.add(name);
 				}
 				return true;
@@ -271,9 +279,9 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		yield `const ${names.scope} = ${asType(type, scriptLang)}${endOfLine}`;
 		yield `// @ts-ignore${newLine}`; // #2304
 		yield `[`;
-		for (const [name, source, offset, features] of scope.members) {
+		for (const [, source, offset, features, sourceName] of scope.members) {
 			yield `${names.scope}.`;
-			yield [name, source, offset, features];
+			yield* generateCamelized(sourceName, source, offset, features);
 			yield `,`;
 		}
 		yield `]${endOfLine}`;
@@ -289,11 +297,11 @@ export function createTemplateCodegenContext(scriptLang: string) {
 	// to find the names accessed within their body.
 	const accessLog: string[] = [];
 
-	function accessVariable(source: string, name: string, offset?: number, dotValue = false) {
+	function accessVariable(source: string, name: string, offset?: number, dotValue = false, sourceName = name) {
 		accessLog.push(name);
 		contextAccesses.add(name);
 		if (offset !== undefined) {
-			recordScopeMember(name, source, offset, codeFeatures.importCompletionOnly);
+			recordScopeMember(name, source, offset, codeFeatures.importCompletionOnly, sourceName);
 		}
 		if (dotValue) {
 			dotValueAccesses.add(name);
