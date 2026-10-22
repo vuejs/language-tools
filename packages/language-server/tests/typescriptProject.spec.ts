@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { afterAll, beforeAll, expect, test } from 'vitest';
 import { type LspServer, startLspServer } from '../../content-mapper/tests/lsp';
 import { connectTypeScriptProjectResolver, type TypeScriptProjectResolver } from '../lib/typescriptProject';
@@ -75,6 +76,33 @@ test('an inferred project has compiler options but no config file', async () => 
 		expect(project).toBeDefined();
 		expect(project!.configFileName).toBeUndefined();
 		expect(project!.parsedCommandLine.options).toMatchObject({ allowJs: true });
+	}
+	finally {
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+test('after invalidate, a config change the TypeScript language server was told about shows up', async () => {
+	const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'vue-config-change-')));
+	try {
+		const tsconfig = path.join(dir, 'tsconfig.json');
+		const file = path.join(dir, 'a.ts');
+		const writeConfig = (strict: boolean) =>
+			fs.writeFileSync(tsconfig, JSON.stringify({ compilerOptions: { strict }, include: ['*.ts'] }));
+		writeConfig(false);
+		fs.writeFileSync(file, 'export {};');
+		expect((await resolver.getProject(file.replace(/\\/g, '/')))!.parsedCommandLine.options.strict).toBe(false);
+
+		writeConfig(true);
+		// the TypeScript language server does not watch files itself and the API cannot tell it about changes
+		resolver.invalidate();
+		expect((await resolver.getProject(file.replace(/\\/g, '/')))!.parsedCommandLine.options.strict).toBe(false);
+
+		server.notify('workspace/didChangeWatchedFiles', { changes: [{ uri: pathToFileURL(tsconfig).href, type: 2 }] });
+		// a round trip on the same connection guarantees the notification was read before the API is asked
+		await server.request('vue/sync', {}).catch(() => {});
+		resolver.invalidate();
+		expect((await resolver.getProject(file.replace(/\\/g, '/')))!.parsedCommandLine.options.strict).toBe(true);
 	}
 	finally {
 		fs.rmSync(dir, { recursive: true, force: true });
