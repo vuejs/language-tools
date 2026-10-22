@@ -1,11 +1,12 @@
 import { names, type VueVirtualCode } from '@vue/language-core';
-import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests';
+import type { ComponentPropInfo, ExtractPropsInfo } from '@vue/typescript-plugin/lib/requests';
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import type { ComponentMeta, TypeScript } from 'vue-component-meta';
 import { getComponentMetaOfType } from 'vue-component-meta/lib/componentMeta';
 import {
+	collectExtractProps,
 	findVariable,
 	getComponentNames,
 	getComponentProps,
@@ -56,6 +57,14 @@ export interface TypeScriptProjectResolver {
 	getComponentNames(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
 	/** The directive names (`vFoo`) available in the template of the Vue file `fileName`. */
 	getComponentDirectives(fileName: string): Promise<string[] | undefined>;
+	/**
+	 * The template context properties of the Vue file `fileName` whose end offset in its service script `isExtracted`
+	 * accepts.
+	 */
+	collectExtractProps(
+		fileName: string,
+		isExtracted: (offset: number) => boolean,
+	): Promise<ExtractPropsInfo[] | undefined>;
 	/** Whether the identifier at `offset` in the service script of the Vue file `fileName` is a `Ref`. */
 	isRefAtOffset(fileName: string, offset: number): Promise<boolean | undefined>;
 	/** Releases the file opened by `getProject`. */
@@ -192,6 +201,12 @@ export async function connectTypeScriptProjectResolver(
 					.map(symbol => symbol.name)
 					.filter(name => directiveRE.test(name));
 			});
+		},
+		collectExtractProps(fileName, isExtracted) {
+			return withSourceFile(
+				fileName,
+				(project, sourceFile) => collectExtractProps(ts, project.checker, sourceFile, isExtracted),
+			);
 		},
 		isRefAtOffset(fileName, offset) {
 			return withSourceFile(

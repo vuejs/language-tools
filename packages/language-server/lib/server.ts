@@ -7,6 +7,7 @@ import {
 	createLanguage,
 	createVueLanguagePlugin,
 	isCompletionEnabled,
+	isSemanticTokensEnabled,
 	type LanguagePlugin,
 	VueVirtualCode,
 } from '@vue/language-core';
@@ -17,7 +18,7 @@ import {
 	type LanguageService,
 } from '@vue/language-service';
 import { URI } from 'vscode-uri';
-import { getComponentPropsOffset, toServiceScriptOffset } from './componentMeta';
+import { getComponentPropsOffset, toServiceScriptOffset, toSourceOffset } from './componentMeta';
 import {
 	connectTypeScriptProjectResolver,
 	type TypeScriptProject,
@@ -158,8 +159,26 @@ export function startServer(ts: typeof import('typescript')) {
 				},
 			},
 			createVueLanguageServicePlugins(ts, {
-				collectExtractProps(...args) {
-					return sendTsServerRequest('_vue:collectExtractProps', args);
+				async collectExtractProps(fileName, [start, end]) {
+					try {
+						const script = await getVueScript(fileName);
+						const template = script?.virtualCode.ir.template;
+						if (script && template) {
+							return await (await connectTypeScriptApi()).collectExtractProps(fileName, offset => {
+								const sourceOffset = toSourceOffset(
+									script.language,
+									script.sourceScript,
+									script.virtualCode,
+									offset,
+									isSemanticTokensEnabled,
+								);
+								return sourceOffset !== undefined
+									&& sourceOffset >= template.startTagEnd + start
+									&& sourceOffset <= template.startTagEnd + end;
+							});
+						}
+					}
+					catch {}
 				},
 				async getComponentDirectives(fileName) {
 					try {

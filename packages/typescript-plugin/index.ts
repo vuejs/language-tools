@@ -11,7 +11,6 @@ import {
 } from './lib/common';
 import { getExtensionFormats } from './lib/contentMappers';
 import type { Requests } from './lib/requests';
-import { collectExtractProps } from './lib/requests/collectExtractProps';
 const projectToOriginalLanguageService = new WeakMap<ts.server.Project, ts.LanguageService>();
 
 export = createLanguageServicePlugin(
@@ -89,28 +88,10 @@ export = createLanguageServicePlugin(
 				string,
 				(request: ts.server.protocol.Request) => ts.server.HandlerResponse
 			>;
-			if (handlers.has('_vue:collectExtractProps')) {
+			if (handlers.has('_vue:getAutoImportSuggestions')) {
 				return;
 			}
 
-			session.addProtocolHandler(
-				'_vue:collectExtractProps',
-				request => {
-					const [fileName, templateCodeRange]: Parameters<Requests['collectExtractProps']> = request.arguments;
-					const { program, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
-					return createResponse(
-						collectExtractProps(
-							ts,
-							language,
-							program,
-							sourceScript,
-							virtualCode,
-							templateCodeRange,
-							sourceScript.generated ? sourceScript.snapshot.getLength() : 0,
-						),
-					);
-				},
-			);
 			session.addProtocolHandler('_vue:getAutoImportSuggestions', request => {
 				const [fileName, position]: Parameters<Requests['getAutoImportSuggestions']> = request.arguments;
 				const { project, language, vueOptions, extensions, sourceScript, virtualCode } = getProjectAndVirtualCode(

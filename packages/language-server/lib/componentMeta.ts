@@ -8,7 +8,7 @@ import {
 	type VueVirtualCode,
 } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests';
+import type { ComponentPropInfo, ExtractPropsInfo } from '@vue/typescript-plugin/lib/requests';
 import { getSelfComponentName } from '@vue/typescript-plugin/lib/requests/utils';
 import type { URI } from 'vscode-uri';
 import type { TypeScript } from 'vue-component-meta';
@@ -179,6 +179,73 @@ export function toServiceScriptOffset(
 		if (filter(mapping.data)) {
 			return offset;
 		}
+	}
+}
+
+/**
+ * Maps an offset of a Vue file's generated service script to its source text, through a mapping `filter` accepts.
+ */
+export function toSourceOffset(
+	language: Language<URI>,
+	sourceScript: SourceScript<URI>,
+	virtualCode: VueVirtualCode,
+	offset: number,
+	filter: (data: VueCodeInformation) => boolean,
+) {
+	const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(virtualCode);
+	if (!serviceScript) {
+		return;
+	}
+	for (const [sourceOffset, mapping] of language.maps.get(serviceScript.code, sourceScript).toSourceLocation(offset)) {
+		if (filter(mapping.data)) {
+			return sourceOffset;
+		}
+	}
+}
+
+/**
+ * The template context properties (`__VLS_ctx.foo`) whose generated end offset `isExtracted` accepts, with their
+ * types and whether they are written to.
+ */
+export async function collectExtractProps(
+	ts: TypeScript,
+	checker: Checker,
+	sourceFile: SourceFile,
+	isExtracted: (offset: number) => boolean,
+) {
+	const accesses: { name: string; node: Node; model: boolean }[] = [];
+	visit(sourceFile);
+	const result = new Map<string, ExtractPropsInfo>();
+	for (const { name, node, model } of accesses) {
+		let info = result.get(name);
+		if (!info) {
+			const typeString = await checker.typeToString(
+				await checker.getTypeAtLocation(node),
+				node,
+				ts.TypeFormatFlags.NoTruncation,
+			);
+			info = { name, type: typeString.includes('__VLS_') ? 'any' : typeString, model: false };
+			result.set(name, info);
+		}
+		info.model ||= model;
+	}
+	return [...result.values()];
+
+	function visit(node: Node) {
+		if (
+			ts.isPropertyAccessExpression(node)
+			&& ts.isIdentifier(node.expression)
+			&& node.expression.text === names.ctx
+			&& ts.isIdentifier(node.name)
+			&& isExtracted(node.name.end)
+		) {
+			accesses.push({
+				name: node.name.text,
+				node,
+				model: ts.isPostfixUnaryExpression(node.parent) || ts.isBinaryExpression(node.parent),
+			});
+		}
+		node.forEachChild(visit);
 	}
 }
 

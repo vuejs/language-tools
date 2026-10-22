@@ -10,11 +10,17 @@ export interface ComponentPropInfo {
 	boolean?: boolean;
 }
 
+export interface ExtractPropsInfo {
+	name: string;
+	type: string;
+	model: boolean;
+}
+
 export interface Requests {
 	collectExtractProps(
 		fileName: string,
 		templateCodeRange: [number, number],
-	): Response<ReturnType<typeof import('./collectExtractProps.js')['collectExtractProps']>>;
+	): Response<ExtractPropsInfo[]>;
 	/** Edits in UTF-16 offsets of `fileName`'s source text that add a default import of `incomingFileName`. */
 	getDefaultImportEdits(
 		fileName: string,
