@@ -123,7 +123,7 @@ async function getSymbolOfTypeNode(ts: TypeScript, checker: Checker, node: TypeN
 	}
 }
 
-function findVariable(ts: TypeScript, sourceFile: SourceFile, name: string) {
+export function findVariable(ts: TypeScript, sourceFile: SourceFile, name: string) {
 	return findNode(sourceFile, node => ts.isVariableDeclaration(node) && node.name.getText() === name);
 }
 

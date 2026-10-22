@@ -112,6 +112,16 @@ test('a .vue file no content mapper covers has no project', async () => {
 	expect(await resolver.getProject(fileName('fixture.vue'))).toBeUndefined();
 });
 
+test('element names come from the intrinsic elements of the Vue file', async () => {
+	const elementNames = await resolver.getElementNames(fileName('tsconfigProject/empty.vue'));
+	expect(elementNames).toContain('div');
+	expect(elementNames).toContain('svg');
+});
+
+test('a .vue file no content mapper covers has no element names', async () => {
+	expect(await resolver.getElementNames(fileName('fixture.vue'))).toBeUndefined();
+});
+
 test('a closed file resolves again when asked later', async () => {
 	resolver.closeFile(fileName('typescriptProject/jsconfig/a.js'));
 	await expectConfigFileName('typescriptProject/jsconfig/a.js', 'typescriptProject/jsconfig/jsconfig.json');

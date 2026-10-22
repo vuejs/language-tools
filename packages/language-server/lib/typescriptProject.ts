@@ -1,10 +1,13 @@
-import type { VueVirtualCode } from '@vue/language-core';
+import { names, type VueVirtualCode } from '@vue/language-core';
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import type { ComponentMeta, TypeScript } from 'vue-component-meta';
 import { getComponentMetaOfType } from 'vue-component-meta/lib/componentMeta';
-import { getComponentType } from './componentMeta';
+import { findVariable, getComponentType } from './componentMeta';
+
+type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
+type Project = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Project;
 
 /** An edit in UTF-16 offsets of the file's own text (for a content-mapped file, its source text). */
 export interface TextEdit {
@@ -30,6 +33,8 @@ export interface TypeScriptProjectResolver {
 	getDefaultImportEdits(fileName: string, incomingFileName: string): Promise<readonly TextEdit[] | undefined>;
 	/** The metadata of the component that `tag` refers to in the template of the Vue file `fileName`. */
 	getComponentMeta(fileName: string, virtualCode: VueVirtualCode, tag: string): Promise<ComponentMeta | undefined>;
+	/** The intrinsic element names available in the template of the Vue file `fileName`. */
+	getElementNames(fileName: string): Promise<string[] | undefined>;
 	/** Releases the file opened by `getProject`. */
 	closeFile(fileName: string): void;
 	/** Forgets the cached answers, e.g. after a config file changed. */
@@ -67,6 +72,27 @@ export async function connectTypeScriptProjectResolver(
 		}
 	}
 
+	async function withProject<T>(fileName: string, fn: (project: Project) => Promise<T | undefined>) {
+		const snapshot = await openSnapshot(fileName);
+		try {
+			const project = await snapshot.getDefaultProjectForFile(fileName);
+			return project && await fn(project);
+		}
+		finally {
+			await snapshot.dispose();
+		}
+	}
+
+	function withSourceFile<T>(
+		fileName: string,
+		fn: (project: Project, sourceFile: SourceFile) => Promise<T | undefined>,
+	) {
+		return withProject(fileName, async project => {
+			const sourceFile = await project.program.getSourceFile(fileName);
+			return sourceFile && await fn(project, sourceFile);
+		});
+	}
+
 	return {
 		getProject(fileName) {
 			let result = projects.get(fileName);
@@ -91,30 +117,25 @@ export async function connectTypeScriptProjectResolver(
 			}
 			return result;
 		},
-		async getDefaultImportEdits(fileName, incomingFileName) {
-			const snapshot = await api.getCurrentLanguageServerSnapshot({ openFiles: [fileName] });
-			try {
-				const project = await snapshot.getDefaultProjectForFile(fileName);
-				const moduleSymbol = await project?.checker.getSymbolOfSourceFile(incomingFileName);
-				const defaultExport = moduleSymbol && await project!.checker.getMemberInModuleExports(moduleSymbol, 'default');
-				return defaultExport && await project!.languageService.getImportEditsForSymbols(fileName, [defaultExport]);
-			}
-			finally {
-				await snapshot.dispose();
-			}
+		getDefaultImportEdits(fileName, incomingFileName) {
+			return withProject(fileName, async project => {
+				const moduleSymbol = await project.checker.getSymbolOfSourceFile(incomingFileName);
+				const defaultExport = moduleSymbol && await project.checker.getMemberInModuleExports(moduleSymbol, 'default');
+				return defaultExport && await project.languageService.getImportEditsForSymbols(fileName, [defaultExport]);
+			});
 		},
-		async getComponentMeta(fileName, virtualCode, tag) {
-			const snapshot = await api.getCurrentLanguageServerSnapshot({ openFiles: [fileName] });
-			try {
-				const project = await snapshot.getDefaultProjectForFile(fileName);
-				const sourceFile = await project?.program.getSourceFile(fileName);
-				const component = sourceFile
-					&& await getComponentType(ts, project!.checker, sourceFile, virtualCode, tag);
-				return component && await getComponentMetaOfType(ts, project!, component.type, component.node);
-			}
-			finally {
-				await snapshot.dispose();
-			}
+		getComponentMeta(fileName, virtualCode, tag) {
+			return withSourceFile(fileName, async (project, sourceFile) => {
+				const component = await getComponentType(ts, project.checker, sourceFile, virtualCode, tag);
+				return component && await getComponentMetaOfType(ts, project, component.type, component.node);
+			});
+		},
+		getElementNames(fileName) {
+			return withSourceFile(fileName, async (project, sourceFile) => {
+				const intrinsics = findVariable(ts, sourceFile, names.intrinsics);
+				const type = intrinsics && await project.checker.getTypeAtLocation(intrinsics);
+				return type && (await type.getProperties()).map(symbol => symbol.name);
+			});
 		},
 		closeFile(fileName) {
 			if (projects.delete(fileName)) {

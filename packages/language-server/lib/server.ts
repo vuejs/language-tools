@@ -180,8 +180,11 @@ export function startServer(ts: typeof import('typescript')) {
 				getElementAttrs(...args) {
 					return sendTsServerRequest('_vue:getElementAttrs', args);
 				},
-				getElementNames(...args) {
-					return sendTsServerRequest('_vue:getElementNames', args);
+				async getElementNames(fileName) {
+					try {
+						return await (await connectTypeScriptApi()).getElementNames(fileName);
+					}
+					catch {}
 				},
 				async getDefaultImportEdits(fileName, incomingFileName) {
 					try {

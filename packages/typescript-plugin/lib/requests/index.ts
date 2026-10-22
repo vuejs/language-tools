@@ -40,7 +40,7 @@ export interface Requests {
 	): Response<ReturnType<typeof import('./getElementAttrs.js')['getElementAttrs']>>;
 	getElementNames(
 		fileName: string,
-	): Response<ReturnType<typeof import('./getElementNames.js')['getElementNames']>>;
+	): Response<string[]>;
 	getAutoImportSuggestions(
 		fileName: string,
 		position: number,

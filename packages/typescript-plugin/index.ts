@@ -16,7 +16,6 @@ import { getComponentNames } from './lib/requests/getComponentNames';
 import { getComponentProps } from './lib/requests/getComponentProps';
 import { getComponentSlots } from './lib/requests/getComponentSlots';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
-import { getElementNames } from './lib/requests/getElementNames';
 import { isRefAtPosition } from './lib/requests/isRefAtPosition';
 
 const projectToOriginalLanguageService = new WeakMap<ts.server.Project, ts.LanguageService>();
@@ -275,11 +274,6 @@ export = createLanguageServicePlugin(
 				const [fileName, ...args]: Parameters<Requests['getElementAttrs']> = request.arguments;
 				const { program } = getProject(fileName);
 				return createResponse(getElementAttrs(ts, program, fileName, ...args));
-			});
-			session.addProtocolHandler('_vue:getElementNames', request => {
-				const [fileName]: Parameters<Requests['getElementNames']> = request.arguments;
-				const { program } = getProject(fileName);
-				return createResponse(getElementNames(ts, program, fileName));
 			});
 			session.addProtocolHandler('_vue:isRefAtPosition', request => {
 				const [fileName, position]: Parameters<Requests['isRefAtPosition']> = request.arguments;

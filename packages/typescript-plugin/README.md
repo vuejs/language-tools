@@ -53,7 +53,6 @@ This plugin registers the following Vue-specific commands for `tsserver`:
 | `_vue:getComponentProps` | Get component props |
 | `_vue:getComponentSlots` | Get component slots |
 | `_vue:getElementAttrs` | Get element attributes |
-| `_vue:getElementNames` | Get element name list |
 
 ## How it Works
 
