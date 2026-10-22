@@ -411,7 +411,13 @@ function patchTypeScriptExtension() {
 			name: tsPluginName,
 			enableForWorkspaceTypeScriptVersions: true,
 			configNamespace: 'typescript',
-			languages: config.server.includeLanguages,
+			languages: [
+				...new Set(
+					getIncludeLanguages()
+						.map(l => typeof l === 'string' ? l : l.language)
+						.filter(l => l !== undefined),
+				),
+			],
 		},
 		{
 			name: 'vue-reactivity-analysis-plugin-pack',
