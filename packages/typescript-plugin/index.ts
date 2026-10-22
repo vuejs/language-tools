@@ -18,7 +18,6 @@ import { getComponentProps } from './lib/requests/getComponentProps';
 import { getComponentSlots } from './lib/requests/getComponentSlots';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
-import { getImportPathForFile } from './lib/requests/getImportPathForFile';
 import { isRefAtPosition } from './lib/requests/isRefAtPosition';
 
 const projectToOriginalLanguageService = new WeakMap<ts.server.Project, ts.LanguageService>();
@@ -115,20 +114,6 @@ export = createLanguageServicePlugin(
 					);
 				},
 			);
-			session.addProtocolHandler('_vue:getImportPathForFile', request => {
-				const [fileName, incomingFileName]: Parameters<Requests['getImportPathForFile']> = request.arguments;
-				const { project, program } = getProject(fileName);
-				return createResponse(
-					getImportPathForFile(
-						ts,
-						project,
-						program,
-						fileName,
-						incomingFileName,
-						session['getPreferences'](fileName),
-					),
-				);
-			});
 			session.addProtocolHandler('_vue:getAutoImportSuggestions', request => {
 				const [fileName, position]: Parameters<Requests['getAutoImportSuggestions']> = request.arguments;
 				const { project, language, vueOptions, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);

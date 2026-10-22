@@ -38,34 +38,6 @@ import Comp from './module-rename-comp-renamed.vue'
 	).toBe(false);
 });
 
-test('#6152 answers requests with the owning project in a multi-project session', async () => {
-	const server = await getLanguageServer();
-	const firstProjectFile = path.join(testWorkspacePath, 'tsconfigProject', 'fixture.vue');
-	const secondProjectFile = path.join(testWorkspacePath, 'tsconfigProject2', 'fixture.vue');
-
-	// Open a file of the first project before any file of the second project,
-	// so the session-level `_vue:` handlers are registered by the first project.
-	for (const fileName of [firstProjectFile, secondProjectFile]) {
-		const document = await server.open(URI.file(fileName).toString(), 'vue', fs.readFileSync(fileName, 'utf8'));
-		if (openedDocuments.every(doc => doc.uri !== document.uri)) {
-			openedDocuments.push(document);
-		}
-	}
-
-	// The `@2/*` path alias only exists in tsconfigProject2, and is shorter than `../../fixture`,
-	// so only the second project's program and compilerOptions produce it.
-	const res = await server.tsserver.message({
-		seq: server.nextSeq(),
-		command: '_vue:getImportPathForFile',
-		arguments: [
-			path.join(testWorkspacePath, 'tsconfigProject2', 'nested', 'deep', 'importer.ts'),
-			path.join(testWorkspacePath, 'tsconfigProject2', 'fixture.ts'),
-		],
-	});
-	expect(res.success).toBe(true);
-	expect(res.body).toBe('@2/fixture');
-});
-
 test('a <style> @import is resolved by the CSS language service alone', async () => {
 	const server = await getLanguageServer();
 	const fileName = path.join(testWorkspacePath, 'tsconfigProject2', 'style-import.vue');

@@ -19,10 +19,24 @@ interface Snapshot {
 				 */
 				raw?: { contentMappers?: unknown[] };
 			};
+			checker: {
+				getSymbolOfSourceFile(file: string): Promise<object | undefined>;
+				getMemberInModuleExports(symbol: object, name: string): Promise<object | undefined>;
+			};
+			languageService: {
+				getImportEditsForSymbols(file: string, symbols: readonly object[]): Promise<readonly TextEdit[]>;
+			};
 		}
 		| undefined
 	>;
 	dispose(): Promise<void>;
+}
+
+/** An edit in UTF-16 offsets of the file's own text (for a content-mapped file, its source text). */
+export interface TextEdit {
+	pos: number;
+	end: number;
+	newText: string;
 }
 
 export interface TypeScriptProject {
@@ -35,6 +49,11 @@ export interface TypeScriptProject {
 export interface TypeScriptProjectResolver {
 	/** The file's default project in the running TypeScript language server, or undefined when it has none for it. */
 	getProject(fileName: string): Promise<TypeScriptProject | undefined>;
+	/**
+	 * The TypeScript language server's edits that add a default import of `incomingFileName` to `fileName`, or
+	 * undefined when `incomingFileName` has no default export in `fileName`'s project.
+	 */
+	getDefaultImportEdits(fileName: string, incomingFileName: string): Promise<readonly TextEdit[] | undefined>;
 	/** Releases the file opened by `getProject`. */
 	closeFile(fileName: string): void;
 	/** Forgets the cached answers, e.g. after a config file changed. */
@@ -89,6 +108,18 @@ export async function connectTypeScriptProjectResolver(
 				result.catch(() => projects.delete(fileName));
 			}
 			return result;
+		},
+		async getDefaultImportEdits(fileName, incomingFileName) {
+			const snapshot = await api.getCurrentLanguageServerSnapshot({ openFiles: [fileName] });
+			try {
+				const project = await snapshot.getDefaultProjectForFile(fileName);
+				const moduleSymbol = await project?.checker.getSymbolOfSourceFile(incomingFileName);
+				const defaultExport = moduleSymbol && await project!.checker.getMemberInModuleExports(moduleSymbol, 'default');
+				return defaultExport && await project!.languageService.getImportEditsForSymbols(fileName, [defaultExport]);
+			}
+			finally {
+				await snapshot.dispose();
+			}
 		},
 		closeFile(fileName) {
 			if (projects.delete(fileName)) {

@@ -175,8 +175,11 @@ export function startServer(ts: typeof import('typescript')) {
 				getElementNames(...args) {
 					return sendTsServerRequest('_vue:getElementNames', args);
 				},
-				getImportPathForFile(...args) {
-					return sendTsServerRequest('_vue:getImportPathForFile', args);
+				async getDefaultImportEdits(fileName, incomingFileName) {
+					try {
+						return await (await connectTypeScriptApi()).getDefaultImportEdits(fileName, incomingFileName);
+					}
+					catch {}
 				},
 				getAutoImportSuggestions(...args) {
 					return sendTsServerRequest('_vue:getAutoImportSuggestions', args);

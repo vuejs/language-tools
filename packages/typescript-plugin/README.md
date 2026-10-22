@@ -45,7 +45,6 @@ This plugin registers the following Vue-specific commands for `tsserver`:
 | Command | Description |
 | :--- | :--- |
 | `_vue:collectExtractProps` | Collect extractable props |
-| `_vue:getImportPathForFile` | Get import path for a file |
 | `_vue:getAutoImportSuggestions` | Get auto-import suggestions |
 | `_vue:resolveAutoImportCompletionEntry` | Resolve auto-import completion entry |
 | `_vue:isRefAtPosition` | Check if position is a ref |

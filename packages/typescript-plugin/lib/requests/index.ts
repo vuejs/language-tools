@@ -8,10 +8,11 @@ export interface Requests {
 		fileName: string,
 		templateCodeRange: [number, number],
 	): Response<ReturnType<typeof import('./collectExtractProps.js')['collectExtractProps']>>;
-	getImportPathForFile(
+	/** Edits in UTF-16 offsets of `fileName`'s source text that add a default import of `incomingFileName`. */
+	getDefaultImportEdits(
 		fileName: string,
 		incomingFileName: string,
-	): Response<ReturnType<typeof import('./getImportPathForFile.js')['getImportPathForFile']>>;
+	): Response<readonly { pos: number; end: number; newText: string }[]>;
 	isRefAtPosition(
 		fileName: string,
 		position: number,

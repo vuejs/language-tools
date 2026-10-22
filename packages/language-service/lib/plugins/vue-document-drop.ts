@@ -1,15 +1,14 @@
-import type { InsertTextFormat, LanguageServicePlugin, WorkspaceEdit } from '@volar/language-service';
-import { forEachEmbeddedCode, getAllExtensions, getBaseNameWithoutExtension } from '@vue/language-core';
-import { camelize, capitalize, hyphenate } from '@vue/shared';
-import { posix as path } from 'path-browserify';
+import type { InsertTextFormat, LanguageServicePlugin, TextEdit } from '@volar/language-service';
+import { getAllExtensions } from '@vue/language-core';
+import { hyphenate } from '@vue/shared';
 import { URI } from 'vscode-uri';
 import { getTagNameCasing, TagNameCasing } from '../nameCasing';
-import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
+import { createAddComponentToOptionEdit } from '../plugins/vue-extract-file';
 import { resolveEmbeddedCode } from '../utils';
 
 export function create(
 	ts: typeof import('typescript'),
-	{ getImportPathForFile }: import('@vue/typescript-plugin/lib/requests').Requests,
+	{ getDefaultImportEdits }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',
@@ -38,72 +37,60 @@ export function create(
 					}
 
 					const { ir } = info.root;
-					const script = ir.scriptSetup ?? ir.script;
-					if (!script) {
+					if (!ir.scriptSetup && !ir.script) {
 						return;
 					}
 
-					const tagNameCasing = await getTagNameCasing(context, info.script.id);
-					const newName = capitalize(
-						camelize(getBaseNameWithoutExtension(importUri, info.root.vueCompilerOptions)),
-					);
-
-					const additionalEdit: WorkspaceEdit = {};
-					const code = [...forEachEmbeddedCode(info.root)].find(code =>
-						code.id === (ir.scriptSetup ? 'scriptsetup_raw' : 'script_raw')
-					)!;
-					const lastImportNode = getLastImportNode(ts, script.ast);
 					const incomingFileName = URI.parse(importUri).fsPath.replace(/\\/g, '/');
-
-					let importPath = await getImportPathForFile(info.root.fileName, incomingFileName);
-
-					if (!importPath) {
-						importPath = path.relative(path.dirname(info.root.fileName), incomingFileName)
-							|| importUri.slice(importUri.lastIndexOf('/') + 1);
-
-						if (!importPath.startsWith('./') && !importPath.startsWith('../')) {
-							importPath = './' + importPath;
-						}
+					const importEdits = await getDefaultImportEdits(info.root.fileName, incomingFileName);
+					const name = importEdits && getDefaultImportName(ts, importEdits);
+					if (!importEdits || !name) {
+						return;
 					}
 
-					const embeddedDocumentUriStr = context.encodeEmbeddedDocumentUri(info.script.id, code.id).toString();
-
-					additionalEdit.changes ??= {};
-					additionalEdit.changes[embeddedDocumentUriStr] = [];
-					additionalEdit.changes[embeddedDocumentUriStr].push({
-						range: lastImportNode
-							? {
-								start: script.ast.getLineAndCharacterOfPosition(lastImportNode.end),
-								end: script.ast.getLineAndCharacterOfPosition(lastImportNode.end),
-							}
-							: {
-								start: script.ast.getLineAndCharacterOfPosition(0),
-								end: script.ast.getLineAndCharacterOfPosition(0),
-							},
-						newText: `\nimport ${newName} from '${importPath}'`
-							+ (lastImportNode ? '' : '\n'),
-					});
+					const sfcDocument = context.documents.get(info.script.id, info.script.languageId, info.script.snapshot);
+					const sfcEdits: TextEdit[] = importEdits.map(edit => ({
+						range: {
+							start: sfcDocument.positionAt(edit.pos),
+							end: sfcDocument.positionAt(edit.end),
+						},
+						newText: edit.newText,
+					}));
 
 					if (ir.script) {
-						const edit = createAddComponentToOptionEdit(ts, ir, ir.script.ast, newName);
+						const edit = createAddComponentToOptionEdit(ts, ir, ir.script.ast, name);
 						if (edit) {
-							additionalEdit.changes[embeddedDocumentUriStr].push({
+							sfcEdits.push({
 								range: {
-									start: document.positionAt(edit.range.start),
-									end: document.positionAt(edit.range.end),
+									start: sfcDocument.positionAt(ir.script.startTagEnd + edit.range.start),
+									end: sfcDocument.positionAt(ir.script.startTagEnd + edit.range.end),
 								},
 								newText: edit.newText,
 							});
 						}
 					}
 
+					const tagNameCasing = await getTagNameCasing(context, info.script.id);
+
 					return {
-						insertText: `<${tagNameCasing === TagNameCasing.Kebab ? hyphenate(newName) : newName}$0 />`,
+						insertText: `<${tagNameCasing === TagNameCasing.Kebab ? hyphenate(name) : name}$0 />`,
 						insertTextFormat: 2 satisfies typeof InsertTextFormat.Snippet,
-						additionalEdit,
+						additionalEdit: { changes: { [sfcDocument.uri]: sfcEdits } },
 					};
 				},
 			};
 		},
 	};
+}
+
+/** The local name of the default import the TypeScript language server's edits add. */
+function getDefaultImportName(ts: typeof import('typescript'), edits: readonly { newText: string }[]) {
+	for (const { newText } of edits) {
+		const ast = ts.createSourceFile('drop.ts', newText, ts.ScriptTarget.Latest);
+		for (const statement of ast.statements) {
+			if (ts.isImportDeclaration(statement) && statement.importClause?.name) {
+				return statement.importClause.name.text;
+			}
+		}
+	}
 }
