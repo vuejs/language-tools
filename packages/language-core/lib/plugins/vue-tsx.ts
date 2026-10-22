@@ -10,6 +10,7 @@ import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { BindingFlag } from '../parsers/utils';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
 import type { IR, VueCompilerOptions, VueLanguagePlugin } from '../types';
+import { getBaseNameWithoutExtension } from '../utils/shared';
 import { computedSet } from '../utils/signals';
 
 export const serviceScriptRE = /^script_(?:js|jsx|ts|tsx)$/;
@@ -173,8 +174,7 @@ function useCodegen(
 				name = defineOptions.name;
 			}
 			else {
-				const baseName = path.basename(fileName);
-				name = baseName.slice(0, baseName.lastIndexOf('.'));
+				name = getBaseNameWithoutExtension(fileName, vueCompilerOptions);
 			}
 		}
 		return capitalize(camelize(name));

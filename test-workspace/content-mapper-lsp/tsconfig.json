@@ -13,7 +13,15 @@
 			"options": {
 				"languageFeatures": true
 			}
+		},
+		{
+			"package": "@vue/content-mapper",
+			"extensions": [".vue.md"],
+			"options": {
+				"format": "vitepress",
+				"languageFeatures": true
+			}
 		}
 	],
-	"include": ["*.vue"]
+	"include": ["*.vue", "*.md"]
 }

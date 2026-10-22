@@ -7,10 +7,10 @@ import type { BindingFlag } from '../lib/parsers/utils';
 
 it('only treats default imports of sfc-format extensions as components', () => {
 	const vueCompilerOptions = getDefaultCompilerOptions();
-	vueCompilerOptions.extensionFormats = { '.vue': 'sfc', '.md': 'vitepress', '.html': 'petite-vue' };
+	vueCompilerOptions.extensionFormats = { '.vue': 'sfc', '.vue.md': 'vitepress', '.html': 'petite-vue' };
 	const sourceFile = ts.createSourceFile(
 		'App.vue.ts',
-		`import Foo from './Foo.vue';\nimport Doc from './Doc.md';\nimport Page from './Page.html';`,
+		`import Foo from './Foo.vue';\nimport Doc from './Doc.vue.md';\nimport Page from './Page.html';`,
 		ts.ScriptTarget.Latest,
 	);
 	for (

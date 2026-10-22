@@ -10,7 +10,7 @@
 		},
 		{
 			"package": "@vue/content-mapper",
-			"extensions": [".md"],
+			"extensions": [".vue.md"],
 			"options": {
 				"format": "vitepress",
 				"languageFeatures": false

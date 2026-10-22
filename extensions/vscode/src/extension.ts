@@ -36,7 +36,7 @@ const inferredContentMappers = [
 	},
 	{
 		package: '@vue/content-mapper',
-		extensions: ['.md'],
+		extensions: ['.vue.md'],
 		options: { languageFeatures: true, target: 99, format: 'vitepress' },
 	},
 ];
@@ -116,7 +116,7 @@ export = defineExtension(() => {
 	const { stop } = watch(activeTextEditor, () => {
 		if (
 			!visibleTextEditors.value.some(
-				editor => config.server.includeLanguages.includes(editor.document.languageId),
+				editor => vscode.languages.match(getIncludeLanguages(), editor.document),
 			)
 		) {
 			return;
@@ -187,7 +187,7 @@ export = defineExtension(() => {
 
 		volarLabs.addLanguageClient(client);
 
-		const selectors = config.server.includeLanguages;
+		const selectors = getIncludeLanguages();
 
 		activateAutoInsertion(selectors, client);
 		activateDocumentDropEdit(selectors, client);
@@ -212,6 +212,10 @@ export = defineExtension(() => {
 
 	return volarLabs.extensionExports;
 });
+
+function getIncludeLanguages() {
+	return config.server.includeLanguages as lsp.DocumentSelector;
+}
 
 function launch(serverPath: string, tsdk: string) {
 	const args = ['--tsdk=' + tsdk];
@@ -265,7 +269,7 @@ function launch(serverPath: string, tsdk: string) {
 					return edits;
 				},
 			},
-			documentSelector: config.server.includeLanguages,
+			documentSelector: getIncludeLanguages(),
 			initializationOptions: { contentMappers: inferredContentMappers },
 			markdown: {
 				isTrusted: true,
@@ -407,7 +411,13 @@ function patchTypeScriptExtension() {
 			name: tsPluginName,
 			enableForWorkspaceTypeScriptVersions: true,
 			configNamespace: 'typescript',
-			languages: config.server.includeLanguages,
+			languages: [
+				...new Set(
+					getIncludeLanguages()
+						.map(l => typeof l === 'string' ? l : l.language)
+						.filter(l => l !== undefined),
+				),
+			],
 		},
 		{
 			name: 'vue-reactivity-analysis-plugin-pack',

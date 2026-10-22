@@ -72,7 +72,7 @@ Search for `Vue (Official)` or `Vue.volar` in the VSCode extension marketplace a
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `vue.server.path` | `string` | - | Custom language server path |
-| `vue.server.includeLanguages` | `string[]` | `["vue"]` | Language IDs to process |
+| `vue.server.includeLanguages` | `(string \| { language, pattern })[]` | `["vue", { "language": "markdown", "pattern": "**/*.vue.md" }]` | Documents to process: language IDs, or a language ID with a glob pattern |
 | `vue.trace.server` | `string` | `off` | Server trace level |
 
 ## Commands

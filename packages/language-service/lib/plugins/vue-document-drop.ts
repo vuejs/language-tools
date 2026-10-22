@@ -1,5 +1,5 @@
 import type { InsertTextFormat, LanguageServicePlugin, WorkspaceEdit } from '@volar/language-service';
-import { forEachEmbeddedCode, getAllExtensions } from '@vue/language-core';
+import { forEachEmbeddedCode, getAllExtensions, getBaseNameWithoutExtension } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import { URI } from 'vscode-uri';
@@ -44,8 +44,9 @@ export function create(
 					}
 
 					const tagNameCasing = await getTagNameCasing(context, info.script.id);
-					const baseName = path.basename(importUri);
-					const newName = capitalize(camelize(baseName.slice(0, baseName.lastIndexOf('.'))));
+					const newName = capitalize(
+						camelize(getBaseNameWithoutExtension(importUri, info.root.vueCompilerOptions)),
+					);
 
 					const additionalEdit: WorkspaceEdit = {};
 					const code = [...forEachEmbeddedCode(info.root)].find(code =>
