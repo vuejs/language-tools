@@ -267,6 +267,12 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 					catch {}
 				},
+				async getAutoImportValues(fileName) {
+					try {
+						return await (await connectTypeScriptApi()).getAutoImportValues(fileName);
+					}
+					catch {}
+				},
 				async getComponentImportEdits(fileName, component) {
 					try {
 						const script = await getVueScript(fileName);

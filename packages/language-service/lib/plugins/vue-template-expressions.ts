@@ -1,5 +1,14 @@
-import type { CompletionItemKind, LanguageServicePlugin } from '@volar/language-service';
+import {
+	type CompletionItem,
+	type CompletionItemKind,
+	type LanguageServicePlugin,
+	transformCompletionItem,
+} from '@volar/language-service';
+import { getSourceRange } from '@volar/language-service/lib/utils/featureWorkers';
 import type * as CompilerDOM from '@vue/compiler-dom';
+import { tsCodegen } from '@vue/language-core';
+import { URI } from 'vscode-uri';
+import type { AutoImportExport } from '../requests';
 import { resolveEmbeddedCode } from '../utils';
 
 // Keywords that may appear in a single JavaScript expression
@@ -18,19 +27,34 @@ const keywords = [
 	'void',
 ];
 
+interface AutoImportData {
+	__vue__autoImportValue: {
+		uri: string;
+		fileName: string;
+		entry: AutoImportExport;
+	};
+}
+
 /**
- * Completes JavaScript keywords at the start of an identifier in template expressions;
- * the TypeScript completion of template expressions only lists the template scope.
+ * Completes, at the start of an identifier in template expressions, the JavaScript keywords and the not yet imported
+ * value exports of the project; the TypeScript completion of template expressions only lists the template scope.
  */
-export function create(ts: typeof import('typescript')): LanguageServicePlugin {
+export function create(
+	ts: typeof import('typescript'),
+	{ getAutoImportValues, getComponentImportEdits }: import('../requests').Requests,
+): LanguageServicePlugin {
 	return {
-		name: 'vue-template-keywords',
+		name: 'vue-template-expressions',
 		capabilities: {
-			completionProvider: {},
+			completionProvider: {
+				resolveProvider: true,
+			},
 		},
 		create(context) {
+			const resolvedItems = new WeakSet<CompletionItem>();
+
 			return {
-				provideCompletionItems(document, position) {
+				async provideCompletionItems(document, position) {
 					if (document.languageId !== 'html') {
 						return;
 					}
@@ -50,14 +74,72 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 						return;
 					}
 					const range = { start: document.positionAt(offset - word.length), end: position };
-					return {
-						isIncomplete: false,
-						items: keywords.map(keyword => ({
-							label: keyword,
-							kind: 14 satisfies typeof CompletionItemKind.Keyword,
-							textEdit: { range, newText: keyword },
-						})),
-					};
+					const items: CompletionItem[] = keywords.map(keyword => ({
+						label: keyword,
+						kind: 14 satisfies typeof CompletionItemKind.Keyword,
+						textEdit: { range, newText: keyword },
+					}));
+					// Like TypeScript's auto imports, exports are listed once a name is being typed.
+					if (word) {
+						const { fileName } = info.root;
+						const bindings = tsCodegen.get(info.root.ir)?.getSetupBindings();
+						for (const entry of await getAutoImportValues(fileName) ?? []) {
+							if (bindings?.has(entry.name)) {
+								continue;
+							}
+							items.push({
+								label: entry.name,
+								kind: entry.kind === 'class'
+									? 7 satisfies typeof CompletionItemKind.Class
+									: entry.kind === 'function'
+									? 3 satisfies typeof CompletionItemKind.Function
+									: 6 satisfies typeof CompletionItemKind.Variable,
+								labelDetails: { description: entry.description },
+								textEdit: { range, newText: entry.name },
+								data: {
+									__vue__autoImportValue: { uri: document.uri, fileName, entry },
+								} satisfies AutoImportData,
+							});
+						}
+					}
+					return { isIncomplete: !word, items };
+				},
+
+				async resolveCompletionItem(item) {
+					const data = (item.data as AutoImportData | undefined)?.__vue__autoImportValue;
+					if (!data) {
+						return item;
+					}
+					const info = resolveEmbeddedCode(context, data.uri);
+					const edits = info && await getComponentImportEdits(data.fileName, data.entry);
+					if (!info || !edits) {
+						return item;
+					}
+					const sourceDocument = context.documents.get(info.script.id, info.script.languageId, info.script.snapshot);
+					const embeddedDocument = context.documents.get(URI.parse(data.uri), info.code.languageId, info.code.snapshot);
+					const map = context.language.maps.get(info.code, info.script);
+					item = transformCompletionItem(
+						item,
+						embeddedRange => getSourceRange([sourceDocument, embeddedDocument, map], embeddedRange),
+						embeddedDocument,
+						context,
+					);
+					// The import edits are in the source document already.
+					item.additionalTextEdits = edits.map(edit => ({
+						range: {
+							start: sourceDocument.positionAt(edit.pos),
+							end: sourceDocument.positionAt(edit.end),
+						},
+						newText: edit.newText,
+					}));
+					resolvedItems.add(item);
+					return item;
+				},
+
+				transformCompletionItem(item) {
+					if (resolvedItems.has(item)) {
+						return item;
+					}
 				},
 			};
 		},

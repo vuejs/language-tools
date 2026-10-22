@@ -989,24 +989,49 @@ test('Auto insert defines', async () => {
 	`);
 });
 
-test.fails('#5847', async () => {
+test('#5847', async () => {
 	await prepareDocument(
 		'tsconfigProject/fixture.ts',
 		'typescript',
 		`export function testFn() { console.log('testFn'); }`,
 	);
-	expect(
-		await requestCompletionItemToTsServer(
-			'tsconfigProject/fixture.vue',
-			'vue',
-			`
-			<script setup></script>
+	const content = `
+<script setup lang="ts"></script>
 
-			<template>{{ testFn| }}</template>
-			`,
-			'testFn',
-		),
-	).toMatchObject({ kind: 3, labelDetails: { description: './fixture' } });
+<template>{{ testFn| }}</template>
+`;
+	expect(
+		await requestCompletionItemToVueServer('tsconfigProject/fixture.vue', 'vue', content, 'testFn'),
+	).toMatchObject({ kind: 3, labelDetails: { description: 'fixture.ts' } });
+	expect(await applyCompletionItem('tsconfigProject/fixture.vue', content, 'testFn')).toMatchInlineSnapshot(`
+		"
+		<script setup lang="ts">
+		import { testFn } from './fixture';
+		</script>
+
+		<template>{{ testFn }}</template>
+		"
+	`);
+});
+
+test('Not-imported exports skip setup bindings of the same name', async () => {
+	await prepareDocument(
+		'tsconfigProject/fixture.ts',
+		'typescript',
+		`export function testFn() { console.log('testFn'); }`,
+	);
+	const items = (await requestCompletionListToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+<script setup lang="ts">
+const testFn = 1;
+</script>
+
+<template>{{ testF| }}</template>
+`,
+	)).items;
+	expect(items.filter(item => item.label === 'testFn')).toEqual([]);
 });
 
 test('Setup bindings complete as components by type', async () => {

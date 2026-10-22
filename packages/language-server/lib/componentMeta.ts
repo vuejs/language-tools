@@ -8,7 +8,7 @@ import {
 	type VueCodeInformation,
 	type VueVirtualCode,
 } from '@vue/language-core';
-import type { AutoImportComponent, ComponentPropInfo, ExtractPropsInfo } from '@vue/language-service/lib/requests';
+import type { AutoImportExport, ComponentPropInfo, ExtractPropsInfo } from '@vue/language-service/lib/requests';
 import { camelize, capitalize } from '@vue/shared';
 import * as path from 'node:path';
 import type { URI } from 'vscode-uri';
@@ -117,40 +117,53 @@ export async function getComponentNames(
 	return [...new Set(componentNames)];
 }
 
+export interface ProjectValueExport extends AutoImportExport {
+	isComponent: boolean;
+}
+
 /**
- * The components that the modules of a program, other than external libraries, export. A default export is named
- * after its file in PascalCase, as a Vue file refers to itself.
+ * The value exports of the modules of a program, other than external libraries. A default export is named after its
+ * file in PascalCase, as a Vue file refers to itself.
  */
-export async function getAutoImportComponents(
+export async function getProjectValueExports(
 	ts: TypeScript,
 	program: Program,
 	checker: Checker,
-): Promise<AutoImportComponent[]> {
+): Promise<ProjectValueExport[]> {
 	const modules = await getProjectModules(program, checker);
-	const components = await Promise.all(
-		modules.map(async ({ fileName, moduleSymbol }): Promise<AutoImportComponent[]> => {
+	const valueExports = await Promise.all(
+		modules.map(async ({ fileName, moduleSymbol }): Promise<ProjectValueExport[]> => {
 			const exports = await checker.getExportsOfModule(moduleSymbol);
-			const types = await checker.getTypeOfSymbol(
-				await Promise.all(
-					exports.map(async symbol =>
-						symbol.flags & ts.SymbolFlags.Alias ? await checker.getAliasedSymbol(symbol) : symbol
-					),
+			const targets = await Promise.all(
+				exports.map(async symbol =>
+					symbol.flags & ts.SymbolFlags.Alias ? await checker.getAliasedSymbol(symbol) : symbol
 				),
 			);
+			const types = await checker.getTypeOfSymbol(targets);
 			const isComponent = await Promise.all(types.map(isComponentType));
-			return exports
-				.filter((_, j) => isComponent[j])
-				.map(({ name: exportName }) => ({
+			return exports.flatMap(({ name: exportName }, j): ProjectValueExport[] => {
+				const { flags } = targets[j]!;
+				if (!(flags & ts.SymbolFlags.Value)) {
+					return [];
+				}
+				return [{
 					name: exportName === 'default'
 						? getSelfComponentName(fileName)
 						: exportName,
 					fileName,
 					exportName,
 					description: path.posix.relative(program.getCurrentDirectory(), fileName),
-				}));
+					kind: flags & ts.SymbolFlags.Class
+						? 'class'
+						: flags & ts.SymbolFlags.Function
+						? 'function'
+						: 'variable',
+					isComponent: isComponent[j]!,
+				}];
+			});
 		}),
 	);
-	return components.flat();
+	return valueExports.flat();
 }
 
 /** The named value exports called `name` of the modules of a program, other than external libraries. */

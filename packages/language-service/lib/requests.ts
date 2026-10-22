@@ -7,15 +7,19 @@ export interface TextEdit {
 	newText: string;
 }
 
-/** A component a module of the project exports. */
-export interface AutoImportComponent {
-	/** The name the component is imported and used as. */
+/** A value a module of the project exports. */
+export interface AutoImportExport {
+	/** The name the value is imported and used as. */
 	name: string;
 	fileName: string;
 	exportName: string;
 	/** `fileName` relative to the project's current directory. */
 	description: string;
+	kind: 'class' | 'function' | 'variable';
 }
+
+/** A component a module of the project exports. */
+export type AutoImportComponent = AutoImportExport;
 
 export interface ComponentPropInfo {
 	name: string;
@@ -87,7 +91,11 @@ export interface Requests {
 	getAutoImportComponents(
 		fileName: string,
 	): Response<AutoImportComponent[]>;
-	/** Edits that import `component` into the Vue file `fileName`. */
+	/** The named value exports of the modules of `fileName`'s project, other than external libraries. */
+	getAutoImportValues(
+		fileName: string,
+	): Response<AutoImportExport[]>;
+	/** Edits that import `component`, or any other value export, into the Vue file `fileName` under its `name`. */
 	getComponentImportEdits(
 		fileName: string,
 		component: AutoImportComponent,
