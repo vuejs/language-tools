@@ -53,7 +53,11 @@ export async function getLanguageServer(): Promise<{
 		serverHandle.connection.onNotification(PublishDiagnosticsNotification.type, () => {});
 		serverHandle.connection.onRequest(ConfigurationRequest.type, ({ items }) => {
 			return items.map(({ section }) => {
-				if (section?.startsWith('vue.inlayHints.') || section === 'vue.hover.rich') {
+				if (
+					section?.startsWith('vue.inlayHints.')
+					|| section === 'vue.hover.rich'
+					|| section === 'vue.autoInsert.dotValue'
+				) {
 					return true;
 				}
 				return null;

@@ -12,6 +12,7 @@ import {
 	getComponentSlots,
 	getComponentType,
 	getElementAttrs,
+	isRefAtOffset,
 } from './componentMeta';
 
 type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
@@ -55,6 +56,8 @@ export interface TypeScriptProjectResolver {
 	getComponentNames(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
 	/** The directive names (`vFoo`) available in the template of the Vue file `fileName`. */
 	getComponentDirectives(fileName: string): Promise<string[] | undefined>;
+	/** Whether the identifier at `offset` in the service script of the Vue file `fileName` is a `Ref`. */
+	isRefAtOffset(fileName: string, offset: number): Promise<boolean | undefined>;
 	/** Releases the file opened by `getProject`. */
 	closeFile(fileName: string): void;
 	/** Forgets the cached answers, e.g. after a config file changed. */
@@ -189,6 +192,12 @@ export async function connectTypeScriptProjectResolver(
 					.map(symbol => symbol.name)
 					.filter(name => directiveRE.test(name));
 			});
+		},
+		isRefAtOffset(fileName, offset) {
+			return withSourceFile(
+				fileName,
+				(project, sourceFile) => isRefAtOffset(ts, project.checker, sourceFile, offset),
+			);
 		},
 		closeFile(fileName) {
 			if (projects.delete(fileName)) {

@@ -12,8 +12,6 @@ import {
 import { getExtensionFormats } from './lib/contentMappers';
 import type { Requests } from './lib/requests';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
-import { isRefAtPosition } from './lib/requests/isRefAtPosition';
-
 const projectToOriginalLanguageService = new WeakMap<ts.server.Project, ts.LanguageService>();
 
 export = createLanguageServicePlugin(
@@ -240,20 +238,6 @@ export = createLanguageServicePlugin(
 					resolveCompletionEntryDetails(language, details, data);
 				}
 				return createResponse(details);
-			});
-			session.addProtocolHandler('_vue:isRefAtPosition', request => {
-				const [fileName, position]: Parameters<Requests['isRefAtPosition']> = request.arguments;
-				const { program, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
-				return createResponse(
-					isRefAtPosition(
-						ts,
-						language,
-						program,
-						sourceScript,
-						virtualCode,
-						position,
-					),
-				);
 			});
 
 			projectService.logger.info('Vue specific commands are successfully added.');

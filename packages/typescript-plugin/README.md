@@ -47,7 +47,6 @@ This plugin registers the following Vue-specific commands for `tsserver`:
 | `_vue:collectExtractProps` | Collect extractable props |
 | `_vue:getAutoImportSuggestions` | Get auto-import suggestions |
 | `_vue:resolveAutoImportCompletionEntry` | Resolve auto-import completion entry |
-| `_vue:isRefAtPosition` | Check if position is a ref |
 ## How it Works
 
 This plugin is created using `createLanguageServicePlugin` from `@volar/typescript`. It:

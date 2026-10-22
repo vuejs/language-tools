@@ -144,8 +144,7 @@ export function getComponentPropsOffset(
 	position: number,
 ) {
 	const { template } = virtualCode.ir;
-	const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(virtualCode);
-	if (!template?.ast || !serviceScript) {
+	if (!template?.ast) {
 		return;
 	}
 	const node = [...forEachElementNode(template.ast)].filter(child => position >= child.loc.start.offset).pop();
@@ -153,12 +152,61 @@ export function getComponentPropsOffset(
 	if (node?.tagType !== 1) {
 		return;
 	}
-	const map = language.maps.get(serviceScript.code, sourceScript);
-	for (const [offset, mapping] of map.toGeneratedLocation(template.startTagEnd + node.loc.start.offset)) {
-		if ((mapping.data as VueCodeInformation).__propsCompletion) {
+	return toServiceScriptOffset(
+		language,
+		sourceScript,
+		virtualCode,
+		template.startTagEnd + node.loc.start.offset,
+		data => !!data.__propsCompletion,
+	);
+}
+
+/** Maps an offset of a Vue file's source text to its generated service script, through a mapping `filter` accepts. */
+export function toServiceScriptOffset(
+	language: Language<URI>,
+	sourceScript: SourceScript<URI>,
+	virtualCode: VueVirtualCode,
+	sourceOffset: number,
+	filter: (data: VueCodeInformation) => boolean,
+) {
+	const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(virtualCode);
+	if (!serviceScript) {
+		return;
+	}
+	for (
+		const [offset, mapping] of language.maps.get(serviceScript.code, sourceScript).toGeneratedLocation(sourceOffset)
+	) {
+		if (filter(mapping.data)) {
 			return offset;
 		}
 	}
+}
+
+/** Whether the identifier at `offset`, an offset in the generated service script, is a `Ref`. */
+export async function isRefAtOffset(ts: TypeScript, checker: Checker, sourceFile: SourceFile, offset: number) {
+	const identifier = findNode(
+		sourceFile,
+		node => ts.isIdentifier(node) && node.getStart(sourceFile) <= offset && offset <= node.end,
+		node => node.pos <= offset && offset <= node.end,
+	);
+	if (!identifier) {
+		return false;
+	}
+	for (const prop of await (await checker.getTypeAtLocation(identifier)).getProperties()) {
+		for (const declaration of prop.declarations) {
+			const node = await declaration.resolve();
+			if (
+				node
+				&& ts.isPropertySignatureDeclaration(node)
+				&& ts.isComputedPropertyName(node.name)
+				&& ts.isIdentifier(node.name.expression)
+				&& node.name.expression.text === 'RefSymbol'
+			) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 /**
@@ -320,6 +368,15 @@ function searchDefaultImportIdentifier(ts: TypeScript, sourceFile: SourceFile, n
 	return node && ts.isImportDeclaration(node) ? node.importClause?.name : undefined;
 }
 
-function findNode(node: Node, predicate: (node: Node) => boolean): Node | undefined {
-	return predicate(node) ? node : node.forEachChild(child => findNode(child, predicate));
+/** The first node in pre-order that matches `predicate`, descending only into the nodes `descend` accepts. */
+function findNode(
+	node: Node,
+	predicate: (node: Node) => boolean,
+	descend: (node: Node) => boolean = () => true,
+): Node | undefined {
+	return predicate(node)
+		? node
+		: descend(node)
+		? node.forEachChild(child => findNode(child, predicate, descend))
+		: undefined;
 }

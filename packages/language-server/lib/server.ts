@@ -3,7 +3,13 @@ import { createLanguageServiceEnvironment } from '@volar/language-server/lib/pro
 import { createConnection, createServer } from '@volar/language-server/node';
 import type { MapperOptions } from '@vue/content-mapper/protocol';
 import { resolveVueCompilerOptions } from '@vue/content-mapper/vueOptions';
-import { createLanguage, createVueLanguagePlugin, type LanguagePlugin, VueVirtualCode } from '@vue/language-core';
+import {
+	createLanguage,
+	createVueLanguagePlugin,
+	isCompletionEnabled,
+	type LanguagePlugin,
+	VueVirtualCode,
+} from '@vue/language-core';
 import {
 	createLanguageService,
 	createUriMap,
@@ -11,7 +17,7 @@ import {
 	type LanguageService,
 } from '@vue/language-service';
 import { URI } from 'vscode-uri';
-import { getComponentPropsOffset } from './componentMeta';
+import { getComponentPropsOffset, toServiceScriptOffset } from './componentMeta';
 import {
 	connectTypeScriptProjectResolver,
 	type TypeScriptProject,
@@ -163,42 +169,38 @@ export function startServer(ts: typeof import('typescript')) {
 				},
 				async getComponentMeta(fileName, tag) {
 					try {
-						const virtualCode = await getVueVirtualCode(fileName);
-						if (virtualCode) {
-							return await (await connectTypeScriptApi()).getComponentMeta(fileName, virtualCode, tag);
+						const script = await getVueScript(fileName);
+						if (script) {
+							return await (await connectTypeScriptApi()).getComponentMeta(fileName, script.virtualCode, tag);
 						}
 					}
 					catch {}
 				},
 				async getComponentNames(fileName) {
 					try {
-						const virtualCode = await getVueVirtualCode(fileName);
-						if (virtualCode) {
-							return await (await connectTypeScriptApi()).getComponentNames(fileName, virtualCode);
+						const script = await getVueScript(fileName);
+						if (script) {
+							return await (await connectTypeScriptApi()).getComponentNames(fileName, script.virtualCode);
 						}
 					}
 					catch {}
 				},
 				async getComponentProps(fileName, position) {
 					try {
-						const uri = URI.file(fileName);
-						const { language } = (await server.project.getLanguageService(uri)).context;
-						const sourceScript = language.scripts.get(uri);
-						const virtualCode = sourceScript?.generated?.root;
-						if (sourceScript && virtualCode instanceof VueVirtualCode) {
-							const offset = getComponentPropsOffset(language, sourceScript, virtualCode, position);
-							if (offset !== undefined) {
-								return await (await connectTypeScriptApi()).getComponentProps(fileName, offset);
-							}
+						const script = await getVueScript(fileName);
+						const offset = script
+							&& getComponentPropsOffset(script.language, script.sourceScript, script.virtualCode, position);
+						if (offset !== undefined) {
+							return await (await connectTypeScriptApi()).getComponentProps(fileName, offset);
 						}
 					}
 					catch {}
 				},
 				async getComponentSlots(fileName) {
 					try {
-						const virtualCode = await getVueVirtualCode(fileName);
-						if (virtualCode) {
-							return await (await connectTypeScriptApi()).getComponentSlots(fileName, virtualCode);
+						const script = await getVueScript(fileName);
+						if (script) {
+							return await (await connectTypeScriptApi()).getComponentSlots(fileName, script.virtualCode);
 						}
 					}
 					catch {}
@@ -227,8 +229,21 @@ export function startServer(ts: typeof import('typescript')) {
 				resolveAutoImportCompletionEntry(...args) {
 					return sendTsServerRequest('_vue:resolveAutoImportCompletionEntry', args);
 				},
-				isRefAtPosition(...args) {
-					return sendTsServerRequest('_vue:isRefAtPosition', args);
+				async isRefAtPosition(fileName, position) {
+					try {
+						const script = await getVueScript(fileName);
+						const offset = script && toServiceScriptOffset(
+							script.language,
+							script.sourceScript,
+							script.virtualCode,
+							position,
+							isCompletionEnabled,
+						);
+						if (offset !== undefined) {
+							return await (await connectTypeScriptApi()).isRefAtOffset(fileName, offset);
+						}
+					}
+					catch {}
 				},
 			}),
 		);
@@ -241,11 +256,14 @@ export function startServer(ts: typeof import('typescript')) {
 
 		return result;
 
-		async function getVueVirtualCode(fileName: string) {
+		async function getVueScript(fileName: string) {
 			const uri = URI.file(fileName);
-			const languageService = await server.project.getLanguageService(uri);
-			const virtualCode = languageService.context.language.scripts.get(uri)?.generated?.root;
-			return virtualCode instanceof VueVirtualCode ? virtualCode : undefined;
+			const { language } = (await server.project.getLanguageService(uri)).context;
+			const sourceScript = language.scripts.get(uri);
+			const virtualCode = sourceScript?.generated?.root;
+			if (sourceScript && virtualCode instanceof VueVirtualCode) {
+				return { language, sourceScript, virtualCode };
+			}
 		}
 
 		async function sendTsServerRequest<T>(command: string, args: any): Promise<T | null> {

@@ -23,7 +23,7 @@ export interface Requests {
 	isRefAtPosition(
 		fileName: string,
 		position: number,
-	): Response<ReturnType<typeof import('./isRefAtPosition.js')['isRefAtPosition']>>;
+	): Response<boolean>;
 	getComponentDirectives(
 		fileName: string,
 	): Response<string[]>;
