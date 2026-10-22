@@ -1,6 +1,6 @@
 import {
 	forEachElementNode,
-	getBaseNameWithoutExtension,
+	getSelfComponentName,
 	type Language,
 	names,
 	type SourceScript,
@@ -8,9 +8,8 @@ import {
 	type VueCodeInformation,
 	type VueVirtualCode,
 } from '@vue/language-core';
+import type { AutoImportComponent, ComponentPropInfo, ExtractPropsInfo } from '@vue/language-service/lib/requests';
 import { camelize, capitalize } from '@vue/shared';
-import type { AutoImportComponent, ComponentPropInfo, ExtractPropsInfo } from '@vue/typescript-plugin/lib/requests';
-import { getSelfComponentName } from '@vue/typescript-plugin/lib/requests/utils';
 import * as path from 'node:path';
 import type { URI } from 'vscode-uri';
 import type { TypeScript } from 'vue-component-meta';
@@ -50,7 +49,7 @@ export async function getComponentType(
 		}
 	}
 
-	const selfName = getSelfComponentName(virtualCode);
+	const selfName = getSelfComponentName(virtualCode.fileName);
 	const components = findVariable(ts, sourceFile, names.components);
 	if (components) {
 		const [firstName, ...restNames] = tag.split('.') as [string, ...string[]];
@@ -106,7 +105,7 @@ export async function getComponentNames(
 	const componentNames = (await (await checker.getTypeAtLocation(components)).getProperties())
 		.map(symbol => symbol.name)
 		.filter(name => !name.includes('$') && !name.startsWith('_'));
-	componentNames.push(getSelfComponentName(virtualCode));
+	componentNames.push(getSelfComponentName(virtualCode.fileName));
 
 	for (const binding of tsCodegen.get(virtualCode.ir)?.getSetupBindings() ?? []) {
 		const symbol = await checker.resolveName(binding, ts.SymbolFlags.Value, components);
@@ -153,7 +152,7 @@ export async function getAutoImportComponents(
 			.filter((_, j) => isComponent[j])
 			.map(({ name: exportName }) => ({
 				name: exportName === 'default'
-					? capitalize(camelize(getBaseNameWithoutExtension(fileName)))
+					? getSelfComponentName(fileName)
 					: exportName,
 				fileName,
 				exportName,

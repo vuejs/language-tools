@@ -15,7 +15,7 @@ const unicodeRE = /\\u/g;
 
 export function create(
 	ts: typeof import('typescript'),
-	{ collectExtractProps }: import('@vue/typescript-plugin/lib/requests').Requests,
+	{ collectExtractProps }: import('../requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-extract-file',

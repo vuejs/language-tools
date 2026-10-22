@@ -1,10 +1,4 @@
-import { getBaseNameWithoutExtension, type VueVirtualCode } from '@vue/language-core';
-import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
-
-export function getSelfComponentName({ fileName }: VueVirtualCode) {
-	return capitalize(camelize(getBaseNameWithoutExtension(fileName)));
-}
 
 export function* forEachTouchingNode(
 	ts: typeof import('typescript'),

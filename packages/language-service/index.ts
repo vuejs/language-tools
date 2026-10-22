@@ -4,7 +4,6 @@ export * from '@volar/language-service';
 // for @vue/language-server usage
 export * from '@volar/language-service/lib/utils/featureWorkers';
 
-import type { Requests } from '@vue/typescript-plugin/lib/requests';
 import { create as createEmmetPlugin } from 'volar-service-emmet';
 import { create as createJsonPlugin } from 'volar-service-json';
 import { create as createPugFormatPlugin } from 'volar-service-pug-beautify';
@@ -25,6 +24,7 @@ import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
 import { create as createVueSuggestDefineAssignmentPlugin } from './lib/plugins/vue-suggest-define-assignment';
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
 import { create as createVueTemplateRefLinksPlugin } from './lib/plugins/vue-template-ref-links';
+import type { Requests } from './lib/requests';
 
 const noop = () => {};
 

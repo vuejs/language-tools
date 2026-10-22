@@ -1,5 +1,5 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
-import { hyphenate } from '@vue/shared';
+import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'path-browserify';
 import type * as ts from 'typescript';
 import type { IRTemplate, TextRange } from '../types';
@@ -67,4 +67,9 @@ export function getNodeText(
 export function getBaseNameWithoutExtension(fileName: string) {
 	const baseName = path.basename(fileName);
 	return baseName.slice(0, baseName.lastIndexOf('.'));
+}
+
+/** The name a Vue file's template refers to the file's own component by. */
+export function getSelfComponentName(fileName: string) {
+	return capitalize(camelize(getBaseNameWithoutExtension(fileName)));
 }

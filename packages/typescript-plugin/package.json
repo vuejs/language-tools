@@ -22,8 +22,6 @@
 	},
 	"devDependencies": {
 		"@types/node": "^26.0.1",
-		"@types/path-browserify": "^1.0.3",
-		"@vue/compiler-dom": "^3.5.0",
-		"vue-component-meta": "workspace:*"
+		"@types/path-browserify": "^1.0.3"
 	}
 }

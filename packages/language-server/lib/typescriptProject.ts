@@ -4,7 +4,7 @@ import type {
 	ComponentPropInfo,
 	ExtractPropsInfo,
 	TextEdit,
-} from '@vue/typescript-plugin/lib/requests';
+} from '@vue/language-service/lib/requests';
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';

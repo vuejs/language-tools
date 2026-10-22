@@ -39,7 +39,6 @@
 		"@volar/kit": "2.4.28",
 		"@volar/typescript": "2.4.28",
 		"@vue/compiler-dom": "^3.5.0",
-		"@vue/typescript-plugin": "workspace:*",
 		"typescript": "<7",
 		"vscode-css-languageservice": "^6.3.10",
 		"vue-component-meta": "workspace:*"

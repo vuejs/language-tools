@@ -283,9 +283,6 @@ importers:
       '@vue/compiler-dom':
         specifier: ^3.5.0
         version: 3.5.40
-      '@vue/typescript-plugin':
-        specifier: workspace:*
-        version: link:../typescript-plugin
       typescript:
         specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
         version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
@@ -317,12 +314,6 @@ importers:
       '@types/path-browserify':
         specifier: ^1.0.3
         version: 1.0.3
-      '@vue/compiler-dom':
-        specifier: ^3.5.0
-        version: 3.5.40
-      vue-component-meta:
-        specifier: workspace:*
-        version: link:../component-meta
 
   test-workspace:
     devDependencies:

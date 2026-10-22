@@ -14,7 +14,7 @@ import {
 } from '@vue/language-core';
 import { camelize, capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
-import { forEachTouchingNode } from './requests/utils';
+import { forEachTouchingNode } from './utils';
 
 const windowsPathRE = /\\/g;
 

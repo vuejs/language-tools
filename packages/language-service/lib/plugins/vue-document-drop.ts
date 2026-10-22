@@ -7,7 +7,7 @@ import { resolveEmbeddedCode } from '../utils';
 
 export function create(
 	ts: typeof import('typescript'),
-	{ getDefaultImportEdits }: import('@vue/typescript-plugin/lib/requests').Requests,
+	{ getDefaultImportEdits }: import('../requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',

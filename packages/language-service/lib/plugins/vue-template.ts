@@ -48,7 +48,7 @@ const V_FOR_SNIPPET = '="${1:value} in ${2:source}"';
 interface AutoImportData {
 	__vue__autoImport: {
 		fileName: string;
-		component: import('@vue/typescript-plugin/lib/requests').AutoImportComponent;
+		component: import('../requests').AutoImportComponent;
 	};
 }
 
@@ -58,7 +58,7 @@ let modelData: html.HTMLDataV1 | undefined;
 
 export function create(
 	languageId: 'html' | 'jade',
-	tsserver: import('@vue/typescript-plugin/lib/requests').Requests,
+	tsserver: import('../requests').Requests,
 ): LanguageServicePlugin {
 	const defaultDataProvider = html.getDefaultHTMLDataProvider();
 	let htmlData: html.IHTMLDataProvider[] = [defaultDataProvider];

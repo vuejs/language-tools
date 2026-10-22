@@ -20,7 +20,7 @@ import { createVueLanguageServicePlugins } from '@vue/language-service';
 import * as ts from 'typescript';
 
 // Create Vue language service plugins
-// The optional second argument `client` is used for communication with @vue/typescript-plugin
+// The optional second argument `client` answers the type-aware requests of `lib/requests`
 const plugins = createVueLanguageServicePlugins(ts);
 ```
 
