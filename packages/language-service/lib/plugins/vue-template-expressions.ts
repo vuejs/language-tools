@@ -178,7 +178,12 @@ function getExpressionStartAt(
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode,
 	offset: number,
 ): number | undefined {
-	if (offset < node.loc.start.offset || offset > node.loc.end.offset) {
+	// The location of a `v-if` or `v-for` node does not cover all its branches or children.
+	if (
+		node.type !== 9 satisfies CompilerDOM.NodeTypes.IF
+		&& node.type !== 11 satisfies CompilerDOM.NodeTypes.FOR
+		&& (offset < node.loc.start.offset || offset > node.loc.end.offset)
+	) {
 		return;
 	}
 	switch (node.type) {

@@ -545,6 +545,8 @@ test('Keywords at identifier starts in template expressions', async () => {
 			`<template><div @click="list.map(x => |)"></div></template>`,
 			`<template><div v-if="!|"></div></template>`,
 			`<template><div v-for="item in l|"></div></template>`,
+			`<template><div v-for="item in list">{{ item + | }}</div></template>`,
+			`<template><div v-if="a"></div><div v-else-if="|"></div></template>`,
 			`<template>{{ { ...| } }}</template>`,
 		]
 	) {
