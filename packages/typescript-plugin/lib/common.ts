@@ -604,7 +604,7 @@ export function postprocessLanguageService<T>(
 	}
 }
 
-export function resolveCompletionResult<T>(
+function resolveCompletionResult<T>(
 	ts: typeof import('typescript'),
 	language: Language<T>,
 	asScriptId: (fileName: string) => T,
@@ -686,7 +686,7 @@ export function resolveCompletionResult<T>(
 	}
 }
 
-export type VueCompletionData =
+type VueCompletionData =
 	| ts.CompletionEntryData & {
 		__vue__componentAutoImport?: {
 			oldName: string;
@@ -695,16 +695,10 @@ export type VueCompletionData =
 		__vue__autoImport?: {
 			fileName: string;
 		};
-		__vue__autoImportSuggestions?: {
-			fileName: string;
-			position: number;
-			entryName: string;
-			source: string | undefined;
-		};
 	}
 	| undefined;
 
-export function resolveCompletionEntryDetails(
+function resolveCompletionEntryDetails(
 	language: Language<any>,
 	details: ts.CompletionEntryDetails,
 	data: VueCompletionData,
@@ -718,27 +712,6 @@ export function resolveCompletionEntryDetails(
 					textChange.newText = textChange.newText.replace(
 						'import ' + oldName + ' from ',
 						'import ' + newName + ' from ',
-					);
-				}
-			}
-		}
-	}
-	// #5874
-	if (data?.__vue__autoImportSuggestions) {
-		for (const codeAction of details?.codeActions ?? []) {
-			for (const change of codeAction.changes) {
-				for (const textChange of change.textChanges) {
-					if (data.__vue__componentAutoImport) {
-						const { oldName, newName } = data.__vue__componentAutoImport;
-						textChange.newText = textChange.newText.replace(
-							'import type ' + oldName + ' from ',
-							'import ' + newName + ' from ',
-						);
-					}
-					const { entryName } = data.__vue__autoImportSuggestions;
-					textChange.newText = textChange.newText.replace(
-						'import type { ' + entryName + ' } from ',
-						'import { ' + entryName + ' } from ',
 					);
 				}
 			}

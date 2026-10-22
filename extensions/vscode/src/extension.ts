@@ -279,17 +279,6 @@ function launch(serverPath: string, tsdk: string) {
 		},
 	);
 
-	client.onNotification('tsserver/request', ([seq, command, args]) => {
-		vscode.commands.executeCommand<{ body?: unknown } | undefined>(
-			'typescript.tsserverRequest',
-			command,
-			args,
-			{ isAsync: true, lowPriority: true },
-		).then(
-			res => client.sendNotification('tsserver/response', [seq, res?.body]),
-			() => client.sendNotification('tsserver/response', [seq, undefined]),
-		);
-	});
 	client.onRequest('vue/typescriptApiConnection', getTypeScriptApiConnection);
 	client.start();
 

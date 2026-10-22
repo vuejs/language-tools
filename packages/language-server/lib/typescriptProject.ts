@@ -1,5 +1,10 @@
 import { names, type VueVirtualCode } from '@vue/language-core';
-import type { ComponentPropInfo, ExtractPropsInfo } from '@vue/typescript-plugin/lib/requests';
+import type {
+	AutoImportComponent,
+	ComponentPropInfo,
+	ExtractPropsInfo,
+	TextEdit,
+} from '@vue/typescript-plugin/lib/requests';
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
@@ -8,6 +13,7 @@ import { getComponentMetaOfType } from 'vue-component-meta/lib/componentMeta';
 import {
 	collectExtractProps,
 	findVariable,
+	getAutoImportComponents,
 	getComponentNames,
 	getComponentProps,
 	getComponentSlots,
@@ -20,13 +26,7 @@ type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'impor
 type Project = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Project;
 
 const directiveRE = /^v[A-Z]/;
-
-/** An edit in UTF-16 offsets of the file's own text (for a content-mapped file, its source text). */
-export interface TextEdit {
-	pos: number;
-	end: number;
-	newText: string;
-}
+const defaultImportRE = /\bimport\s+[\w$]+(?=\s*(?:,|from\b))/;
 
 export interface TypeScriptProject {
 	/** Undefined for the TypeScript language server's inferred project. */
@@ -43,6 +43,10 @@ export interface TypeScriptProjectResolver {
 	 * undefined when `incomingFileName` has no default export in `fileName`'s project.
 	 */
 	getDefaultImportEdits(fileName: string, incomingFileName: string): Promise<readonly TextEdit[] | undefined>;
+	/** The components that the modules of `fileName`'s project, other than external libraries, export. */
+	getAutoImportComponents(fileName: string): Promise<AutoImportComponent[] | undefined>;
+	/** The TypeScript language server's edits that import `component` into `fileName` under `component.name`. */
+	getComponentImportEdits(fileName: string, component: AutoImportComponent): Promise<readonly TextEdit[] | undefined>;
 	/** The metadata of the component that `tag` refers to in the template of the Vue file `fileName`. */
 	getComponentMeta(fileName: string, virtualCode: VueVirtualCode, tag: string): Promise<ComponentMeta | undefined>;
 	/** The intrinsic element names available in the template of the Vue file `fileName`. */
@@ -91,7 +95,6 @@ export async function connectTypeScriptProjectResolver(
 	};
 	const api = await ts.API.fromLSPConnection({ pipe });
 	const projects = new Map<string, Promise<TypeScriptProject | undefined>>();
-
 	async function openSnapshot(fileName: string) {
 		try {
 			// Opening the file makes the TypeScript language server load its default project even if the editor's didOpen has not reached it yet.
@@ -154,6 +157,25 @@ export async function connectTypeScriptProjectResolver(
 				const moduleSymbol = await project.checker.getSymbolOfSourceFile(incomingFileName);
 				const defaultExport = moduleSymbol && await project.checker.getMemberInModuleExports(moduleSymbol, 'default');
 				return defaultExport && await project.languageService.getImportEditsForSymbols(fileName, [defaultExport]);
+			});
+		},
+		getAutoImportComponents(fileName) {
+			return withProject(fileName, project => getAutoImportComponents(ts, project.program, project.checker));
+		},
+		getComponentImportEdits(fileName, { name, fileName: moduleFileName, exportName }) {
+			return withProject(fileName, async project => {
+				const moduleSymbol = await project.checker.getSymbolOfSourceFile(moduleFileName);
+				const symbol = moduleSymbol && await project.checker.getMemberInModuleExports(moduleSymbol, exportName);
+				if (!symbol) {
+					return;
+				}
+				// A template use site needs a value import.
+				const edits = await project.languageService.getImportEditsForSymbols(fileName, [symbol], {
+					isValidTypeOnlyUseSite: false,
+				});
+				return exportName === 'default'
+					? edits.map(edit => ({ ...edit, newText: edit.newText.replace(defaultImportRE, `import ${name}`) }))
+					: edits;
 			});
 		},
 		getComponentMeta(fileName, virtualCode, tag) {

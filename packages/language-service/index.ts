@@ -65,7 +65,7 @@ export function createVueLanguageServicePlugins(
 		createVueDocumentDropPlugin(ts, client),
 		createVueExtractFilePlugin(ts, client),
 		createVueMissingPropsHintsPlugin(client),
-		createVueTemplatePlugin(ts, 'html', client),
-		createVueTemplatePlugin(ts, 'jade', client),
+		createVueTemplatePlugin('html', client),
+		createVueTemplatePlugin('jade', client),
 	];
 }

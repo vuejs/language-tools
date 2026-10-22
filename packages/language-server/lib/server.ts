@@ -45,17 +45,10 @@ interface TypeScriptApiConnection {
 export function startServer(ts: typeof import('typescript')) {
 	const connection = createConnection();
 	const server = createServer(connection);
-	const tsserverRequestHandlers = new Map<number, (res: any) => void>();
 
-	let tsserverRequestId = 0;
 	let typescriptApi: Promise<TypeScriptProjectResolver> | undefined;
 
 	connection.listen();
-
-	connection.onNotification('tsserver/response', ([id, res]) => {
-		tsserverRequestHandlers.get(id)?.(res);
-		tsserverRequestHandlers.delete(id);
-	});
 
 	/** A failed acquisition is reported once and not cached, so the next request asks the client again. */
 	function connectTypeScriptApi() {
@@ -242,11 +235,28 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 					catch {}
 				},
-				getAutoImportSuggestions(...args) {
-					return sendTsServerRequest('_vue:getAutoImportSuggestions', args);
+				async getAutoImportComponents(fileName) {
+					try {
+						return await (await connectTypeScriptApi()).getAutoImportComponents(fileName);
+					}
+					catch {}
 				},
-				resolveAutoImportCompletionEntry(...args) {
-					return sendTsServerRequest('_vue:resolveAutoImportCompletionEntry', args);
+				async getComponentImportEdits(fileName, component) {
+					try {
+						const script = await getVueScript(fileName);
+						if (!script) {
+							return;
+						}
+						const edits = await (await connectTypeScriptApi()).getComponentImportEdits(fileName, component);
+						const [first, ...rest] = edits ?? [];
+						// The IR fills in an empty `scriptSetup` for an SFC without script.
+						const descriptor = script.virtualCode.vueSfc?.descriptor;
+						if (first && !descriptor?.script && !descriptor?.scriptSetup) {
+							return [{ ...first, newText: `<script setup lang="ts">${first.newText}</script>\n\n` }, ...rest];
+						}
+						return edits;
+					}
+					catch {}
 				},
 				async isRefAtPosition(fileName, position) {
 					try {
@@ -283,14 +293,6 @@ export function startServer(ts: typeof import('typescript')) {
 			if (sourceScript && virtualCode instanceof VueVirtualCode) {
 				return { language, sourceScript, virtualCode };
 			}
-		}
-
-		async function sendTsServerRequest<T>(command: string, args: any): Promise<T | null> {
-			return await new Promise<T | null>(resolve => {
-				const requestId = ++tsserverRequestId;
-				tsserverRequestHandlers.set(requestId, resolve);
-				connection.sendNotification('tsserver/request', [requestId, command, args]);
-			});
 		}
 
 		function createProjectLanguageService(server: LanguageServer, project: TypeScriptProject | undefined) {

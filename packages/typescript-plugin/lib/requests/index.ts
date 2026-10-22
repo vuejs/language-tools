@@ -1,7 +1,21 @@
-import type * as ts from 'typescript';
-import type { VueCompletionData } from '../common';
-
 type Response<T> = T | null | undefined | Promise<T | null | undefined>;
+
+/** An edit in UTF-16 offsets of a file's source text. */
+export interface TextEdit {
+	pos: number;
+	end: number;
+	newText: string;
+}
+
+/** A component a module of the project exports. */
+export interface AutoImportComponent {
+	/** The name the component is imported and used as. */
+	name: string;
+	fileName: string;
+	exportName: string;
+	/** `fileName` relative to the project's current directory. */
+	description: string;
+}
 
 export interface ComponentPropInfo {
 	name: string;
@@ -25,7 +39,7 @@ export interface Requests {
 	getDefaultImportEdits(
 		fileName: string,
 		incomingFileName: string,
-	): Response<readonly { pos: number; end: number; newText: string }[]>;
+	): Response<readonly TextEdit[]>;
 	isRefAtPosition(
 		fileName: string,
 		position: number,
@@ -54,11 +68,13 @@ export interface Requests {
 	getElementNames(
 		fileName: string,
 	): Response<string[]>;
-	getAutoImportSuggestions(
+	/** The components that the modules of `fileName`'s project, other than external libraries, export. */
+	getAutoImportComponents(
 		fileName: string,
-		position: number,
-	): Response<ts.CompletionInfo>;
-	resolveAutoImportCompletionEntry(
-		data: VueCompletionData,
-	): Response<ts.CompletionEntryDetails>;
+	): Response<AutoImportComponent[]>;
+	/** Edits that import `component` into the Vue file `fileName`. */
+	getComponentImportEdits(
+		fileName: string,
+		component: AutoImportComponent,
+	): Response<readonly TextEdit[]>;
 }

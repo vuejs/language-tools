@@ -108,10 +108,6 @@ vim.lsp.config('vue_ls', {
 })
 ```
 
-### `tsserver/request` (required)
-
-Component and template features still query `@vue/typescript-plugin` running in tsserver. The server sends `tsserver/request` notifications with `[id, command, args]`; the client runs the command in tsserver and replies with a `tsserver/response` notification carrying `[id, body]` (`body` is `undefined` on failure).
-
 ## Related Packages
 
 - [`@vue/language-core`](../language-core) - Core module

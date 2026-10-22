@@ -1,5 +1,6 @@
 import {
 	forEachElementNode,
+	getBaseNameWithoutExtension,
 	type Language,
 	names,
 	type SourceScript,
@@ -8,8 +9,9 @@ import {
 	type VueVirtualCode,
 } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import type { ComponentPropInfo, ExtractPropsInfo } from '@vue/typescript-plugin/lib/requests';
+import type { AutoImportComponent, ComponentPropInfo, ExtractPropsInfo } from '@vue/typescript-plugin/lib/requests';
 import { getSelfComponentName } from '@vue/typescript-plugin/lib/requests/utils';
+import * as path from 'node:path';
 import type { URI } from 'vscode-uri';
 import type { TypeScript } from 'vue-component-meta';
 
@@ -17,6 +19,7 @@ type Node = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }})
 type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
 type TypeNode = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).TypeNode;
 type Checker = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Checker;
+type Program = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Program;
 type Symbol = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Symbol;
 type Type = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Type;
 
@@ -113,6 +116,51 @@ export async function getComponentNames(
 	}
 
 	return [...new Set(componentNames)];
+}
+
+/**
+ * The components that the modules of a program, other than external libraries, export. A default export is named
+ * after its file in PascalCase, as a Vue file refers to itself.
+ */
+export async function getAutoImportComponents(
+	ts: TypeScript,
+	program: Program,
+	checker: Checker,
+): Promise<AutoImportComponent[]> {
+	// The program's order depends on which files are open.
+	const allFileNames = [...await program.getSourceFileNames()].sort();
+	const metadata = await Promise.all(allFileNames.map(fileName => program.getSourceFileMetadata(fileName)));
+	const fileNames = allFileNames.filter((_, i) =>
+		metadata[i] && !metadata[i].isFromExternalLibrary && !metadata[i].isDefaultLibrary
+	);
+	const moduleSymbols = await checker.getSymbolOfSourceFile(fileNames);
+
+	const components = await Promise.all(moduleSymbols.map(async (moduleSymbol, i): Promise<AutoImportComponent[]> => {
+		if (!moduleSymbol) {
+			return [];
+		}
+		const fileName = fileNames[i]!;
+		const exports = await checker.getExportsOfModule(moduleSymbol);
+		const types = await checker.getTypeOfSymbol(
+			await Promise.all(
+				exports.map(async symbol =>
+					symbol.flags & ts.SymbolFlags.Alias ? await checker.getAliasedSymbol(symbol) : symbol
+				),
+			),
+		);
+		const isComponent = await Promise.all(types.map(isComponentType));
+		return exports
+			.filter((_, j) => isComponent[j])
+			.map(({ name: exportName }) => ({
+				name: exportName === 'default'
+					? capitalize(camelize(getBaseNameWithoutExtension(fileName)))
+					: exportName,
+				fileName,
+				exportName,
+				description: path.posix.relative(program.getCurrentDirectory(), fileName),
+			}));
+	}));
+	return components.flat();
 }
 
 /**

@@ -5,7 +5,7 @@
   <a href="https://github.com/vuejs/language-tools/blob/master/LICENSE"><img src="https://img.shields.io/github/license/vuejs/language-tools.svg?labelColor=18181B&color=1584FC" alt="License"></a>
 </p>
 
-A TypeScript language service plugin that enables `tsserver` to understand `.vue` files. This plugin is used by `@vue/language-server` to collaborate with the TypeScript language service.
+A TypeScript language service plugin that enables `tsserver` to understand `.vue` files.
 
 ## Installation
 
@@ -38,14 +38,6 @@ Create `.vscode/settings.json` in your project root:
 }
 ```
 
-## Provided Features
-
-This plugin registers the following Vue-specific commands for `tsserver`:
-
-| Command | Description |
-| :--- | :--- |
-| `_vue:getAutoImportSuggestions` | Get auto-import suggestions |
-| `_vue:resolveAutoImportCompletionEntry` | Resolve auto-import completion entry |
 ## How it Works
 
 This plugin is created using `createLanguageServicePlugin` from `@volar/typescript`. It:
@@ -53,7 +45,6 @@ This plugin is created using `createLanguageServicePlugin` from `@volar/typescri
 1. Reads `vueCompilerOptions` from `tsconfig.json`
 2. Creates a Vue language plugin to process `.vue` files
 3. Intercepts and handles TypeScript language service requests
-4. Registers Vue-specific protocol handlers
 
 ## Related Packages
 

@@ -19,7 +19,6 @@ import {
 import { camelize, capitalize } from '@vue/shared';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
-import { applyCompletionEntryDetails, convertCompletionInfo } from 'volar-service-typescript/lib/utils/lspConverters';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import type { PropMeta, TypeId, TypeNode } from 'vue-component-meta';
@@ -46,12 +45,18 @@ const DIRECTIVE_V_FOR_NAME = 'v-for';
 // Templates
 const V_FOR_SNIPPET = '="${1:value} in ${2:source}"';
 
+interface AutoImportData {
+	__vue__autoImport: {
+		fileName: string;
+		component: import('@vue/typescript-plugin/lib/requests').AutoImportComponent;
+	};
+}
+
 let customData: html.IHTMLDataProvider[];
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
 
 export function create(
-	ts: typeof import('typescript'),
 	languageId: 'html' | 'jade',
 	tsserver: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
@@ -215,47 +220,29 @@ export function create(
 						htmlCompletion: CompletionList,
 						info: NonNullable<ReturnType<typeof resolveEmbeddedCode>>,
 					) {
-						const autoImportPlaceholderIndex = htmlCompletion.items.findIndex(item =>
-							item.label === AUTO_IMPORT_PLACEHOLDER
-						);
-						if (autoImportPlaceholderIndex === -1) {
+						const placeholderIndex = htmlCompletion.items.findIndex(item => item.label === AUTO_IMPORT_PLACEHOLDER);
+						if (placeholderIndex === -1) {
 							return;
 						}
-						const offset = document.offsetAt(position);
-						const map = context.language.maps.get(info.code, info.script);
-						let spliced = false;
-						for (const [sourceOffset] of map.toSourceLocation(offset)) {
-							const autoImport = await tsserver.getAutoImportSuggestions(
-								info.root.fileName,
-								sourceOffset,
-							);
-							if (!autoImport) {
-								continue;
-							}
-							const tsCompletion = convertCompletionInfo(ts, autoImport, document, position, entry => entry.data);
-							const placeholder = htmlCompletion.items[autoImportPlaceholderIndex]!;
-							for (const tsItem of tsCompletion.items) {
-								if (placeholder.textEdit) {
-									const newText = tsItem.textEdit?.newText ?? tsItem.label;
-									tsItem.textEdit = {
-										...placeholder.textEdit,
-										newText: tagNameCasing === TagNameCasing.Kebab
-											? hyphenateTag(newText)
-											: newText,
-									};
-								}
-								else {
-									tsItem.textEdit = undefined;
-								}
-							}
-							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1, ...tsCompletion.items);
-							spliced = true;
-							lastCompletionDocument = document;
-							break;
-						}
-						if (!spliced) {
-							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1);
-						}
+						const placeholder = htmlCompletion.items[placeholderIndex]!;
+						const { fileName } = info.root;
+						const components = await tsserver.getAutoImportComponents(fileName) ?? [];
+						const items = components
+							.filter(component => !componentSet.has(component.name))
+							.map((component): html.CompletionItem => ({
+								label: component.name,
+								kind: 6 satisfies typeof CompletionItemKind.Variable,
+								labelDetails: { description: component.description },
+								textEdit: placeholder.textEdit && {
+									...placeholder.textEdit,
+									newText: tagNameCasing === TagNameCasing.Kebab
+										? hyphenateTag(component.name)
+										: component.name,
+								},
+								data: { __vue__autoImport: { fileName, component } } satisfies AutoImportData,
+							}));
+						htmlCompletion.items.splice(placeholderIndex, 1, ...items);
+						lastCompletionDocument = document;
 					}
 
 					function resolveComponentItemKinds(htmlCompletion: CompletionList) {
@@ -300,9 +287,9 @@ export function create(
 				},
 
 				async resolveCompletionItem(item) {
-					const data = item.data as import('@vue/typescript-plugin/lib/common').VueCompletionData;
+					const data = item.data as AutoImportData | undefined;
 
-					if (data?.__vue__autoImport || data?.__vue__componentAutoImport) {
+					if (data?.__vue__autoImport) {
 						const embeddedUri = URI.parse(lastCompletionDocument!.uri);
 						const decoded = context.decodeEmbeddedDocumentUri(embeddedUri);
 						if (!decoded) {
@@ -312,8 +299,9 @@ export function create(
 						if (!sourceScript) {
 							return item;
 						}
-						const details = await tsserver.resolveAutoImportCompletionEntry(data);
-						if (details) {
+						const { fileName, component } = data.__vue__autoImport;
+						const edits = await tsserver.getComponentImportEdits(fileName, component);
+						if (edits) {
 							const virtualCode = sourceScript.generated!.embeddedCodes.get(decoded[1])!;
 							const sourceDocument = context.documents.get(
 								sourceScript.id,
@@ -332,14 +320,13 @@ export function create(
 								embeddedDocument,
 								context,
 							);
-							applyCompletionEntryDetails(
-								ts,
-								item,
-								details,
-								sourceDocument,
-								fileName => URI.file(fileName),
-								() => undefined,
-							);
+							item.additionalTextEdits = edits.map(edit => ({
+								range: {
+									start: sourceDocument.positionAt(edit.pos),
+									end: sourceDocument.positionAt(edit.end),
+								},
+								newText: edit.newText,
+							}));
 							transformedItems.add(item);
 						}
 					}

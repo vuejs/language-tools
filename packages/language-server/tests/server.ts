@@ -69,17 +69,6 @@ export async function getLanguageServer(): Promise<{
 			const { pipe } = await server.request<{ pipe: string }>('custom/initializeAPISession', {});
 			return { pipe, packageJsonPath: typescriptPackageJsonPath };
 		});
-		serverHandle.connection.onNotification('tsserver/request', ([id, command, args]) => {
-			tsserver.message({
-				seq: seq++,
-				command: command,
-				arguments: args,
-			}).then(
-				res => serverHandle!.connection.sendNotification('tsserver/response', [id, res?.body]),
-				() => serverHandle!.connection.sendNotification('tsserver/response', [id, undefined]),
-			);
-		});
-
 		initializeResult = await serverHandle.initialize(
 			URI.file(testWorkspacePath).toString(),
 			// What the VS Code client registers for files outside any tsconfig
