@@ -1,5 +1,6 @@
 import { names, tsCodegen, type VueVirtualCode } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
+import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests';
 import { getSelfComponentName } from '@vue/typescript-plugin/lib/requests/utils';
 import type { TypeScript } from 'vue-component-meta';
 
@@ -116,6 +117,45 @@ async function isComponentType(type: Type) {
 	if (type.isObjectType()) {
 		for (const name of ['setup', 'render', 'template']) {
 			if (await type.getProperty(name)) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+/** The attributes of the intrinsic element `tag` in a Vue file's template. */
+export async function getElementAttrs(
+	ts: TypeScript,
+	checker: Checker,
+	sourceFile: SourceFile,
+	tag: string,
+): Promise<ComponentPropInfo[] | undefined> {
+	const intrinsics = findVariable(ts, sourceFile, names.intrinsics);
+	const element = intrinsics && await (await checker.getTypeAtLocation(intrinsics)).getProperty(tag);
+	if (!element) {
+		return;
+	}
+	const attrs: ComponentPropInfo[] = [];
+	for (const prop of await (await checker.getTypeOfSymbol(element)).getProperties()) {
+		const info: ComponentPropInfo = { name: prop.name };
+		if (!booleanExceptionProps.has(prop.name) && await hasBooleanType(ts, await checker.getTypeOfSymbol(prop))) {
+			info.boolean = true;
+		}
+		attrs.push(info);
+	}
+	return attrs;
+}
+
+const booleanExceptionProps = new Set(['class', 'style']);
+
+async function hasBooleanType(ts: TypeScript, type: Type): Promise<boolean> {
+	if (type.flags & ts.TypeFlags.BooleanLike) {
+		return true;
+	}
+	if (type.isUnionType() || type.isIntersectionType()) {
+		for (const member of await type.getTypes()) {
+			if (await hasBooleanType(ts, member)) {
 				return true;
 			}
 		}

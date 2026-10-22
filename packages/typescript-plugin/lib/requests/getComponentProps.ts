@@ -8,14 +8,8 @@ import {
 	type VueVirtualCode,
 } from '@vue/language-core';
 import type * as ts from 'typescript';
+import type { ComponentPropInfo } from './index';
 import { booleanExceptionProps, hasBooleanType } from './utils';
-
-export interface ComponentPropInfo {
-	name: string;
-	description?: string;
-	optional?: boolean;
-	boolean?: boolean;
-}
 
 export function getComponentProps(
 	ts: typeof import('typescript'),

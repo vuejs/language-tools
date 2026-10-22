@@ -47,9 +47,13 @@ test('Vue tags', async () => {
 
 test('#4670', async () => {
 	expect(
-		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><div click| /></template>`)).items.map(
-			item => item.label,
-		).filter(label => label.includes('click')),
+		(await requestCompletionListToVueServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`<template><div click| /></template>`,
+		))
+			.items.map(item => item.label)
+			.filter(label => label.includes('click')),
 	).toMatchInlineSnapshot(`
 		[
 		  "@dblclick",
@@ -738,7 +742,7 @@ test('Boolean props', async () => {
 
 	expect(
 		await requestCompletionItemToVueServer(
-			'fixture.vue',
+			'tsconfigProject/fixture.vue',
 			'vue',
 			`
 		<template>
@@ -771,6 +775,28 @@ test('Boolean props', async () => {
 		  },
 		}
 	`);
+});
+
+test('Element attributes', async () => {
+	const content = `
+		<template>
+			<x-foo f| />
+		</template>
+
+		<script lang="ts">
+		declare module 'vue/jsx-runtime' {
+			namespace JSX {
+				interface IntrinsicElements {
+					'x-foo': { flag?: boolean; label?: string };
+				}
+			}
+		}
+		export default {};
+		</script>
+		`;
+	const items = (await requestCompletionListToVueServer('tsconfigProject/fixture.vue', 'vue', content)).items;
+	expect(items.find(item => item.label === 'flag')?.textEdit?.newText).toBe('flag');
+	expect(items.find(item => item.label === 'label')?.textEdit?.newText).toBe('label="$1"');
 });
 
 test('Directives', async () => {

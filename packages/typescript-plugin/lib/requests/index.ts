@@ -3,6 +3,13 @@ import type { VueCompletionData } from '../common';
 
 type Response<T> = T | null | undefined | Promise<T | null | undefined>;
 
+export interface ComponentPropInfo {
+	name: string;
+	description?: string;
+	optional?: boolean;
+	boolean?: boolean;
+}
+
 export interface Requests {
 	collectExtractProps(
 		fileName: string,
@@ -37,7 +44,7 @@ export interface Requests {
 	getElementAttrs(
 		fileName: string,
 		tag: string,
-	): Response<ReturnType<typeof import('./getElementAttrs.js')['getElementAttrs']>>;
+	): Response<ComponentPropInfo[]>;
 	getElementNames(
 		fileName: string,
 	): Response<string[]>;

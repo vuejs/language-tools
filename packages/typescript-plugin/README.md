@@ -50,7 +50,6 @@ This plugin registers the following Vue-specific commands for `tsserver`:
 | `_vue:isRefAtPosition` | Check if position is a ref |
 | `_vue:getComponentProps` | Get component props |
 | `_vue:getComponentSlots` | Get component slots |
-| `_vue:getElementAttrs` | Get element attributes |
 
 ## How it Works
 
