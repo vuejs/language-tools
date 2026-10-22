@@ -24,6 +24,8 @@ const removedOptions: Record<string, string> = {
 	checkUnknownEvents: `Unknown events are always reported, so this option has no equivalent.`,
 	checkUnknownProps: `Unknown props are always reported, so this option has no equivalent.`,
 	extensions: `Set \`extensions\` on the \`contentMappers\` entry instead.`,
+	resolveStyleImports:
+		`Vue no longer reads CSS imports; \`<style module src>\` is always typed by importing its \`src\`, and CSS files are typed by CSS content mappers or declarations.`,
 };
 
 /** Resolved fields computed from other options (e.g. precompiled glob matchers, the template context set by `format: "petite-vue"`, or the formats of the `contentMappers` extensions); not user-settable. */

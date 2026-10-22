@@ -1,4 +1,4 @@
-import type { Code, IRAttr, IRStyle } from '../../types';
+import type { Code, IRAttr } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -29,24 +29,6 @@ export function* generateClassProperty(
 	}
 	yield `: ${propertyType}`;
 	yield ` }`;
-}
-
-export function* generateStyleImports(style: IRStyle, includeSrc = true): Generator<Code> {
-	if (includeSrc && typeof style.src === 'object') {
-		yield `${newLine} & typeof import(`;
-		yield* generateStyleSrc(style.src);
-		yield `).default`;
-	}
-	for (const { text, offset } of style.imports) {
-		yield `${newLine} & typeof import('`;
-		yield [
-			text,
-			style.name,
-			offset,
-			codeFeatures.navigationAndVerification,
-		];
-		yield `').default`;
-	}
 }
 
 export function* generateStyleSrc(src: Exclude<IRAttr, true>): Generator<Code> {

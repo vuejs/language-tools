@@ -65,7 +65,6 @@ export interface VueCompilerOptions {
 	vapor: boolean;
 	fallthroughAttributes: boolean;
 	checkRequiredFallthroughAttributes: boolean;
-	resolveStyleImports: boolean;
 	resolveStyleClassNames: boolean | 'scoped';
 	fallthroughComponentNames: string[];
 	dataAttributes: string[];
@@ -121,7 +120,7 @@ export interface VueLanguagePluginReturn {
 		options: CompilerDOM.CompilerOptions,
 	): CompilerDOM.CodegenResult | undefined;
 	compileSFCStyle?(lang: string, style: string):
-		| Pick<IRStyle, 'imports' | 'bindings' | 'classNames'>
+		| Pick<IRStyle, 'bindings' | 'classNames'>
 		| undefined;
 	updateSFCTemplate?(
 		oldResult: CompilerDOM.CodegenResult,
@@ -189,10 +188,6 @@ export interface IRStyle extends IRBlock {
 	src: IRAttr | undefined;
 	module: IRAttr | undefined;
 	scoped: boolean;
-	imports: {
-		text: string;
-		offset: number;
-	}[];
 	bindings: {
 		text: string;
 		offset: number;

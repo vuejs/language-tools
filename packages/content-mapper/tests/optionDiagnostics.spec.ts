@@ -29,6 +29,10 @@ test('reports options removed in v4 with a migration hint', () => {
 	});
 	expect(diagnostics[0]!.messageText).toContain(`Option 'strictTemplates' was removed in v4.`);
 	expect(diagnostics[1]!.messageText).toContain('GlobalComponents');
+	expect(toOptionDiagnostics({ resolveStyleImports: true })).toMatchObject([{
+		path: ['resolveStyleImports'],
+		code: OptionDiagnosticCode.RemovedOption,
+	}]);
 });
 
 test('reports unknown options and the removed vueCompilerOptions wrapper', () => {

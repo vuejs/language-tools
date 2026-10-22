@@ -338,7 +338,6 @@ export function getDefaultCompilerOptions(
 		vapor: false,
 		fallthroughAttributes: false,
 		checkRequiredFallthroughAttributes: false,
-		resolveStyleImports: false,
 		resolveStyleClassNames: 'scoped',
 		fallthroughComponentNames: [
 			'Transition',

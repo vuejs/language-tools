@@ -139,10 +139,6 @@ export function useIR(
 					}
 				}
 			});
-			const getImports = computedArray(
-				() => getIr()?.imports ?? [],
-				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
-			);
 			const getBindings = computedArray(
 				() => getIr()?.bindings ?? [],
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
@@ -161,9 +157,6 @@ export function useIR(
 					},
 					get scoped() {
 						return getScoped();
-					},
-					get imports() {
-						return getImports();
 					},
 					get bindings() {
 						return getBindings();

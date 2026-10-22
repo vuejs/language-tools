@@ -5,7 +5,7 @@ import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateTypeAlias, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import type { StyleCodegenOptions } from '.';
-import { generateClassProperty, generateStyleImports, generateStyleSrc } from './common';
+import { generateClassProperty, generateStyleSrc } from './common';
 
 /**
  * `<style module src>` is typed by an ordinary import of the src, so whatever types that module
@@ -79,9 +79,6 @@ export function* generateStyleModules(
 			yield `${names.PrettifyGlobal}<{}`;
 			if (typeof style.src === 'object') {
 				yield `${newLine} & typeof ${getStyleModuleImportName(style)}`;
-			}
-			if (vueCompilerOptions.resolveStyleImports) {
-				yield* generateStyleImports(style, false);
 			}
 			for (const className of style.classNames) {
 				yield* generateClassProperty(

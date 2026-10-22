@@ -83,11 +83,6 @@
 					"default": false,
 					"markdownDescription": "Check required fallthrough attributes."
 				},
-				"resolveStyleImports": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "Enable to generate type imports for external CSS files by `<style src=\"...\">` or `@import \"...\"`. `<style module src=\"...\">` is always typed by importing its `src`.\n\nSee: https://github.com/vuejs/language-tools/pull/5136"
-				},
 				"resolveStyleClassNames": {
 					"type": [
 						"boolean",

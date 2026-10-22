@@ -1,15 +1,4 @@
 {
 	"extends": "../../tsconfig.base.json",
-	"contentMappers": [
-		{
-			"package": "@vue/content-mapper",
-			"extensions": [".vue"],
-			"options": {
-				"languageFeatures": false,
-				"target": 99,
-				"resolveStyleImports": true
-			}
-		}
-	],
 	"include": ["**/*"]
 }
