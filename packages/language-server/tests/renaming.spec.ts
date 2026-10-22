@@ -449,6 +449,32 @@ test.fails('Scoped Classes', async () => {
 	]);
 });
 
+test('Scoped class names in :class from the style block', async () => {
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<div :class="'foo'"></div>
+				<div :class="['foo', { 'foo': true }]"></div>
+				<div :class="{ foo }"></div>
+			</template>
+			<style scoped>
+			.fo|o { }
+			</style>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		[
+		  "tsconfigProject/fixture.vue:2:18-2:21 -> NEW",
+		  "tsconfigProject/fixture.vue:3:19-3:22 -> NEW",
+		  "tsconfigProject/fixture.vue:3:28-3:31 -> NEW",
+		  "tsconfigProject/fixture.vue:7:4-7:7 -> NEW",
+		]
+	`);
+});
+
 test('Template Ref', async () => {
 	expect(
 		await requestRenameToTsServer(

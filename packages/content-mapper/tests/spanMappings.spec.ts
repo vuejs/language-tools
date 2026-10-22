@@ -370,3 +370,21 @@ test('cuts a verbatim section at a navigation-only copy of its content', () => {
 	]);
 	expect(unverifiedRanges).toEqual([[6, 7]]);
 });
+
+test('cuts a verbatim section at a copy that also offers completion', () => {
+	// generated: ('a'); a   (`a` copied from the section at 2..3 to 7..8)
+	// original:  ('a');
+	expect(toSpanMappings(
+		[
+			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [5], data: { verification: true } },
+			{ sourceOffsets: [2], generatedOffsets: [7], lengths: [1], data: { navigation: true, completion: true } },
+		],
+		`('a'); a`,
+		`('a');`,
+	)).toEqual([
+		[0, 2, 0, 2, SpanMapKind.Verbatim, 0],
+		[2, 1, 2, 1, SpanMapKind.Verbatim, 0],
+		[3, 2, 3, 2, SpanMapKind.Verbatim, 0],
+		[7, 1, 2, 1, SpanMapKind.Verbatim, navigationBits | completionBits],
+	]);
+});
