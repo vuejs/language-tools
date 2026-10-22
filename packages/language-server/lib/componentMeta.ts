@@ -193,6 +193,42 @@ export async function getUnresolvedName(ts: TypeScript, checker: Checker, source
 }
 
 /**
+ * The location of the declaration of the component `tag` refers to in a Vue file's template, in the source text of
+ * the file declaring it, when that is another file.
+ */
+export async function getComponentDefinition(
+	ts: TypeScript,
+	checker: Checker,
+	sourceFile: SourceFile,
+	virtualCode: VueVirtualCode,
+	tag: string,
+) {
+	const node = (await getComponentType(ts, checker, sourceFile, virtualCode, tag))?.node;
+	const declarationFile = node?.getSourceFile();
+	if (!node || !declarationFile || declarationFile.fileName === sourceFile.fileName) {
+		return;
+	}
+	const name = (node as { name?: Node }).name;
+	const target = name && ts.isIdentifier(name) ? name : node;
+	let start = target.getStart(declarationFile);
+	let end = target.end;
+	let text = declarationFile.text;
+	if (declarationFile.spanMap) {
+		({ pos: start, end } = declarationFile.spanMap.virtualToOriginalSpan({ pos: start, end }).range);
+		text = declarationFile.originalText;
+	}
+	return {
+		fileName: declarationFile.fileName,
+		range: { start: toLineAndCharacter(text, start), end: toLineAndCharacter(text, end) },
+	};
+}
+
+function toLineAndCharacter(text: string, offset: number) {
+	const lines = text.slice(0, offset).split('\n');
+	return { line: lines.length - 1, character: lines.at(-1)!.length };
+}
+
+/**
  * A constructor (`DefineComponent`, an SFC's default export, a class component) or a component options object.
  * Plain functions are not counted, as their type cannot tell a functional component from any other function.
  */

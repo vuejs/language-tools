@@ -30,6 +30,15 @@ export interface ImportFix {
 	edits: readonly TextEdit[];
 }
 
+/** A location in a file's source text. */
+export interface DefinitionLocation {
+	fileName: string;
+	range: {
+		start: { line: number; character: number };
+		end: { line: number; character: number };
+	};
+}
+
 export interface ExtractPropsInfo {
 	name: string;
 	type: string;
@@ -92,4 +101,9 @@ export interface Requests {
 		position: number,
 		isComponentTag: boolean,
 	): Response<ImportFix[]>;
+	/** The declaration of the component `tag` refers to, when another file declares it. */
+	getComponentDefinition(
+		fileName: string,
+		tag: string,
+	): Response<DefinitionLocation>;
 }

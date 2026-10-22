@@ -2,6 +2,7 @@ import { names, type VueVirtualCode } from '@vue/language-core';
 import type {
 	AutoImportComponent,
 	ComponentPropInfo,
+	DefinitionLocation,
 	ExtractPropsInfo,
 	TextEdit,
 } from '@vue/language-service/lib/requests';
@@ -14,6 +15,7 @@ import {
 	collectExtractProps,
 	findVariable,
 	getAutoImportComponents,
+	getComponentDefinition,
 	getComponentNames,
 	getComponentProps,
 	getComponentSlots,
@@ -59,6 +61,12 @@ export interface TypeScriptProjectResolver {
 		fileName: string,
 		name: string,
 	): Promise<{ fileName: string; edits: readonly TextEdit[] }[] | undefined>;
+	/** The declaration of the component that `tag` refers to in the template of the Vue file `fileName`, in another file. */
+	getComponentDefinition(
+		fileName: string,
+		virtualCode: VueVirtualCode,
+		tag: string,
+	): Promise<DefinitionLocation | undefined>;
 	/** The metadata of the component that `tag` refers to in the template of the Vue file `fileName`. */
 	getComponentMeta(fileName: string, virtualCode: VueVirtualCode, tag: string): Promise<ComponentMeta | undefined>;
 	/** The intrinsic element names available in the template of the Vue file `fileName`. */
@@ -223,6 +231,12 @@ export async function connectTypeScriptProjectResolver(
 					}),
 				})));
 			});
+		},
+		getComponentDefinition(fileName, virtualCode, tag) {
+			return withSourceFile(
+				fileName,
+				(project, sourceFile) => getComponentDefinition(ts, project.checker, sourceFile, virtualCode, tag),
+			);
 		},
 		getComponentMeta(fileName, virtualCode, tag) {
 			return withSourceFile(fileName, async (project, sourceFile) => {

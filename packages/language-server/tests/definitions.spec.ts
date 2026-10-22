@@ -1,4 +1,6 @@
-import type { TextDocument } from '@volar/language-server';
+import type { Location, TextDocument } from '@volar/language-server';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server';
@@ -117,6 +119,40 @@ test('#2600', async () => {
 		]
 	`);
 });
+
+test('global component tags lead to the file declaring the component', async () => {
+	expect(await requestVueDefinitions('ParentGlobal.vue', '<GlobalChild', 1)).toEqual(['Child.vue 0:0-0:0']);
+	expect(await requestVueDefinitions('ParentGlobal.vue', '<GlobalTsChild', 1)).toEqual([
+		'tsChild.ts 2:13-2:20',
+	]);
+	expect(await requestVueDefinitions('ParentGlobal.vue', '</GlobalTsChild', 2)).toEqual([
+		'tsChild.ts 2:13-2:20',
+	]);
+	expect(await requestVueDefinitions('ParentNamespace.vue', '<Foo.Bar', 5)).toEqual(['Child.vue 0:0-0:0']);
+});
+
+test('component tags declared in the file itself have no definition from the Vue language server', async () => {
+	expect(await requestVueDefinitions('ParentLocal.vue', '<Local', 1)).toEqual([]);
+});
+
+/** The Vue language server's definitions at `search` + `delta` of a file in `hoverComponentMeta`, as it is on disk. */
+async function requestVueDefinitions(file: string, search: string, delta: number) {
+	const fileName = `${testWorkspacePath}/hoverComponentMeta/${file}`;
+	const content = fs.readFileSync(fileName, 'utf8');
+	const server = await getLanguageServer();
+	const document = await prepareDocument(`hoverComponentMeta/${file}`, 'vue', content);
+	const definitions = await server.vueserver.sendDefinitionRequest(
+		document.uri,
+		document.positionAt(content.indexOf(search) + delta),
+	) ?? [];
+	return [definitions].flat().map(definition => {
+		// Without link support in the client, the server answers locations.
+		const { uri, range: { start, end } } = 'targetUri' in definition
+			? { uri: definition.targetUri, range: definition.targetSelectionRange }
+			: definition as Location;
+		return `${path.basename(URI.parse(uri).fsPath)} ${start.line}:${start.character}-${end.line}:${end.character}`;
+	});
+}
 
 const openedDocuments: TextDocument[] = [];
 

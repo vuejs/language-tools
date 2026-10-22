@@ -13,6 +13,7 @@ import { create as createCssPlugin } from './lib/plugins/css';
 import { create as createVueAutoDotValuePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
 import { create as createVueAutoSpacePlugin } from './lib/plugins/vue-autoinsert-space';
 import { create as createVueCompilerDomErrorsPlugin } from './lib/plugins/vue-compiler-dom-errors';
+import { create as createVueComponentDefinitionPlugin } from './lib/plugins/vue-component-definition';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
@@ -66,6 +67,7 @@ export function createVueLanguageServicePlugins(
 		createVueDocumentDropPlugin(ts, client),
 		createVueExtractFilePlugin(ts, client),
 		createVueMissingPropsHintsPlugin(client),
+		createVueComponentDefinitionPlugin(client),
 		createVueTemplateImportFixPlugin(client),
 		createVueTemplatePlugin('html', client),
 		createVueTemplatePlugin('jade', client),

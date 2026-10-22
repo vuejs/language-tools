@@ -320,6 +320,15 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 					catch {}
 				},
+				async getComponentDefinition(fileName, tag) {
+					try {
+						const script = await getVueScript(fileName);
+						if (script) {
+							return await (await connectTypeScriptApi()).getComponentDefinition(fileName, script.virtualCode, tag);
+						}
+					}
+					catch {}
+				},
 				async isRefAtPosition(fileName, position) {
 					try {
 						const script = await getVueScript(fileName);
