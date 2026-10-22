@@ -36,7 +36,9 @@ export function create(
 					}
 
 					const { ir } = info.root;
-					if (!ir.scriptSetup && !ir.script) {
+					// The IR fills in an empty `scriptSetup` for an SFC without script.
+					const descriptor = info.root.vueSfc?.descriptor;
+					if (!descriptor?.scriptSetup && !descriptor?.script) {
 						return;
 					}
 
