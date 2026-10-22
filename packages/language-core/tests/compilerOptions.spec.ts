@@ -84,7 +84,6 @@ describe('CompilerOptionsResolver', () => {
 				'@vue/language-core': {} as any,
 				typescript: ts,
 			},
-			compilerOptions: {},
 			vueCompilerOptions,
 			config: {},
 		});

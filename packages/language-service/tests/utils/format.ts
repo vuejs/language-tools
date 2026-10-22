@@ -8,7 +8,6 @@ import { createVueLanguageServicePlugins } from '../..';
 const resolvedVueOptions = getDefaultCompilerOptions();
 const vuePlugin = createVueLanguagePlugin<URI>(
 	ts,
-	{},
 	resolvedVueOptions,
 	() => '',
 );

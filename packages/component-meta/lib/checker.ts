@@ -30,7 +30,6 @@ export function createCheckerBase(
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot | undefined>();
 	const vueLanguagePlugin = core.createVueLanguagePlugin<string>(
 		ts,
-		projectHost.getCompilationSettings(),
 		vueOptions,
 		id => id,
 	);

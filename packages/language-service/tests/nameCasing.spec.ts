@@ -8,7 +8,6 @@ import type { AttrNameCasing, TagNameCasing } from '../lib/nameCasing';
 
 const vueLanguagePlugin = createVueLanguagePlugin<URI>(
 	ts,
-	{},
 	getDefaultCompilerOptions(),
 	uri => uri.path,
 );

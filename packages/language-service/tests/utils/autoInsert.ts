@@ -62,7 +62,6 @@ export function createAutoInserter(
 const vueCompilerOptions = getDefaultCompilerOptions();
 const vuePlugin = createVueLanguagePlugin<URI>(
 	ts,
-	{},
 	vueCompilerOptions,
 	() => '',
 );

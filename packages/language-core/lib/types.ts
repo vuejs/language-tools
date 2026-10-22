@@ -103,7 +103,6 @@ export interface VueLanguagePluginReturn {
 	version: typeof validVersions[number];
 	name?: string;
 	order?: number;
-	requiredCompilerOptions?: string[];
 	/**
 	 * Parses a file into SFC blocks. The first plugin returning a result wins; otherwise the built-in
 	 * parser of the file's format is used. Which files reach it is decided by the host
@@ -139,7 +138,6 @@ export type VueLanguagePlugin<T extends Record<string, any> = {}> = (
 			'@vue/compiler-dom': typeof CompilerDOM;
 			'@vue/language-core': typeof import('../index');
 		};
-		compilerOptions: ts.CompilerOptions;
 		vueCompilerOptions: VueCompilerOptions;
 		config: T;
 	},

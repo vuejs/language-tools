@@ -68,7 +68,7 @@ import { createLanguageService, createVueLanguageServicePlugins } from '@vue/lan
 import ts from 'typescript';
 
 const language = createLanguage([
-  createVueLanguagePlugin(ts, compilerOptions, vueCompilerOptions, asFileName),
+  createVueLanguagePlugin(ts, vueCompilerOptions, asFileName),
 ]);
 
 const service = createLanguageService(

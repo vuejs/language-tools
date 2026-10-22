@@ -199,7 +199,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		}
 		const { languageFeatures, ...mapperOptions } = state.params.options ?? {};
 		const watchedBefore = watchedFiles ? new Set(watchedFiles) : undefined;
-		const { parsed, vueOptions } = resolveVueCompilerOptions(
+		const { vueOptions } = resolveVueCompilerOptions(
 			ts,
 			host,
 			configFileName || undefined,
@@ -215,11 +215,9 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 					: []),
 			]
 			: [];
-		const compilerOptions = normalizeCompilerOptions(state.params.compilerOptions);
 		const configuration = {
 			plugin: vue.createVueLanguagePlugin<string>(
 				ts,
-				{ ...parsed?.options, ...compilerOptions },
 				vueOptions,
 				fileName => fileName,
 			),
@@ -242,7 +240,6 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		return {
 			plugin: vue.createVueLanguagePlugin<string>(
 				ts,
-				parsed.options,
 				parsed.vueOptions,
 				fileName => fileName,
 			),
@@ -260,17 +257,9 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 	};
 }
 
-function normalizeCompilerOptions(options: Record<string, unknown>) {
-	// `options` already arrives in the numeric-enum wire format that
-	// `ts.CompilerOptions` expects; `convertCompilerOptionsFromJson` expects
-	// string enums and silently drops numeric `lib`/`target`/`module`/`jsx`.
-	return options as ReturnType<typeof ts.convertCompilerOptionsFromJson>['options'];
-}
-
 function createIdentity(params: OpenProjectParams, watchedFiles: Iterable<string>) {
 	const hash = createHash('sha256');
 	hash.update(JSON.stringify(params.options ?? null));
-	hash.update(JSON.stringify(params.compilerOptions));
 	for (const fileName of [...watchedFiles].sort()) {
 		hash.update(fileName);
 		hash.update(ts.sys.readFile(fileName) ?? '');

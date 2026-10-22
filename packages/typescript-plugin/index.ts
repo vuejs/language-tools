@@ -31,7 +31,6 @@ export = createLanguageServicePlugin(
 		const vueOptions = getVueCompilerOptions();
 		const vuePlugin = core.createVueLanguagePlugin<string>(
 			ts,
-			info.languageServiceHost.getCompilationSettings(),
 			vueOptions,
 			id => id,
 		);

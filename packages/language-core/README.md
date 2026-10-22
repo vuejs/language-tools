@@ -26,7 +26,6 @@ import ts from 'typescript';
 
 const plugin: LanguagePlugin<string> = createVueLanguagePlugin(
   ts,
-  compilerOptions,    // ts.CompilerOptions
   vueCompilerOptions, // VueCompilerOptions
   (scriptId) => scriptId  // asFileName: Converts scriptId to a file name
 );

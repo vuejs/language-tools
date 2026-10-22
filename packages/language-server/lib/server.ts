@@ -139,8 +139,7 @@ export function startServer(ts: typeof import('typescript')) {
 						}
 						return languageService;
 					}
-					// Inferred projects share the compiler options the TypeScript language server infers for all of them.
-					return simpleLanguageService ??= createProjectLanguageService(server, project);
+					return simpleLanguageService ??= createProjectLanguageService(server, undefined);
 				},
 				getExistingLanguageServices() {
 					const projects = [...tsconfigProjects.values()];
@@ -248,7 +247,6 @@ export function startServer(ts: typeof import('typescript')) {
 
 		function createProjectLanguageService(server: LanguageServer, project: TypeScriptProject | undefined) {
 			const configFileName = project?.configFileName;
-			const compilerOptions = project?.parsedCommandLine.options ?? {};
 			const asFileName = (uri: URI) => uri.fsPath.replace(/\\/g, '/');
 			const entries = (configFileName
 				? project!.parsedCommandLine.raw?.contentMappers as ContentMapperEntry[] | undefined
@@ -261,7 +259,6 @@ export function startServer(ts: typeof import('typescript')) {
 					routeByExtensions(
 						createVueLanguagePlugin(
 							ts,
-							compilerOptions,
 							resolveVueCompilerOptions(ts, ts.sys, configFileName, entry.options).vueOptions,
 							asFileName,
 						),
@@ -275,7 +272,7 @@ export function startServer(ts: typeof import('typescript')) {
 					: createParsedCommandLineByJson(ts, ts.sys, ts.sys.getCurrentDirectory(), {});
 				vuePlugins = [
 					routeByExtensions(
-						createVueLanguagePlugin(ts, compilerOptions, vueOptions, asFileName),
+						createVueLanguagePlugin(ts, vueOptions, asFileName),
 						getAllExtensions(vueOptions),
 					),
 				];
