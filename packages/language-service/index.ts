@@ -25,6 +25,7 @@ import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
 import { create as createVueSuggestDefineAssignmentPlugin } from './lib/plugins/vue-suggest-define-assignment';
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
 import { create as createVueTemplateImportFixPlugin } from './lib/plugins/vue-template-import-fix';
+import { create as createVueTemplateKeywordsPlugin } from './lib/plugins/vue-template-keywords';
 import { create as createVueTemplateRefLinksPlugin } from './lib/plugins/vue-template-ref-links';
 import type { Requests } from './lib/requests';
 
@@ -71,5 +72,7 @@ export function createVueLanguageServicePlugins(
 		createVueTemplateImportFixPlugin(client),
 		createVueTemplatePlugin('html', client),
 		createVueTemplatePlugin('jade', client),
+		// after the template plugins, whose completion takes precedence
+		createVueTemplateKeywordsPlugin(ts),
 	];
 }

@@ -1,4 +1,4 @@
-import type { CompletionItem, TextDocument } from '@volar/language-server';
+import type { CompletionItem, CompletionItemKind, TextDocument } from '@volar/language-server';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, expect, test } from 'vitest';
@@ -534,6 +534,57 @@ test('Template expression completion keeps unused variables reported', async () 
 			.filter(diagnostic => diagnostic.code === 6133)
 			.map(diagnostic => document.getText(diagnostic.range)),
 	).toEqual(['unused', 'index']);
+});
+
+test('Keywords at identifier starts in template expressions', async () => {
+	for (
+		const content of [
+			`<template>{{ ty| }}</template>`,
+			`<template>{{ foo + | }}</template>`,
+			`<template><div :foo="a && t|"></div></template>`,
+			`<template><div @click="list.map(x => |)"></div></template>`,
+			`<template><div v-if="!|"></div></template>`,
+			`<template><div v-for="item in l|"></div></template>`,
+			`<template>{{ { ...| } }}</template>`,
+		]
+	) {
+		const items = (await requestCompletionListToVueServer('fixture.vue', 'vue', content)).items
+			.filter(item => item.kind === 14 satisfies typeof CompletionItemKind.Keyword);
+		expect(items.map(item => item.label), content).toEqual([
+			'async',
+			'delete',
+			'false',
+			'function',
+			'in',
+			'instanceof',
+			'new',
+			'null',
+			'this',
+			'true',
+			'typeof',
+			'void',
+		]);
+	}
+});
+
+test('No keywords outside identifier starts in template expressions', async () => {
+	for (
+		const content of [
+			`<template>{{ foo.| }}</template>`,
+			`<template>{{ foo?.t| }}</template>`,
+			`<template>{{ 'ty|' }}</template>`,
+			`<template>{{ \`ty|\` }}</template>`,
+			`<template>{{ 1.| }}</template>`,
+			`<template><div>ty|</div></template>`,
+			`<template><div t|></div></template>`,
+			`<template><div title="t|"></div></template>`,
+			`<template><Comp #default="|"></Comp></template>`,
+		]
+	) {
+		const items = (await requestCompletionListToVueServer('fixture.vue', 'vue', content)).items
+			.filter(item => item.label === 'typeof');
+		expect(items, content).toEqual([]);
+	}
 });
 
 test('Slot name', async () => {
