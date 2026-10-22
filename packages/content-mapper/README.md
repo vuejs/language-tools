@@ -40,7 +40,7 @@ outside `<script>` / `<style>` is the template and its expressions can also read
 {
 	"contentMappers": [
 		{ "package": "@vue/content-mapper", "extensions": [".vue"] },
-		{ "package": "@vue/content-mapper", "extensions": [".md"], "options": { "format": "vitepress" } }
+		{ "package": "@vue/content-mapper", "extensions": [".vue.md"], "options": { "format": "vitepress" } }
 	]
 }
 ```

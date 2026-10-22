@@ -49,16 +49,16 @@ test('a solution-style tsconfig hands the file to the referenced project', async
 });
 
 test('an own contentMappers array replaces the inherited one', async () => {
-	await expectConfigFileName('tsconfigContentMappers/fixture.md', 'tsconfigContentMappers/tsconfig.json');
-	// the override config only maps `.vue`, so the TypeScript language server hands its `.md` file to the parent config
-	await expectConfigFileName('tsconfigContentMappers/override/fixture.md', 'tsconfigContentMappers/tsconfig.json');
+	await expectConfigFileName('tsconfigContentMappers/fixture.vue.md', 'tsconfigContentMappers/tsconfig.json');
+	// the override config only maps `.vue`, so the TypeScript language server hands its `.vue.md` file to the parent config
+	await expectConfigFileName('tsconfigContentMappers/override/fixture.vue.md', 'tsconfigContentMappers/tsconfig.json');
 });
 
 test('a project carries the contentMappers inherited through extends', async () => {
-	const project = await resolver.getProject(fileName('tsconfigContentMappers/fixture.md'));
+	const project = await resolver.getProject(fileName('tsconfigContentMappers/fixture.vue.md'));
 	expect(project?.contentMappers).toEqual([
 		{ package: '@vue/content-mapper', extensions: ['.vue'] },
-		{ package: '@vue/content-mapper', extensions: ['.md'], options: { format: 'vitepress' } },
+		{ package: '@vue/content-mapper', extensions: ['.vue.md'], options: { format: 'vitepress' } },
 	]);
 });
 

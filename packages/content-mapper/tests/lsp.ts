@@ -109,9 +109,9 @@ export class LspDocument {
 		return uri.startsWith('file:') && path.relative(fileURLToPath(uri), this.fileName) === '';
 	}
 
-	open(server: LspServer) {
+	open(server: LspServer, languageId = 'vue') {
 		server.notify('textDocument/didOpen', {
-			textDocument: { uri: this.uri, languageId: 'vue', version: 1, text: this.text },
+			textDocument: { uri: this.uri, languageId, version: 1, text: this.text },
 		});
 	}
 
