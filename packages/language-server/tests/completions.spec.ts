@@ -447,7 +447,7 @@ test('Directive modifiers', async () => {
 	).toBe(1);
 });
 
-test.fails('Directive modifiers from the TypeScript language server', async () => {
+test('Directive modifiers from the TypeScript language server', async () => {
 	expect(
 		(await requestCompletionListToTsServer(
 			'tsconfigProject/fixture.vue',
@@ -489,7 +489,7 @@ test.fails('<script setup>', async () => {
 	);
 });
 
-test.fails('Slot name', async () => {
+test('Slot name', async () => {
 	const completion = await requestCompletionItemToTsServer(
 		'tsconfigProject/fixture.vue',
 		'vue',
@@ -515,7 +515,7 @@ test.fails('Slot name', async () => {
 	expect(range!.start).toEqual(range!.end);
 });
 
-test.fails('Slot name (v-slot:)', async () => {
+test('Slot name (v-slot:)', async () => {
 	const completion = await requestCompletionItemToTsServer(
 		'tsconfigProject/fixture.vue',
 		'vue',

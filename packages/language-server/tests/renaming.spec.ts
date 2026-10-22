@@ -142,7 +142,7 @@ test('CSS', async () => {
 	`);
 });
 
-test.fails('Scoped class names in a static class attribute', async () => {
+test('Scoped class names in a static class attribute', async () => {
 	expect(
 		await requestRenameToTsServer(
 			'tsconfigProject/fixture.vue',
