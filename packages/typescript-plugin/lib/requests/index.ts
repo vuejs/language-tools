@@ -40,10 +40,6 @@ export interface Requests {
 	getElementNames(
 		fileName: string,
 	): Response<ReturnType<typeof import('./getElementNames.js')['getElementNames']>>;
-	getDocumentHighlights(
-		fileName: string,
-		position: number,
-	): Response<ts.DocumentHighlights[]>;
 	getQuickInfoAtPosition(
 		fileName: string,
 		position: ts.LineAndCharacter,

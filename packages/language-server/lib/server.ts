@@ -188,16 +188,6 @@ export function startServer(ts: typeof import('typescript')) {
 				isRefAtPosition(...args) {
 					return sendTsServerRequest('_vue:isRefAtPosition', args);
 				},
-				getDocumentHighlights(fileName, position) {
-					return sendTsServerRequest(
-						'_vue:documentHighlights-full',
-						{
-							file: fileName,
-							...{ position } as unknown as { line: number; offset: number },
-							filesToSearch: [fileName],
-						} satisfies ts.server.protocol.DocumentHighlightsRequestArgs,
-					);
-				},
 				async getQuickInfoAtPosition(fileName, { line, character }) {
 					const result = await sendTsServerRequest<ts.server.protocol.QuickInfoResponseBody>(
 						'_vue:quickinfo' satisfies `_vue:${ts.server.protocol.CommandTypes.Quickinfo}`,

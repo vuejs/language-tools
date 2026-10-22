@@ -93,13 +93,10 @@ export = createLanguageServicePlugin(
 				string,
 				(request: ts.server.protocol.Request) => ts.server.HandlerResponse
 			>;
-			if (handlers.has('_vue:documentHighlights-full')) {
+			if (handlers.has('_vue:quickinfo')) {
 				return;
 			}
 
-			session.addProtocolHandler('_vue:documentHighlights-full', request => {
-				return handlers.get('documentHighlights-full')!(request);
-			});
 			session.addProtocolHandler('_vue:quickinfo', request => {
 				return handlers.get('quickinfo')!(request);
 			});

@@ -19,6 +19,7 @@ export function create(): LanguageServicePlugin {
 
 			return {
 				...baseServiceInstance,
+				provideDocumentHighlights: undefined,
 				async provideDiagnostics(document, token) {
 					let diagnostics = await baseServiceInstance.provideDiagnostics?.(document, token) ?? [];
 					if (document.languageId === 'postcss') {
