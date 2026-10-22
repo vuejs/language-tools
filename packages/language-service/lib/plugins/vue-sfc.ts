@@ -67,8 +67,6 @@ export function create(): LanguageServicePlugin {
 				...htmlServiceInstance,
 
 				provideDocumentLinks: undefined,
-				provideDocumentHighlights: undefined,
-
 				async resolveEmbeddedCodeFormattingOptions(sourceScript, virtualCode, options) {
 					if (sourceScript.generated?.root instanceof VueVirtualCode) {
 						if (virtualCode.id === 'script_raw' || virtualCode.id === 'scriptsetup_raw') {

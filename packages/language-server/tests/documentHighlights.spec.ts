@@ -49,29 +49,24 @@ span
 	).toEqual(['div']);
 });
 
-test('nothing outside template tag names is highlighted', async () => {
+test('embedded TypeScript is left to the TypeScript server', async () => {
 	const content = `
 <script setup lang="ts">
 const msg = 'hi';
+function onClick() {}
 </script>
 
 <template>
-	<div :title="msg">{{ msg }}</div>
+	<div v-if="msg" :title="msg" @click="onClick">{{ msg }}</div>
 </template>
-
-<style>
-.a { color: red; }
-.a { color: blue; }
-</style>
 `;
 	const positions = [
 		content.indexOf('msg ='),
-		content.indexOf('msg"'),
+		content.indexOf('onClick()'),
+		content.indexOf('msg" :'),
+		content.indexOf('msg" @'),
+		content.indexOf('onClick"'),
 		content.indexOf('msg }}'),
-		content.indexOf('title'),
-		content.indexOf('.a') + 1,
-		content.indexOf('script setup'),
-		content.indexOf('template>'),
 	];
 	for (const position of positions) {
 		expect(
@@ -80,6 +75,24 @@ const msg = 'hi';
 		)
 			.toEqual([]);
 	}
+});
+
+test('CSS and SFC block tags keep their highlights', async () => {
+	const content = `
+<script setup lang="ts">
+</script>
+
+<style>
+.a { color: red; }
+.a { color: blue; }
+</style>
+`;
+	const at = (search: string, delta: number) => {
+		const position = content.indexOf(search) + delta;
+		return content.slice(0, position) + '|' + content.slice(position);
+	};
+	expect(await highlight(at('.a', 1))).toEqual(['.a', '.a']);
+	expect(await highlight(at('style>', 1))).toEqual(['style', 'style']);
 });
 
 async function highlight(content: string, file = 'documentHighlights.vue') {
