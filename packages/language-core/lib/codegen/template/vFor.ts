@@ -18,7 +18,6 @@ export function* generateVFor(
 ): Generator<Code> {
 	const { source } = node.parseResult;
 	const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
-	const scope = ctx.scope();
 	let bindingNames: string[] = [];
 	const defaultInitializerRanges: [number, number][] = [];
 
@@ -57,6 +56,7 @@ export function* generateVFor(
 		yield endOfLine;
 	}
 
+	const scope = ctx.scope(true);
 	scope.declare(...bindingNames);
 
 	yield `for (const [`;

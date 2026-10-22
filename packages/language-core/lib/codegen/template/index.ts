@@ -35,7 +35,7 @@ export { generate as generateTemplate };
 function generate(options: TemplateCodegenOptions) {
 	// The references registry accumulates across codegen passes; start clean.
 	styleScopedClassReferences.delete(options.template);
-	const ctx = createTemplateCodegenContext();
+	const ctx = createTemplateCodegenContext(options.scriptLang);
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
 	for (const code of codeGenerator) {
@@ -51,7 +51,7 @@ function* generateWorker(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
-	const scope = ctx.scope();
+	const scope = ctx.scope(true);
 	const {
 		slotsAssignName,
 		propsAssignName,

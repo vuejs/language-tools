@@ -6,7 +6,7 @@ import { forEachNode } from '../utils';
 import type { TemplateCodegenContext } from './context';
 
 // https://github.com/vuejs/core/blob/fb0c3ca519f1fccf52049cd6b8db3a67a669afe9/packages/compiler-core/src/transforms/transformExpression.ts#L47
-const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
+export const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export interface DeclarationItem {
 	id: ts.Identifier;

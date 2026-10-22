@@ -26,6 +26,8 @@ export interface ScriptCodegenOptions {
 	localComponents: Set<string>;
 	localDirectives: Set<string>;
 	dotValueBindings: Set<string>;
+	/** Setup bindings that template and style expressions reference. */
+	scopeBindings: Set<string>;
 }
 
 export { generate as generateScript };

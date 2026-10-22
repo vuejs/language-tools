@@ -25,7 +25,7 @@ function generate(options: StyleCodegenOptions) {
 	for (const style of options.styles) {
 		styleScopedClassReferences.delete(style);
 	}
-	const ctx = createTemplateCodegenContext();
+	const ctx = createTemplateCodegenContext(options.scriptLang);
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
 	for (const code of codeGenerator) {
@@ -41,7 +41,7 @@ function* generateWorker(
 	options: StyleCodegenOptions,
 	ctx: TemplateCodegenContext,
 ) {
-	const scope = ctx.scope();
+	const scope = ctx.scope(true);
 	yield* generateStyleScopedClasses(options, ctx);
 	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);

@@ -21,6 +21,7 @@ export function* generateTemplate(
 	yield* generateTemplateCtx(options, selfType);
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
+	yield* generateTemplateScope(options);
 
 	yield `void ${names.ctx}, ${names.components}, ${names.intrinsics}, ${names.directives}${endOfLine}`;
 
@@ -162,6 +163,20 @@ function* generateTemplateDirectives(
 	});
 	yield* generateTypedVar('let', names.directives, scriptLang, function*() {
 		yield `${names.LocalDirectives} & ${names.BuiltInDirectives} & import('${vueCompilerOptions.lib}').GlobalDirectives`;
+	});
+}
+
+function* generateTemplateScope(
+	{ vueCompilerOptions, templateAndStyleTypes, scopeBindings, scriptLang }: ScriptCodegenOptions,
+): Generator<Code> {
+	if (!templateAndStyleTypes.has(names.Scope)) {
+		return;
+	}
+	yield* generateTypeAlias(names.Scope, scriptLang, function*() {
+		yield `typeof ${names.ctx} & ${names.Globals}`;
+		if (scopeBindings.size) {
+			yield ` & ${generateExposedType(vueCompilerOptions.lib, scopeBindings)}`;
+		}
 	});
 }
 

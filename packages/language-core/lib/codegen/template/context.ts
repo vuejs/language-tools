@@ -3,66 +3,14 @@ import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { endOfLine, isTsLang, newLine } from '../utils';
+import { asType, endOfLine, isTsLang, newLine } from '../utils';
+import { isLiteralWhitelisted } from './bindingReferences';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
 const directiveCommentRE = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)-->$/;
 
-// Reserved words can never be auto-imported bindings, and emitting them as
-// bare array elements is a syntax error (#5267: `[class,]`).
-const reservedWords = new Set([
-	'arguments',
-	'await',
-	'break',
-	'case',
-	'catch',
-	'class',
-	'const',
-	'continue',
-	'debugger',
-	'default',
-	'delete',
-	'do',
-	'else',
-	'enum',
-	'eval',
-	'export',
-	'extends',
-	'false',
-	'finally',
-	'for',
-	'function',
-	'if',
-	'implements',
-	'import',
-	'in',
-	'instanceof',
-	'interface',
-	'let',
-	'new',
-	'null',
-	'package',
-	'private',
-	'protected',
-	'public',
-	'return',
-	'static',
-	'super',
-	'switch',
-	'this',
-	'throw',
-	'true',
-	'try',
-	'typeof',
-	'var',
-	'void',
-	'while',
-	'with',
-	'yield',
-]);
-
-export function createTemplateCodegenContext() {
+export function createTemplateCodegenContext(scriptLang: string) {
 	// directive comments ---------------------------------------------------------
 
 	const stack: {
@@ -246,6 +194,11 @@ export function createTemplateCodegenContext() {
 	// scopes ---------------------------------------------------------------------
 
 	class Scope extends Set<string> {
+		block = false;
+		/** Locals the generated code always reads, so listing them hides no unused diagnostic. */
+		read = new Set<string>();
+		members: [name: string, source: string, offset: number, features: VueCodeInformation][] = [];
+
 		declare(...variables: string[]) {
 			for (const name of variables) {
 				this.add(name);
@@ -254,21 +207,82 @@ export function createTemplateCodegenContext() {
 
 		end() {
 			scopes.pop();
-			return generateAutoImport();
+			return generateScopeMembers(this);
 		}
 	}
 
 	const scopes: Scope[] = [];
 
-	function scope() {
+	/**
+	 * A block scope gathers the template identifiers within it as members of
+	 * `__VLS_scope`; completion is mapped only on those members.
+	 */
+	function scope(block = false) {
 		const scope = new Scope();
+		scope.block = block;
 		scopes.push(scope);
 		return scope;
 	}
 
+	const scopeMemberNames = new Set<string>();
+
+	/**
+	 * Returns false when the name is a local of the expression itself, which
+	 * keeps its own completion.
+	 */
+	function recordScopeMember(name: string, source: string, offset: number, features: VueCodeInformation) {
+		if (isLiteralWhitelisted(name) || name === 'require' || name.startsWith('__VLS_')) {
+			return false;
+		}
+		for (let i = scopes.length - 1; i >= 0; i--) {
+			const scope = scopes[i]!;
+			if (scope.block) {
+				if (!scope.members.some(member => member[1] === source && member[2] === offset)) {
+					scope.members.push([name, source, offset, features]);
+					scopeMemberNames.add(name);
+				}
+				return true;
+			}
+			if (scope.has(name)) {
+				return false;
+			}
+		}
+		return false;
+	}
+
+	function* generateScopeMembers(scope: Scope): Generator<Code> {
+		if (!scope.members.length) {
+			return;
+		}
+		generatedTypes.add(names.Scope);
+		// Only referenced locals are listed: a type query reads the variable,
+		// which would hide its unused diagnostic.
+		const locals = new Set([
+			...scope.read,
+			...[scope, ...scopes]
+				.flatMap(scope => scope.members.map(([name]) => name))
+				.filter(name => scope.has(name) || scopes.some(scope => scope.block && scope.has(name))),
+		]);
+		let type = names.Scope;
+		if (locals.size) {
+			type += ` & { ${[...locals].map(name => `${name}: typeof ${name}`).join(`; `)} }`;
+		}
+		yield `{${newLine}`;
+		yield `const ${names.scope} = ${asType(type, scriptLang)}${endOfLine}`;
+		yield `// @ts-ignore${newLine}`; // #2304
+		yield `[`;
+		for (const [name, source, offset, features] of scope.members) {
+			yield `${names.scope}.`;
+			yield [name, source, offset, features];
+			yield `,`;
+		}
+		yield `]${endOfLine}`;
+		yield `}${newLine}`;
+	}
+
 	// context accesses -----------------------------------------------------------
 
-	const contextAccesses = new Map<string, Map<string, Set<number>>>();
+	const contextAccesses = new Set<string>();
 	const dotValueAccesses = new Set<string>();
 
 	// Ordered log of accessed names; event-handler closures slice from a mark
@@ -277,41 +291,13 @@ export function createTemplateCodegenContext() {
 
 	function accessVariable(source: string, name: string, offset?: number, dotValue = false) {
 		accessLog.push(name);
-		let map = contextAccesses.get(name);
-		if (!map) {
-			contextAccesses.set(name, map = new Map());
-		}
-		let arr = map.get(source);
-		if (!arr) {
-			map.set(source, arr = new Set());
-		}
+		contextAccesses.add(name);
 		if (offset !== undefined) {
-			arr.add(offset);
+			recordScopeMember(name, source, offset, codeFeatures.importCompletionOnly);
 		}
 		if (dotValue) {
 			dotValueAccesses.add(name);
 		}
-	}
-
-	function* generateAutoImport(): Generator<Code> {
-		const all = [...contextAccesses.entries()];
-		if (!all.some(([, offsets]) => offsets.size)) {
-			return;
-		}
-		yield `// @ts-ignore${newLine}`; // #2304
-		yield `[`;
-		for (const [varName, map] of all) {
-			for (const [source, offsets] of map) {
-				if (!reservedWords.has(varName)) {
-					for (const offset of offsets) {
-						yield [varName, source, offset, codeFeatures.importCompletionOnly];
-						yield `,`;
-					}
-				}
-				offsets.clear();
-			}
-		}
-		yield `]${endOfLine}`;
 	}
 
 	// conditions -----------------------------------------------------------------
@@ -400,11 +386,12 @@ export function createTemplateCodegenContext() {
 		getInternalVariable,
 		scopes,
 		scope,
+		scopeMemberNames,
+		recordScopeMember,
 		contextAccesses,
 		dotValueAccesses,
 		accessLog,
 		accessVariable,
-		generateAutoImport,
 		conditions,
 		generateConditionGuards,
 		hoistVars,

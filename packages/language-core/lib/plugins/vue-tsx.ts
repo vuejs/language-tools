@@ -263,6 +263,15 @@ function useCodegen(
 		].filter(name => bindings.has(name)));
 	});
 
+	const getScopeBindings = computedSet(() => {
+		const bindings = getSetupBindings();
+		const consts = getSetupConsts();
+		return new Set([
+			...getGeneratedTemplate()?.scopeMemberNames ?? [],
+			...getGeneratedStyle()?.scopeMemberNames ?? [],
+		].filter(name => bindings.has(name) || consts.has(name)));
+	});
+
 	const getUsedSetupBindings = computedSet(() => {
 		return new Set([
 			...getReferencedBindings(),
@@ -282,6 +291,7 @@ function useCodegen(
 			localComponents: getLocalComponents(),
 			localDirectives: getLocalDirectives(),
 			dotValueBindings: getDotValueBindings(),
+			scopeBindings: getScopeBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateAndStyleTypes: new Set([

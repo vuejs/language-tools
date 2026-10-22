@@ -465,7 +465,7 @@ test('Directive modifiers from the TypeScript language server', async () => {
 	).toEqual(['attr', 'prop']);
 });
 
-test.fails('$event argument', async () => {
+test('$event argument', async () => {
 	await requestCompletionItemToTsServer(
 		'tsconfigProject/fixture.vue',
 		'vue',
@@ -487,6 +487,53 @@ test.fails('<script setup>', async () => {
 	`,
 		'foo',
 	);
+});
+
+test('Template expression completion is limited to the template scope', async () => {
+	const labels = (await requestCompletionListToTsServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<template>
+			<div v-for="item in list">
+				{{ foo + item }}
+				<div @click="console.log($eve|)"></div>
+			</div>
+		</template>
+
+		<script lang="ts" setup>
+		const foo = 1;
+		const list = [1];
+		</script>
+	`,
+	)).map(item => item.label);
+	expect(labels).toEqual(expect.arrayContaining(['$event', 'item', 'list', 'foo', 'Math', 'undefined', '$props']));
+	expect(labels).not.toContain('window');
+	expect(labels.filter(label => label.startsWith('__VLS_'))).toEqual([]);
+});
+
+test('Template expression completion keeps unused variables reported', async () => {
+	const document = await prepareDocument(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<template>
+			<div v-for="(item, index) in list">{{ item }}</div>
+		</template>
+
+		<script lang="ts" setup>
+		const unused = 1;
+		const list = [1];
+		</script>
+	`,
+	);
+	const server = await getLanguageServer();
+	const report = await server.typescript('textDocument/diagnostic', { textDocument: { uri: document.uri } });
+	expect(
+		(report.items as { code?: number; range: any }[])
+			.filter(diagnostic => diagnostic.code === 6133)
+			.map(diagnostic => document.getText(diagnostic.range)),
+	).toEqual(['unused', 'index']);
 });
 
 test('Slot name', async () => {

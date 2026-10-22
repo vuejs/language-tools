@@ -47,6 +47,41 @@ declare global {
 			expose?: (exposed: T) => void;
 		};
 	};
+	// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/shared/src/globalsAllowList.ts
+	type __VLS_Globals =
+		& Pick<
+			typeof globalThis,
+			Extract<
+				| 'Infinity'
+				| 'NaN'
+				| 'isFinite'
+				| 'isNaN'
+				| 'parseFloat'
+				| 'parseInt'
+				| 'decodeURI'
+				| 'decodeURIComponent'
+				| 'encodeURI'
+				| 'encodeURIComponent'
+				| 'Math'
+				| 'Number'
+				| 'Date'
+				| 'Array'
+				| 'Object'
+				| 'Boolean'
+				| 'String'
+				| 'RegExp'
+				| 'Map'
+				| 'Set'
+				| 'JSON'
+				| 'Intl'
+				| 'BigInt'
+				| 'console'
+				| 'Error'
+				| 'Symbol',
+				keyof typeof globalThis
+			>
+		>
+		& { undefined: undefined };
 	type __VLS_IsFunction<T, K> = K extends keyof T ? unknown extends T[K] ? false
 		: true
 		: false;

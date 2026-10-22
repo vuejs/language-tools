@@ -179,8 +179,9 @@ export function* generateEventExpression(
 		);
 
 		if (isCompound) {
-			const scope = ctx.scope();
+			const scope = ctx.scope(true);
 			scope.declare('$event');
+			scope.read.add('$event');
 
 			const accessMark = ctx.accessLog.length;
 			const codes: Code[] = [];
