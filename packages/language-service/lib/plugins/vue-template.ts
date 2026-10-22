@@ -22,7 +22,7 @@ import { create as createPugService } from 'volar-service-pug';
 import { applyCompletionEntryDetails, convertCompletionInfo } from 'volar-service-typescript/lib/utils/lspConverters';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
-import type { PropertyMeta } from 'vue-component-meta';
+import type { PropMeta, TypeId, TypeNode } from 'vue-component-meta';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
@@ -388,7 +388,7 @@ export function create(
 						if (offset >= tagStart && offset <= tagEnd) {
 							const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
 							const props = meta?.props.filter(p => !p.global);
-							const modelProps = new Set<PropertyMeta>();
+							const modelProps = new Set<PropMeta>();
 							let tableContents: string[] = [];
 
 							for (const event of meta?.events ?? []) {
@@ -410,13 +410,13 @@ export function create(
 								}
 							}
 
-							if (props?.length) {
+							if (meta && props?.length) {
 								let table =
 									`<tr><th align="left">Prop</th><th align="left">Description</th><th align="left">Default</th></tr>\n`;
 								for (const p of props) {
 									table += `<tr>
 											<td>${printName(p, modelProps.has(p))}</td>
-											<td>${printDescription(p)}</td>
+											<td>${printDescription(p, meta.types)}</td>
 											<td>${p.default ? `<code>${p.default}</code>` : ''}</td>
 										</tr>\n`;
 								}
@@ -428,7 +428,7 @@ export function create(
 								for (const e of meta.events) {
 									table += `<tr>
 											<td>${printName(e)}</td>
-											<td colspan="2">${printDescription(e)}</td>
+											<td colspan="2">${printDescription(e, meta.types)}</td>
 										</tr>\n`;
 								}
 								tableContents.push(table);
@@ -439,7 +439,7 @@ export function create(
 								for (const s of meta.slots) {
 									table += `<tr>
 											<td>${printName(s)}</td>
-											<td colspan="2">${printDescription(s)}</td>
+											<td colspan="2">${printDescription(s, meta.types)}</td>
 										</tr>\n`;
 								}
 								tableContents.push(table);
@@ -450,7 +450,7 @@ export function create(
 								for (const e of meta.exposed) {
 									table += `<tr>
 											<td>${printName(e)}</td>
-											<td colspan="2">${printDescription(e)}</td>
+											<td colspan="2">${printDescription(e, meta.types)}</td>
 										</tr>\n`;
 								}
 								tableContents.push(table);
@@ -491,12 +491,12 @@ export function create(
 						return name;
 					}
 
-					function printDescription(meta: { description?: string; type: string }) {
-						let desc = `<code>${meta.type}</code>`;
-						if (meta.description) {
+					function printDescription(member: { description?: string; type: TypeId }, types: TypeNode[]) {
+						let desc = `<code>${types[member.type]?.text}</code>`;
+						if (member.description) {
 							// blank line for terminate HTML to support markdown
 							// see: https://github.github.com/gfm/#example-118
-							desc = `\n\n${meta.description}<br>${desc}`;
+							desc = `\n\n${member.description}<br>${desc}`;
 						}
 						return desc;
 					}

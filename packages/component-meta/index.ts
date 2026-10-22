@@ -1,7 +1,6 @@
 import { posix as path } from 'path-browserify';
 import type { Project } from 'typescript-7/async' with { 'resolution-mode': 'import' };
 import { getComponentMeta, getExportNames } from './lib/componentMeta';
-import type { ComponentMetaContext, MetaCheckerOptions } from './lib/types';
 
 export { getComponentMeta, getExportNames };
 export * from './lib/types';
@@ -10,10 +9,7 @@ export * from './lib/types';
  * Runs the TypeScript 7 API in a child process for the project of `tsconfig`. Every query reads the files from disk
  * into a new snapshot that is released when the query completes.
  */
-export async function createChecker(
-	tsconfig: string,
-	options: MetaCheckerOptions = {},
-) {
+export async function createChecker(tsconfig: string) {
 	tsconfig = tsconfig.replace(/\\/g, '/');
 
 	const ts = {
@@ -21,17 +17,14 @@ export async function createChecker(
 		...await import('typescript-7/async'),
 	};
 	const api = new ts.API({ cwd: path.dirname(tsconfig), runExternalCode: true });
-	const context: ComponentMetaContext = { ts, printer: api.printer };
 
 	return {
 		getComponentMeta(fileName: string, exportName?: string) {
-			return withProject(project => getComponentMeta(context, project, fileName, exportName, options));
+			return withProject(project => getComponentMeta(ts, project, fileName, exportName));
 		},
 		/** The metadata of the default exports of `fileNames`, queried in a single snapshot. */
 		getComponentMetas(fileNames: string[]) {
-			return withProject(project =>
-				Promise.all(fileNames.map(fileName => getComponentMeta(context, project, fileName, 'default', options)))
-			);
+			return withProject(project => Promise.all(fileNames.map(fileName => getComponentMeta(ts, project, fileName))));
 		},
 		getExportNames(fileName: string) {
 			return withProject(project => getExportNames(project, fileName));

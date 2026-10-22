@@ -1,14 +1,6 @@
-import type { Checker, Printer, Type } from 'typescript-7/async' with { 'resolution-mode': 'import' };
-
 export type TypeScript =
 	& typeof import('typescript-7/ast', { with: { 'resolution-mode': 'import' }})
 	& typeof import('typescript-7/async', { with: { 'resolution-mode': 'import' }});
-
-/** The TypeScript 7 module and the printer of the `API` instance that created the project's snapshot. */
-export interface ComponentMetaContext {
-	ts: TypeScript;
-	printer: Printer;
-}
 
 export type ComponentMetaChecker = Awaited<ReturnType<typeof import('../index')['createChecker']>>;
 
@@ -19,85 +11,90 @@ export interface Declaration {
 	end: number;
 }
 
+/** An index into `ComponentMeta.types`. */
+export type TypeId = number;
+
 export interface ComponentMeta {
 	name?: string;
 	description?: string;
-	type: TypeMeta;
-	props: PropertyMeta[];
+	props: PropMeta[];
 	events: EventMeta[];
 	slots: SlotMeta[];
 	exposed: ExposeMeta[];
+	/** The types that members refer to by `TypeId`, each resolved once. */
+	types: TypeNode[];
 }
 
-export enum TypeMeta {
-	Unknown = 0,
-	Class = 1,
-	Function = 2,
-}
-
-export interface PropertyMeta {
+export interface Tag {
 	name: string;
-	description: string;
-	type: string;
-	default?: string;
-	global: boolean;
+	text?: string;
+}
+
+export interface PropMeta {
+	name: string;
 	required: boolean;
-	tags: { name: string; text?: string }[];
-	schema: PropertyMetaSchema;
+	default?: string;
+	description: string;
+	tags: Tag[];
+	/** Declared by Vue or the global component props (e.g. `key`, `class`) rather than the component. */
+	global: boolean;
 	declarations: Declaration[];
+	type: TypeId;
 }
 
 export interface EventMeta {
 	name: string;
 	description: string;
-	type: string;
-	signature: string;
-	tags: { name: string; text?: string }[];
-	schema: PropertyMetaSchema[];
+	tags: Tag[];
+	/** The event's call signature. */
 	declarations: Declaration[];
+	/** A `function` type of the event's arguments. */
+	type: TypeId;
 }
 
 export interface SlotMeta {
 	name: string;
 	description: string;
-	type: string;
-	tags: { name: string; text?: string }[];
-	schema: PropertyMetaSchema;
+	tags: Tag[];
 	declarations: Declaration[];
+	/** The type of the slot props. */
+	type: TypeId;
 }
 
 export interface ExposeMeta {
 	name: string;
 	description: string;
-	type: string;
-	tags: { name: string; text?: string }[];
-	schema: PropertyMetaSchema;
+	tags: Tag[];
 	declarations: Declaration[];
+	type: TypeId;
 }
 
-export type PropertyMetaSchema =
-	| string
-	| { kind: 'literal'; type: string; value: string }
-	| { kind: 'enum'; type: string; schema?: PropertyMetaSchema[] }
-	| { kind: 'array'; type: string; schema?: PropertyMetaSchema[] }
-	| { kind: 'event'; type: string; schema?: PropertyMetaSchema[] }
-	| { kind: 'object'; type: string; schema?: Record<string, PropertyMeta> };
-
-export type MetaCheckerSchemaOptions = boolean | {
-	/**
-	 * A list of type names to be ignored in expending in schema.
-	 * Can be functions to ignore types dynamically.
-	 */
-	ignore?: (
-		| string
-		| ((
-			name: string,
-			type: Type,
-			typeChecker: Checker,
-		) => boolean | void | undefined | null | Promise<boolean | void | undefined | null>)
-	)[];
-};
-
-export interface MetaCheckerOptions {
-	schema?: MetaCheckerSchemaOptions;
+export interface PropertyNode {
+	name: string;
+	optional: boolean;
+	description: string;
+	type: TypeId;
 }
+
+export interface ParameterNode {
+	name: string;
+	optional: boolean;
+	rest: boolean;
+	type: TypeId;
+}
+
+/**
+ * A type as written by the checker (`text`) and, unless it is declared outside the project's own source files, its
+ * structure.
+ */
+export type TypeNode =
+	& { text: string }
+	& (
+		| { kind: 'primitive' | 'literal' }
+		| { kind: 'union'; types: TypeId[] }
+		| { kind: 'array'; element: TypeId }
+		| { kind: 'tuple'; elements: TypeId[] }
+		| { kind: 'object'; properties: PropertyNode[] }
+		| { kind: 'function'; parameters: ParameterNode[]; returns: TypeId }
+		| { kind: 'external'; declaration?: Declaration }
+	);

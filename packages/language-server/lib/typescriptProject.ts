@@ -2,7 +2,7 @@ import type { VueVirtualCode } from '@vue/language-core';
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-import type { ComponentMeta, ComponentMetaContext, TypeScript } from 'vue-component-meta';
+import type { ComponentMeta, TypeScript } from 'vue-component-meta';
 import { getComponentMetaOfType } from 'vue-component-meta/lib/componentMeta';
 import { getComponentType } from './componentMeta';
 
@@ -53,7 +53,6 @@ export async function connectTypeScriptProjectResolver(
 		...await import(pathToFileURL(require.resolve(`${name}/async`)).href),
 	};
 	const api = await ts.API.fromLSPConnection({ pipe });
-	const context: ComponentMetaContext = { ts, printer: api.printer };
 	const projects = new Map<string, Promise<TypeScriptProject | undefined>>();
 
 	async function openSnapshot(fileName: string) {
@@ -111,7 +110,7 @@ export async function connectTypeScriptProjectResolver(
 				const sourceFile = await project?.program.getSourceFile(fileName);
 				const component = sourceFile
 					&& await getComponentType(ts, project!.checker, sourceFile, virtualCode, tag);
-				return component && await getComponentMetaOfType(context, project!, component.type, component.node);
+				return component && await getComponentMetaOfType(ts, project!, component.type, component.node);
 			}
 			finally {
 				await snapshot.dispose();
