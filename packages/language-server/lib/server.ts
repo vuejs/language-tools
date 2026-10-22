@@ -18,6 +18,7 @@ import {
 	type LanguageService,
 } from '@vue/language-service';
 import type { TextEdit } from '@vue/language-service/lib/requests';
+import { placeScriptImportEdits } from '@vue/language-service/lib/utils';
 import { capitalize } from '@vue/shared';
 import * as path from 'node:path';
 import { URI } from 'vscode-uri';
@@ -270,7 +271,7 @@ export function startServer(ts: typeof import('typescript')) {
 					try {
 						const script = await getVueScript(fileName);
 						if (script) {
-							return wrapImportEdits(
+							return placeScriptImportEdits(
 								script.virtualCode,
 								await (await connectTypeScriptApi()).getComponentImportEdits(fileName, component),
 							);
@@ -309,7 +310,7 @@ export function startServer(ts: typeof import('typescript')) {
 							candidates = await api.getNamedImportFixes(fileName, name) ?? [];
 						}
 						return candidates.flatMap(({ fileName: moduleFileName, edits }) => {
-							const wrapped = wrapImportEdits(script.virtualCode, edits);
+							const wrapped = placeScriptImportEdits(script.virtualCode, edits);
 							if (!wrapped?.length) {
 								return [];
 							}
@@ -380,22 +381,6 @@ export function startServer(ts: typeof import('typescript')) {
 		});
 
 		return result;
-
-		/**
-		 * Wraps the import edits for an SFC without script in a new `<script setup>` at the top of the file; the
-		 * position TypeScript picks there means nothing, as the IR fills in an empty `scriptSetup`.
-		 */
-		function wrapImportEdits(virtualCode: VueVirtualCode, edits: readonly TextEdit[] | undefined) {
-			const [first, ...rest] = edits ?? [];
-			const descriptor = virtualCode.vueSfc?.descriptor;
-			if (first && !descriptor?.script && !descriptor?.scriptSetup) {
-				return [
-					{ pos: 0, end: 0, newText: `<script setup lang="ts">\n${first.newText.trim()}\n</script>\n\n` },
-					...rest,
-				];
-			}
-			return edits;
-		}
 
 		async function getVueScript(fileName: string) {
 			const uri = URI.file(fileName);

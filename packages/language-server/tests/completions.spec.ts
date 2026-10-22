@@ -288,6 +288,16 @@ test('Auto import picks up the components another file changes', async () => {
 	expect(await getLabels()).not.toContain('Added');
 });
 
+test('Auto import into an empty script setup', async () => {
+	expect(
+		await applyCompletionItem(
+			'tsconfigProject/fixture.vue',
+			`<script setup lang="ts"></script>\n\n<template><| /></template>`,
+			'Comp',
+		),
+	).toBe(`<script setup lang="ts">\nimport { Comp } from './comp';\n</script>\n\n<template><Comp /></template>`);
+});
+
 test('Auto import into a Vue file without script', async () => {
 	expect(await applyCompletionItem('tsconfigProject/fixture.vue', `<template><| /></template>`, 'Comp')).toBe(
 		`<script setup lang="ts">\nimport { Comp } from './comp';\n</script>\n\n<template><Comp /></template>`,

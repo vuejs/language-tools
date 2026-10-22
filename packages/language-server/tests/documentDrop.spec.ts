@@ -36,6 +36,20 @@ test('registers a dropped component in the Options API with the name the TypeScr
 	);
 });
 
+test('imports a dropped component into an empty script setup', async () => {
+	const { document, edit } = await drop('pages/deep/EmptySetupTarget.vue', 'components/deep/DropComponent.vue');
+	expect(applyEdits(document, edit?.additionalEdit?.changes?.[document.uri])).toBe(
+		`<script setup lang="ts">
+import DropComponent from '@/components/deep/DropComponent.vue';
+</script>
+
+<template>
+	<div></div>
+</template>
+`,
+	);
+});
+
 test('does not import a dropped component into an SFC without script', async () => {
 	const { edit } = await drop('pages/deep/NoScriptTarget.vue', 'components/deep/DropComponent.vue');
 	expect(edit).toBeNull();

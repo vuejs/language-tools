@@ -1,6 +1,28 @@
 import type { LanguageServiceContext, SourceScript } from '@volar/language-service';
 import { forEachElementNode, type IRTemplate, type VueVirtualCode } from '@vue/language-core';
 import { URI } from 'vscode-uri';
+import type { TextEdit } from './requests';
+
+/**
+ * Places the TypeScript import edits for an SFC whose script has no content: the position TypeScript
+ * picks maps to nothing in the SFC, so the imports go into a new `<script setup>` or the empty block.
+ */
+export function placeScriptImportEdits(root: VueVirtualCode, edits: readonly TextEdit[] | null | undefined) {
+	const descriptor = root.vueSfc?.descriptor;
+	if (!edits?.length || !descriptor) {
+		return edits;
+	}
+	const imports = edits.map(edit => edit.newText.trim()).filter(Boolean).join('\n');
+	const block = descriptor.scriptSetup ?? descriptor.script;
+	if (!block) {
+		return [{ pos: 0, end: 0, newText: `<script setup lang="ts">\n${imports}\n</script>\n\n` }];
+	}
+	if (!block.content.trim()) {
+		const pos = block.loc.start.offset;
+		return [{ pos, end: pos, newText: `\n${imports}${/^\r?\n/.test(block.content) ? '' : '\n'}` }];
+	}
+	return edits;
+}
 
 export function resolveEmbeddedCode(
 	context: LanguageServiceContext,

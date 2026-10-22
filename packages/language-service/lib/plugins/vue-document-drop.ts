@@ -3,7 +3,7 @@ import { hyphenate } from '@vue/shared';
 import { URI } from 'vscode-uri';
 import { getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { createAddComponentToOptionEdit } from '../plugins/vue-extract-file';
-import { resolveEmbeddedCode } from '../utils';
+import { placeScriptImportEdits, resolveEmbeddedCode } from '../utils';
 
 export function create(
 	ts: typeof import('typescript'),
@@ -43,7 +43,10 @@ export function create(
 					}
 
 					const incomingFileName = URI.parse(importUri).fsPath.replace(/\\/g, '/');
-					const importEdits = await getDefaultImportEdits(info.root.fileName, incomingFileName);
+					const importEdits = placeScriptImportEdits(
+						info.root,
+						await getDefaultImportEdits(info.root.fileName, incomingFileName),
+					);
 					const name = importEdits && getDefaultImportName(ts, importEdits);
 					if (!importEdits || !name) {
 						return;
