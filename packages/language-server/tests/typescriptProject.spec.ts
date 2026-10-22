@@ -67,6 +67,18 @@ test('options are merged across extends, raw only carries the resolved contentMa
 	expect(parsedCommandLine.raw).not.toHaveProperty('vueCompilerOptions');
 });
 
+test('options carry configFilePath and absolute paths, relative to the config that set them', async () => {
+	// Vue plugins read these from `ctx.compilerOptions`, e.g. vue-macros `configFilePath` and vue-router `rootDir`
+	const { options } = (await resolver.getProject(fileName('typescriptProject/paths/app/src/a.ts')))!.parsedCommandLine;
+	const expectPath = (actual: unknown, expected: string) =>
+		expect(path.relative(actual as string, path.join(testWorkspacePath, 'typescriptProject/paths', expected))).toBe('');
+	expectPath(options.configFilePath, 'app/tsconfig.json');
+	expectPath(options.rootDir, 'app/src');
+	expectPath(options.outDir, 'app/dist');
+	expectPath(options.declarationDir, 'base/decl');
+	expectPath(options.typeRoots?.[0], 'base/types');
+});
+
 test('an inferred project has compiler options but no config file', async () => {
 	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-inferred-'));
 	try {
