@@ -207,9 +207,6 @@ importers:
         specifier: workspace:*
         version: link:../component-meta
     devDependencies:
-      '@typescript/server-harness':
-        specifier: latest
-        version: 0.3.6
       '@volar/test-utils':
         specifier: 2.4.28
         version: 2.4.28
@@ -839,9 +836,6 @@ packages:
     resolution: {integrity: sha512-l0OPZ6xD69vQpyfS5yTSwJ5xJTYM2hUKFRYlvyyUSvbFubUz8jQRLcrn+WU4QehV9WkVIQIx8CLgNCI0Zqhmyg==}
     cpu: [x64]
     os: [win32]
-
-  '@typescript/server-harness@0.3.6':
-    resolution: {integrity: sha512-y72UF/Xv7Y0rdidvogsBMl2kA2ZzNR0HNQI+mOm5AlTdWFJP290UyF9Se5RFipS+GrXa+DjbiPHmu90e/x6weg==}
 
   '@typescript/typescript-aix-ppc64@7.1.0-beta':
     resolution: {integrity: sha512-DXDG+jIWxBHGdoO70tcHON33rCnSzsEZj9P13oyf/r/KEGIo6awsdSNVNjAw0uMwEpqRu75IrgCcW58YcVkZHg==}
@@ -2290,8 +2284,6 @@ snapshots:
 
   '@typescript-native-bridge/win32-x64@6.0.3-bridge.16.tsgo.7.0.2':
     optional: true
-
-  '@typescript/server-harness@0.3.6': {}
 
   '@typescript/typescript-aix-ppc64@7.1.0-beta':
     optional: true

@@ -94,13 +94,6 @@ async function openDocument(server: Awaited<ReturnType<typeof getLanguageServer>
 }
 
 async function getSemanticDiagnostics(server: Awaited<ReturnType<typeof getLanguageServer>>, uri: string) {
-	const res = await server.tsserver.message({
-		seq: server.nextSeq(),
-		command: 'semanticDiagnosticsSync',
-		arguments: {
-			file: URI.parse(uri).fsPath,
-		},
-	});
-	expect(res.success).toBe(true);
-	return res.body as any[];
+	const report = await server.typescript('textDocument/diagnostic', { textDocument: { uri } });
+	return report.items as { code?: number | string }[];
 }

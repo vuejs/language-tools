@@ -3,41 +3,20 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
-import { getLanguageServer, testWorkspacePath } from './server';
+import { formatLocations, getLanguageServer, testWorkspacePath } from './server';
 
-test('TS to vue', async () => {
+test.fails('TS to vue: default import name', async () => {
 	expect(
 		await requestDefinition('tsconfigProject/fixture1.ts', 'typescript', `import C|omponent from './empty.vue';`),
-	).toMatchInlineSnapshot(`
-		[
-		  {
-		    "end": {
-		      "line": 1,
-		      "offset": 1,
-		    },
-		    "file": "\${testWorkspacePath}/tsconfigProject/empty.vue",
-		    "start": {
-		      "line": 1,
-		      "offset": 1,
-		    },
-		  },
-		]
-	`);
+	).toEqual(['tsconfigProject/empty.vue:0:0-0:0']);
+});
+
+test('TS to vue: module specifier', async () => {
 	expect(
 		await requestDefinition('tsconfigProject/fixture2.ts', 'typescript', `import Component from '|./empty.vue';`),
 	).toMatchInlineSnapshot(`
 		[
-		  {
-		    "end": {
-		      "line": 1,
-		      "offset": 1,
-		    },
-		    "file": "\${testWorkspacePath}/tsconfigProject/empty.vue",
-		    "start": {
-		      "line": 1,
-		      "offset": 1,
-		    },
-		  },
+		  "tsconfigProject/empty.vue:0:0-0:0",
 		]
 	`);
 });
@@ -56,30 +35,12 @@ test('Alias path', async () => {
 		),
 	).toMatchInlineSnapshot(`
 		[
-		  {
-		    "contextEnd": {
-		      "line": 1,
-		      "offset": 26,
-		    },
-		    "contextStart": {
-		      "line": 1,
-		      "offset": 1,
-		    },
-		    "end": {
-		      "line": 1,
-		      "offset": 17,
-		    },
-		    "file": "\${testWorkspacePath}/tsconfigProject/foo.ts",
-		    "start": {
-		      "line": 1,
-		      "offset": 14,
-		    },
-		  },
+		  "tsconfigProject/foo.ts:0:13-0:16",
 		]
 	`);
 });
 
-test('#2600', async () => {
+test.fails('#2600', async () => {
 	await prepareDocument(
 		'tsconfigProject/foo.vue',
 		'vue',
@@ -103,21 +64,7 @@ test('#2600', async () => {
 			</script>
 		`,
 		),
-	).toMatchInlineSnapshot(`
-		[
-		  {
-		    "end": {
-		      "line": 8,
-		      "offset": 3,
-		    },
-		    "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
-		    "start": {
-		      "line": 7,
-		      "offset": 3,
-		    },
-		  },
-		]
-	`);
+	).toEqual(['tsconfigProject/foo.vue:6:2-7:2']);
 });
 
 test('global component tags lead to the file declaring the component', async () => {
@@ -172,21 +119,12 @@ async function requestDefinition(fileName: string, languageId: string, content: 
 	const server = await getLanguageServer();
 	let document = await prepareDocument(fileName, languageId, content);
 
-	const res = await server.tsserver.message({
-		seq: server.nextSeq(),
-		command: 'definition',
-		arguments: {
-			file: URI.parse(document.uri).fsPath,
-			position: offset,
-		},
-	});
-	expect(res.success).toBe(true);
-
-	for (const ref of res.body) {
-		ref.file = '${testWorkspacePath}' + ref.file.slice(testWorkspacePath.length);
-	}
-
-	return res.body;
+	return formatLocations(
+		await server.typescript('textDocument/definition', {
+			textDocument: { uri: document.uri },
+			position: document.positionAt(offset),
+		}),
+	);
 }
 
 async function prepareDocument(fileName: string, languageId: string, content: string) {

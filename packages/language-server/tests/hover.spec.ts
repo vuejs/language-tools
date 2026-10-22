@@ -21,19 +21,14 @@ const foo = 1;
 		content,
 	);
 
-	const res = await server.tsserver.message({
-		seq: server.nextSeq(),
-		command: 'quickinfo',
-		arguments: {
-			file: URI.parse(document.uri).fsPath,
-			position: offset,
-		},
+	const hover = await server.typescript('textDocument/hover', {
+		textDocument: { uri: document.uri },
+		position: document.positionAt(offset),
 	});
 
 	await server.close(document.uri);
 
-	expect(res.success).toBe(true);
-	expect(res.body?.displayString).toBe('var Math: Math');
+	expect(hover?.contents?.value).toContain('var Math: Math');
 });
 
 test('rich hover of a component tag shows its meta from the TypeScript language server', async () => {

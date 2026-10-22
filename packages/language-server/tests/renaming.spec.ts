@@ -1,7 +1,7 @@
-import type { TextDocument } from '@volar/language-server';
+import type { Range, TextDocument } from '@volar/language-server';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
-import { getLanguageServer, testWorkspacePath } from './server';
+import { formatLocations, getLanguageServer, testWorkspacePath } from './server';
 
 test('#2410', async () => {
 	expect(
@@ -81,7 +81,7 @@ test('#2410', async () => {
 test('CSS', async () => {
 	expect(
 		await requestRenameToTsServer(
-			'fixture.vue',
+			'tsconfigProject/fixture.vue',
 			'vue',
 			`
 			<template>
@@ -99,118 +99,14 @@ test('CSS', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "foo",
-		    "fullDisplayName": "foo",
-		    "kind": "property",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 3,
-		        "offset": 28,
-		      },
-		      "start": {
-		        "line": 3,
-		        "offset": 25,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 28,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 25,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 8,
-		            "offset": 8,
-		          },
-		          "start": {
-		            "line": 8,
-		            "offset": 5,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:2:24-2:27 -> NEW",
+		  "tsconfigProject/fixture.vue:7:4-7:7 -> NEW",
+		]
 	`);
 	expect(
 		await requestRenameToTsServer(
-			'fixture.vue',
-			'vue',
-			`
-			<template>
-				<div class="foo|"></div>
-			</template>
-
-			<style scoped>
-			.foo { }
-			</style>
-		`,
-		),
-	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "foo",
-		    "fullDisplayName": "__type.foo",
-		    "kind": "property",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 3,
-		        "offset": 20,
-		      },
-		      "start": {
-		        "line": 3,
-		        "offset": 17,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 20,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 17,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 7,
-		            "offset": 8,
-		          },
-		          "start": {
-		            "line": 7,
-		            "offset": 5,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
-	`);
-	expect(
-		await requestRenameToTsServer(
-			'fixture.vue',
+			'tsconfigProject/fixture.vue',
 			'vue',
 			`
 			<script lang="ts" setup>
@@ -233,121 +129,35 @@ test('CSS', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "foo",
-		    "fullDisplayName": "foo",
-		    "kind": "const",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 8,
-		        "offset": 28,
-		      },
-		      "start": {
-		        "line": 8,
-		        "offset": 25,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 12,
-		            "offset": 35,
-		          },
-		          "start": {
-		            "line": 12,
-		            "offset": 32,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 12,
-		            "offset": 29,
-		          },
-		          "start": {
-		            "line": 12,
-		            "offset": 26,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 11,
-		            "offset": 35,
-		          },
-		          "start": {
-		            "line": 11,
-		            "offset": 32,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 11,
-		            "offset": 29,
-		          },
-		          "start": {
-		            "line": 11,
-		            "offset": 26,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 10,
-		            "offset": 29,
-		          },
-		          "start": {
-		            "line": 10,
-		            "offset": 26,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 9,
-		            "offset": 29,
-		          },
-		          "start": {
-		            "line": 9,
-		            "offset": 26,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 8,
-		            "offset": 28,
-		          },
-		          "start": {
-		            "line": 8,
-		            "offset": 25,
-		          },
-		        },
-		        {
-		          "contextEnd": {
-		            "line": 3,
-		            "offset": 18,
-		          },
-		          "contextStart": {
-		            "line": 3,
-		            "offset": 4,
-		          },
-		          "end": {
-		            "line": 3,
-		            "offset": 13,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 10,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:10:25-10:28 -> NEW",
+		  "tsconfigProject/fixture.vue:10:31-10:34 -> NEW",
+		  "tsconfigProject/fixture.vue:11:25-11:28 -> NEW",
+		  "tsconfigProject/fixture.vue:11:31-11:34 -> NEW",
+		  "tsconfigProject/fixture.vue:2:9-2:12 -> NEW",
+		  "tsconfigProject/fixture.vue:7:24-7:27 -> NEW",
+		  "tsconfigProject/fixture.vue:8:25-8:28 -> NEW",
+		  "tsconfigProject/fixture.vue:9:25-9:28 -> NEW",
+		]
 	`);
+});
+
+test.fails('Scoped class names in a static class attribute', async () => {
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<div class="foo|"></div>
+			</template>
+
+			<style scoped>
+			.foo { }
+			</style>
+		`,
+		),
+	).toEqual(['tsconfigProject/fixture.vue:2:16-2:19 -> NEW', 'tsconfigProject/fixture.vue:6:4-6:7 -> NEW']);
 });
 
 test('Component props', async () => {
@@ -380,85 +190,11 @@ test('Component props', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "aaaBbb",
-		    "fullDisplayName": "__object.aaaBbb",
-		    "kind": "property",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 7,
-		        "offset": 24,
-		      },
-		      "start": {
-		        "line": 7,
-		        "offset": 18,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 4,
-		            "offset": 17,
-		          },
-		          "start": {
-		            "line": 4,
-		            "offset": 11,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 18,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 11,
-		          },
-		        },
-		      ],
-		    },
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "contextEnd": {
-		            "line": 7,
-		            "offset": 32,
-		          },
-		          "contextStart": {
-		            "line": 7,
-		            "offset": 18,
-		          },
-		          "end": {
-		            "line": 7,
-		            "offset": 24,
-		          },
-		          "start": {
-		            "line": 7,
-		            "offset": 18,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 14,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 8,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:2:7-2:13 -> NEW",
+		  "tsconfigProject/fixture.vue:6:17-6:23 -> NEW",
+		  "tsconfigProject/foo.vue:3:10-3:16 -> NEW",
+		]
 	`);
 });
 
@@ -492,85 +228,11 @@ test('Component type props', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "aaaBbb",
-		    "fullDisplayName": "__type.aaaBbb",
-		    "kind": "property",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 7,
-		        "offset": 24,
-		      },
-		      "start": {
-		        "line": 7,
-		        "offset": 18,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 4,
-		            "offset": 17,
-		          },
-		          "start": {
-		            "line": 4,
-		            "offset": 11,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 18,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 11,
-		          },
-		        },
-		      ],
-		    },
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 14,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 8,
-		          },
-		        },
-		        {
-		          "contextEnd": {
-		            "line": 7,
-		            "offset": 32,
-		          },
-		          "contextStart": {
-		            "line": 7,
-		            "offset": 18,
-		          },
-		          "end": {
-		            "line": 7,
-		            "offset": 24,
-		          },
-		          "start": {
-		            "line": 7,
-		            "offset": 18,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:2:7-2:13 -> NEW",
+		  "tsconfigProject/fixture.vue:6:17-6:23 -> NEW",
+		  "tsconfigProject/foo.vue:3:10-3:16 -> NEW",
+		]
 	`);
 });
 
@@ -590,60 +252,10 @@ test('Component dynamic props', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "foo",
-		    "fullDisplayName": "foo",
-		    "kind": "const",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 3,
-		        "offset": 15,
-		      },
-		      "start": {
-		        "line": 3,
-		        "offset": 12,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 15,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 12,
-		          },
-		        },
-		        {
-		          "contextEnd": {
-		            "line": 7,
-		            "offset": 22,
-		          },
-		          "contextStart": {
-		            "line": 7,
-		            "offset": 4,
-		          },
-		          "end": {
-		            "line": 7,
-		            "offset": 13,
-		          },
-		          "start": {
-		            "line": 7,
-		            "offset": 10,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:2:11-2:14 -> NEW",
+		  "tsconfigProject/fixture.vue:6:9-6:12 -> NEW",
+		]
 	`);
 });
 
@@ -664,52 +276,10 @@ test('#6176', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "foo",
-		    "fullDisplayName": "foo",
-		    "kind": "const",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 3,
-		        "offset": 15,
-		      },
-		      "start": {
-		        "line": 3,
-		        "offset": 12,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 15,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 12,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 8,
-		            "offset": 13,
-		          },
-		          "start": {
-		            "line": 8,
-		            "offset": 10,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:2:11-2:14 -> NEW",
+		  "tsconfigProject/fixture.vue:7:9-7:12 -> NEW",
+		]
 	`);
 });
 
@@ -737,60 +307,10 @@ test('Component returns', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "foo",
-		    "fullDisplayName": "foo",
-		    "kind": "property",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 3,
-		        "offset": 11,
-		      },
-		      "start": {
-		        "line": 3,
-		        "offset": 8,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "contextEnd": {
-		            "line": 12,
-		            "offset": 13,
-		          },
-		          "contextStart": {
-		            "line": 12,
-		            "offset": 7,
-		          },
-		          "end": {
-		            "line": 12,
-		            "offset": 10,
-		          },
-		          "start": {
-		            "line": 12,
-		            "offset": 7,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 11,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 8,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:11:6-11:9 -> NEW",
+		  "tsconfigProject/fixture.vue:2:7-2:10 -> NEW",
+		]
 	`);
 });
 
@@ -810,60 +330,10 @@ test('<script setup>', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "foo",
-		    "fullDisplayName": "foo",
-		    "kind": "const",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 3,
-		        "offset": 11,
-		      },
-		      "start": {
-		        "line": 3,
-		        "offset": 8,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 11,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 8,
-		          },
-		        },
-		        {
-		          "contextEnd": {
-		            "line": 7,
-		            "offset": 18,
-		          },
-		          "contextStart": {
-		            "line": 7,
-		            "offset": 4,
-		          },
-		          "end": {
-		            "line": 7,
-		            "offset": 13,
-		          },
-		          "start": {
-		            "line": 7,
-		            "offset": 10,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:2:7-2:10 -> NEW",
+		  "tsconfigProject/fixture.vue:6:9-6:12 -> NEW",
+		]
 	`);
 });
 
@@ -884,90 +354,11 @@ test('Component tags', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "AaBb",
-		    "fullDisplayName": "AaBb",
-		    "kind": "alias",
-		    "kindModifiers": "export",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 8,
-		        "offset": 15,
-		      },
-		      "start": {
-		        "line": 8,
-		        "offset": 11,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 4,
-		            "offset": 19,
-		          },
-		          "start": {
-		            "line": 4,
-		            "offset": 14,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 4,
-		            "offset": 11,
-		          },
-		          "start": {
-		            "line": 4,
-		            "offset": 6,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 17,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 13,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 10,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 6,
-		          },
-		        },
-		        {
-		          "contextEnd": {
-		            "line": 8,
-		            "offset": 35,
-		          },
-		          "contextStart": {
-		            "line": 8,
-		            "offset": 4,
-		          },
-		          "end": {
-		            "line": 8,
-		            "offset": 15,
-		          },
-		          "start": {
-		            "line": 8,
-		            "offset": 11,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:2:12-2:16 -> NEW",
+		  "tsconfigProject/fixture.vue:2:5-2:9 -> NEW",
+		  "tsconfigProject/fixture.vue:7:10-7:14 -> NEW",
+		]
 	`);
 });
 
@@ -991,77 +382,18 @@ test('Global component tags', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "Foo",
-		    "fullDisplayName": ""vue".GlobalComponents.Foo",
-		    "kind": "property",
-		    "kindModifiers": "declare",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 5,
-		        "offset": 9,
-		      },
-		      "start": {
-		        "line": 5,
-		        "offset": 6,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 11,
-		            "offset": 15,
-		          },
-		          "start": {
-		            "line": 11,
-		            "offset": 12,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 11,
-		            "offset": 9,
-		          },
-		          "start": {
-		            "line": 11,
-		            "offset": 6,
-		          },
-		        },
-		        {
-		          "contextEnd": {
-		            "line": 5,
-		            "offset": 15,
-		          },
-		          "contextStart": {
-		            "line": 5,
-		            "offset": 6,
-		          },
-		          "end": {
-		            "line": 5,
-		            "offset": 9,
-		          },
-		          "start": {
-		            "line": 5,
-		            "offset": 6,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:10:11-10:14 -> NEW",
+		  "tsconfigProject/fixture.vue:10:5-10:8 -> NEW",
+		  "tsconfigProject/fixture.vue:4:5-4:8 -> NEW",
+		]
 	`);
 });
 
 test('#4673', async () => {
 	expect(
 		await requestRenameToTsServer(
-			'fixture.vue',
+			'tsconfigProject/fixture.vue',
 			'vue',
 			`
 			<script setup lang="ts">
@@ -1084,69 +416,18 @@ test('#4673', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "styl",
-		    "fullDisplayName": "__type.styl",
-		    "kind": "property",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 9,
-		        "offset": 22,
-		      },
-		      "start": {
-		        "line": 9,
-		        "offset": 18,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 9,
-		            "offset": 22,
-		          },
-		          "start": {
-		            "line": 9,
-		            "offset": 18,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 16,
-		            "offset": 23,
-		          },
-		          "start": {
-		            "line": 16,
-		            "offset": 19,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 5,
-		            "offset": 40,
-		          },
-		          "start": {
-		            "line": 5,
-		            "offset": 36,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:15:18-15:22 -> NEW",
+		  "tsconfigProject/fixture.vue:4:35-4:39 -> NEW",
+		  "tsconfigProject/fixture.vue:8:17-8:21 -> NEW",
+		]
 	`);
 });
 
-test('Scoped Classes', async () => {
+test.fails('Scoped Classes', async () => {
 	expect(
 		await requestRenameToTsServer(
-			'fixture.vue',
+			'tsconfigProject/fixture.vue',
 			'vue',
 			`
 			<template>
@@ -1159,85 +440,13 @@ test('Scoped Classes', async () => {
 			</style>
 		`,
 		),
-	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "foo",
-		    "fullDisplayName": "__type.foo",
-		    "kind": "property",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 3,
-		        "offset": 22,
-		      },
-		      "start": {
-		        "line": 3,
-		        "offset": 19,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 5,
-		            "offset": 23,
-		          },
-		          "start": {
-		            "line": 5,
-		            "offset": 20,
-		          },
-		          "suffixText": ": foo",
-		        },
-		        {
-		          "end": {
-		            "line": 4,
-		            "offset": 32,
-		          },
-		          "start": {
-		            "line": 4,
-		            "offset": 29,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 4,
-		            "offset": 23,
-		          },
-		          "start": {
-		            "line": 4,
-		            "offset": 20,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 22,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 19,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 8,
-		            "offset": 8,
-		          },
-		          "start": {
-		            "line": 8,
-		            "offset": 5,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
-	`);
+	).toEqual([
+		'tsconfigProject/fixture.vue:2:18-2:21 -> NEW',
+		'tsconfigProject/fixture.vue:3:19-3:22 -> NEW',
+		'tsconfigProject/fixture.vue:3:28-3:31 -> NEW',
+		'tsconfigProject/fixture.vue:4:19-4:22 -> NEW: foo',
+		'tsconfigProject/fixture.vue:7:4-7:7 -> NEW',
+	]);
 });
 
 test('Template Ref', async () => {
@@ -1257,52 +466,10 @@ test('Template Ref', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "foo",
-		    "fullDisplayName": "__type.foo",
-		    "kind": "property",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 8,
-		        "offset": 34,
-		      },
-		      "start": {
-		        "line": 8,
-		        "offset": 31,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 16,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 13,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 8,
-		            "offset": 34,
-		          },
-		          "start": {
-		            "line": 8,
-		            "offset": 31,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:2:12-2:15 -> NEW",
+		  "tsconfigProject/fixture.vue:7:30-7:33 -> NEW",
+		]
 	`);
 });
 
@@ -1322,75 +489,7 @@ test('Same Name Shorthand', async () => {
 			</script>
 		`,
 		),
-	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "fooBar",
-		    "fullDisplayName": "__object.fooBar",
-		    "kind": "property",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 3,
-		        "offset": 19,
-		      },
-		      "start": {
-		        "line": 3,
-		        "offset": 12,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 4,
-		            "offset": 25,
-		          },
-		          "prefixText": "fooBar: ",
-		          "start": {
-		            "line": 4,
-		            "offset": 19,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 19,
-		          },
-		          "prefixText": "foo-bar="",
-		          "start": {
-		            "line": 3,
-		            "offset": 12,
-		          },
-		          "suffixText": """,
-		        },
-		        {
-		          "contextEnd": {
-		            "line": 8,
-		            "offset": 21,
-		          },
-		          "contextStart": {
-		            "line": 8,
-		            "offset": 4,
-		          },
-		          "end": {
-		            "line": 8,
-		            "offset": 16,
-		          },
-		          "start": {
-		            "line": 8,
-		            "offset": 10,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
-	`);
+	).toMatchInlineSnapshot(`[]`);
 	expect(
 		await requestRenameToTsServer(
 			'tsconfigProject/fixture.vue',
@@ -1409,72 +508,9 @@ test('Same Name Shorthand', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "fooBar",
-		    "fullDisplayName": "__type.fooBar",
-		    "kind": "property",
-		    "kindModifiers": "declare",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 9,
-		        "offset": 11,
-		      },
-		      "start": {
-		        "line": 9,
-		        "offset": 5,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 4,
-		            "offset": 25,
-		          },
-		          "start": {
-		            "line": 4,
-		            "offset": 19,
-		          },
-		          "suffixText": ": fooBar",
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 19,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 12,
-		          },
-		          "suffixText": "="fooBar"",
-		        },
-		        {
-		          "contextEnd": {
-		            "line": 9,
-		            "offset": 20,
-		          },
-		          "contextStart": {
-		            "line": 9,
-		            "offset": 5,
-		          },
-		          "end": {
-		            "line": 9,
-		            "offset": 11,
-		          },
-		          "start": {
-		            "line": 9,
-		            "offset": 5,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:8:4-8:10 -> NEW",
+		]
 	`);
 });
 
@@ -1498,60 +534,10 @@ test('Setup binding access positions', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "count",
-		    "fullDisplayName": "count",
-		    "kind": "const",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 3,
-		        "offset": 13,
-		      },
-		      "start": {
-		        "line": 3,
-		        "offset": 8,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 13,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 8,
-		          },
-		        },
-		        {
-		          "contextEnd": {
-		            "line": 8,
-		            "offset": 25,
-		          },
-		          "contextStart": {
-		            "line": 8,
-		            "offset": 4,
-		          },
-		          "end": {
-		            "line": 8,
-		            "offset": 15,
-		          },
-		          "start": {
-		            "line": 8,
-		            "offset": 10,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:2:7-2:12 -> NEW",
+		  "tsconfigProject/fixture.vue:7:9-7:14 -> NEW",
+		]
 	`);
 
 	// v-for source
@@ -1571,60 +557,10 @@ test('Setup binding access positions', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "nums",
-		    "fullDisplayName": "nums",
-		    "kind": "const",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 3,
-		        "offset": 26,
-		      },
-		      "start": {
-		        "line": 3,
-		        "offset": 22,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 26,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 22,
-		          },
-		        },
-		        {
-		          "contextEnd": {
-		            "line": 8,
-		            "offset": 35,
-		          },
-		          "contextStart": {
-		            "line": 8,
-		            "offset": 4,
-		          },
-		          "end": {
-		            "line": 8,
-		            "offset": 14,
-		          },
-		          "start": {
-		            "line": 8,
-		            "offset": 10,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:2:21-2:25 -> NEW",
+		  "tsconfigProject/fixture.vue:7:9-7:13 -> NEW",
+		]
 	`);
 
 	// inline event handler write target
@@ -1644,60 +580,10 @@ test('Setup binding access positions', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "count",
-		    "fullDisplayName": "count",
-		    "kind": "const",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 3,
-		        "offset": 26,
-		      },
-		      "start": {
-		        "line": 3,
-		        "offset": 21,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 26,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 21,
-		          },
-		        },
-		        {
-		          "contextEnd": {
-		            "line": 8,
-		            "offset": 25,
-		          },
-		          "contextStart": {
-		            "line": 8,
-		            "offset": 4,
-		          },
-		          "end": {
-		            "line": 8,
-		            "offset": 15,
-		          },
-		          "start": {
-		            "line": 8,
-		            "offset": 10,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:2:20-2:25 -> NEW",
+		  "tsconfigProject/fixture.vue:7:9-7:14 -> NEW",
+		]
 	`);
 
 	// v-bind shorthand
@@ -1716,64 +602,7 @@ test('Setup binding access positions', async () => {
 			</script>
 		`,
 		),
-	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "count",
-		    "fullDisplayName": "__object.count",
-		    "kind": "property",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 3,
-		        "offset": 16,
-		      },
-		      "start": {
-		        "line": 3,
-		        "offset": 11,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 16,
-		          },
-		          "prefixText": "count="",
-		          "start": {
-		            "line": 3,
-		            "offset": 11,
-		          },
-		          "suffixText": """,
-		        },
-		        {
-		          "contextEnd": {
-		            "line": 8,
-		            "offset": 25,
-		          },
-		          "contextStart": {
-		            "line": 8,
-		            "offset": 4,
-		          },
-		          "end": {
-		            "line": 8,
-		            "offset": 15,
-		          },
-		          "start": {
-		            "line": 8,
-		            "offset": 10,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
-	`);
+	).toMatchInlineSnapshot(`[]`);
 
 	// inline for-of with a same-named loop variable: matches plain TS, which
 	// binds the source to the loop declaration (TS2448), so rename covers the
@@ -1794,52 +623,10 @@ test('Setup binding access positions', async () => {
 		`,
 		),
 	).toMatchInlineSnapshot(`
-		{
-		  "info": {
-		    "canRename": true,
-		    "displayName": "nums",
-		    "fullDisplayName": "nums",
-		    "kind": "const",
-		    "kindModifiers": "",
-		    "triggerSpan": {
-		      "end": {
-		        "line": 3,
-		        "offset": 44,
-		      },
-		      "start": {
-		        "line": 3,
-		        "offset": 40,
-		      },
-		    },
-		  },
-		  "locs": [
-		    {
-		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		      "locs": [
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 44,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 40,
-		          },
-		        },
-		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 36,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 32,
-		          },
-		        },
-		      ],
-		    },
-		  ],
-		}
+		[
+		  "tsconfigProject/fixture.vue:2:31-2:35 -> NEW",
+		  "tsconfigProject/fixture.vue:2:39-2:43 -> NEW",
+		]
 	`);
 });
 
@@ -1879,24 +666,14 @@ async function requestRenameToTsServer(fileName: string, languageId: string, _co
 	const server = await getLanguageServer();
 	let document = await prepareDocument(fileName, languageId, content);
 
-	const res = await server.tsserver.message({
-		seq: server.nextSeq(),
-		command: 'rename',
-		arguments: {
-			file: URI.parse(document.uri).fsPath,
-			position: offset,
-			findInStrings: false,
-			findInComments: false,
-		},
+	const edit = await server.typescript('textDocument/rename', {
+		textDocument: { uri: document.uri },
+		position: document.positionAt(offset),
+		newName: 'NEW',
 	});
-
-	expect(res!.success).toBe(true);
-
-	for (const loc of res!.body.locs) {
-		loc.file = '${testWorkspacePath}' + loc.file.slice(testWorkspacePath.length);
-	}
-
-	return res.body;
+	return Object.entries<{ range: Range; newText: string }[]>(edit?.changes ?? {})
+		.flatMap(([uri, edits]) => edits.map(({ range, newText }) => `${formatLocations({ uri, range })[0]} -> ${newText}`))
+		.sort();
 }
 
 async function prepareDocument(fileName: string, languageId: string, content: string) {

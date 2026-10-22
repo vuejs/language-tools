@@ -1,8 +1,8 @@
-import { launchServer } from '@typescript/server-harness';
 import {
 	ConfigurationRequest,
 	type InitializeResult,
 	PublishDiagnosticsNotification,
+	type Range,
 	type TextDocument,
 } from '@volar/language-server';
 import type { LanguageServerHandle } from '@volar/test-utils';
@@ -12,43 +12,35 @@ import { URI } from 'vscode-uri';
 import { type LspServer, startLspServer } from '../../content-mapper/tests/lsp';
 
 let serverHandle: LanguageServerHandle | undefined;
-let tsserver: import('@typescript/server-harness').Server;
 let typescriptServer: Promise<LspServer> | undefined;
 const typescriptServerVersions = new Map<string, number>();
 let initializeResult: InitializeResult;
-let seq = 1;
 
 export const testWorkspacePath = path.resolve(__dirname, '../../../test-workspace');
 export const typescriptPackageJsonPath = path.resolve(__dirname, '../../../node_modules/typescript-7/package.json');
 
+type LocationLike = { uri: string; range: Range } | { targetUri: string; targetSelectionRange: Range };
+
+/** `file:line:character-line:character` (zero-based, relative to the test workspace) for each LSP location. */
+export function formatLocations(locations: LocationLike | readonly LocationLike[] | null | undefined) {
+	return (Array.isArray(locations) ? locations : locations ? [locations] : []).map((location: LocationLike) => {
+		const [uri, { start, end }] = 'uri' in location
+			? [location.uri, location.range]
+			: [location.targetUri, location.targetSelectionRange];
+		const file = path.relative(testWorkspacePath, URI.parse(uri).fsPath).replace(/\\/g, '/');
+		return `${file}:${start.line}:${start.character}-${end.line}:${end.character}`;
+	}).sort();
+}
+
 export async function getLanguageServer(): Promise<{
 	vueserver: LanguageServerHandle;
 	initializeResult: InitializeResult;
-	tsserver: import('@typescript/server-harness').Server;
-	nextSeq: () => number;
+	/** Sends a request to the TypeScript 7 language server that serves the opened documents. */
+	typescript: <T = any>(method: string, params: unknown) => Promise<T>;
 	open: (uri: string, languageId: string, content: string) => Promise<TextDocument>;
 	close: (uri: string) => Promise<void>;
 }> {
 	if (!serverHandle) {
-		tsserver = launchServer(
-			require.resolve('typescript/lib/tsserver', {
-				paths: [path.dirname(require.resolve('typescript/package.json'))],
-			}),
-			[
-				'--disableAutomaticTypingAcquisition',
-				'--globalPlugins',
-				'@vue/typescript-plugin',
-				'--pluginProbeLocations',
-				path.join(__dirname, '..'),
-				'--suppressDiagnosticEvents',
-				// '--logVerbosity', 'verbose',
-				// '--logFile', path.join(__dirname, 'tsserver.log'),
-			],
-		);
-
-		tsserver.on('exit', code => console.log(code ? `Exited with code ${code}` : `Terminated`));
-		// tsserver.on('event', e => console.log(e));
-
 		serverHandle = startLanguageServer(require.resolve('../index.js'), testWorkspacePath);
 		serverHandle.connection.onNotification(PublishDiagnosticsNotification.type, () => {});
 		serverHandle.connection.onRequest(ConfigurationRequest.type, ({ items }) => {
@@ -83,8 +75,8 @@ export async function getLanguageServer(): Promise<{
 	return {
 		vueserver: serverHandle,
 		initializeResult,
-		tsserver: tsserver,
-		nextSeq: () => seq++,
+		typescript: async (method, params) =>
+			(await (typescriptServer ??= startLspServer(testWorkspacePath))).request(method, params),
 		open: async (uri, languageId, content) => {
 			if (uri.startsWith('file://')) {
 				// What an editor does for its TypeScript language server, which the Vue language server's API session reads from.
@@ -102,25 +94,6 @@ export async function getLanguageServer(): Promise<{
 				typescriptServerVersions.set(uri, version);
 				// a round trip on the same connection guarantees the notification was read before the API is asked
 				await server.request('vue/sync', {}).catch(() => {});
-
-				const res = await tsserver.message({
-					seq: seq++,
-					type: 'request',
-					command: 'updateOpen',
-					arguments: {
-						changedFiles: [],
-						closedFiles: [],
-						openFiles: [
-							{
-								file: URI.parse(uri).fsPath,
-								fileContent: content,
-							},
-						],
-					},
-				});
-				if (!res.success) {
-					throw new Error(res.body);
-				}
 			}
 			return await serverHandle!.openInMemoryDocument(uri, languageId, content);
 		},
@@ -128,19 +101,6 @@ export async function getLanguageServer(): Promise<{
 			if (uri.startsWith('file://')) {
 				if (typescriptServerVersions.delete(uri)) {
 					(await typescriptServer!).notify('textDocument/didClose', { textDocument: { uri } });
-				}
-				const res = await tsserver.message({
-					seq: seq++,
-					type: 'request',
-					command: 'updateOpen',
-					arguments: {
-						changedFiles: [],
-						closedFiles: [URI.parse(uri).fsPath],
-						openFiles: [],
-					},
-				});
-				if (!res.success) {
-					throw new Error(res.body);
 				}
 			}
 			await serverHandle!.closeTextDocument(uri);
