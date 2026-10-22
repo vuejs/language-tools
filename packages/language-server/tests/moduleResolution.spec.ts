@@ -1,4 +1,4 @@
-import type { TextDocument } from '@volar/language-server';
+import { FileChangeType, type TextDocument } from '@volar/language-server';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, expect, test } from 'vitest';
@@ -25,6 +25,12 @@ import Comp from './module-rename-comp-renamed.vue'
 
 	fs.renameSync(oldComponentPath, newComponentPath);
 	createdFiles.push(newComponentPath);
+	// The TypeScript language server only watches the disk itself when the client cannot, and its watcher may miss
+	// the rename in time (e.g. on Linux CI); an editor reports the change.
+	await server.changeWatchedFiles([
+		{ uri: URI.file(oldComponentPath).toString(), type: FileChangeType.Deleted },
+		{ uri: URI.file(newComponentPath).toString(), type: FileChangeType.Created },
+	]);
 
 	await expect.poll(
 		async () => {

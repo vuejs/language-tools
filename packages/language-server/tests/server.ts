@@ -1,5 +1,6 @@
 import {
 	ConfigurationRequest,
+	type FileEvent,
 	type InitializeResult,
 	PublishDiagnosticsNotification,
 	type Range,
@@ -39,6 +40,8 @@ export async function getLanguageServer(): Promise<{
 	typescript: <T = any>(method: string, params: unknown) => Promise<T>;
 	open: (uri: string, languageId: string, content: string) => Promise<TextDocument>;
 	close: (uri: string) => Promise<void>;
+	/** What an editor's file watcher reports to its TypeScript language server after files change on disk. */
+	changeWatchedFiles: (changes: FileEvent[]) => Promise<void>;
 }> {
 	if (!serverHandle) {
 		serverHandle = startLanguageServer(require.resolve('../index.js'), testWorkspacePath);
@@ -104,6 +107,12 @@ export async function getLanguageServer(): Promise<{
 				}
 			}
 			await serverHandle!.closeTextDocument(uri);
+		},
+		changeWatchedFiles: async changes => {
+			const server = await (typescriptServer ??= startLspServer(testWorkspacePath));
+			server.notify('workspace/didChangeWatchedFiles', { changes });
+			// a round trip on the same connection guarantees the notification was read before the next request
+			await server.request('vue/sync', {}).catch(() => {});
 		},
 	};
 }
