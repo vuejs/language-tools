@@ -1,7 +1,8 @@
 import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
+import picomatch from 'picomatch';
 import type * as ts from 'typescript';
-import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from './types';
+import type { RawPlugin, RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from './types';
 import { hyphenateTag } from './utils/shared';
 
 interface ParseConfigHost extends Omit<ts.ParseConfigHost, 'readDirectory'> {}
@@ -54,7 +55,10 @@ export function createParsedCommandLineByJson(
 
 	return {
 		...parsed,
-		vueOptions: resolver.build(),
+		vueOptions: withExtensionFormats(
+			resolver.build(),
+			resolveContentMappers(ts, host, configFileName ?? path.join(rootDir, 'tsconfig.json'), json),
+		),
 	};
 }
 
@@ -99,7 +103,7 @@ export function createParsedCommandLine(
 
 		return {
 			...parsed,
-			vueOptions: resolver.build(),
+			vueOptions: withExtensionFormats(resolver.build(), resolveContentMappers(ts, host, configFileName)),
 		};
 	}
 	catch {}
@@ -111,8 +115,70 @@ export function createParsedCommandLine(
 	};
 }
 
+/**
+ * Resolves a tsconfig's `contentMappers` the way TS 7 does: the array is never merged; the config's own
+ * array wins (even an empty one), otherwise the last `extends` entry that resolves to one wins.
+ */
+export function resolveContentMappers(
+	ts: typeof import('typescript'),
+	host: ParseConfigHost,
+	configFileName: string,
+	json: any = ts.readConfigFile(configFileName, host.readFile).config,
+	ancestors = new Set<string>(),
+): unknown[] | undefined {
+	if (json?.contentMappers !== undefined) {
+		return Array.isArray(json.contentMappers) ? json.contentMappers : undefined;
+	}
+	let result: unknown[] | undefined;
+	ancestors.add(configFileName);
+	for (const specifier of [json?.extends].flat()) {
+		if (typeof specifier !== 'string') {
+			continue;
+		}
+		const extendedConfigFileName = resolveExtends(ts, host, configFileName, specifier);
+		if (extendedConfigFileName && !ancestors.has(extendedConfigFileName)) {
+			result = resolveContentMappers(ts, host, extendedConfigFileName, undefined, ancestors) ?? result;
+		}
+	}
+	ancestors.delete(configFileName);
+	return result;
+}
+
+/** Resolves an `extends` specifier with TypeScript's own resolution, including package specifiers. */
+function resolveExtends(
+	ts: typeof import('typescript'),
+	host: ParseConfigHost,
+	configFileName: string,
+	specifier: string,
+) {
+	const sourceFile = ts.readJsonConfigFile(configFileName, () => JSON.stringify({ extends: specifier }));
+	ts.parseJsonSourceFileConfigFileContent(
+		sourceFile,
+		{ ...host, readDirectory: () => [] },
+		path.dirname(configFileName),
+		{},
+		configFileName,
+	);
+	return sourceFile.extendedSourceFiles?.[0];
+}
+
+/** Derives `extensionFormats` from the `@vue/content-mapper` entries of a raw `contentMappers` option. */
+export function withExtensionFormats(vueOptions: VueCompilerOptions, contentMappers: unknown) {
+	if (Array.isArray(contentMappers)) {
+		vueOptions.extensionFormats = {};
+		for (const entry of contentMappers) {
+			if (entry?.package === '@vue/content-mapper' && Array.isArray(entry.extensions)) {
+				for (const extension of entry.extensions) {
+					vueOptions.extensionFormats[extension] = entry.options?.format ?? 'sfc';
+				}
+			}
+		}
+	}
+	return vueOptions;
+}
+
 export class CompilerOptionsResolver {
-	options: Omit<RawVueCompilerOptions, 'target' | 'strictTemplates' | 'typesRoot' | 'plugins'> = {};
+	options: Omit<RawVueCompilerOptions, 'target' | 'typesRoot' | 'plugins'> = {};
 	target: number | undefined;
 	typesRoot: string | undefined;
 	plugins: VueLanguagePlugin[] = [];
@@ -133,14 +199,6 @@ export class CompilerOptionsResolver {
 						this.target = options[key];
 					}
 					break;
-				case 'strictTemplates':
-					const strict = !!options.strictTemplates;
-					this.options.strictVModel ??= strict;
-					this.options.checkUnknownProps ??= strict;
-					this.options.checkUnknownEvents ??= strict;
-					this.options.checkUnknownDirectives ??= strict;
-					this.options.checkUnknownComponents ??= strict;
-					break;
 				case 'typesRoot':
 					if (options[key] !== undefined) {
 						if (path.isAbsolute(options[key])) {
@@ -152,25 +210,10 @@ export class CompilerOptionsResolver {
 					}
 					break;
 				case 'plugins':
-					this.plugins = (options.plugins ?? [])
-						.flatMap<VueLanguagePlugin>((pluginPath: string) => {
-							try {
-								const resolve = (require as NodeJS.Require | undefined)?.resolve;
-								const resolvedPath = resolve?.(pluginPath, { paths: [rootDir] });
-								if (resolvedPath) {
-									const plugin = require(resolvedPath);
-									plugin.__moduleName = pluginPath;
-									return plugin;
-								}
-								else {
-									console.warn('[Vue] Load plugin failed:', pluginPath);
-								}
-							}
-							catch (error) {
-								console.warn('[Vue] Resolve plugin path failed:', pluginPath, error);
-							}
-							return [];
-						});
+					// A config that declares `plugins` replaces the inherited list; `[]` clears it
+					if (options.plugins) {
+						this.plugins = resolvePlugins(options.plugins, rootDir);
+					}
 					break;
 				default:
 					// @ts-expect-error
@@ -187,7 +230,6 @@ export class CompilerOptionsResolver {
 		defaults = getDefaultCompilerOptions(
 			this.target,
 			this.options.lib,
-			undefined,
 			this.typesRoot,
 		),
 	): VueCompilerOptions {
@@ -215,6 +257,9 @@ export class CompilerOptionsResolver {
 				).map(([k, v]) => [camelize(k), v]),
 			),
 		};
+		// Compiling a glob costs far more than testing it, and codegen tests every prop against these
+		resolvedOptions.isDataAttribute = picomatch(resolvedOptions.dataAttributes);
+		resolvedOptions.isHtmlAttribute = picomatch(resolvedOptions.htmlAttributes);
 
 		return resolvedOptions;
 	}
@@ -239,28 +284,50 @@ export class CompilerOptionsResolver {
 	}
 }
 
+function resolvePlugins(list: RawPlugin[], rootDir: string): VueLanguagePlugin[] {
+	const plugins: VueLanguagePlugin[] = [];
+	for (let raw of list) {
+		raw = typeof raw === 'string' ? { name: raw } : raw;
+		try {
+			const resolve = (require as NodeJS.Require | undefined)?.resolve;
+			const resolvedPath = resolve?.(raw.name, { paths: [rootDir] });
+			if (resolvedPath) {
+				const moduleExports = require(resolvedPath);
+				for (const plugin of Array.isArray(moduleExports) ? moduleExports : [moduleExports]) {
+					plugin.__moduleConfig = raw;
+					plugins.push(plugin);
+				}
+			}
+			else {
+				console.warn('[Vue] Load plugin failed:', raw.name);
+			}
+		}
+		catch (error) {
+			console.warn('[Vue] Resolve plugin path failed:', raw.name, error);
+		}
+	}
+	return plugins;
+}
+
 export function getDefaultCompilerOptions(
 	target = 99,
 	lib = 'vue',
-	strictTemplates = false,
 	typesRoot = typeof __dirname !== 'undefined'
 		? path.join(__dirname.replace(/\\/g, '/'), '..', 'types')
 		: '@vue/language-core/types',
 ): VueCompilerOptions {
+	const dataAttributes: string[] = [];
+	const htmlAttributes = ['aria-*'];
+
 	return {
 		target,
 		lib,
 		typesRoot,
-		extensions: ['.vue'],
-		vitePressExtensions: ['.vue.md'],
-		petiteVueExtensions: [],
+		format: 'sfc',
+		extensionFormats: { '.vue': 'sfc' },
+		globalTemplateContext: false,
 		jsxSlots: false,
 		strictCssModules: false,
-		strictVModel: strictTemplates,
-		checkUnknownProps: strictTemplates,
-		checkUnknownEvents: strictTemplates,
-		checkUnknownDirectives: strictTemplates,
-		checkUnknownComponents: strictTemplates,
 		inferComponentDollarEl: false,
 		inferComponentDollarRefs: false,
 		inferTemplateDollarAttrs: false,
@@ -268,8 +335,9 @@ export function getDefaultCompilerOptions(
 		inferTemplateDollarRefs: false,
 		inferTemplateDollarSlots: false,
 		skipTemplateCodegen: false,
+		vapor: false,
 		fallthroughAttributes: false,
-		resolveStyleImports: false,
+		checkRequiredFallthroughAttributes: false,
 		resolveStyleClassNames: 'scoped',
 		fallthroughComponentNames: [
 			'Transition',
@@ -277,8 +345,10 @@ export function getDefaultCompilerOptions(
 			'Teleport',
 			'Suspense',
 		],
-		dataAttributes: [],
-		htmlAttributes: ['aria-*'],
+		dataAttributes,
+		htmlAttributes,
+		isDataAttribute: picomatch(dataAttributes),
+		isHtmlAttribute: picomatch(htmlAttributes),
 		optionsWrapper: [`(await import('${lib}')).defineComponent(`, `)`],
 		macros: {
 			defineProps: ['defineProps'],

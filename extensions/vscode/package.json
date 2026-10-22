@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "3.1.8",
+	"version": "3.3.13",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -44,6 +44,17 @@
 					"jsconfig-*.json"
 				],
 				"url": "./schemas/vue-tsconfig.schema.json"
+			},
+			{
+				"fileMatch": [
+					"tsconfig.json",
+					"tsconfig.*.json",
+					"tsconfig-*.json",
+					"jsconfig.json",
+					"jsconfig.*.json",
+					"jsconfig-*.json"
+				],
+				"url": "./schemas/vue-content-mapper-tsconfig.schema.json"
 			}
 		],
 		"languages": [
@@ -215,35 +226,6 @@
 				]
 			}
 		],
-		"semanticTokenScopes": [
-			{
-				"language": "vue",
-				"scopes": {
-					"component": [
-						"support.class.component.vue",
-						"entity.name.type.class.vue"
-					]
-				}
-			},
-			{
-				"language": "markdown",
-				"scopes": {
-					"component": [
-						"support.class.component.vue",
-						"entity.name.type.class.vue"
-					]
-				}
-			},
-			{
-				"language": "html",
-				"scopes": {
-					"component": [
-						"support.class.component.vue",
-						"entity.name.type.class.vue"
-					]
-				}
-			}
-		],
 		"breakpoints": [
 			{
 				"language": "vue"
@@ -253,6 +235,11 @@
 			"type": "object",
 			"title": "Vue",
 			"properties": {
+				"vue.welcome.show": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "%configuration.welcome.show%"
+				},
 				"vue.trace.server": {
 					"scope": "window",
 					"type": "string",
@@ -499,21 +486,20 @@
 		}
 	},
 	"scripts": {
-		"vscode:prepublish": "npm run build",
-		"build": "rolldown --config",
+		"vscode:prepublish": "rolldown --config",
 		"pack": "npx @vscode/vsce package",
 		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generated-meta.ts && cd ../.. && npm run format"
 	},
 	"devDependencies": {
-		"@types/node": "^22.10.4",
+		"@types/node": "^26.0.1",
 		"@types/vscode": "1.88.0",
-		"@volar/typescript": "2.4.27",
-		"@volar/vscode": "2.4.27",
+		"@volar/typescript": "2.4.28",
+		"@volar/vscode": "2.4.28",
 		"@vue/language-core": "workspace:*",
 		"@vue/language-server": "workspace:*",
 		"@vue/typescript-plugin": "workspace:*",
 		"laplacenoma": "latest",
-		"reactive-vscode": "latest",
+		"reactive-vscode": "^1.0.2",
 		"rolldown": "latest",
 		"vscode-ext-gen": "latest",
 		"vscode-tmlanguage-snapshot": "latest"

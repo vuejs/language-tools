@@ -16,10 +16,10 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 
-					const { sfc } = info.root;
-					const codegen = tsCodegen.get(sfc);
+					const { ir } = info.root;
+					const codegen = tsCodegen.get(ir);
 
-					if (!sfc.scriptSetup) {
+					if (!ir.scriptSetup) {
 						return;
 					}
 
@@ -41,7 +41,7 @@ export function create(): LanguageServicePlugin {
 						if (!arg) {
 							return [];
 						}
-						const name = sfc.scriptSetup!.content.slice(arg.start + 1, arg.end - 1);
+						const name = ir.scriptSetup!.content.slice(arg.start + 1, arg.end - 1);
 						const range = {
 							start: document.positionAt(arg.start + 1),
 							end: document.positionAt(arg.end - 1),

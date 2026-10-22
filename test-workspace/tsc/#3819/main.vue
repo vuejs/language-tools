@@ -10,6 +10,7 @@ const config = {
 </script>
 
 <template>
+	<!-- @vue-ignore -->
 	<Comp :config="config">
 		<template #last-columns></template>
 		<!-- @vue-expect-error -->

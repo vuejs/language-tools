@@ -4,7 +4,7 @@
 // Meta info
 export const publisher = 'Vue';
 export const name = 'volar';
-export const version = '3.1.8';
+export const version = '3.3.13';
 export const displayName = 'Vue (Official)';
 export const description = 'Language Support for Vue';
 export const extensionId = `${publisher}.${name}`;
@@ -55,6 +55,7 @@ export const languages = {
  * Type union of all configs
  */
 export type ConfigKey =
+	| 'vue.welcome.show'
 	| 'vue.trace.server'
 	| 'vue.editor.focusMode'
 	| 'vue.editor.reactivityVisualization'
@@ -62,6 +63,7 @@ export type ConfigKey =
 	| 'vue.server.path'
 	| 'vue.server.includeLanguages'
 	| 'vue.codeActions.askNewComponentName'
+	| 'vue.hover.rich'
 	| 'vue.suggest.componentNameCasing'
 	| 'vue.suggest.propNameCasing'
 	| 'vue.suggest.defineAssignment'
@@ -81,6 +83,7 @@ export type ConfigKey =
 	| 'vue.format.wrapAttributes';
 
 export interface ConfigKeyTypeMap {
+	'vue.welcome.show': boolean;
 	'vue.trace.server': 'off' | 'messages' | 'verbose';
 	'vue.editor.focusMode': boolean;
 	'vue.editor.reactivityVisualization': boolean;
@@ -88,6 +91,7 @@ export interface ConfigKeyTypeMap {
 	'vue.server.path': string | undefined;
 	'vue.server.includeLanguages': unknown[];
 	'vue.codeActions.askNewComponentName': boolean;
+	'vue.hover.rich': boolean;
 	'vue.suggest.componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
 	'vue.suggest.propNameCasing': 'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase';
 	'vue.suggest.defineAssignment': boolean;
@@ -115,6 +119,7 @@ export interface ConfigKeyTypeMap {
 }
 
 export interface ConfigShorthandMap {
+	welcomeShow: 'vue.welcome.show';
 	traceServer: 'vue.trace.server';
 	editorFocusMode: 'vue.editor.focusMode';
 	editorReactivityVisualization: 'vue.editor.reactivityVisualization';
@@ -122,6 +127,7 @@ export interface ConfigShorthandMap {
 	serverPath: 'vue.server.path';
 	serverIncludeLanguages: 'vue.server.includeLanguages';
 	codeActionsAskNewComponentName: 'vue.codeActions.askNewComponentName';
+	hoverRich: 'vue.hover.rich';
 	suggestComponentNameCasing: 'vue.suggest.componentNameCasing';
 	suggestPropNameCasing: 'vue.suggest.propNameCasing';
 	suggestDefineAssignment: 'vue.suggest.defineAssignment';
@@ -142,6 +148,7 @@ export interface ConfigShorthandMap {
 }
 
 export interface ConfigShorthandTypeMap {
+	welcomeShow: boolean;
 	traceServer: 'off' | 'messages' | 'verbose';
 	editorFocusMode: boolean;
 	editorReactivityVisualization: boolean;
@@ -149,6 +156,7 @@ export interface ConfigShorthandTypeMap {
 	serverPath: string | undefined;
 	serverIncludeLanguages: unknown[];
 	codeActionsAskNewComponentName: boolean;
+	hoverRich: boolean;
 	suggestComponentNameCasing: 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
 	suggestPropNameCasing: 'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase';
 	suggestDefineAssignment: boolean;
@@ -184,6 +192,15 @@ export interface ConfigItem<T extends keyof ConfigKeyTypeMap> {
  * Configs map registered by `Vue.volar`
  */
 export const configs = {
+	/**
+	 * @key `vue.welcome.show`
+	 * @default `true`
+	 * @type `boolean`
+	 */
+	welcomeShow: {
+		key: 'vue.welcome.show',
+		default: true,
+	} as ConfigItem<'vue.welcome.show'>,
 	/**
 	 * @key `vue.trace.server`
 	 * @default `"off"`
@@ -247,6 +264,15 @@ export const configs = {
 		key: 'vue.codeActions.askNewComponentName',
 		default: true,
 	} as ConfigItem<'vue.codeActions.askNewComponentName'>,
+	/**
+	 * @key `vue.hover.rich`
+	 * @default `false`
+	 * @type `boolean`
+	 */
+	hoverRich: {
+		key: 'vue.hover.rich',
+		default: false,
+	} as ConfigItem<'vue.hover.rich'>,
 	/**
 	 * @key `vue.suggest.componentNameCasing`
 	 * @default `"preferPascalCase"`
@@ -403,6 +429,7 @@ export const configs = {
 };
 
 export interface ScopedConfigKeyTypeMap {
+	'welcome.show': boolean;
 	'trace.server': 'off' | 'messages' | 'verbose';
 	'editor.focusMode': boolean;
 	'editor.reactivityVisualization': boolean;
@@ -410,6 +437,7 @@ export interface ScopedConfigKeyTypeMap {
 	'server.path': string | undefined;
 	'server.includeLanguages': unknown[];
 	'codeActions.askNewComponentName': boolean;
+	'hover.rich': boolean;
 	'suggest.componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
 	'suggest.propNameCasing': 'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase';
 	'suggest.defineAssignment': boolean;
@@ -439,6 +467,7 @@ export interface ScopedConfigKeyTypeMap {
 export const scopedConfigs = {
 	scope: 'vue',
 	defaults: {
+		'welcome.show': true,
 		'trace.server': 'off',
 		'editor.focusMode': false,
 		'editor.reactivityVisualization': true,
@@ -446,6 +475,7 @@ export const scopedConfigs = {
 		'server.path': undefined,
 		'server.includeLanguages': ['vue', { 'language': 'markdown', 'pattern': '**/*.vue.md' }],
 		'codeActions.askNewComponentName': true,
+		'hover.rich': false,
 		'suggest.componentNameCasing': 'preferPascalCase',
 		'suggest.propNameCasing': 'preferKebabCase',
 		'suggest.defineAssignment': true,
@@ -468,6 +498,9 @@ export const scopedConfigs = {
 
 export interface NestedConfigs {
 	'vue': {
+		'welcome': {
+			'show': boolean;
+		};
 		'trace': {
 			'server': 'off' | 'messages' | 'verbose';
 		};
@@ -482,6 +515,9 @@ export interface NestedConfigs {
 		};
 		'codeActions': {
 			'askNewComponentName': boolean;
+		};
+		'hover': {
+			'rich': boolean;
 		};
 		'suggest': {
 			'componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
@@ -525,6 +561,9 @@ export interface NestedConfigs {
 }
 
 export interface NestedScopedConfigs {
+	'welcome': {
+		'show': boolean;
+	};
 	'trace': {
 		'server': 'off' | 'messages' | 'verbose';
 	};
@@ -539,6 +578,9 @@ export interface NestedScopedConfigs {
 	};
 	'codeActions': {
 		'askNewComponentName': boolean;
+	};
+	'hover': {
+		'rich': boolean;
 	};
 	'suggest': {
 		'componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';

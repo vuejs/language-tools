@@ -9,16 +9,33 @@ export type { SFCParseResult } from '@vue/compiler-sfc';
 
 export { VueEmbeddedCode };
 
-export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
-	strictTemplates?: boolean;
-	target?: 'auto' | 3 | 3.3 | 3.5 | 3.6 | 99 | number;
-	plugins?: string[];
-};
+export type RawVueCompilerOptions =
+	& Partial<
+		Omit<VueCompilerOptions, 'target' | 'plugins' | 'isDataAttribute' | 'isHtmlAttribute' | 'extensionFormats'>
+	>
+	& {
+		target?: 'auto' | 3.3 | 3.5 | 3.6 | 99 | number;
+		plugins?: RawPlugin[];
+	};
+
+export type RawPlugin =
+	| string
+	| Record<string, any> & {
+		name: string;
+	};
 
 export interface VueCodeInformation extends CodeInformation {
 	__importCompletion?: boolean;
+	__propsCompletion?: boolean;
+	__shorthandExpression?: 'html' | 'js';
 	__combineToken?: symbol;
-	__linkedToken?: symbol;
+	__diagnosticDirective?: {
+		directive: {
+			policy: 'ignore' | 'expect';
+			originalLength: number;
+		};
+		phase: 'anchor' | 'content' | 'end';
+	};
 }
 
 export type Code = Segment<VueCodeInformation>;
@@ -27,16 +44,17 @@ export interface VueCompilerOptions {
 	target: number;
 	lib: string;
 	typesRoot: string;
-	extensions: string[];
-	vitePressExtensions: string[];
-	petiteVueExtensions: string[];
+	/** Selects the built-in parser: a Vue SFC, VitePress markdown or a petite-vue HTML page. */
+	format: 'sfc' | 'vitepress' | 'petite-vue';
+	/**
+	 * The format of each extension registered by the tsconfig's `@vue/content-mapper` entries
+	 * (`contentMappers`), or `{ '.vue': 'sfc' }` without any. Derived, not user-settable.
+	 */
+	extensionFormats: Record<string, VueCompilerOptions['format']>;
+	/** Exposes `globalThis` in the template context, as petite-vue templates read globals directly. */
+	globalTemplateContext: boolean;
 	jsxSlots: boolean;
-	strictVModel: boolean;
 	strictCssModules: boolean;
-	checkUnknownProps: boolean;
-	checkUnknownEvents: boolean;
-	checkUnknownDirectives: boolean;
-	checkUnknownComponents: boolean;
 	inferComponentDollarEl: boolean;
 	inferComponentDollarRefs: boolean;
 	inferTemplateDollarAttrs: boolean;
@@ -44,12 +62,15 @@ export interface VueCompilerOptions {
 	inferTemplateDollarRefs: boolean;
 	inferTemplateDollarSlots: boolean;
 	skipTemplateCodegen: boolean;
+	vapor: boolean;
 	fallthroughAttributes: boolean;
-	resolveStyleImports: boolean;
+	checkRequiredFallthroughAttributes: boolean;
 	resolveStyleClassNames: boolean | 'scoped';
 	fallthroughComponentNames: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
+	isDataAttribute: (name: string) => boolean;
+	isHtmlAttribute: (name: string) => boolean;
 	optionsWrapper: [string, string] | [];
 	macros: {
 		defineProps: string[];
@@ -75,17 +96,18 @@ export interface VueCompilerOptions {
 	>;
 }
 
-export const validVersions = [2, 2.1, 2.2] as const;
+export const validVersions = [4] as const;
 
 export interface VueLanguagePluginReturn {
 	version: typeof validVersions[number];
 	name?: string;
 	order?: number;
-	requiredCompilerOptions?: string[];
-	getLanguageId?(fileName: string): string | undefined;
-	isValidFile?(fileName: string, languageId: string): boolean;
+	/**
+	 * Parses a file into SFC blocks. The first plugin returning a result wins; otherwise the built-in
+	 * parser of the file's format is used. Which files reach it is decided by the host
+	 * (the extensions of `vueCompilerOptions.extensionFormats`).
+	 */
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
-	parseSFC2?(fileName: string, languageId: string, content: string): SFCParseResult | undefined;
 	updateSFC?(
 		oldResult: SFCParseResult,
 		textChange: { start: number; end: number; newText: string },
@@ -98,26 +120,44 @@ export interface VueLanguagePluginReturn {
 		options: CompilerDOM.CompilerOptions,
 	): CompilerDOM.CodegenResult | undefined;
 	compileSFCStyle?(lang: string, style: string):
-		| Pick<Sfc['styles'][number], 'imports' | 'bindings' | 'classNames'>
+		| Pick<IRStyle, 'bindings' | 'classNames'>
 		| undefined;
 	updateSFCTemplate?(
 		oldResult: CompilerDOM.CodegenResult,
 		textChange: { start: number; end: number; newText: string },
 	): CompilerDOM.CodegenResult | undefined;
-	getEmbeddedCodes?(fileName: string, sfc: Sfc): { id: string; lang: string }[];
-	resolveEmbeddedCode?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedCode): void;
+	getEmbeddedCodes?(fileName: string, ir: IR): { id: string; lang: string }[];
+	resolveEmbeddedCode?(fileName: string, ir: IR, embeddedFile: VueEmbeddedCode): void;
 }
 
-export type VueLanguagePlugin = (ctx: {
-	modules: {
-		typescript: typeof ts;
-		'@vue/compiler-dom': typeof CompilerDOM;
-	};
-	compilerOptions: ts.CompilerOptions;
-	vueCompilerOptions: VueCompilerOptions;
-}) => VueLanguagePluginReturn | VueLanguagePluginReturn[];
+export type VueLanguagePlugin<T extends Record<string, any> = {}> = (
+	ctx: {
+		modules: {
+			typescript: typeof ts;
+			'@vue/compiler-dom': typeof CompilerDOM;
+			'@vue/language-core': typeof import('../index');
+		};
+		vueCompilerOptions: VueCompilerOptions;
+		config: T;
+	},
+) => VueLanguagePluginReturn | VueLanguagePluginReturn[];
 
-export interface SfcBlock {
+export interface IR {
+	content: string;
+	comments: string[];
+	template: IRTemplate | undefined;
+	script: IRScript | undefined;
+	scriptSetup: IRScriptSetup | undefined;
+	styles: readonly IRStyle[];
+	customBlocks: readonly IRCustomBlock[];
+}
+
+export type IRAttr = true | {
+	text: string;
+	offset: number;
+};
+
+export interface IRBlock {
 	name: string;
 	start: number;
 	end: number;
@@ -128,68 +168,51 @@ export interface SfcBlock {
 	attrs: Record<string, string | true>;
 }
 
-export type SfcBlockAttr = true | {
-	text: string;
-	offset: number;
-	quotes: boolean;
-};
+export interface IRTemplate extends IRBlock {
+	ast: CompilerDOM.RootNode | undefined;
+	errors: CompilerDOM.CompilerError[];
+	warnings: CompilerDOM.CompilerError[];
+}
 
-export interface Sfc {
-	content: string;
-	comments: string[];
-	template:
-		| SfcBlock & {
-			ast: CompilerDOM.RootNode | undefined;
-			errors: CompilerDOM.CompilerError[];
-			warnings: CompilerDOM.CompilerError[];
-		}
-		| undefined;
-	script:
-		| (SfcBlock & {
-			src: SfcBlockAttr | undefined;
-			ast: ts.SourceFile;
-		})
-		| undefined;
-	scriptSetup:
-		| SfcBlock & {
-			// https://github.com/vuejs/rfcs/discussions/436
-			generic: SfcBlockAttr | undefined;
-			ast: ts.SourceFile;
-		}
-		| undefined;
-	styles: readonly (SfcBlock & {
-		src: SfcBlockAttr | undefined;
-		module: SfcBlockAttr | undefined;
-		scoped: boolean;
-		imports: {
-			text: string;
-			offset: number;
-		}[];
-		bindings: {
-			text: string;
-			offset: number;
-		}[];
-		classNames: {
-			text: string;
-			offset: number;
-		}[];
-	})[];
-	customBlocks: readonly (SfcBlock & {
-		type: string;
-	})[];
+export interface IRScript extends IRBlock {
+	src: IRAttr | undefined;
+	ast: ts.SourceFile;
+}
+
+export interface IRScriptSetup extends IRBlock {
+	generic: IRAttr | undefined;
+	ast: ts.SourceFile;
+}
+
+export interface IRStyle extends IRBlock {
+	src: IRAttr | undefined;
+	module: IRAttr | undefined;
+	scoped: boolean;
+	bindings: {
+		text: string;
+		offset: number;
+	}[];
+	classNames: {
+		text: string;
+		offset: number;
+	}[];
+}
+
+export interface IRCustomBlock extends IRBlock {
+	type: string;
 }
 
 declare module '@vue/compiler-sfc' {
 	interface SFCBlock {
-		__src?: SfcBlockAttr;
+		__src?: IRAttr;
 	}
 
 	interface SFCScriptBlock {
-		__generic?: SfcBlockAttr;
+		__generic?: IRAttr;
 	}
 
 	interface SFCStyleBlock {
-		__module?: SfcBlockAttr;
+		__module?: IRAttr;
 	}
 }
 

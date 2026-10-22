@@ -1,5 +1,5 @@
 import type * as ts from 'typescript';
-import type { VueCompletionData } from '../common.js';
+import type { VueCompletionData } from '../common';
 
 type Response<T> = T | null | undefined | Promise<T | null | undefined>;
 
@@ -11,7 +11,6 @@ export interface Requests {
 	getImportPathForFile(
 		fileName: string,
 		incomingFileName: string,
-		preferences: ts.UserPreferences,
 	): Response<ReturnType<typeof import('./getImportPathForFile.js')['getImportPathForFile']>>;
 	isRefAtPosition(
 		fileName: string,
@@ -20,13 +19,17 @@ export interface Requests {
 	getComponentDirectives(
 		fileName: string,
 	): Response<ReturnType<typeof import('./getComponentDirectives.js')['getComponentDirectives']>>;
-	getComponentNames(
-		fileName: string,
-	): Response<ReturnType<typeof import('./getComponentNames.js')['getComponentNames']>>;
 	getComponentMeta(
 		fileName: string,
 		tag: string,
 	): Response<ReturnType<typeof import('./getComponentMeta.js')['getComponentMeta']>>;
+	getComponentNames(
+		fileName: string,
+	): Response<ReturnType<typeof import('./getComponentNames.js')['getComponentNames']>>;
+	getComponentProps(
+		fileName: string,
+		position: number,
+	): Response<ReturnType<typeof import('./getComponentProps.js')['getComponentProps']>>;
 	getComponentSlots(
 		fileName: string,
 	): Response<ReturnType<typeof import('./getComponentSlots.js')['getComponentSlots']>>;
@@ -37,18 +40,6 @@ export interface Requests {
 	getElementNames(
 		fileName: string,
 	): Response<ReturnType<typeof import('./getElementNames.js')['getElementNames']>>;
-	resolveModuleName(
-		fileName: string,
-		moduleName: string,
-	): Response<ReturnType<typeof import('./resolveModuleName.js')['resolveModuleName']>>;
-	getDocumentHighlights(
-		fileName: string,
-		position: number,
-	): Response<ts.DocumentHighlights[]>;
-	getEncodedSemanticClassifications(
-		fileName: string,
-		span: ts.TextSpan,
-	): Response<ts.Classifications>;
 	getQuickInfoAtPosition(
 		fileName: string,
 		position: ts.LineAndCharacter,

@@ -60,12 +60,16 @@ export function createAutoInserter(
 // util
 
 const vueCompilerOptions = getDefaultCompilerOptions();
-const vueLanguagePlugin = createVueLanguagePlugin<URI>(
+const vuePlugin = createVueLanguagePlugin<URI>(
 	ts,
-	{},
 	vueCompilerOptions,
 	() => '',
 );
+const vueLanguagePlugin: typeof vuePlugin = {
+	...vuePlugin,
+	createVirtualCode: (uri, languageId, snapshot, ctx) =>
+		languageId === 'vue' ? vuePlugin.createVirtualCode!(uri, languageId, snapshot, ctx) : undefined,
+};
 const vueServicePLugins = createVueLanguageServicePlugins(ts);
 const autoInserter = createAutoInserter([vueLanguagePlugin], vueServicePLugins);
 

@@ -1,9 +1,11 @@
 {
 	"private": true,
-	"packageManager": "pnpm@10.25.0",
+	"packageManager": "pnpm@11.9.0",
 	"scripts": {
-		"build": "tsgo -b",
-		"watch": "tsgo -b -w",
+		"build": "tsc -b",
+		"build:ext": "pnpm --dir extensions/vscode exec rolldown --config",
+		"watch": "tsc -b -w",
+		"watch:ext": "npm run build:ext && node extensions/vscode/scripts/write-plugins.ts --dev && npm run watch",
 		"test": "npm run build && vitest run",
 		"test:grammar": "vitest run extensions/vscode/tests/grammar.spec.ts",
 		"format": "dprint fmt",
@@ -11,18 +13,13 @@
 		"lint:fix": "npm run lint -- --fix"
 	},
 	"devDependencies": {
-		"@tsslint/cli": "3.0.0-alpha.0",
-		"@tsslint/config": "3.0.0-alpha.0",
-		"@tsslint/eslint": "3.0.0-alpha.0",
+		"@tsslint/cli": "latest",
+		"@tsslint/compat-eslint": "latest",
+		"@tsslint/config": "latest",
 		"@typescript-eslint/eslint-plugin": "latest",
-		"@typescript/native-preview": "latest",
 		"dprint": "latest",
-		"typescript": "latest",
+		"typescript": "<7",
+		"typescript-7": "npm:typescript@7.1.0-beta",
 		"vitest": "latest"
-	},
-	"pnpm": {
-		"overrides": {
-			"vite": "beta"
-		}
 	}
 }

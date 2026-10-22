@@ -1,30 +1,41 @@
 import * as path from 'path-browserify';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
-import type { Code, Sfc, SfcBlock, VueCompilerOptions } from '../../types';
+import type { Code, IRBlock, IRScript, IRScriptSetup, IRStyle, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import * as names from '../names';
-import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { names } from '../names';
+import { generateStyleModuleImports } from '../style/modules';
+import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { Boundary } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
-import { generateGeneric, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
+import { generateGeneric, generateMacros, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
 import { generateTemplate } from './template';
-
-const exportExpression = `{} as typeof ${names._export}`;
 
 export interface ScriptCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
-	script: Sfc['script'];
-	scriptSetup: Sfc['scriptSetup'];
+	script: IRScript | undefined;
+	scriptSetup: IRScriptSetup | undefined;
+	styles: readonly IRStyle[];
 	fileName: string;
+	scriptLang: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateAndStyleTypes: Set<string>;
 	templateAndStyleCodes: Code[];
-	exposed: Set<string>;
+	setupBindings: Set<string>;
+	localComponents: Set<string>;
+	localDirectives: Set<string>;
+	dotValueBindings: Set<string>;
 }
 
 export { generate as generateScript };
+
+function* generateSyntheticDefaultExport(exportedExpression: string): Generator<Code> {
+	// keep the synthetic default export navigable: go-to-definition on
+	// `import Foo from './Foo.vue'` lands on this zero-length anchor at the SFC top
+	yield [``, 'main', 0, codeFeatures.navigationWithoutRename];
+	yield `export default ${exportedExpression}${endOfLine}`;
+}
 
 function generate(options: ScriptCodegenOptions) {
 	const ctx = createScriptCodegenContext(options);
@@ -37,6 +48,7 @@ function* generateWorker(
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
 	const { script, scriptRanges, scriptSetup, scriptSetupRanges, vueCompilerOptions, fileName } = options;
+	const exportExpression = asType(`typeof ${names.export}`, options.scriptLang);
 
 	yield* generateGlobalTypesReference(vueCompilerOptions, fileName);
 
@@ -50,24 +62,30 @@ function* generateWorker(
 			src = src.slice(0, -'.tsx'.length) + '.jsx';
 		}
 
-		yield `import __VLS_default from `;
-		const token = yield* startBoundary('main', script.src.offset, {
-			...codeFeatures.all,
-			...src !== script.src.text ? codeFeatures.navigationWithoutRename : {},
-		});
+		yield `import ${names.src} from `;
+		const boundary = yield* Boundary.start(
+			'main',
+			script.src.offset,
+			script.src.offset + script.src.text.length,
+			{
+				...codeFeatures.all,
+				...src !== script.src.text ? codeFeatures.navigationWithoutRename : {},
+			},
+		);
 		yield `'`;
-		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, { __combineToken: token }];
+		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, boundary.features];
 		yield src.slice(script.src.text.length);
 		yield `'`;
-		yield endBoundary(token, script.src.offset + script.src.text.length);
+		yield boundary.end();
 		yield endOfLine;
-		yield `export default __VLS_default;${endOfLine}`;
+		yield* generateSyntheticDefaultExport(names.src);
 
-		yield* generateTemplate(options, ctx, '__VLS_default');
+		yield* generateTemplate(options, names.src);
 	}
 	// <script> + <script setup>
 	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
 		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
+		yield* generateMacros(options);
 
 		// <script>
 		let selfType: string | undefined;
@@ -79,16 +97,17 @@ function* generateWorker(
 				scriptRanges,
 				exportDefault,
 				vueCompilerOptions,
-				selfType = '__VLS_self',
+				selfType = names.self,
+				exportExpression,
 			);
 		}
 		else {
 			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
-			yield `export default ${exportExpression}${endOfLine}`;
+			yield* generateSyntheticDefaultExport(exportExpression);
 		}
 
 		// <script setup>
-		yield* generateExportDeclareEqual(scriptSetup, names._export);
+		yield* generateExportDeclareEqual(scriptSetup, names.export);
 		if (scriptSetup.generic) {
 			yield* generateGeneric(
 				options,
@@ -101,7 +120,7 @@ function* generateWorker(
 					ctx,
 					scriptSetup,
 					scriptSetupRanges,
-					generateTemplate(options, ctx, selfType),
+					generateTemplate(options, selfType),
 				),
 			);
 		}
@@ -112,7 +131,7 @@ function* generateWorker(
 				ctx,
 				scriptSetup,
 				scriptSetupRanges,
-				generateTemplate(options, ctx, selfType),
+				generateTemplate(options, selfType),
 				[`return `],
 			);
 			yield `})()${endOfLine}`;
@@ -121,9 +140,10 @@ function* generateWorker(
 	// only <script setup>
 	else if (scriptSetup && scriptSetupRanges) {
 		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
+		yield* generateMacros(options);
 
 		if (scriptSetup.generic) {
-			yield* generateExportDeclareEqual(scriptSetup, names._export);
+			yield* generateExportDeclareEqual(scriptSetup, names.export);
 			yield* generateGeneric(
 				options,
 				ctx,
@@ -135,7 +155,7 @@ function* generateWorker(
 					ctx,
 					scriptSetup,
 					scriptSetupRanges,
-					generateTemplate(options, ctx),
+					generateTemplate(options),
 				),
 			);
 		}
@@ -146,11 +166,11 @@ function* generateWorker(
 				ctx,
 				scriptSetup,
 				scriptSetupRanges,
-				generateTemplate(options, ctx),
-				generateExportDeclareEqual(scriptSetup, names._export),
+				generateTemplate(options),
+				generateExportDeclareEqual(scriptSetup, names.export),
 			);
 		}
-		yield `export default ${exportExpression}${endOfLine}`;
+		yield* generateSyntheticDefaultExport(exportExpression);
 	}
 	// only <script>
 	else if (script && scriptRanges) {
@@ -162,29 +182,33 @@ function* generateWorker(
 				scriptRanges,
 				exportDefault,
 				vueCompilerOptions,
-				names._export,
-				generateTemplate(options, ctx, names._export),
+				names.export,
+				exportExpression,
+				generateTemplate(options, names.export),
 			);
 		}
 		else {
 			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
-			yield* generateExportDeclareEqual(script, names._export);
+			yield* generateExportDeclareEqual(script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
-			yield* generateTemplate(options, ctx, names._export);
-			yield `export default ${exportExpression}${endOfLine}`;
+			yield* generateTemplate(options, names.export);
+			yield* generateSyntheticDefaultExport(exportExpression);
 		}
 	}
 
 	yield* ctx.localTypes.generate();
+	// after the user's code, which may start with `/// <reference>` or `// @ts-nocheck`
+	yield* generateStyleModuleImports(options.styles);
 }
 
 function* generateScriptWithExportDefault(
 	ctx: ScriptCodegenContext,
-	script: NonNullable<Sfc['script']>,
+	script: IRScript,
 	scriptRanges: ScriptRanges,
 	exportDefault: NonNullable<ScriptRanges['exportDefault']>,
 	vueCompilerOptions: VueCompilerOptions,
 	varName: string,
+	exportExpression: string,
 	templateGenerator?: Generator<Code>,
 ): Generator<Code> {
 	const componentOptions = scriptRanges.exportDefault?.options;
@@ -235,7 +259,7 @@ function* generateScriptWithExportDefault(
 }
 
 function* generateGlobalTypesReference(
-	{ typesRoot, lib, target, checkUnknownProps }: VueCompilerOptions,
+	{ typesRoot, lib, target }: VueCompilerOptions,
 	fileName: string,
 ): Generator<Code> {
 	let typesPath: string;
@@ -254,18 +278,20 @@ function* generateGlobalTypesReference(
 		typesPath = typesRoot;
 	}
 	yield `/// <reference types=${JSON.stringify(typesPath + '/template-helpers.d.ts')} />${newLine}`;
-	if (!checkUnknownProps) {
-		yield `/// <reference types=${JSON.stringify(typesPath + '/props-fallback.d.ts')} />${newLine}`;
-	}
 	if (lib === 'vue' && target < 3.5) {
 		yield `/// <reference types=${JSON.stringify(typesPath + '/vue-3.4-shims.d.ts')} />${newLine}`;
 	}
 }
 
-function* generateExportDeclareEqual(block: SfcBlock, name: string): Generator<Code> {
+export function* generateExportDeclareEqual(
+	block: IRBlock,
+	name: string,
+	start = 0,
+	end = block.content.length,
+): Generator<Code> {
 	yield `const `;
-	const token = yield* startBoundary(block.name, 0, codeFeatures.doNotReportTs6133);
+	const boundary = yield* Boundary.start(block.name, start, end, codeFeatures.verification);
 	yield name;
-	yield endBoundary(token, block.content.length);
+	yield boundary.end();
 	yield ` = `;
 }

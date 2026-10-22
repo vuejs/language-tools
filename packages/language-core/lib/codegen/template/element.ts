@@ -1,24 +1,24 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
-import type * as ts from 'typescript';
 import type { Code } from '../../types';
-import { getElementTagOffsets, getNodeText, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
+import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import * as names from '../names';
-import { endOfLine, forEachNode, getTypeScriptAST, identifierRegex, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { names } from '../names';
+import { generateExportDeclareEqual } from '../script';
+import { endOfLine, generateTypedVar, identifierRE, newLine } from '../utils';
+import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
 import { generateElementDirectives } from './elementDirectives';
 import { generateElementEvents } from './elementEvents';
-import { type FailGeneratedExpression, generateElementProps } from './elementProps';
+import { type FailedPropExpressions, generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
-import { generateStyleScopedClassReference } from './styleScopedClasses';
+import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
 import { generateVSlot } from './vSlot';
 
@@ -30,6 +30,7 @@ export function* generateComponent(
 	let { tag, props } = node;
 	let [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
 	let isExpression = false;
+	let isIsShorthand = false;
 
 	if (tag.includes('.')) {
 		isExpression = true;
@@ -42,7 +43,8 @@ export function* generateComponent(
 				&& prop.arg?.loc.source === 'is'
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				if (prop.arg.loc.end.offset === prop.exp.loc.end.offset) {
+				isIsShorthand = prop.arg.loc.end.offset === prop.exp.loc.end.offset;
+				if (isIsShorthand) {
 					ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.exp.loc, 'is'));
 				}
 				isExpression = true;
@@ -63,7 +65,9 @@ export function* generateComponent(
 			options,
 			ctx,
 			options.template,
-			codeFeatures.all,
+			isIsShorthand
+				? codeFeatures.withoutHighlightAndCompletion
+				: codeFeatures.all,
 			tag,
 			startTagOffset,
 			`(`,
@@ -90,65 +94,68 @@ export function* generateComponent(
 			camelize(tag),
 			tag,
 		]);
-		const matchedSetupConst = [...originalNames].find(name => options.setupConsts.has(name));
-		if (matchedSetupConst) {
+		const matchedImportedComponent = [...originalNames].find(name => options.importedComponents.has(name));
+		if (matchedImportedComponent) {
 			// navigation & auto import support
 			yield `const ${componentVar} = `;
 			yield* generateCamelized(
-				matchedSetupConst[0]! + tag.slice(1),
+				matchedImportedComponent[0]! + tag.slice(1),
 				'template',
 				startTagOffset,
 				{
-					...codeFeatures.withoutHighlightAndCompletion,
+					...codeFeatures.tagName,
 					...codeFeatures.importCompletionOnly,
 				},
 			);
 			if (endTagOffset !== undefined) {
 				yield ` || `;
 				yield* generateCamelized(
-					matchedSetupConst[0]! + tag.slice(1),
+					matchedImportedComponent[0]! + tag.slice(1),
 					'template',
 					endTagOffset,
-					codeFeatures.withoutHighlightAndCompletion,
+					codeFeatures.tagName,
 				);
 			}
 			yield endOfLine;
 		}
 		else {
-			yield `let ${componentVar}!: __VLS_WithComponent<'${tag}', __VLS_LocalComponents, __VLS_GlobalComponents`;
-			yield originalNames.has(options.componentName)
-				? `, typeof ${names._export}`
-				: `, void`;
-			for (const name of originalNames) {
-				yield `, '${name}'`;
-			}
-			yield `>[`;
-			yield* generateStringLiteralKey(
-				tag,
-				startTagOffset,
-				{
-					...codeFeatures.semanticWithoutHighlight,
-					...options.vueCompilerOptions.checkUnknownComponents
-						? codeFeatures.verification
-						: codeFeatures.doNotReportTs2339AndTs2551,
-				},
-			);
-			yield `]${endOfLine}`;
-
-			if (identifierRegex.test(camelize(tag))) {
-				// navigation support
-				yield `/** @ts-ignore @type {typeof ${names.components}.`;
-				yield* generateCamelized(tag, 'template', startTagOffset, codeFeatures.navigation);
-				if (tag[0] !== tag[0]!.toUpperCase()) {
-					yield ` | typeof ${names.components}.`;
-					yield* generateCamelized(capitalize(tag), 'template', startTagOffset, codeFeatures.navigation);
+			yield* generateTypedVar('let', componentVar, options.scriptLang, function*() {
+				yield `${names.WithComponent}<'${tag}', ${names.LocalComponents}, ${names.GlobalComponents}`;
+				yield originalNames.has(options.componentName)
+					? `, typeof ${names.export}`
+					: `, void`;
+				for (const name of originalNames) {
+					yield `, '${name}'`;
 				}
-				if (endTagOffset !== undefined) {
+				yield `>[`;
+				yield* generateStringLiteralKey(
+					tag,
+					startTagOffset,
+					{
+						...codeFeatures.semanticWithoutHighlight,
+						...codeFeatures.verification,
+					},
+				);
+				yield `]`;
+			});
+
+			if (identifierRE.test(camelize(tag))) {
+				// navigation support
+				yield `/** @ts-ignore @type {`;
+				for (const offset of [startTagOffset, endTagOffset]) {
+					if (offset === undefined) {
+						continue;
+					}
 					yield ` | typeof ${names.components}.`;
-					yield* generateCamelized(tag, 'template', endTagOffset, codeFeatures.navigation);
+					yield* generateCamelized(tag, 'template', offset, codeFeatures.navigation);
 					if (tag[0] !== tag[0]!.toUpperCase()) {
 						yield ` | typeof ${names.components}.`;
-						yield* generateCamelized(capitalize(tag), 'template', endTagOffset, codeFeatures.navigation);
+						yield* generateCamelized(capitalize(tag), 'template', offset, codeFeatures.navigation);
+					}
+					if (tag.includes('-')) {
+						yield ` | typeof ${names.components}[`;
+						yield* generateStringLiteralKey(tag, offset, codeFeatures.navigation);
+						yield `]`;
 					}
 				}
 				yield `} */${newLine}`;
@@ -159,18 +166,6 @@ export function* generateComponent(
 		}
 	}
 
-	yield* generateComponentBody(options, ctx, node, tag, startTagOffset, props, componentVar);
-}
-
-function* generateComponentBody(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
-	tag: string,
-	tagOffset: number,
-	props: (CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode)[],
-	componentVar: string,
-): Generator<Code> {
 	let isCtxVarUsed = false;
 	let isPropsVarUsed = false;
 
@@ -178,51 +173,68 @@ function* generateComponentBody(
 	const getPropsVar = () => (isPropsVarUsed = true, propsVar);
 	ctx.components.push(getCtxVar);
 
-	const failGeneratedExpressions: FailGeneratedExpression[] = [];
+	const functionalVar = ctx.getInternalVariable();
+	const vnodeVar = ctx.getInternalVariable();
+	const ctxVar = ctx.getInternalVariable();
+	const propsVar = ctx.getInternalVariable();
+
+	const failedPropExps: FailedPropExpressions[] = [];
 	const propCodes = [...generateElementProps(
 		options,
 		ctx,
 		node,
 		props,
-		options.vueCompilerOptions.checkUnknownProps,
-		failGeneratedExpressions,
+		failedPropExps,
 	)];
-	const functionalVar = ctx.getInternalVariable();
-	const vNodeVar = ctx.getInternalVariable();
-	const ctxVar = ctx.getInternalVariable();
-	const propsVar = ctx.getInternalVariable();
+	const propsStr = toString(propCodes);
 
 	yield `// @ts-ignore${newLine}`;
-	yield `const ${functionalVar} = ${
-		options.vueCompilerOptions.checkUnknownProps ? '__VLS_asFunctionalComponent0' : '__VLS_asFunctionalComponent1'
-	}(${componentVar}, new ${componentVar}({${newLine}`;
-	yield* toString(propCodes);
+	yield `const ${functionalVar} = ${names.asFunctionalComponent0}(${componentVar}, new ${componentVar}({${newLine}`;
+	yield `// @ts-ignore${newLine}`;
+	yield propsStr
+		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
+		.replace(/\n/g, ' ');
 	yield `}))${endOfLine}`;
 
-	yield `const `;
-	const token = yield* startBoundary('template', node.loc.start.offset, codeFeatures.doNotReportTs6133);
-	yield vNodeVar;
-	yield endBoundary(token, node.loc.end.offset);
-	yield ` = ${functionalVar}`;
+	yield* generateExportDeclareEqual(options.template, vnodeVar, node.loc.start.offset, node.loc.end.offset);
+	yield functionalVar;
 
-	if (ctx.currentInfo.generic) {
-		const { content, offset } = ctx.currentInfo.generic;
-		const token = yield* startBoundary('template', offset, codeFeatures.verification);
+	const commentInfo = ctx.getCommentInfo();
+	if (commentInfo.generic) {
+		const { content, offset } = commentInfo.generic;
+		const boundary = yield* Boundary.start(
+			'template',
+			offset,
+			offset + content.length,
+			codeFeatures.verification,
+		);
 		yield `<`;
 		yield [content, 'template', offset, codeFeatures.all];
 		yield `>`;
-		yield endBoundary(token, offset + content.length);
+		yield boundary.end();
 	}
 
+	const shouldInheritAttrs = hasVBindAttrs(options, ctx, node);
+
 	yield `(`;
-	const token2 = yield* startBoundary('template', tagOffset, codeFeatures.verification);
-	yield `{${newLine}`;
+	const boundary2 = yield* Boundary.start(
+		'template',
+		startTagOffset,
+		startTagOffset + tag.length,
+		shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes
+			? {}
+			: codeFeatures.verification,
+	);
+	yield `{`;
+	yield [``, 'template', node.loc.start.offset, { __propsCompletion: true }];
+	yield newLine;
 	yield* propCodes;
 	yield `}`;
-	yield endBoundary(token2, tagOffset + tag.length);
-	yield `, ...__VLS_functionalComponentArgsRest(${functionalVar}))${endOfLine}`;
+	yield boundary2.end();
+	yield `, ...${names.functionalComponentArgsRest}(${functionalVar}))${endOfLine}`;
+	yield `void ${vnodeVar}${endOfLine}`;
 
-	yield* generateFailedExpressions(options, ctx, failGeneratedExpressions);
+	yield* generateFailedExpressions(options, ctx, failedPropExps);
 	yield* generateElementEvents(
 		options,
 		ctx,
@@ -234,44 +246,62 @@ function* generateComponentBody(
 	yield* generateElementDirectives(options, ctx, node);
 
 	const templateRef = getTemplateRef(node);
-	const isRootNode = ctx.singleRootNodes.has(node)
+	const isSingleRoot = ctx.singleRootNodes.has(node)
 		&& !options.vueCompilerOptions.fallthroughComponentNames.includes(hyphenateTag(tag));
+	const inferRootEl = ctx.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl;
+	const inferTemplateRefs = options.vueCompilerOptions.inferTemplateDollarRefs
+		|| options.vueCompilerOptions.inferComponentDollarRefs
+		|| options.setupRefs.size > 0;
 
-	if (templateRef || isRootNode) {
+	if ((templateRef && inferTemplateRefs) || (isSingleRoot && inferRootEl)) {
 		const componentInstanceVar = ctx.getInternalVariable();
-		yield `var ${componentInstanceVar} = {} as (Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0] | null)`;
-		if (ctx.inVFor) {
-			yield `[]`;
-		}
-		yield endOfLine;
+		yield* generateTypedVar('var', componentInstanceVar, options.scriptLang, function*() {
+			yield `Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0]`;
+		});
 
-		if (templateRef) {
-			const typeExp = `typeof ${ctx.getHoistVariable(componentInstanceVar)}`;
+		if (templateRef && inferTemplateRefs) {
+			let typeExp = `typeof ${ctx.getHoistVariable(componentInstanceVar)} | null`;
+			if (ctx.inVFor) {
+				typeExp = `(${typeExp})[]`;
+			}
 			ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 		}
-		if (isRootNode) {
+		if (isSingleRoot && inferRootEl) {
 			ctx.singleRootElTypes.add(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
 		}
 	}
 
-	if (hasVBindAttrs(options, ctx, node)) {
-		ctx.inheritedAttrVars.add(getPropsVar());
+	if (shouldInheritAttrs) {
+		if (options.vueCompilerOptions.checkRequiredFallthroughAttributes) {
+			const restsVar = ctx.getInternalVariable();
+			yield `var ${restsVar} = ${names.omit}(${getPropsVar()}, {\n${propsStr}})${endOfLine}`;
+			ctx.inheritedAttrVars.add(restsVar);
+		}
+		else {
+			ctx.inheritedAttrVars.add(getPropsVar());
+		}
 	}
 
 	yield* generateStyleScopedClassReferences(options, node);
 
-	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as
-		| CompilerDOM.DirectiveNode
-		| undefined;
-	if (slotDir || node.children.length) {
-		yield* generateVSlot(options, ctx, node, slotDir, getCtxVar());
-	}
+	const slotDir = node.props.find(CompilerDOM.isVSlot);
+	const hasSlots = !!slotDir || node.children.length > 0;
 
-	if (isCtxVarUsed) {
-		yield `var ${ctxVar}!: __VLS_FunctionalComponentCtx<typeof ${componentVar}, typeof ${vNodeVar}>${endOfLine}`;
+	// declared ahead of the slot code that reads them: JS has no `var x!: T`,
+	// so a later declaration would be read before assignment (TS2454)
+	if (isCtxVarUsed || hasSlots) {
+		yield* generateTypedVar('var', ctxVar, options.scriptLang, function*() {
+			yield `${names.ExtractComponentContext}<typeof ${componentVar}, typeof ${vnodeVar}>`;
+		});
 	}
 	if (isPropsVarUsed) {
-		yield `var ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${vNodeVar}>${endOfLine}`;
+		yield* generateTypedVar('var', propsVar, options.scriptLang, function*() {
+			yield `${names.ExtractComponentProps}<typeof ${componentVar}, typeof ${vnodeVar}>`;
+		});
+	}
+
+	if (hasSlots) {
+		yield* generateVSlot(options, ctx, node, slotDir, ctxVar);
 	}
 	ctx.components.pop();
 }
@@ -282,17 +312,15 @@ export function* generateElement(
 	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
 	const [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
-	const failedPropExps: FailGeneratedExpression[] = [];
+	const failedPropExps: FailedPropExpressions[] = [];
 
-	yield `${
-		options.vueCompilerOptions.checkUnknownProps ? `__VLS_asFunctionalElement0` : `__VLS_asFunctionalElement1`
-	}(${names.intrinsics}`;
+	yield `${names.asFunctionalElement0}(${names.intrinsics}`;
 	yield* generatePropertyAccess(
 		options,
 		ctx,
 		node.tag,
 		startTagOffset,
-		codeFeatures.withoutHighlightAndCompletion,
+		codeFeatures.tagName,
 	);
 	if (endTagOffset !== undefined) {
 		yield `, `;
@@ -302,22 +330,26 @@ export function* generateElement(
 			ctx,
 			node.tag,
 			endTagOffset,
-			codeFeatures.withoutHighlightAndCompletion,
+			codeFeatures.tagName,
 		);
 	}
 	yield `)(`;
-	const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+	const boundary = yield* Boundary.start(
+		'template',
+		startTagOffset,
+		startTagOffset + node.tag.length,
+		codeFeatures.verification,
+	);
 	yield `{${newLine}`;
 	yield* generateElementProps(
 		options,
 		ctx,
 		node,
 		node.props,
-		options.vueCompilerOptions.checkUnknownProps,
 		failedPropExps,
 	);
 	yield `}`;
-	yield endBoundary(token, startTagOffset + node.tag.length);
+	yield boundary.end();
 	yield `)${endOfLine}`;
 
 	yield* generateFailedExpressions(options, ctx, failedPropExps);
@@ -325,153 +357,83 @@ export function* generateElement(
 
 	const templateRef = getTemplateRef(node);
 	if (templateRef) {
-		let typeExp = `__VLS_Elements['${node.tag}']`;
+		let typeExp = `${names.Elements}['${node.tag}']`;
 		if (ctx.inVFor) {
 			typeExp += `[]`;
 		}
 		ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 	}
-	if (ctx.singleRootNodes.has(node)) {
-		ctx.singleRootElTypes.add(`__VLS_Elements['${node.tag}']`);
+	if (
+		ctx.singleRootNodes.has(node) && (ctx.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl)
+	) {
+		ctx.singleRootElTypes.add(`${names.Elements}['${node.tag}']`);
 	}
 
 	if (hasVBindAttrs(options, ctx, node)) {
-		ctx.inheritedAttrVars.add(`__VLS_intrinsics.${node.tag}`);
+		ctx.inheritedAttrVars.add(`${names.intrinsics}.${node.tag}`);
 	}
 
 	yield* generateStyleScopedClassReferences(options, node);
 
+	yield* ctx.generateDiagnosticDirectiveEnd();
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}
 }
 
-function* generateStyleScopedClassReferences(
-	{ template, typescript: ts }: TemplateCodegenOptions,
+export function* generateFragment(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
-	for (const prop of node.props) {
-		if (
-			prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
-			&& prop.name === 'class'
-			&& prop.value
-		) {
-			if (template.lang === 'pug') {
-				const getClassOffset = Reflect.get(prop.value.loc.start, 'getClassOffset') as (offset: number) => number;
-				const content = prop.value.loc.source.slice(1, -1);
-				for (const [className, pos] of forEachClassName(content)) {
-					yield* generateStyleScopedClassReference(template, className, getClassOffset(pos + 1));
-				}
-			}
-			else {
-				const [text, start] = normalizeAttributeValue(prop.value);
-				for (const [className, offset] of forEachClassName(text)) {
-					yield* generateStyleScopedClassReference(template, className, start + offset);
-				}
-			}
-		}
-		else if (
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-			&& prop.arg.content === 'class'
-		) {
-			const content = '(' + prop.exp.content + ')';
-			const startOffset = prop.exp.loc.start.offset - 1;
-			const ast = getTypeScriptAST(ts, template, content);
-			const literals: ts.StringLiteralLike[] = [];
+	const [startTagOffset] = getElementTagOffsets(node, options.template);
+	const failedPropExps: FailedPropExpressions[] = [];
 
-			for (const node of forEachNode(ts, ast)) {
-				if (
-					!ts.isExpressionStatement(node)
-					|| !ts.isParenthesizedExpression(node.expression)
-				) {
-					continue;
-				}
-				const { expression } = node.expression;
+	// special case for <template v-for="..." :key="..." />
+	if (node.props.length) {
+		yield `${names.asFunctionalElement0}(${names.intrinsics}.template)(`;
+		const boundary = yield* Boundary.start(
+			'template',
+			startTagOffset,
+			startTagOffset + node.tag.length,
+			codeFeatures.verification,
+		);
+		yield `{${newLine}`;
+		yield* generateElementProps(
+			options,
+			ctx,
+			node,
+			node.props,
+			failedPropExps,
+		);
+		yield `}`;
+		yield boundary.end();
+		yield `)${endOfLine}`;
 
-				if (ts.isStringLiteralLike(expression)) {
-					literals.push(expression);
-				}
-				else if (ts.isArrayLiteralExpression(expression)) {
-					yield* walkArrayLiteral(expression);
-				}
-				else if (ts.isObjectLiteralExpression(expression)) {
-					yield* walkObjectLiteral(expression);
-				}
-			}
-
-			for (const literal of literals) {
-				const start = literal.end - literal.text.length - 1 + startOffset;
-				for (const [className, offset] of forEachClassName(literal.text)) {
-					yield* generateStyleScopedClassReference(template, className, start + offset);
-				}
-			}
-
-			function* walkArrayLiteral(node: ts.ArrayLiteralExpression) {
-				const { elements } = node;
-				for (const element of elements) {
-					if (ts.isStringLiteralLike(element)) {
-						literals.push(element);
-					}
-					else if (ts.isObjectLiteralExpression(element)) {
-						yield* walkObjectLiteral(element);
-					}
-				}
-			}
-
-			function* walkObjectLiteral(node: ts.ObjectLiteralExpression) {
-				const { properties } = node;
-				for (const property of properties) {
-					if (ts.isPropertyAssignment(property)) {
-						const { name } = property;
-						if (ts.isIdentifier(name)) {
-							const text = getNodeText(ts, name, ast);
-							yield* generateStyleScopedClassReference(template, text, name.end - text.length + startOffset);
-						}
-						else if (ts.isStringLiteral(name)) {
-							literals.push(name);
-						}
-						else if (ts.isComputedPropertyName(name)) {
-							const { expression } = name;
-							if (ts.isStringLiteralLike(expression)) {
-								literals.push(expression);
-							}
-						}
-					}
-					else if (ts.isShorthandPropertyAssignment(property)) {
-						const text = getNodeText(ts, property.name, ast);
-						yield* generateStyleScopedClassReference(template, text, property.name.end - text.length + startOffset);
-					}
-				}
-			}
-		}
+		yield* generateFailedExpressions(options, ctx, failedPropExps);
 	}
-}
 
-function* forEachClassName(content: string) {
-	let offset = 0;
-	for (const className of content.split(' ')) {
-		yield [className, offset] as const;
-		offset += className.length + 1;
+	yield* ctx.generateDiagnosticDirectiveEnd();
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child);
 	}
 }
 
 function* generateFailedExpressions(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	failGeneratedExpressions: FailGeneratedExpression[],
+	failedPropExps: FailedPropExpressions[],
 ): Generator<Code> {
-	for (const failedExp of failGeneratedExpressions) {
+	for (const { node, prefix, suffix } of failedPropExps) {
 		yield* generateInterpolation(
 			options,
 			ctx,
 			options.template,
 			codeFeatures.all,
-			failedExp.node.loc.source,
-			failedExp.node.loc.start.offset,
-			failedExp.prefix,
-			failedExp.suffix,
+			node.loc.source,
+			node.loc.start.offset,
+			prefix,
+			suffix,
 		);
 		yield endOfLine;
 	}

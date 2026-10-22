@@ -141,7 +141,11 @@ function createBlock(node: ElementNode, source: string) {
 					block.scoped = true;
 				}
 				else if (p.name === 'module') {
-					block.__module = parseAttr(p, node);
+					const attr = parseAttr(p, node);
+					// an empty name means the default `$style`, anchored to the attribute name
+					block.__module = attr !== true && attr.text
+						? attr
+						: { text: '', offset: p.loc.start.offset - node.loc.start.offset };
 				}
 			}
 		}
@@ -165,6 +169,5 @@ function parseAttr(p: CompilerDOM.AttributeNode, node: CompilerDOM.ElementNode) 
 	return {
 		text: content,
 		offset: offset - node.loc.start.offset,
-		quotes: offset > p.value.loc.start.offset,
 	};
 }

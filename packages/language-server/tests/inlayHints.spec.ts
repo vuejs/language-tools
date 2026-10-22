@@ -1,7 +1,7 @@
 import type { TextDocument } from '@volar/language-server';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
-import { getLanguageServer, testWorkspacePath } from './server.js';
+import { getLanguageServer, testWorkspacePath } from './server';
 
 test('Inline handler leading', async () => {
 	expect(
@@ -180,6 +180,86 @@ test('Destructured props', async () => {
 					watch(() => /* props. */foo, (foo) => {
 						console.log(foo, /* props. */bar, props.baz);
 					});
+					</script>
+				"
+	`);
+});
+
+test('Destructured props var declaration shadowing', async () => {
+	expect(
+		await requestInlayHintsResult(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<script setup lang="ts">
+			const { foo, bar } = defineProps<{
+				foo?: string;
+				bar?: string;
+			}>();
+			let baz: string | undefined;
+
+			function nestedBlock() {
+				baz = foo;
+				{
+					var foo = "local";
+				}
+				baz = foo;
+			}
+
+			function forLoop() {
+				baz = foo;
+				for (var foo = "local"; false;) {}
+			}
+
+			function nestedFunction() {
+				function nested() {
+					{
+						var foo = "local";
+					}
+					return foo;
+				}
+				baz = foo;
+				nested();
+			}
+
+			console.log(bar);
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		"
+					<script setup lang="ts">
+					const { foo, bar } = defineProps<{
+						foo?: string;
+						bar?: string;
+					}>();
+					let baz: string | undefined;
+
+					function nestedBlock() {
+						baz = foo;
+						{
+							var foo = "local";
+						}
+						baz = foo;
+					}
+
+					function forLoop() {
+						baz = foo;
+						for (var foo = "local"; false;) {}
+					}
+
+					function nestedFunction() {
+						function nested() {
+							{
+								var foo = "local";
+							}
+							return foo;
+						}
+						baz = /* props. */foo;
+						nested();
+					}
+
+					console.log(/* props. */bar);
 					</script>
 				"
 	`);

@@ -1,7 +1,7 @@
-import type { Code, Sfc, VueCodeInformation } from '../../types';
+import type { Code, IRAttr } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { identifierRE, newLine } from '../utils';
+import { Boundary } from '../utils/boundary';
 
 export function* generateClassProperty(
 	source: string,
@@ -10,37 +10,36 @@ export function* generateClassProperty(
 	propertyType: string,
 ): Generator<Code> {
 	yield `${newLine} & { `;
-	const token = yield* startBoundary(source, offset, codeFeatures.navigation);
-	yield `'`;
-	yield [classNameWithDot.slice(1), source, offset + 1, { __combineToken: token }];
-	yield `'`;
-	yield endBoundary(token, offset + classNameWithDot.length);
+	const className = classNameWithDot.slice(1);
+	// An unquoted name maps verbatim, so it can be both a definition and renamed.
+	if (identifierRE.test(className)) {
+		yield [className, source, offset + 1, codeFeatures.navigation];
+	}
+	else {
+		const boundary = yield* Boundary.start(
+			source,
+			offset,
+			offset + classNameWithDot.length,
+			codeFeatures.navigation,
+		);
+		yield `'`;
+		yield [className, source, offset + 1, boundary.features];
+		yield `'`;
+		yield boundary.end();
+	}
 	yield `: ${propertyType}`;
 	yield ` }`;
 }
 
-export function* generateStyleImports(style: Sfc['styles'][number]): Generator<Code> {
-	const features: VueCodeInformation = {
-		navigation: true,
-		verification: true,
-	};
-	if (typeof style.src === 'object') {
-		yield `${newLine} & typeof import(`;
-		const token = yield* startBoundary('main', style.src.offset, features);
-		yield `'`;
-		yield [style.src.text, 'main', style.src.offset, { __combineToken: token }];
-		yield `'`;
-		yield endBoundary(token, style.src.offset + style.src.text.length);
-		yield `).default`;
-	}
-	for (const { text, offset } of style.imports) {
-		yield `${newLine} & typeof import('`;
-		yield [
-			text,
-			style.name,
-			offset,
-			features,
-		];
-		yield `').default`;
-	}
+export function* generateStyleSrc(src: Exclude<IRAttr, true>): Generator<Code> {
+	const boundary = yield* Boundary.start(
+		'main',
+		src.offset,
+		src.offset + src.text.length,
+		codeFeatures.navigationAndVerification,
+	);
+	yield `'`;
+	yield [src.text, 'main', src.offset, boundary.features];
+	yield `'`;
+	yield boundary.end();
 }

@@ -1,14 +1,68 @@
 import type * as ts from 'typescript';
-import type { Code, Sfc, SfcBlock, VueCodeInformation } from '../../types';
+import type { Code, IRBlock, IRScript, IRScriptSetup, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
-export const identifierRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
+export const identifierRE = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
-const cacheMaps = new Map<SfcBlock, [content: string, Map<string, [ts.SourceFile, usages: number]>]>();
+export function isTsLang(lang: string): boolean {
+	return lang === 'ts' || lang === 'tsx';
+}
 
-export function getTypeScriptAST(ts: typeof import('typescript'), block: SfcBlock, text: string): ts.SourceFile {
+// `{} as T` in TS; `/** @type {T} */ ({})` in JS. The JSDoc cast keeps the
+// same assertion semantics under checkJs, and requires no type-only syntax.
+export function asType(type: string, lang: string): string {
+	return isTsLang(lang) ? `{} as ${type}` : `/** @type {${type}} */ ({})`;
+}
+
+// `let name!: T;` in TS; `var name = /** @type {T} */ ({});` in JS.
+export function* generateTypedVar(
+	kind: 'let' | 'var',
+	name: string,
+	lang: string,
+	type: () => Generator<Code>,
+): Generator<Code> {
+	if (isTsLang(lang)) {
+		yield `${kind} ${name}!: `;
+		yield* type();
+		yield endOfLine;
+	}
+	else {
+		yield `var ${name} = /** @type {`;
+		yield* type();
+		yield `} */ ({})${endOfLine}`;
+	}
+}
+
+// `type name = T;` in TS; `/** @typedef {T} name */;` in JS.
+export function* generateTypeAlias(
+	name: string,
+	lang: string,
+	type: () => Generator<Code>,
+): Generator<Code> {
+	if (isTsLang(lang)) {
+		yield `type ${name} = `;
+		yield* type();
+		yield endOfLine;
+	}
+	else {
+		yield `/** @typedef {`;
+		yield* type();
+		yield `} ${name} */${endOfLine}`;
+	}
+}
+
+// The phantom argument that carries the component library's `Ref` brand into
+// `__VLS_unwrap` / `__VLS_withDotValue`; the helper declarations cannot
+// resolve the library import themselves.
+export function getRefBrandArgument(vueCompilerOptions: VueCompilerOptions, lang: string): string {
+	return asType(`import('${vueCompilerOptions.lib}').Ref<unknown>`, lang);
+}
+
+const cacheMaps = new WeakMap<IRBlock, [content: string, Map<string, [ts.SourceFile, usages: number]>]>();
+
+export function getTypeScriptAST(ts: typeof import('typescript'), block: IRBlock, text: string): ts.SourceFile {
 	if (!cacheMaps.has(block)) {
 		cacheMaps.set(block, [block.content, new Map()]);
 	}
@@ -35,7 +89,7 @@ export function getTypeScriptAST(ts: typeof import('typescript'), block: SfcBloc
 }
 
 export function* generateSfcBlockSection(
-	block: NonNullable<Sfc['script' | 'scriptSetup']>,
+	block: IRScript | IRScriptSetup,
 	start: number,
 	end: number,
 	features: VueCodeInformation,
@@ -50,8 +104,9 @@ export function* generateSfcBlockSection(
 			const diagStart = diag.start;
 			const diagEnd = diag.start + diag.length;
 			if (diagStart >= textEnd && diagEnd <= end) {
-				yield `;`;
-				yield ['', block.name, end, codeFeatures.verification];
+				// map the synthesized terminator to the end of the section, so that
+				// truncation parse errors resolve back to the original block
+				yield [';', block.name, end, codeFeatures.verification];
 				yield newLine;
 				break;
 			}

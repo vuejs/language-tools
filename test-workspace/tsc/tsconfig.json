@@ -332,9 +332,6 @@
 			"path": "./#4391/tsconfig.json"
 		},
 		{
-			"path": "./#4413/tsconfig.json"
-		},
-		{
 			"path": "./#4433/tsconfig.json"
 		},
 		{
@@ -506,6 +503,36 @@
 			"path": "./#5843/tsconfig.json"
 		},
 		{
+			"path": "./#5895/tsconfig.json"
+		},
+		{
+			"path": "./#5899/tsconfig.json"
+		},
+		{
+			"path": "./#5927/tsconfig.json"
+		},
+		{
+			"path": "./#5934/tsconfig.json"
+		},
+		{
+			"path": "./#5986/tsconfig.json"
+		},
+		{
+			"path": "./#6040/tsconfig.json"
+		},
+		{
+			"path": "./#6084/tsconfig.json"
+		},
+		{
+			"path": "./#6094/tsconfig.json"
+		},
+		{
+			"path": "./#6180/tsconfig.json"
+		},
+		{
+			"path": "./#6228/tsconfig.json"
+		},
+		{
 			"path": "./#625/tsconfig.json"
 		},
 		{
@@ -521,7 +548,22 @@
 			"path": "./_failed_#5823/tsconfig.json"
 		},
 		{
+			"path": "./_failed_cssModuleDuplicate/tsconfig.json"
+		},
+		{
+			"path": "./_failed_cssModuleSrc/tsconfig.json"
+		},
+		{
+			"path": "./_failed_directive_arity/tsconfig.json"
+		},
+		{
+			"path": "./_failed_directive_generic/tsconfig.json"
+		},
+		{
 			"path": "./_failed_directives/tsconfig.json"
+		},
+		{
+			"path": "./_failed_fragment_props/tsconfig.json"
 		},
 		{
 			"path": "./attrs/tsconfig.json"
@@ -534,6 +576,9 @@
 		},
 		{
 			"path": "./cssModule/tsconfig.json"
+		},
+		{
+			"path": "./cssModuleSrc/tsconfig.json"
 		},
 		{
 			"path": "./dataAttributes/tsconfig.json"
@@ -560,6 +605,9 @@
 			"path": "./directives/tsconfig.json"
 		},
 		{
+			"path": "./dot-value-uninitialized/tsconfig.json"
+		},
+		{
 			"path": "./dynamic-component/tsconfig.json"
 		},
 		{
@@ -567,6 +615,9 @@
 		},
 		{
 			"path": "./fallthroughAttributes/tsconfig.json"
+		},
+		{
+			"path": "./fallthroughAttributes_checkRequired/tsconfig.json"
 		},
 		{
 			"path": "./fallthroughAttributes_duplicateNameEvent/tsconfig.json"
@@ -578,9 +629,6 @@
 			"path": "./fallthroughAttributes_generic/tsconfig.json"
 		},
 		{
-			"path": "./fallthroughAttributes_requiredProp/tsconfig.json"
-		},
-		{
 			"path": "./fallthroughAttributes_unknownTag/tsconfig.json"
 		},
 		{
@@ -588,6 +636,15 @@
 		},
 		{
 			"path": "./intrinsicProps/tsconfig.json"
+		},
+		{
+			"path": "./js-hoist-vars/tsconfig.json"
+		},
+		{
+			"path": "./js-slot-ctx-strict/tsconfig.json"
+		},
+		{
+			"path": "./macros-alias/tsconfig.json"
 		},
 		{
 			"path": "./namespace-component/tsconfig.json"
@@ -603,6 +660,9 @@
 		},
 		{
 			"path": "./reference-type-in-template/tsconfig.json"
+		},
+		{
+			"path": "./rfcs#836/tsconfig.json"
 		},
 		{
 			"path": "./rootEl/tsconfig.json"
@@ -623,10 +683,22 @@
 			"path": "./type-helpers/tsconfig.json"
 		},
 		{
+			"path": "./unknownComponent/tsconfig.json"
+		},
+		{
 			"path": "./unknownProp/tsconfig.json"
 		},
 		{
 			"path": "./unknownTag/tsconfig.json"
+		},
+		{
+			"path": "./unwrapBindingAccess/tsconfig.json"
+		},
+		{
+			"path": "./useTemplateRef-dynamic-arg/tsconfig.json"
+		},
+		{
+			"path": "./useTemplateRef-nullable/tsconfig.json"
 		},
 		{
 			"path": "./v-bind-require-object/tsconfig.json"
@@ -645,6 +717,9 @@
 		},
 		{
 			"path": "./withDefaults/tsconfig.json"
+		},
+		{
+			"path": "./withDotValue/tsconfig.json"
 		}
 	]
 }

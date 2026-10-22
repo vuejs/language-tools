@@ -7,9 +7,9 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
-import child from './child.vue';
+import basic from './basic.vue';
 </script>
 
 <template>
-  <child />
+  <basic />
 </template>

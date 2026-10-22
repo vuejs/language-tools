@@ -1,14 +1,12 @@
 {
-	"properties": {
+	"definitions": {
 		"vueCompilerOptions": {
 			"type": "object",
-			"additionalProperties": false,
 			"properties": {
 				"target": {
 					"default": "auto",
 					"enum": [
 						"auto",
-						3,
 						3.3,
 						3.5,
 						3.6,
@@ -25,60 +23,15 @@
 					"default": "@vue/language-core/types",
 					"markdownDescription": "Root path for helper type definitions. See: https://github.com/vuejs/language-tools/pull/5872"
 				},
-				"extensions": {
-					"type": "array",
-					"default": [".vue"],
-					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/vuejs/language-tools/tree/master/extensions/vscode/README.md#custom-file-extensions."
-				},
-				"vitePressExtensions": {
-					"type": "array",
-					"default": [".vue.md"],
-					"markdownDescription": "Valid file extensions that should be considered as regular VitePress SFC."
-				},
-				"petiteVueExtensions": {
-					"type": "array",
-					"default": [".html"],
-					"markdownDescription": "Valid file extensions that should be considered as regular PetiteVue SFC."
-				},
 				"jsxSlots": {
 					"type": "boolean",
 					"default": false,
 					"markdownDescription": "Generate slots type for `JSX.ElementChildrenAttribute`."
 				},
-				"strictTemplates": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "Enables strict templates. When set to `true`, all `checkUnknown*` options will be enabled."
-				},
-				"strictVModel": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "Strict type constraints of `v-model`. If not set, uses the 'strictTemplates' value."
-				},
 				"strictCssModules": {
 					"type": "boolean",
 					"default": false,
 					"markdownDescription": "Strict type checking of CSS modules."
-				},
-				"checkUnknownProps": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "Check unknown props. If not set, uses the 'strictTemplates' value."
-				},
-				"checkUnknownEvents": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "Check unknown events. If not set, uses the 'strictTemplates' value."
-				},
-				"checkUnknownDirectives": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "Check unknown directives. If not set, uses the 'strictTemplates' value."
-				},
-				"checkUnknownComponents": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "Check unknown components. If not set, uses the 'strictTemplates' value."
 				},
 				"inferComponentDollarEl": {
 					"type": "boolean",
@@ -115,15 +68,20 @@
 					"default": false,
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/577"
 				},
+				"vapor": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Enable Vapor mode for all Vue SFCs."
+				},
 				"fallthroughAttributes": {
 					"type": "boolean",
 					"default": false,
 					"markdownDescription": "Enable to support typed fallthrough attributes. Please note that enabling may significantly slow down type checking."
 				},
-				"resolveStyleImports": {
+				"checkRequiredFallthroughAttributes": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "Enable to generate type imports for external CSS files by `<style src=\"...\">` or `@import \"...\"`.\n\nSee: https://github.com/vuejs/language-tools/pull/5136"
+					"markdownDescription": "Check required fallthrough attributes."
 				},
 				"resolveStyleClassNames": {
 					"type": [
@@ -190,6 +148,22 @@
 				"plugins": {
 					"type": "array",
 					"default": [],
+					"items": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string",
+										"markdownDescription": "Name of the plugin module to be required."
+									}
+								}
+							}
+						]
+					},
 					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
 				"experimentalModelPropName": {
@@ -207,6 +181,12 @@
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/1969"
 				}
 			}
+		}
+	},
+	"properties": {
+		"vueCompilerOptions": {
+			"$ref": "#/definitions/vueCompilerOptions",
+			"deprecationMessage": "Deprecated: configure Vue options under contentMappers[].options instead."
 		}
 	}
 }

@@ -1,0 +1,12 @@
+{
+	"exclude": ["../tsconfig.base.json"],
+	"include": ["**/*"],
+	"compilerOptions": {
+		"paths": {
+			"@2/*": ["./*"]
+		}
+	},
+	"contentMappers": [
+		{ "package": "@vue/content-mapper", "extensions": [".vue"] }
+	]
+}

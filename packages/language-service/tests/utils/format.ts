@@ -6,12 +6,16 @@ import type { URI } from 'vscode-uri';
 import { createVueLanguageServicePlugins } from '../..';
 
 const resolvedVueOptions = getDefaultCompilerOptions();
-const vueLanguagePlugin = createVueLanguagePlugin<URI>(
+const vuePlugin = createVueLanguagePlugin<URI>(
 	ts,
-	{},
 	resolvedVueOptions,
 	() => '',
 );
+const vueLanguagePlugin: typeof vuePlugin = {
+	...vuePlugin,
+	createVirtualCode: (uri, languageId, snapshot, ctx) =>
+		languageId === 'vue' ? vuePlugin.createVirtualCode!(uri, languageId, snapshot, ctx) : undefined,
+};
 const vueServicePLugins = createVueLanguageServicePlugins(ts);
 const formatter = kit.createFormatter([vueLanguagePlugin], vueServicePLugins);
 

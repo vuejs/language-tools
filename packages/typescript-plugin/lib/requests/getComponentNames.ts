@@ -5,9 +5,9 @@ import { getSelfComponentName, getVariableType } from './utils';
 export function getComponentNames(
 	ts: typeof import('typescript'),
 	program: ts.Program,
-	{ fileName, sfc }: VueVirtualCode,
+	virtualCode: VueVirtualCode,
 ): string[] {
-	const sourceFile = program.getSourceFile(fileName);
+	const sourceFile = program.getSourceFile(virtualCode.fileName);
 	if (!sourceFile) {
 		return [];
 	}
@@ -20,8 +20,12 @@ export function getComponentNames(
 		.filter(entry => !entry.includes('$') && !entry.startsWith('_'))
 		?? [];
 
-	componentNames.push(getSelfComponentName(fileName));
-	componentNames.push(...tsCodegen.get(sfc)?.getImportedComponents() ?? []);
+	const codegen = tsCodegen.get(virtualCode.ir);
+	componentNames.push(
+		getSelfComponentName(virtualCode.fileName),
+		...codegen?.getImportedComponents() ?? [],
+		...codegen?.getSetupBindings() ?? [],
+	);
 
 	return [...new Set(componentNames)];
 }

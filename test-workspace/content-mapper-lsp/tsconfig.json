@@ -1,0 +1,19 @@
+{
+	"extends": "../tsconfig.base.json",
+	"compilerOptions": {
+		// `./CssModuleSrc.module.css` resolves to the declaration a CSS content mapper would provide
+		"allowArbitraryExtensions": true,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false
+	},
+	"contentMappers": [
+		{
+			"package": "@vue/content-mapper",
+			"extensions": [".vue"],
+			"options": {
+				"languageFeatures": true
+			}
+		}
+	],
+	"include": ["*.vue"]
+}
