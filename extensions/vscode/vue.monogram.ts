@@ -6,8 +6,8 @@
 // embeds CSS (delegated, like the official grammar does). The tokens + rules are html.ts's;
 // only the markup config (block tags + embeds) and the scope name differ.
 //
-// Increment 1: the SFC block skeleton + block-level embeds. Vue template directives
-// (v-if / :bind / @event / #slot) and {{ }} interpolation are the next increment.
+// On top of the SFC block skeleton + block-level embeds, Vue template directives
+// (v-if / :bind / @event / #slot) and {{ }} interpolation are injected (see `inject` below).
 // Oracle: vuejs/language-tools' hand-written vue.tmLanguage.json (scopeName text.html.vue).
 //
 // Vue is a DIALECT of html.ts: it reuses html's tokens/rules/scopes verbatim (a .vue file
@@ -56,7 +56,8 @@ export default defineGrammar({
 		// that isn't `=>`). This is a true drop-in: those official key names now resolve in Monogram's
 		// own source.ts NATIVELY (typescript.ts's `canonicalRepoNames` 限制器 makes gen-tm emit `#comment`/
 		// `#type`/`#punctuation-comma` as the actual key names) AND in VS Code's official source.ts, so the
-		// SAME vue grammar runs on either host (proven by test/vue-dropin.ts). Vue-only, so it extends
+		// SAME vue grammar runs on either host (tests/vue-highlight.spec.ts checks the `generic="T"` case
+		// against VS Code's source.ts). Vue-only, so it extends
 		// html.ts's `on*`/`style` embeds rather than polluting the HTML grammar.
 		attributeEmbed: [...(htmlMarkup.attributeEmbed ?? []), {
 			namePattern: 'generic',

@@ -50,8 +50,8 @@ describe('embedded grammar', async () => {
 });
 
 // The committed grammars + language configuration are generated output of `vue.monogram.ts` +
-// the Monogram submodule. This guards against drift: editing the source or bumping the submodule
-// without re-running `npm run gen:grammar` fails here. Structural compare ignores `dprint`
+// the pinned `monogram` dependency. This guards against drift: editing the source or bumping the
+// pin without re-running `npm run gen:grammar` fails here. Structural compare ignores `dprint`
 // formatting (and the language config's `// …` JSONC comments, dropped by generation).
 describe('generated artifacts are in sync with source', () => {
 	const extensionRoot = path.resolve(__dirname, '..');
