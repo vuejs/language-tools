@@ -162,17 +162,21 @@ export function startServer(ts: typeof import('typescript')) {
 				},
 				async getComponentMeta(fileName, tag) {
 					try {
-						const uri = URI.file(fileName);
-						const languageService = await server.project.getLanguageService(uri);
-						const virtualCode = languageService.context.language.scripts.get(uri)?.generated?.root;
-						if (virtualCode instanceof VueVirtualCode) {
+						const virtualCode = await getVueVirtualCode(fileName);
+						if (virtualCode) {
 							return await (await connectTypeScriptApi()).getComponentMeta(fileName, virtualCode, tag);
 						}
 					}
 					catch {}
 				},
-				getComponentNames(...args) {
-					return sendTsServerRequest('_vue:getComponentNames', args);
+				async getComponentNames(fileName) {
+					try {
+						const virtualCode = await getVueVirtualCode(fileName);
+						if (virtualCode) {
+							return await (await connectTypeScriptApi()).getComponentNames(fileName, virtualCode);
+						}
+					}
+					catch {}
 				},
 				getComponentProps(...args) {
 					return sendTsServerRequest('_vue:getComponentProps', args);
@@ -214,6 +218,13 @@ export function startServer(ts: typeof import('typescript')) {
 		};
 
 		return result;
+
+		async function getVueVirtualCode(fileName: string) {
+			const uri = URI.file(fileName);
+			const languageService = await server.project.getLanguageService(uri);
+			const virtualCode = languageService.context.language.scripts.get(uri)?.generated?.root;
+			return virtualCode instanceof VueVirtualCode ? virtualCode : undefined;
+		}
 
 		async function sendTsServerRequest<T>(command: string, args: any): Promise<T | null> {
 			return await new Promise<T | null>(resolve => {

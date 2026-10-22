@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import type { ComponentMeta, TypeScript } from 'vue-component-meta';
 import { getComponentMetaOfType } from 'vue-component-meta/lib/componentMeta';
-import { findVariable, getComponentType } from './componentMeta';
+import { findVariable, getComponentNames, getComponentType } from './componentMeta';
 
 type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
 type Project = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Project;
@@ -37,6 +37,8 @@ export interface TypeScriptProjectResolver {
 	getComponentMeta(fileName: string, virtualCode: VueVirtualCode, tag: string): Promise<ComponentMeta | undefined>;
 	/** The intrinsic element names available in the template of the Vue file `fileName`. */
 	getElementNames(fileName: string): Promise<string[] | undefined>;
+	/** The component names available in the template of the Vue file `fileName`. */
+	getComponentNames(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
 	/** The directive names (`vFoo`) available in the template of the Vue file `fileName`. */
 	getComponentDirectives(fileName: string): Promise<string[] | undefined>;
 	/** Releases the file opened by `getProject`. */
@@ -140,6 +142,12 @@ export async function connectTypeScriptProjectResolver(
 				const type = intrinsics && await project.checker.getTypeAtLocation(intrinsics);
 				return type && (await type.getProperties()).map(symbol => symbol.name);
 			});
+		},
+		getComponentNames(fileName, virtualCode) {
+			return withSourceFile(
+				fileName,
+				(project, sourceFile) => getComponentNames(ts, project.checker, sourceFile, virtualCode),
+			);
 		},
 		getComponentDirectives(fileName) {
 			return withSourceFile(fileName, async (project, sourceFile) => {

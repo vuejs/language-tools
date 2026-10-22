@@ -471,6 +471,7 @@ test('Auto import', async () => {
 		  "cloneVNode",
 		  "Comment",
 		  "Comment$1",
+		  "Comp",
 		  "compile",
 		  "compileToFunction",
 		  "computed",
@@ -1264,6 +1265,31 @@ test('#5847', async () => {
 		  ],
 		}
 	`);
+});
+
+test('Setup bindings complete as components by type', async () => {
+	const labels = (await requestCompletionListToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<script setup lang="ts">
+		import { defineComponent, ref } from 'vue';
+		const DefinedComp = defineComponent({});
+		const SetupComp = { setup() {} };
+		const RenderComp = { render() {} };
+		const TemplateComp = { template: '<div />' };
+		function PlainFunction() {}
+		const RefValue = ref(0);
+		const PrimitiveValue = 1;
+		</script>
+
+		<template><| /></template>
+	`,
+	)).items.map(item => item.label);
+	expect(labels).toEqual(expect.arrayContaining(['DefinedComp', 'SetupComp', 'RenderComp', 'TemplateComp']));
+	expect(labels).not.toContain('PlainFunction');
+	expect(labels).not.toContain('RefValue');
+	expect(labels).not.toContain('PrimitiveValue');
 });
 
 test('#6110', async () => {

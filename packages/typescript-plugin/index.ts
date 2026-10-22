@@ -12,7 +12,6 @@ import {
 import { getExtensionFormats } from './lib/contentMappers';
 import type { Requests } from './lib/requests';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
-import { getComponentNames } from './lib/requests/getComponentNames';
 import { getComponentProps } from './lib/requests/getComponentProps';
 import { getComponentSlots } from './lib/requests/getComponentSlots';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
@@ -244,11 +243,6 @@ export = createLanguageServicePlugin(
 					resolveCompletionEntryDetails(language, details, data);
 				}
 				return createResponse(details);
-			});
-			session.addProtocolHandler('_vue:getComponentNames', request => {
-				const [fileName]: Parameters<Requests['getComponentNames']> = request.arguments;
-				const { program, virtualCode } = getProjectAndVirtualCode(fileName);
-				return createResponse(getComponentNames(ts, program, virtualCode));
 			});
 			session.addProtocolHandler('_vue:getComponentProps', request => {
 				const [fileName, position]: Parameters<Requests['getComponentProps']> = request.arguments;

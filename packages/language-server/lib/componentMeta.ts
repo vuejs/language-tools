@@ -76,6 +76,53 @@ export async function getComponentType(
 	}
 }
 
+/**
+ * The component names available in a Vue file's template: the registered components, the file itself, and the
+ * setup bindings whose type is a component.
+ */
+export async function getComponentNames(
+	ts: TypeScript,
+	checker: Checker,
+	sourceFile: SourceFile,
+	virtualCode: VueVirtualCode,
+) {
+	const components = findVariable(ts, sourceFile, names.components);
+	if (!components) {
+		return;
+	}
+	const componentNames = (await (await checker.getTypeAtLocation(components)).getProperties())
+		.map(symbol => symbol.name)
+		.filter(name => !name.includes('$') && !name.startsWith('_'));
+	componentNames.push(getSelfComponentName(virtualCode));
+
+	for (const binding of tsCodegen.get(virtualCode.ir)?.getSetupBindings() ?? []) {
+		const symbol = await checker.resolveName(binding, ts.SymbolFlags.Value, components);
+		if (symbol && await isComponentType(await getTypeOfSymbol(ts, checker, symbol, components))) {
+			componentNames.push(binding);
+		}
+	}
+
+	return [...new Set(componentNames)];
+}
+
+/**
+ * A constructor (`DefineComponent`, an SFC's default export, a class component) or a component options object.
+ * Plain functions are not counted, as their type cannot tell a functional component from any other function.
+ */
+async function isComponentType(type: Type) {
+	if ((await type.getConstructSignatures()).length) {
+		return true;
+	}
+	if (type.isObjectType()) {
+		for (const name of ['setup', 'render', 'template']) {
+			if (await type.getProperty(name)) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 async function getTypeOfSymbol(ts: TypeScript, checker: Checker, symbol: Symbol, location: Node) {
 	if (symbol.flags & ts.SymbolFlags.Alias) {
 		symbol = await checker.getAliasedSymbol(symbol);
