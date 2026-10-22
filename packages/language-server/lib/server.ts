@@ -17,6 +17,9 @@ import {
 	createVueLanguageServicePlugins,
 	type LanguageService,
 } from '@vue/language-service';
+import type { TextEdit } from '@vue/language-service/lib/requests';
+import { capitalize } from '@vue/shared';
+import * as path from 'node:path';
 import { URI } from 'vscode-uri';
 import { getComponentPropsOffset, toServiceScriptOffset, toSourceOffset } from './componentMeta';
 import { createReactivityAnalyzer, getInterpolationRanges, type ReactivityAnalysisParams } from './reactivity';
@@ -25,6 +28,8 @@ import {
 	type TypeScriptProject,
 	type TypeScriptProjectResolver,
 } from './typescriptProject';
+
+const moduleSpecifierRE = /\bfrom\s*(['"])(.+?)\1/;
 
 /** A `contentMappers[]` entry, as written in a tsconfig or contributed for inferred projects. */
 interface ContentMapperEntry {
@@ -264,17 +269,54 @@ export function startServer(ts: typeof import('typescript')) {
 				async getComponentImportEdits(fileName, component) {
 					try {
 						const script = await getVueScript(fileName);
-						if (!script) {
+						if (script) {
+							return wrapImportEdits(
+								script.virtualCode,
+								await (await connectTypeScriptApi()).getComponentImportEdits(fileName, component),
+							);
+						}
+					}
+					catch {}
+				},
+				async getImportFixes(fileName, position, isComponentTag) {
+					try {
+						const script = await getVueScript(fileName);
+						const offset = script && toServiceScriptOffset(
+							script.language,
+							script.sourceScript,
+							script.virtualCode,
+							position,
+							data => !!data.__importCompletion,
+						);
+						if (!script || offset === undefined) {
 							return;
 						}
-						const edits = await (await connectTypeScriptApi()).getComponentImportEdits(fileName, component);
-						const [first, ...rest] = edits ?? [];
-						// The IR fills in an empty `scriptSetup` for an SFC without script.
-						const descriptor = script.virtualCode.vueSfc?.descriptor;
-						if (first && !descriptor?.script && !descriptor?.scriptSetup) {
-							return [{ ...first, newText: `<script setup lang="ts">${first.newText}</script>\n\n` }, ...rest];
+						const api = await connectTypeScriptApi();
+						const name = await api.getUnresolvedName(fileName, offset);
+						if (!name) {
+							return;
 						}
-						return edits;
+						let candidates: { fileName: string; edits: readonly TextEdit[] | undefined }[];
+						if (isComponentTag) {
+							const components = (await api.getAutoImportComponents(fileName) ?? [])
+								.filter(component => component.name === name || component.name === capitalize(name));
+							candidates = await Promise.all(components.map(async component => ({
+								fileName: component.fileName,
+								edits: await api.getComponentImportEdits(fileName, component),
+							})));
+						}
+						else {
+							candidates = await api.getNamedImportFixes(fileName, name) ?? [];
+						}
+						return candidates.flatMap(({ fileName: moduleFileName, edits }) => {
+							const wrapped = wrapImportEdits(script.virtualCode, edits);
+							if (!wrapped?.length) {
+								return [];
+							}
+							const specifier = wrapped.map(edit => moduleSpecifierRE.exec(edit.newText)?.[2]).find(Boolean)
+								?? path.posix.relative(path.posix.dirname(fileName), moduleFileName);
+							return [{ title: `Add import from "${specifier}"`, edits: wrapped }];
+						});
 					}
 					catch {}
 				},
@@ -329,6 +371,22 @@ export function startServer(ts: typeof import('typescript')) {
 		});
 
 		return result;
+
+		/**
+		 * Wraps the import edits for an SFC without script in a new `<script setup>` at the top of the file; the
+		 * position TypeScript picks there means nothing, as the IR fills in an empty `scriptSetup`.
+		 */
+		function wrapImportEdits(virtualCode: VueVirtualCode, edits: readonly TextEdit[] | undefined) {
+			const [first, ...rest] = edits ?? [];
+			const descriptor = virtualCode.vueSfc?.descriptor;
+			if (first && !descriptor?.script && !descriptor?.scriptSetup) {
+				return [
+					{ pos: 0, end: 0, newText: `<script setup lang="ts">\n${first.newText.trim()}\n</script>\n\n` },
+					...rest,
+				];
+			}
+			return edits;
+		}
 
 		async function getVueScript(fileName: string) {
 			const uri = URI.file(fileName);

@@ -23,6 +23,7 @@ import { create as createVueScopedClassLinksPlugin } from './lib/plugins/vue-sco
 import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
 import { create as createVueSuggestDefineAssignmentPlugin } from './lib/plugins/vue-suggest-define-assignment';
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
+import { create as createVueTemplateImportFixPlugin } from './lib/plugins/vue-template-import-fix';
 import { create as createVueTemplateRefLinksPlugin } from './lib/plugins/vue-template-ref-links';
 import type { Requests } from './lib/requests';
 
@@ -65,6 +66,7 @@ export function createVueLanguageServicePlugins(
 		createVueDocumentDropPlugin(ts, client),
 		createVueExtractFilePlugin(ts, client),
 		createVueMissingPropsHintsPlugin(client),
+		createVueTemplateImportFixPlugin(client),
 		createVueTemplatePlugin('html', client),
 		createVueTemplatePlugin('jade', client),
 	];

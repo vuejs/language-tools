@@ -126,6 +126,49 @@ export async function getAutoImportComponents(
 	program: Program,
 	checker: Checker,
 ): Promise<AutoImportComponent[]> {
+	const modules = await getProjectModules(program, checker);
+	const components = await Promise.all(
+		modules.map(async ({ fileName, moduleSymbol }): Promise<AutoImportComponent[]> => {
+			const exports = await checker.getExportsOfModule(moduleSymbol);
+			const types = await checker.getTypeOfSymbol(
+				await Promise.all(
+					exports.map(async symbol =>
+						symbol.flags & ts.SymbolFlags.Alias ? await checker.getAliasedSymbol(symbol) : symbol
+					),
+				),
+			);
+			const isComponent = await Promise.all(types.map(isComponentType));
+			return exports
+				.filter((_, j) => isComponent[j])
+				.map(({ name: exportName }) => ({
+					name: exportName === 'default'
+						? getSelfComponentName(fileName)
+						: exportName,
+					fileName,
+					exportName,
+					description: path.posix.relative(program.getCurrentDirectory(), fileName),
+				}));
+		}),
+	);
+	return components.flat();
+}
+
+/** The named value exports called `name` of the modules of a program, other than external libraries. */
+export async function getNamedValueExports(ts: TypeScript, program: Program, checker: Checker, name: string) {
+	const modules = await getProjectModules(program, checker);
+	const exports = await Promise.all(modules.map(async ({ fileName, moduleSymbol }) => {
+		let symbol = await checker.getMemberInModuleExports(moduleSymbol, name);
+		const target = symbol && symbol.flags & ts.SymbolFlags.Alias ? await checker.getAliasedSymbol(symbol) : symbol;
+		if (!target || !(target.flags & ts.SymbolFlags.Value)) {
+			symbol = undefined;
+		}
+		return symbol && { fileName, symbol };
+	}));
+	return exports.filter(entry => !!entry);
+}
+
+/** The modules of a program, other than external libraries, sorted by file name. */
+async function getProjectModules(program: Program, checker: Checker) {
 	// The program's order depends on which files are open.
 	const allFileNames = [...await program.getSourceFileNames()].sort();
 	const metadata = await Promise.all(allFileNames.map(fileName => program.getSourceFileMetadata(fileName)));
@@ -133,33 +176,20 @@ export async function getAutoImportComponents(
 		metadata[i] && !metadata[i].isFromExternalLibrary && !metadata[i].isDefaultLibrary
 	);
 	const moduleSymbols = await checker.getSymbolOfSourceFile(fileNames);
+	return fileNames.flatMap((fileName, i) => {
+		const moduleSymbol = moduleSymbols[i];
+		return moduleSymbol ? [{ fileName, moduleSymbol }] : [];
+	});
+}
 
-	const components = await Promise.all(moduleSymbols.map(async (moduleSymbol, i): Promise<AutoImportComponent[]> => {
-		if (!moduleSymbol) {
-			return [];
-		}
-		const fileName = fileNames[i]!;
-		const exports = await checker.getExportsOfModule(moduleSymbol);
-		const types = await checker.getTypeOfSymbol(
-			await Promise.all(
-				exports.map(async symbol =>
-					symbol.flags & ts.SymbolFlags.Alias ? await checker.getAliasedSymbol(symbol) : symbol
-				),
-			),
-		);
-		const isComponent = await Promise.all(types.map(isComponentType));
-		return exports
-			.filter((_, j) => isComponent[j])
-			.map(({ name: exportName }) => ({
-				name: exportName === 'default'
-					? getSelfComponentName(fileName)
-					: exportName,
-				fileName,
-				exportName,
-				description: path.posix.relative(program.getCurrentDirectory(), fileName),
-			}));
-	}));
-	return components.flat();
+/**
+ * The name of the identifier at `offset`, an offset in the generated service script, when it resolves to no symbol.
+ */
+export async function getUnresolvedName(ts: TypeScript, checker: Checker, sourceFile: SourceFile, offset: number) {
+	const identifier = findIdentifier(ts, sourceFile, offset);
+	if (identifier && ts.isIdentifier(identifier) && !await checker.getSymbolAtLocation(identifier)) {
+		return identifier.text;
+	}
 }
 
 /**
@@ -298,11 +328,7 @@ export async function collectExtractProps(
 
 /** Whether the identifier at `offset`, an offset in the generated service script, is a `Ref`. */
 export async function isRefAtOffset(ts: TypeScript, checker: Checker, sourceFile: SourceFile, offset: number) {
-	const identifier = findNode(
-		sourceFile,
-		node => ts.isIdentifier(node) && node.getStart(sourceFile) <= offset && offset <= node.end,
-		node => node.pos <= offset && offset <= node.end,
-	);
+	const identifier = findIdentifier(ts, sourceFile, offset);
 	if (!identifier) {
 		return false;
 	}
@@ -475,6 +501,14 @@ async function getSymbolOfTypeNode(ts: TypeScript, checker: Checker, node: TypeN
 
 export function findVariable(ts: TypeScript, sourceFile: SourceFile, name: string) {
 	return findNode(sourceFile, node => ts.isVariableDeclaration(node) && node.name.getText() === name);
+}
+
+function findIdentifier(ts: TypeScript, sourceFile: SourceFile, offset: number) {
+	return findNode(
+		sourceFile,
+		node => ts.isIdentifier(node) && node.getStart(sourceFile) <= offset && offset <= node.end,
+		node => node.pos <= offset && offset <= node.end,
+	);
 }
 
 function searchDefaultImportIdentifier(ts: TypeScript, sourceFile: SourceFile, name: string) {

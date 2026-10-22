@@ -19,6 +19,8 @@ import {
 	getComponentSlots,
 	getComponentType,
 	getElementAttrs,
+	getNamedValueExports,
+	getUnresolvedName,
 	isRefAtOffset,
 } from './componentMeta';
 
@@ -50,6 +52,13 @@ export interface TypeScriptProjectResolver {
 	getAutoImportComponents(fileName: string): Promise<AutoImportComponent[] | undefined>;
 	/** The TypeScript language server's edits that import `component` into `fileName` under `component.name`. */
 	getComponentImportEdits(fileName: string, component: AutoImportComponent): Promise<readonly TextEdit[] | undefined>;
+	/** The name of the identifier at `offset` in the service script of the Vue file `fileName`, when it resolves to nothing. */
+	getUnresolvedName(fileName: string, offset: number): Promise<string | undefined>;
+	/** The TypeScript language server's edits that import each named value export called `name` into `fileName`. */
+	getNamedImportFixes(
+		fileName: string,
+		name: string,
+	): Promise<{ fileName: string; edits: readonly TextEdit[] }[] | undefined>;
 	/** The metadata of the component that `tag` refers to in the template of the Vue file `fileName`. */
 	getComponentMeta(fileName: string, virtualCode: VueVirtualCode, tag: string): Promise<ComponentMeta | undefined>;
 	/** The intrinsic element names available in the template of the Vue file `fileName`. */
@@ -195,6 +204,24 @@ export async function connectTypeScriptProjectResolver(
 				return exportName === 'default'
 					? edits.map(edit => ({ ...edit, newText: edit.newText.replace(defaultImportRE, `import ${name}`) }))
 					: edits;
+			});
+		},
+		getUnresolvedName(fileName, offset) {
+			return withSourceFile(
+				fileName,
+				(project, sourceFile) => getUnresolvedName(ts, project.checker, sourceFile, offset),
+			);
+		},
+		getNamedImportFixes(fileName, name) {
+			return withProject(fileName, async project => {
+				const exports = await getNamedValueExports(ts, project.program, project.checker, name);
+				return await Promise.all(exports.map(async ({ fileName: moduleFileName, symbol }) => ({
+					fileName: moduleFileName,
+					// A template use site needs a value import.
+					edits: await project.languageService.getImportEditsForSymbols(fileName, [symbol], {
+						isValidTypeOnlyUseSite: false,
+					}),
+				})));
 			});
 		},
 		getComponentMeta(fileName, virtualCode, tag) {

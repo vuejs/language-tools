@@ -290,7 +290,7 @@ test('Auto import picks up the components another file changes', async () => {
 
 test('Auto import into a Vue file without script', async () => {
 	expect(await applyCompletionItem('tsconfigProject/fixture.vue', `<template><| /></template>`, 'Comp')).toBe(
-		`<script setup lang="ts">import { Comp } from './comp';\n\n</script>\n\n<template><Comp /></template>`,
+		`<script setup lang="ts">\nimport { Comp } from './comp';\n</script>\n\n<template><Comp /></template>`,
 	);
 });
 

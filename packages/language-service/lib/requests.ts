@@ -24,6 +24,12 @@ export interface ComponentPropInfo {
 	boolean?: boolean;
 }
 
+/** A quick fix that imports an unresolved name. */
+export interface ImportFix {
+	title: string;
+	edits: readonly TextEdit[];
+}
+
 export interface ExtractPropsInfo {
 	name: string;
 	type: string;
@@ -77,4 +83,13 @@ export interface Requests {
 		fileName: string,
 		component: AutoImportComponent,
 	): Response<readonly TextEdit[]>;
+	/**
+	 * Quick fixes that import the unresolved name at `position` in the template of the Vue file `fileName`: the
+	 * components named like the tag when `isComponentTag`, otherwise the named exports of the name.
+	 */
+	getImportFixes(
+		fileName: string,
+		position: number,
+		isComponentTag: boolean,
+	): Response<ImportFix[]>;
 }
