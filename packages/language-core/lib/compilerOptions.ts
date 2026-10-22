@@ -116,7 +116,7 @@ export function createParsedCommandLine(
 }
 
 /**
- * Resolves a tsconfig's `contentMappers` the way tsgo does: the array is never merged; the config's own
+ * Resolves a tsconfig's `contentMappers` the way TS 7 does: the array is never merged; the config's own
  * array wins (even an empty one), otherwise the last `extends` entry that resolves to one wins.
  */
 export function resolveContentMappers(
