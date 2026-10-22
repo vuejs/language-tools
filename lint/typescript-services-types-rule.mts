@@ -1,5 +1,9 @@
 import { defineRule } from '@tsslint/config';
-import type * as ts from 'typescript';
+import * as fs from 'node:fs';
+import { createRequire } from 'node:module';
+import * as path from 'node:path';
+import type { Expression } from 'typescript-7/ast';
+import { type Symbol, SymbolFlags, type Type } from 'typescript-7/sync';
 
 /*
  * services types list: https://github.com/microsoft/TypeScript/blob/38d95c8001300f525fd601dd0ce6d0ff5f12baee/src/services/types.ts
@@ -102,16 +106,32 @@ for (const [typeName, properties] of Object.entries(SERVICES_TYPES)) {
 	tsServicesTypes.set(typeName, new Set(properties));
 }
 
-const TYPESCRIPT_PACKAGE_PATH = '/node_modules/typescript/';
+const typescriptDirs = new Map<string, string>();
 
-export default defineRule(({ typescript: ts, file, program, report }) => {
-	const typeChecker = program.getTypeChecker();
+/** The real directory of the `typescript` package a file resolves, which may be installed under another name. */
+function getTypescriptDir(fileName: string) {
+	const dir = path.dirname(fileName);
+	let typescriptDir = typescriptDirs.get(dir);
+	if (typescriptDir === undefined) {
+		const packageJsonPath = createRequire(fileName).resolve('typescript/package.json');
+		typescriptDir = normalize(fs.realpathSync(path.dirname(packageJsonPath))) + '/';
+		typescriptDirs.set(dir, typescriptDir);
+	}
+	return typescriptDir;
+}
 
-	ts.forEachChild(file, function visit(node) {
+function normalize(fileName: string) {
+	return fileName.replace(/\\/g, '/').toLowerCase();
+}
+
+export default defineRule(({ typescript: ts, file, checker, report }) => {
+	const typescriptDir = getTypescriptDir(file.fileName);
+
+	file.forEachChild(function visit(node): void {
 		if (ts.isPropertyAccessExpression(node)) {
 			checkAccess(node.expression, node.name.text, node.name.getStart(file), node.name.getEnd());
 		}
-		else if (ts.isElementAccessExpression(node) && ts.isStringLiteralLike(node.argumentExpression)) {
+		else if (ts.isElementAccessExpression(node) && ts.isStringLiteralLikeNode(node.argumentExpression)) {
 			checkAccess(
 				node.expression,
 				node.argumentExpression.text,
@@ -119,36 +139,28 @@ export default defineRule(({ typescript: ts, file, program, report }) => {
 				node.argumentExpression.getEnd(),
 			);
 		}
-		ts.forEachChild(node, visit);
+		node.forEachChild(visit);
 	});
 
-	function isUnionOrIntersection(type: ts.Type): type is ts.UnionOrIntersectionType {
-		return (type.flags & (ts.TypeFlags.Union | ts.TypeFlags.Intersection)) !== 0;
-	}
-
-	function isTypescriptSourceFile(sourceFile: ts.SourceFile) {
-		return sourceFile.fileName.replace(/\\/g, '/').includes(TYPESCRIPT_PACKAGE_PATH);
-	}
-
-	function isTypescriptSymbol(symbol: ts.Symbol, typeName: string) {
-		if (symbol.getName() !== typeName) {
+	function isTypescriptSymbol(symbol: Symbol, typeName: string) {
+		if (symbol.name !== typeName) {
 			return false;
 		}
-		return (symbol.getDeclarations() ?? []).some(declaration => isTypescriptSourceFile(declaration.getSourceFile()));
+		return symbol.declarations.some(declaration => normalize(declaration.path).startsWith(typescriptDir));
 	}
 
-	function isTargetType(type: ts.Type, typeName: string): boolean {
-		if (isUnionOrIntersection(type)) {
-			return type.types.some(inner => isTargetType(inner, typeName));
+	function isTargetType(type: Type, typeName: string): boolean {
+		if (type.isUnionType() || type.isIntersectionType()) {
+			return type.getTypes().some(inner => isTargetType(inner, typeName));
 		}
 
-		const symbol = type.aliasSymbol ?? type.getSymbol();
+		const symbol = type.getAliasSymbol() ?? type.getSymbol();
 		if (!symbol) {
 			return false;
 		}
 
-		if (symbol.flags & ts.SymbolFlags.Alias) {
-			const aliasedSymbol = typeChecker.getAliasedSymbol(symbol);
+		if (symbol.flags & SymbolFlags.Alias) {
+			const aliasedSymbol = checker.getAliasedSymbol(symbol);
 			if (aliasedSymbol && isTypescriptSymbol(aliasedSymbol, typeName)) {
 				return true;
 			}
@@ -157,12 +169,12 @@ export default defineRule(({ typescript: ts, file, program, report }) => {
 		return isTypescriptSymbol(symbol, typeName);
 	}
 
-	function checkAccess(target: ts.Expression, propertyName: string, start: number, end: number) {
+	function checkAccess(target: Expression, propertyName: string, start: number, end: number) {
 		for (const [typeName, properties] of tsServicesTypes) {
 			if (!properties.has(propertyName)) {
 				continue;
 			}
-			const type = typeChecker.getTypeAtLocation(target);
+			const type = checker.getTypeAtLocation(target);
 			if (isTargetType(type, typeName)) {
 				report('TypeScript services types is used.', start, end);
 				break;
