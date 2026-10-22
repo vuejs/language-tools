@@ -1,13 +1,12 @@
-import { names, tsCodegen, type VueVirtualCode } from '@vue/language-core';
+import { getBaseNameWithoutExtension, names, tsCodegen, type VueVirtualCode } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import * as path from 'path-browserify';
 import type * as ts from 'typescript';
 
 export function getComponentType(
 	ts: typeof import('typescript'),
 	checker: ts.TypeChecker,
 	sourceFile: ts.SourceFile,
-	{ fileName, ir }: VueVirtualCode,
+	virtualCode: VueVirtualCode,
 	tag: string,
 ): {
 	node: ts.Node;
@@ -18,7 +17,7 @@ export function getComponentType(
 		camelize(tag),
 		capitalize(camelize(tag)),
 	]);
-	const codegen = tsCodegen.get(ir);
+	const codegen = tsCodegen.get(virtualCode.ir);
 
 	for (const importedName of codegen?.getImportedComponents() ?? []) {
 		if (testNames.has(importedName)) {
@@ -54,22 +53,21 @@ export function getComponentType(
 			}
 		}
 		else {
-			const name = getSelfComponentName(fileName);
+			const name = getSelfComponentName(virtualCode);
 			if (name === capitalize(camelize(tag))) {
 				return getVariableType(ts, checker, sourceFile, names.export);
 			}
 		}
 	}
 
-	const selfName = getSelfComponentName(fileName);
+	const selfName = getSelfComponentName(virtualCode);
 	if (testNames.has(selfName)) {
 		return getVariableType(ts, checker, sourceFile, names.export);
 	}
 }
 
-export function getSelfComponentName(fileName: string) {
-	const baseName = path.basename(fileName);
-	return capitalize(camelize(baseName.slice(0, baseName.lastIndexOf('.'))));
+export function getSelfComponentName({ fileName, vueCompilerOptions }: VueVirtualCode) {
+	return capitalize(camelize(getBaseNameWithoutExtension(fileName, vueCompilerOptions)));
 }
 
 export function getVariableType(

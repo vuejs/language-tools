@@ -1,7 +1,8 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import { hyphenate } from '@vue/shared';
+import * as path from 'path-browserify';
 import type * as ts from 'typescript';
-import type { IRTemplate, TextRange } from '../types';
+import type { IRTemplate, TextRange, VueCompilerOptions } from '../types';
 
 export { hyphenate as hyphenateTag } from '@vue/shared';
 
@@ -60,4 +61,16 @@ export function getNodeText(
 ) {
 	const { start, end } = getStartEnd(ts, node, ast);
 	return ast.text.slice(start, end);
+}
+
+/** Strips the longest matching key of `extensionFormats` (e.g. `.vue.md`), or else the last extension. */
+export function getBaseNameWithoutExtension(fileName: string, vueCompilerOptions: VueCompilerOptions) {
+	const baseName = path.basename(fileName);
+	let end = baseName.lastIndexOf('.');
+	for (const extension in vueCompilerOptions.extensionFormats) {
+		if (baseName.endsWith(extension) && baseName.length - extension.length < end) {
+			end = baseName.length - extension.length;
+		}
+	}
+	return baseName.slice(0, end);
 }
