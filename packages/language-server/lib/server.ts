@@ -19,7 +19,6 @@ import {
 } from '@vue/language-service';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import { resolveModuleName } from './moduleResolution';
 import {
 	connectTypeScriptProjectResolver,
 	type TypeScriptProject,
@@ -195,15 +194,6 @@ export function startServer(ts: typeof import('typescript')) {
 				},
 				isRefAtPosition(...args) {
 					return sendTsServerRequest('_vue:isRefAtPosition', args);
-				},
-				async resolveModuleName(fileName, moduleName, allowNonExistent) {
-					return resolveModuleName(
-						ts,
-						(await getTypeScriptProject(fileName))?.parsedCommandLine.options ?? {},
-						fileName,
-						moduleName,
-						allowNonExistent,
-					);
 				},
 				getDocumentHighlights(fileName, position) {
 					return sendTsServerRequest(

@@ -17,7 +17,7 @@ import {
 	type VueVirtualCode,
 } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import { create as createHtmlService, resolveReference } from 'volar-service-html';
+import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import { applyCompletionEntryDetails, convertCompletionInfo } from 'volar-service-typescript/lib/utils/lspConverters';
 import * as html from 'vscode-html-languageservice';
@@ -60,46 +60,10 @@ export function create(
 	// htmlData is shared by every project's service instance
 	// lock for avoid concurrent requests from different projects
 	let htmlDataLock = Promise.resolve();
-	let modulePathCache:
-		| Map<string, Promise<string | null | undefined> | string | null | undefined>
-		| undefined;
 
 	const onDidChangeCustomDataListeners = new Set<() => void>();
 	const serviceOptions: Parameters<typeof createHtmlService>[0] = {
 		useDefaultDataProvider: false,
-		getDocumentContext: context => ({
-			resolveReference(ref, base) {
-				let baseUri = URI.parse(base);
-				const decoded = context.decodeEmbeddedDocumentUri(baseUri);
-				if (decoded) {
-					baseUri = decoded[0];
-				}
-				if (
-					modulePathCache
-					&& baseUri.scheme === 'file'
-					&& !ref.startsWith('./')
-					&& !ref.startsWith('../')
-				) {
-					const map = modulePathCache;
-					if (!map.has(ref)) {
-						const fileName = baseUri.fsPath.replace(/\\/g, '/');
-						const promise = tsserver.resolveModuleName(fileName, ref);
-						map.set(ref, promise);
-						if (promise instanceof Promise) {
-							promise.then(res => map.set(ref, res));
-						}
-					}
-					const cached = modulePathCache.get(ref);
-					if (cached instanceof Promise) {
-						throw cached;
-					}
-					if (cached) {
-						return URI.file(cached).toString();
-					}
-				}
-				return resolveReference(ref, baseUri, context.env.workspaceFolders);
-			},
-		}),
 		getCustomData() {
 			return customData?.length ? htmlData.concat(customData) : htmlData;
 		},
@@ -545,25 +509,6 @@ export function create(
 							return contents.some(hasContents);
 						}
 						return !!contents.value;
-					}
-				},
-
-				async provideDocumentLinks(document, token) {
-					modulePathCache = new Map();
-					while (true) {
-						try {
-							const result = await baseServiceInstance.provideDocumentLinks?.(document, token);
-							modulePathCache = undefined;
-							return result;
-						}
-						catch (e) {
-							if (e instanceof Promise) {
-								await e;
-							}
-							else {
-								throw e;
-							}
-						}
 					}
 				},
 			};

@@ -20,7 +20,6 @@ import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
 import { isRefAtPosition } from './lib/requests/isRefAtPosition';
-import { resolveModuleName } from './lib/requests/resolveModuleName';
 
 const projectToOriginalLanguageService = new WeakMap<ts.server.Project, ts.LanguageService>();
 
@@ -332,11 +331,6 @@ export = createLanguageServicePlugin(
 						position,
 					),
 				);
-			});
-			session.addProtocolHandler('_vue:resolveModuleName', request => {
-				const [fileName, ...args]: Parameters<Requests['resolveModuleName']> = request.arguments;
-				const { project } = getProject(fileName);
-				return createResponse(resolveModuleName(ts, project, fileName, ...args));
 			});
 
 			projectService.logger.info('Vue specific commands are successfully added.');

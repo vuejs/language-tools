@@ -38,7 +38,7 @@ import Comp from './module-rename-comp-renamed.vue'
 	).toBe(false);
 });
 
-test('resolves module names with the owning project in a multi-project session', async () => {
+test('#6152 answers requests with the owning project in a multi-project session', async () => {
 	const server = await getLanguageServer();
 	const firstProjectFile = path.join(testWorkspacePath, 'tsconfigProject', 'fixture.vue');
 	const secondProjectFile = path.join(testWorkspacePath, 'tsconfigProject2', 'fixture.vue');
@@ -52,42 +52,41 @@ test('resolves module names with the owning project in a multi-project session',
 		}
 	}
 
-	// The `@2/*` path alias only exists in tsconfigProject2, so the module can
-	// only be resolved with the second project's compilerOptions.
+	// The `@2/*` path alias only exists in tsconfigProject2, and is shorter than `../../fixture`,
+	// so only the second project's program and compilerOptions produce it.
 	const res = await server.tsserver.message({
 		seq: server.nextSeq(),
-		command: '_vue:resolveModuleName',
-		arguments: [secondProjectFile, '@2/fixture'],
+		command: '_vue:getImportPathForFile',
+		arguments: [
+			path.join(testWorkspacePath, 'tsconfigProject2', 'nested', 'deep', 'importer.ts'),
+			path.join(testWorkspacePath, 'tsconfigProject2', 'fixture.ts'),
+		],
 	});
 	expect(res.success).toBe(true);
-	// to lower case for fixing windows path
-	expect(res.body?.replace(/\\/g, '/').toLowerCase()).toBe(
-		path.join(testWorkspacePath, 'tsconfigProject2', 'fixture.ts').replace(/\\/g, '/').toLowerCase(),
-	);
+	expect(res.body).toBe('@2/fixture');
 });
 
-test('resolves module names with the owning project without the tsserver bridge', async () => {
+test('a <style> @import is resolved by the CSS language service alone', async () => {
 	const server = await getLanguageServer();
-	const fileName = path.join(testWorkspacePath, 'tsconfigProject2', 'module-alias.vue');
-	// The `@2/*` alias only exists in tsconfigProject2, so the CSS `@import` can only resolve with the
-	// owning project's compilerOptions. The target is in a subdirectory because the fallback for
-	// unresolved modules keeps only the basename, which would otherwise land on the same path.
+	const fileName = path.join(testWorkspacePath, 'tsconfigProject2', 'style-import.vue');
 	// On disk, so the TypeScript language server can find the file's project.
 	const document = await openDocument(
 		server,
 		fileName,
 		`<template><div /></template>
 <style>
+@import "./styles/fixture.css";
 @import "@2/styles/fixture.css";
 </style>
 `,
 	);
 
 	const links = await server.vueserver.sendDocumentLinkRequest(document.uri);
-	expect(links).toHaveLength(1);
-	expect(links![0]!.target).toBe(
+	expect(links?.map(link => link.target)).toEqual([
 		URI.file(path.join(testWorkspacePath, 'tsconfigProject2', 'styles', 'fixture.css')).toString(),
-	);
+		// a CSS URL, not a module specifier: the project's `paths` alias does not apply
+		URI.file(path.join(testWorkspacePath, 'tsconfigProject2', '@2', 'styles', 'fixture.css')).toString(),
+	]);
 });
 
 const openedDocuments: TextDocument[] = [];

@@ -62,7 +62,7 @@ export function createVueLanguageServicePlugins(
 		createVueInlayHintsPlugin(ts),
 
 		// type aware plugins
-		createCssPlugin(client),
+		createCssPlugin(),
 		createVueAutoDotValuePlugin(ts, client),
 		createVueDocumentDropPlugin(ts, client),
 		createVueDocumentHighlightsPlugin(client),

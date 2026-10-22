@@ -46,11 +46,6 @@ test('a content-mapped .vue file belongs to the tsconfig that declares the mappe
 
 test('a solution-style tsconfig hands the file to the referenced project', async () => {
 	await expectConfigFileName('tsconfigSolution/src/App.vue', 'tsconfigSolution/generated/tsconfig.app.json');
-	const project = await resolver.getProject(fileName('tsconfigSolution/src/App.vue'));
-	expect(project!.parsedCommandLine.options.paths).toEqual({ '@solution/*': ['../src/*'] });
-	// `resolveModuleName` needs the directory `paths` are relative to
-	const pathsBasePath = project!.parsedCommandLine.options.pathsBasePath as string;
-	expect(path.relative(pathsBasePath, path.join(testWorkspacePath, 'tsconfigSolution/generated'))).toBe('');
 });
 
 test('an own contentMappers array replaces the inherited one', async () => {
