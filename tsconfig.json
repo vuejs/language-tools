@@ -17,6 +17,7 @@
 		"packages/*/scripts",
 		"packages/*/tests",
 		"tsslint.config.ts",
-		"lint/*.ts"
+		"lint/*.ts",
+		"lint/*.mts"
 	]
 }

@@ -1,7 +1,7 @@
 import { defineRule } from '@tsslint/config';
 
 export default defineRule(({ typescript: ts, file, report }) => {
-	ts.forEachChild(file, function visit(node) {
+	file.forEachChild(function visit(node): void {
 		if (
 			ts.isImportDeclaration(node)
 			&& node.importClause
@@ -44,6 +44,6 @@ export default defineRule(({ typescript: ts, file, report }) => {
 				],
 			);
 		}
-		ts.forEachChild(node, visit);
+		node.forEachChild(visit);
 	});
 });
