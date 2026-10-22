@@ -976,6 +976,25 @@ test('Slot name (bare v-slot)', async () => {
 	expect(completions?.find(item => item.name === 'default')).toBeUndefined();
 });
 
+test('Slot element name', async () => {
+	for (const define of ['defineSlots', 'const slots = defineSlots']) {
+		const items = (await requestCompletionListToVueServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<slot name="|" />
+			</template>
+
+			<script setup lang="ts">
+			${define}<{ header(): any; footer(): any }>();
+			</script>
+			`,
+		)).items;
+		expect(items.map(item => item.label)).toEqual(expect.arrayContaining(['header', 'footer']));
+	}
+});
+
 test('#2454', async () => {
 	await requestCompletionItemToVueServer(
 		'tsconfigProject/fixture.vue',

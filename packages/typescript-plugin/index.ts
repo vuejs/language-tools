@@ -12,7 +12,6 @@ import {
 import { getExtensionFormats } from './lib/contentMappers';
 import type { Requests } from './lib/requests';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
-import { getComponentSlots } from './lib/requests/getComponentSlots';
 import { isRefAtPosition } from './lib/requests/isRefAtPosition';
 
 const projectToOriginalLanguageService = new WeakMap<ts.server.Project, ts.LanguageService>();
@@ -241,11 +240,6 @@ export = createLanguageServicePlugin(
 					resolveCompletionEntryDetails(language, details, data);
 				}
 				return createResponse(details);
-			});
-			session.addProtocolHandler('_vue:getComponentSlots', request => {
-				const [fileName]: Parameters<Requests['getComponentSlots']> = request.arguments;
-				const { program, virtualCode } = getProjectAndVirtualCode(fileName);
-				return createResponse(getComponentSlots(ts, program, virtualCode));
 			});
 			session.addProtocolHandler('_vue:isRefAtPosition', request => {
 				const [fileName, position]: Parameters<Requests['isRefAtPosition']> = request.arguments;

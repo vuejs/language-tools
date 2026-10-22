@@ -5,7 +5,14 @@ import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import type { ComponentMeta, TypeScript } from 'vue-component-meta';
 import { getComponentMetaOfType } from 'vue-component-meta/lib/componentMeta';
-import { findVariable, getComponentNames, getComponentProps, getComponentType, getElementAttrs } from './componentMeta';
+import {
+	findVariable,
+	getComponentNames,
+	getComponentProps,
+	getComponentSlots,
+	getComponentType,
+	getElementAttrs,
+} from './componentMeta';
 
 type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
 type Project = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Project;
@@ -40,6 +47,8 @@ export interface TypeScriptProjectResolver {
 	getElementNames(fileName: string): Promise<string[] | undefined>;
 	/** The props of the component whose props object literal contains `offset` in the service script of the Vue file `fileName`. */
 	getComponentProps(fileName: string, offset: number): Promise<ComponentPropInfo[] | undefined>;
+	/** The names of the slots the Vue file `fileName` declares. */
+	getComponentSlots(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
 	/** The attributes of the intrinsic element `tag` in the template of the Vue file `fileName`. */
 	getElementAttrs(fileName: string, tag: string): Promise<ComponentPropInfo[] | undefined>;
 	/** The component names available in the template of the Vue file `fileName`. */
@@ -152,6 +161,12 @@ export async function connectTypeScriptProjectResolver(
 			return withSourceFile(
 				fileName,
 				(project, sourceFile) => getComponentProps(ts, project.checker, sourceFile, offset),
+			);
+		},
+		getComponentSlots(fileName, virtualCode) {
+			return withSourceFile(
+				fileName,
+				(project, sourceFile) => getComponentSlots(ts, project.checker, sourceFile, virtualCode),
 			);
 		},
 		getElementAttrs(fileName, tag) {

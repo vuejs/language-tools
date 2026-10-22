@@ -6,43 +6,6 @@ export function getSelfComponentName({ fileName }: VueVirtualCode) {
 	return capitalize(camelize(getBaseNameWithoutExtension(fileName)));
 }
 
-export function getVariableType(
-	ts: typeof import('typescript'),
-	checker: ts.TypeChecker,
-	sourceFile: ts.SourceFile,
-	name: string,
-) {
-	const node = searchVariableDeclarationNode(ts, sourceFile, name);
-	if (node) {
-		return {
-			node: node,
-			type: checker.getTypeAtLocation(node),
-		};
-	}
-}
-
-function searchVariableDeclarationNode(
-	ts: typeof import('typescript'),
-	sourceFile: ts.SourceFile,
-	name: string,
-) {
-	let result: ts.VariableDeclaration | undefined;
-	walk(sourceFile);
-	return result;
-
-	function walk(node: ts.Node) {
-		if (result) {
-			return;
-		}
-		else if (ts.isVariableDeclaration(node) && node.name.getText() === name) {
-			result = node;
-		}
-		else {
-			node.forEachChild(walk);
-		}
-	}
-}
-
 export function* forEachTouchingNode(
 	ts: typeof import('typescript'),
 	sourceFile: ts.SourceFile,

@@ -40,7 +40,7 @@ export interface Requests {
 	): Response<ComponentPropInfo[]>;
 	getComponentSlots(
 		fileName: string,
-	): Response<ReturnType<typeof import('./getComponentSlots.js')['getComponentSlots']>>;
+	): Response<string[]>;
 	getElementAttrs(
 		fileName: string,
 		tag: string,

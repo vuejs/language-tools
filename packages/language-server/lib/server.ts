@@ -194,8 +194,14 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 					catch {}
 				},
-				getComponentSlots(...args) {
-					return sendTsServerRequest('_vue:getComponentSlots', args);
+				async getComponentSlots(fileName) {
+					try {
+						const virtualCode = await getVueVirtualCode(fileName);
+						if (virtualCode) {
+							return await (await connectTypeScriptApi()).getComponentSlots(fileName, virtualCode);
+						}
+					}
+					catch {}
 				},
 				async getElementAttrs(fileName, tag) {
 					try {

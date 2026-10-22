@@ -212,6 +212,19 @@ export async function getComponentProps(
 	}
 }
 
+/** The names of the slots a Vue file declares. */
+export async function getComponentSlots(
+	ts: TypeScript,
+	checker: Checker,
+	sourceFile: SourceFile,
+	virtualCode: VueVirtualCode,
+) {
+	const codegen = tsCodegen.get(virtualCode.ir);
+	const slots = codegen
+		&& findVariable(ts, sourceFile, codegen.getScriptSetupRanges()?.defineSlots?.name ?? names.slots);
+	return slots && (await (await checker.getTypeAtLocation(slots)).getProperties()).map(symbol => symbol.name);
+}
+
 /** The attributes of the intrinsic element `tag` in a Vue file's template. */
 export async function getElementAttrs(
 	ts: TypeScript,
