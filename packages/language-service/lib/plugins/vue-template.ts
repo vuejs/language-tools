@@ -3,6 +3,7 @@ import {
 	type CompletionItemTag,
 	type CompletionList,
 	type LanguageServicePlugin,
+	type Position,
 	type TextDocument,
 	transformCompletionItem,
 } from '@volar/language-service';
@@ -56,6 +57,9 @@ export function create(
 ): LanguageServicePlugin {
 	const defaultDataProvider = html.getDefaultHTMLDataProvider();
 	let htmlData: html.IHTMLDataProvider[] = [defaultDataProvider];
+	// htmlData is shared by every project's service instance
+	// lock for avoid concurrent requests from different projects
+	let htmlDataLock = Promise.resolve();
 	let modulePathCache:
 		| Map<string, Promise<string | null | undefined> | string | null | undefined>
 		| undefined;
@@ -161,7 +165,7 @@ export function create(
 					if (codegen) {
 						const componentNames = new Set([
 							...codegen.getImportedComponents(),
-							...codegen.getSetupExposed(),
+							...codegen.getLocalComponents(),
 						]);
 						voidElements = defaultDataProvider.provideTags()
 							.filter(tag => tag.void)
@@ -238,7 +242,7 @@ export function create(
 					}
 
 					if (htmlCompletion.items[0]?.kind === 12 satisfies typeof CompletionItemKind.Value) {
-						addDirectiveModifiers(htmlCompletion, htmlCompletion.items[0], document);
+						addDirectiveModifiers(htmlCompletion, htmlCompletion.items[0], document, position);
 					}
 
 					await resolveAutoImportPlaceholder(htmlCompletion, info);
@@ -572,23 +576,33 @@ export function create(
 				mode: 'completion' | 'hover',
 				fn: () => T,
 			) {
-				// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
-				await fn();
+				const { install, sync } = await provideHtmlData(sourceDocumentUri, root, position, hint, mode);
 
-				const { sync } = await provideHtmlData(sourceDocumentUri, root, position, hint, mode);
-				let lastSync = await sync();
-				let result = await fn();
-				while (lastSync.version !== (lastSync = await sync()).version) {
-					result = await fn();
+				const previousLock = htmlDataLock;
+				let unlock!: () => void;
+				htmlDataLock = new Promise<void>(resolve => unlock = resolve);
+				await previousLock;
+				try {
+					// #4298: Precompute HTMLDocument before installing providers to avoid parseHTMLDocument requesting component names from tsserver
+					await fn();
+
+					install();
+					let lastSync = await sync();
+					let result = await fn();
+					while (lastSync.version !== (lastSync = await sync()).version) {
+						result = await fn();
+					}
+					return {
+						result,
+						...lastSync,
+					};
 				}
-				updateHtmlData([
-					defaultDataProvider,
-				]);
-
-				return {
-					result,
-					...lastSync,
-				};
+				finally {
+					updateHtmlData([
+						defaultDataProvider,
+					]);
+					unlock();
+				}
 			}
 
 			async function provideHtmlData(
@@ -637,7 +651,7 @@ export function create(
 							for (
 								const name of [
 									...codegen.getImportedComponents(),
-									...codegen.getSetupExposed(),
+									...codegen.getLocalComponents(),
 								]
 							) {
 								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name);
@@ -729,7 +743,7 @@ export function create(
 								...attrs.map(attr => [attr.name, attr] as const),
 							]
 						) {
-							if (propName.match(EVENT_PROP_REGEX)) {
+							if (EVENT_PROP_REGEX.test(propName)) {
 								let labelName = propName.slice(2);
 								labelName = labelName.charAt(0).toLowerCase() + labelName.slice(1);
 								if (attrNameCasing === AttrNameCasing.Kebab) {
@@ -812,24 +826,25 @@ export function create(
 					},
 				});
 
-				updateHtmlData([
-					{
-						getId: () => 'vue-template',
-						isApplicable: () => true,
-						provideTags,
-						provideAttributes,
-						provideValues,
-					},
-					{
-						getId: () => 'vue-auto-imports',
-						isApplicable: () => true,
-						provideTags: () => [{ name: AUTO_IMPORT_PLACEHOLDER, attributes: [] }],
-						provideAttributes: () => [],
-						provideValues: () => [],
-					},
-				]);
-
 				return {
+					install() {
+						updateHtmlData([
+							{
+								getId: () => 'vue-template',
+								isApplicable: () => true,
+								provideTags,
+								provideAttributes,
+								provideValues,
+							},
+							{
+								getId: () => 'vue-auto-imports',
+								isApplicable: () => true,
+								provideTags: () => [{ name: AUTO_IMPORT_PLACEHOLDER, attributes: [] }],
+								provideAttributes: () => [],
+								provideValues: () => [],
+							},
+						]);
+					},
 					async sync() {
 						await Promise.all(tasks);
 						return {
@@ -889,50 +904,60 @@ export function create(
 				list: CompletionList,
 				item: html.CompletionItem,
 				document: TextDocument,
+				position: Position,
 			) {
 				const replacement = getReplacement(item, document);
-				if (!replacement?.text.includes('.')) {
+				if (!replacement?.text) {
 					return;
 				}
 
-				const [text, ...modifiers] = replacement.text.split('.') as [string, ...string[]];
-				const isVOn = text.startsWith(DIRECTIVE_V_ON) || text.startsWith(V_ON_SHORTHAND) && text.length > 1;
-				const isVBind = text.startsWith(DIRECTIVE_V_BIND) || text.startsWith(V_BIND_SHORTHAND) && text.length > 1;
-				const isVModel = text.startsWith(DIRECTIVE_V_MODEL) || text === 'v-model';
-				const currentModifiers = isVOn
-					? vOnModifiers
-					: isVBind
-					? vBindModifiers
-					: isVModel
-					? vModelModifiers
-					: undefined;
-
-				if (!currentModifiers) {
+				const replacementStart = document.offsetAt(replacement.textEdit.range.start);
+				const start = replacement.text.lastIndexOf('.', document.offsetAt(position) - replacementStart - 1) + 1;
+				if (start === 0) {
 					return;
 				}
 
-				for (const modifier in currentModifiers) {
-					if (modifiers.includes(modifier)) {
-						continue;
-					}
+				const [text, ...existingModifiers] = replacement.text.split('.') as [string, ...string[]];
 
-					const description = currentModifiers[modifier]!;
-					const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
-					const newItem: html.CompletionItem = {
-						label: modifier,
-						filterText: insertText,
-						documentation: {
-							kind: 'markdown',
-							value: description,
-						},
-						textEdit: {
-							range: replacement.textEdit.range,
-							newText: insertText,
-						},
-						kind: 20 satisfies typeof CompletionItemKind.EnumMember,
+				let matchedModifiers: Record<string, string> | undefined;
+				if (text.startsWith(DIRECTIVE_V_ON) || text.startsWith(V_ON_SHORTHAND) && text.length > 1) {
+					matchedModifiers = vOnModifiers;
+				}
+				else if (text.startsWith(DIRECTIVE_V_BIND) || text.startsWith(V_BIND_SHORTHAND) && text.length > 1) {
+					matchedModifiers = vBindModifiers;
+				}
+				else if (text.startsWith(DIRECTIVE_V_MODEL) || text === 'v-model') {
+					matchedModifiers = vModelModifiers;
+				}
+
+				if (matchedModifiers) {
+					const nextModifierStart = replacement.text.indexOf('.', start);
+					const end = nextModifierStart !== -1 ? nextModifierStart : replacement.text.length;
+					const range = {
+						start: document.positionAt(replacementStart + start),
+						end: document.positionAt(replacementStart + end),
 					};
+					const currentModifier = replacement.text.slice(start, end);
 
-					list.items.push(newItem);
+					for (const modifier in matchedModifiers) {
+						if (existingModifiers.includes(modifier) && modifier !== currentModifier) {
+							continue;
+						}
+
+						list.items.push({
+							label: modifier,
+							filterText: modifier,
+							documentation: {
+								kind: 'markdown',
+								value: matchedModifiers[modifier]!,
+							},
+							textEdit: {
+								range,
+								newText: modifier,
+							},
+							kind: 20 satisfies typeof CompletionItemKind.EnumMember,
+						});
+					}
 				}
 			}
 		},

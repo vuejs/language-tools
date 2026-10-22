@@ -1,4 +1,4 @@
-<script lang="ts" setup generic="Row extends unknown">
+<script lang="ts" setup generic>
 defineProps({
     selectAll: {
         type: Boolean,

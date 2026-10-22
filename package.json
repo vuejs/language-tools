@@ -1,9 +1,9 @@
 {
 	"private": true,
-	"packageManager": "pnpm@11.1.1",
+	"packageManager": "pnpm@11.9.0",
 	"scripts": {
-		"build": "tsgo -b",
-		"watch": "tsgo -b -w",
+		"build": "tsc -b",
+		"watch": "tsc -b -w",
 		"watch:ext": "node extensions/vscode/scripts/write-plugins.ts --dev && npm run watch",
 		"test": "npm run build && vitest run",
 		"test:grammar": "vitest run extensions/vscode/tests/grammar.spec.ts extensions/vscode/tests/vue-highlight.spec.ts",
@@ -16,8 +16,7 @@
 		"@tsslint/cli": "latest",
 		"@tsslint/compat-eslint": "latest",
 		"@tsslint/config": "latest",
-		"@typescript-eslint/eslint-plugin": "~8.58.2",
-		"@typescript/native-preview": "latest",
+		"@typescript-eslint/eslint-plugin": "latest",
 		"dprint": "latest",
 		"typescript": "latest",
 		"vitest": "latest"

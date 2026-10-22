@@ -52,21 +52,20 @@ test('#4670', async () => {
 		).filter(label => label.includes('click')),
 	).toMatchInlineSnapshot(`
 		[
+		  "@dblclick",
+		  "v-on:dblclick",
 		  "@auxclick",
 		  "v-on:auxclick",
 		  "@click",
 		  "v-on:click",
-		  "@dblclick",
-		  "v-on:dblclick",
 		]
 	`);
 });
 
 test('HTML tags and built-in components', async () => {
 	expect(
-		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><| /></template>`)).items.map(item =>
-			item.label
-		),
+		(await requestCompletionListToVueServer('tsconfigProject/empty.vue', 'vue', `<template><| /></template>`)).items
+			.map(item => item.label),
 	).toMatchInlineSnapshot(`
 		[
 		  "!DOCTYPE",
@@ -76,7 +75,7 @@ test('HTML tags and built-in components', async () => {
 		  "BaseTransition",
 		  "Transition",
 		  "TransitionGroup",
-		  "Fixture",
+		  "Empty",
 		  "a",
 		  "abbr",
 		  "address",
@@ -241,6 +240,7 @@ test('HTML tags and built-in components', async () => {
 		  "polyline",
 		  "radialGradient",
 		  "rect",
+		  "set",
 		  "stop",
 		  "switch",
 		  "symbol",
@@ -268,7 +268,7 @@ test('Auto import', async () => {
 		} satisfies import('typescript').server.protocol.ConfigureRequestArguments,
 	});
 	expect(
-		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><| /></template>`)).items
+		(await requestCompletionListToVueServer('tsconfigProject/empty.vue', 'vue', `<template><| /></template>`)).items
 			.map(item => item.label),
 	).toMatchInlineSnapshot(`
 		[
@@ -279,7 +279,7 @@ test('Auto import', async () => {
 		  "BaseTransition",
 		  "Transition",
 		  "TransitionGroup",
-		  "Fixture",
+		  "Empty",
 		  "a",
 		  "abbr",
 		  "address",
@@ -444,6 +444,7 @@ test('Auto import', async () => {
 		  "polyline",
 		  "radialGradient",
 		  "rect",
+		  "set",
 		  "stop",
 		  "switch",
 		  "symbol",
@@ -454,45 +455,80 @@ test('Auto import', async () => {
 		  "view",
 		  "component",
 		  "slot",
+		  "applyCheckboxModel",
+		  "applyDynamicModel",
+		  "applyRadioModel",
+		  "applySelectModel",
+		  "applyTextModel",
+		  "applyVShow",
 		  "BaseTransition",
 		  "BaseTransitionPropsValidators",
 		  "callWithAsyncErrorHandling",
 		  "callWithErrorHandling",
 		  "camelize",
 		  "capitalize",
+		  "child",
 		  "cloneVNode",
 		  "Comment",
+		  "Comment$1",
 		  "compile",
 		  "compileToFunction",
 		  "computed",
 		  "createApp",
+		  "createAssetComponent",
 		  "createBaseVNode",
 		  "createBlock",
 		  "createCommentVNode",
+		  "createComponent",
+		  "createComponentWithFallback",
+		  "createDynamicComponent",
 		  "createElementBlock",
 		  "createElementVNode",
+		  "createFor",
+		  "createForSlots",
 		  "createHydrationRenderer",
+		  "createIf",
+		  "createInvoker",
+		  "createKeyedFragment",
+		  "createPlainElement",
 		  "createRenderer",
+		  "createSelector",
+		  "createSlot",
 		  "createSlots",
 		  "createSSRApp",
 		  "createStaticVNode",
+		  "createTemplateRefSetter",
+		  "createTextNode",
 		  "createTextVNode",
+		  "createVaporApp",
+		  "createVaporSSRApp",
 		  "createVNode",
 		  "customRef",
 		  "defineAsyncComponent",
 		  "defineComponent",
 		  "defineCustomElement",
 		  "defineSSRCustomElement",
+		  "defineVaporAsyncComponent",
+		  "defineVaporComponent",
+		  "defineVaporCustomElement",
+		  "defineVaporSSRCustomElement",
+		  "delegate",
+		  "delegateEvents",
 		  "DeprecationTypes",
 		  "devtools",
+		  "DynamicFragment",
 		  "effect",
 		  "effectScope",
 		  "EffectScope",
 		  "ErrorCodes",
+		  "extend",
+		  "Fixture",
 		  "Fragment",
 		  "getCurrentInstance",
 		  "getCurrentScope",
 		  "getCurrentWatcher",
+		  "getDefaultValue",
+		  "getRestElement",
 		  "getTransitionRawChildren",
 		  "guardReactiveProps",
 		  "h",
@@ -505,6 +541,8 @@ test('Auto import', async () => {
 		  "hydrateOnVisible",
 		  "initCustomFormatter",
 		  "inject",
+		  "insert",
+		  "isFragment",
 		  "isMemoSame",
 		  "isProxy",
 		  "isReactive",
@@ -512,20 +550,29 @@ test('Auto import', async () => {
 		  "isRef",
 		  "isRuntimeOnly",
 		  "isShallow",
+		  "isVaporComponent",
 		  "isVNode",
 		  "jsx",
 		  "jsxDEV",
+		  "jsxs",
 		  "KeepAlive",
 		  "markRaw",
 		  "mergeProps",
+		  "MoveType",
+		  "next",
 		  "nextTick",
+		  "nodeOps",
 		  "normalizeClass",
 		  "normalizeProps",
 		  "normalizeStyle",
+		  "nthChild",
+		  "NULL_DYNAMIC_COMPONENT",
+		  "on",
 		  "onActivated",
 		  "onBeforeMount",
 		  "onBeforeUnmount",
 		  "onBeforeUpdate",
+		  "onBinding",
 		  "onDeactivated",
 		  "onErrorCaptured",
 		  "onMounted",
@@ -537,6 +584,7 @@ test('Auto import', async () => {
 		  "onUpdated",
 		  "onWatcherCleanup",
 		  "openBlock",
+		  "patchProp",
 		  "popScopeId",
 		  "provide",
 		  "proxyRefs",
@@ -548,16 +596,35 @@ test('Auto import', async () => {
 		  "readonly",
 		  "ref",
 		  "registerRuntimeCompiler",
+		  "remove",
 		  "render",
+		  "renderEffect",
 		  "renderList",
 		  "renderSlot",
 		  "resolveComponent",
 		  "resolveDirective",
 		  "resolveDynamicComponent",
 		  "resolveTransitionHooks",
+		  "setAttr",
+		  "setBlockKey",
 		  "setBlockTracking",
+		  "setClass",
+		  "setClassName",
 		  "setDevtoolsHook",
+		  "setDOMProp",
+		  "setDynamicEvents",
+		  "setDynamicProps",
+		  "setElementText",
+		  "setHtml",
+		  "setInsertionState",
+		  "setIsHydratingEnabled",
+		  "setProp",
+		  "setStaticTemplateRef",
+		  "setStyle",
+		  "setTemplateRefBinding",
+		  "setText",
 		  "setTransitionHooks",
+		  "setValue",
 		  "shallowReactive",
 		  "shallowReadonly",
 		  "shallowRef",
@@ -566,6 +633,7 @@ test('Auto import', async () => {
 		  "stop",
 		  "Suspense",
 		  "Teleport",
+		  "template",
 		  "Text",
 		  "toDisplayString",
 		  "toHandlerKey",
@@ -580,6 +648,7 @@ test('Auto import', async () => {
 		  "TransitionGroup",
 		  "TriggerOpTypes",
 		  "triggerRef",
+		  "txt",
 		  "unref",
 		  "useAttrs",
 		  "useCssModule",
@@ -592,6 +661,15 @@ test('Auto import', async () => {
 		  "useSSRContext",
 		  "useTemplateRef",
 		  "useTransitionState",
+		  "useVaporCssVars",
+		  "VaporComponentInstance",
+		  "VaporElement",
+		  "VaporFragment",
+		  "vaporInteropPlugin",
+		  "VaporKeepAlive",
+		  "VaporTeleport",
+		  "VaporTransition",
+		  "VaporTransitionGroup",
 		  "version",
 		  "vModelCheckbox",
 		  "vModelDynamic",
@@ -600,17 +678,22 @@ test('Auto import', async () => {
 		  "vModelText",
 		  "vShow",
 		  "VueElement",
+		  "VueElementBase",
 		  "warn",
 		  "watch",
 		  "watchEffect",
 		  "watchPostEffect",
 		  "watchSyncEffect",
+		  "withAsyncContext",
 		  "withCtx",
 		  "withDirectives",
 		  "withKeys",
 		  "withMemo",
 		  "withModifiers",
 		  "withScopeId",
+		  "withVaporDirectives",
+		  "withVaporKeys",
+		  "withVaporModifiers",
 		]
 	`);
 });
@@ -752,7 +835,7 @@ test('<script setup>', async () => {
 });
 
 test('Slot name', async () => {
-	await requestCompletionItemToTsServer(
+	const completion = await requestCompletionItemToTsServer(
 		'fixture.vue',
 		'vue',
 		`
@@ -772,6 +855,67 @@ test('Slot name', async () => {
 	`,
 		'default',
 	);
+	expect(completion.replacementSpan).toBeDefined();
+	expect((completion.replacementSpan as any).end.offset - (completion.replacementSpan as any).start.offset).toBe(0);
+});
+
+test('Slot name (v-slot:)', async () => {
+	const completion = await requestCompletionItemToTsServer(
+		'fixture.vue',
+		'vue',
+		`
+		<template>
+			<Foo>
+				<template v-slot:|></template>
+			</Foo>
+		</template>
+
+		<script lang="ts" setup>
+		let Foo: new () => {
+			$slots: {
+				default: any;
+			};
+		};
+		</script>
+		`,
+		'default',
+	);
+	expect(completion.replacementSpan).toBeDefined();
+	expect((completion.replacementSpan as any).end.offset - (completion.replacementSpan as any).start.offset).toBe(0);
+});
+
+test('Slot name (bare v-slot)', async () => {
+	const content = `
+	<template>
+		<Foo v-slot|></Foo>
+	</template>
+
+	<script lang="ts" setup>
+	let Foo: new () => {
+		$slots: {
+			default: any;
+		};
+	};
+	</script>
+	`;
+	const offset = content.indexOf('|');
+	expect(offset).toBeGreaterThanOrEqual(0);
+	const document = await prepareDocument(
+		'fixture.vue',
+		'vue',
+		content.slice(0, offset) + content.slice(offset + 1),
+	);
+	const server = await getLanguageServer();
+	const res = await server.tsserver.message({
+		seq: server.nextSeq(),
+		command: 'completions',
+		arguments: {
+			file: URI.parse(document.uri).fsPath,
+			position: offset,
+		},
+	});
+	const completions = (res.success ? res.body : undefined) as ts.CompletionEntry[] | undefined;
+	expect(completions?.find(item => item.name === 'default')).toBeUndefined();
 });
 
 test('#2454', async () => {
@@ -849,6 +993,34 @@ test('#4639', async () => {
 	`,
 		'capture',
 	);
+});
+
+test('#6132', async () => {
+	const item = await requestCompletionItemToVueServer(
+		'fixture.vue',
+		'vue',
+		`
+		<template>
+			<div @click.|.stop />
+		</template>
+	`,
+		'capture',
+	);
+	expect(item.textEdit).toMatchInlineSnapshot(`
+		{
+		  "newText": "capture",
+		  "range": {
+		    "end": {
+		      "character": 15,
+		      "line": 2,
+		    },
+		    "start": {
+		      "character": 15,
+		      "line": 2,
+		    },
+		  },
+		}
+	`);
 });
 
 test('Alias path', async () => {
@@ -1092,6 +1264,23 @@ test('#5847', async () => {
 		  ],
 		}
 	`);
+});
+
+test('#6110', async () => {
+	await requestCompletionItemToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<script setup lang="ts">
+		import { Comp } from './comp';
+		</script>
+
+		<template>
+			<C|
+		</template>
+	`,
+		'Comp',
+	);
 });
 
 const openedDocuments: TextDocument[] = [];

@@ -16,7 +16,7 @@ import { camelize, capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
 import { forEachTouchingNode } from './requests/utils';
 
-const windowsPathReg = /\\/g;
+const windowsPathRE = /\\/g;
 
 export function preprocessLanguageService(
 	languageService: ts.LanguageService,
@@ -93,7 +93,7 @@ export function preprocessLanguageService(
 						generateRange2[0] - leadingOffset,
 						generateRange2[1] - leadingOffset,
 					);
-					if (codegen?.getSetupExposed().has(variableName)) {
+					if (codegen?.getUsedSetupBindings().has(variableName)) {
 						const extraInfo = getQuickInfoAtPosition(fileName, generateRange2[0], ...rests);
 						result.tags = extraInfo?.tags;
 					}
@@ -201,7 +201,7 @@ export function preprocessLanguageService(
 							generateRange2[0] - leadingOffset,
 							generateRange2[1] - leadingOffset,
 						);
-						if (codegen?.getSetupExposed().has(variableName)) {
+						if (codegen?.getUsedSetupBindings().has(variableName)) {
 							diagnostic.start = generateRange2[0];
 							diagnostic.length = generateRange2[1] - generateRange2[0];
 							break;
@@ -435,7 +435,7 @@ export function postprocessLanguageService<T>(
 					}
 					const styles = root.ir.styles;
 					if (!styles.length) {
-						return result;
+						continue;
 					}
 					const isInStyle = styles.some(style =>
 						reference.textSpan.start >= style.startTagEnd
@@ -459,7 +459,7 @@ export function postprocessLanguageService<T>(
 		getCompletionsAtPosition: ts.LanguageService['getCompletionsAtPosition'],
 	): ts.LanguageService['getCompletionsAtPosition'] {
 		return (filePath, position, ...rests) => {
-			const fileName = filePath.replace(windowsPathReg, '/');
+			const fileName = filePath.replace(windowsPathRE, '/');
 			const result = getCompletionsAtPosition(fileName, position, ...rests);
 			if (result) {
 				resolveCompletionResult(
@@ -633,7 +633,7 @@ export function resolveCompletionResult<T>(
 		);
 
 		if (ranges.some(([start, end]) => position >= start && position <= end)) {
-			const globalKinds = new Set(['var', 'function', 'module']);
+			const globalKinds = new Set(['var', 'function', 'module', 'const']);
 			const globalsOrKeywords = (ts as any).Completions.SortText.GlobalsOrKeywords;
 			const sortTexts = new Set([
 				globalsOrKeywords,

@@ -5,7 +5,7 @@ import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { endOfLine, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { Boundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 import { generateElementProps, generatePropExp } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
@@ -60,22 +60,42 @@ export function* generateSlotOutlet(
 				codes = [`['default']`];
 			}
 
-			const token = yield* startBoundary('template', nameProp.loc.start.offset, codeFeatures.verification);
+			const boundary = yield* Boundary.start(
+				'template',
+				nameProp.loc.start.offset,
+				nameProp.loc.end.offset,
+				codeFeatures.verification,
+			);
 			yield options.slotsAssignName ?? names.slots;
 			yield* codes;
-			yield endBoundary(token, nameProp.loc.end.offset);
+			yield boundary.end();
 		}
 		else {
-			const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+			const boundary = yield* Boundary.start(
+				'template',
+				startTagOffset,
+				startTagEndOffset,
+				codeFeatures.verification,
+			);
 			yield `${options.slotsAssignName ?? names.slots}[`;
-			const token2 = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+			const boundary2 = yield* Boundary.start(
+				'template',
+				startTagOffset,
+				startTagEndOffset,
+				codeFeatures.verification,
+			);
 			yield `'default'`;
-			yield endBoundary(token2, startTagEndOffset);
+			yield boundary2.end();
 			yield `]`;
-			yield endBoundary(token, startTagEndOffset);
+			yield boundary.end();
 		}
 		yield `)(`;
-		const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+		const boundary = yield* Boundary.start(
+			'template',
+			startTagOffset,
+			startTagEndOffset,
+			codeFeatures.verification,
+		);
 		yield `{${newLine}`;
 		yield* generateElementProps(
 			options,
@@ -85,7 +105,7 @@ export function* generateSlotOutlet(
 			true,
 		);
 		yield `}`;
-		yield endBoundary(token, startTagEndOffset);
+		yield boundary.end();
 		yield `)${endOfLine}`;
 	}
 	else {
@@ -107,7 +127,6 @@ export function* generateSlotOutlet(
 				name: nameProp.value.content,
 				offset: nameProp.loc.start.offset + nameProp.loc.source.indexOf(nameProp.value.content, nameProp.name.length),
 				tagRange: [startTagOffset, startTagOffset + node.tag.length],
-				nodeLoc: node.loc,
 				propsVar: ctx.getHoistVariable(propsVar),
 			});
 		}
@@ -141,7 +160,6 @@ export function* generateSlotOutlet(
 			ctx.slots.push({
 				name: 'default',
 				tagRange: [startTagOffset, startTagEndOffset],
-				nodeLoc: node.loc,
 				propsVar: ctx.getHoistVariable(propsVar),
 			});
 		}

@@ -11,7 +11,7 @@ interface ActionData {
 	newName: string;
 }
 
-const unicodeReg = /\\u/g;
+const unicodeRE = /\\u/g;
 
 export function create(
 	ts: typeof import('typescript'),
@@ -317,7 +317,7 @@ export function createAddComponentToOptionEdit(
 		const printText = printer.printNode(ts.EmitHint.Expression, newNode, ast);
 		return {
 			range: componentOptions.components,
-			newText: unescape(printText.replace(unicodeReg, '%u')),
+			newText: unescape(printText.replace(unicodeRE, '%u')),
 		};
 	}
 	else {
@@ -331,7 +331,7 @@ export function createAddComponentToOptionEdit(
 		const printText = printer.printNode(ts.EmitHint.Expression, newNode, ast);
 		return {
 			range: componentOptions.args,
-			newText: unescape(printText.replace(unicodeReg, '%u')),
+			newText: unescape(printText.replace(unicodeRE, '%u')),
 		};
 	}
 }

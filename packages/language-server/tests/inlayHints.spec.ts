@@ -185,6 +185,86 @@ test('Destructured props', async () => {
 	`);
 });
 
+test('Destructured props var declaration shadowing', async () => {
+	expect(
+		await requestInlayHintsResult(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<script setup lang="ts">
+			const { foo, bar } = defineProps<{
+				foo?: string;
+				bar?: string;
+			}>();
+			let baz: string | undefined;
+
+			function nestedBlock() {
+				baz = foo;
+				{
+					var foo = "local";
+				}
+				baz = foo;
+			}
+
+			function forLoop() {
+				baz = foo;
+				for (var foo = "local"; false;) {}
+			}
+
+			function nestedFunction() {
+				function nested() {
+					{
+						var foo = "local";
+					}
+					return foo;
+				}
+				baz = foo;
+				nested();
+			}
+
+			console.log(bar);
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		"
+					<script setup lang="ts">
+					const { foo, bar } = defineProps<{
+						foo?: string;
+						bar?: string;
+					}>();
+					let baz: string | undefined;
+
+					function nestedBlock() {
+						baz = foo;
+						{
+							var foo = "local";
+						}
+						baz = foo;
+					}
+
+					function forLoop() {
+						baz = foo;
+						for (var foo = "local"; false;) {}
+					}
+
+					function nestedFunction() {
+						function nested() {
+							{
+								var foo = "local";
+							}
+							return foo;
+						}
+						baz = /* props. */foo;
+						nested();
+					}
+
+					console.log(/* props. */bar);
+					</script>
+				"
+	`);
+});
+
 test('#4720', async () => {
 	expect(
 		await requestInlayHintsResult(

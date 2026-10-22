@@ -1,0 +1,12 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"strict": true
+	},
+	"vueCompilerOptions": {
+		"macros": {
+			"defineProps": ["dp"]
+		}
+	},
+	"include": ["**/*"]
+}

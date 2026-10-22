@@ -2,7 +2,7 @@ import type { CodeMapping, VirtualCode } from '@volar/language-core';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import { computed, signal } from 'alien-signals';
 import type * as ts from 'typescript';
-import { allCodeFeatures } from '../plugins';
+import { codeFeatures } from '../codegen/codeFeatures';
 import type { IR, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
 import { useEmbeddedCodes } from './embeddedCodes';
 import { useIR } from './ir';
@@ -62,7 +62,7 @@ export class VueVirtualCode implements VirtualCode {
 				sourceOffsets: [0],
 				generatedOffsets: [0],
 				lengths: [this._snapshot().getLength()],
-				data: allCodeFeatures,
+				data: codeFeatures.full,
 			}];
 		});
 	}

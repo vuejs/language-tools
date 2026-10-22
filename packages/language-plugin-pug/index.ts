@@ -3,9 +3,11 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { VueLanguagePlugin } from '@vue/language-core';
 import { baseParse } from './lib/baseParse';
 
-const classRegex = /^class\s*=/;
+const classRE = /^class\s*=/;
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
+	const { allCodeFeatures, codeFeatures, compileTemplate } = modules['@vue/language-core'];
+
 	return {
 		name: require('./package.json').name,
 
@@ -31,21 +33,13 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					ir.template.content,
 					ir.template.name,
 					0,
-					{
-						verification: true,
-						completion: true,
-						semantic: true,
-						navigation: true,
-						structure: true,
-						format: true,
-					},
+					codeFeatures?.full ?? allCodeFeatures,
 				]);
 			}
 		},
 
 		compileSFCTemplate(lang, template, options) {
 			if (lang === 'pug') {
-				const { compileTemplate } = modules['@vue/language-core'];
 				let parsed: ReturnType<typeof baseParse>;
 				let baseOffset = 0;
 
@@ -75,7 +69,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						// #5099
 						if (
 							error.code === 2 satisfies CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE
-							&& classRegex.test(parsed.htmlCode.slice(error.loc?.start.offset))
+							&& classRE.test(parsed.htmlCode.slice(error.loc?.start.offset))
 						) {
 							return;
 						}

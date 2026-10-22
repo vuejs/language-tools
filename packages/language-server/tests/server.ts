@@ -20,11 +20,15 @@ export async function getLanguageServer(): Promise<{
 }> {
 	if (!serverHandle) {
 		tsserver = launchServer(
-			path.join(__dirname, '..', '..', '..', 'node_modules', 'typescript', 'lib', 'tsserver.js'),
+			require.resolve('typescript/lib/tsserver', {
+				paths: [path.dirname(require.resolve('typescript/package.json'))],
+			}),
 			[
 				'--disableAutomaticTypingAcquisition',
 				'--globalPlugins',
 				'@vue/typescript-plugin',
+				'--pluginProbeLocations',
+				path.join(__dirname, '..'),
 				'--suppressDiagnosticEvents',
 				// '--logVerbosity', 'verbose',
 				// '--logFile', path.join(__dirname, 'tsserver.log'),

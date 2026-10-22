@@ -1,6 +1,6 @@
 import { replaceSourceRange } from 'muggle-string';
+import { codeFeatures } from '../codegen/codeFeatures';
 import type { VueLanguagePlugin } from '../types';
-import { allCodeFeatures } from './shared';
 
 const plugin: VueLanguagePlugin = () => {
 	return {
@@ -15,7 +15,7 @@ const plugin: VueLanguagePlugin = () => {
 
 		resolveEmbeddedCode(_fileName, ir, embeddedFile) {
 			if (embeddedFile.id === 'root_tags') {
-				embeddedFile.content.push([ir.content, undefined, 0, allCodeFeatures]);
+				embeddedFile.content.push([ir.content, undefined, 0, codeFeatures.full]);
 				for (
 					const block of [
 						ir.template,
@@ -43,7 +43,7 @@ const plugin: VueLanguagePlugin = () => {
 							'',
 							undefined,
 							block.startTagEnd + offset,
-							{ structure: true },
+							codeFeatures.structure,
 						],
 						ir.content.slice(
 							block.startTagEnd + offset,

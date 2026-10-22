@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { run } from '..';
+import { runTsc } from './utils';
 
 test(`vue-tsc`, () => {
 	const dirPath = path.resolve(__dirname, '..', '..', '..', 'test-workspace', 'tsc');
@@ -21,49 +21,56 @@ test(`vue-tsc`, () => {
 	);
 
 	expect(
-		getTscOutput().sort(),
+		runTsc('tsc').sort(),
 	).toMatchInlineSnapshot(`
 		[
 		  "test-workspace/tsc/_failed_#3632/both.vue(3,1): error TS1109: Expression expected.",
 		  "test-workspace/tsc/_failed_#3632/both.vue(7,1): error TS1109: Expression expected.",
 		  "test-workspace/tsc/_failed_#3632/script.vue(3,1): error TS1109: Expression expected.",
 		  "test-workspace/tsc/_failed_#3632/scriptSetup.vue(3,1): error TS1109: Expression expected.",
-		  "test-workspace/tsc/_failed_#4569/main.vue(1,41): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.",
+		  "test-workspace/tsc/_failed_#4569/main.vue(1,33): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.",
 		  "test-workspace/tsc/_failed_#5071/withScript.vue(1,19): error TS1005: ';' expected.",
 		  "test-workspace/tsc/_failed_#5071/withoutScript.vue(2,26): error TS1005: ';' expected.",
 		  "test-workspace/tsc/_failed_#5823/main.vue(6,13): error TS1109: Expression expected.",
-		  "test-workspace/tsc/_failed_directives/main.vue(14,6): error TS2339: Property 'notExist' does not exist on type '{ exist: {}; Comp: () => void; $: ComponentInternalInstance; $data: {}; $props: {}; $attrs: Data; $refs: Data; $slots: Readonly<InternalSlots>; ... 8 more ...; $watch<T extends string | ((...args: any) => any)>(source: T, cb: T extends (...args: any) => infer R ? (args_0: R, args_1: R, args_2: OnCleanup) => any : (a...'.",
+		  "test-workspace/tsc/_failed_cssModuleDuplicate/bare.vue(1,8): error TS2300: Duplicate identifier '$style'.",
+		  "test-workspace/tsc/_failed_cssModuleDuplicate/bare.vue(5,8): error TS2300: Duplicate identifier '$style'.",
+		  "test-workspace/tsc/_failed_cssModuleDuplicate/bare.vue(5,8): error TS2717: Subsequent property declarations must have the same type.  Property '$style' must be of type 'Record<string, string> & { a: string; }', but here has type 'Record<string, string> & { b: string; }'.",
+		  "test-workspace/tsc/_failed_cssModuleDuplicate/empty.vue(1,8): error TS2300: Duplicate identifier '$style'.",
+		  "test-workspace/tsc/_failed_cssModuleDuplicate/empty.vue(5,8): error TS2300: Duplicate identifier '$style'.",
+		  "test-workspace/tsc/_failed_cssModuleDuplicate/empty.vue(5,8): error TS2717: Subsequent property declarations must have the same type.  Property '$style' must be of type 'Record<string, string> & { a: string; }', but here has type 'Record<string, string> & { b: string; }'.",
+		  "test-workspace/tsc/_failed_cssModuleDuplicate/kebab.vue(1,16): error TS2300: Duplicate identifier ''a-b''.",
+		  "test-workspace/tsc/_failed_cssModuleDuplicate/kebab.vue(5,16): error TS2300: Duplicate identifier ''a-b''.",
+		  "test-workspace/tsc/_failed_cssModuleDuplicate/kebab.vue(5,16): error TS2717: Subsequent property declarations must have the same type.  Property ''a-b'' must be of type 'Record<string, string> & { a: string; }', but here has type 'Record<string, string> & { b: string; }'.",
+		  "test-workspace/tsc/_failed_cssModuleDuplicate/named.vue(1,16): error TS2300: Duplicate identifier 'foo'.",
+		  "test-workspace/tsc/_failed_cssModuleDuplicate/named.vue(5,16): error TS2300: Duplicate identifier 'foo'.",
+		  "test-workspace/tsc/_failed_directive_arity/main.vue(10,17): error TS2322: Type 'string' is not assignable to type 'number'.",
+		  "test-workspace/tsc/_failed_directive_arity/main.vue(11,16): error TS2353: Object literal may only specify known properties, and 'unknown' does not exist in type 'Partial<Record<"attr" | "prop", boolean>>'.",
+		  "test-workspace/tsc/_failed_directive_generic/main.vue(20,18): error TS2322: Type '(_a: string) => void' is not assignable to type '(a: 1) => void'.",
+		  "test-workspace/tsc/_failed_directive_generic/main.vue(21,15): error TS2322: Type 'string' is not assignable to type 'number'.",
+		  "test-workspace/tsc/_failed_directive_generic/main.vue(21,20): error TS2322: Type '(_a: string) => void' is not assignable to type '(a: number) => void'.",
+		  "test-workspace/tsc/_failed_directive_generic/main.vue(22,22): error TS2322: Type '(_a: string) => void' is not assignable to type '(a: 1) => void'.",
+		  "test-workspace/tsc/_failed_directive_generic/main.vue(23,15): error TS2769: No overload matches this call.",
+		  "test-workspace/tsc/_failed_directive_generic/main.vue(24,21): error TS2322: Type 'string' is not assignable to type 'number'.",
+		  "test-workspace/tsc/_failed_directives/main.vue(14,6): error TS2339: Property 'notExist' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.",
 		  "test-workspace/tsc/_failed_directives/main.vue(17,2): error TS2578: Unused '@ts-expect-error' directive.",
 		  "test-workspace/tsc/_failed_directives/main.vue(20,2): error TS2578: Unused '@ts-expect-error' directive.",
-		  "test-workspace/tsc/_failed_directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type '{ exist: {}; Comp: () => void; $: ComponentInternalInstance; $data: {}; $props: {}; $attrs: Data; $refs: Data; $slots: Readonly<InternalSlots>; ... 8 more ...; $watch<T extends string | ((...args: any) => any)>(source: T, cb: T extends (...args: any) => infer R ? (args_0: R, args_1: R, args_2: OnCleanup) => any : (a...'.",
+		  "test-workspace/tsc/_failed_directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.",
+		  "test-workspace/tsc/_failed_fragment_props/main.vue(12,46): error TS2339: Property 'bar' does not exist on type '{ id: number; }'.",
+		  "test-workspace/tsc/_failed_fragment_props/main.vue(12,54): error TS2339: Property 'baz' does not exist on type '{ id: number; }'.",
+		  "test-workspace/tsc/_failed_fragment_props/main.vue(6,31): error TS2322: Type '{ id: number; }' is not assignable to type 'PropertyKey | undefined'.",
+		  "test-workspace/tsc/_failed_fragment_props/main.vue(9,32): error TS2353: Object literal may only specify known properties, and 'foo' does not exist in type 'HTMLAttributes & ReservedProps'.",
+		  "test-workspace/tsc/useTemplateRef-dynamic-arg/main.vue(3,7): error TS2464: A computed property name must be of type 'string', 'number', 'symbol', or 'any'.",
+		  "test-workspace/tsc/useTemplateRef-nullable/main.vue(3,5): error TS18047: 'foo.value' is possibly 'null'.",
+		  "test-workspace/tsc/useTemplateRef-nullable/main.vue(3,9): error TS2339: Property 'bar' does not exist on type 'HTMLInputElement'.",
+		  "test-workspace/tsc/withDotValue/main.vue(10,19): error TS2740: Type 'TemplateStringsArray' is missing the following properties from type 'Event': bubbles, cancelBubble, cancelable, composed, and 18 more.",
+		  "test-workspace/tsc/withDotValue/main.vue(2,25): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
+		  "test-workspace/tsc/withDotValue/main.vue(3,17): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
+		  "test-workspace/tsc/withDotValue/main.vue(4,28): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
+		  "test-workspace/tsc/withDotValue/main.vue(5,28): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
+		  "test-workspace/tsc/withDotValue/main.vue(6,20): error TS2345: Argument of type 'number' is not assignable to parameter of type 'Event'.",
+		  "test-workspace/tsc/withDotValue/main.vue(7,24): error TS2740: Type 'TemplateStringsArray' is missing the following properties from type 'Event': bubbles, cancelBubble, cancelable, composed, and 18 more.",
+		  "test-workspace/tsc/withDotValue/main.vue(8,16): error TS2740: Type 'TemplateStringsArray' is missing the following properties from type 'Event': bubbles, cancelBubble, cancelable, composed, and 18 more.",
+		  "test-workspace/tsc/withDotValue/main.vue(9,27): error TS2740: Type 'TemplateStringsArray' is missing the following properties from type 'Event': bubbles, cancelBubble, cancelable, composed, and 18 more.",
 		]
 	`);
 });
-
-function getTscOutput() {
-	const consoleOutput: string[] = [];
-	const originalConsoleLog = process.stdout.write;
-	const originalArgv = process.argv;
-	process.stdout.write = output => {
-		consoleOutput.push(String(output).trim());
-		return true;
-	};
-	process.argv = [
-		...originalArgv,
-		'--build',
-		path.resolve(__dirname, '../../../test-workspace/tsc'),
-		'--pretty',
-		'false',
-	];
-	try {
-		const tscPath = require.resolve(
-			`typescript/lib/tsc`,
-			{ paths: [path.resolve(__dirname, '../../../test-workspace')] },
-		);
-		run(tscPath);
-	}
-	catch {}
-	process.stdout.write = originalConsoleLog;
-	process.argv = originalArgv;
-	return consoleOutput;
-}
