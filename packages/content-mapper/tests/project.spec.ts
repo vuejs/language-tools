@@ -145,7 +145,7 @@ test('maps the synthetic default export to the top of the SFC', () => {
 	expect(anchor![5] & SpanMapFeature.Rename).toBeFalsy();
 });
 
-test('leaves document highlights on tag names to the matching-tag pair', () => {
+test('maps document highlights on tag names like any other reference', () => {
 	const projectHandle = 'tag-highlight-project';
 	openProject({
 		configFileName: '',
@@ -170,7 +170,7 @@ test('leaves document highlights on tag names to the matching-tag pair', () => {
 	for (const tag of ['<div', '</div', '<Comp', '</Comp', '<my-el', '</my-el']) {
 		let offset = content.indexOf(tag);
 		while (offset !== -1) {
-			expect(highlightable(offset + tag.indexOf('<') + (tag[1] === '/' ? 2 : 1)), tag).toBe(false);
+			expect(highlightable(offset + tag.indexOf('<') + (tag[1] === '/' ? 2 : 1)), tag).toBe(true);
 			offset = content.indexOf(tag, offset + 1);
 		}
 	}

@@ -67,8 +67,6 @@ export function* generateComponent(
 			options.template,
 			isIsShorthand
 				? codeFeatures.withoutHighlightAndCompletion
-				: tag === node.tag
-				? { ...codeFeatures.all, ...codeFeatures.navigationWithoutHighlight }
 				: codeFeatures.all,
 			tag,
 			startTagOffset,
@@ -81,7 +79,7 @@ export function* generateComponent(
 				options,
 				ctx,
 				options.template,
-				{ ...codeFeatures.withoutCompletion, ...codeFeatures.navigationWithoutHighlight },
+				codeFeatures.withoutCompletion,
 				tag,
 				endTagOffset,
 				`(`,
@@ -149,14 +147,14 @@ export function* generateComponent(
 						continue;
 					}
 					yield ` | typeof ${names.components}.`;
-					yield* generateCamelized(tag, 'template', offset, codeFeatures.navigationWithoutHighlight);
+					yield* generateCamelized(tag, 'template', offset, codeFeatures.navigation);
 					if (tag[0] !== tag[0]!.toUpperCase()) {
 						yield ` | typeof ${names.components}.`;
-						yield* generateCamelized(capitalize(tag), 'template', offset, codeFeatures.navigationWithoutHighlight);
+						yield* generateCamelized(capitalize(tag), 'template', offset, codeFeatures.navigation);
 					}
 					if (tag.includes('-')) {
 						yield ` | typeof ${names.components}[`;
-						yield* generateStringLiteralKey(tag, offset, codeFeatures.navigationWithoutHighlight);
+						yield* generateStringLiteralKey(tag, offset, codeFeatures.navigation);
 						yield `]`;
 					}
 				}

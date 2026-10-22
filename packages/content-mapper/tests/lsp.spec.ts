@@ -12,7 +12,18 @@ const typeProps = new LspDocument(path.join(workspace, 'TypeProps.vue'));
 const propsParent = new LspDocument(path.join(workspace, 'PropsParent.vue'));
 const model = new LspDocument(path.join(workspace, 'Model.vue'));
 const modelParent = new LspDocument(path.join(workspace, 'ModelParent.vue'));
-const documents = [shorthand, cssModule, cssModuleSrc, runtimeProps, typeProps, propsParent, model, modelParent];
+const tagHighlights = new LspDocument(path.join(workspace, 'TagHighlights.vue'));
+const documents = [
+	shorthand,
+	cssModule,
+	cssModuleSrc,
+	runtimeProps,
+	typeProps,
+	propsParent,
+	model,
+	modelParent,
+	tagHighlights,
+];
 
 let server: LspServer;
 
@@ -94,6 +105,20 @@ test('object shorthand in interpolations links the template and the script varia
 	expect(await references(shorthand, variable)).toEqual(['3:6 foo', '9:6 foo']);
 	expect(await highlights(shorthand, variable)).toEqual(['3:6 foo', '9:6 foo']);
 	expect(await definition(shorthand, shorthand.at('{ foo }', 0, 2))).toContain('9:6 foo');
+});
+
+test('tag names highlight like any other reference to the component or element', async () => {
+	const component = ['1:7 TypeProps', '7:15 TypeProps', '7:3 TypeProps', '9:2 TypeProps'];
+	expect(await highlights(tagHighlights, tagHighlights.at('import TypeProps', 0, 7))).toEqual(component);
+	expect(await highlights(tagHighlights, tagHighlights.at('<TypeProps />', 0, 1))).toEqual(component);
+	expect(await highlights(tagHighlights, tagHighlights.at('</TypeProps>', 0, 2))).toEqual(component);
+	expect(await highlights(tagHighlights, tagHighlights.at('<div>', 0, 1))).toEqual([
+		'10:2 div',
+		'10:21 div',
+		'6:2 div',
+		'8:3 div',
+	]);
+	expect(await highlights(tagHighlights, tagHighlights.at('const msg', 0, 6))).toEqual(['10:14 msg', '2:6 msg']);
 });
 
 test('rename leaves template shorthands untouched instead of corrupting them', async () => {

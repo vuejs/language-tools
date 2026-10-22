@@ -38,14 +38,6 @@ export const codeFeatures = defineCodeFeatures({
 	navigation: {
 		navigation: true,
 	},
-	/**
-	 * For tag names: TypeScript would highlight every tag of the same component or element, so
-	 * highlights on tag names are left to the HTML service's matching-tag pair.
-	 * @internal
-	 */
-	navigationWithoutHighlight: {
-		navigation: { shouldHighlight: () => false },
-	},
 	/** @internal */
 	navigationWithoutRename: {
 		navigation: { shouldRename: () => false },
@@ -87,7 +79,7 @@ export const codeFeatures = defineCodeFeatures({
 	tagName: {
 		semantic: { shouldHighlight: () => false },
 		verification: true,
-		navigation: { shouldHighlight: () => false },
+		navigation: true,
 	},
 	/** @internal */
 	withoutSemantic: {
