@@ -495,7 +495,7 @@
 		"@vue/language-server": "workspace:*",
 		"@vue/typescript-plugin": "workspace:*",
 		"laplacenoma": "latest",
-		"monogram": "github:johnsoncodehk/monogram#8c489e29e000fbfd886fb89ecf2cfcc94bde38b6",
+		"monogram": "github:johnsoncodehk/monogram#16d86677e52ef0727bc0a0d1d29a51a542eab6fc",
 		"reactive-vscode": "^1.0.2",
 		"rolldown": "latest",
 		"vscode-ext-gen": "latest",

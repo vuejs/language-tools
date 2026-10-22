@@ -14,8 +14,8 @@
 //   - syntaxes/vue.directives.tmLanguage.json      (injection, scopeName vue.directives)
 //   - syntaxes/vue.interpolations.tmLanguage.json  (injection, scopeName vue.interpolations)
 //   - languages/vue-language-configuration.json    (editor behavior: indent / folding / brackets)
-import { generateMarkupInjection, generateTmLanguage } from 'monogram/src/gen-tm.ts';
-import { generateLanguageConfig } from 'monogram/src/gen-vscode-config.ts';
+import { generateLanguageConfig } from 'monogram/language-configuration';
+import { generateMarkupInjection, generateTmLanguage } from 'monogram/textmate';
 import { writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
