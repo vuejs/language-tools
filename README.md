@@ -57,7 +57,6 @@ npm install typescript @vue/content-mapper --save-dev
 | :--- | :--- |
 | [@vue/language-server](./packages/language-server) | The language server itself |
 | [@vue/language-service](./packages/language-service) | Language service plugin collection |
-| [@vue/typescript-plugin](./packages/typescript-plugin) | TypeScript language service plugin |
 
 ### Core Module
 

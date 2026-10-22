@@ -112,7 +112,6 @@ vim.lsp.config('vue_ls', {
 
 - [`@vue/language-core`](../language-core) - Core module
 - [`@vue/language-service`](../language-service) - Language service plugins
-- [`@vue/typescript-plugin`](../typescript-plugin) - TypeScript plugin
 
 ## License
 
