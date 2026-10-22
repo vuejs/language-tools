@@ -4,14 +4,16 @@ import { expect, it } from 'vitest';
 import { names } from '../lib/codegen/names';
 import { getDefaultCompilerOptions } from '../lib/compilerOptions';
 import { createVueLanguagePlugin } from '../lib/languagePlugin';
+import type { VueCompilerOptions } from '../lib/types';
 import { getBaseNameWithoutExtension } from '../lib/utils/shared';
-import { getFormat } from '../lib/virtualCode';
 
 function createVueCompilerOptions(
-	extensionFormats: Record<string, 'sfc' | 'vitepress' | 'petite-vue'> = { '.vue': 'sfc', '.vue.md': 'vitepress' },
+	extensionFormats: Record<string, VueCompilerOptions['format']> = { '.vue': 'sfc', '.vue.md': 'vitepress' },
+	format: VueCompilerOptions['format'] = 'sfc',
 ) {
 	const vueCompilerOptions = getDefaultCompilerOptions();
 	vueCompilerOptions.extensionFormats = extensionFormats;
+	vueCompilerOptions.format = format;
 	return vueCompilerOptions;
 }
 
@@ -23,12 +25,17 @@ it('strips the longest matching configured extension from the file name', () => 
 	expect(getBaseNameWithoutExtension('C:/project/src/page.vue.md', vueCompilerOptions)).toBe('page');
 });
 
-it('takes the format and the name from the longest matching extension, regardless of order', () => {
+it('takes the name from the longest matching extension, regardless of order', () => {
 	const vueCompilerOptions = createVueCompilerOptions({ '.vue': 'sfc', '.md': 'petite-vue', '.vue.md': 'vitepress' });
-	expect(getFormat(vueCompilerOptions, '/project/src/page.vue.md')).toBe('vitepress');
 	expect(getBaseNameWithoutExtension('/project/src/page.vue.md', vueCompilerOptions)).toBe('page');
-	expect(getFormat(vueCompilerOptions, '/project/src/readme.md')).toBe('petite-vue');
 	expect(getBaseNameWithoutExtension('/project/src/readme.md', vueCompilerOptions)).toBe('readme');
+});
+
+it('parses every file by the format option, whatever its extension', () => {
+	const vueCompilerOptions = createVueCompilerOptions({ '.vue': 'sfc', '.vue.md': 'vitepress' }, 'petite-vue');
+	const plugin = createVueLanguagePlugin<string>(ts, vueCompilerOptions, id => id);
+	expect(plugin.getLanguageId('/project/src/page.vue.md')).toBe('html');
+	expect(plugin.getLanguageId('/project/src/comp.vue')).toBe('html');
 });
 
 it.each([
@@ -36,7 +43,11 @@ it.each([
 	['.md before .vue.md', { '.vue': 'sfc', '.md': 'petite-vue', '.vue.md': 'vitepress' } as const],
 ])('derives the self component name from a multi-dot extension (%s)', (_, extensionFormats) => {
 	const fileName = '/project/src/page.vue.md';
-	const plugin = createVueLanguagePlugin<string>(ts, createVueCompilerOptions(extensionFormats), id => id);
+	const plugin = createVueLanguagePlugin<string>(
+		ts,
+		createVueCompilerOptions(extensionFormats, 'vitepress'),
+		id => id,
+	);
 	const code = plugin.createVirtualCode!(
 		fileName,
 		'markdown',

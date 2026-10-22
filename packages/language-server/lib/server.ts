@@ -232,7 +232,14 @@ export function startServer(ts: typeof import('typescript')) {
 					routeByExtensions(
 						createVueLanguagePlugin(
 							ts,
-							resolveVueCompilerOptions(ts, ts.sys, configFileName, entry.options, contentMappers),
+							resolveVueCompilerOptions(
+								ts,
+								ts.sys,
+								configFileName,
+								entry.options,
+								// The mapper of an inferred project only receives its own entry's options, never the inferred array.
+								configFileName ? contentMappers : undefined,
+							),
 							asFileName,
 						),
 						entry.extensions,

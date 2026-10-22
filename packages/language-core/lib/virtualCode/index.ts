@@ -4,7 +4,6 @@ import { computed, signal } from 'alien-signals';
 import type * as ts from 'typescript';
 import { codeFeatures } from '../codegen/codeFeatures';
 import type { IR, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
-import { getMatchedExtension } from '../utils/shared';
 import { useEmbeddedCodes } from './embeddedCodes';
 import { useIR } from './ir';
 import { petiteVueParser } from './parsers/petiteVue';
@@ -25,13 +24,8 @@ const rootLanguageIds: Record<VueCompilerOptions['format'], string> = {
 	'petite-vue': 'html',
 };
 
-export function getFormat(vueCompilerOptions: VueCompilerOptions, fileName: string) {
-	const extension = getMatchedExtension(fileName, vueCompilerOptions);
-	return extension ? vueCompilerOptions.extensionFormats[extension]! : vueCompilerOptions.format;
-}
-
-export function getRootLanguageId(vueCompilerOptions: VueCompilerOptions, fileName: string) {
-	return rootLanguageIds[getFormat(vueCompilerOptions, fileName)] ?? 'vue';
+export function getRootLanguageId(vueCompilerOptions: VueCompilerOptions) {
+	return rootLanguageIds[vueCompilerOptions.format] ?? 'vue';
 }
 
 export class VueVirtualCode implements VirtualCode {
@@ -47,7 +41,7 @@ export class VueVirtualCode implements VirtualCode {
 	private _mappings: () => CodeMapping[];
 
 	get languageId() {
-		return getRootLanguageId(this.vueCompilerOptions, this.fileName);
+		return getRootLanguageId(this.vueCompilerOptions);
 	}
 	get snapshot() {
 		return this._snapshot();
@@ -131,7 +125,7 @@ export class VueVirtualCode implements VirtualCode {
 		}
 
 		const content = snapshot.getText(0, snapshot.getLength());
-		for (const plugin of [...plugins, builtInParsers[getFormat(this.vueCompilerOptions, this.fileName)] ?? sfcParser]) {
+		for (const plugin of [...plugins, builtInParsers[this.vueCompilerOptions.format] ?? sfcParser]) {
 			const sfc = plugin.parseSFC?.(this.fileName, content);
 			if (sfc) {
 				return {

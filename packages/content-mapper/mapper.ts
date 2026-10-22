@@ -84,16 +84,12 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 	}
 
 	function transform(params: TransformParams): TransformResult {
-		const state = params.projectHandle
-			? projects.get(params.projectHandle)
-			: undefined;
-		if (params.projectHandle && !state) {
+		const state = projects.get(params.projectHandle);
+		if (!state) {
 			throw new Error(`Unknown ${frontend.name} project handle: ${params.projectHandle}`);
 		}
 
-		const configuration = state
-			? getConfiguration(state)
-			: createStandaloneConfiguration(params);
+		const configuration = getConfiguration(state);
 		const snapshot = ts.ScriptSnapshot.fromString(params.content);
 		const root = configuration.plugin.createVirtualCode?.(
 			params.fileName,
@@ -219,25 +215,6 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		}
 		state.configurations.set(configFileName, configuration);
 		return configuration;
-	}
-
-	function createStandaloneConfiguration(params: TransformParams): ProjectConfiguration {
-		const configFileName = ts.findConfigFile(path.dirname(params.fileName), ts.sys.fileExists);
-		return {
-			plugin: vue.createVueLanguagePlugin<string>(
-				ts,
-				resolveVueCompilerOptions(
-					ts,
-					ts.sys,
-					configFileName,
-					undefined,
-					configFileName ? vue.resolveContentMappers(ts, ts.sys, normalizePath(configFileName)) : undefined,
-				),
-				fileName => fileName,
-			),
-			languageFeatures: true,
-			virtualCodes: new Map(),
-		};
 	}
 
 	return {

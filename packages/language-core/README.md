@@ -31,9 +31,9 @@ const plugin: LanguagePlugin<string> = createVueLanguagePlugin(
 );
 ```
 
-The plugin parses every file it is given by the format of its extension in `vueCompilerOptions.extensionFormats`, falling back to `vueCompilerOptions.format`; the host decides which files are content mapper files, e.g. by those extensions.
+The plugin parses every file it is given by `vueCompilerOptions.format`; the host creates one plugin per `@vue/content-mapper` entry (with that entry's `format`) and routes to it only the files of that entry's `extensions`.
 
-`createParsedCommandLine` derives `extensionFormats` from the tsconfig's `contentMappers`: each `@vue/content-mapper` entry maps its `extensions` to its `format` (default `'sfc'`). Without `contentMappers` it is `{ '.vue': 'sfc' }`.
+`createParsedCommandLine` derives `extensionFormats` from the tsconfig's `contentMappers`: each `@vue/content-mapper` entry maps its `extensions` to its `format` (default `'sfc'`). Without `contentMappers` it is `{ '.vue': 'sfc' }`. It decides which imports are SFC components and which extension is stripped from a file's own component name.
 
 ### `createParsedCommandLine`
 

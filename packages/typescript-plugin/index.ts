@@ -25,27 +25,28 @@ export = createLanguageServicePlugin(
 		projectToOriginalLanguageService.set(info.project, info.languageService);
 
 		const vueOptions = getVueCompilerOptions();
-		const vuePlugin = core.createVueLanguagePlugin<string>(
-			ts,
-			vueOptions,
-			id => id,
-		);
-		const languagePlugin: core.LanguagePlugin<string> = {
-			...vuePlugin,
-			getLanguageId: fileName =>
-				core.isContentMapperFile(vueOptions, fileName) ? vuePlugin.getLanguageId(fileName) : undefined,
-			createVirtualCode: (fileName, languageId, snapshot, ctx) =>
-				core.isContentMapperFile(vueOptions, fileName)
-					? vuePlugin.createVirtualCode!(fileName, languageId, snapshot, ctx)
-					: undefined,
-		};
+		// tsserver hands every content-mapped file to this one host, so each file goes to the plugin of its
+		// longest matching extension, parsed by that extension's format.
+		const languagePlugins = Object.entries(vueOptions.extensionFormats)
+			.sort(([a], [b]) => b.length - a.length)
+			.map(([extension, format]): core.LanguagePlugin<string> => {
+				const vuePlugin = core.createVueLanguagePlugin<string>(ts, { ...vueOptions, format }, id => id);
+				return {
+					...vuePlugin,
+					getLanguageId: fileName => fileName.endsWith(extension) ? vuePlugin.getLanguageId(fileName) : undefined,
+					createVirtualCode: (fileName, languageId, snapshot, ctx) =>
+						fileName.endsWith(extension)
+							? vuePlugin.createVirtualCode!(fileName, languageId, snapshot, ctx)
+							: undefined,
+				};
+			});
 		addVueCommands();
 
 		let _language: core.Language<string> | undefined;
 		info.languageService = preprocessLanguageService(info.languageService, () => _language);
 
 		return {
-			languagePlugins: [languagePlugin],
+			languagePlugins,
 			setup: language => {
 				_language = language;
 				info.languageService = postprocessLanguageService(
