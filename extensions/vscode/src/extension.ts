@@ -36,7 +36,7 @@ const inferredContentMappers = [
 	},
 	{
 		package: '@vue/content-mapper',
-		extensions: ['.md'],
+		extensions: ['.vue.md'],
 		options: { languageFeatures: true, target: 99, format: 'vitepress' },
 	},
 ];
