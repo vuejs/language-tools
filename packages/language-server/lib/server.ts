@@ -239,7 +239,7 @@ export function startServer(ts: typeof import('typescript')) {
 			const configFileName = project?.configFileName;
 			const asFileName = (uri: URI) => uri.fsPath.replace(/\\/g, '/');
 			const entries = (configFileName
-				? project!.parsedCommandLine.raw?.contentMappers as ContentMapperEntry[] | undefined
+				? project!.contentMappers as ContentMapperEntry[] | undefined
 				: inferredContentMappers)
 				?.filter(entry => entry.package === '@vue/content-mapper');
 			// `vueCompilerOptions` is still read locally: the TypeScript API does not merge it across `extends`.

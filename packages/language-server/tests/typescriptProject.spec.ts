@@ -54,26 +54,21 @@ test('an own contentMappers array replaces the inherited one', async () => {
 	await expectConfigFileName('tsconfigContentMappers/override/fixture.md', 'tsconfigContentMappers/tsconfig.json');
 });
 
-test('options are merged across extends, raw only carries the resolved contentMappers', async () => {
-	const { parsedCommandLine } = (await resolver.getProject(fileName('tsconfigContentMappers/fixture.md')))!;
-	expect(parsedCommandLine.options.strict).toBe(true);
-	expect(parsedCommandLine.raw?.contentMappers).toEqual([
+test('a project carries the contentMappers inherited through extends', async () => {
+	const project = await resolver.getProject(fileName('tsconfigContentMappers/fixture.md'));
+	expect(project?.contentMappers).toEqual([
 		{ package: '@vue/content-mapper', extensions: ['.vue'] },
 		{ package: '@vue/content-mapper', extensions: ['.md'], options: { format: 'vitepress' } },
 	]);
-	// the language server reads `vueCompilerOptions` locally because of this
-	expect(parsedCommandLine.raw).not.toHaveProperty('vueCompilerOptions');
 });
 
-test('an inferred project has compiler options but no config file', async () => {
+test('an inferred project has no config file and no content mappers', async () => {
 	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-inferred-'));
 	try {
 		const file = path.join(dir, 'a.ts');
 		fs.writeFileSync(file, 'export {};');
 		const project = await resolver.getProject(file.replace(/\\/g, '/'));
-		expect(project).toBeDefined();
-		expect(project!.configFileName).toBeUndefined();
-		expect(project!.parsedCommandLine.options).toMatchObject({ allowJs: true });
+		expect(project).toEqual({ configFileName: undefined, contentMappers: undefined });
 	}
 	finally {
 		fs.rmSync(dir, { recursive: true, force: true });
@@ -85,22 +80,28 @@ test('after invalidate, a config change the TypeScript language server was told 
 	try {
 		const tsconfig = path.join(dir, 'tsconfig.json');
 		const file = path.join(dir, 'a.ts');
-		const writeConfig = (strict: boolean) =>
-			fs.writeFileSync(tsconfig, JSON.stringify({ compilerOptions: { strict }, include: ['*.ts'] }));
-		writeConfig(false);
+		const writeConfig = (extension: string) =>
+			fs.writeFileSync(
+				tsconfig,
+				JSON.stringify({ include: ['*.ts'], contentMappers: [{ package: 'example-mapper', extensions: [extension] }] }),
+			);
+		const getExtensions = async () =>
+			((await resolver.getProject(file.replace(/\\/g, '/')))?.contentMappers as { extensions: string[] }[])
+				.map(entry => entry.extensions);
+		writeConfig('.a');
 		fs.writeFileSync(file, 'export {};');
-		expect((await resolver.getProject(file.replace(/\\/g, '/')))!.parsedCommandLine.options.strict).toBe(false);
+		expect(await getExtensions()).toEqual([['.a']]);
 
-		writeConfig(true);
+		writeConfig('.b');
 		// the TypeScript language server does not watch files itself and the API cannot tell it about changes
 		resolver.invalidate();
-		expect((await resolver.getProject(file.replace(/\\/g, '/')))!.parsedCommandLine.options.strict).toBe(false);
+		expect(await getExtensions()).toEqual([['.a']]);
 
 		server.notify('workspace/didChangeWatchedFiles', { changes: [{ uri: pathToFileURL(tsconfig).href, type: 2 }] });
 		// a round trip on the same connection guarantees the notification was read before the API is asked
 		await server.request('vue/sync', {}).catch(() => {});
 		resolver.invalidate();
-		expect((await resolver.getProject(file.replace(/\\/g, '/')))!.parsedCommandLine.options.strict).toBe(true);
+		expect(await getExtensions()).toEqual([['.b']]);
 	}
 	finally {
 		fs.rmSync(dir, { recursive: true, force: true });

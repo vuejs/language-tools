@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-import type * as ts from 'typescript';
 
 /** The parts of `typescript/async` used here; the module is loaded at runtime from the TS 7 installation. */
 interface API {
@@ -10,21 +9,27 @@ interface API {
 }
 
 interface Snapshot {
-	getDefaultProjectForFile(file: string): Promise<TypeScriptProject | undefined>;
+	getDefaultProjectForFile(file: string): Promise<
+		| {
+			configFileName: string | undefined;
+			parsedCommandLine: {
+				/**
+				 * The config file's own JSON, not merged with `extends`, except that `contentMappers` is replaced by
+				 * the resolved (possibly inherited) array. Undefined for inferred projects.
+				 */
+				raw?: { contentMappers?: unknown[] };
+			};
+		}
+		| undefined
+	>;
 	dispose(): Promise<void>;
 }
 
 export interface TypeScriptProject {
 	/** Undefined for the TypeScript language server's inferred project. */
 	configFileName: string | undefined;
-	parsedCommandLine: {
-		options: ts.CompilerOptions;
-		/**
-		 * The config file's own JSON, not merged with `extends`, except that `contentMappers` is replaced by
-		 * the resolved (possibly inherited) array. Undefined for inferred projects.
-		 */
-		raw?: { contentMappers?: unknown[] };
-	};
+	/** The config's resolved (possibly inherited) `contentMappers`. */
+	contentMappers: unknown[] | undefined;
 }
 
 export interface TypeScriptProjectResolver {
@@ -70,7 +75,11 @@ export async function connectTypeScriptProjectResolver(
 			if (!result) {
 				result = openSnapshot(fileName).then(async snapshot => {
 					try {
-						return await snapshot.getDefaultProjectForFile(fileName);
+						const project = await snapshot.getDefaultProjectForFile(fileName);
+						return project && {
+							configFileName: project.configFileName,
+							contentMappers: project.parsedCommandLine.raw?.contentMappers,
+						};
 					}
 					finally {
 						await snapshot.dispose();
