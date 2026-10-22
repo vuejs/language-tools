@@ -100,14 +100,15 @@ export function startServer(ts: typeof import('typescript')) {
 		// The content mappers the client registers for files outside any tsconfig.
 		const inferredContentMappers: ContentMapperEntry[] | undefined = params.initializationOptions?.contentMappers;
 
+		// Any JSON file may be a config or one it extends. The rebuilt services ask again with `openFiles`, which
+		// makes the TypeScript language server apply the change notifications the editor already sent it.
 		server.fileWatcher.onDidChangeWatchedFiles(({ changes }) => {
-			for (const change of changes) {
-				const changeUri = URI.parse(change.uri);
-				if (tsconfigProjects.has(changeUri)) {
-					tsconfigProjects.get(changeUri)!.dispose();
-					tsconfigProjects.delete(changeUri);
-					void typescriptApi?.then(resolver => resolver.invalidate(), () => {});
+			if (changes.some(change => change.uri.endsWith('.json'))) {
+				for (const languageService of tsconfigProjects.values()) {
+					languageService.dispose();
 				}
+				tsconfigProjects.clear();
+				void typescriptApi?.then(resolver => resolver.invalidate(), () => {});
 			}
 		});
 
@@ -315,7 +316,10 @@ export function startServer(ts: typeof import('typescript')) {
 		}
 	});
 
-	connection.onInitialized(server.initialized);
+	connection.onInitialized(() => {
+		server.initialized();
+		void server.fileWatcher.watchFiles(['**/*.json']);
+	});
 
 	connection.onShutdown(server.shutdown);
 }
