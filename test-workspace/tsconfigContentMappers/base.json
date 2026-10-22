@@ -1,6 +1,5 @@
 {
 	"compilerOptions": { "strict": true },
-	"vueCompilerOptions": { "strictCssModules": true },
 	"contentMappers": [
 		{ "package": "@vue/content-mapper", "extensions": [".vue"] },
 		{ "package": "@vue/content-mapper", "extensions": [".md"], "options": { "format": "vitepress" } }

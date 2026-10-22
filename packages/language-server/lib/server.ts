@@ -3,14 +3,7 @@ import { createLanguageServiceEnvironment } from '@volar/language-server/lib/pro
 import { createConnection, createServer } from '@volar/language-server/node';
 import type { MapperOptions } from '@vue/content-mapper/protocol';
 import { resolveVueCompilerOptions } from '@vue/content-mapper/vueOptions';
-import {
-	createLanguage,
-	createParsedCommandLine,
-	createParsedCommandLineByJson,
-	createVueLanguagePlugin,
-	getAllExtensions,
-	type LanguagePlugin,
-} from '@vue/language-core';
+import { createLanguage, createVueLanguagePlugin, getAllExtensions, type LanguagePlugin } from '@vue/language-core';
 import {
 	createLanguageService,
 	createUriMap,
@@ -238,18 +231,17 @@ export function startServer(ts: typeof import('typescript')) {
 		function createProjectLanguageService(server: LanguageServer, project: TypeScriptProject | undefined) {
 			const configFileName = project?.configFileName;
 			const asFileName = (uri: URI) => uri.fsPath.replace(/\\/g, '/');
-			const entries = (configFileName
+			const contentMappers = configFileName
 				? project!.contentMappers as ContentMapperEntry[] | undefined
-				: inferredContentMappers)
-				?.filter(entry => entry.package === '@vue/content-mapper');
-			// `vueCompilerOptions` is still read locally: the TypeScript API does not merge it across `extends`.
+				: inferredContentMappers;
+			const entries = contentMappers?.filter(entry => entry.package === '@vue/content-mapper');
 			let vuePlugins: LanguagePlugin<URI>[];
 			if (entries?.length) {
 				vuePlugins = entries.map(entry =>
 					routeByExtensions(
 						createVueLanguagePlugin(
 							ts,
-							resolveVueCompilerOptions(ts, ts.sys, configFileName, entry.options).vueOptions,
+							resolveVueCompilerOptions(ts, ts.sys, configFileName, entry.options, contentMappers),
 							asFileName,
 						),
 						entry.extensions,
@@ -257,9 +249,7 @@ export function startServer(ts: typeof import('typescript')) {
 				);
 			}
 			else {
-				const { vueOptions } = configFileName
-					? createParsedCommandLine(ts, ts.sys, configFileName)
-					: createParsedCommandLineByJson(ts, ts.sys, ts.sys.getCurrentDirectory(), {});
+				const vueOptions = resolveVueCompilerOptions(ts, ts.sys, configFileName, undefined, contentMappers);
 				vuePlugins = [
 					routeByExtensions(
 						createVueLanguagePlugin(ts, vueOptions, asFileName),

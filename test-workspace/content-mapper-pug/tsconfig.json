@@ -5,15 +5,14 @@
 		"noUnusedParameters": false,
 		"strict": true
 	},
-	"vueCompilerOptions": {
-		"plugins": ["../../packages/language-plugin-pug"]
-	},
 	"contentMappers": [
 		{
 			"package": "@vue/content-mapper",
 			"extensions": [".vue"],
 			"options": {
-				"languageFeatures": false
+				"languageFeatures": false,
+				"target": 99,
+				"plugins": ["../../packages/language-plugin-pug"]
 			}
 		}
 	],

@@ -16,7 +16,7 @@ test('generates a Vue service script with source mappings', () => {
 
 	expect(opened.configIdentity).toHaveLength(64);
 	expect(opened.watchedFiles).toContain(configFileName);
-	expect(opened.watchedFiles).toContain(
+	expect(opened.watchedFiles).not.toContain(
 		path.resolve(__dirname, '../../../test-workspace/tsconfig.base.json'),
 	);
 
@@ -279,7 +279,7 @@ test('tracks dynamic configuration for inferred projects', () => {
 	}
 });
 
-test('watches plugins declared in the tsconfig vueCompilerOptions', () => {
+test('ignores the top-level vueCompilerOptions of the tsconfig', () => {
 	const workspace = createWorkspace();
 	const configFileName = path.join(workspace, 'tsconfig.json');
 	fs.writeFileSync(
@@ -290,27 +290,14 @@ test('watches plugins declared in the tsconfig vueCompilerOptions', () => {
 		}),
 	);
 	try {
-		const first = openProject({
+		const opened = openProject({
 			configFileName,
 			projectHandle: 'tsconfig-plugin-project',
 			compilerOptions: {},
 			options: {},
 		});
 		closeProject('tsconfig-plugin-project');
-		expect(first.watchedFiles).toContain(pluginEntry(workspace));
-
-		fs.writeFileSync(
-			pluginEntry(workspace),
-			`module.exports = () => ({ name: 'vue-test-plugin', version: 4, order: 3 });\n`,
-		);
-		const second = openProject({
-			configFileName,
-			projectHandle: 'tsconfig-plugin-project',
-			compilerOptions: {},
-			options: {},
-		});
-		closeProject('tsconfig-plugin-project');
-		expect(second.configIdentity).not.toBe(first.configIdentity);
+		expect(opened.watchedFiles).not.toContain(pluginEntry(workspace));
 	}
 	finally {
 		fs.rmSync(workspace, { recursive: true, force: true });

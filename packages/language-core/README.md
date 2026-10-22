@@ -72,7 +72,7 @@ const msg = 'Hello'
 
 ## `vueCompilerOptions`
 
-Configure Vue compiler behavior through the `vueCompilerOptions` field in `tsconfig.json`:
+`createParsedCommandLine` (used by `@vue/typescript-plugin` on TypeScript 5) reads Vue compiler options from the `vueCompilerOptions` field in `tsconfig.json`; [`@vue/content-mapper`](../content-mapper) ignores that field and takes the same options from its `contentMappers` entry's `options`:
 
 ```jsonc
 {

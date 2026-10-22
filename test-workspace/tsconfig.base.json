@@ -13,15 +13,13 @@
 		"noEmit": true,
 		"jsx": "preserve"
 	},
-	"vueCompilerOptions": {
-		"target": 99
-	},
 	"contentMappers": [
 		{
 			"package": "@vue/content-mapper",
 			"extensions": [".vue"],
 			"options": {
-				"languageFeatures": false
+				"languageFeatures": false,
+				"target": 99
 			}
 		}
 	],

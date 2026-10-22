@@ -33,11 +33,6 @@ test('content mapper full corpus', () => {
 							rootDir: corpusRoot,
 							outDir: path.join(emitDirectory, project),
 						},
-						contentMappers: [{
-							package: '@vue/content-mapper',
-							extensions: ['.vue'],
-							options: { languageFeatures: false },
-						}],
 					},
 					undefined,
 					'\t',

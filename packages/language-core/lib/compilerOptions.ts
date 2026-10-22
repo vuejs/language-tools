@@ -163,7 +163,7 @@ function resolveExtends(
 }
 
 /** Derives `extensionFormats` from the `@vue/content-mapper` entries of a raw `contentMappers` option. */
-function withExtensionFormats(vueOptions: VueCompilerOptions, contentMappers: unknown) {
+export function withExtensionFormats(vueOptions: VueCompilerOptions, contentMappers: unknown) {
 	if (Array.isArray(contentMappers)) {
 		vueOptions.extensionFormats = {};
 		for (const entry of contentMappers) {

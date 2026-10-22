@@ -49,14 +49,27 @@ Both entries share one mapper process; each keeps its own options.
 
 For CLI-only projects, `"options": { "languageFeatures": false }` skips
 language-feature flags while preserving source spans used for diagnostics.
-Inferred-project registrations can provide Vue compiler options (e.g. `target`)
-directly in the same options object. The Vue VS Code extension contributes a conditional JSON schema
-for these options when the mapper package is
-`@vue/content-mapper`.
+Vue compiler options (e.g. `target`, `plugins`) go directly in the same options object:
 
-The mapper uses dynamic project configuration so Vue compiler options, extended
-tsconfig files, the installed Vue version, and Vue language plugins participate
-in cache invalidation.
+```jsonc
+{
+	"contentMappers": [
+		{
+			"package": "@vue/content-mapper",
+			"extensions": [".vue"],
+			"options": { "target": 3.5, "plugins": ["@vue/language-plugin-pug"] }
+		}
+	]
+}
+```
+
+The tsconfig's top-level `vueCompilerOptions` field is not read by the mapper; move its
+contents into the entry's `options`. A tsconfig that declares its own `contentMappers`
+replaces the inherited entries, options included. The Vue VS Code extension contributes a
+conditional JSON schema for these options when the mapper package is `@vue/content-mapper`.
+
+The mapper uses dynamic project configuration so Vue compiler options, the installed Vue
+version, and Vue language plugins participate in cache invalidation.
 
 Each transform selects its virtual extension through the content-mapper
 protocol. JSX-bearing service scripts use `.tsx`; other Vue service scripts

@@ -15,15 +15,21 @@ npm install @vue/language-plugin-pug --save-dev
 
 ## Configuration
 
-Add this plugin in `tsconfig.json`:
+Add this plugin to the `@vue/content-mapper` options in `tsconfig.json`:
 
 ```jsonc
 {
-  "vueCompilerOptions": {
-    "plugins": ["@vue/language-plugin-pug"]
-  }
+  "contentMappers": [
+    {
+      "package": "@vue/content-mapper",
+      "extensions": [".vue"],
+      "options": { "plugins": ["@vue/language-plugin-pug"] }
+    }
+  ]
 }
 ```
+
+With `@vue/typescript-plugin` on TypeScript 5, use the top-level `vueCompilerOptions.plugins` field instead.
 
 ## Usage
 

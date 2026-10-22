@@ -198,23 +198,13 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			watchedFiles.add(path.normalize(configFileName));
 		}
 		const { languageFeatures, ...mapperOptions } = state.params.options ?? {};
-		const watchedBefore = watchedFiles ? new Set(watchedFiles) : undefined;
-		const { vueOptions } = resolveVueCompilerOptions(
+		const vueOptions = resolveVueCompilerOptions(
 			ts,
 			host,
 			configFileName || undefined,
 			state.params.options,
+			configFileName ? vue.resolveContentMappers(ts, host, normalizePath(configFileName)) : undefined,
 		);
-		// The tsconfig `extends` chain is only read while resolving, so the files it added include every
-		// config that may declare legacy Vue options; files without `vueCompilerOptions` are skipped.
-		const configFileNames = configFileName
-			? [
-				normalizePath(configFileName),
-				...(watchedFiles && watchedBefore
-					? [...watchedFiles].filter(fileName => !watchedBefore.has(fileName))
-					: []),
-			]
-			: [];
 		const configuration = {
 			plugin: vue.createVueLanguagePlugin<string>(
 				ts,
@@ -226,7 +216,6 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		};
 		if (watchedFiles) {
 			addPluginWatchFiles(watchedFiles, mapperOptions.plugins, rootDir);
-			addConfigPluginWatchFiles(watchedFiles, configFileNames);
 		}
 		state.configurations.set(configFileName, configuration);
 		return configuration;
@@ -234,13 +223,16 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 
 	function createStandaloneConfiguration(params: TransformParams): ProjectConfiguration {
 		const configFileName = ts.findConfigFile(path.dirname(params.fileName), ts.sys.fileExists);
-		const parsed = configFileName
-			? vue.createParsedCommandLine(ts, ts.sys, normalizePath(configFileName))
-			: vue.createParsedCommandLineByJson(ts, ts.sys, normalizePath(path.dirname(params.fileName)), {});
 		return {
 			plugin: vue.createVueLanguagePlugin<string>(
 				ts,
-				parsed.vueOptions,
+				resolveVueCompilerOptions(
+					ts,
+					ts.sys,
+					configFileName,
+					undefined,
+					configFileName ? vue.resolveContentMappers(ts, ts.sys, normalizePath(configFileName)) : undefined,
+				),
 				fileName => fileName,
 			),
 			languageFeatures: true,
@@ -280,23 +272,6 @@ function addPluginWatchFiles(watchedFiles: Set<string>, plugins: unknown, rootDi
 			watchedFiles.add(require.resolve(name, { paths: [rootDir] }));
 		}
 		catch {}
-	}
-}
-
-/**
- * A tsconfig may still carry `vueCompilerOptions.plugins`; `createParsedCommandLine` loads those
- * plugins, so their entry files participate in transforms and must be watched as well.
- */
-function addConfigPluginWatchFiles(watchedFiles: Set<string>, configFileNames: string[]) {
-	for (const configFileName of configFileNames) {
-		const content = ts.sys.readFile(configFileName);
-		if (content === undefined) {
-			continue;
-		}
-		const plugins = ts.parseConfigFileTextToJson(configFileName, content).config?.vueCompilerOptions?.plugins;
-		if (plugins !== undefined) {
-			addPluginWatchFiles(watchedFiles, plugins, path.dirname(configFileName));
-		}
 	}
 }
 
