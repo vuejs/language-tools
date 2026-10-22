@@ -920,7 +920,7 @@ test('Slot name (bare v-slot)', async () => {
 
 test('#2454', async () => {
 	await requestCompletionItemToVueServer(
-		'fixture.vue',
+		'tsconfigProject/fixture.vue',
 		'vue',
 		`
 		<script setup lang="ts">

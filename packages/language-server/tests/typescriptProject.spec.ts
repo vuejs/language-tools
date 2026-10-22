@@ -122,6 +122,17 @@ test('a .vue file no content mapper covers has no element names', async () => {
 	expect(await resolver.getElementNames(fileName('fixture.vue'))).toBeUndefined();
 });
 
+test('directive names come from the directives of the Vue file', async () => {
+	const directives = await resolver.getComponentDirectives(fileName('tsconfigProject/empty.vue'));
+	expect(directives).toContain('vHtml');
+	expect(directives).toContain('vShow');
+	expect(directives).not.toContain('Transition');
+});
+
+test('a .vue file no content mapper covers has no directive names', async () => {
+	expect(await resolver.getComponentDirectives(fileName('fixture.vue'))).toBeUndefined();
+});
+
 test('a closed file resolves again when asked later', async () => {
 	resolver.closeFile(fileName('typescriptProject/jsconfig/a.js'));
 	await expectConfigFileName('typescriptProject/jsconfig/a.js', 'typescriptProject/jsconfig/jsconfig.json');

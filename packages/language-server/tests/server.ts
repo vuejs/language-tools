@@ -14,6 +14,7 @@ import { type LspServer, startLspServer } from '../../content-mapper/tests/lsp';
 let serverHandle: LanguageServerHandle | undefined;
 let tsserver: import('@typescript/server-harness').Server;
 let typescriptServer: Promise<LspServer> | undefined;
+const typescriptServerVersions = new Map<string, number>();
 let initializeResult: InitializeResult;
 let seq = 1;
 
@@ -93,6 +94,22 @@ export async function getLanguageServer(): Promise<{
 		nextSeq: () => seq++,
 		open: async (uri, languageId, content) => {
 			if (uri.startsWith('file://')) {
+				// What an editor does for its TypeScript language server, which the Vue language server's API session reads from.
+				const server = await (typescriptServer ??= startLspServer(testWorkspacePath));
+				const version = (typescriptServerVersions.get(uri) ?? 0) + 1;
+				if (version === 1) {
+					server.notify('textDocument/didOpen', { textDocument: { uri, languageId, version, text: content } });
+				}
+				else {
+					server.notify('textDocument/didChange', {
+						textDocument: { uri, version },
+						contentChanges: [{ text: content }],
+					});
+				}
+				typescriptServerVersions.set(uri, version);
+				// a round trip on the same connection guarantees the notification was read before the API is asked
+				await server.request('vue/sync', {}).catch(() => {});
+
 				const res = await tsserver.message({
 					seq: seq++,
 					type: 'request',
@@ -116,6 +133,9 @@ export async function getLanguageServer(): Promise<{
 		},
 		close: async uri => {
 			if (uri.startsWith('file://')) {
+				if (typescriptServerVersions.delete(uri)) {
+					(await typescriptServer!).notify('textDocument/didClose', { textDocument: { uri } });
+				}
 				const res = await tsserver.message({
 					seq: seq++,
 					type: 'request',

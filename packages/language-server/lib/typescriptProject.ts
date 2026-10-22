@@ -9,6 +9,8 @@ import { findVariable, getComponentType } from './componentMeta';
 type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
 type Project = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Project;
 
+const directiveRE = /^v[A-Z]/;
+
 /** An edit in UTF-16 offsets of the file's own text (for a content-mapped file, its source text). */
 export interface TextEdit {
 	pos: number;
@@ -35,6 +37,8 @@ export interface TypeScriptProjectResolver {
 	getComponentMeta(fileName: string, virtualCode: VueVirtualCode, tag: string): Promise<ComponentMeta | undefined>;
 	/** The intrinsic element names available in the template of the Vue file `fileName`. */
 	getElementNames(fileName: string): Promise<string[] | undefined>;
+	/** The directive names (`vFoo`) available in the template of the Vue file `fileName`. */
+	getComponentDirectives(fileName: string): Promise<string[] | undefined>;
 	/** Releases the file opened by `getProject`. */
 	closeFile(fileName: string): void;
 	/** Forgets the cached answers, e.g. after a config file changed. */
@@ -135,6 +139,15 @@ export async function connectTypeScriptProjectResolver(
 				const intrinsics = findVariable(ts, sourceFile, names.intrinsics);
 				const type = intrinsics && await project.checker.getTypeAtLocation(intrinsics);
 				return type && (await type.getProperties()).map(symbol => symbol.name);
+			});
+		},
+		getComponentDirectives(fileName) {
+			return withSourceFile(fileName, async (project, sourceFile) => {
+				const directives = findVariable(ts, sourceFile, names.directives);
+				const type = directives && await project.checker.getTypeAtLocation(directives);
+				return type && (await type.getProperties())
+					.map(symbol => symbol.name)
+					.filter(name => directiveRE.test(name));
 			});
 		},
 		closeFile(fileName) {

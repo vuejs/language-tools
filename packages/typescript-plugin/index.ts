@@ -12,7 +12,6 @@ import {
 import { getExtensionFormats } from './lib/contentMappers';
 import type { Requests } from './lib/requests';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
-import { getComponentDirectives } from './lib/requests/getComponentDirectives';
 import { getComponentNames } from './lib/requests/getComponentNames';
 import { getComponentProps } from './lib/requests/getComponentProps';
 import { getComponentSlots } from './lib/requests/getComponentSlots';
@@ -245,11 +244,6 @@ export = createLanguageServicePlugin(
 					resolveCompletionEntryDetails(language, details, data);
 				}
 				return createResponse(details);
-			});
-			session.addProtocolHandler('_vue:getComponentDirectives', request => {
-				const [fileName]: Parameters<Requests['getComponentDirectives']> = request.arguments;
-				const { program } = getProject(fileName);
-				return createResponse(getComponentDirectives(ts, program, fileName));
 			});
 			session.addProtocolHandler('_vue:getComponentNames', request => {
 				const [fileName]: Parameters<Requests['getComponentNames']> = request.arguments;

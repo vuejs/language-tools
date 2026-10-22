@@ -154,8 +154,11 @@ export function startServer(ts: typeof import('typescript')) {
 				collectExtractProps(...args) {
 					return sendTsServerRequest('_vue:collectExtractProps', args);
 				},
-				getComponentDirectives(...args) {
-					return sendTsServerRequest('_vue:getComponentDirectives', args);
+				async getComponentDirectives(fileName) {
+					try {
+						return await (await connectTypeScriptApi()).getComponentDirectives(fileName);
+					}
+					catch {}
 				},
 				async getComponentMeta(fileName, tag) {
 					try {

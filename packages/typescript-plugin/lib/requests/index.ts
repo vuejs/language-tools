@@ -19,7 +19,7 @@ export interface Requests {
 	): Response<ReturnType<typeof import('./isRefAtPosition.js')['isRefAtPosition']>>;
 	getComponentDirectives(
 		fileName: string,
-	): Response<ReturnType<typeof import('./getComponentDirectives.js')['getComponentDirectives']>>;
+	): Response<string[]>;
 	getComponentMeta(
 		fileName: string,
 		tag: string,
