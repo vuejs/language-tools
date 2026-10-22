@@ -190,10 +190,9 @@ export function* generateComponent(
 
 	yield `// @ts-ignore${newLine}`;
 	yield `const ${functionalVar} = ${names.asFunctionalComponent0}(${componentVar}, new ${componentVar}({${newLine}`;
-	yield `// @ts-ignore${newLine}`;
-	yield propsStr
-		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
-		.replace(/\n/g, ' ');
+	// an unmapped copy for inference only, whose diagnostics the content mapper ignores;
+	// joining it onto one line would break line comments and automatic semicolons
+	yield propsStr;
 	yield `}))${endOfLine}`;
 
 	yield* generateExportDeclareEqual(options.template, vnodeVar, node.loc.start.offset, node.loc.end.offset);
