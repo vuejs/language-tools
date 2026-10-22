@@ -3,7 +3,7 @@ import { createLanguageServiceEnvironment } from '@volar/language-server/lib/pro
 import { createConnection, createServer } from '@volar/language-server/node';
 import type { MapperOptions } from '@vue/content-mapper/protocol';
 import { resolveVueCompilerOptions } from '@vue/content-mapper/vueOptions';
-import { createLanguage, createVueLanguagePlugin, getAllExtensions, type LanguagePlugin } from '@vue/language-core';
+import { createLanguage, createVueLanguagePlugin, type LanguagePlugin } from '@vue/language-core';
 import {
 	createLanguageService,
 	createUriMap,
@@ -234,10 +234,9 @@ export function startServer(ts: typeof import('typescript')) {
 			const contentMappers = configFileName
 				? project!.contentMappers as ContentMapperEntry[] | undefined
 				: inferredContentMappers;
-			const entries = contentMappers?.filter(entry => entry.package === '@vue/content-mapper');
-			let vuePlugins: LanguagePlugin<URI>[];
-			if (entries?.length) {
-				vuePlugins = entries.map(entry =>
+			const vuePlugins = (contentMappers ?? [])
+				.filter(entry => entry.package === '@vue/content-mapper')
+				.map(entry =>
 					routeByExtensions(
 						createVueLanguagePlugin(
 							ts,
@@ -247,16 +246,6 @@ export function startServer(ts: typeof import('typescript')) {
 						entry.extensions,
 					)
 				);
-			}
-			else {
-				const vueOptions = resolveVueCompilerOptions(ts, ts.sys, configFileName, undefined, contentMappers);
-				vuePlugins = [
-					routeByExtensions(
-						createVueLanguagePlugin(ts, vueOptions, asFileName),
-						getAllExtensions(vueOptions),
-					),
-				];
-			}
 			const language = createLanguage<URI>(
 				[
 					{

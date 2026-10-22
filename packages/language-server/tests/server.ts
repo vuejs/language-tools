@@ -77,7 +77,8 @@ export async function getLanguageServer(): Promise<{
 
 		initializeResult = await serverHandle.initialize(
 			URI.file(testWorkspacePath).toString(),
-			{},
+			// What the VS Code client registers for files outside any tsconfig
+			{ contentMappers: [{ package: '@vue/content-mapper', extensions: ['.vue'] }] },
 			{
 				workspace: {
 					configuration: true,
