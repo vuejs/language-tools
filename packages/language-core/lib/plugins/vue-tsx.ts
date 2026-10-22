@@ -311,6 +311,7 @@ function useCodegen(
 		getGeneratedScript,
 		getGeneratedTemplate,
 		getSetupBindings,
+		getScopeBindings,
 		getLocalComponents,
 		getUsedSetupBindings,
 	};

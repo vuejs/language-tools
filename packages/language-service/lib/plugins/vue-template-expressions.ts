@@ -6,7 +6,8 @@ import {
 } from '@volar/language-service';
 import { getSourceRange } from '@volar/language-service/lib/utils/featureWorkers';
 import type * as CompilerDOM from '@vue/compiler-dom';
-import { tsCodegen } from '@vue/language-core';
+import { collectBindingNames, tsCodegen } from '@vue/language-core';
+import { parseVForNode } from '@vue/language-core/lib/codegen/template/vFor';
 import { URI } from 'vscode-uri';
 import type { AutoImportExport } from '../requests';
 import { resolveEmbeddedCode } from '../utils';
@@ -36,8 +37,9 @@ interface AutoImportData {
 }
 
 /**
- * Completes, at the start of an identifier in template expressions, the JavaScript keywords and the not yet imported
- * value exports of the project; the TypeScript completion of template expressions only lists the template scope.
+ * Completes, at the start of an identifier in template expressions, the JavaScript keywords, the setup bindings and
+ * template locals in scope, and the not yet imported value exports of the project. The TypeScript completion of
+ * template expressions lists only the template scope, which names a binding or local once the template uses it.
  */
 export function create(
 	ts: typeof import('typescript'),
@@ -64,7 +66,8 @@ export function create(
 						return;
 					}
 					const offset = document.offsetAt(position);
-					const start = getExpressionStartAt(ast, offset);
+					const locals: string[] = [];
+					const start = getExpressionStartAt(ts, ast, offset, locals);
 					if (start === undefined) {
 						return;
 					}
@@ -79,10 +82,26 @@ export function create(
 						kind: 14 satisfies typeof CompletionItemKind.Keyword,
 						textEdit: { range, newText: keyword },
 					}));
+					const codegen = tsCodegen.get(info.root.ir);
+					const bindings = codegen?.getSetupBindings();
+					const listed = new Set([
+						...codegen?.getScopeBindings() ?? [],
+						...codegen?.getGeneratedTemplate()?.scopeMemberNames ?? [],
+						...keywords,
+						...Object.values(info.root.vueCompilerOptions.macros).flat(),
+					]);
+					for (const name of new Set([...locals, ...bindings ?? []])) {
+						if (!listed.has(name) && !name.startsWith('__VLS_')) {
+							items.push({
+								label: name,
+								kind: 6 satisfies typeof CompletionItemKind.Variable,
+								textEdit: { range, newText: name },
+							});
+						}
+					}
 					// Like TypeScript's auto imports, exports are listed once a name is being typed.
 					if (word) {
 						const { fileName } = info.root;
-						const bindings = tsCodegen.get(info.root.ir)?.getSetupBindings();
 						for (const entry of await getAutoImportValues(fileName) ?? []) {
 							if (bindings?.has(entry.name)) {
 								continue;
@@ -174,9 +193,12 @@ function isIdentifierStart(ts: typeof import('typescript'), textBefore: string) 
 		&& last !== ts.SyntaxKind.NumericLiteral;
 }
 
+/** Also pushes to `locals` the names that the `v-for` and `v-slot` around the expression declare. */
 function getExpressionStartAt(
+	ts: typeof import('typescript'),
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode,
 	offset: number,
+	locals: string[],
 ): number | undefined {
 	// The location of a `v-if` or `v-for` node does not cover all its branches or children.
 	if (
@@ -195,7 +217,7 @@ function getExpressionStartAt(
 		}
 		case 9 satisfies CompilerDOM.NodeTypes.IF: {
 			for (const branch of node.branches) {
-				const start = getExpressionStartAt(branch, offset);
+				const start = getExpressionStartAt(ts, branch, offset, locals);
 				if (start !== undefined) {
 					return start;
 				}
@@ -234,13 +256,37 @@ function getExpressionStartAt(
 					return expression.loc.start.offset;
 				}
 			}
+			const localCount = locals.length;
+			if (node.type === 11 satisfies CompilerDOM.NodeTypes.FOR) {
+				const { leftExpressionText } = parseVForNode(node);
+				if (leftExpressionText) {
+					locals.push(...getBindingNames(ts, `const [${leftExpressionText}]`));
+				}
+			}
+			if (node.type === 1 satisfies CompilerDOM.NodeTypes.ELEMENT) {
+				for (const prop of node.props) {
+					if (
+						prop.type === 7 satisfies CompilerDOM.NodeTypes.DIRECTIVE
+						&& prop.name === 'slot'
+						&& prop.exp?.type === 4 satisfies CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+					) {
+						locals.push(...getBindingNames(ts, `(${prop.exp.content}) => {}`));
+					}
+				}
+			}
 			for (const child of node.children) {
-				const start = getExpressionStartAt(child, offset);
+				const start = getExpressionStartAt(ts, child, offset, locals);
 				if (start !== undefined) {
 					return start;
 				}
 			}
+			locals.length = localCount;
 			return;
 		}
 	}
+}
+
+function getBindingNames(ts: typeof import('typescript'), text: string) {
+	const ast = ts.createSourceFile('/a.ts', text, ts.ScriptTarget.Latest);
+	return collectBindingNames(ts, ast, ast);
 }

@@ -474,8 +474,8 @@ test('$event argument', async () => {
 	);
 });
 
-test.fails('<script setup>', async () => {
-	await requestCompletionItemToTsServer(
+test('<script setup>', async () => {
+	await requestCompletionItemToVueServer(
 		'tsconfigProject/fixture.vue',
 		'vue',
 		`
@@ -725,8 +725,8 @@ test.skip('#2511', async () => {
 		`);
 });
 
-test.fails('#3658', async () => {
-	await requestCompletionItemToTsServer(
+test('#3658', async () => {
+	await requestCompletionItemToVueServer(
 		'tsconfigProject/fixture.vue',
 		'vue',
 		`
@@ -1022,18 +1022,67 @@ test('Not-imported exports skip setup bindings of the same name', async () => {
 		'typescript',
 		`export function testFn() { console.log('testFn'); }`,
 	);
-	const items = (await requestCompletionListToVueServer(
-		'tsconfigProject/fixture.vue',
-		'vue',
-		`
+	const content = `
 <script setup lang="ts">
 const testFn = 1;
 </script>
 
 <template>{{ testF| }}</template>
-`,
-	)).items;
-	expect(items.filter(item => item.label === 'testFn')).toEqual([]);
+`;
+	const items = (await requestCompletionListToVueServer('tsconfigProject/fixture.vue', 'vue', content)).items;
+	expect(items.filter(item => item.label === 'testFn')).toMatchObject([{ kind: 6 }]);
+	expect(
+		(await requestCompletionItemToVueServer('tsconfigProject/fixture.vue', 'vue', content, 'testFn'))
+			.additionalTextEdits,
+	).toBeUndefined();
+});
+
+test('Setup bindings and template locals the template scope does not list complete in template expressions', async () => {
+	const getItems = async (content: string) =>
+		(await requestCompletionListToVueServer('tsconfigProject/fixture.vue', 'vue', content)).items;
+	const script = `
+<script setup lang="ts">
+import { defineProps, ref } from 'vue';
+const foo = ref(1);
+let bar = 2;
+function baz() {}
+const used = 1;
+const list = [1];
+</script>
+`;
+	const content = `${script}<template>{{ used + | }}</template>`;
+	expect(
+		(await getItems(content))
+			.filter(item => item.kind === 6 satisfies typeof CompletionItemKind.Variable)
+			.map(item => item.label),
+	).toEqual(['ref', 'foo', 'bar', 'baz', 'list']);
+	expect(
+		(await requestCompletionItemToVueServer('tsconfigProject/fixture.vue', 'vue', content, 'foo')).additionalTextEdits,
+	).toBeUndefined();
+
+	const localLabels = (await getItems(`${script}
+<template>
+	<div v-for="({ id }, index) in list">
+		<Comp v-slot="{ row }">{{ index + | }}</Comp>
+	</div>
+</template>
+`)).map(item => item.label);
+	expect(localLabels).toEqual(expect.arrayContaining(['id', 'row', 'foo']));
+	expect(localLabels).not.toContain('index');
+	expect(localLabels).not.toContain('list');
+	expect((await getItems(`${script}<template><div v-for="item in |"></div></template>`)).map(item => item.label))
+		.not.toContain('item');
+
+	for (
+		const content of [
+			`${script}<template>{{ foo.| }}</template>`,
+			`${script}<template>{{ 'b|' }}</template>`,
+			`${script}<template><div v-for="item in list">{{ item }}</div>{{ bar }}{{ i| }}</template>`,
+		]
+	) {
+		const labels = (await getItems(content)).map(item => item.label);
+		expect(labels.filter(label => label === 'bar' || label === 'item'), content).toEqual([]);
+	}
 });
 
 test('Setup bindings complete as components by type', async () => {
