@@ -579,7 +579,6 @@ export function create(
 						};
 					},
 					provide({ components, elements }) {
-						const codegen = tsCodegen.get(root.ir);
 						const names = new Set<string>();
 						const tags = new Map<string, html.ITagData>();
 
@@ -588,11 +587,6 @@ export function create(
 						}
 						for (const tag of elements) {
 							names.add(tag);
-						}
-						if (codegen) {
-							for (const name of codegen.getLocalComponents()) {
-								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name);
-							}
 						}
 
 						for (const name of names) {
