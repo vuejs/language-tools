@@ -28,7 +28,7 @@ export default defineRule(({ typescript: ts, file, report }) => {
 									newText: '',
 									span: {
 										start: token.getStart(file),
-										length: element.name.getStart(file) - token.getStart(file),
+										length: (element.propertyName ?? element.name).getStart(file) - token.getStart(file),
 									},
 								};
 							}),
