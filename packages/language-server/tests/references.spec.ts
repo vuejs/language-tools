@@ -3,7 +3,7 @@ import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { formatLocations, getLanguageServer, testWorkspacePath } from './server';
 
-test.fails('Default slot', async () => {
+test('Default slot', async () => {
 	await prepareDocument(
 		'tsconfigProject/foo.vue',
 		'vue',
@@ -31,7 +31,7 @@ test.fails('Default slot', async () => {
 		),
 	).toEqual([
 		'tsconfigProject/fixture.vue:2:5-2:9',
-		'tsconfigProject/foo.vue:6:3-8:13',
+		'tsconfigProject/foo.vue:6:3-6:4',
 	]);
 });
 

@@ -48,11 +48,12 @@ export function* generateVSlot(
 	}
 	else {
 		yield `const { `;
-		// #932: reference for implicit default slot
+		// #932: reference for implicit default slot, anchored at the element's `<`
+		// because a mapped range may not contain the element's other mappings
 		const boundary = yield* Boundary.start(
 			'template',
 			node.loc.start.offset,
-			node.loc.end.offset,
+			node.loc.start.offset + 1,
 			codeFeatures.navigation,
 		);
 		yield `default`;
