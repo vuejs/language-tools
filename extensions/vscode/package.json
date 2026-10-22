@@ -476,10 +476,11 @@
 	"devDependencies": {
 		"@types/node": "^26.0.1",
 		"@types/vscode": "1.88.0",
-		"@volar/vscode": "2.4.28",
+		"@volar/vscode": "2.4.30",
 		"@vue/language-server": "workspace:*",
 		"reactive-vscode": "^1.0.2",
 		"rolldown": "latest",
+		"typescript": "<7",
 		"vscode-ext-gen": "latest",
 		"vscode-tmlanguage-snapshot": "latest"
 	}

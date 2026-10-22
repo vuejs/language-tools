@@ -19,7 +19,7 @@
 		"generate-names": "node scripts/generate-names.js"
 	},
 	"dependencies": {
-		"@volar/language-core": "2.4.28",
+		"@volar/language-core": "2.4.30",
 		"@vue/compiler-dom": "^3.5.0",
 		"@vue/shared": "^3.5.0",
 		"alien-signals": "^3.2.1",
@@ -31,7 +31,7 @@
 		"@types/node": "^26.0.1",
 		"@types/path-browserify": "^1.0.3",
 		"@types/picomatch": "^4.0.3",
-		"@volar/typescript": "2.4.28",
+		"@volar/typescript": "2.4.30",
 		"@vue/compiler-sfc": "^3.5.0"
 	}
 }

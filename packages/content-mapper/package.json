@@ -27,7 +27,7 @@
 		"typescript": ">=5.0.0"
 	},
 	"dependencies": {
-		"@volar/language-core": "2.4.28",
+		"@volar/language-core": "2.4.30",
 		"@vue/language-core": "workspace:*",
 		"muggle-string": "^0.4.1"
 	},
