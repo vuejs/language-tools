@@ -371,6 +371,21 @@ test('cuts a verbatim section at a navigation-only copy of its content', () => {
 	expect(unverifiedRanges).toEqual([[6, 7]]);
 });
 
+test('reports segments mapped without verification as unverified', () => {
+	const unverifiedRanges: [number, number][] = [];
+	toSpanMappings(
+		[
+			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [1], data: { navigation: true, verification: true } },
+			{ sourceOffsets: [2], generatedOffsets: [2], lengths: [1], data: { navigation: true } },
+		],
+		'abc',
+		'abc',
+		true,
+		unverifiedRanges,
+	);
+	expect(unverifiedRanges).toEqual([[2, 3]]);
+});
+
 test('cuts a verbatim section at a copy that also offers completion', () => {
 	// generated: ('a'); a   (`a` copied from the section at 2..3 to 7..8)
 	// original:  ('a');

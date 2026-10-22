@@ -53,7 +53,7 @@ export function toSpanMappings(
 	generatedText: string,
 	originalText: string,
 	languageFeatures = true,
-	/** Receives virtual ranges that are mapped for navigation only and must not report diagnostics. */
+	/** Receives virtual ranges that are mapped without verification and must not report diagnostics. */
 	unverifiedRanges: [start: number, end: number][] = [],
 ): SpanMapping[] {
 	const candidates: Candidate[] = [];
@@ -204,7 +204,7 @@ export function toSpanMappings(
 		}
 	}
 
-	const copies = splitAtNavigationCopies(candidates);
+	splitAtNavigationCopies(candidates);
 
 	candidates.sort((left, right) =>
 		left.kind - right.kind
@@ -225,7 +225,7 @@ export function toSpanMappings(
 		generatedIntervals.add(candidate.generatedStart, candidate.generatedEnd);
 		originalIntervals.add(candidate.originalStart, candidate.originalEnd);
 		selected.push(candidate);
-		if (copies.has(candidate) && !candidate.verified) {
+		if (!candidate.verified) {
 			unverifiedRanges.push([candidate.generatedStart, candidate.generatedEnd]);
 		}
 	}
@@ -288,9 +288,8 @@ function splitAtNavigationCopies(candidates: Candidate[]) {
 		&& candidate.features
 		&& !(candidate.features & ~(navigationFeatures | completionFeatures))
 	);
-	const cutters = new Set<Candidate>();
 	if (!copies.length) {
-		return cutters;
+		return;
 	}
 	for (let index = candidates.length - 1; index >= 0; index--) {
 		const section = candidates[index]!;
@@ -306,7 +305,6 @@ function splitAtNavigationCopies(candidates: Candidate[]) {
 			) {
 				cuts.add(copy.originalStart);
 				cuts.add(copy.originalEnd);
-				cutters.add(copy);
 			}
 		}
 		cuts.delete(section.originalStart);
@@ -325,7 +323,6 @@ function splitAtNavigationCopies(candidates: Candidate[]) {
 		}));
 		candidates.splice(index, 1, ...pieces);
 	}
-	return cutters;
 }
 
 function getCombineToken(data: Mapping['data']): symbol | undefined {
