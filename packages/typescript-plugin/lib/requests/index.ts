@@ -37,7 +37,7 @@ export interface Requests {
 	getComponentProps(
 		fileName: string,
 		position: number,
-	): Response<ReturnType<typeof import('./getComponentProps.js')['getComponentProps']>>;
+	): Response<ComponentPropInfo[]>;
 	getComponentSlots(
 		fileName: string,
 	): Response<ReturnType<typeof import('./getComponentSlots.js')['getComponentSlots']>>;

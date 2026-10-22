@@ -43,18 +43,6 @@ function searchVariableDeclarationNode(
 	}
 }
 
-export const booleanExceptionProps = new Set(['class', 'style']);
-
-export function hasBooleanType(ts: typeof import('typescript'), type: ts.Type): boolean {
-	if (type.flags & ts.TypeFlags.BooleanLike) {
-		return true;
-	}
-	if (type.isUnionOrIntersection()) {
-		return type.types.some(type => hasBooleanType(ts, type));
-	}
-	return false;
-}
-
 export function* forEachTouchingNode(
 	ts: typeof import('typescript'),
 	sourceFile: ts.SourceFile,

@@ -12,7 +12,6 @@ import {
 import { getExtensionFormats } from './lib/contentMappers';
 import type { Requests } from './lib/requests';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
-import { getComponentProps } from './lib/requests/getComponentProps';
 import { getComponentSlots } from './lib/requests/getComponentSlots';
 import { isRefAtPosition } from './lib/requests/isRefAtPosition';
 
@@ -242,25 +241,6 @@ export = createLanguageServicePlugin(
 					resolveCompletionEntryDetails(language, details, data);
 				}
 				return createResponse(details);
-			});
-			session.addProtocolHandler('_vue:getComponentProps', request => {
-				const [fileName, position]: Parameters<Requests['getComponentProps']> = request.arguments;
-				const { project, program, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
-				const tsLanguageService = projectToOriginalLanguageService.get(project);
-				if (!tsLanguageService) {
-					return createResponse(undefined);
-				}
-				return createResponse(
-					getComponentProps(
-						ts,
-						tsLanguageService,
-						program,
-						language,
-						sourceScript,
-						virtualCode,
-						position,
-					),
-				);
 			});
 			session.addProtocolHandler('_vue:getComponentSlots', request => {
 				const [fileName]: Parameters<Requests['getComponentSlots']> = request.arguments;

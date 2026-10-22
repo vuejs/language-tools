@@ -11,6 +11,7 @@ import {
 	type LanguageService,
 } from '@vue/language-service';
 import { URI } from 'vscode-uri';
+import { getComponentPropsOffset } from './componentMeta';
 import {
 	connectTypeScriptProjectResolver,
 	type TypeScriptProject,
@@ -178,8 +179,20 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 					catch {}
 				},
-				getComponentProps(...args) {
-					return sendTsServerRequest('_vue:getComponentProps', args);
+				async getComponentProps(fileName, position) {
+					try {
+						const uri = URI.file(fileName);
+						const { language } = (await server.project.getLanguageService(uri)).context;
+						const sourceScript = language.scripts.get(uri);
+						const virtualCode = sourceScript?.generated?.root;
+						if (sourceScript && virtualCode instanceof VueVirtualCode) {
+							const offset = getComponentPropsOffset(language, sourceScript, virtualCode, position);
+							if (offset !== undefined) {
+								return await (await connectTypeScriptApi()).getComponentProps(fileName, offset);
+							}
+						}
+					}
+					catch {}
 				},
 				getComponentSlots(...args) {
 					return sendTsServerRequest('_vue:getComponentSlots', args);

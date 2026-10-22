@@ -706,7 +706,7 @@ test('Auto import', async () => {
 test('Boolean props', async () => {
 	expect(
 		await requestCompletionItemToVueServer(
-			'fixture.vue',
+			'tsconfigProject/fixture.vue',
 			'vue',
 			`
 		<template>
@@ -774,6 +774,37 @@ test('Boolean props', async () => {
 		    },
 		  },
 		}
+	`);
+});
+
+test('Component props', async () => {
+	const items = (await requestCompletionListToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<template>
+			<Comp foo="" | />
+		</template>
+
+		<script setup lang="ts">
+		declare const Comp: new () => {
+			$props: {
+				/** The foo. */
+				foo?: string;
+				'onUpdate:bar'?: (value: number) => void;
+				onBaz?: () => void;
+			};
+		};
+		</script>
+		`,
+	)).items;
+	expect(items.find(item => item.label === ':foo')?.documentation).toMatchObject({ value: 'The foo.' });
+	expect(items.map(item => item.label).filter(label => /bar|baz/.test(label))).toMatchInlineSnapshot(`
+		[
+		  "@update:bar",
+		  "v-model:bar",
+		  "@baz",
+		]
 	`);
 });
 

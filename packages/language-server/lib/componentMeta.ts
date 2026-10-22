@@ -1,7 +1,16 @@
-import { names, tsCodegen, type VueVirtualCode } from '@vue/language-core';
+import {
+	forEachElementNode,
+	type Language,
+	names,
+	type SourceScript,
+	tsCodegen,
+	type VueCodeInformation,
+	type VueVirtualCode,
+} from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests';
 import { getSelfComponentName } from '@vue/typescript-plugin/lib/requests/utils';
+import type { URI } from 'vscode-uri';
 import type { TypeScript } from 'vue-component-meta';
 
 type Node = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).Node;
@@ -122,6 +131,85 @@ async function isComponentType(type: Type) {
 		}
 	}
 	return false;
+}
+
+/**
+ * The offset in the generated service script of the props object literal of the component element that the
+ * template offset `position` lies in (or after the start of).
+ */
+export function getComponentPropsOffset(
+	language: Language<URI>,
+	sourceScript: SourceScript<URI>,
+	virtualCode: VueVirtualCode,
+	position: number,
+) {
+	const { template } = virtualCode.ir;
+	const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(virtualCode);
+	if (!template?.ast || !serviceScript) {
+		return;
+	}
+	const node = [...forEachElementNode(template.ast)].filter(child => position >= child.loc.start.offset).pop();
+	// ElementTypes.COMPONENT
+	if (node?.tagType !== 1) {
+		return;
+	}
+	const map = language.maps.get(serviceScript.code, sourceScript);
+	for (const [offset, mapping] of map.toGeneratedLocation(template.startTagEnd + node.loc.start.offset)) {
+		if ((mapping.data as VueCodeInformation).__propsCompletion) {
+			return offset;
+		}
+	}
+}
+
+/**
+ * The props of the component whose generated props object literal contains `offset`, an offset in the generated
+ * service script.
+ */
+export async function getComponentProps(
+	ts: TypeScript,
+	checker: Checker,
+	sourceFile: SourceFile,
+	offset: number,
+): Promise<ComponentPropInfo[] | undefined> {
+	let objectLiteral: Node | undefined;
+	visit(sourceFile);
+	const type = objectLiteral && ts.isObjectLiteralExpression(objectLiteral)
+		&& await checker.getContextualType(objectLiteral);
+	if (!type) {
+		return;
+	}
+	const props: ComponentPropInfo[] = [];
+	for (const prop of await checker.getPropertiesOfType(type)) {
+		const [documentation, tags, propType] = await Promise.all([
+			checker.getDocumentationCommentOfSymbol(prop),
+			checker.getJsDocTagsOfSymbol(prop),
+			checker.getTypeOfSymbol(prop),
+		]);
+		const info: ComponentPropInfo = {
+			name: prop.name,
+			description: [
+				documentation,
+				...tags.map(tag => `*@${tag.name}*${tag.text ? ` — ${tag.text}` : ''}`),
+			].filter(Boolean).join('\n\n'),
+		};
+		if (prop.flags & ts.SymbolFlags.Optional) {
+			info.optional = true;
+		}
+		if (!booleanExceptionProps.has(prop.name) && await hasBooleanType(ts, propType)) {
+			info.boolean = true;
+		}
+		props.push(info);
+	}
+	return props;
+
+	function visit(node: Node) {
+		if (node.pos <= offset && offset <= node.end) {
+			if (ts.isObjectLiteralExpression(node)) {
+				objectLiteral = node;
+			}
+			node.forEachChild(visit);
+		}
+	}
 }
 
 /** The attributes of the intrinsic element `tag` in a Vue file's template. */
