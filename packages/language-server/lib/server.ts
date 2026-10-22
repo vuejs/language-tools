@@ -1,4 +1,4 @@
-import type { LanguageServer } from '@volar/language-server';
+import type { LanguageServer, MessageActionItem } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createConnection, createServer } from '@volar/language-server/node';
 import type { MapperOptions } from '@vue/content-mapper/protocol';
@@ -69,10 +69,12 @@ export function startServer(ts: typeof import('typescript')) {
 				if (typescriptApi === connecting) {
 					typescriptApi = undefined;
 				}
-				connection.window.showErrorMessage(
+				// Sent as a request even without actions (the type argument selects the overload that admits it);
+				// a client may fail to answer it, and an unhandled rejection would end the server.
+				connection.window.showErrorMessage<MessageActionItem>(
 					`Vue: cannot connect to the TypeScript 7 language server (${error?.message ?? error}). `
 						+ 'Vue will try again on the next request.',
-				);
+				).catch(() => {});
 			});
 		}
 		return typescriptApi;
