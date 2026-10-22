@@ -193,8 +193,8 @@ export = defineExtension(() => {
 		activateDocumentDropEdit(selectors, client);
 
 		focusMode.activate(selectors);
-		interpolationDecorators.activate(selectors);
-		reactivityVisualization.activate(selectors);
+		interpolationDecorators.activate(selectors, client);
+		reactivityVisualization.activate(selectors, client);
 		welcome.activate(context);
 	}, { immediate: true });
 
@@ -407,10 +407,6 @@ function patchTypeScriptExtension() {
 						.filter(l => l !== undefined),
 				),
 			],
-		},
-		{
-			name: 'vue-reactivity-analysis-plugin-pack',
-			enableForWorkspaceTypeScriptVersions: true,
 		},
 	];
 

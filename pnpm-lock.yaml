@@ -44,24 +44,15 @@ importers:
       '@types/vscode':
         specifier: 1.88.0
         version: 1.88.0
-      '@volar/typescript':
-        specifier: 2.4.28
-        version: 2.4.28
       '@volar/vscode':
         specifier: 2.4.28
         version: 2.4.28
-      '@vue/language-core':
-        specifier: workspace:*
-        version: link:../../packages/language-core
       '@vue/language-server':
         specifier: workspace:*
         version: link:../../packages/language-server
       '@vue/typescript-plugin':
         specifier: workspace:*
         version: link:../../packages/typescript-plugin
-      laplacenoma:
-        specifier: latest
-        version: 0.0.3
       reactive-vscode:
         specifier: ^1.0.2
         version: 1.0.2(@types/vscode@1.88.0)
@@ -206,6 +197,9 @@ importers:
       '@vue/typescript-plugin':
         specifier: workspace:*
         version: link:../typescript-plugin
+      laplacenoma:
+        specifier: ^0.0.3
+        version: 0.0.3
       typescript:
         specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
         version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2

@@ -19,6 +19,7 @@ import {
 } from '@vue/language-service';
 import { URI } from 'vscode-uri';
 import { getComponentPropsOffset, toServiceScriptOffset, toSourceOffset } from './componentMeta';
+import { createReactivityAnalyzer, getInterpolationRanges, type ReactivityAnalysisParams } from './reactivity';
 import {
 	connectTypeScriptProjectResolver,
 	type TypeScriptProject,
@@ -301,6 +302,31 @@ export function startServer(ts: typeof import('typescript')) {
 			name: packageJson.name,
 			version: packageJson.version,
 		};
+
+		const reactivityAnalyzer = createReactivityAnalyzer(ts);
+		connection.onRequest(
+			'vue/reactivityAnalysis',
+			async ({ textDocument, offset, content }: ReactivityAnalysisParams) => {
+				const fileName = URI.parse(textDocument.uri).fsPath.replace(/\\/g, '/');
+				if (content !== undefined) {
+					return reactivityAnalyzer.analyzeScript(fileName, content, offset);
+				}
+				const script = await getVueScript(fileName);
+				if (script) {
+					return reactivityAnalyzer.analyzeVueScript(
+						script.language,
+						script.sourceScript,
+						script.virtualCode,
+						fileName,
+						offset,
+					);
+				}
+			},
+		);
+		connection.onRequest('vue/interpolationRanges', async ({ textDocument }: { textDocument: { uri: string } }) => {
+			const script = await getVueScript(URI.parse(textDocument.uri).fsPath.replace(/\\/g, '/'));
+			return script && getInterpolationRanges(script.virtualCode);
+		});
 
 		return result;
 

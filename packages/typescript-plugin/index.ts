@@ -52,7 +52,6 @@ export = createLanguageServicePlugin(
 					extensions,
 					fileName => fileName,
 				);
-				(info.project as any).__vue__ = { language, vueOptions, extensions };
 			},
 		};
 	},

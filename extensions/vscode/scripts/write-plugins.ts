@@ -8,14 +8,9 @@ write(
 	isDev ? '@vue/typescript-plugin' : '../../dist/typescript-plugin.js',
 	'VUE_TYPESCRIPT_PLUGIN_PATH',
 );
-write(
-	'reactivity-analysis-plugin',
-	isDev ? '../../out/reactivityAnalysisPlugin.js' : '../../dist/reactivity-analysis-plugin.js',
-);
-
-function write(name: string, specifier: string, pathEnvName?: string) {
+function write(name: string, specifier: string, pathEnvName: string) {
 	const dir = path.join(import.meta.dirname, `../node_modules/vue-${name}-pack`);
 	fs.mkdirSync(dir, { recursive: true });
-	const requireId = pathEnvName ? `process.env.${pathEnvName} || '${specifier}'` : `'${specifier}'`;
+	const requireId = `process.env.${pathEnvName} || '${specifier}'`;
 	fs.writeFileSync(path.join(dir, `index.js`), `module.exports = require(${requireId});\n`);
 }
