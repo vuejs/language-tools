@@ -10,7 +10,7 @@ afterAll(async () => {
 	await vueServer?.shutdown();
 });
 
-test('config files are watched so project services pick up changes', async () => {
+test('all files are watched so project services and auto-import components pick up changes', async () => {
 	const watchers: unknown[] = [];
 	vueServer = startLanguageServer(require.resolve('../index.js'), testWorkspacePath);
 	vueServer.connection.onRequest(ConfigurationRequest.type, ({ items }) => items.map(() => null));
@@ -24,5 +24,5 @@ test('config files are watched so project services pick up changes', async () =>
 	await vueServer.initialize(URI.file(testWorkspacePath).toString(), {}, {
 		workspace: { configuration: true, didChangeWatchedFiles: { dynamicRegistration: true } },
 	});
-	await expect.poll(() => watchers).toContainEqual({ globPattern: '**/*.json' });
+	await expect.poll(() => watchers).toContainEqual({ globPattern: '**/*' });
 });

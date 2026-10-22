@@ -103,15 +103,34 @@ export function startServer(ts: typeof import('typescript')) {
 				}
 				tsconfigProjects.clear();
 				void typescriptApi?.then(resolver => resolver.invalidate(), () => {});
+				return;
+			}
+			for (const change of changes) {
+				withResolver(change.uri, (resolver, fileName) => resolver.fileChanged(fileName));
 			}
 		});
 
-		server.documents.onDidClose(({ document }) => {
-			const uri = URI.parse(document.uri);
-			if (uri.scheme === 'file') {
-				void typescriptApi?.then(resolver => resolver.closeFile(uri.fsPath.replace(/\\/g, '/')), () => {});
-			}
+		// Opening a document can change its content in the TypeScript language server, too.
+		server.documents.onDidChangeContent(({ document }) => {
+			withResolver(document.uri, (resolver, fileName) => resolver.fileChanged(fileName));
 		});
+
+		server.documents.onDidClose(({ document }) => {
+			withResolver(document.uri, (resolver, fileName) => {
+				// closing reverts unsaved content to the file on disk
+				resolver.fileChanged(fileName);
+				resolver.closeFile(fileName);
+			});
+		});
+
+		/** Calls `fn` with the connected resolver, if any, for a `file:` document. */
+		function withResolver(documentUri: string, fn: (resolver: TypeScriptProjectResolver, fileName: string) => void) {
+			const uri = URI.parse(documentUri);
+			if (uri.scheme === 'file') {
+				const fileName = uri.fsPath.replace(/\\/g, '/');
+				void typescriptApi?.then(resolver => fn(resolver, fileName), () => {});
+			}
+		}
 
 		let simpleLanguageService: LanguageService | undefined;
 
@@ -353,7 +372,8 @@ export function startServer(ts: typeof import('typescript')) {
 
 	connection.onInitialized(() => {
 		server.initialized();
-		void server.fileWatcher.watchFiles(['**/*.json']);
+		// Config files rebuild the project services; any project file may add, change or remove a component.
+		void server.fileWatcher.watchFiles(['**/*']);
 	});
 
 	connection.onShutdown(server.shutdown);

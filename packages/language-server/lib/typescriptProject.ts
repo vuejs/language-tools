@@ -43,7 +43,10 @@ export interface TypeScriptProjectResolver {
 	 * undefined when `incomingFileName` has no default export in `fileName`'s project.
 	 */
 	getDefaultImportEdits(fileName: string, incomingFileName: string): Promise<readonly TextEdit[] | undefined>;
-	/** The components that the modules of `fileName`'s project, other than external libraries, export. */
+	/**
+	 * The components that the modules of `fileName`'s project, other than external libraries, export. Cached per
+	 * project for `fileName` until another file changes, so edits to `fileName` itself reuse the answer.
+	 */
 	getAutoImportComponents(fileName: string): Promise<AutoImportComponent[] | undefined>;
 	/** The TypeScript language server's edits that import `component` into `fileName` under `component.name`. */
 	getComponentImportEdits(fileName: string, component: AutoImportComponent): Promise<readonly TextEdit[] | undefined>;
@@ -73,6 +76,8 @@ export interface TypeScriptProjectResolver {
 	isRefAtOffset(fileName: string, offset: number): Promise<boolean | undefined>;
 	/** Releases the file opened by `getProject`. */
 	closeFile(fileName: string): void;
+	/** Forgets the cached auto-import components that a change to `fileName` may affect. */
+	fileChanged(fileName: string): void;
 	/** Forgets the cached answers, e.g. after a config file changed. */
 	invalidate(): void;
 	dispose(): void;
@@ -95,6 +100,11 @@ export async function connectTypeScriptProjectResolver(
 	};
 	const api = await ts.API.fromLSPConnection({ pipe });
 	const projects = new Map<string, Promise<TypeScriptProject | undefined>>();
+	/** Per project id, the auto-import components and the file they were enumerated for. */
+	const autoImportComponents = new Map<string, {
+		fileName: string;
+		components: Promise<AutoImportComponent[]>;
+	}>();
 	async function openSnapshot(fileName: string) {
 		try {
 			// Opening the file makes the TypeScript language server load its default project even if the editor's didOpen has not reached it yet.
@@ -160,7 +170,16 @@ export async function connectTypeScriptProjectResolver(
 			});
 		},
 		getAutoImportComponents(fileName) {
-			return withProject(fileName, project => getAutoImportComponents(ts, project.program, project.checker));
+			return withProject(fileName, project => {
+				let cached = autoImportComponents.get(project.id);
+				// The requesting file's own exports may have changed since another file's enumeration.
+				if (cached?.fileName !== fileName) {
+					cached = { fileName, components: getAutoImportComponents(ts, project.program, project.checker) };
+					autoImportComponents.set(project.id, cached);
+					cached.components.catch(() => autoImportComponents.delete(project.id));
+				}
+				return cached.components;
+			});
 		},
 		getComponentImportEdits(fileName, { name, fileName: moduleFileName, exportName }) {
 			return withProject(fileName, async project => {
@@ -241,11 +260,20 @@ export async function connectTypeScriptProjectResolver(
 				api.getCurrentLanguageServerSnapshot({ closeFiles: [fileName] }).then(snapshot => snapshot.dispose(), () => {});
 			}
 		},
+		fileChanged(fileName) {
+			for (const [id, { fileName: requester }] of autoImportComponents) {
+				if (requester !== fileName) {
+					autoImportComponents.delete(id);
+				}
+			}
+		},
 		invalidate() {
 			projects.clear();
+			autoImportComponents.clear();
 		},
 		dispose() {
 			projects.clear();
+			autoImportComponents.clear();
 			api.close().catch(() => {});
 		},
 	};

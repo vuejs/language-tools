@@ -1,4 +1,5 @@
 import type { TextDocument } from '@volar/language-server';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type * as ts from 'typescript';
 import { afterEach, expect, test } from 'vitest';
@@ -269,6 +270,22 @@ test('Auto import components exported from .vue and .ts files', async () => {
 	expect(await applyCompletionItem('tsconfigProject/fixture.vue', content, 'Comp')).toBe(
 		`<script setup lang="ts">\nimport { Comp } from './comp';\n\nconst a = 1;\n</script>\n\n<template><Comp /></template>`,
 	);
+});
+
+test('Auto import picks up the components another file changes', async () => {
+	const getLabels = async () =>
+		(await requestCompletionListToVueServer('tsconfigProject/fixture.vue', 'vue', `<template><| /></template>`))
+			.items.map(item => item.label);
+	const comp = fs.readFileSync(path.join(testWorkspacePath, 'tsconfigProject/comp.ts'), 'utf8');
+	expect(await getLabels()).not.toContain('Added');
+	await prepareDocument(
+		'tsconfigProject/comp.ts',
+		'typescript',
+		`${comp}\nexport const Added = defineComponent({});\n`,
+	);
+	expect(await getLabels()).toContain('Added');
+	await prepareDocument('tsconfigProject/comp.ts', 'typescript', comp);
+	expect(await getLabels()).not.toContain('Added');
 });
 
 test('Auto import into a Vue file without script', async () => {
