@@ -123,6 +123,7 @@ export function* generateComponent(
 				yield originalNames.has(options.componentName)
 					? `, typeof ${names.export}`
 					: `, void`;
+				yield `, ${options.vueCompilerOptions.checkUnknownComponents}`;
 				for (const name of originalNames) {
 					yield `, '${name}'`;
 				}
@@ -132,9 +133,7 @@ export function* generateComponent(
 					startTagOffset,
 					{
 						...codeFeatures.semanticWithoutHighlight,
-						...options.vueCompilerOptions.checkUnknownComponents
-							? codeFeatures.verification
-							: codeFeatures.doNotReportTs2339AndTs2551,
+						...codeFeatures.verification,
 					},
 				);
 				yield `]`;
