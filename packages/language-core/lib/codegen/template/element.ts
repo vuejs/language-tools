@@ -196,13 +196,7 @@ export function* generateComponent(
 	)];
 	const propsStr = toString(propCodes);
 
-	yield `// @ts-ignore${newLine}`;
-	yield `const ${functionalVar} = ${names.asFunctionalComponent0}(${componentVar}, new ${componentVar}({${newLine}`;
-	yield `// @ts-ignore${newLine}`;
-	yield propsStr
-		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
-		.replace(/\n/g, ' ');
-	yield `}))${endOfLine}`;
+	yield `const ${functionalVar} = ${names.asFunctionalComponent0}(${componentVar})${endOfLine}`;
 
 	yield* generateExportDeclareEqual(options.template, vnodeVar, node.loc.start.offset, node.loc.end.offset);
 	yield functionalVar;
