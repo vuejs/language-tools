@@ -1,6 +1,4 @@
-/// <reference types="@volar/typescript" />
-
-import { forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
+import { forEachEmbeddedCode, type LanguagePlugin, type VirtualCode } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as LanguageCore from '../index';
 import { createPlugins } from './plugins';
@@ -65,27 +63,17 @@ export function createVueLanguagePlugin<T>(
 		disposeVirtualCode(scriptId) {
 			fileRegistry.delete(String(scriptId));
 		},
-		typescript: {
-			// A TypeScript host registers the extensions of the files it routes to this plugin.
-			extraFileExtensions: [],
-			getServiceScript(root) {
-				for (const code of forEachEmbeddedCode(root)) {
-					if (serviceScriptRE.test(code.id)) {
-						const lang = code.id.slice('script_'.length);
-						return {
-							code,
-							extension: '.' + lang,
-							scriptKind: lang === 'js'
-								? ts.ScriptKind.JS
-								: lang === 'jsx'
-								? ts.ScriptKind.JSX
-								: lang === 'tsx'
-								? ts.ScriptKind.TSX
-								: ts.ScriptKind.TS,
-						};
-					}
-				}
-			},
-		},
 	};
+}
+
+/** The generated TypeScript / JavaScript code of a Vue file, and the extension TypeScript should see it with. */
+export function getServiceScript(root: VirtualCode) {
+	for (const code of forEachEmbeddedCode(root)) {
+		if (serviceScriptRE.test(code.id)) {
+			return {
+				code,
+				extension: '.' + code.id.slice('script_'.length) as '.js' | '.jsx' | '.ts' | '.tsx',
+			};
+		}
+	}
 }

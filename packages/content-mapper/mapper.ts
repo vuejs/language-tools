@@ -8,7 +8,6 @@ import type {
 	OptionDiagnostic,
 	TransformParams,
 	TransformResult,
-	VirtualExtension,
 } from './protocol';
 import { toSpanMappings } from './spanMappings';
 import { loadTypeScript } from './typescript';
@@ -99,7 +98,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		if (root) {
 			configuration.virtualCodes.set(params.fileName, root);
 		}
-		const serviceScript = root && configuration.plugin.typescript?.getServiceScript(root);
+		const serviceScript = root && vue.getServiceScript(root);
 
 		if (!serviceScript) {
 			return {
@@ -110,7 +109,6 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		}
 
 		const text = serviceScript.code.snapshot.getText(0, serviceScript.code.snapshot.getLength());
-		const extension = getVirtualExtension(serviceScript.extension);
 		const unverifiedRanges: [number, number][] = [];
 		const mappings = toSpanMappings(
 			serviceScript.code.mappings,
@@ -122,7 +120,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		const diagnosticDirectives = toDiagnosticDirectives(serviceScript.code.mappings);
 		return {
 			text,
-			extension,
+			extension: serviceScript.extension,
 			diagnosticDirectives: {
 				unusedExpectDirectiveDiagnostics: [{
 					code: 2578,
@@ -137,27 +135,6 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			},
 			mappings,
 		};
-	}
-
-	function getVirtualExtension(extension: string): VirtualExtension {
-		switch (extension) {
-			case '.js':
-				return '.js';
-			case '.jsx':
-				return '.jsx';
-			case '.ts':
-				return '.ts';
-			case '.tsx':
-				return '.tsx';
-			case '.mjs':
-			case '.cjs':
-			case '.mts':
-			case '.cts':
-			case '.json':
-				return extension;
-			default:
-				throw new Error(`Unsupported Vue service script extension: ${extension}`);
-		}
 	}
 
 	function getConfiguration(state: ProjectState) {

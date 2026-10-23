@@ -1,6 +1,7 @@
 import {
 	forEachElementNode,
 	getSelfComponentName,
+	getServiceScript,
 	type Language,
 	names,
 	type SourceScript,
@@ -295,7 +296,7 @@ export function toServiceScriptOffset(
 	sourceOffset: number,
 	filter: (data: VueCodeInformation) => boolean,
 ) {
-	const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(virtualCode);
+	const serviceScript = getServiceScript(virtualCode);
 	if (!serviceScript) {
 		return;
 	}
@@ -318,7 +319,7 @@ export function toSourceOffset(
 	offset: number,
 	filter: (data: VueCodeInformation) => boolean,
 ) {
-	const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(virtualCode);
+	const serviceScript = getServiceScript(virtualCode);
 	if (!serviceScript) {
 		return;
 	}

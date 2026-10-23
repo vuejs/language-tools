@@ -1,5 +1,3 @@
-/// <reference types="@volar/typescript" />
-
 export * from '@volar/language-service';
 // for @vue/language-server usage
 export * from '@volar/language-service/lib/utils/featureWorkers';

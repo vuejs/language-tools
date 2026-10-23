@@ -1,4 +1,10 @@
-import { forEachEmbeddedCode, type Language, type SourceScript, type VueVirtualCode } from '@vue/language-core';
+import {
+	forEachEmbeddedCode,
+	getServiceScript,
+	type Language,
+	type SourceScript,
+	type VueVirtualCode,
+} from '@vue/language-core';
 import { createAnalyzer } from 'laplacenoma';
 import rulesVue from 'laplacenoma/rules/vue';
 import type { URI } from 'vscode-uri';
@@ -65,7 +71,7 @@ export function createReactivityAnalyzer(ts: typeof import('typescript')) {
 			fileName: string,
 			offset: number,
 		): ReactivityAnalysisResult | undefined {
-			const serviceScript = sourceScript.generated!.languagePlugin.typescript?.getServiceScript(virtualCode);
+			const serviceScript = getServiceScript(virtualCode);
 			if (!serviceScript) {
 				return;
 			}

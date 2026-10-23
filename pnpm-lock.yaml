@@ -142,9 +142,6 @@ importers:
       '@types/picomatch':
         specifier: ^4.0.3
         version: 4.0.3
-      '@volar/typescript':
-        specifier: 2.4.30
-        version: 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
       '@vue/compiler-sfc':
         specifier: ^3.5.0
         version: 3.5.40
@@ -263,9 +260,6 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
       '@volar/kit':
-        specifier: 2.4.30
-        version: 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
-      '@volar/typescript':
         specifier: 2.4.30
         version: 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
       '@vue/compiler-dom':

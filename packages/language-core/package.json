@@ -31,7 +31,6 @@
 		"@types/node": "^26.0.1",
 		"@types/path-browserify": "^1.0.3",
 		"@types/picomatch": "^4.0.3",
-		"@volar/typescript": "2.4.30",
 		"@vue/compiler-sfc": "^3.5.0"
 	}
 }
