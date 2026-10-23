@@ -1,6 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
-import { toString } from 'muggle-string';
 import type { Code } from '../../types';
 import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
@@ -185,7 +184,9 @@ export function* generateComponent(
 		options.vueCompilerOptions.checkUnknownProps,
 		failedPropExps,
 	)];
-	const propsStr = toString(propCodes);
+	const inferencePropCodes: Code[] = propCodes.map(code =>
+		typeof code === 'string' ? code : [code[0], code[1], code[2], {}]
+	);
 
 	// The instance type comes from a real construct call with a copy of the props: only a call resolves the
 	// overloads of the component and infers its type parameters from the props, including intersections of
@@ -202,10 +203,7 @@ export function* generateComponent(
 	yield `const ${functionalVar} = ${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
-	yield `// @ts-ignore${newLine}`;
-	yield propsStr
-		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
-		.replace(/\n/g, ' ');
+	yield* inferencePropCodes;
 	yield `}))${endOfLine}`;
 
 	yield `const `;
@@ -293,7 +291,9 @@ export function* generateComponent(
 	if (shouldInheritAttrs) {
 		if (options.vueCompilerOptions.checkRequiredFallthroughAttributes) {
 			const restsVar = ctx.getInternalVariable();
-			yield `var ${restsVar} = ${names.omit}(${getPropsVar()}, {\n${propsStr}})${endOfLine}`;
+			yield `var ${restsVar} = ${names.omit}(${getPropsVar()}, {${newLine}`;
+			yield* inferencePropCodes;
+			yield `})${endOfLine}`;
 			ctx.inheritedAttrVars.add(restsVar);
 		}
 		else {
