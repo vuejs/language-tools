@@ -204,10 +204,8 @@ export function* generateComponent(
 	//   `$props` instead would report every props error a second time. The copy is not mapped to the template.
 	yield `// @ts-ignore${newLine}`;
 	yield `const ${functionalVar} = ${names.asFunctionalComponent0}(${componentVar}, new ${componentVar}({${newLine}`;
-	yield `// @ts-ignore${newLine}`;
-	yield propsStr
-		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
-		.replace(/\n/g, ' ');
+	// unmapped copy for inference only
+	yield propsStr;
 	yield `}))${endOfLine}`;
 
 	yield* generateExportDeclareEqual(options.template, vnodeVar, node.loc.start.offset, node.loc.end.offset);
