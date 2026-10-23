@@ -186,16 +186,10 @@ declare global {
 	): [never, never] extends __VLS_DirectiveHookArgsRest<F> ? [never, never]
 		: [never] extends __VLS_DirectiveHookArgsRest<F> ? [never]
 		: [];
-	// the constructor overload propagates the type parameters of a generic constructor to the
-	// returned function (higher order inference), so they are inferred from the props it is called with;
-	// `any` skips it in favor of the second overload, which resolves to `any`;
-	// so do unions of constructors, which share one functional component of the union of their instances
-	function __VLS_asFunctionalComponent0<A extends any[], I>(
-		t: new(...args: A) => I,
-	): __VLS_FunctionalComponent<I>;
-	function __VLS_asFunctionalComponent0<T, I = T extends new(...args: any) => infer R ? R : never>(
+	function __VLS_asFunctionalComponent0<T, K>(
 		t: T,
-	): T extends new(...args: any) => any ? __VLS_FunctionalComponent<I>
+		instance: K,
+	): T extends new(...args: any) => any ? __VLS_FunctionalComponent<K>
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
 		: __VLS_FunctionalComponent<{}>;
