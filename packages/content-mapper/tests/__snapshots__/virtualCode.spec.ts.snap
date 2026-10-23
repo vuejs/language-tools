@@ -9,7 +9,6 @@ exports[`generated code of js components type checks > diagnostics 1`] = `
   "Main.vue.js: error TS2339: Property 'ping' does not exist on type 'Omit<{ bar: (n: number) => void; foo: () => void; "update:a": (value: string) => void; }, never>'.",
   "Main.vue.js: error TS2345: Argument of type 'number' is not assignable to parameter of type 'never'.",
   "Main.vue.js: error TS2345: Argument of type 'undefined' is not assignable to parameter of type 'never'.",
-  "Main.vue.js: error TS2559: Type '{ onCustomEvent: (...[$event]: any[]) => unknown; }' has no properties in common with type 'HTMLAttributes & ReservedProps'.",
 ]
 `;
 

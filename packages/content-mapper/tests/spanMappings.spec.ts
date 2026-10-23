@@ -329,6 +329,42 @@ test('lets segments inside a feature-less merged token win and fills around them
 	]);
 });
 
+test('fills around segments inside a merged token without language features', () => {
+	const boundary = { verification: true, __combineToken: Symbol() };
+	expect(toSpanMappings(
+		[
+			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [0], data: boundary },
+			{ sourceOffsets: [2], generatedOffsets: [4], lengths: [1], data: { navigation: true, verification: true } },
+			{ sourceOffsets: [1], generatedOffsets: [6], lengths: [0], data: boundary },
+		],
+		'{a: b}',
+		'C b',
+		false,
+	)).toEqual([
+		[0, 4, 0, 1, SpanMapKind.Atom, 0],
+		[4, 1, 2, 1, SpanMapKind.Verbatim, 0],
+		[5, 1, 0, 1, SpanMapKind.Atom, 0],
+	]);
+});
+
+test('reports fills of an unverified merged token as unverified', () => {
+	// e.g. the props object of `checkRequiredFallthroughAttributes`
+	const boundary = { __combineToken: Symbol() };
+	const unverifiedRanges: [number, number][] = [];
+	toSpanMappings(
+		[
+			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [0], data: boundary },
+			{ sourceOffsets: [2], generatedOffsets: [4], lengths: [1], data: { navigation: true, verification: true } },
+			{ sourceOffsets: [1], generatedOffsets: [6], lengths: [0], data: boundary },
+		],
+		'{a: b}',
+		'C b',
+		true,
+		unverifiedRanges,
+	);
+	expect(unverifiedRanges).toEqual([[0, 4], [5, 6]]);
+});
+
 test('maps both sides of a shorthand as atoms so rename never edits them', () => {
 	// generated: {a: a}   original: {a}
 	expect(toSpanMappings(

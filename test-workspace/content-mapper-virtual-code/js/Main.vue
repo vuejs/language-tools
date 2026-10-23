@@ -30,7 +30,10 @@ const count = ref(0);
 	<!-- @vue-expect-error -->
 	<missing-comp></missing-comp>
 	<Transition></Transition>
-	<div @custom-event="exactType($event, /** @type {any} */ (null))" />
+	<div
+		@click="exactType($event, /** @type {PointerEvent} */ ({}))"
+		@custom-event="exactType($event, /** @type {any} */ (null))"
+	/>
 
 	<!-- @vue-expect-error -->
 	<Gen :value="1" @change="exactType($event, /** @type {string} */ (''))" />

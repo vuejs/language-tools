@@ -169,7 +169,8 @@ export function toSpanMappings(
 		const verbatim = generatedLength === originalLength
 			&& generatedText.slice(generatedStart, generatedEnd)
 				=== originalText.slice(originalStart, originalEnd);
-		let features = languageFeatures && !wrappers.has(entry) ? getFeatures(data) : 0;
+		const sourceFeatures = wrappers.has(entry) ? 0 : getFeatures(data);
+		let features = languageFeatures ? sourceFeatures : 0;
 		if (generatedLength === 0) {
 			// Zero-length spans only serve as navigation anchors (e.g. the synthetic
 			// default export) and completion points (e.g. an empty slot name); drop
@@ -196,7 +197,8 @@ export function toSpanMappings(
 		};
 		// A feature-less merged token (e.g. a verification boundary around a
 		// props object) only carries diagnostics; let the segments inside it win.
-		if (languageFeatures && !features && !verbatim && merged.has(entry)) {
+		// Decide by the source features so this holds without language features too.
+		if (!sourceFeatures && !verbatim && merged.has(entry)) {
 			fills.push(candidate);
 		}
 		else {
@@ -261,6 +263,9 @@ export function toSpanMappings(
 		for (const piece of pieces) {
 			generatedIntervals.add(piece.generatedStart, piece.generatedEnd);
 			selected.push(piece);
+			if (!fill.verified) {
+				unverifiedRanges.push([piece.generatedStart, piece.generatedEnd]);
+			}
 		}
 		originalIntervals.add(fill.originalStart, fill.originalEnd);
 	}
