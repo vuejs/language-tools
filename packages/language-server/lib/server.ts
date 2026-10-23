@@ -451,7 +451,7 @@ export function startServer(ts: typeof import('typescript')) {
 					routeByExtensions(
 						createVueLanguagePlugin(
 							ts,
-							resolveVueCompilerOptions(ts, ts.sys, configFileName, entry.options),
+							resolveVueCompilerOptions(ts.sys.readFile, configFileName, entry.options),
 							asFileName,
 						),
 						entry.extensions,

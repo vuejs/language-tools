@@ -167,7 +167,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			? path.dirname(configFileName)
 			: process.cwd();
 		const { languageFeatures, ...mapperOptions } = state.params.options ?? {};
-		const vueOptions = resolveVueCompilerOptions(ts, host, configFileName || undefined, state.params.options);
+		const vueOptions = resolveVueCompilerOptions(host.readFile, configFileName || undefined, state.params.options);
 		const configuration = {
 			plugin: vue.createVueLanguagePlugin<string>(
 				ts,

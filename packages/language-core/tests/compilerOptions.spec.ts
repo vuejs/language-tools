@@ -71,7 +71,7 @@ describe('CompilerOptionsResolver', () => {
 		writePluginPackage(layerDir, 'base');
 		writePluginPackage(clientDir, 'client');
 
-		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: [PLUGIN_NAME] }, layerDir);
 		resolver.addConfig({ plugins: [PLUGIN_NAME] }, clientDir);
 
@@ -103,7 +103,7 @@ describe('CompilerOptionsResolver', () => {
 		writeNamedPluginPackage(baseDir, '@fixture/base', ['basePlugin']);
 		writeNamedPluginPackage(appDir, '@fixture/app', ['appPlugin']);
 
-		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: ['@fixture/base'] }, baseDir);
 		resolver.addConfig({ plugins: ['@fixture/app'] }, appDir);
 
@@ -116,7 +116,7 @@ describe('CompilerOptionsResolver', () => {
 		const appDir = path.join(tmpDir, 'app');
 		writeNamedPluginPackage(baseDir, '@fixture/base', ['basePlugin']);
 
-		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: ['@fixture/base'] }, baseDir);
 		resolver.addConfig({ jsxSlots: true }, appDir);
 
@@ -131,7 +131,7 @@ describe('CompilerOptionsResolver', () => {
 		const appDir = path.join(tmpDir, 'app');
 		writeNamedPluginPackage(baseDir, '@fixture/base', ['basePlugin']);
 
-		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: ['@fixture/base'] }, baseDir);
 		resolver.addConfig({ plugins: [] }, appDir);
 
@@ -142,7 +142,7 @@ describe('CompilerOptionsResolver', () => {
 		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-array-'));
 		writeNamedPluginPackage(tmpDir, '@fixture/multi', ['firstPlugin', 'secondPlugin']);
 
-		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: ['@fixture/multi'] }, tmpDir);
 
 		expect(resolver.build().plugins.map(plugin => plugin.name)).toEqual(['firstPlugin', 'secondPlugin']);
@@ -151,7 +151,7 @@ describe('CompilerOptionsResolver', () => {
 	it('has no plugins when no config declares them', () => {
 		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-none-'));
 
-		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ jsxSlots: true }, tmpDir);
 
 		expect(resolver.build().plugins).toEqual([]);

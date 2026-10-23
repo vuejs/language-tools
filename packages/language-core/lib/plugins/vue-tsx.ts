@@ -70,7 +70,7 @@ function useCodegen(
 	const getResolvedOptions = computed(() => {
 		const options = parseVueCompilerOptions(ir.comments);
 		if (options) {
-			const resolver = new CompilerOptionsResolver(ts, () => undefined /* does not support resolving target="auto" */);
+			const resolver = new CompilerOptionsResolver(() => undefined /* does not support resolving target="auto" */);
 			resolver.addConfig(options, path.dirname(fileName));
 			return resolver.build(vueCompilerOptions);
 		}
