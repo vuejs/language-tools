@@ -190,6 +190,17 @@ export function* generateComponent(
 	)];
 	const propsStr = toString(propCodes);
 
+	// The instance type comes from a real construct call with a copy of the props: only a call resolves the
+	// overloads of the component and infers its type parameters from the props, including intersections of
+	// construct signatures such as `DefineComponent<...> & (new <T>(props: { items: T[] }, slots) => ...)` of
+	// Vuetify's `genericComponent`. Inferring from the constructor type alone takes the last overload and loses
+	// the type parameters of intersections. The two `@ts-ignore`s cover what the call reports for valid templates:
+	// - components that are not constructable (functional components, plain objects, `{}`) or abstract;
+	// - construct signatures of other arities (`new () => ...`, Vuetify's `(props, slots)`);
+	// - excess or weakly matching props, since attributes and events are passed along with the props;
+	// - diagnostics of the copy itself: its expressions have the parameter types of the constructor as contextual
+	//   type (`any` for `DefineComponent`), so function expressions report implicit `any`, and typing it like
+	//   `$props` instead would report every props error a second time. The copy is not mapped to the template.
 	yield `// @ts-ignore${newLine}`;
 	yield `const ${functionalVar} = ${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
