@@ -9,6 +9,7 @@ import {
 	isCompletionEnabled,
 	isSemanticTokensEnabled,
 	type LanguagePlugin,
+	tsCodegen,
 	VueVirtualCode,
 } from '@vue/language-core';
 import {
@@ -19,10 +20,15 @@ import {
 } from '@vue/language-service';
 import type { TextEdit } from '@vue/language-service/lib/requests';
 import { placeScriptImportEdits } from '@vue/language-service/lib/utils';
-import { capitalize } from '@vue/shared';
+import { camelize, capitalize } from '@vue/shared';
 import * as path from 'node:path';
 import { URI } from 'vscode-uri';
-import { getComponentPropsOffset, toServiceScriptOffset, toSourceOffset } from './componentMeta';
+import {
+	getComponentPropsOffset,
+	toServiceScriptOffset,
+	toServiceScriptOffsets,
+	toSourceOffset,
+} from './componentMeta';
 import { createReactivityAnalyzer, getInterpolationRanges, type ReactivityAnalysisParams } from './reactivity';
 import {
 	connectTypeScriptProjectResolver,
@@ -302,26 +308,43 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 					catch {}
 				},
-				async getImportFixes(fileName, position, isComponentTag) {
+				async getImportFixes(fileName, position, tag) {
 					try {
 						const script = await getVueScript(fileName);
-						const offset = script && toServiceScriptOffset(
-							script.language,
-							script.sourceScript,
-							script.virtualCode,
-							position,
-							data => !!data.__importCompletion,
-						);
-						if (!script || offset === undefined) {
+						if (!script) {
 							return;
 						}
 						const api = await connectTypeScriptApi();
-						const name = await api.getUnresolvedName(fileName, offset);
+						let name: string | undefined;
+						if (tag !== undefined) {
+							const tagNames = [tag, camelize(tag), capitalize(camelize(tag))];
+							const setupBindings = tsCodegen.get(script.virtualCode.ir)?.getSetupBindings();
+							const componentNames = await api.getComponentNames(fileName, script.virtualCode);
+							if (
+								!componentNames
+								|| tagNames.some(tagName => setupBindings?.has(tagName) || componentNames.includes(tagName))
+							) {
+								return;
+							}
+							name = camelize(tag);
+						}
+						else {
+							const offsets = toServiceScriptOffsets(
+								script.language,
+								script.sourceScript,
+								script.virtualCode,
+								position,
+								data => !!data.navigation,
+							);
+							for (const offset of offsets) {
+								name ??= await api.getUnresolvedName(fileName, offset);
+							}
+						}
 						if (!name) {
 							return;
 						}
 						let candidates: { fileName: string; edits: readonly TextEdit[] | undefined }[];
-						if (isComponentTag) {
+						if (tag !== undefined) {
 							const components = (await api.getAutoImportComponents(fileName) ?? [])
 								.filter(component => component.name === name || component.name === capitalize(name));
 							candidates = await Promise.all(components.map(async component => ({

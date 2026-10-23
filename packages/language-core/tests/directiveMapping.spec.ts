@@ -30,7 +30,7 @@ import { vOnClickOutside } from '@vueuse/components';
 		.filter(ranges => ranges.length && ranges.every(([rangeStart, rangeEnd]) => rangeStart >= start && rangeEnd <= end))
 		.map(ranges => [Math.min(...ranges.map(range => range[0])), Math.max(...ranges.map(range => range[1]))]);
 
-	expect(spans.length).toBeGreaterThan(1);
+	expect(spans.length).toBeGreaterThan(0);
 	for (const span of spans) {
 		expect(span).toEqual([start, end]);
 	}

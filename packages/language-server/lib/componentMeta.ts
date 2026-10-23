@@ -295,18 +295,34 @@ export function toServiceScriptOffset(
 	virtualCode: VueVirtualCode,
 	sourceOffset: number,
 	filter: (data: VueCodeInformation) => boolean,
+): number | undefined {
+	return toServiceScriptOffsets(language, sourceScript, virtualCode, sourceOffset, filter)[0];
+}
+
+/**
+ * The offsets an offset of a Vue file's source text maps to in its generated service script, through the mappings
+ * `filter` accepts, including those ending at the offset.
+ */
+export function toServiceScriptOffsets(
+	language: Language<URI>,
+	sourceScript: SourceScript<URI>,
+	virtualCode: VueVirtualCode,
+	sourceOffset: number,
+	filter: (data: VueCodeInformation) => boolean,
 ) {
 	const serviceScript = getServiceScript(virtualCode);
 	if (!serviceScript) {
-		return;
+		return [];
 	}
+	const offsets: number[] = [];
 	for (
 		const [offset, mapping] of language.maps.get(serviceScript.code, sourceScript).toGeneratedLocation(sourceOffset)
 	) {
 		if (filter(mapping.data)) {
-			return offset;
+			offsets.push(offset);
 		}
 	}
+	return offsets;
 }
 
 /**

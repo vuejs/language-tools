@@ -31,6 +31,11 @@ const identical = Math.random() > 0.5 ? A : C;
 	<component :is="differing" @change="exactType($event, {} as any)" />
 	<component :is="identical" @change="exactType($event, {} as number)" />
 	<notComp />
+	<!-- @vue-expect-error -->
+	<Missing />
+	<!-- @vue-expect-error -->
+	<missing-comp></missing-comp>
+	<Transition></Transition>
 	<div @click="exactType($event, {} as PointerEvent)" @custom-event="exactType($event, {} as any)" />
 
 	<!-- @vue-expect-error -->

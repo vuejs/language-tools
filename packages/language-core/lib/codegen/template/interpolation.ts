@@ -25,9 +25,7 @@ export function* generateInterpolation(
 	}
 
 	const { completion, ...featuresWithoutCompletion } = features;
-	const memberFeatures: VueCodeInformation = completion
-		? { ...codeFeatures.importCompletionOnly, completion }
-		: codeFeatures.importCompletionOnly;
+	const memberFeatures: VueCodeInformation = completion ? { completion } : {};
 
 	let prevEnd = 0;
 	for (

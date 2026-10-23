@@ -24,12 +24,7 @@ export function create(
 					}
 					const offset = document.offsetAt(range.start);
 					const tag = getComponentTagAt(template, offset);
-					// The generated reference of an unresolved tag maps from its start tag only.
-					const fixes = await getImportFixes(
-						info.root.fileName,
-						template.startTagEnd + (tag?.startTagNameOffset ?? offset),
-						!!tag,
-					);
+					const fixes = await getImportFixes(info.root.fileName, template.startTagEnd + offset, tag?.tag);
 					if (!fixes?.length) {
 						return;
 					}

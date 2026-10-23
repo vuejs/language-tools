@@ -271,6 +271,16 @@ test('Auto import components exported from .vue and .ts files', async () => {
 	);
 });
 
+test('Auto import components into a JS script setup', async () => {
+	expect(
+		await applyCompletionItem(
+			'tsconfigProject/fixture.vue',
+			`<script setup>\nconst a = 1;\n</script>\n\n<template><| /></template>`,
+			'Comp',
+		),
+	).toBe(`<script setup>\nimport { Comp } from './comp';\n\nconst a = 1;\n</script>\n\n<template><Comp /></template>`);
+});
+
 test('Auto import picks up the components another file changes', async () => {
 	const getLabels = async () =>
 		(await requestCompletionListToVueServer('tsconfigProject/fixture.vue', 'vue', `<template><| /></template>`))

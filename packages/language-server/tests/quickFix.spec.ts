@@ -48,6 +48,64 @@ test('"Add import" quick fix for an unresolved component tag', async () => {
 		});
 });
 
+test('"Add import" quick fix for an unresolved component tag in JS', async () => {
+	expect(
+		await applyImportFixes(
+			'tsconfigProject/fixture.vue',
+			`<script setup>\nconst a = 1;\n</script>\n\n<template><|Comp /></template>`,
+		),
+	).toEqual({
+		'Add import from "./comp"':
+			`<script setup>\nimport { Comp } from './comp';\n\nconst a = 1;\n</script>\n\n<template><Comp /></template>`,
+	});
+});
+
+test('"Add import" quick fix for an unresolved kebab-case component tag', async () => {
+	expect(await applyImportFixes('tsconfigProject/fixture.vue', `${scriptSetup}<template><|empty /></template>`))
+		.toEqual({
+			'Add import from "./empty.vue"':
+				`<script setup lang="ts">\nimport Empty from './empty.vue';\n\nconst a = 1;\n</script>\n\n<template><empty /></template>`,
+		});
+	await prepareDocument(
+		'tsconfigProject/fixture.ts',
+		'typescript',
+		`import { defineComponent } from 'vue';\nexport const MyComp = defineComponent({});`,
+	);
+	expect(
+		await applyImportFixes('tsconfigProject/fixture.vue', `${scriptSetup}<template><my-comp></|my-comp></template>`),
+	)
+		.toEqual({
+			'Add import from "./fixture"':
+				`<script setup lang="ts">\nimport { MyComp } from './fixture';\n\nconst a = 1;\n</script>\n\n<template><my-comp></my-comp></template>`,
+		});
+});
+
+test('no "Add import" quick fix for an imported or global component tag', async () => {
+	expect(
+		await applyImportFixes(
+			'tsconfigProject/fixture.vue',
+			`<script setup lang="ts">\nimport { Comp } from './comp';\n</script>\n\n<template><|Comp /><comp /></template>`,
+		),
+	).toEqual({});
+	expect(
+		await applyImportFixes(
+			'tsconfigProject/fixture.vue',
+			`<script setup lang="ts">\nimport { Comp } from './comp';\n</script>\n\n<template><Comp /><|comp /></template>`,
+		),
+	).toEqual({});
+	expect(
+		Object.keys(await applyImportFixes('tsconfigProject/fixture.vue', `${scriptSetup}<template><|Comp /></template>`)),
+	)
+		.toEqual(['Add import from "./comp"']);
+	await prepareDocument(
+		'tsconfigProject/fixture.ts',
+		'typescript',
+		`declare module 'vue' {\n\tinterface GlobalComponents {\n\t\tComp: typeof import('./comp').Comp;\n\t}\n}\nexport {};\n`,
+	);
+	expect(await applyImportFixes('tsconfigProject/fixture.vue', `${scriptSetup}<template><|Comp /></template>`))
+		.toEqual({});
+});
+
 test('"Add import" quick fix into a Vue file without script', async () => {
 	expect(await applyImportFixes('tsconfigProject/fixture.vue', `<template>{{ |NotComp }}</template>`)).toEqual({
 		'Add import from "./comp"':

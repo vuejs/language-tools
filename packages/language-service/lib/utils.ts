@@ -64,7 +64,7 @@ export function getComponentTagAt(template: IRTemplate, offset: number) {
 		}
 		for (const start of starts) {
 			if (offset >= start && offset <= start + node.tag.length) {
-				return { tag: node.tag, start, end: start + node.tag.length, startTagNameOffset: starts[0]! };
+				return { tag: node.tag, start, end: start + node.tag.length };
 			}
 		}
 	}

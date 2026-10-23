@@ -103,10 +103,7 @@ export function* generateComponent(
 			yield* generateIdentifier(
 				options,
 				ctx,
-				generateCamelized(camelizedTag, 'template', startTagOffset, {
-					...codeFeatures.tagName,
-					...codeFeatures.importCompletionOnly,
-				}),
+				generateCamelized(camelizedTag, 'template', startTagOffset, codeFeatures.tagName),
 				matchedBinding,
 				'template',
 				startTagOffset,
@@ -148,8 +145,8 @@ export function* generateComponent(
 			});
 
 			if (identifierRE.test(camelize(tag))) {
-				// navigation support
-				yield `/** @ts-ignore @type {`;
+				// navigation support; TypeScript does not check the type of a JSDoc on an expression statement
+				yield `/** @type {`;
 				for (const offset of [startTagOffset, endTagOffset]) {
 					if (offset === undefined) {
 						continue;
@@ -167,9 +164,7 @@ export function* generateComponent(
 					}
 				}
 				yield `} */${newLine}`;
-				// auto import support
-				yield* generateCamelized(tag, 'template', startTagOffset, codeFeatures.importCompletionOnly);
-				yield endOfLine;
+				yield `${componentVar}${endOfLine}`;
 			}
 		}
 	}

@@ -1,10 +1,8 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
-import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
-import { generateCamelized } from '../utils/camelized';
 import { isLiteralWhitelisted } from './bindingReferences';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
@@ -259,7 +257,8 @@ export function createTemplateCodegenContext(scriptLang: string) {
 	}
 
 	function* generateScopeMembers(scope: Scope): Generator<Code> {
-		if (!scope.members.length) {
+		const completionMembers = scope.members.filter(([, , , features]) => features.completion);
+		if (!completionMembers.length) {
 			return;
 		}
 		generatedTypes.add(names.Scope);
@@ -277,11 +276,15 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		}
 		yield `{${newLine}`;
 		yield `const ${names.scope} = ${asType(type, scriptLang)}${endOfLine}`;
-		yield `// @ts-ignore${newLine}`; // #2304
 		yield `[`;
-		for (const [, source, offset, features, sourceName] of scope.members) {
+		for (const [, source, offset, features, sourceName] of completionMembers) {
+			// The completion of a member lists the members of the scope whatever its name, so the edges of each
+			// identifier map around `constructor`, which resolves on any object without being listed, instead of a
+			// name the scope may not have.
 			yield `${names.scope}.`;
-			yield* generateCamelized(sourceName, source, offset, features);
+			yield [``, source, offset, features];
+			yield `constructor`;
+			yield [``, source, offset + sourceName.length, features];
 			yield `,`;
 		}
 		yield `]${endOfLine}`;
@@ -301,7 +304,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		accessLog.push(name);
 		contextAccesses.add(name);
 		if (offset !== undefined) {
-			recordScopeMember(name, source, offset, codeFeatures.importCompletionOnly, sourceName);
+			recordScopeMember(name, source, offset, {}, sourceName);
 		}
 		if (dotValue) {
 			dotValueAccesses.add(name);

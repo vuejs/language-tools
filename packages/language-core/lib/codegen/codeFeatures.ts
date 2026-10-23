@@ -17,10 +17,6 @@ export const codeFeatures = defineCodeFeatures({
 		navigation: true,
 	},
 	/** @internal */
-	importCompletionOnly: {
-		__importCompletion: true,
-	},
-	/** @internal */
 	verification: {
 		verification: true,
 	},

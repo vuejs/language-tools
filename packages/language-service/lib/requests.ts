@@ -101,13 +101,13 @@ export interface Requests {
 		component: AutoImportComponent,
 	): Response<readonly TextEdit[]>;
 	/**
-	 * Quick fixes that import the unresolved name at `position` in the template of the Vue file `fileName`: the
-	 * components named like the tag when `isComponentTag`, otherwise the named exports of the name.
+	 * Quick fixes that import, into the Vue file `fileName`, the components named like `tag` when it resolves to no
+	 * component, otherwise the named exports of the unresolved name at `position` of the template.
 	 */
 	getImportFixes(
 		fileName: string,
 		position: number,
-		isComponentTag: boolean,
+		tag: string | undefined,
 	): Response<ImportFix[]>;
 	/** The declaration of the component `tag` refers to, when another file declares it. */
 	getComponentDefinition(
