@@ -724,7 +724,7 @@ export function resolveCompletionResult<T>(
 					item.name = capitalize(item.name.slice(0, -suffix.length));
 					if (item.insertText) {
 						// #2286
-						item.insertText = item.insertText.replace(`${suffix}$1`, '$1');
+						item.insertText = item.insertText.replace(`${oldName}$1`, `${item.name}$1`);
 					}
 					if (data) {
 						data.__vue__componentAutoImport = {
