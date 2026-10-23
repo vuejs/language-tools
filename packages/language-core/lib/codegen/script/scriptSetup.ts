@@ -6,6 +6,7 @@ import { names } from '../names';
 import {
 	asType,
 	endOfLine,
+	generateExportDeclareEqual,
 	generateSfcBlockSection,
 	generateTypeAlias,
 	generateTypedVar,
@@ -43,6 +44,10 @@ export function* generateGeneric(
 	generic: NonNullable<IRScriptSetup['generic']>,
 	body: Iterable<Code>,
 ): Generator<Code> {
+	// Collected up front: whether `__VLS_PublicProps` was generated is only known
+	// once the body ran, and the setup result type has to be emitted before it.
+	const bodyCodes = [...body];
+
 	yield `(`;
 	if (typeof generic === 'object') {
 		const boundary = yield* Boundary.start(
@@ -65,8 +70,6 @@ export function* generateGeneric(
 		+ `	${names.exposed}?: NonNullable<Awaited<typeof ${names.setup}>>['expose'],${newLine}`
 		+ `	${names.setup} = (async () => {${newLine}`;
 
-	yield* body;
-
 	const propTypes: string[] = [];
 	const emitTypes: string[] = [];
 	const { vueCompilerOptions } = options;
@@ -75,14 +78,6 @@ export function* generateGeneric(
 		propTypes.push(names.PublicProps);
 	}
 	if (scriptSetupRanges.defineProps?.arg) {
-		yield `const ${names.propsOption} = `;
-		yield* generateSfcBlockSection(
-			scriptSetup,
-			scriptSetupRanges.defineProps.arg.start,
-			scriptSetupRanges.defineProps.arg.end,
-			codeFeatures.navigation,
-		);
-		yield endOfLine;
 		propTypes.push(
 			`import('${vueCompilerOptions.lib}').${
 				vueCompilerOptions.target >= 3.3 ? `ExtractPublicPropTypes` : `ExtractPropTypes`
@@ -102,40 +97,59 @@ export function* generateGeneric(
 		emitTypes.push(`typeof ${names.modelEmit}`);
 	}
 
-	yield `return {} as {${newLine}`;
-	yield `	props: `;
-	yield vueCompilerOptions.target >= 3.4
-		? `import('${vueCompilerOptions.lib}').PublicProps`
-		: vueCompilerOptions.target >= 3
-		? `import('${vueCompilerOptions.lib}').VNodeProps`
-			+ ` & import('${vueCompilerOptions.lib}').AllowedComponentProps`
-			+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`
-		: `globalThis.JSX.IntrinsicAttributes`;
-	if (propTypes.length) {
-		yield ` & ${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}>`;
+	// Emitted ahead of the body for the same reason as the component declaration
+	// in `generateSetupFunction`: the `typeof` queries below have to resolve at a
+	// position before the template's `__VLS_withDotValue` assertions.
+	yield* generateTypeAlias(names.SetupResult, options.scriptLang, function*() {
+		yield `{${newLine}`;
+		yield `	props: `;
+		yield vueCompilerOptions.target >= 3.4
+			? `import('${vueCompilerOptions.lib}').PublicProps`
+			: vueCompilerOptions.target >= 3
+			? `import('${vueCompilerOptions.lib}').VNodeProps`
+				+ ` & import('${vueCompilerOptions.lib}').AllowedComponentProps`
+				+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`
+			: `globalThis.JSX.IntrinsicAttributes`;
+		if (propTypes.length) {
+			yield ` & ${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}>`;
+		}
+		yield ` & (typeof globalThis extends { __VLS_PROPS_FALLBACK: infer P } ? P : {})${endOfLine}`;
+		yield `	expose: (exposed: `;
+		yield scriptSetupRanges.defineExpose
+			? `import('${vueCompilerOptions.lib}').ShallowUnwrapRef<typeof ${names.exposed}>`
+			: `{}`;
+		if (
+			options.vueCompilerOptions.inferComponentDollarRefs
+			&& options.templateAndStyleTypes.has(names.TemplateRefs)
+		) {
+			yield ` & { $refs: ${names.TemplateRefs}; }`;
+		}
+		if (
+			options.vueCompilerOptions.inferComponentDollarEl
+			&& options.templateAndStyleTypes.has(names.RootEl)
+		) {
+			yield ` & { $el: ${names.RootEl}; }`;
+		}
+		yield `) => void${endOfLine}`;
+		yield `	attrs: any${endOfLine}`;
+		yield `	slots: ${hasSlotsType(options) ? names.Slots : `{}`}${endOfLine}`;
+		yield `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`}${endOfLine}`;
+		yield `}`;
+	});
+
+	yield* bodyCodes;
+
+	if (scriptSetupRanges.defineProps?.arg) {
+		yield `const ${names.propsOption} = `;
+		yield* generateSfcBlockSection(
+			scriptSetup,
+			scriptSetupRanges.defineProps.arg.start,
+			scriptSetupRanges.defineProps.arg.end,
+			codeFeatures.navigation,
+		);
+		yield endOfLine;
 	}
-	yield ` & (typeof globalThis extends { __VLS_PROPS_FALLBACK: infer P } ? P : {})${endOfLine}`;
-	yield `	expose: (exposed: `;
-	yield scriptSetupRanges.defineExpose
-		? `import('${vueCompilerOptions.lib}').ShallowUnwrapRef<typeof ${names.exposed}>`
-		: `{}`;
-	if (
-		options.vueCompilerOptions.inferComponentDollarRefs
-		&& options.templateAndStyleTypes.has(names.TemplateRefs)
-	) {
-		yield ` & { $refs: ${names.TemplateRefs}; }`;
-	}
-	if (
-		options.vueCompilerOptions.inferComponentDollarEl
-		&& options.templateAndStyleTypes.has(names.RootEl)
-	) {
-		yield ` & { $el: ${names.RootEl}; }`;
-	}
-	yield `) => void${endOfLine}`;
-	yield `	attrs: any${endOfLine}`;
-	yield `	slots: ${hasSlotsType(options) ? names.Slots : `{}`}${endOfLine}`;
-	yield `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`}${endOfLine}`;
-	yield `}${endOfLine}`;
+	yield `return ${asType(names.SetupResult, options.scriptLang)}${endOfLine}`;
 	yield `})(),${newLine}`; // __VLS_setup = (async () => {
 	yield `) => ({} as import('${vueCompilerOptions.lib}').VNode & { __ctx?: NonNullable<Awaited<typeof ${names.setup}>> }))${endOfLine}`;
 }
@@ -146,7 +160,7 @@ export function* generateSetupFunction(
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 	body: Iterable<Code>,
-	output?: Iterable<Code>,
+	output?: 'export' | 'return',
 ): Generator<Code> {
 	const transforms: CodeTransform[] = [];
 
@@ -358,22 +372,46 @@ export function* generateSetupFunction(
 	);
 	yield* generateModels(options, scriptSetup, scriptSetupRanges);
 	yield* generatePublicProps(options, ctx, scriptSetup, scriptSetupRanges);
-	yield* body;
 
+	// The component is declared ahead of the template code, which starts with
+	// flow-sensitive `__VLS_withDotValue` assertions. A reference to the
+	// component placed after them would force TypeScript to resolve those
+	// assertion calls while the component type is still being computed, which
+	// reports a circular implicit `any` whenever a setup binding transitively
+	// imports this component.
 	if (output) {
+		const declare: Iterable<Code> = output === 'export'
+			? generateExportDeclareEqual(scriptSetup, names.export)
+			: [`const ${names.component} = `];
 		if (hasSlotsType(options)) {
 			yield `const ${names.base} = `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
-			yield* output;
+			yield* declare;
 			yield asType(`${ctx.localTypes.WithSlots}<typeof ${names.base}, ${names.Slots}>`, options.scriptLang);
 			yield endOfLine;
 		}
 		else {
-			yield* output;
+			yield* declare;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 		}
+		if (output === 'export') {
+			yield `export default ${asType(`typeof ${names.export}`, options.scriptLang)}${endOfLine}`;
+		}
+		else {
+			// A `return` has to stay last, so the component is reached through an
+			// alias; a type alias resolves `typeof` at its own position.
+			yield* generateTypeAlias(names.Component, options.scriptLang, function*() {
+				yield `typeof ${names.component}`;
+			});
+		}
+	}
+
+	yield* body;
+
+	if (output === 'return') {
+		yield `return ${asType(names.Component, options.scriptLang)}${endOfLine}`;
 	}
 }
 
