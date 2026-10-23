@@ -24,7 +24,7 @@
 		}
 	},
 	"peerDependencies": {
-		"typescript": ">=5.0.0"
+		"typescript": ">=7.1.0-beta"
 	},
 	"dependencies": {
 		"@volar/language-core": "2.4.30",

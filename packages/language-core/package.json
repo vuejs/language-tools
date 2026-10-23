@@ -27,6 +27,14 @@
 		"path-browserify": "^1.0.1",
 		"picomatch": "^4.0.4"
 	},
+	"peerDependencies": {
+		"typescript": ">=7.1.0-beta"
+	},
+	"peerDependenciesMeta": {
+		"typescript": {
+			"optional": true
+		}
+	},
 	"devDependencies": {
 		"@types/node": "^26.0.1",
 		"@types/path-browserify": "^1.0.3",
