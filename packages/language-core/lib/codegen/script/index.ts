@@ -111,7 +111,7 @@ function* generateWorker(
 		}
 
 		// <script setup>
-		yield* generateExportDeclareEqual(scriptSetup, names.export);
+		yield* generateComponentDeclareEqual(scriptSetup, names.export);
 		if (scriptSetup.generic) {
 			yield* generateGeneric(
 				options,
@@ -147,7 +147,7 @@ function* generateWorker(
 		yield* generateMacros(options);
 
 		if (scriptSetup.generic) {
-			yield* generateExportDeclareEqual(scriptSetup, names.export);
+			yield* generateComponentDeclareEqual(scriptSetup, names.export);
 			yield* generateGeneric(
 				options,
 				ctx,
@@ -171,7 +171,7 @@ function* generateWorker(
 				scriptSetup,
 				scriptSetupRanges,
 				generateTemplate(options),
-				generateExportDeclareEqual(scriptSetup, names.export),
+				generateComponentDeclareEqual(scriptSetup, names.export),
 			);
 		}
 		yield* generateSyntheticDefaultExport(exportExpression);
@@ -193,7 +193,7 @@ function* generateWorker(
 		}
 		else {
 			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
-			yield* generateExportDeclareEqual(script, names.export);
+			yield* generateComponentDeclareEqual(script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 			yield* generateTemplate(options, names.export);
 			yield* generateSyntheticDefaultExport(exportExpression);
@@ -249,7 +249,7 @@ function* generateScriptWithExportDefault(
 	if (templateGenerator) {
 		yield* templateGenerator;
 	}
-	yield* generateExportDeclareEqual(script, varName);
+	yield* generateComponentDeclareEqual(script, varName);
 	if (wrapLeft && wrapRight) {
 		yield wrapLeft;
 		yield* generateSfcBlockSection(script, expression.start, expression.end, codeFeatures.all);
@@ -287,14 +287,21 @@ function* generateGlobalTypesReference(
 	}
 }
 
+// The component declaration has no source of its own: map it to the tag name of its block,
+// so that its declaration emit errors (e.g. a private type of a generic component) report there.
+function* generateComponentDeclareEqual(block: IRBlock, name: string): Generator<Code> {
+	const tagNameStart = block.start + 1;
+	yield* generateExportDeclareEqual('main', name, tagNameStart, tagNameStart + 'script'.length);
+}
+
 export function* generateExportDeclareEqual(
-	block: IRBlock,
+	source: string,
 	name: string,
-	start = 0,
-	end = block.content.length,
+	start: number,
+	end: number,
 ): Generator<Code> {
 	yield `const `;
-	const boundary = yield* Boundary.start(block.name, start, end, codeFeatures.verification);
+	const boundary = yield* Boundary.start(source, start, end, codeFeatures.verification);
 	yield name;
 	yield boundary.end();
 	yield ` = `;

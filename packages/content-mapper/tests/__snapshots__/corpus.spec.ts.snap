@@ -25,8 +25,7 @@ exports[`content mapper full corpus 1`] = `
   "test-workspace/tsc/_failed_#3632/both.vue(7,1): error TS1109: Expression expected.",
   "test-workspace/tsc/_failed_#3632/script.vue(3,1): error TS1109: Expression expected.",
   "test-workspace/tsc/_failed_#3632/scriptSetup.vue(3,1): error TS1109: Expression expected.",
-  "test-workspace/tsc/_failed_#4569/main.vue(4,7): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.
-  This location is in virtual code produced by the content mapper '@vue/content-mapper@3.3.9' and has no corresponding location in the original file.",
+  "test-workspace/tsc/_failed_#4569/main.vue(1,2): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.",
   "test-workspace/tsc/_failed_#5071/withScript.vue(1,19): error TS1005: ';' expected.",
   "test-workspace/tsc/_failed_#5071/withoutScript.vue(2,26): error TS1005: ';' expected.",
   "test-workspace/tsc/_failed_#5823/main.vue(6,13): error TS1109: Expression expected.",

@@ -208,7 +208,7 @@ export function* generateComponent(
 	yield propsStr;
 	yield `}))${endOfLine}`;
 
-	yield* generateExportDeclareEqual(options.template, vnodeVar, node.loc.start.offset, node.loc.end.offset);
+	yield* generateExportDeclareEqual(options.template.name, vnodeVar, node.loc.start.offset, node.loc.end.offset);
 	yield functionalVar;
 
 	const commentInfo = ctx.getCommentInfo();
