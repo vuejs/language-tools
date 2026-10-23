@@ -566,6 +566,9 @@
 			"path": "./attrs/tsconfig.json"
 		},
 		{
+			"path": "./componentConstructor/tsconfig.json"
+		},
+		{
 			"path": "./components/tsconfig.json"
 		},
 		{
