@@ -2,7 +2,6 @@
 import { ref } from 'vue';
 import { exactType } from '../shared';
 import Child from './child.vue';
-import OverloadEmits from './overloadEmits.vue';
 
 declare const Overloaded: new() => {
 	$props: { onChange?: { (value: number): void; (value: string, extra: boolean): void } };
@@ -14,6 +13,7 @@ declare const A: new() => { $props: { onChange?: (value: number) => void } };
 declare const B: new() => { $props: { onChange?: (value: string) => void } };
 declare const C: new() => { $props: { onChange?: (num: number) => void; extra?: string } };
 declare const Union: new() => { $props: { onChange?: ((value: number) => void) | ((value: string) => void) } };
+declare const UnionParams: new() => { $props: { onChange?: (...args: [number] | [string, boolean]) => void } };
 declare const Untyped: {};
 
 const text = ref('');
@@ -34,11 +34,10 @@ const identical = Math.random() > 0.5 ? A : C;
 	<Union @change="exactType($event, {} as any); count++" />
 	<component :is="differing" @change="exactType($event, {} as any); count++" />
 
-	<!-- one signature with a union of parameter lists -->
-	<OverloadEmits @change="exactType($event, {} as string | number); count++" />
+	<!-- one signature with a union of parameter lists, e.g. overloaded `defineEmits` of one event -->
+	<UnionParams @change="exactType($event, {} as string | number); count++" />
 
 	<!-- the same parameters -->
-	<OverloadEmits @same="exactType($event, {} as number); count++" />
 	<SameOverloads @change="exactType($event, {} as number); count++" />
 	<component :is="identical" @change="exactType($event, {} as number); count++" />
 
