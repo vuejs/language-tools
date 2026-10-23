@@ -471,7 +471,8 @@
 	"scripts": {
 		"vscode:prepublish": "rolldown --config",
 		"pack": "npx @vscode/vsce package",
-		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generated-meta.ts && cd ../.. && npm run format"
+		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generated-meta.ts && cd ../.. && npm run format",
+		"version": "npm run gen-ext-meta && git add src/generated-meta.ts"
 	},
 	"devDependencies": {
 		"@types/node": "^26.0.1",
