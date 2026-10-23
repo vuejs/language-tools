@@ -1,8 +1,9 @@
+import { replaceRange } from 'muggle-string';
 import type { Code, IRBlock, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { getRefBrandArgument, getTypeScriptAST, identifierRE } from '../utils';
+import { endOfLine, getRefBrandArgument, getTypeScriptAST, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { forEachDeclarations, shouldIdentifierSkipped } from './bindingReferences';
 import type { TemplateCodegenContext } from './context';
@@ -20,8 +21,12 @@ export function* generateInterpolation(
 	suffix: string = '',
 	inNarrowing: boolean = false,
 ): Generator<Code> {
+	const generated: Code[] = [];
+	const identifierStarts = new Map<number, number>();
+	const identifierEnds = new Map<number, number>();
+	const functionMark = ctx.functionScopes.length;
 	if (prefix) {
-		yield prefix;
+		generated.push(prefix);
 	}
 
 	let prevEnd = 0;
@@ -37,23 +42,23 @@ export function* generateInterpolation(
 		)
 	) {
 		if (isShorthand) {
-			yield* generateNonIdentifierCode(
+			generated.push(...generateNonIdentifierCode(
 				code.slice(prevEnd, offset + name.length),
 				block.name,
 				start + prevEnd,
 				features,
 				prevEnd > 0,
-			);
-			yield `: `;
+			));
+			generated.push(`: `);
 		}
 		else if (prevEnd < offset) {
-			yield* generateNonIdentifierCode(
+			generated.push(...generateNonIdentifierCode(
 				code.slice(prevEnd, offset),
 				block.name,
 				start + prevEnd,
 				features,
 				prevEnd > 0,
-			);
+			));
 		}
 
 		const codes: Code[] = [[
@@ -65,7 +70,8 @@ export function* generateInterpolation(
 				: features,
 		]];
 
-		yield* generateIdentifier(
+		identifierStarts.set(start + offset, generated.length);
+		generated.push(...generateIdentifier(
 			options,
 			ctx,
 			codes,
@@ -76,23 +82,85 @@ export function* generateInterpolation(
 			isNarrowing,
 			inTypeQuery,
 			isNewOperand,
-		);
+		));
+		identifierEnds.set(start + offset + name.length, generated.length);
 
 		prevEnd = offset + name.length;
 	}
 
 	if (prevEnd < code.length) {
-		yield* generateNonIdentifierCode(
+		generated.push(...generateNonIdentifierCode(
 			code.slice(prevEnd),
 			block.name,
 			start + prevEnd,
 			features,
 			prevEnd > 0,
-		);
+		));
 	}
 
 	if (suffix) {
-		yield suffix;
+		generated.push(suffix);
+	}
+	const insertions: { index: number; offset: number; codes: Code[] }[] = [];
+	for (const scope of ctx.functionScopes.splice(functionMark)) {
+		const body = scope.functionBody!;
+		const bodyStart = start + body.start - prefix.length;
+		const bodyEnd = start + body.end - prefix.length;
+		const assertions = [...scope.reasserts].map(name =>
+			`${names.withDotValue}(${name}, ${getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)})${
+				body.isBlock ? endOfLine : ', '
+			}`
+		).join('');
+		const opening: Code[] = [`${body.isBlock ? newLine : ''}${assertions}`];
+		if (!body.isBlock) {
+			// Return-type errors can span the parentheses or the whole comma expression.
+			const bodyFeatures = { verification: features.verification };
+			const expressionFeatures = { ...bodyFeatures, __combineToken: Symbol() };
+			opening.unshift(
+				['(', block.name, bodyStart, bodyFeatures],
+				['', block.name, bodyStart, expressionFeatures],
+			);
+			insertions.push({
+				...toGeneratedPosition(bodyEnd, identifierEnds),
+				codes: [
+					['', block.name, bodyEnd, expressionFeatures],
+					[')', block.name, bodyEnd - 1, bodyFeatures],
+				],
+			});
+		}
+		insertions.push({
+			...toGeneratedPosition(bodyStart, identifierStarts),
+			codes: opening,
+		});
+	}
+	for (const insertion of insertions.reverse().sort((a, b) => b.index - a.index || b.offset - a.offset)) {
+		const { index, offset, codes } = insertion;
+		if (offset === 0) {
+			generated.splice(index, 0, ...codes);
+		}
+		else {
+			// Replace within one chunk so adjacent zero-length boundary mappings survive.
+			const chunk = [generated[index]!];
+			replaceRange(chunk, offset, offset, ...codes);
+			generated.splice(index, 1, ...chunk);
+		}
+	}
+	yield* generated;
+
+	function toGeneratedPosition(sourceOffset: number, identifiers: Map<number, number>) {
+		const identifierIndex = identifiers.get(sourceOffset);
+		if (identifierIndex !== undefined) {
+			return { index: identifierIndex, offset: 0 };
+		}
+		for (const [index, code] of generated.entries()) {
+			if (
+				typeof code !== 'string' && code[1] === block.name && code[2] <= sourceOffset
+				&& sourceOffset <= code[2] + code[0].length
+			) {
+				return { index, offset: sourceOffset - code[2] };
+			}
+		}
+		return { index: generated.length, offset: 0 };
 	}
 }
 
@@ -129,6 +197,7 @@ interface IdentifierOptions {
 	setupConsts: Set<string>;
 	setupBindings: Set<string>;
 	dotValueBindings: Set<string>;
+	reassertBindings?: Set<string>;
 	vueCompilerOptions: VueCompilerOptions;
 	scriptLang: string;
 }
@@ -172,6 +241,15 @@ export function* generateIdentifier(
 	else if (options.setupBindings.has(name)) {
 		// First pass records narrowing accesses here; the second pass emits from dotValueBindings.
 		ctx.accessVariable(source, name, start, inTypeQuery || isNarrowing);
+		if (options.reassertBindings?.has(name)) {
+			for (let i = ctx.scopes.length - 1; i >= 0; i--) {
+				const scope = ctx.scopes[i]!;
+				if (scope.functionBody) {
+					scope.reasserts.add(name);
+					break;
+				}
+			}
+		}
 		if (inTypeQuery || options.dotValueBindings.has(name)) {
 			yield* codes;
 			yield `.`;
