@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-core",
-	"version": "3.3.13",
+	"version": "4.0.0-alpha.0",
 	"license": "MIT",
 	"files": [
 		"index.d.ts",
