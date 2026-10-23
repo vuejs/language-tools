@@ -89,11 +89,16 @@ export function* generateGeneric(
 			}<typeof ${names.propsOption}>`,
 		);
 	}
-	if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
+	const hasEmitProps = scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length;
+	if (hasEmitProps) {
 		propTypes.push(names.EmitProps);
 	}
 	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
-		propTypes.push(names.InheritedAttrs);
+		propTypes.push(
+			hasEmitProps
+				? `Omit<${names.InheritedAttrs}, keyof ${names.EmitProps}>`
+				: names.InheritedAttrs,
+		);
 	}
 	if (scriptSetupRanges.defineEmits) {
 		emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}`);
