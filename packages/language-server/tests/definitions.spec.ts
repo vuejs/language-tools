@@ -101,6 +101,29 @@ async function requestVueDefinitions(file: string, search: string, delta: number
 	});
 }
 
+test('#6252', async () => {
+	await prepareDocument(
+		'tsconfigProject/components.ts',
+		'typescript',
+		`import Foo from './empty.vue'; export { Foo };`,
+	);
+
+	expect(
+		await requestDefinition(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<script setup lang="ts">
+			import { Foo } from './components';
+			</script>
+			<template>
+				<F|oo />
+			</template>
+		`,
+		),
+	).toEqual(['tsconfigProject/empty.vue:0:0-0:0']);
+});
+
 const openedDocuments: TextDocument[] = [];
 
 afterEach(async () => {
