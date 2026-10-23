@@ -349,6 +349,7 @@ export function* generateElement(
 		node,
 		node.props,
 		failedPropExps,
+		`typeof ${names.intrinsics}['${node.tag}']`,
 	);
 	yield `}`;
 	yield boundary.end();
@@ -407,6 +408,7 @@ export function* generateFragment(
 			node,
 			node.props,
 			failedPropExps,
+			`typeof ${names.intrinsics}.template`,
 		);
 		yield `}`;
 		yield boundary.end();

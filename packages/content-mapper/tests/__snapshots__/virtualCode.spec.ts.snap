@@ -7,29 +7,19 @@ exports[`generated code of js components type checks > diagnostics 1`] = `
   "Main.vue.js: error TS2339: Property 'ping' does not exist on type 'Omit<{ bar: (n: number) => void; foo: () => void; "update:a": (value: string) => void; }, never>'.",
   "Main.vue.js: error TS2345: Argument of type 'number' is not assignable to parameter of type 'never'.",
   "Main.vue.js: error TS2345: Argument of type 'undefined' is not assignable to parameter of type 'never'.",
-  "Main.vue.js: error TS2559: Type '{ onCustomEvent: ($event: any) => unknown; }' has no properties in common with type 'HTMLAttributes & ReservedProps'.",
+  "Main.vue.js: error TS2559: Type '{ onCustomEvent: (...[$event]: any[]) => unknown; }' has no properties in common with type 'HTMLAttributes & ReservedProps'.",
 ]
 `;
 
 exports[`generated code of js components type checks > lines under @ts-ignore 1`] = `
 [
-  "Main.vue.js: (...[$event])",
   "Main.vue.js: [__VLS_scope.",
-  "Main.vue.js: (...[$event])",
   "Main.vue.js: [__VLS_scope.",
-  "Main.vue.js: (...[$event])",
-  "Main.vue.js: (...[$event])",
   "Main.vue.js: [__VLS_scope.",
-  "Main.vue.js: (...[$event])",
-  "Main.vue.js: (...[$event])",
   "Main.vue.js: [__VLS_scope.",
-  "Main.vue.js: (...[$event])",
   "Main.vue.js: [__VLS_scope.",
-  "Main.vue.js: (...[$event])",
   "Main.vue.js: [__VLS_scope.",
-  "Main.vue.js: (...[$event])",
   "Main.vue.js: [__VLS_scope.",
-  "Main.vue.js: (...[$event])",
   "Main.vue.js: [__VLS_scope.",
   "Main.vue.js: [__VLS_scope.",
 ]
@@ -46,31 +36,17 @@ exports[`generated code of ts components type checks > diagnostics 1`] = `
 
 exports[`generated code of ts components type checks > lines under @ts-ignore 1`] = `
 [
-  "Comp.vue.ts: (...[$event])",
   "Comp.vue.ts: [__VLS_scope.",
-  "Main.vue.ts: (...[$event])",
   "Main.vue.ts: [__VLS_scope.",
-  "Main.vue.ts: (...[$event])",
   "Main.vue.ts: [__VLS_scope.",
-  "Main.vue.ts: (...[$event])",
-  "Main.vue.ts: (...[$event])",
-  "Main.vue.ts: (...[$event])",
   "Main.vue.ts: [__VLS_scope.",
-  "Main.vue.ts: (...[$event])",
   "Main.vue.ts: [__VLS_scope.",
-  "Main.vue.ts: (...[$event])",
   "Main.vue.ts: [__VLS_scope.",
-  "Main.vue.ts: (...[$event])",
   "Main.vue.ts: [__VLS_scope.",
-  "Main.vue.ts: (...[$event])",
   "Main.vue.ts: [__VLS_scope.",
-  "Main.vue.ts: (...[$event])",
   "Main.vue.ts: [__VLS_scope.",
-  "Main.vue.ts: (...[$event])",
   "Main.vue.ts: [__VLS_scope.",
-  "Main.vue.ts: (...[$event])",
   "Main.vue.ts: [__VLS_scope.",
-  "Main.vue.ts: (...[$event])",
   "Main.vue.ts: [__VLS_scope.",
   "Main.vue.ts: [__VLS_scope.",
 ]

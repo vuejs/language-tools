@@ -34,7 +34,8 @@ export function* generateSlotOutlet(
 	});
 
 	if (options.hasDefineSlots) {
-		yield `${names.asFunctionalSlot}(`;
+		const slotVar = ctx.getInternalVariable();
+		yield `const ${slotVar} = ${names.asFunctionalSlot}(`;
 		if (nameProp) {
 			let codes: Generator<Code> | Code[];
 			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
@@ -89,7 +90,8 @@ export function* generateSlotOutlet(
 			yield `]`;
 			yield boundary.end();
 		}
-		yield `)(`;
+		yield `)${endOfLine}`;
+		yield `${slotVar}(`;
 		const boundary = yield* Boundary.start(
 			'template',
 			startTagOffset,
@@ -102,6 +104,8 @@ export function* generateSlotOutlet(
 			ctx,
 			node,
 			node.props.filter(prop => prop !== nameProp),
+			undefined,
+			`Parameters<typeof ${slotVar}>[0]`,
 		);
 		yield `}`;
 		yield boundary.end();

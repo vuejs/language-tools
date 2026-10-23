@@ -95,6 +95,18 @@ declare global {
 		: __VLS_IsFunction<Emits, Event> extends true ? { [K in onEvent]?: Emits[Event & keyof Emits] }
 		: __VLS_IsFunction<Emits, CamelizedEvent> extends true ? { [K in onEvent]?: Emits[CamelizedEvent & keyof Emits] }
 		: Props;
+	// the rest parameter `$event` of an inline handler is destructured from, as if it were contextually typed by `T[K]`:
+	// the parameters of the handler (`[undefined?]` for none), or `any[]` without one handler signature
+	// (no such property, or overloads or union members of different parameters)
+	type __VLS_EventArgs<T, K extends PropertyKey> = K extends keyof T
+		? __VLS_IsAny<T[K]> extends true ? any[] : __VLS_HandlerArgs<__VLS_HandlerParameters<NonNullable<T[K]>>>
+		: any[];
+	type __VLS_HandlerParameters<F> = F extends unknown
+		? __VLS_OverloadUnion<F> extends infer S ? S extends (...args: infer P) => any ? P : never : never
+		: never;
+	type __VLS_HandlerArgs<P> = [P] extends [never] ? any[]
+		: [P] extends [__VLS_UnionToIntersection<P>] ? P extends [] ? [undefined?] : P
+		: any[];
 	// fix https://github.com/vuejs/language-tools/issues/926
 	type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends
 		((arg: infer P) => unknown) ? P : never;
