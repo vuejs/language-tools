@@ -86,10 +86,12 @@ export function create(
 					if (ir.script) {
 						const edit = createAddComponentToOptionEdit(ts, ir, ir.script.ast, newName);
 						if (edit) {
-							additionalEdit.changes[embeddedDocumentUriStr].push({
+							const scriptDocumentUriStr = context.encodeEmbeddedDocumentUri(info.script.id, 'script_raw')
+								.toString();
+							(additionalEdit.changes[scriptDocumentUriStr] ??= []).push({
 								range: {
-									start: document.positionAt(edit.range.start),
-									end: document.positionAt(edit.range.end),
+									start: ir.script.ast.getLineAndCharacterOfPosition(edit.range.start),
+									end: ir.script.ast.getLineAndCharacterOfPosition(edit.range.end),
 								},
 								newText: edit.newText,
 							});
