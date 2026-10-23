@@ -1,8 +1,8 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'path-browserify';
-import type * as ts from 'typescript';
-import type { IRTemplate, TextRange } from '../types';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type { IRTemplate, TextRange, TypeScript } from '../types';
 
 export { hyphenate as hyphenateTag } from '@vue/shared';
 
@@ -43,24 +43,49 @@ export function getElementTagOffsets(
 }
 
 export function getStartEnd<T extends ts.Node>(
-	ts: typeof import('typescript'),
 	node: T,
 	ast: ts.SourceFile,
 ): TextRange<T> {
 	return {
 		node,
-		start: (ts as any).getTokenPosOfNode(node, ast) as number,
+		start: node.getStart(ast),
 		end: node.end,
 	};
 }
 
 export function getNodeText(
-	ts: typeof import('typescript'),
 	node: ts.Node,
 	ast: ts.SourceFile,
 ) {
-	const { start, end } = getStartEnd(ts, node, ast);
+	const { start, end } = getStartEnd(node, ast);
 	return ast.text.slice(start, end);
+}
+
+// The type guards below are named differently, or missing, in the TypeScript 7 and classic APIs.
+
+export function isStringLiteralLike(
+	ts: TypeScript,
+	node: ts.Node,
+): node is ts.StringLiteral | ts.NoSubstitutionTemplateLiteral {
+	return node.kind === ts.SyntaxKind.StringLiteral || node.kind === ts.SyntaxKind.NoSubstitutionTemplateLiteral;
+}
+
+export function isFunctionLikeDeclaration(ts: TypeScript, node: ts.Node): node is ts.FunctionLikeDeclaration {
+	switch (node.kind) {
+		case ts.SyntaxKind.FunctionDeclaration:
+		case ts.SyntaxKind.MethodDeclaration:
+		case ts.SyntaxKind.GetAccessor:
+		case ts.SyntaxKind.SetAccessor:
+		case ts.SyntaxKind.Constructor:
+		case ts.SyntaxKind.FunctionExpression:
+		case ts.SyntaxKind.ArrowFunction:
+			return true;
+	}
+	return false;
+}
+
+export function isTypeAssertionExpression(ts: TypeScript, node: ts.Node): node is ts.TypeAssertion {
+	return node.kind === ts.SyntaxKind.TypeAssertionExpression;
 }
 
 /** Strips the last extension, as `@vue/compiler-core` does to derive a component's self-reference name. */

@@ -11,6 +11,7 @@ import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { createVueLanguageServicePlugins } from '../..';
+import { asCoreTypeScript } from '../../lib/utils';
 
 // TODO: migrate to @volar/kit
 export function createAutoInserter(
@@ -61,7 +62,7 @@ export function createAutoInserter(
 
 const vueCompilerOptions = getDefaultCompilerOptions();
 const vuePlugin = createVueLanguagePlugin<URI>(
-	ts,
+	asCoreTypeScript(ts),
 	vueCompilerOptions,
 	() => '',
 );

@@ -98,9 +98,6 @@ importers:
       muggle-string:
         specifier: ^0.4.1
         version: 0.4.1
-      typescript:
-        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
     devDependencies:
       '@types/node':
         specifier: ^26.0.1
@@ -108,6 +105,9 @@ importers:
       '@vue/compiler-sfc':
         specifier: ^3.5.0
         version: 3.5.40
+      typescript:
+        specifier: npm:typescript@7.1.0-beta
+        version: 7.1.0-beta
 
   packages/language-core:
     dependencies:
@@ -145,6 +145,9 @@ importers:
       '@vue/compiler-sfc':
         specifier: ^3.5.0
         version: 3.5.40
+      typescript:
+        specifier: npm:typescript@7.1.0-beta
+        version: 7.1.0-beta
 
   packages/language-plugin-pug:
     dependencies:

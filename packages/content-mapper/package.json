@@ -34,6 +34,6 @@
 	"devDependencies": {
 		"@types/node": "^26.0.1",
 		"@vue/compiler-sfc": "^3.5.0",
-		"typescript": "<7"
+		"typescript": "npm:typescript@7.1.0-beta"
 	}
 }

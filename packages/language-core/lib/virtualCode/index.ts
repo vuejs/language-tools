@@ -1,9 +1,8 @@
-import type { CodeMapping, VirtualCode } from '@volar/language-core';
+import type { CodeMapping, IScriptSnapshot, VirtualCode } from '@volar/language-core';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import { computed, signal } from 'alien-signals';
-import type * as ts from 'typescript';
 import { codeFeatures } from '../codegen/codeFeatures';
-import type { IR, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
+import type { IR, TypeScript, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
 import { useEmbeddedCodes } from './embeddedCodes';
 import { useIR } from './ir';
 import { petiteVueParser } from './parsers/petiteVue';
@@ -32,8 +31,8 @@ export class VueVirtualCode implements VirtualCode {
 	readonly id = 'main';
 
 	private _snapshot: {
-		(): ts.IScriptSnapshot;
-		(newSnapshot: ts.IScriptSnapshot): void;
+		(): IScriptSnapshot;
+		(newSnapshot: IScriptSnapshot): void;
 	};
 	private _parsedSfcResult: () => ReturnType<typeof this.parseSfc>;
 	private _ir: IR;
@@ -65,10 +64,10 @@ export class VueVirtualCode implements VirtualCode {
 
 	constructor(
 		public fileName: string,
-		public initSnapshot: ts.IScriptSnapshot,
+		public initSnapshot: IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
 		plugins: VueLanguagePluginReturn[],
-		ts: typeof import('typescript'),
+		ts: TypeScript,
 	) {
 		this._snapshot = signal(initSnapshot);
 		this._parsedSfcResult = computed(lastResult => this.parseSfc(plugins, lastResult));
@@ -90,14 +89,14 @@ export class VueVirtualCode implements VirtualCode {
 		});
 	}
 
-	update(newSnapshot: ts.IScriptSnapshot) {
+	update(newSnapshot: IScriptSnapshot) {
 		this._snapshot(newSnapshot);
 	}
 
 	private parseSfc(
 		plugins: VueLanguagePluginReturn[],
 		lastResult?: {
-			snapshot: ts.IScriptSnapshot;
+			snapshot: IScriptSnapshot;
 			result: SFCParseResult;
 			plugin: SfcParser;
 		},

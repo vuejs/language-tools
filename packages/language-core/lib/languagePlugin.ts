@@ -3,7 +3,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import * as LanguageCore from '../index';
 import { createPlugins } from './plugins';
 import { serviceScriptRE } from './plugins/vue-tsx';
-import type { VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
+import type { TypeScript, VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
 import { getRootLanguageId, VueVirtualCode } from './virtualCode';
 
 const fileRegistries: Record<string, Map<string, VueVirtualCode>> = {};
@@ -23,7 +23,7 @@ function getVueFileRegistry(vueCompilerOptions: VueCompilerOptions, plugins: Vue
 }
 
 export function createVueLanguagePlugin<T>(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	vueCompilerOptions: VueCompilerOptions,
 	asFileName: (scriptId: T) => string,
 ): LanguagePlugin<T, VueVirtualCode> {

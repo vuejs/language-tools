@@ -1,5 +1,4 @@
-import type * as ts from 'typescript';
-import type { Code, IRTemplate, VueCompilerOptions } from '../../types';
+import type { Code, IRTemplate, TypeScript, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, generateTypeAlias, generateTypedVar, newLine } from '../utils';
@@ -10,7 +9,7 @@ import { references as styleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
 
 export interface TemplateCodegenOptions {
-	typescript: typeof ts;
+	typescript: TypeScript;
 	vueCompilerOptions: VueCompilerOptions;
 	template: IRTemplate;
 	isVapor: boolean;

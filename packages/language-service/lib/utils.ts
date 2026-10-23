@@ -1,7 +1,33 @@
 import type { LanguageServiceContext, SourceScript } from '@volar/language-service';
-import { forEachElementNode, type IRTemplate, type VueVirtualCode } from '@vue/language-core';
+import {
+	type collectBindingIdentifiers,
+	forEachElementNode,
+	type IRTemplate,
+	type TypeScript,
+	type VueVirtualCode,
+} from '@vue/language-core';
+import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 import type { TextEdit } from './requests';
+
+/*
+ * language-core is typed against the TypeScript 7 AST API, which has no language service, so the language
+ * service runs language-core on the classic API instead; it provides everything language-core reads under
+ * the same names. These convert between the two at that boundary.
+ */
+export function asCoreTypeScript(typescript: typeof import('typescript')) {
+	return typescript as unknown as TypeScript;
+}
+
+export function asClassicNode<T extends ts.Node>(node: CoreNode) {
+	return node as unknown as T;
+}
+
+export function asCoreNode(node: ts.Node) {
+	return node as unknown as CoreNode;
+}
+
+type CoreNode = Parameters<typeof collectBindingIdentifiers>[1];
 
 /**
  * Places the TypeScript import edits for an SFC whose script has no content: the position TypeScript

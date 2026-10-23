@@ -1,4 +1,4 @@
-import type { Code, IRStyle, VueCompilerOptions } from '../../types';
+import type { Code, IRStyle, TypeScript, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
@@ -8,7 +8,7 @@ import { references as styleScopedClassReferences } from '../template/styleScope
 import { endOfLine } from '../utils';
 
 export interface StyleCodegenOptions {
-	typescript: typeof import('typescript');
+	typescript: TypeScript;
 	vueCompilerOptions: VueCompilerOptions;
 	styles: readonly IRStyle[];
 	scriptLang: string;

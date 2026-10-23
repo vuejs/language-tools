@@ -3,7 +3,7 @@ import { hyphenate } from '@vue/shared';
 import { URI } from 'vscode-uri';
 import { getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { createAddComponentToOptionEdit } from '../plugins/vue-extract-file';
-import { placeScriptImportEdits, resolveEmbeddedCode } from '../utils';
+import { asClassicNode, placeScriptImportEdits, resolveEmbeddedCode } from '../utils';
 
 export function create(
 	ts: typeof import('typescript'),
@@ -62,7 +62,7 @@ export function create(
 					}));
 
 					if (ir.script) {
-						const edit = createAddComponentToOptionEdit(ts, ir, ir.script.ast, name);
+						const edit = createAddComponentToOptionEdit(ts, ir, asClassicNode(ir.script.ast), name);
 						if (edit) {
 							sfcEdits.push({
 								range: {

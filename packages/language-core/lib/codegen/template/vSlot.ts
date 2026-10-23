@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { replaceSourceRange } from 'muggle-string';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';

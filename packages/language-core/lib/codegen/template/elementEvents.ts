@@ -1,8 +1,8 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { getUnwrappedExpression } from '../../parsers/utils';
-import type { Code, VueCodeInformation } from '../../types';
+import type { Code, TypeScript, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import {
@@ -319,7 +319,7 @@ function* generateReasserts(
 	}
 }
 
-export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.SourceFile) {
+export function isCompoundExpression(ts: TypeScript, ast: ts.SourceFile) {
 	if (ast.statements.length === 0) {
 		return false;
 	}
@@ -343,7 +343,7 @@ export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.So
 	return true;
 }
 
-function isSingleExpression(ts: typeof import('typescript'), ast: ts.SourceFile) {
+function isSingleExpression(ts: TypeScript, ast: ts.SourceFile) {
 	if (ast.statements.length === 1 && ast.text[ast.endOfFileToken.pos - 1] !== ';') {
 		const statement = ast.statements[0]!;
 		if (ts.isExpressionStatement(statement)) {

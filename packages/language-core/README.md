@@ -22,14 +22,15 @@ Creates a Vue language plugin for integration with Volar language services.
 ```typescript
 import { createVueLanguagePlugin } from '@vue/language-core';
 import type { LanguagePlugin } from '@volar/language-core';
-import ts from 'typescript';
 
 const plugin: LanguagePlugin<string> = createVueLanguagePlugin(
-  ts,
+  ts, // TypeScript
   vueCompilerOptions, // VueCompilerOptions
   (scriptId) => scriptId  // asFileName: Converts scriptId to a file name
 );
 ```
+
+`ts` is the TypeScript 7 `typescript/ast` module plus a synchronous `createSourceFile`, which TypeScript 7 only offers through its API process (`@vue/content-mapper` builds it from `typescript/sync`). The classic `typescript` module provides the same names, so `@vue/language-server` passes that instead.
 
 The plugin parses every file it is given by `vueCompilerOptions.format`; the host creates one plugin per `@vue/content-mapper` entry (with that entry's `format`) and routes to it only the files of that entry's `extensions`. Nothing in the generated code depends on other entries: like `@vue/compiler-sfc`, a template tag refers to the `<script setup>` binding of its name whatever it is imported from, and a file's own component name is its file name without the last extension.
 

@@ -1,4 +1,4 @@
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = ({ modules }) => {

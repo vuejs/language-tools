@@ -4,10 +4,11 @@ import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import type { URI } from 'vscode-uri';
 import { createVueLanguageServicePlugins } from '../..';
+import { asCoreTypeScript } from '../../lib/utils';
 
 const resolvedVueOptions = getDefaultCompilerOptions();
 const vuePlugin = createVueLanguagePlugin<URI>(
-	ts,
+	asCoreTypeScript(ts),
 	resolvedVueOptions,
 	() => '',
 );

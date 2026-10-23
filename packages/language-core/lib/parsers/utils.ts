@@ -1,5 +1,5 @@
-import type * as ts from 'typescript';
-import type { TextRange } from '../types';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type { TextRange, TypeScript } from '../types';
 import { collectBindingRanges } from '../utils/collectBindings';
 import { getNodeText } from '../utils/shared';
 
@@ -13,12 +13,12 @@ export const enum BindingFlag {
 }
 
 export function parseBindings(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	ast: ts.SourceFile,
 ) {
 	const bindings = new Map<string, BindingFlag>();
 
-	ts.forEachChild(ast, node => {
+	ast.forEachChild(node => {
 		if (ts.isVariableStatement(node)) {
 			const isConst = !!(node.declarationList.flags & ts.NodeFlags.Const);
 			for (const decl of node.declarationList.declarations) {
@@ -47,7 +47,7 @@ export function parseBindings(
 		}
 
 		if (ts.isImportDeclaration(node)) {
-			if (node.importClause && !node.importClause.isTypeOnly) {
+			if (node.importClause && node.importClause.phaseModifier !== ts.SyntaxKind.TypeKeyword) {
 				const { name, namedBindings } = node.importClause;
 
 				if (name) {
@@ -72,12 +72,12 @@ export function parseBindings(
 	return bindings;
 
 	function _getNodeText(node: ts.Node) {
-		return getNodeText(ts, node, ast);
+		return getNodeText(node, ast);
 	}
 }
 
 export function getClosestMultiLineCommentRange(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	node: ts.Node,
 	parents: ts.Node[],
 	ast: ts.SourceFile,
@@ -101,7 +101,7 @@ export function getClosestMultiLineCommentRange(
 	}
 }
 
-export function getUnwrappedExpression(ts: typeof import('typescript'), node: ts.Node) {
+export function getUnwrappedExpression(ts: TypeScript, node: ts.Node) {
 	while (
 		ts.isParenthesizedExpression(node)
 		|| ts.isAssertionExpression(node)

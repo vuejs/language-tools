@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Code, IRBlock } from '../../types';
-import { getNodeText, normalizeAttributeValue } from '../../utils/shared';
+import { getNodeText, isStringLiteralLike, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, forEachNode, getTypeScriptAST } from '../utils';
@@ -38,9 +38,9 @@ export function* generateStyleScopedClassReferences(
 			const content = '(' + prop.exp.content + ')';
 			const startOffset = prop.exp.loc.start.offset - 1;
 			const ast = getTypeScriptAST(ts, template, content);
-			const literals: ts.StringLiteralLike[] = [];
+			const literals: (ts.StringLiteral | ts.NoSubstitutionTemplateLiteral)[] = [];
 
-			for (const node of forEachNode(ts, ast)) {
+			for (const node of forEachNode(ast)) {
 				if (
 					!ts.isExpressionStatement(node)
 					|| !ts.isParenthesizedExpression(node.expression)
@@ -49,7 +49,7 @@ export function* generateStyleScopedClassReferences(
 				}
 				const { expression } = node.expression;
 
-				if (ts.isStringLiteralLike(expression)) {
+				if (isStringLiteralLike(ts, expression)) {
 					literals.push(expression);
 				}
 				else if (ts.isArrayLiteralExpression(expression)) {
@@ -70,7 +70,7 @@ export function* generateStyleScopedClassReferences(
 			function* walkArrayLiteral(node: ts.ArrayLiteralExpression) {
 				const { elements } = node;
 				for (const element of elements) {
-					if (ts.isStringLiteralLike(element)) {
+					if (isStringLiteralLike(ts, element)) {
 						literals.push(element);
 					}
 					else if (ts.isObjectLiteralExpression(element)) {
@@ -85,7 +85,7 @@ export function* generateStyleScopedClassReferences(
 					if (ts.isPropertyAssignment(property)) {
 						const { name } = property;
 						if (ts.isIdentifier(name)) {
-							const text = getNodeText(ts, name, ast);
+							const text = getNodeText(name, ast);
 							yield* generateStyleScopedClassReference(template, text, name.end - text.length + startOffset);
 						}
 						else if (ts.isStringLiteral(name)) {
@@ -93,13 +93,13 @@ export function* generateStyleScopedClassReferences(
 						}
 						else if (ts.isComputedPropertyName(name)) {
 							const { expression } = name;
-							if (ts.isStringLiteralLike(expression)) {
+							if (isStringLiteralLike(ts, expression)) {
 								literals.push(expression);
 							}
 						}
 					}
 					else if (ts.isShorthandPropertyAssignment(property)) {
-						const text = getNodeText(ts, property.name, ast);
+						const text = getNodeText(property.name, ast);
 						yield* generateStyleScopedClassReference(template, text, property.name.end - text.length + startOffset);
 					}
 				}

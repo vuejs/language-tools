@@ -1,9 +1,9 @@
-import * as ts from 'typescript';
 import { expect, it } from 'vitest';
 import { getDefaultCompilerOptions } from '../lib/compilerOptions';
 import { parseScriptRanges } from '../lib/parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../lib/parsers/scriptSetupRanges';
 import type { BindingFlag } from '../lib/parsers/utils';
+import { ts } from './typescript';
 
 it('binds imports the same way whatever they are imported from', () => {
 	const sourceFile = ts.createSourceFile(

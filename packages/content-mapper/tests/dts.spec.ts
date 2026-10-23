@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import * as ts from 'typescript';
 import { expect, test } from 'vitest';
 import { repositoryRoot, runTsc } from './utils';
 
@@ -69,34 +68,38 @@ function assertSelfContained(emitted: Map<string, string>) {
 		expect(text).not.toContain('/// <reference');
 	}
 
-	const checkFiles = new Map<string, string>(
-		[...emitted].map(([outputFile, text]) => [
-			outputFile.slice(0, -'.d.ts'.length) + '.check.ts',
-			text,
-		]),
-	);
-	const checkOptions: ts.CompilerOptions = {
-		noEmit: true,
-		skipLibCheck: true,
-		target: ts.ScriptTarget.ESNext,
-		module: ts.ModuleKind.ESNext,
-		moduleResolution: ts.ModuleResolutionKind.Bundler,
-	};
-	const checkHost = ts.createCompilerHost(checkOptions);
-	const { fileExists, getSourceFile } = checkHost;
-	checkHost.fileExists = fileName =>
-		checkFiles.has(fileName.replace(/\\/g, '/')) || fileExists.call(checkHost, fileName);
-	checkHost.getSourceFile = (fileName, languageVersion, ...args) => {
-		const text = checkFiles.get(fileName.replace(/\\/g, '/'));
-		return text !== undefined
-			? ts.createSourceFile(fileName, text, languageVersion)
-			: getSourceFile.call(checkHost, fileName, languageVersion, ...args);
-	};
-	const checkProgram = ts.createProgram([...checkFiles.keys()], checkOptions, checkHost);
-	const danglingReferences = checkProgram.getSemanticDiagnostics()
-		.map(diagnostic => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'))
-		.filter(message => /Cannot find (name|namespace) '__VLS_/.test(message));
-	expect(danglingReferences).toEqual([]);
+	// inside the repository, so that `vue` resolves as it does for the emitted declarations
+	const checkDir = fs.mkdtempSync(path.join(repositoryRoot, 'test-workspace', '.dts-check-'));
+	try {
+		const checkFiles: string[] = [];
+		for (const [outputFile, text] of emitted) {
+			const checkFile = outputFile.slice(0, -'.d.ts'.length) + '.check.ts';
+			fs.mkdirSync(path.dirname(path.join(checkDir, checkFile)), { recursive: true });
+			fs.writeFileSync(path.join(checkDir, checkFile), text);
+			checkFiles.push(checkFile);
+		}
+		fs.writeFileSync(
+			path.join(checkDir, 'tsconfig.json'),
+			JSON.stringify({
+				compilerOptions: {
+					noEmit: true,
+					skipLibCheck: true,
+					target: 'esnext',
+					module: 'esnext',
+					moduleResolution: 'bundler',
+				},
+				files: checkFiles,
+			}),
+		);
+		const result = runTsc(['-p', checkDir, '--pretty', 'false']);
+		const danglingReferences = (result.stdout + result.stderr)
+			.split('\n')
+			.filter(message => /Cannot find (name|namespace) '__VLS_/.test(message));
+		expect(danglingReferences).toEqual([]);
+	}
+	finally {
+		fs.rmSync(checkDir, { recursive: true, force: true });
+	}
 }
 
 function readFilesRecursive(dir: string): string[] {

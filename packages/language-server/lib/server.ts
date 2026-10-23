@@ -19,7 +19,7 @@ import {
 	type LanguageService,
 } from '@vue/language-service';
 import type { TextEdit } from '@vue/language-service/lib/requests';
-import { placeScriptImportEdits } from '@vue/language-service/lib/utils';
+import { asCoreTypeScript, placeScriptImportEdits } from '@vue/language-service/lib/utils';
 import { camelize, capitalize } from '@vue/shared';
 import * as path from 'node:path';
 import { URI } from 'vscode-uri';
@@ -450,7 +450,7 @@ export function startServer(ts: typeof import('typescript')) {
 				.map(entry =>
 					routeByExtensions(
 						createVueLanguagePlugin(
-							ts,
+							asCoreTypeScript(ts),
 							resolveVueCompilerOptions(ts.sys.readFile, configFileName, entry.options),
 							asFileName,
 						),

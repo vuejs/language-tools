@@ -1,5 +1,13 @@
-import type * as ts from 'typescript';
-import type { Code, IRBlock, IRScript, IRScriptSetup, VueCodeInformation, VueCompilerOptions } from '../../types';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type {
+	Code,
+	IRBlock,
+	IRScript,
+	IRScriptSetup,
+	TypeScript,
+	VueCodeInformation,
+	VueCompilerOptions,
+} from '../../types';
 import { codeFeatures } from '../codeFeatures';
 
 export const newLine = `\n`;
@@ -62,7 +70,7 @@ export function getRefBrandArgument(vueCompilerOptions: VueCompilerOptions, lang
 
 const cacheMaps = new WeakMap<IRBlock, [content: string, Map<string, [ts.SourceFile, usages: number]>]>();
 
-export function getTypeScriptAST(ts: typeof import('typescript'), block: IRBlock, text: string): ts.SourceFile {
+export function getTypeScriptAST(ts: TypeScript, block: IRBlock, text: string): ts.SourceFile {
 	if (!cacheMaps.has(block)) {
 		cacheMaps.set(block, [block.content, new Map()]);
 	}
@@ -100,7 +108,7 @@ export function* generateSfcBlockSection(
 	// #3632
 	if ('parseDiagnostics' in block.ast) {
 		const textEnd = text.trimEnd().length;
-		for (const diag of block.ast.parseDiagnostics as ts.DiagnosticWithLocation[]) {
+		for (const diag of block.ast.parseDiagnostics as { start: number; length: number }[]) {
 			const diagStart = diag.start;
 			const diagEnd = diag.start + diag.length;
 			if (diagStart >= textEnd && diagEnd <= end) {
@@ -114,9 +122,9 @@ export function* generateSfcBlockSection(
 	}
 }
 
-export function* forEachNode(ts: typeof import('typescript'), node: ts.Node): Generator<ts.Node> {
+export function* forEachNode(node: ts.Node): Generator<ts.Node> {
 	const children: ts.Node[] = [];
-	ts.forEachChild(node, child => {
+	node.forEachChild(child => {
 		children.push(child);
 	});
 	for (const child of children) {

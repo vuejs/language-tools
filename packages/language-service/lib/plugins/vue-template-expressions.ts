@@ -10,7 +10,7 @@ import { collectBindingNames, tsCodegen } from '@vue/language-core';
 import { parseVForNode } from '@vue/language-core/lib/codegen/template/vFor';
 import { URI } from 'vscode-uri';
 import type { AutoImportExport } from '../requests';
-import { resolveEmbeddedCode } from '../utils';
+import { asCoreTypeScript, resolveEmbeddedCode } from '../utils';
 
 // Keywords that may appear in a single JavaScript expression
 const keywords = [
@@ -287,6 +287,7 @@ function getExpressionStartAt(
 }
 
 function getBindingNames(ts: typeof import('typescript'), text: string) {
-	const ast = ts.createSourceFile('/a.ts', text, ts.ScriptTarget.Latest);
-	return collectBindingNames(ts, ast, ast);
+	const coreTs = asCoreTypeScript(ts);
+	const ast = coreTs.createSourceFile('/a.ts', text, coreTs.ScriptTarget.Latest);
+	return collectBindingNames(coreTs, ast, ast);
 }

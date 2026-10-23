@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import * as ts from 'typescript';
 import { afterEach, describe, expect, it } from 'vitest';
 import { CompilerOptionsResolver } from '../lib/compilerOptions';
 import { createPlugins } from '../lib/plugins';
+import { ts } from './typescript';
 
 const PLUGIN_NAME = '@fixture/vue-language-plugin-pug';
 

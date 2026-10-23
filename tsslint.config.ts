@@ -68,12 +68,4 @@ export default defineConfig([{
 		'missing-dependency': (await import('./lint/missing-dependency-rule.ts')).default,
 		'type-imports': (await import('./lint/type-imports-rule.ts')).default,
 	},
-}, {
-	include: [
-		'packages/language-core/**/*.ts',
-		'packages/language-plugin-pug/**/*.ts',
-	],
-	rules: {
-		'typescript-services-types': (await import('./lint/typescript-services-types-rule.mts')).default,
-	},
 }]);

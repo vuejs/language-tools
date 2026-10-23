@@ -1,7 +1,8 @@
 import { isGloballyAllowed, makeMap } from '@vue/shared';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type { TypeScript } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
-import { getNodeText } from '../../utils/shared';
+import { getNodeText, isFunctionLikeDeclaration, isTypeAssertionExpression } from '../../utils/shared';
 import { forEachNode } from '../utils';
 import type { TemplateCodegenContext } from './context';
 
@@ -18,7 +19,7 @@ export interface DeclarationItem {
 }
 
 export function* forEachDeclarations(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	node: ts.Node,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
@@ -30,17 +31,17 @@ export function* forEachDeclarations(
 			id: node,
 			isShorthand: false,
 			isNarrowing: inNarrowing,
-			skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, node, ast)),
+			skipped: shouldIdentifierSkipped(ctx, getNodeText(node, ast)),
 			inTypeQuery: false,
 			isNewOperand: false,
 		};
 	}
 	else if (ts.isShorthandPropertyAssignment(node)) {
 		yield {
-			id: node.name,
+			id: node.name as ts.Identifier,
 			isShorthand: true,
 			isNarrowing: inNarrowing,
-			skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, node.name, ast)),
+			skipped: shouldIdentifierSkipped(ctx, getNodeText(node.name, ast)),
 			inTypeQuery: false,
 			isNewOperand: false,
 		};
@@ -69,7 +70,7 @@ export function* forEachDeclarations(
 				id: node.expression,
 				isShorthand: false,
 				isNarrowing: false,
-				skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, node.expression, ast)),
+				skipped: shouldIdentifierSkipped(ctx, getNodeText(node.expression, ast)),
 				inTypeQuery: false,
 				isNewOperand: true,
 			};
@@ -96,7 +97,7 @@ export function* forEachDeclarations(
 	else if (ts.isNonNullExpression(node)) {
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 	}
-	else if (ts.isTypeAssertionExpression(node)) {
+	else if (isTypeAssertionExpression(ts, node)) {
 		yield* forEachDeclarationsInTypeNode(ts, node.type, ast, ctx, scope);
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 	}
@@ -177,20 +178,20 @@ export function* forEachDeclarations(
 	}
 	else if (ts.isFunctionDeclaration(node)) {
 		if (node.name) {
-			scope.declare(getNodeText(ts, node.name, ast));
+			scope.declare(getNodeText(node.name, ast));
 		}
 		yield* forEachDeclarationsInFunction(ts, node, ast, ctx);
 	}
 	else if (ts.isClassDeclaration(node)) {
 		if (node.name) {
-			scope.declare(getNodeText(ts, node.name, ast));
+			scope.declare(getNodeText(node.name, ast));
 		}
 		yield* forEachDeclarationsInClass(ts, node, ast, ctx, scope);
 	}
 	else if (ts.isClassExpression(node)) {
 		const classScope = ctx.scope();
 		if (node.name) {
-			classScope.declare(getNodeText(ts, node.name, ast));
+			classScope.declare(getNodeText(node.name, ast));
 		}
 		yield* forEachDeclarationsInClass(ts, node, ast, ctx, classScope);
 		classScope.end();
@@ -214,7 +215,7 @@ export function* forEachDeclarations(
 				yield* forEachDeclarations(ts, prop.expression, ast, ctx, scope, false);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/4604
-			else if (ts.isFunctionLike(prop) && prop.body) {
+			else if (isFunctionLikeDeclaration(ts, prop) && prop.body) {
 				if (prop.name && ts.isComputedPropertyName(prop.name)) {
 					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx, scope, false);
 				}
@@ -229,7 +230,7 @@ export function* forEachDeclarations(
 	else if (ts.isBlock(node)) {
 		const scope = ctx.scope();
 		predeclareFunctionDeclarations(ts, node.statements, ast, scope);
-		for (const child of forEachNode(ts, node)) {
+		for (const child of forEachNode(node)) {
 			yield* forEachDeclarations(ts, child, ast, ctx, scope, false);
 		}
 		scope.end();
@@ -323,7 +324,7 @@ export function* forEachDeclarations(
 		yield* forEachDeclarationsInTypeNode(ts, node, ast, ctx, scope);
 	}
 	else if (ts.isEnumDeclaration(node)) {
-		scope.declare(getNodeText(ts, node.name, ast));
+		scope.declare(getNodeText(node.name, ast));
 		for (const member of node.members) {
 			if (member.initializer) {
 				yield* forEachDeclarations(ts, member.initializer, ast, ctx, scope, false);
@@ -363,14 +364,14 @@ export function* forEachDeclarations(
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 	}
 	else {
-		for (const child of forEachNode(ts, node)) {
+		for (const child of forEachNode(node)) {
 			yield* forEachDeclarations(ts, child, ast, ctx, scope, false);
 		}
 	}
 }
 
 function* forEachNarrowedBy(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	condition: ts.Expression | undefined,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
@@ -385,20 +386,20 @@ function* forEachNarrowedBy(
 }
 
 function predeclareFunctionDeclarations(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	statements: readonly ts.Statement[],
 	ast: ts.SourceFile,
 	scope: ReturnType<TemplateCodegenContext['scope']>,
 ) {
 	for (const statement of statements) {
 		if (ts.isFunctionDeclaration(statement) && statement.name) {
-			scope.declare(getNodeText(ts, statement.name, ast));
+			scope.declare(getNodeText(statement.name, ast));
 		}
 	}
 }
 
 function* forEachDeclarationsInAssignmentTarget(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	node: ts.Node,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
@@ -409,7 +410,7 @@ function* forEachDeclarationsInAssignmentTarget(
 			id: node,
 			isShorthand: false,
 			isNarrowing: true,
-			skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, node, ast)),
+			skipped: shouldIdentifierSkipped(ctx, getNodeText(node, ast)),
 			inTypeQuery: false,
 			isNewOperand: false,
 		};
@@ -424,10 +425,10 @@ function* forEachDeclarationsInAssignmentTarget(
 			}
 			else if (ts.isShorthandPropertyAssignment(prop)) {
 				yield {
-					id: prop.name,
+					id: prop.name as ts.Identifier,
 					isShorthand: true,
 					isNarrowing: true,
-					skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, prop.name, ast)),
+					skipped: shouldIdentifierSkipped(ctx, getNodeText(prop.name, ast)),
 					inTypeQuery: false,
 					isNewOperand: false,
 				};
@@ -466,7 +467,7 @@ function* forEachDeclarationsInAssignmentTarget(
 }
 
 function* forEachDeclarationsInBinding(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	node: ts.BindingElement | ts.ParameterDeclaration | ts.VariableDeclaration,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
@@ -475,7 +476,7 @@ function* forEachDeclarationsInBinding(
 	if ('propertyName' in node && node.propertyName && ts.isComputedPropertyName(node.propertyName)) {
 		yield* forEachDeclarations(ts, node.propertyName.expression, ast, ctx, scope, true);
 	}
-	if (!ts.isIdentifier(node.name)) {
+	if (node.name && !ts.isIdentifier(node.name)) {
 		yield* forEachDeclarations(ts, node.name, ast, ctx, scope, false);
 	}
 	if ('type' in node && node.type) {
@@ -487,7 +488,7 @@ function* forEachDeclarationsInBinding(
 }
 
 function* forEachDeclarationsInFunction(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	node:
 		| ts.ArrowFunction
 		| ts.FunctionExpression
@@ -500,7 +501,7 @@ function* forEachDeclarationsInFunction(
 ): Generator<DeclarationItem> {
 	const scope = ctx.scope();
 	if (ts.isFunctionExpression(node) && node.name) {
-		scope.declare(getNodeText(ts, node.name, ast));
+		scope.declare(getNodeText(node.name, ast));
 	}
 	for (const param of node.parameters) {
 		scope.declare(...collectBindingNames(ts, param.name, ast));
@@ -523,7 +524,7 @@ function* forEachDeclarationsInFunction(
 }
 
 function* forEachDeclarationsInClass(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	node: ts.ClassDeclaration | ts.ClassExpression,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
@@ -535,6 +536,9 @@ function* forEachDeclarationsInClass(
 	for (const clause of node.heritageClauses ?? []) {
 		if (clause.token === ts.SyntaxKind.ExtendsKeyword) {
 			for (const type of clause.types) {
+				if (!ts.isExpressionWithTypeArguments(type)) {
+					continue;
+				}
 				yield* forEachDeclarations(ts, type.expression, ast, ctx, scope, false);
 				if (type.typeArguments) {
 					for (const typeArg of type.typeArguments) {
@@ -587,7 +591,7 @@ function* forEachDeclarationsInClass(
 }
 
 function* forEachDeclarationsInTypeNode(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	node: ts.Node,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
@@ -602,7 +606,7 @@ function* forEachDeclarationsInTypeNode(
 			id,
 			isShorthand: false,
 			isNarrowing: false,
-			skipped: shouldIdentifierSkipped(ctx, getNodeText(ts, id, ast)),
+			skipped: shouldIdentifierSkipped(ctx, getNodeText(id, ast)),
 			inTypeQuery: true,
 			isNewOperand: false,
 		};
@@ -615,7 +619,7 @@ function* forEachDeclarationsInTypeNode(
 		}
 	}
 	else {
-		for (const child of forEachNode(ts, node)) {
+		for (const child of forEachNode(node)) {
 			yield* forEachDeclarationsInTypeNode(ts, child, ast, ctx, scope);
 		}
 	}
@@ -636,20 +640,20 @@ export function shouldIdentifierSkipped(
 // vue-tsc runs against TypeScript's tsc bundle, which does not include
 // type guards that the compiler itself never uses, so check `kind` directly.
 
-function isDeleteExpression(ts: typeof import('typescript'), node: ts.Node): node is ts.DeleteExpression {
+function isDeleteExpression(ts: TypeScript, node: ts.Node): node is ts.DeleteExpression {
 	return node.kind === ts.SyntaxKind.DeleteExpression;
 }
 
-function isWhileStatement(ts: typeof import('typescript'), node: ts.Node): node is ts.WhileStatement {
+function isWhileStatement(ts: TypeScript, node: ts.Node): node is ts.WhileStatement {
 	return node.kind === ts.SyntaxKind.WhileStatement;
 }
 
-function isDoStatement(ts: typeof import('typescript'), node: ts.Node): node is ts.DoStatement {
+function isDoStatement(ts: TypeScript, node: ts.Node): node is ts.DoStatement {
 	return node.kind === ts.SyntaxKind.DoStatement;
 }
 
 function isBreakOrContinueStatement(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	node: ts.Node,
 ): node is ts.BreakOrContinueStatement {
 	return node.kind === ts.SyntaxKind.BreakStatement || node.kind === ts.SyntaxKind.ContinueStatement;

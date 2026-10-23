@@ -1,4 +1,4 @@
-import type { Code, IRBlock, VueCodeInformation, VueCompilerOptions } from '../../types';
+import type { Code, IRBlock, TypeScript, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
@@ -9,7 +9,7 @@ import type { TemplateCodegenContext } from './context';
 
 export function* generateInterpolation(
 	options: IdentifierOptions & {
-		typescript: typeof import('typescript');
+		typescript: TypeScript;
 	},
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
@@ -226,7 +226,7 @@ export function* generateIdentifier(
 }
 
 function* forEachIdentifiers(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
 	code: string,
@@ -251,10 +251,10 @@ function* forEachIdentifiers(
 			inNarrowing,
 		)
 	) {
-		const text = getNodeText(ts, id, ast);
+		const text = getNodeText(id, ast);
 		yield [
 			text,
-			getStartEnd(ts, id, ast).start - prefix.length,
+			getStartEnd(id, ast).start - prefix.length,
 			isShorthand,
 			isNarrowing,
 			inTypeQuery,

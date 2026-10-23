@@ -9,7 +9,7 @@ import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { BindingFlag } from '../parsers/utils';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
-import type { IR, VueCompilerOptions, VueLanguagePlugin } from '../types';
+import type { IR, TypeScript, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { getBaseNameWithoutExtension } from '../utils/shared';
 import { computedSet } from '../utils/signals';
 
@@ -62,7 +62,7 @@ function computeLang(ir: IR) {
 export default plugin;
 
 function useCodegen(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	vueCompilerOptions: VueCompilerOptions,
 	fileName: string,
 	ir: IR,

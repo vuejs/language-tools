@@ -2,12 +2,26 @@ import type { CodeInformation } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import type { Segment } from 'muggle-string';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { VueEmbeddedCode } from './virtualCode/embeddedCodes';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
 export { VueEmbeddedCode };
+
+/**
+ * The TypeScript 7 AST API with a synchronous parser. Hosts on the classic TypeScript API pass it instead,
+ * so language-core only reads what both APIs provide alike.
+ */
+export type TypeScript = typeof import('typescript/ast', { with: { 'resolution-mode': 'import' }}) & {
+	createSourceFile(
+		fileName: string,
+		sourceText: string,
+		languageVersion: ts.ScriptTarget,
+		setParentNodes?: boolean,
+		scriptKind?: ts.ScriptKind,
+	): ts.SourceFile;
+};
 
 export type RawVueCompilerOptions =
 	& Partial<
@@ -130,7 +144,7 @@ export interface VueLanguagePluginReturn {
 export type VueLanguagePlugin<T extends Record<string, any> = {}> = (
 	ctx: {
 		modules: {
-			typescript: typeof ts;
+			typescript: TypeScript;
 			'@vue/compiler-dom': typeof CompilerDOM;
 			'@vue/language-core': typeof import('../index');
 		};

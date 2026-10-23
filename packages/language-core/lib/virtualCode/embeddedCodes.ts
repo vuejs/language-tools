@@ -1,7 +1,6 @@
-import type { Mapping, VirtualCode } from '@volar/language-core';
+import type { IScriptSnapshot, Mapping, TextChangeRange, VirtualCode } from '@volar/language-core';
 import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
-import type * as ts from 'typescript';
 import type { Code, IR, IRBlock, VueCodeInformation, VueLanguagePluginReturn } from '../types';
 import { buildMappings } from '../utils/buildMappings';
 
@@ -82,7 +81,7 @@ export function useEmbeddedCodes(
 
 	function useEmbeddedCodesForPlugin(plugin: VueLanguagePluginReturn) {
 		const getMap = computed<
-			Map<string, () => { code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot }>
+			Map<string, () => { code: VueEmbeddedCode; snapshot: IScriptSnapshot }>
 		>(
 			prevMap => {
 				if (!plugin.getEmbeddedCodes) {
@@ -90,7 +89,7 @@ export function useEmbeddedCodes(
 				}
 
 				const newCodeList = plugin.getEmbeddedCodes(fileName, ir);
-				const map = new Map<string, () => { code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot }>();
+				const map = new Map<string, () => { code: VueEmbeddedCode; snapshot: IScriptSnapshot }>();
 
 				for (const { id, lang } of newCodeList) {
 					const key = id + '__' + lang;
@@ -109,7 +108,7 @@ export function useEmbeddedCodes(
 		return computed(() => {
 			const result: {
 				code: VueEmbeddedCode;
-				snapshot: ts.IScriptSnapshot;
+				snapshot: IScriptSnapshot;
 				mappings: Mapping<VueCodeInformation>[];
 			}[] = [];
 
@@ -142,8 +141,8 @@ export function useEmbeddedCodes(
 				}
 			}
 			const newText = toString(code.content);
-			const changeRanges = new Map<ts.IScriptSnapshot, ts.TextChangeRange | undefined>();
-			const snapshot: ts.IScriptSnapshot = {
+			const changeRanges = new Map<IScriptSnapshot, TextChangeRange | undefined>();
+			const snapshot: IScriptSnapshot = {
 				getText: (start, end) => newText.slice(start, end),
 				getLength: () => newText.length,
 				getChangeRange(oldSnapshot) {
@@ -211,7 +210,7 @@ export function useEmbeddedCodes(
 	}
 }
 
-function fullDiffTextChangeRange(oldText: string, newText: string): ts.TextChangeRange | undefined {
+function fullDiffTextChangeRange(oldText: string, newText: string): TextChangeRange | undefined {
 	for (let start = 0; start < oldText.length && start < newText.length; start++) {
 		if (oldText[start] !== newText[start]) {
 			let end = oldText.length;

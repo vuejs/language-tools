@@ -1,12 +1,12 @@
-import type * as ts from 'typescript';
-import type { TextRange } from '../types';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type { TextRange, TypeScript } from '../types';
 import { getNodeText, getStartEnd } from '../utils/shared';
 import { getClosestMultiLineCommentRange, getUnwrappedExpression, parseBindings } from './utils';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> {}
 
 export function parseScriptRanges(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	sourceFile: ts.SourceFile,
 ) {
 	let exportDefault:
@@ -25,11 +25,11 @@ export function parseScriptRanges(
 		}
 		| undefined;
 
-	ts.forEachChild(sourceFile, child => {
+	sourceFile.forEachChild(child => {
 		if (ts.isExportAssignment(child)) {
 			exportDefault = {
-				...getStartEnd(ts, child, sourceFile),
-				expression: getStartEnd(ts, child.expression, sourceFile),
+				...getStartEnd(child, sourceFile),
+				expression: getStartEnd(child.expression, sourceFile),
 				isObjectLiteral: ts.isObjectLiteralExpression(child.expression),
 				options: parseOptionsFromExtression(ts, child.expression, sourceFile),
 			};
@@ -47,7 +47,7 @@ export function parseScriptRanges(
 }
 
 export function parseOptionsFromExtression(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	exp: ts.Node,
 	sourceFile: ts.SourceFile,
 ) {
@@ -71,7 +71,7 @@ export function parseOptionsFromExtression(
 		let directivesOptionNode: ts.ObjectLiteralExpression | undefined;
 		let nameOptionNode: ts.StringLiteral | undefined;
 		let inheritAttrsOption: string | undefined;
-		ts.forEachChild(obj, node => {
+		obj.forEachChild(node => {
 			if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name)) {
 				const name = _getNodeText(node.name);
 				if (name === 'components' && ts.isObjectLiteralExpression(node.initializer)) {
@@ -103,10 +103,10 @@ export function parseOptionsFromExtression(
 	}
 
 	function _getStartEnd<T extends ts.Node>(node: T): TextRange<T> {
-		return getStartEnd(ts, node, sourceFile);
+		return getStartEnd(node, sourceFile);
 	}
 
 	function _getNodeText(node: ts.Node) {
-		return getNodeText(ts, node, sourceFile);
+		return getNodeText(node, sourceFile);
 	}
 }

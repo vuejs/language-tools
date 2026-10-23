@@ -1,5 +1,7 @@
+import type { IScriptSnapshot } from '@volar/language-core';
 import * as vue from '@vue/language-core';
 import { createHash } from 'node:crypto';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { toDiagnosticDirectives, withSynthesizedDiagnosticIgnores } from './diagnosticDirectives';
 import type {
@@ -12,8 +14,6 @@ import type {
 import { toSpanMappings } from './spanMappings';
 import { loadTypeScript } from './typescript';
 import { resolveVueCompilerOptions } from './vueOptions';
-
-const ts = loadTypeScript();
 
 interface ProjectConfiguration {
 	plugin: ReturnType<typeof vue.createVueLanguagePlugin<string>>;
@@ -88,7 +88,11 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		}
 
 		const configuration = getConfiguration(state);
-		const snapshot = ts.ScriptSnapshot.fromString(params.content);
+		const snapshot: IScriptSnapshot = {
+			getText: (start, end) => params.content.slice(start, end),
+			getLength: () => params.content.length,
+			getChangeRange: () => undefined,
+		};
 		const root = configuration.plugin.createVirtualCode?.(
 			params.fileName,
 			configuration.plugin.getLanguageId(params.fileName)!,
@@ -151,26 +155,23 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		configFileName: string,
 		watchedFiles?: Set<string>,
 	) {
-		const host = watchedFiles
-			? {
-				...ts.sys,
-				readFile(fileName: string) {
-					const content = ts.sys.readFile(fileName);
-					if (content !== undefined && path.isAbsolute(fileName)) {
-						watchedFiles.add(path.normalize(fileName));
-					}
-					return content;
-				},
+		const readFile = watchedFiles
+			? (fileName: string) => {
+				const content = readFileIfExists(fileName);
+				if (content !== undefined && path.isAbsolute(fileName)) {
+					watchedFiles.add(path.normalize(fileName));
+				}
+				return content;
 			}
-			: ts.sys;
+			: readFileIfExists;
 		const rootDir = configFileName
 			? path.dirname(configFileName)
 			: process.cwd();
 		const { languageFeatures, ...mapperOptions } = state.params.options ?? {};
-		const vueOptions = resolveVueCompilerOptions(host.readFile, configFileName || undefined, state.params.options);
+		const vueOptions = resolveVueCompilerOptions(readFile, configFileName || undefined, state.params.options);
 		const configuration = {
 			plugin: vue.createVueLanguagePlugin<string>(
-				ts,
+				loadTypeScript(),
 				vueOptions,
 				fileName => fileName,
 			),
@@ -198,9 +199,16 @@ function createIdentity(params: OpenProjectParams, watchedFiles: Iterable<string
 	hash.update(JSON.stringify(params.options ?? null));
 	for (const fileName of [...watchedFiles].sort()) {
 		hash.update(fileName);
-		hash.update(ts.sys.readFile(fileName) ?? '');
+		hash.update(readFileIfExists(fileName) ?? '');
 	}
 	return hash.digest('hex');
+}
+
+function readFileIfExists(fileName: string) {
+	try {
+		return fs.readFileSync(fileName, 'utf8').replace(/^\uFEFF/, '');
+	}
+	catch {}
 }
 
 function addPluginWatchFiles(watchedFiles: Set<string>, plugins: unknown, rootDir: string) {

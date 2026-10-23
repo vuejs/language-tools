@@ -5,9 +5,10 @@ import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getAttrNameCasing, getTagNameCasing } from '../lib/nameCasing';
 import type { AttrNameCasing, TagNameCasing } from '../lib/nameCasing';
+import { asCoreTypeScript } from '../lib/utils';
 
 const vueLanguagePlugin = createVueLanguagePlugin<URI>(
-	ts,
+	asCoreTypeScript(ts),
 	getDefaultCompilerOptions(),
 	uri => uri.path,
 );
