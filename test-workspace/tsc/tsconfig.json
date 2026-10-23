@@ -611,6 +611,9 @@
 			"path": "./dynamic-component/tsconfig.json"
 		},
 		{
+			"path": "./eventArgs/tsconfig.json"
+		},
+		{
 			"path": "./events/tsconfig.json"
 		},
 		{
