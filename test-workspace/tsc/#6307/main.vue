@@ -1,11 +1,8 @@
 <script setup lang="ts">
+import { exactType } from '../shared';
 import child from './child.vue';
-
-function onSelect(id: number) {
-	console.log(id);
-}
 </script>
 
 <template>
-	<child :value="1" @select="onSelect" />
+	<child :value="1" @select="v => exactType(v, {} as number)" />
 </template>
