@@ -361,6 +361,7 @@ export function* generateElement(
 		node.props,
 		options.vueCompilerOptions.checkUnknownProps,
 		failedPropExps,
+		`typeof ${names.intrinsics}['${node.tag}']`,
 	);
 	yield `}`;
 	yield boundary.end();
@@ -421,6 +422,7 @@ export function* generateFragment(
 			node.props,
 			options.vueCompilerOptions.checkUnknownProps,
 			failedPropExps,
+			`typeof ${names.intrinsics}.template`,
 		);
 		yield `}`;
 		yield boundary.end();
