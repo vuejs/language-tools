@@ -58,56 +58,14 @@ export default defineConfig([{
 			'require-yield': true,
 			'use-isnan': true,
 			'valid-typeof': true,
-			'@typescript-eslint/await-thenable': true,
-			'@typescript-eslint/no-array-delete': true,
-			'@typescript-eslint/no-base-to-string': true,
-			// '@typescript-eslint/no-confusing-void-expression': true,
-			'@typescript-eslint/no-duplicate-enum-values': true,
-			'@typescript-eslint/no-duplicate-type-constituents': true,
-			'@typescript-eslint/no-extra-non-null-assertion': true,
-			// '@typescript-eslint/no-floating-promises': true,
-			'@typescript-eslint/no-for-in-array': true,
-			'@typescript-eslint/no-implied-eval': true,
-			'@typescript-eslint/no-meaningless-void-operator': true,
-			'@typescript-eslint/no-misused-new': true,
-			'@typescript-eslint/no-misused-spread': true,
-			'@typescript-eslint/no-non-null-asserted-optional-chain': true,
-			// '@typescript-eslint/no-redundant-type-constituents': true,
-			'@typescript-eslint/no-this-alias': true,
-			'@typescript-eslint/no-unnecessary-parameter-property-assignment': true,
-			'@typescript-eslint/no-unsafe-declaration-merging': true,
-			'@typescript-eslint/no-unsafe-unary-minus': true,
-			'@typescript-eslint/no-useless-empty-export': true,
-			'@typescript-eslint/no-wrapper-object-types': true,
-			'@typescript-eslint/prefer-as-const': true,
-			'@typescript-eslint/require-array-sort-compare': true,
-			'@typescript-eslint/restrict-template-expressions': true,
-			'@typescript-eslint/triple-slash-reference': true,
-			// Disabled: flags the VueCompletionData assertions as unnecessary on the
-			// 6.0.3-generation checker — stock 6.0.3 reports them identically (not a
-			// TNB divergence; master's TS7 checker doesn't flag them).
-			// '@typescript-eslint/no-unnecessary-type-assertion': true,
-			// '@typescript-eslint/unbound-method': true,
 
 			// Project-specific rules
 			'curly': true,
 			'eqeqeq': true,
 			'no-unused-expressions': true,
 			'require-await': true,
-			'@typescript-eslint/consistent-type-imports': [true, {
-				disallowTypeAnnotations: false,
-				fixStyle: 'inline-type-imports',
-			}],
 		}),
 		'missing-dependency': (await import('./lint/missing-dependency-rule.ts')).default,
 		'type-imports': (await import('./lint/type-imports-rule.ts')).default,
-	},
-}, {
-	include: [
-		'packages/language-core/**/*.ts',
-		'packages/language-plugin-pug/**/*.ts',
-	],
-	rules: {
-		'typescript-services-types': (await import('./lint/typescript-services-types-rule.ts')).default,
 	},
 }]);

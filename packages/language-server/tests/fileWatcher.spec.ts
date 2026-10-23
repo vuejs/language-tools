@@ -10,7 +10,7 @@ afterAll(async () => {
 	await vueServer?.shutdown();
 });
 
-test('config files are watched so project services pick up changes', async () => {
+test('config files and files that can export components are watched', async () => {
 	const watchers: unknown[] = [];
 	vueServer = startLanguageServer(require.resolve('../index.js'), testWorkspacePath);
 	vueServer.connection.onRequest(ConfigurationRequest.type, ({ items }) => items.map(() => null));
@@ -21,8 +21,14 @@ test('config files are watched so project services pick up changes', async () =>
 			}
 		}
 	});
-	await vueServer.initialize(URI.file(testWorkspacePath).toString(), {}, {
+	await vueServer.initialize(URI.file(testWorkspacePath).toString(), {
+		contentMappers: [{ package: '@vue/content-mapper', extensions: ['.vue'] }],
+	}, {
 		workspace: { configuration: true, didChangeWatchedFiles: { dynamicRegistration: true } },
 	});
 	await expect.poll(() => watchers).toContainEqual({ globPattern: '**/*.json' });
+	expect(watchers).toContainEqual({ globPattern: '**/*.ts' });
+	expect(watchers).toContainEqual({ globPattern: '**/*.mjs' });
+	expect(watchers).toContainEqual({ globPattern: '**/*.vue' });
+	expect(watchers).not.toContainEqual({ globPattern: '**/*' });
 });

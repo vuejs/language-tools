@@ -23,10 +23,6 @@ interface RequestMessage {
 export function runMapperServer(mapper: ContentMapper, options: { workerPath: string }) {
 	let input = Buffer.alloc(0);
 	const workerPath = readArgument('worker') ?? options.workerPath;
-	const typescriptPath = readArgument('typescript');
-	if (typescriptPath) {
-		process.env.VUE_CONTENT_MAPPER_TYPESCRIPT = typescriptPath;
-	}
 	const transformPool = new TransformPool(mapper, undefined, workerPath);
 	let unusedExpectErrorMessage = "Unused '@ts-expect-error' directive.";
 
@@ -108,7 +104,7 @@ export function runMapperServer(mapper: ContentMapper, options: { workerPath: st
 	}
 
 	function initialize(params: InitializeParams): InitializeResult {
-		unusedExpectErrorMessage = getUnusedExpectErrorMessage(params.locale, typescriptPath);
+		unusedExpectErrorMessage = getUnusedExpectErrorMessage(params.locale);
 		return {
 			positionEncoding: selectPositionEncoding(params.positionEncodings),
 			diagnosticSource: mapper.diagnosticSource,

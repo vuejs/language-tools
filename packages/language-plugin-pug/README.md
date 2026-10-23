@@ -29,8 +29,6 @@ Add this plugin to the `@vue/content-mapper` options in `tsconfig.json`:
 }
 ```
 
-With `@vue/typescript-plugin` on TypeScript 5, use the top-level `vueCompilerOptions.plugins` field instead.
-
 ## Usage
 
 After configuration, you can use Pug syntax in Vue components:

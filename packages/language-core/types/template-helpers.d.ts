@@ -47,6 +47,41 @@ declare global {
 			expose?: (exposed: T) => void;
 		};
 	};
+	// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/shared/src/globalsAllowList.ts
+	type __VLS_Globals =
+		& Pick<
+			typeof globalThis,
+			Extract<
+				| 'Infinity'
+				| 'NaN'
+				| 'isFinite'
+				| 'isNaN'
+				| 'parseFloat'
+				| 'parseInt'
+				| 'decodeURI'
+				| 'decodeURIComponent'
+				| 'encodeURI'
+				| 'encodeURIComponent'
+				| 'Math'
+				| 'Number'
+				| 'Date'
+				| 'Array'
+				| 'Object'
+				| 'Boolean'
+				| 'String'
+				| 'RegExp'
+				| 'Map'
+				| 'Set'
+				| 'JSON'
+				| 'Intl'
+				| 'BigInt'
+				| 'console'
+				| 'Error'
+				| 'Symbol',
+				keyof typeof globalThis
+			>
+		>
+		& { undefined: undefined };
 	type __VLS_IsFunction<T, K> = K extends keyof T ? unknown extends T[K] ? false
 		: true
 		: false;
@@ -60,6 +95,19 @@ declare global {
 		: __VLS_IsFunction<Emits, Event> extends true ? { [K in onEvent]?: Emits[Event & keyof Emits] }
 		: __VLS_IsFunction<Emits, CamelizedEvent> extends true ? { [K in onEvent]?: Emits[CamelizedEvent & keyof Emits] }
 		: Props;
+	// the rest parameter `$event` of an inline handler is destructured from, as if it were contextually typed by `T[K]`:
+	// the parameters of the handler (`[undefined?]` for none), or `any[]` without one handler signature
+	// (no such property, or overloads or union members of different parameters);
+	// the parameters of each signature are wrapped, so a union of tuples in one signature stays one signature
+	type __VLS_EventArgs<T, K extends PropertyKey> = K extends keyof T
+		? __VLS_IsAny<T[K]> extends true ? any[] : __VLS_HandlerArgs<__VLS_HandlerParameters<NonNullable<T[K]>>>
+		: any[];
+	type __VLS_HandlerParameters<F> = F extends unknown
+		? __VLS_OverloadUnion<F> extends infer S ? S extends (...args: infer P) => any ? [P] : never : never
+		: never;
+	type __VLS_HandlerArgs<W> = [W] extends [never] ? any[]
+		: [W] extends [__VLS_UnionToIntersection<W>] ? W extends [infer P] ? P extends [] ? [undefined?] : P : never
+		: any[];
 	// fix https://github.com/vuejs/language-tools/issues/926
 	type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends
 		((arg: infer P) => unknown) ? P : never;

@@ -108,8 +108,88 @@ test('after invalidate, a config change the TypeScript language server was told 
 	}
 });
 
+test('auto-import components are reused across edits to the requesting file until another file changes', async () => {
+	const dir = fs.mkdtempSync(path.join(testWorkspacePath, 'auto-import-cache-'));
+	try {
+		const write = (file: string, text: string) => {
+			const filePath = path.join(dir, file);
+			// FileChangeType: 1 created, 2 changed
+			const type = fs.existsSync(filePath) ? 2 : 1;
+			fs.writeFileSync(filePath, text);
+			server.notify('workspace/didChangeWatchedFiles', { changes: [{ uri: pathToFileURL(filePath).href, type }] });
+		};
+		const writeComponent = (file: string, name: string) =>
+			write(file, `import { defineComponent } from 'vue';\nexport const ${name} = defineComponent({});\n`);
+		const toFileName = (file: string) => path.join(dir, file).replace(/\\/g, '/');
+		const getNames = async () =>
+			(await resolver.getAutoImportComponents(toFileName('a.ts')))?.map(component => component.name);
+		write('tsconfig.json', JSON.stringify({ include: ['*.ts'] }));
+		write('a.ts', 'export {};\n');
+		writeComponent('foo.ts', 'Foo');
+		const components = await resolver.getAutoImportComponents(toFileName('a.ts'));
+		expect(components?.map(component => component.name)).toEqual(['Foo']);
+
+		writeComponent('bar.ts', 'Bar');
+		// a round trip on the same connection guarantees the notifications were read before the API is asked
+		await server.request('vue/sync', {}).catch(() => {});
+		resolver.fileChanged(toFileName('a.ts'));
+		expect(await resolver.getAutoImportComponents(toFileName('a.ts'))).toBe(components);
+		resolver.fileChanged(toFileName('bar.ts'));
+		expect(await getNames()).toEqual(['Bar', 'Foo']);
+
+		writeComponent('foo.ts', 'Baz');
+		await server.request('vue/sync', {}).catch(() => {});
+		expect(await getNames()).toEqual(['Bar', 'Foo']);
+		resolver.invalidate();
+		expect(await getNames()).toEqual(['Bar', 'Baz']);
+	}
+	finally {
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+test('a change to a file that cannot export components keeps the auto-import components', async () => {
+	const dir = fs.mkdtempSync(path.join(testWorkspacePath, 'auto-import-cache-'));
+	try {
+		const toFileName = (file: string) => path.join(dir, file).replace(/\\/g, '/');
+		fs.writeFileSync(path.join(dir, 'tsconfig.json'), JSON.stringify({ include: ['*.ts'] }));
+		fs.writeFileSync(path.join(dir, 'a.ts'), 'export {};\n');
+		const components = await resolver.getAutoImportComponents(toFileName('a.ts'));
+		expect(components).toBeDefined();
+
+		resolver.fileChanged(toFileName('notes.md'));
+		expect(await resolver.getAutoImportComponents(toFileName('a.ts'))).toBe(components);
+		resolver.fileChanged(toFileName('b.ts'));
+		expect(await resolver.getAutoImportComponents(toFileName('a.ts'))).not.toBe(components);
+	}
+	finally {
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+});
+
 test('a .vue file no content mapper covers has no project', async () => {
 	expect(await resolver.getProject(fileName('fixture.vue'))).toBeUndefined();
+});
+
+test('element names come from the intrinsic elements of the Vue file', async () => {
+	const elementNames = await resolver.getElementNames(fileName('tsconfigProject/empty.vue'));
+	expect(elementNames).toContain('div');
+	expect(elementNames).toContain('svg');
+});
+
+test('a .vue file no content mapper covers has no element names', async () => {
+	expect(await resolver.getElementNames(fileName('fixture.vue'))).toBeUndefined();
+});
+
+test('directive names come from the directives of the Vue file', async () => {
+	const directives = await resolver.getComponentDirectives(fileName('tsconfigProject/empty.vue'));
+	expect(directives).toContain('vHtml');
+	expect(directives).toContain('vShow');
+	expect(directives).not.toContain('Transition');
+});
+
+test('a .vue file no content mapper covers has no directive names', async () => {
+	expect(await resolver.getComponentDirectives(fileName('fixture.vue'))).toBeUndefined();
 });
 
 test('a closed file resolves again when asked later', async () => {

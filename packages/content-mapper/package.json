@@ -24,16 +24,16 @@
 		}
 	},
 	"peerDependencies": {
-		"typescript": ">=5.0.0"
+		"typescript": ">=7.1.0-beta"
 	},
 	"dependencies": {
-		"@volar/language-core": "2.4.28",
+		"@volar/language-core": "2.4.30",
 		"@vue/language-core": "workspace:*",
 		"muggle-string": "^0.4.1"
 	},
 	"devDependencies": {
 		"@types/node": "^26.0.1",
 		"@vue/compiler-sfc": "^3.5.0",
-		"typescript": "<7"
+		"typescript": "npm:typescript@7.1.0-beta"
 	}
 }

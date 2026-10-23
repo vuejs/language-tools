@@ -1,5 +1,5 @@
-import type * as ts from 'typescript';
-import type { TextRange } from '../types';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type { TextRange, TypeScript } from '../types';
 import { collectBindingRanges } from '../utils/collectBindings';
 import { getNodeText } from '../utils/shared';
 
@@ -8,19 +8,17 @@ export const enum BindingFlag {
 	// Bindings re-asserted per closure by the template codegen (imports, `let`/`var`).
 	Variable,
 	Const = 1 << 1,
-	Component = 1 << 2,
 	// `let`/`var` without an initializer; reading these may raise TS2454.
-	Uninitialized = 1 << 3,
+	Uninitialized = 1 << 2,
 }
 
 export function parseBindings(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	ast: ts.SourceFile,
-	componentExtsensions: string[],
 ) {
 	const bindings = new Map<string, BindingFlag>();
 
-	ts.forEachChild(ast, node => {
+	ast.forEachChild(node => {
 		if (ts.isVariableStatement(node)) {
 			const isConst = !!(node.declarationList.flags & ts.NodeFlags.Const);
 			for (const decl of node.declarationList.declarations) {
@@ -49,33 +47,16 @@ export function parseBindings(
 		}
 
 		if (ts.isImportDeclaration(node)) {
-			const moduleName = _getNodeText(node.moduleSpecifier).slice(1, -1);
-
-			if (node.importClause && !node.importClause.isTypeOnly) {
+			if (node.importClause && node.importClause.phaseModifier !== ts.SyntaxKind.TypeKeyword) {
 				const { name, namedBindings } = node.importClause;
 
 				if (name) {
-					if (componentExtsensions.some(ext => moduleName.endsWith(ext))) {
-						bindings.set(_getNodeText(name), BindingFlag.Const | BindingFlag.Component);
-					}
-					else {
-						bindings.set(_getNodeText(name), BindingFlag.Variable);
-					}
+					bindings.set(_getNodeText(name), BindingFlag.Variable);
 				}
 				if (namedBindings) {
 					if (ts.isNamedImports(namedBindings)) {
 						for (const element of namedBindings.elements) {
-							if (element.isTypeOnly) {
-								continue;
-							}
-							if (
-								element.propertyName
-								&& _getNodeText(element.propertyName) === 'default'
-								&& componentExtsensions.some(ext => moduleName.endsWith(ext))
-							) {
-								bindings.set(_getNodeText(element.name), BindingFlag.Const | BindingFlag.Component);
-							}
-							else {
+							if (!element.isTypeOnly) {
 								bindings.set(_getNodeText(element.name), BindingFlag.Variable);
 							}
 						}
@@ -91,12 +72,12 @@ export function parseBindings(
 	return bindings;
 
 	function _getNodeText(node: ts.Node) {
-		return getNodeText(ts, node, ast);
+		return getNodeText(node, ast);
 	}
 }
 
 export function getClosestMultiLineCommentRange(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	node: ts.Node,
 	parents: ts.Node[],
 	ast: ts.SourceFile,
@@ -120,7 +101,7 @@ export function getClosestMultiLineCommentRange(
 	}
 }
 
-export function getUnwrappedExpression(ts: typeof import('typescript'), node: ts.Node) {
+export function getUnwrappedExpression(ts: TypeScript, node: ts.Node) {
 	while (
 		ts.isParenthesizedExpression(node)
 		|| ts.isAssertionExpression(node)

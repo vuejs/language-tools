@@ -1,4 +1,4 @@
-import type { TextDocument } from '@volar/language-server';
+import { FileChangeType, type TextDocument } from '@volar/language-server';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, expect, test } from 'vitest';
@@ -25,6 +25,12 @@ import Comp from './module-rename-comp-renamed.vue'
 
 	fs.renameSync(oldComponentPath, newComponentPath);
 	createdFiles.push(newComponentPath);
+	// The TypeScript language server only watches the disk itself when the client cannot, and its watcher may miss
+	// the rename in time (e.g. on Linux CI); an editor reports the change.
+	await server.changeWatchedFiles([
+		{ uri: URI.file(oldComponentPath).toString(), type: FileChangeType.Deleted },
+		{ uri: URI.file(newComponentPath).toString(), type: FileChangeType.Created },
+	]);
 
 	await expect.poll(
 		async () => {
@@ -94,13 +100,6 @@ async function openDocument(server: Awaited<ReturnType<typeof getLanguageServer>
 }
 
 async function getSemanticDiagnostics(server: Awaited<ReturnType<typeof getLanguageServer>>, uri: string) {
-	const res = await server.tsserver.message({
-		seq: server.nextSeq(),
-		command: 'semanticDiagnosticsSync',
-		arguments: {
-			file: URI.parse(uri).fsPath,
-		},
-	});
-	expect(res.success).toBe(true);
-	return res.body as any[];
+	const report = await server.typescript('textDocument/diagnostic', { textDocument: { uri } });
+	return report.items as { code?: number | string }[];
 }

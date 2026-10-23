@@ -7,8 +7,7 @@
 	},
 	"references": [
 		{ "path": "../component-meta/tsconfig.json" },
-		{ "path": "../language-core/tsconfig.json" },
-		{ "path": "../typescript-plugin/tsconfig.json" }
+		{ "path": "../language-core/tsconfig.json" }
 	],
 	"include": ["*", "lib/**/*"],
 	"exclude": ["tests"]

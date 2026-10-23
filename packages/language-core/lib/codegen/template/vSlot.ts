@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { replaceSourceRange } from 'muggle-string';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
@@ -48,11 +48,12 @@ export function* generateVSlot(
 	}
 	else {
 		yield `const { `;
-		// #932: reference for implicit default slot
+		// #932: reference for implicit default slot, anchored at the element's `<`
+		// because a mapped range may not contain the element's other mappings
 		const boundary = yield* Boundary.start(
 			'template',
 			node.loc.start.offset,
-			node.loc.end.offset,
+			node.loc.start.offset + 1,
 			codeFeatures.navigation,
 		);
 		yield `default`;
@@ -60,7 +61,7 @@ export function* generateVSlot(
 	}
 	yield `: ${slotVar} } = ${names.nonNull}(${ctxVar}.slots)${endOfLine}`;
 
-	const scope = ctx.scope();
+	const scope = ctx.scope(true);
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = getTypeScriptAST(options.typescript, options.template, `(${slotDir.exp.content}) => {}`);
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);

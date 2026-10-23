@@ -1,8 +1,8 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
-import { hyphenate } from '@vue/shared';
+import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'path-browserify';
-import type * as ts from 'typescript';
-import type { IRTemplate, TextRange, VueCompilerOptions } from '../types';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type { IRTemplate, TextRange, TypeScript } from '../types';
 
 export { hyphenate as hyphenateTag } from '@vue/shared';
 
@@ -43,40 +43,58 @@ export function getElementTagOffsets(
 }
 
 export function getStartEnd<T extends ts.Node>(
-	ts: typeof import('typescript'),
 	node: T,
 	ast: ts.SourceFile,
 ): TextRange<T> {
 	return {
 		node,
-		start: (ts as any).getTokenPosOfNode(node, ast) as number,
+		start: node.getStart(ast),
 		end: node.end,
 	};
 }
 
 export function getNodeText(
-	ts: typeof import('typescript'),
 	node: ts.Node,
 	ast: ts.SourceFile,
 ) {
-	const { start, end } = getStartEnd(ts, node, ast);
+	const { start, end } = getStartEnd(node, ast);
 	return ast.text.slice(start, end);
 }
 
-/** Returns the longest key of `extensionFormats` that the file name ends with (e.g. `.vue.md` over `.md`). */
-export function getMatchedExtension(fileName: string, vueCompilerOptions: VueCompilerOptions) {
-	let matched: string | undefined;
-	for (const extension in vueCompilerOptions.extensionFormats) {
-		if (fileName.endsWith(extension) && extension.length > (matched?.length ?? 0)) {
-			matched = extension;
-		}
-	}
-	return matched;
+// The type guards below are named differently, or missing, in the TypeScript 7 and classic APIs.
+
+export function isStringLiteralLike(
+	ts: TypeScript,
+	node: ts.Node,
+): node is ts.StringLiteral | ts.NoSubstitutionTemplateLiteral {
+	return node.kind === ts.SyntaxKind.StringLiteral || node.kind === ts.SyntaxKind.NoSubstitutionTemplateLiteral;
 }
 
-/** Strips the extension matched by `getMatchedExtension`, or else the last extension. */
-export function getBaseNameWithoutExtension(fileName: string, vueCompilerOptions: VueCompilerOptions) {
+export function isFunctionLikeDeclaration(ts: TypeScript, node: ts.Node): node is ts.FunctionLikeDeclaration {
+	switch (node.kind) {
+		case ts.SyntaxKind.FunctionDeclaration:
+		case ts.SyntaxKind.MethodDeclaration:
+		case ts.SyntaxKind.GetAccessor:
+		case ts.SyntaxKind.SetAccessor:
+		case ts.SyntaxKind.Constructor:
+		case ts.SyntaxKind.FunctionExpression:
+		case ts.SyntaxKind.ArrowFunction:
+			return true;
+	}
+	return false;
+}
+
+export function isTypeAssertionExpression(ts: TypeScript, node: ts.Node): node is ts.TypeAssertion {
+	return node.kind === ts.SyntaxKind.TypeAssertionExpression;
+}
+
+/** Strips the last extension, as `@vue/compiler-core` does to derive a component's self-reference name. */
+export function getBaseNameWithoutExtension(fileName: string) {
 	const baseName = path.basename(fileName);
-	const extension = getMatchedExtension(baseName, vueCompilerOptions);
-	return baseName.slice(0, extension ? baseName.length - extension.length : baseName.lastIndexOf('.'));
+	return baseName.slice(0, baseName.lastIndexOf('.'));
+}
+
+/** The name a Vue file's template refers to the file's own component by. */
+export function getSelfComponentName(fileName: string) {
+	return capitalize(camelize(getBaseNameWithoutExtension(fileName)));
 }

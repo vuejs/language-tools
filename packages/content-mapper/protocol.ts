@@ -35,7 +35,7 @@ export interface CloseProjectParams {
 export interface TransformParams {
 	fileName: string;
 	content: string;
-	projectHandle?: string;
+	projectHandle: string;
 }
 
 export interface TransformResult {

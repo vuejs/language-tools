@@ -2,16 +2,30 @@ import type { CodeInformation } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import type { Segment } from 'muggle-string';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { VueEmbeddedCode } from './virtualCode/embeddedCodes';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
 export { VueEmbeddedCode };
 
+/**
+ * The TypeScript 7 AST API with a synchronous parser. Hosts on the classic TypeScript API pass it instead,
+ * so language-core only reads what both APIs provide alike.
+ */
+export type TypeScript = typeof import('typescript/ast', { with: { 'resolution-mode': 'import' }}) & {
+	createSourceFile(
+		fileName: string,
+		sourceText: string,
+		languageVersion: ts.ScriptTarget,
+		setParentNodes?: boolean,
+		scriptKind?: ts.ScriptKind,
+	): ts.SourceFile;
+};
+
 export type RawVueCompilerOptions =
 	& Partial<
-		Omit<VueCompilerOptions, 'target' | 'plugins' | 'isDataAttribute' | 'isHtmlAttribute' | 'extensionFormats'>
+		Omit<VueCompilerOptions, 'target' | 'plugins' | 'isDataAttribute' | 'isHtmlAttribute'>
 	>
 	& {
 		target?: 'auto' | 3.3 | 3.5 | 3.6 | 99 | number;
@@ -25,7 +39,6 @@ export type RawPlugin =
 	};
 
 export interface VueCodeInformation extends CodeInformation {
-	__importCompletion?: boolean;
 	__propsCompletion?: boolean;
 	__shorthandExpression?: 'html' | 'js';
 	__combineToken?: symbol;
@@ -44,13 +57,11 @@ export interface VueCompilerOptions {
 	target: number;
 	lib: string;
 	typesRoot: string;
-	/** Selects the built-in parser: a Vue SFC, VitePress markdown or a petite-vue HTML page. */
-	format: 'sfc' | 'vitepress' | 'petite-vue';
 	/**
-	 * The format of each extension registered by the tsconfig's `@vue/content-mapper` entries
-	 * (`contentMappers`), or `{ '.vue': 'sfc' }` without any. Derived, not user-settable.
+	 * Selects the built-in parser of every file the plugin receives: a Vue SFC, VitePress markdown or a
+	 * petite-vue HTML page. Each `@vue/content-mapper` entry sets it through its `format` option.
 	 */
-	extensionFormats: Record<string, VueCompilerOptions['format']>;
+	format: 'sfc' | 'vitepress' | 'petite-vue';
 	/** Exposes `globalThis` in the template context, as petite-vue templates read globals directly. */
 	globalTemplateContext: boolean;
 	jsxSlots: boolean;
@@ -104,8 +115,8 @@ export interface VueLanguagePluginReturn {
 	order?: number;
 	/**
 	 * Parses a file into SFC blocks. The first plugin returning a result wins; otherwise the built-in
-	 * parser of the file's format is used. Which files reach it is decided by the host
-	 * (the extensions of `vueCompilerOptions.extensionFormats`).
+	 * parser of `vueCompilerOptions.format` is used. Which files reach it is decided by the host
+	 * (the extensions of the `contentMappers` entry).
 	 */
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
 	updateSFC?(
@@ -133,7 +144,7 @@ export interface VueLanguagePluginReturn {
 export type VueLanguagePlugin<T extends Record<string, any> = {}> = (
 	ctx: {
 		modules: {
-			typescript: typeof ts;
+			typescript: TypeScript;
 			'@vue/compiler-dom': typeof CompilerDOM;
 			'@vue/language-core': typeof import('../index');
 		};

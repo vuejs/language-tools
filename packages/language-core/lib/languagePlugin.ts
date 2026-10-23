@@ -1,12 +1,9 @@
-/// <reference types="@volar/typescript" />
-
-import { forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
+import { forEachEmbeddedCode, type LanguagePlugin, type VirtualCode } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
-import type * as ts from 'typescript';
 import * as LanguageCore from '../index';
 import { createPlugins } from './plugins';
 import { serviceScriptRE } from './plugins/vue-tsx';
-import type { VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
+import type { TypeScript, VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
 import { getRootLanguageId, VueVirtualCode } from './virtualCode';
 
 const fileRegistries: Record<string, Map<string, VueVirtualCode>> = {};
@@ -26,7 +23,7 @@ function getVueFileRegistry(vueCompilerOptions: VueCompilerOptions, plugins: Vue
 }
 
 export function createVueLanguagePlugin<T>(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	vueCompilerOptions: VueCompilerOptions,
 	asFileName: (scriptId: T) => string,
 ): LanguagePlugin<T, VueVirtualCode> {
@@ -43,10 +40,10 @@ export function createVueLanguagePlugin<T>(
 	const fileRegistry = getVueFileRegistry(vueCompilerOptions, plugins);
 
 	return {
-		// Every file passed in is parsed by the format of its extension in `extensionFormats`, falling back
-		// to `vueCompilerOptions.format`; the host decides which files are content mapper files.
-		getLanguageId(scriptId) {
-			return getRootLanguageId(vueCompilerOptions, asFileName(scriptId));
+		// Every file passed in is parsed by `vueCompilerOptions.format`; the host routes to this plugin only the
+		// files of the `contentMappers` entry it was created for.
+		getLanguageId() {
+			return getRootLanguageId(vueCompilerOptions);
 		},
 		createVirtualCode(scriptId, _languageId, snapshot) {
 			let code = fileRegistry.get(String(scriptId));
@@ -66,39 +63,17 @@ export function createVueLanguagePlugin<T>(
 		disposeVirtualCode(scriptId) {
 			fileRegistry.delete(String(scriptId));
 		},
-		typescript: {
-			extraFileExtensions: getAllExtensions(vueCompilerOptions)
-				.map<ts.FileExtensionInfo>(ext => ({
-					extension: ext.slice(1),
-					isMixedContent: true,
-					scriptKind: 7 satisfies ts.ScriptKind.Deferred,
-				})),
-			getServiceScript(root) {
-				for (const code of forEachEmbeddedCode(root)) {
-					if (serviceScriptRE.test(code.id)) {
-						const lang = code.id.slice('script_'.length);
-						return {
-							code,
-							extension: '.' + lang,
-							scriptKind: lang === 'js'
-								? ts.ScriptKind.JS
-								: lang === 'jsx'
-								? ts.ScriptKind.JSX
-								: lang === 'tsx'
-								? ts.ScriptKind.TSX
-								: ts.ScriptKind.TS,
-						};
-					}
-				}
-			},
-		},
 	};
 }
 
-export function getAllExtensions(options: VueCompilerOptions) {
-	return Object.keys(options.extensionFormats);
-}
-
-export function isContentMapperFile(options: VueCompilerOptions, fileName: string) {
-	return getAllExtensions(options).some(ext => fileName.endsWith(ext));
+/** The generated TypeScript / JavaScript code of a Vue file, and the extension TypeScript should see it with. */
+export function getServiceScript(root: VirtualCode) {
+	for (const code of forEachEmbeddedCode(root)) {
+		if (serviceScriptRE.test(code.id)) {
+			return {
+				code,
+				extension: '.' + code.id.slice('script_'.length) as '.js' | '.jsx' | '.ts' | '.tsx',
+			};
+		}
+	}
 }

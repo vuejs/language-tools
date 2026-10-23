@@ -1,5 +1,4 @@
-import type * as ts from 'typescript';
-import type { Code, IRTemplate, VueCompilerOptions } from '../../types';
+import type { Code, IRTemplate, TypeScript, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, generateTypeAlias, generateTypedVar, newLine } from '../utils';
@@ -10,12 +9,11 @@ import { references as styleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
 
 export interface TemplateCodegenOptions {
-	typescript: typeof ts;
+	typescript: TypeScript;
 	vueCompilerOptions: VueCompilerOptions;
 	template: IRTemplate;
 	isVapor: boolean;
 	scriptLang: string;
-	importedComponents: Set<string>;
 	setupRefs: Set<string>;
 	setupConsts: Set<string>;
 	setupBindings: Set<string>;
@@ -36,7 +34,7 @@ export { generate as generateTemplate };
 function generate(options: TemplateCodegenOptions) {
 	// The references registry accumulates across codegen passes; start clean.
 	styleScopedClassReferences.delete(options.template);
-	const ctx = createTemplateCodegenContext();
+	const ctx = createTemplateCodegenContext(options.scriptLang);
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
 	for (const code of codeGenerator) {
@@ -52,7 +50,7 @@ function* generateWorker(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
-	const scope = ctx.scope();
+	const scope = ctx.scope(true);
 	const {
 		slotsAssignName,
 		propsAssignName,

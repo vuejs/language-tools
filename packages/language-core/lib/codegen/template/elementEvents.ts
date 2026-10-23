@@ -1,8 +1,8 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { getUnwrappedExpression } from '../../parsers/utils';
-import type { Code, VueCodeInformation } from '../../types';
+import type { Code, TypeScript, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import {
@@ -109,19 +109,29 @@ export function* generateElementEvents(
 			yield `/** @type {${eventType}} */${newLine}const ${eventVar} = {${newLine}`;
 		}
 		for (const { prop, source, offset } of items) {
+			const argsType = `${names.EventArgs}<${eventType}, '${propName}'>`;
 			if (prop.name === 'on') {
 				yield `/** @type {typeof ${emitsVar}.`;
 				yield* generateEventArg(source, offset!, emitPrefix.slice(0, -1), codeFeatures.navigation);
 				yield `} */${newLine}`;
-			}
-			if (prop.name === 'on') {
+				// in JS, the JSDoc above types the property, and fails to parse for a non-identifier name
+				const emitArgName = getEventArgName(source, emitPrefix.slice(0, -1));
 				yield* generateEventArg(source, offset!, propPrefix.slice(0, -1));
 				yield `: `;
-				yield* generateEventExpression(options, ctx, prop);
+				yield* generateEventExpression(
+					options,
+					ctx,
+					prop,
+					isTsLang(options.scriptLang)
+						? argsType
+						: identifierRE.test(emitArgName)
+						? `${names.EventArgs}<typeof ${emitsVar}, '${emitArgName}'>`
+						: `any[]`,
+				);
 			}
 			else {
 				yield `'${propName}': `;
-				yield* generateModelEventExpression(options, ctx, prop);
+				yield* generateModelEventExpression(options, ctx, prop, argsType);
 			}
 			yield `,${newLine}`;
 		}
@@ -159,10 +169,30 @@ export function* generateEventArg(
 	}
 }
 
+export function getEventArgName(name: string, directive = 'on') {
+	if (directive.length) {
+		name = capitalize(name);
+	}
+	return directive + name.split('-').map((part, i) => i ? capitalize(part) : part).join('');
+}
+
+function* generateEventParameter(
+	options: TemplateCodegenOptions,
+	argsType: string,
+): Generator<Code> {
+	if (isTsLang(options.scriptLang)) {
+		yield `(...[$event]: ${argsType}) => {${newLine}`;
+	}
+	else {
+		yield `(/** @type {${argsType}} */ ...[$event]) => {${newLine}`;
+	}
+}
+
 export function* generateEventExpression(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
+	argsType: string,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const ast = getTypeScriptAST(options.typescript, options.template, prop.exp.content);
@@ -179,8 +209,9 @@ export function* generateEventExpression(
 		);
 
 		if (isCompound) {
-			const scope = ctx.scope();
+			const scope = ctx.scope(true);
 			scope.declare('$event');
+			scope.read.add('$event');
 
 			const accessMark = ctx.accessLog.length;
 			const codes: Code[] = [];
@@ -188,8 +219,7 @@ export function* generateEventExpression(
 				codes.push(code);
 			}
 
-			yield `// @ts-ignore${newLine}`;
-			yield `(...[$event]) => {${newLine}`;
+			yield* generateEventParameter(options, argsType);
 			// consume $event to avoid TS6133 when the expression doesn't use it
 			yield `void $event${endOfLine}`;
 
@@ -234,6 +264,7 @@ export function* generateModelEventExpression(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
+	argsType: string,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const accessMark = ctx.accessLog.length;
@@ -248,8 +279,7 @@ export function* generateModelEventExpression(
 			undefined,
 			true,
 		)];
-		yield `// @ts-ignore${newLine}`;
-		yield `(...[$event]) => {${newLine}`;
+		yield* generateEventParameter(options, argsType);
 		yield* generateReasserts(options, ctx, accessMark);
 		yield* ctx.generateConditionGuards();
 		yield* codes;
@@ -289,7 +319,7 @@ function* generateReasserts(
 	}
 }
 
-export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.SourceFile) {
+export function isCompoundExpression(ts: TypeScript, ast: ts.SourceFile) {
 	if (ast.statements.length === 0) {
 		return false;
 	}
@@ -313,7 +343,7 @@ export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.So
 	return true;
 }
 
-function isSingleExpression(ts: typeof import('typescript'), ast: ts.SourceFile) {
+function isSingleExpression(ts: TypeScript, ast: ts.SourceFile) {
 	if (ast.statements.length === 1 && ast.text[ast.endOfFileToken.pos - 1] !== ';') {
 		const statement = ast.statements[0]!;
 		if (ts.isExpressionStatement(statement)) {

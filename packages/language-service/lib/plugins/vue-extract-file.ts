@@ -3,7 +3,7 @@ import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
 import { type IR, type IRTemplate, tsCodegen } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import { resolveEmbeddedCode } from '../utils';
+import { asClassicNode, resolveEmbeddedCode } from '../utils';
 
 interface ActionData {
 	uri: string;
@@ -15,7 +15,7 @@ const unicodeRE = /\\u/g;
 
 export function create(
 	ts: typeof import('typescript'),
-	{ collectExtractProps }: import('@vue/typescript-plugin/lib/requests').Requests,
+	{ collectExtractProps }: import('../requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-extract-file',
@@ -97,7 +97,7 @@ export function create(
 					const document = context.documents.get(URI.parse(uri), info.code.languageId, info.code.snapshot);
 					const sfcDocument = context.documents.get(info.script.id, info.script.languageId, info.script.snapshot);
 					const newUri = sfcDocument.uri.slice(0, sfcDocument.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
-					const lastImportNode = getLastImportNode(ts, script.ast);
+					const lastImportNode = getLastImportNode(ts, asClassicNode(script.ast));
 
 					let newFileTags = [];
 
@@ -145,7 +145,7 @@ export function create(
 					];
 
 					if (ir.script) {
-						const edit = createAddComponentToOptionEdit(ts, ir, ir.script.ast, newName);
+						const edit = createAddComponentToOptionEdit(ts, ir, asClassicNode(ir.script.ast), newName);
 						if (edit) {
 							sfcEdits.push({
 								range: {
@@ -308,7 +308,7 @@ export function createAddComponentToOptionEdit(
 	const printer = ts.createPrinter();
 	if (componentOptions.components) {
 		const newNode: ts.ObjectLiteralExpression = {
-			...componentOptions.components.node,
+			...asClassicNode<ts.ObjectLiteralExpression>(componentOptions.components.node),
 			properties: [
 				...componentOptions.components.node.properties,
 				ts.factory.createShorthandPropertyAssignment(componentName),
@@ -322,7 +322,7 @@ export function createAddComponentToOptionEdit(
 	}
 	else {
 		const newNode: ts.ObjectLiteralExpression = {
-			...componentOptions.args.node,
+			...asClassicNode<ts.ObjectLiteralExpression>(componentOptions.args.node),
 			properties: [
 				...componentOptions.args.node.properties,
 				ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),

@@ -9,7 +9,7 @@ import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { BindingFlag } from '../parsers/utils';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
-import type { IR, VueCompilerOptions, VueLanguagePlugin } from '../types';
+import type { IR, TypeScript, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { getBaseNameWithoutExtension } from '../utils/shared';
 import { computedSet } from '../utils/signals';
 
@@ -62,7 +62,7 @@ function computeLang(ir: IR) {
 export default plugin;
 
 function useCodegen(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	vueCompilerOptions: VueCompilerOptions,
 	fileName: string,
 	ir: IR,
@@ -70,7 +70,7 @@ function useCodegen(
 	const getResolvedOptions = computed(() => {
 		const options = parseVueCompilerOptions(ir.comments);
 		if (options) {
-			const resolver = new CompilerOptionsResolver(ts, () => undefined /* does not support resolving target="auto" */);
+			const resolver = new CompilerOptionsResolver(() => undefined /* does not support resolving target="auto" */);
 			resolver.addConfig(options, path.dirname(fileName));
 			return resolver.build(vueCompilerOptions);
 		}
@@ -83,7 +83,7 @@ function useCodegen(
 
 	const getScriptRanges = computed(() =>
 		ir.script && validLangs.has(ir.script.lang)
-			? parseScriptRanges(ts, ir.script.ast, getResolvedOptions())
+			? parseScriptRanges(ts, ir.script.ast)
 			: undefined
 	);
 
@@ -104,16 +104,6 @@ function useCodegen(
 			}
 		}
 		return flags;
-	});
-
-	const getImportedComponents = computedSet(() => {
-		const names = new Set<string>();
-		for (const [name, flags] of getBindingFlags()) {
-			if (flags & BindingFlag.Component) {
-				names.add(name);
-			}
-		}
-		return names;
 	});
 
 	const getSetupBindings = computedSet(() => new Set(getBindingFlags().keys()));
@@ -174,7 +164,7 @@ function useCodegen(
 				name = defineOptions.name;
 			}
 			else {
-				name = getBaseNameWithoutExtension(fileName, vueCompilerOptions);
+				name = getBaseNameWithoutExtension(fileName);
 			}
 		}
 		return capitalize(camelize(name));
@@ -191,7 +181,6 @@ function useCodegen(
 			isVapor: getIsVapor(),
 			scriptLang: computeLang(ir),
 			componentName: getComponentName(),
-			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
 			setupConsts: getSetupConsts(),
 			setupBindings: getSetupBindings(),
@@ -274,6 +263,15 @@ function useCodegen(
 		].filter(name => bindings.has(name)));
 	});
 
+	const getScopeBindings = computedSet(() => {
+		const bindings = getSetupBindings();
+		const consts = getSetupConsts();
+		return new Set([
+			...getGeneratedTemplate()?.scopeMemberNames ?? [],
+			...getGeneratedStyle()?.scopeMemberNames ?? [],
+		].filter(name => bindings.has(name) || consts.has(name)));
+	});
+
 	const getUsedSetupBindings = computedSet(() => {
 		return new Set([
 			...getReferencedBindings(),
@@ -293,6 +291,7 @@ function useCodegen(
 			localComponents: getLocalComponents(),
 			localDirectives: getLocalDirectives(),
 			dotValueBindings: getDotValueBindings(),
+			scopeBindings: getScopeBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateAndStyleTypes: new Set([
@@ -311,8 +310,8 @@ function useCodegen(
 		getScriptSetupRanges,
 		getGeneratedScript,
 		getGeneratedTemplate,
-		getImportedComponents,
 		getSetupBindings,
+		getScopeBindings,
 		getLocalComponents,
 		getUsedSetupBindings,
 	};

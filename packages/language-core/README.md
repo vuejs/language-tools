@@ -22,31 +22,17 @@ Creates a Vue language plugin for integration with Volar language services.
 ```typescript
 import { createVueLanguagePlugin } from '@vue/language-core';
 import type { LanguagePlugin } from '@volar/language-core';
-import ts from 'typescript';
 
 const plugin: LanguagePlugin<string> = createVueLanguagePlugin(
-  ts,
+  ts, // TypeScript
   vueCompilerOptions, // VueCompilerOptions
   (scriptId) => scriptId  // asFileName: Converts scriptId to a file name
 );
 ```
 
-The plugin parses every file it is given by the format of its extension in `vueCompilerOptions.extensionFormats`, falling back to `vueCompilerOptions.format`; the host decides which files are content mapper files, e.g. by those extensions.
+`ts` is the TypeScript 7 `typescript/ast` module plus a synchronous `createSourceFile`, which TypeScript 7 only offers through its API process (`@vue/content-mapper` builds it from `typescript/sync`). The classic `typescript` module provides the same names, so `@vue/language-server` passes that instead.
 
-`createParsedCommandLine` derives `extensionFormats` from the tsconfig's `contentMappers`: each `@vue/content-mapper` entry maps its `extensions` to its `format` (default `'sfc'`). Without `contentMappers` it is `{ '.vue': 'sfc' }`.
-
-### `createParsedCommandLine`
-
-Parses TypeScript and Vue compiler options from `tsconfig.json`.
-
-```typescript
-import { createParsedCommandLine } from '@vue/language-core';
-import ts from 'typescript';
-
-const parsed = createParsedCommandLine(ts, ts.sys, '/path/to/tsconfig.json');
-// parsed.options: ts.CompilerOptions
-// parsed.vueOptions: VueCompilerOptions
-```
+The plugin parses every file it is given by `vueCompilerOptions.format`; the host creates one plugin per `@vue/content-mapper` entry (with that entry's `format`) and routes to it only the files of that entry's `extensions`. Nothing in the generated code depends on other entries: like `@vue/compiler-sfc`, a template tag refers to the `<script setup>` binding of its name whatever it is imported from, and a file's own component name is its file name without the last extension.
 
 ### `parse`
 
@@ -72,15 +58,20 @@ const msg = 'Hello'
 
 ## `vueCompilerOptions`
 
-`createParsedCommandLine` (used by `@vue/typescript-plugin` on TypeScript 5) reads Vue compiler options from the `vueCompilerOptions` field in `tsconfig.json`; [`@vue/content-mapper`](../content-mapper) ignores that field and takes the same options from its `contentMappers` entry's `options`:
+[`@vue/content-mapper`](../content-mapper) takes these options from its `contentMappers` entry's `options`, and `CompilerOptionsResolver` resolves them:
 
 ```jsonc
 {
-  "compilerOptions": { /* ... */ },
-  "vueCompilerOptions": {
-    "target": 3.5,
-    "plugins": ["@vue/language-plugin-pug"]
-  }
+  "contentMappers": [
+    {
+      "package": "@vue/content-mapper",
+      "extensions": [".vue"],
+      "options": {
+        "target": 3.5,
+        "plugins": ["@vue/language-plugin-pug"]
+      }
+    }
+  ]
 }
 ```
 

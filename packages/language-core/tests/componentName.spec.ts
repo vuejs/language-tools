@@ -1,49 +1,54 @@
 import { forEachEmbeddedCode } from '@volar/language-core';
-import * as ts from 'typescript';
 import { expect, it } from 'vitest';
 import { names } from '../lib/codegen/names';
 import { getDefaultCompilerOptions } from '../lib/compilerOptions';
 import { createVueLanguagePlugin } from '../lib/languagePlugin';
+import type { VueCompilerOptions } from '../lib/types';
 import { getBaseNameWithoutExtension } from '../lib/utils/shared';
-import { getFormat } from '../lib/virtualCode';
+import { createSnapshot, ts } from './typescript';
 
-function createVueCompilerOptions(
-	extensionFormats: Record<string, 'sfc' | 'vitepress' | 'petite-vue'> = { '.vue': 'sfc', '.vue.md': 'vitepress' },
-) {
+function generateScript(fileName: string, format: VueCompilerOptions['format'], content: string) {
 	const vueCompilerOptions = getDefaultCompilerOptions();
-	vueCompilerOptions.extensionFormats = extensionFormats;
-	return vueCompilerOptions;
+	vueCompilerOptions.format = format;
+	const plugin = createVueLanguagePlugin<string>(ts, vueCompilerOptions, id => id);
+	const code = plugin.createVirtualCode!(fileName, 'vue', createSnapshot(content), undefined as any)!;
+	const script = [...forEachEmbeddedCode(code)].find(code => code.id === 'script_ts')!;
+	return script.snapshot.getText(0, script.snapshot.getLength());
 }
 
-it('strips the longest matching configured extension from the file name', () => {
-	const vueCompilerOptions = createVueCompilerOptions();
-	expect(getBaseNameWithoutExtension('/project/src/page.vue.md', vueCompilerOptions)).toBe('page');
-	expect(getBaseNameWithoutExtension('/project/src/my-comp.vue', vueCompilerOptions)).toBe('my-comp');
-	expect(getBaseNameWithoutExtension('/project/src/readme.md', vueCompilerOptions)).toBe('readme');
-	expect(getBaseNameWithoutExtension('C:/project/src/page.vue.md', vueCompilerOptions)).toBe('page');
+it('strips only the last extension from the file name, like @vue/compiler-core', () => {
+	expect(getBaseNameWithoutExtension('/project/src/my-comp.vue')).toBe('my-comp');
+	expect(getBaseNameWithoutExtension('/project/src/page.md')).toBe('page');
+	expect(getBaseNameWithoutExtension('/project/src/page.vue.md')).toBe('page.vue');
+	expect(getBaseNameWithoutExtension('C:/project/src/page.vue.md')).toBe('page.vue');
 });
 
-it('takes the format and the name from the longest matching extension, regardless of order', () => {
-	const vueCompilerOptions = createVueCompilerOptions({ '.vue': 'sfc', '.md': 'petite-vue', '.vue.md': 'vitepress' });
-	expect(getFormat(vueCompilerOptions, '/project/src/page.vue.md')).toBe('vitepress');
-	expect(getBaseNameWithoutExtension('/project/src/page.vue.md', vueCompilerOptions)).toBe('page');
-	expect(getFormat(vueCompilerOptions, '/project/src/readme.md')).toBe('petite-vue');
-	expect(getBaseNameWithoutExtension('/project/src/readme.md', vueCompilerOptions)).toBe('readme');
+it('parses every file by the format option, whatever its extension', () => {
+	const vueCompilerOptions = getDefaultCompilerOptions();
+	vueCompilerOptions.format = 'petite-vue';
+	const plugin = createVueLanguagePlugin<string>(ts, vueCompilerOptions, id => id);
+	expect(plugin.getLanguageId('/project/src/page.vue.md')).toBe('html');
+	expect(plugin.getLanguageId('/project/src/comp.vue')).toBe('html');
 });
 
 it.each([
-	['.vue.md only', { '.vue': 'sfc', '.vue.md': 'vitepress' } as const],
-	['.md before .vue.md', { '.vue': 'sfc', '.md': 'petite-vue', '.vue.md': 'vitepress' } as const],
-])('derives the self component name from a multi-dot extension (%s)', (_, extensionFormats) => {
-	const fileName = '/project/src/page.vue.md';
-	const plugin = createVueLanguagePlugin<string>(ts, createVueCompilerOptions(extensionFormats), id => id);
-	const code = plugin.createVirtualCode!(
-		fileName,
-		'markdown',
-		ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>\n\n<Page />\n'),
-		undefined as any,
-	)!;
-	const script = [...forEachEmbeddedCode(code)].find(code => code.id === 'script_ts')!;
-	const generated = script.snapshot.getText(0, script.snapshot.getLength());
-	expect(generated).toContain(`<'Page', ${names.LocalComponents}, ${names.GlobalComponents}, typeof ${names.export}`);
+	['/project/src/page.md', true],
+	['/project/src/page.vue.md', false],
+])('derives the self component name of %s from its last extension', (fileName, isSelf) => {
+	const generated = generateScript(fileName, 'vitepress', '<script setup lang="ts"></script>\n\n<Page />\n');
+	expect(generated).toContain(
+		`<'Page', ${names.LocalComponents}, ${names.GlobalComponents}, ${isSelf ? `typeof ${names.export}` : 'void'}`,
+	);
+});
+
+it('refers a tag to the setup binding of its name, whatever it is imported from', () => {
+	const generated = generateScript(
+		'/project/src/App.vue',
+		'sfc',
+		`<script setup lang="ts">\nimport Foo from './Foo.tsx';\nimport { Bar } from './bar';\n</script>\n\n<template><Foo /><bar /></template>\n`,
+	);
+	expect(generated).toContain(`= ${names.unwrap}(Foo, `);
+	expect(generated).toContain(`= ${names.unwrap}(Bar, `);
+	expect(generated).not.toContain(`${names.WithComponent}<'Foo'`);
+	expect(generated).not.toContain(`${names.WithComponent}<'bar'`);
 });

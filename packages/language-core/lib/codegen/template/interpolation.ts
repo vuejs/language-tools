@@ -1,4 +1,4 @@
-import type { Code, IRBlock, VueCodeInformation, VueCompilerOptions } from '../../types';
+import type { Code, IRBlock, TypeScript, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
@@ -9,7 +9,7 @@ import type { TemplateCodegenContext } from './context';
 
 export function* generateInterpolation(
 	options: IdentifierOptions & {
-		typescript: typeof import('typescript');
+		typescript: TypeScript;
 	},
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
@@ -24,9 +24,12 @@ export function* generateInterpolation(
 		yield prefix;
 	}
 
+	const { completion, ...featuresWithoutCompletion } = features;
+	const memberFeatures: VueCodeInformation = completion ? { completion } : {};
+
 	let prevEnd = 0;
 	for (
-		const [name, offset, isShorthand, isNarrowing, inTypeQuery, isNewOperand] of forEachIdentifiers(
+		const [name, offset, isShorthand, isNarrowing, inTypeQuery, isNewOperand, skipped] of forEachIdentifiers(
 			options.typescript,
 			ctx,
 			block,
@@ -36,6 +39,10 @@ export function* generateInterpolation(
 			inNarrowing,
 		)
 	) {
+		const isMember = ctx.recordScopeMember(name, block.name, start + offset, memberFeatures);
+		if (skipped && !isMember) {
+			continue;
+		}
 		if (prevEnd < offset) {
 			yield* generateNonIdentifierCode(
 				code.slice(prevEnd, offset),
@@ -45,8 +52,15 @@ export function* generateInterpolation(
 				prevEnd > 0,
 			);
 		}
+		prevEnd = offset + name.length;
+
+		const identifierFeatures = isMember ? featuresWithoutCompletion : features;
+		if (skipped) {
+			yield [name, block.name, start + offset, identifierFeatures];
+			continue;
+		}
 		if (isShorthand) {
-			yield [name, block.name, start + offset, features];
+			yield [name, block.name, start + offset, identifierFeatures];
 			yield `: `;
 		}
 
@@ -55,8 +69,8 @@ export function* generateInterpolation(
 			block.name,
 			start + offset,
 			isShorthand
-				? { ...features, __shorthandExpression: 'js' as const }
-				: features,
+				? { ...identifierFeatures, __shorthandExpression: 'js' as const }
+				: identifierFeatures,
 		]];
 
 		yield* generateIdentifier(
@@ -71,8 +85,6 @@ export function* generateInterpolation(
 			inTypeQuery,
 			isNewOperand,
 		);
-
-		prevEnd = offset + name.length;
 	}
 
 	if (prevEnd < code.length) {
@@ -214,7 +226,7 @@ export function* generateIdentifier(
 }
 
 function* forEachIdentifiers(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
 	code: string,
@@ -222,8 +234,8 @@ function* forEachIdentifiers(
 	suffix: string,
 	inNarrowing: boolean,
 ): Generator<IdentifierAccess> {
-	if (identifierRE.test(code) && !shouldIdentifierSkipped(ctx, code)) {
-		yield [code, 0, false, inNarrowing, false, false];
+	if (identifierRE.test(code)) {
+		yield [code, 0, false, inNarrowing, false, false, shouldIdentifierSkipped(ctx, code)];
 		return;
 	}
 
@@ -239,11 +251,16 @@ function* forEachIdentifiers(
 			inNarrowing,
 		)
 	) {
-		if (skipped) {
-			continue;
-		}
-		const text = getNodeText(ts, id, ast);
-		yield [text, getStartEnd(ts, id, ast).start - prefix.length, isShorthand, isNarrowing, inTypeQuery, isNewOperand];
+		const text = getNodeText(id, ast);
+		yield [
+			text,
+			getStartEnd(id, ast).start - prefix.length,
+			isShorthand,
+			isNarrowing,
+			inTypeQuery,
+			isNewOperand,
+			skipped,
+		];
 	}
 	scope.end();
 }
@@ -255,4 +272,5 @@ type IdentifierAccess = [
 	isNarrowing: boolean,
 	inTypeQuery: boolean,
 	isNewOperand: boolean,
+	skipped: boolean,
 ];

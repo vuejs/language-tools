@@ -121,29 +121,23 @@ export class TransformPool {
 		if (this.workerCount === 1) {
 			return this.#mapper.transform(params);
 		}
-		const project = params.projectHandle
-			? this.#projects.get(params.projectHandle)
-			: undefined;
-		if (params.projectHandle && !project) {
+		const project = this.#projects.get(params.projectHandle);
+		if (!project) {
 			throw new Error(`Unknown ${this.#mapper.name} project handle: ${params.projectHandle}`);
 		}
-		let worker = project?.fileWorkers.get(params.fileName);
+		let worker = project.fileWorkers.get(params.fileName);
 		if (!worker) {
-			worker = project
-				? project.fileWorkers.size < filesBeforeParallelism
-					? project.primaryWorker
-					: this.#getParallelWorker(params.fileName)
-				: this.#workers[0];
-			if (worker && project) {
+			worker = project.fileWorkers.size < filesBeforeParallelism
+				? project.primaryWorker
+				: this.#getParallelWorker(params.fileName);
+			if (worker) {
 				project.fileWorkers.set(params.fileName, worker);
 			}
 		}
 		if (!worker) {
 			throw new Error(`${this.#mapper.name} has no available worker`);
 		}
-		if (project) {
-			await this.#ensureProject(worker, project);
-		}
+		await this.#ensureProject(worker, project);
 		return this.#request(worker, 'transform', params) as Promise<TransformResult>;
 	}
 

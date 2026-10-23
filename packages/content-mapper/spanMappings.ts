@@ -53,7 +53,7 @@ export function toSpanMappings(
 	generatedText: string,
 	originalText: string,
 	languageFeatures = true,
-	/** Receives virtual ranges that are mapped for navigation only and must not report diagnostics. */
+	/** Receives virtual ranges that are mapped without verification and must not report diagnostics. */
 	unverifiedRanges: [start: number, end: number][] = [],
 ): SpanMapping[] {
 	const candidates: Candidate[] = [];
@@ -100,6 +100,8 @@ export function toSpanMappings(
 	}
 	const combineGroups = new Map<symbol, typeof entries>();
 	const merged = new Set<RawEntry>();
+	const wrappers = new Set<RawEntry>();
+	const contents = new Set<RawEntry>();
 	for (const entry of entries) {
 		if (entry.token !== undefined && tokenCounts.get(entry.token)! > 1) {
 			const group = combineGroups.get(entry.token);
@@ -124,8 +126,24 @@ export function toSpanMappings(
 		};
 		entries.push(entry);
 		merged.add(entry);
+		// Completion needs a position inside the synthesized quotes, but an atom only
+		// projects to its edges: when the wrapped content maps the whole token, it
+		// becomes the span itself and the wrapper only carries diagnostics.
+		const content = group.length === 3 ? group[1]! : undefined;
+		if (
+			content
+			&& first.generatedLength === 0
+			&& last.generatedLength === 0
+			&& content.originalStart === entry.originalStart
+			&& content.originalLength === entry.originalLength
+			&& isCodeInformation(content.data)
+			&& content.data.completion
+		) {
+			wrappers.add(entry);
+			contents.add(content);
+		}
 	}
-	const grouped = new Set([...combineGroups.values()].flat());
+	const grouped = new Set([...combineGroups.values()].flat().filter(entry => !contents.has(entry)));
 	const shorthandRanges = new Set<string>();
 	for (const entry of entries) {
 		if (typeof entry.data === 'object' && entry.data !== null && '__shorthandExpression' in entry.data) {
@@ -151,14 +169,15 @@ export function toSpanMappings(
 		const verbatim = generatedLength === originalLength
 			&& generatedText.slice(generatedStart, generatedEnd)
 				=== originalText.slice(originalStart, originalEnd);
-		let features = languageFeatures ? getFeatures(data) : 0;
+		let features = languageFeatures && !wrappers.has(entry) ? getFeatures(data) : 0;
 		if (generatedLength === 0) {
 			// Zero-length spans only serve as navigation anchors (e.g. the synthetic
-			// default export); drop boundary scaffolding and other zero-length markers.
-			if (typeof data !== 'object' || data === null || '__combineToken' in data) {
+			// default export) and completion points (e.g. an empty slot name); drop
+			// boundary scaffolding and other zero-length markers.
+			if (typeof data !== 'object' || data === null || ('__combineToken' in data && !contents.has(entry))) {
 				continue;
 			}
-			features &= navigationFeatures;
+			features &= navigationFeatures | completionFeatures;
 			if (!features) {
 				continue;
 			}
@@ -185,7 +204,7 @@ export function toSpanMappings(
 		}
 	}
 
-	const copies = splitAtNavigationCopies(candidates);
+	splitAtNavigationCopies(candidates);
 
 	candidates.sort((left, right) =>
 		left.kind - right.kind
@@ -206,13 +225,18 @@ export function toSpanMappings(
 		generatedIntervals.add(candidate.generatedStart, candidate.generatedEnd);
 		originalIntervals.add(candidate.originalStart, candidate.originalEnd);
 		selected.push(candidate);
-		if (copies.has(candidate) && !candidate.verified) {
+		if (!candidate.verified) {
 			unverifiedRanges.push([candidate.generatedStart, candidate.generatedEnd]);
 		}
 	}
 
 	// Fill the uncovered parts of each feature-less token with pieces of the
 	// same original span, innermost first, so diagnostics still map to it.
+	// The host orders segments by virtual start alone, so no piece may start where
+	// a zero-length segment does.
+	const zeroLengthStarts = new Set(
+		selected.filter(mapping => mapping.generatedStart === mapping.generatedEnd).map(mapping => mapping.generatedStart),
+	);
 	fills.sort((left, right) => (left.generatedEnd - left.generatedStart) - (right.generatedEnd - right.generatedStart));
 	for (const fill of fills) {
 		if (!originalIntervals.canAdd(fill.originalStart, fill.originalEnd)) {
@@ -226,7 +250,7 @@ export function toSpanMappings(
 		const pieces: Candidate[] = [];
 		let start = fill.generatedStart;
 		for (const mapping of [...inner, { generatedStart: fill.generatedEnd, generatedEnd: fill.generatedEnd }]) {
-			if (start < mapping.generatedStart) {
+			if (start < mapping.generatedStart && !zeroLengthStarts.has(start)) {
 				pieces.push({ ...fill, generatedStart: start, generatedEnd: mapping.generatedStart });
 			}
 			start = Math.max(start, mapping.generatedEnd);
@@ -252,20 +276,20 @@ export function toSpanMappings(
 	]);
 }
 
-// Navigation-only copies of script code (the runtime props object repeated in
-// `defineComponent`, a `defineModel` name in the model props type) lie inside the
-// verbatim section they were copied from. Original spans may not contain one
-// another, so cut that section at each copy's bounds to make the spans identical.
+// Navigation copies of code (the runtime props object repeated in `defineComponent`,
+// a `defineModel` name in the model props type, a scoped class name in a `:class`
+// string) lie inside the verbatim section they were copied from. Original spans
+// may not contain one another, so cut that section at each copy's bounds to make
+// the spans identical.
 function splitAtNavigationCopies(candidates: Candidate[]) {
 	const copies = candidates.filter(candidate =>
 		candidate.kind === SpanMapKind.Verbatim
 		&& candidate.originalStart < candidate.originalEnd
 		&& candidate.features
-		&& !(candidate.features & ~navigationFeatures)
+		&& !(candidate.features & ~(navigationFeatures | completionFeatures))
 	);
-	const cutters = new Set<Candidate>();
 	if (!copies.length) {
-		return cutters;
+		return;
 	}
 	for (let index = candidates.length - 1; index >= 0; index--) {
 		const section = candidates[index]!;
@@ -281,7 +305,6 @@ function splitAtNavigationCopies(candidates: Candidate[]) {
 			) {
 				cuts.add(copy.originalStart);
 				cuts.add(copy.originalEnd);
-				cutters.add(copy);
 			}
 		}
 		cuts.delete(section.originalStart);
@@ -300,7 +323,6 @@ function splitAtNavigationCopies(candidates: Candidate[]) {
 		}));
 		candidates.splice(index, 1, ...pieces);
 	}
-	return cutters;
 }
 
 function getCombineToken(data: Mapping['data']): symbol | undefined {

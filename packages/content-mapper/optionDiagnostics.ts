@@ -28,8 +28,8 @@ const removedOptions: Record<string, string> = {
 		`Vue no longer reads CSS imports; \`<style module src>\` is always typed by importing its \`src\`, and CSS files are typed by CSS content mappers or declarations.`,
 };
 
-/** Resolved fields computed from other options (e.g. precompiled glob matchers, the template context set by `format: "petite-vue"`, or the formats of the `contentMappers` extensions); not user-settable. */
-const derivedOptions = new Set(['isDataAttribute', 'isHtmlAttribute', 'globalTemplateContext', 'extensionFormats']);
+/** Resolved fields computed from other options (e.g. precompiled glob matchers or the template context set by `format: "petite-vue"`); not user-settable. */
+const derivedOptions = new Set(['isDataAttribute', 'isHtmlAttribute', 'globalTemplateContext']);
 
 /**
  * Validates the mapper entry's `options` object and returns diagnostics for options the mapper does not

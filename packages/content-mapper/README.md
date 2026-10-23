@@ -7,6 +7,9 @@ pool.
 
 ## Configuration
 
+The mapper needs TypeScript 7.1 or later and Node.js 20.19 or 22.12 and later. It parses scripts
+through a TypeScript API process that each mapper worker starts.
+
 Install the mapper beside TypeScript, then add it to `tsconfig.json`:
 
 ```jsonc

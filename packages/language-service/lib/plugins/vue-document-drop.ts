@@ -1,14 +1,13 @@
 import type { InsertTextFormat, LanguageServicePlugin, TextEdit } from '@volar/language-service';
-import { getAllExtensions } from '@vue/language-core';
 import { hyphenate } from '@vue/shared';
 import { URI } from 'vscode-uri';
 import { getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { createAddComponentToOptionEdit } from '../plugins/vue-extract-file';
-import { resolveEmbeddedCode } from '../utils';
+import { asClassicNode, placeScriptImportEdits, resolveEmbeddedCode } from '../utils';
 
 export function create(
 	ts: typeof import('typescript'),
-	{ getDefaultImportEdits }: import('@vue/typescript-plugin/lib/requests').Requests,
+	{ getDefaultImportEdits }: import('../requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',
@@ -32,17 +31,22 @@ export function create(
 							importUri = item.value as string;
 						}
 					}
-					if (!importUri || !getAllExtensions(info.root.vueCompilerOptions).some(ext => importUri.endsWith(ext))) {
+					if (!importUri) {
 						return;
 					}
 
 					const { ir } = info.root;
-					if (!ir.scriptSetup && !ir.script) {
+					// The IR fills in an empty `scriptSetup` for an SFC without script.
+					const descriptor = info.root.vueSfc?.descriptor;
+					if (!descriptor?.scriptSetup && !descriptor?.script) {
 						return;
 					}
 
 					const incomingFileName = URI.parse(importUri).fsPath.replace(/\\/g, '/');
-					const importEdits = await getDefaultImportEdits(info.root.fileName, incomingFileName);
+					const importEdits = placeScriptImportEdits(
+						info.root,
+						await getDefaultImportEdits(info.root.fileName, incomingFileName),
+					);
 					const name = importEdits && getDefaultImportName(ts, importEdits);
 					if (!importEdits || !name) {
 						return;
@@ -58,7 +62,7 @@ export function create(
 					}));
 
 					if (ir.script) {
-						const edit = createAddComponentToOptionEdit(ts, ir, ir.script.ast, name);
+						const edit = createAddComponentToOptionEdit(ts, ir, asClassicNode(ir.script.ast), name);
 						if (edit) {
 							sfcEdits.push({
 								range: {

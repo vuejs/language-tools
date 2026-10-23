@@ -5,10 +5,7 @@ import { defineConfig } from 'rolldown';
 export default defineConfig({
 	input: {
 		'extension': './src/extension.ts',
-		'reactivity-analysis-plugin': './src/reactivityAnalysisPlugin.ts',
-		'patch-tsserver': './src/patch-tsserver.ts',
 		'language-server': './node_modules/@vue/language-server/index.ts',
-		'typescript-plugin': './node_modules/@vue/typescript-plugin/index.ts',
 		'content-mapper-server': '../../packages/content-mapper/server.ts',
 		'content-mapper-worker': '../../packages/content-mapper/worker.ts',
 	},
@@ -39,12 +36,6 @@ export default defineConfig({
 				const targetDir = path.resolve(__dirname, './types');
 				fs.rmSync(targetDir, { recursive: true, force: true });
 				fs.cpSync(sourceDir, targetDir, { recursive: true });
-			},
-		},
-		{
-			name: 'redirect',
-			buildEnd() {
-				require('./scripts/write-plugins');
 			},
 		},
 		{

@@ -16,7 +16,7 @@ import { generateElementDirectives } from './elementDirectives';
 import { generateElementEvents } from './elementEvents';
 import { type FailedPropExpressions, generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
-import { generateInterpolation } from './interpolation';
+import { generateIdentifier, generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
@@ -94,26 +94,31 @@ export function* generateComponent(
 			camelize(tag),
 			tag,
 		]);
-		const matchedImportedComponent = [...originalNames].find(name => options.importedComponents.has(name));
-		if (matchedImportedComponent) {
-			// navigation & auto import support
+		// Like `@vue/compiler-sfc`, a tag refers to the setup binding of its name, whatever it is imported from;
+		// referencing it like a template expression keeps navigation and auto import support.
+		const matchedBinding = [...originalNames].find(name => options.setupBindings.has(name));
+		if (matchedBinding) {
+			const camelizedTag = matchedBinding[0]! + tag.slice(1);
 			yield `const ${componentVar} = `;
-			yield* generateCamelized(
-				matchedImportedComponent[0]! + tag.slice(1),
+			yield* generateIdentifier(
+				options,
+				ctx,
+				generateCamelized(camelizedTag, 'template', startTagOffset, codeFeatures.tagName),
+				matchedBinding,
 				'template',
 				startTagOffset,
-				{
-					...codeFeatures.tagName,
-					...codeFeatures.importCompletionOnly,
-				},
+				startTagOffset + tag.length,
 			);
 			if (endTagOffset !== undefined) {
 				yield ` || `;
-				yield* generateCamelized(
-					matchedImportedComponent[0]! + tag.slice(1),
+				yield* generateIdentifier(
+					options,
+					ctx,
+					generateCamelized(camelizedTag, 'template', endTagOffset, codeFeatures.tagName),
+					matchedBinding,
 					'template',
 					endTagOffset,
-					codeFeatures.tagName,
+					endTagOffset + tag.length,
 				);
 			}
 			yield endOfLine;
@@ -140,8 +145,8 @@ export function* generateComponent(
 			});
 
 			if (identifierRE.test(camelize(tag))) {
-				// navigation support
-				yield `/** @ts-ignore @type {`;
+				// navigation support; TypeScript does not check the type of a JSDoc on an expression statement
+				yield `/** @type {`;
 				for (const offset of [startTagOffset, endTagOffset]) {
 					if (offset === undefined) {
 						continue;
@@ -159,9 +164,7 @@ export function* generateComponent(
 					}
 				}
 				yield `} */${newLine}`;
-				// auto import support
-				yield* generateCamelized(tag, 'template', startTagOffset, codeFeatures.importCompletionOnly);
-				yield endOfLine;
+				yield `${componentVar}${endOfLine}`;
 			}
 		}
 	}
@@ -188,6 +191,17 @@ export function* generateComponent(
 	)];
 	const propsStr = toString(propCodes);
 
+	// The instance type comes from a real construct call with a copy of the props: only a call resolves the
+	// overloads of the component and infers its type parameters from the props, including intersections of
+	// construct signatures such as `DefineComponent<...> & (new <T>(props: { items: T[] }, slots) => ...)` of
+	// Vuetify's `genericComponent`. Inferring from the constructor type alone takes the last overload and loses
+	// the type parameters of intersections. The two `@ts-ignore`s cover what the call reports for valid templates:
+	// - components that are not constructable (functional components, plain objects, `{}`) or abstract;
+	// - construct signatures of other arities (`new () => ...`, Vuetify's `(props, slots)`);
+	// - excess or weakly matching props, since attributes and events are passed along with the props;
+	// - diagnostics of the copy itself: its expressions have the parameter types of the constructor as contextual
+	//   type (`any` for `DefineComponent`), so function expressions report implicit `any`, and typing it like
+	//   `$props` instead would report every props error a second time. The copy is not mapped to the template.
 	yield `// @ts-ignore${newLine}`;
 	yield `const ${functionalVar} = ${names.asFunctionalComponent0}(${componentVar}, new ${componentVar}({${newLine}`;
 	// unmapped copy for inference only
@@ -345,6 +359,7 @@ export function* generateElement(
 		node,
 		node.props,
 		failedPropExps,
+		`typeof ${names.intrinsics}['${node.tag}']`,
 	);
 	yield `}`;
 	yield boundary.end();
@@ -403,6 +418,7 @@ export function* generateFragment(
 			node,
 			node.props,
 			failedPropExps,
+			`typeof ${names.intrinsics}.template`,
 		);
 		yield `}`;
 		yield boundary.end();

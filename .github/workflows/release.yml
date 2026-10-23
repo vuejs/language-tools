@@ -39,9 +39,24 @@ jobs:
       id-token: write # to enable use of OIDC for npm provenance
     runs-on: ubuntu-latest
     needs: [auto-tag]
-    if: github.event_name == 'workflow_dispatch' || success()
+    if: github.event_name == 'workflow_dispatch' || needs.auto-tag.result == 'success'
     steps:
       - uses: actions/checkout@v6
+
+      # Prerelease versions (e.g. v4 alphas, dispatched from their branch) go under their prerelease id, never `latest`
+      - name: Resolve npm dist-tag
+        id: dist-tag
+        run: |
+          VERSION=$(node -p "require('./lerna.json').version")
+          if [[ $VERSION == *-* ]]; then
+            PRERELEASE=${VERSION#*-}
+            echo "tag=${PRERELEASE%%.*}" >> "$GITHUB_OUTPUT"
+          elif [[ $GITHUB_REF == refs/heads/master ]]; then
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          else
+            echo "❌ $GITHUB_REF can only publish prerelease versions, but lerna.json has $VERSION"
+            exit 1
+          fi
 
       - uses: pnpm/action-setup@v6
 
@@ -58,12 +73,12 @@ jobs:
         run: npm run build
 
       - name: Publish to NPM
-        run: pnpm dlx --package @lerna-lite/cli --package @lerna-lite/publish lerna publish from-package --yes
+        run: pnpm dlx --package @lerna-lite/cli --package @lerna-lite/publish lerna publish from-package --dist-tag ${{ steps.dist-tag.outputs.tag }} --yes
 
   publish-vscode-marketplace:
     runs-on: ubuntu-latest
     needs: [auto-tag]
-    if: github.event_name == 'workflow_dispatch' || success()
+    if: github.ref == 'refs/heads/master' && (github.event_name == 'workflow_dispatch' || needs.auto-tag.result == 'success')
     steps:
       - uses: actions/checkout@v6
 
@@ -86,7 +101,7 @@ jobs:
   publish-open-vsx:
     runs-on: ubuntu-latest
     needs: [auto-tag]
-    if: github.event_name == 'workflow_dispatch' || success()
+    if: github.ref == 'refs/heads/master' && (github.event_name == 'workflow_dispatch' || needs.auto-tag.result == 'success')
     steps:
       - uses: actions/checkout@v6
 

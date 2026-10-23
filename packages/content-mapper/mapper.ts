@@ -1,5 +1,7 @@
+import type { IScriptSnapshot } from '@volar/language-core';
 import * as vue from '@vue/language-core';
 import { createHash } from 'node:crypto';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { toDiagnosticDirectives, withSynthesizedDiagnosticIgnores } from './diagnosticDirectives';
 import type {
@@ -8,13 +10,10 @@ import type {
 	OptionDiagnostic,
 	TransformParams,
 	TransformResult,
-	VirtualExtension,
 } from './protocol';
 import { toSpanMappings } from './spanMappings';
 import { loadTypeScript } from './typescript';
 import { resolveVueCompilerOptions } from './vueOptions';
-
-const ts = loadTypeScript();
 
 interface ProjectConfiguration {
 	plugin: ReturnType<typeof vue.createVueLanguagePlugin<string>>;
@@ -59,9 +58,8 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		};
 		projects.set(params.projectHandle, state);
 
-		// Inferred projects have no tsconfig, but resolving `target: 'auto'` and the mapper entry's
-		// `plugins` still reads dynamic inputs, so the configuration is always created through the
-		// watching host.
+		// The entry's options arrive in `params`, but resolving `target: 'auto'` and the entry's `plugins`
+		// still reads dynamic inputs, so the configuration is always created through the watching host.
 		const watchedFiles = new Set<string>();
 		createConfiguration(state, params.configFileName, watchedFiles);
 		return {
@@ -84,17 +82,17 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 	}
 
 	function transform(params: TransformParams): TransformResult {
-		const state = params.projectHandle
-			? projects.get(params.projectHandle)
-			: undefined;
-		if (params.projectHandle && !state) {
+		const state = projects.get(params.projectHandle);
+		if (!state) {
 			throw new Error(`Unknown ${frontend.name} project handle: ${params.projectHandle}`);
 		}
 
-		const configuration = state
-			? getConfiguration(state)
-			: createStandaloneConfiguration(params);
-		const snapshot = ts.ScriptSnapshot.fromString(params.content);
+		const configuration = getConfiguration(state);
+		const snapshot: IScriptSnapshot = {
+			getText: (start, end) => params.content.slice(start, end),
+			getLength: () => params.content.length,
+			getChangeRange: () => undefined,
+		};
 		const root = configuration.plugin.createVirtualCode?.(
 			params.fileName,
 			configuration.plugin.getLanguageId(params.fileName)!,
@@ -104,7 +102,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		if (root) {
 			configuration.virtualCodes.set(params.fileName, root);
 		}
-		const serviceScript = root && configuration.plugin.typescript?.getServiceScript(root);
+		const serviceScript = root && vue.getServiceScript(root);
 
 		if (!serviceScript) {
 			return {
@@ -115,7 +113,6 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		}
 
 		const text = serviceScript.code.snapshot.getText(0, serviceScript.code.snapshot.getLength());
-		const extension = getVirtualExtension(serviceScript.extension);
 		const unverifiedRanges: [number, number][] = [];
 		const mappings = toSpanMappings(
 			serviceScript.code.mappings,
@@ -127,7 +124,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		const diagnosticDirectives = toDiagnosticDirectives(serviceScript.code.mappings);
 		return {
 			text,
-			extension,
+			extension: serviceScript.extension,
 			diagnosticDirectives: {
 				unusedExpectDirectiveDiagnostics: [{
 					code: 2578,
@@ -144,27 +141,6 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		};
 	}
 
-	function getVirtualExtension(extension: string): VirtualExtension {
-		switch (extension) {
-			case '.js':
-				return '.js';
-			case '.jsx':
-				return '.jsx';
-			case '.ts':
-				return '.ts';
-			case '.tsx':
-				return '.tsx';
-			case '.mjs':
-			case '.cjs':
-			case '.mts':
-			case '.cts':
-			case '.json':
-				return extension;
-			default:
-				throw new Error(`Unsupported Vue service script extension: ${extension}`);
-		}
-	}
-
 	function getConfiguration(state: ProjectState) {
 		const configFileName = state.params.configFileName;
 		let configuration = state.configurations.get(configFileName);
@@ -179,35 +155,23 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		configFileName: string,
 		watchedFiles?: Set<string>,
 	) {
-		const host = watchedFiles
-			? {
-				...ts.sys,
-				readFile(fileName: string) {
-					const content = ts.sys.readFile(fileName);
-					if (content !== undefined && path.isAbsolute(fileName)) {
-						watchedFiles.add(path.normalize(fileName));
-					}
-					return content;
-				},
+		const readFile = watchedFiles
+			? (fileName: string) => {
+				const content = readFileIfExists(fileName);
+				if (content !== undefined && path.isAbsolute(fileName)) {
+					watchedFiles.add(path.normalize(fileName));
+				}
+				return content;
 			}
-			: ts.sys;
+			: readFileIfExists;
 		const rootDir = configFileName
 			? path.dirname(configFileName)
 			: process.cwd();
-		if (watchedFiles && configFileName) {
-			watchedFiles.add(path.normalize(configFileName));
-		}
 		const { languageFeatures, ...mapperOptions } = state.params.options ?? {};
-		const vueOptions = resolveVueCompilerOptions(
-			ts,
-			host,
-			configFileName || undefined,
-			state.params.options,
-			configFileName ? vue.resolveContentMappers(ts, host, normalizePath(configFileName)) : undefined,
-		);
+		const vueOptions = resolveVueCompilerOptions(readFile, configFileName || undefined, state.params.options);
 		const configuration = {
 			plugin: vue.createVueLanguagePlugin<string>(
-				ts,
+				loadTypeScript(),
 				vueOptions,
 				fileName => fileName,
 			),
@@ -219,25 +183,6 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		}
 		state.configurations.set(configFileName, configuration);
 		return configuration;
-	}
-
-	function createStandaloneConfiguration(params: TransformParams): ProjectConfiguration {
-		const configFileName = ts.findConfigFile(path.dirname(params.fileName), ts.sys.fileExists);
-		return {
-			plugin: vue.createVueLanguagePlugin<string>(
-				ts,
-				resolveVueCompilerOptions(
-					ts,
-					ts.sys,
-					configFileName,
-					undefined,
-					configFileName ? vue.resolveContentMappers(ts, ts.sys, normalizePath(configFileName)) : undefined,
-				),
-				fileName => fileName,
-			),
-			languageFeatures: true,
-			virtualCodes: new Map(),
-		};
 	}
 
 	return {
@@ -254,9 +199,16 @@ function createIdentity(params: OpenProjectParams, watchedFiles: Iterable<string
 	hash.update(JSON.stringify(params.options ?? null));
 	for (const fileName of [...watchedFiles].sort()) {
 		hash.update(fileName);
-		hash.update(ts.sys.readFile(fileName) ?? '');
+		hash.update(readFileIfExists(fileName) ?? '');
 	}
 	return hash.digest('hex');
+}
+
+function readFileIfExists(fileName: string) {
+	try {
+		return fs.readFileSync(fileName, 'utf8').replace(/^\uFEFF/, '');
+	}
+	catch {}
 }
 
 function addPluginWatchFiles(watchedFiles: Set<string>, plugins: unknown, rootDir: string) {
@@ -273,8 +225,4 @@ function addPluginWatchFiles(watchedFiles: Set<string>, plugins: unknown, rootDi
 		}
 		catch {}
 	}
-}
-
-function normalizePath(fileName: string) {
-	return fileName.replace(/\\/g, '/');
 }

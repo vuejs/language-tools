@@ -233,6 +233,55 @@ test('merges boundary-wrapped tokens (synthesized quotes) into one span', () => 
 	]);
 });
 
+const completionBits = SpanMapFeature.Completion | SpanMapFeature.AutoInsert;
+
+test('keeps the content of a boundary-wrapped completion token inside the quotes', () => {
+	const data = { navigation: true, completion: true, __combineToken: Symbol() };
+	// generated: ----------'ab'   (quotes at 10 and 13, `ab` at 11..13)
+	// original:  --------------------ab   (`ab` at 20..22)
+	expect(toSpanMappings(
+		[
+			{ sourceOffsets: [20], generatedOffsets: [10], lengths: [0], data },
+			{ sourceOffsets: [20], generatedOffsets: [11], lengths: [2], data },
+			{ sourceOffsets: [22], generatedOffsets: [14], lengths: [0], data },
+		],
+		`----------'ab'`,
+		`--------------------ab`,
+	)).toEqual([
+		[10, 1, 20, 2, SpanMapKind.Atom, 0],
+		[11, 2, 20, 2, SpanMapKind.Verbatim, navigationBits | completionBits],
+		[13, 1, 20, 2, SpanMapKind.Atom, 0],
+	]);
+});
+
+test('keeps an empty boundary-wrapped completion token as a point inside the quotes', () => {
+	const data = { navigation: true, completion: true, __combineToken: Symbol() };
+	// generated: ----------''   (quotes at 10 and 11)
+	// original:  --------------------   (empty token at 20)
+	expect(toSpanMappings(
+		[
+			{ sourceOffsets: [20], generatedOffsets: [10], lengths: [0], data },
+			{ sourceOffsets: [20], generatedOffsets: [11], lengths: [0], data },
+			{ sourceOffsets: [20], generatedOffsets: [12], lengths: [0], data },
+		],
+		`----------''`,
+		`--------------------`,
+	)).toEqual([
+		[10, 1, 20, 0, SpanMapKind.Atom, 0],
+		[11, 0, 20, 0, SpanMapKind.Verbatim, navigationBits | completionBits],
+	]);
+});
+
+test('keeps zero-length completion points', () => {
+	expect(toSpanMappings(
+		[{ sourceOffsets: [1], generatedOffsets: [2], lengths: [0], data: { completion: true } }],
+		'abc',
+		'abc',
+	)).toEqual([
+		[2, 0, 1, 0, SpanMapKind.Verbatim, completionBits],
+	]);
+});
+
 test('merges camelized identifier segments into one span', () => {
 	const data = { navigation: true, __combineToken: Symbol() };
 	// generated: vOnce   (`v` at 0..1, `Once` at 1..5)
@@ -320,4 +369,37 @@ test('cuts a verbatim section at a navigation-only copy of its content', () => {
 		[6, 1, 2, 1, SpanMapKind.Verbatim, navigationBits],
 	]);
 	expect(unverifiedRanges).toEqual([[6, 7]]);
+});
+
+test('reports segments mapped without verification as unverified', () => {
+	const unverifiedRanges: [number, number][] = [];
+	toSpanMappings(
+		[
+			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [1], data: { navigation: true, verification: true } },
+			{ sourceOffsets: [2], generatedOffsets: [2], lengths: [1], data: { navigation: true } },
+		],
+		'abc',
+		'abc',
+		true,
+		unverifiedRanges,
+	);
+	expect(unverifiedRanges).toEqual([[2, 3]]);
+});
+
+test('cuts a verbatim section at a copy that also offers completion', () => {
+	// generated: ('a'); a   (`a` copied from the section at 2..3 to 7..8)
+	// original:  ('a');
+	expect(toSpanMappings(
+		[
+			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [5], data: { verification: true } },
+			{ sourceOffsets: [2], generatedOffsets: [7], lengths: [1], data: { navigation: true, completion: true } },
+		],
+		`('a'); a`,
+		`('a');`,
+	)).toEqual([
+		[0, 2, 0, 2, SpanMapKind.Verbatim, 0],
+		[2, 1, 2, 1, SpanMapKind.Verbatim, 0],
+		[3, 2, 3, 2, SpanMapKind.Verbatim, 0],
+		[7, 1, 2, 1, SpanMapKind.Verbatim, navigationBits | completionBits],
+	]);
 });

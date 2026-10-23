@@ -15,7 +15,7 @@ test('generates a Vue service script with source mappings', () => {
 	});
 
 	expect(opened.configIdentity).toHaveLength(64);
-	expect(opened.watchedFiles).toContain(configFileName);
+	expect(opened.watchedFiles).not.toContain(configFileName);
 	expect(opened.watchedFiles).not.toContain(
 		path.resolve(__dirname, '../../../test-workspace/tsconfig.base.json'),
 	);
@@ -104,6 +104,12 @@ test('reports invalid mapper options', () => {
 });
 
 test('returns a parser-compatible service script extension', () => {
+	const projectHandle = 'service-script-project';
+	openProject({
+		configFileName: path.resolve(__dirname, '../../../test-workspace/content-mapper/tsconfig.json'),
+		projectHandle,
+		compilerOptions: {},
+	});
 	for (
 		const [lang, extension] of [
 			['js', '.js'],
@@ -113,11 +119,40 @@ test('returns a parser-compatible service script extension', () => {
 		] as const
 	) {
 		const result = transformVue({
+			projectHandle,
 			fileName: path.resolve(__dirname, `ServiceScript.${lang}.vue`),
 			content: `<script lang="${lang}">export default {};</script>`,
 		});
 		expect(result.extension).toBe(extension);
 	}
+	closeProject(projectHandle);
+});
+
+test('rejects a transform outside an open project', () => {
+	expect(() =>
+		transformVue({
+			projectHandle: 'unknown-project',
+			fileName: path.resolve(__dirname, 'App.vue'),
+			content: '',
+		})
+	).toThrow('Unknown Vue content mapper project handle: unknown-project');
+});
+
+test('parses a file by its entry format, not by its extension', () => {
+	const projectHandle = 'format-project';
+	openProject({
+		configFileName: path.resolve(__dirname, '../../../test-workspace/content-mapper/tsconfig.json'),
+		projectHandle,
+		options: { format: 'vitepress' },
+		compilerOptions: {},
+	});
+	const content = '# {{ title }}\n\n<script setup lang="ts">\nconst title = 1;\n</script>\n';
+	const result = transformVue({ projectHandle, fileName: path.resolve(__dirname, 'Page.vue'), content });
+	closeProject(projectHandle);
+
+	// The interpolation in the markdown body is template only to the VitePress parser.
+	const interpolationStart = content.indexOf('title');
+	expect(result.mappings.some(([, , originalStart]) => originalStart === interpolationStart)).toBe(true);
 });
 
 test('maps the synthetic default export to the top of the SFC', () => {
@@ -137,8 +172,10 @@ test('maps the synthetic default export to the top of the SFC', () => {
 
 	const exportStart = result.text.indexOf('export default');
 	expect(exportStart).toBeGreaterThanOrEqual(0);
-	const anchor = result.mappings.find(mapping => mapping[0] === exportStart && mapping[1] === 0);
+	const exportEnd = result.text.indexOf(';', exportStart) + 1;
+	const anchor = result.mappings.find(mapping => mapping[0] === exportStart);
 	expect(anchor).toBeDefined();
+	expect(anchor![1]).toBe(exportEnd - exportStart);
 	expect(anchor![2]).toBe(0);
 	expect(anchor![3]).toBe(0);
 	expect(anchor![5] & SpanMapFeature.Definition).toBeTruthy();
