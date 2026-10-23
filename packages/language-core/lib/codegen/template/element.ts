@@ -146,11 +146,9 @@ export function* generateComponent(
 					if (offset === undefined) {
 						continue;
 					}
-					yield ` | typeof ${names.components}.`;
-					yield* generateCamelized(tag, 'template', offset, codeFeatures.navigation);
-					if (tag[0] !== tag[0]!.toUpperCase()) {
-						yield ` | typeof ${names.components}.`;
-						yield* generateCamelized(capitalize(tag), 'template', offset, codeFeatures.navigation);
+					for (const name of new Set([tag, capitalize(tag)])) {
+						yield ` | typeof ${options.setupBindings.has(camelize(name)) ? '' : `${names.components}.`}`;
+						yield* generateCamelized(name, 'template', offset, codeFeatures.navigation);
 					}
 					if (tag.includes('-')) {
 						yield ` | typeof ${names.components}[`;
