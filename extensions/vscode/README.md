@@ -23,6 +23,13 @@ Vue language support extension for VSCode, providing a full development experien
 
 Search for `Vue (Official)` or `Vue.volar` in the VSCode extension marketplace and click install.
 
+The version 4 alphas are not on the Marketplace. To try one, build a VSIX from its tag (e.g. `v4.0.0-alpha.0`) and install it with `Extensions: Install from VSIX...`:
+
+```sh
+pnpm install --frozen-lockfile && pnpm run build
+cd extensions/vscode && npx @vscode/vsce package --no-dependencies
+```
+
 ## Configuration
 
 ### Editor Settings
@@ -82,17 +89,17 @@ Search for `Vue (Official)` or `Vue.volar` in the VSCode extension marketplace a
 | `Vue: Welcome` | Open the welcome page |
 | `Vue: Restart Server` | Restart the language server |
 
-## Using Workspace TypeScript
+## TypeScript 7 Setup
 
-It is recommended to use the TypeScript version from your project instead of the one built into VSCode:
+Version 4 type-checks `.vue` files through TypeScript 7.1 content mappers, served by the TypeScript (Native Preview) extension.
 
-1. Create `.vscode/settings.json` in your project root
-2. Add the following settings:
+1. Install [TypeScript (Native Preview)](https://marketplace.visualstudio.com/items?itemName=TypeScriptTeam.native-preview)
+2. Install TypeScript 7.1 in your project: `npm i -D typescript@beta`
+3. Point Native Preview at it in `.vscode/settings.json`, because its bundled TypeScript (7.0) has no content mappers:
 
 ```json
 {
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "js/ts.tsdk.path": "node_modules/typescript/lib"
 }
 ```
 

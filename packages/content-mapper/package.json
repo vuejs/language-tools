@@ -5,7 +5,6 @@
 	"files": [
 		"*.d.ts",
 		"*.js",
-		"MIGRATION.md",
 		"README.md"
 	],
 	"sideEffects": true,
