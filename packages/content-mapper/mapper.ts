@@ -104,6 +104,19 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		}
 		const serviceScript = root && vue.getServiceScript(root);
 
+		// As in vue-tsc, a JavaScript SFC with a sibling `.vue.d.ts` (a compiled component shipped by a
+		// package) is typed by those declarations, unchecked like a `.d.ts` under `skipLibCheck`.
+		if (serviceScript?.extension === '.js' || serviceScript?.extension === '.jsx') {
+			const declarations = readFileIfExists(params.fileName + '.d.ts');
+			if (declarations !== undefined) {
+				return {
+					text: '// @ts-nocheck\n' + declarations,
+					extension: '.ts',
+					mappings: [],
+				};
+			}
+		}
+
 		if (!serviceScript) {
 			return {
 				text: 'export {};\n',
