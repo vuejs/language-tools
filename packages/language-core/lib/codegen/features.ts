@@ -9,10 +9,10 @@ export enum VueCodeFeature {
 export const completion = SpanMapFeature.Completion
 	| SpanMapFeature.AutoInsert;
 
-/** The type information features, without semantic tokens. */
 export const semantic = SpanMapFeature.Hover
 	| SpanMapFeature.SignatureHelp
-	| SpanMapFeature.InlayHints;
+	| SpanMapFeature.InlayHints
+	| SpanMapFeature.SemanticTokens;
 
 export const navigation = SpanMapFeature.Definition
 	| SpanMapFeature.TypeDefinition
@@ -27,7 +27,6 @@ export const navigation = SpanMapFeature.Definition
 /** The features of generated script code; the structure and formatting ones belong to whole embedded documents. */
 export const scriptFeatures = completion
 	| semantic
-	| SpanMapFeature.SemanticTokens
 	| navigation;
 
 export const allFeatures = scriptFeatures

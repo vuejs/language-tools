@@ -3,15 +3,7 @@ import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
 import type { Code } from '../../types';
 import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import {
-	completion,
-	ignoreDiagnostics,
-	marker,
-	navigation,
-	scriptFeatures,
-	semantic,
-	VueCodeFeature,
-} from '../features';
+import { ignoreDiagnostics, marker, navigation, scriptFeatures, semantic, VueCodeFeature } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
@@ -87,7 +79,7 @@ export function* generateComponent(
 				options,
 				ctx,
 				options.template,
-				marker(scriptFeatures & ~completion),
+				marker(semantic | navigation),
 				tag,
 				endTagOffset,
 				`(`,

@@ -30,7 +30,7 @@ export function* generateVSlot(
 				ctx,
 				slotDir.arg.loc.source,
 				slotDir.arg.loc.start.offset,
-				slotDir.arg.isStatic ? marker(semantic | navigation | completion) : marker(scriptFeatures),
+				marker(scriptFeatures),
 				false,
 				true,
 			);

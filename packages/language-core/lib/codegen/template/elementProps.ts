@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isHTMLTag, isMathMLTag, isSVGTag } from '@vue/shared';
 import type { Code, VueCodeMarker, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import { marker, navigation, scriptFeatures, semantic, toAtomKind, VueCodeFeature } from '../features';
+import { completion, marker, navigation, scriptFeatures, semantic, toAtomKind, VueCodeFeature } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, identifierRE, newLine } from '../utils';
@@ -216,7 +216,7 @@ export function* generateElementProps(
 				yield `{}`;
 			}
 			else if (prop.value) {
-				yield* generateAttrValue(prop.value, marker(scriptFeatures & ~navigation));
+				yield* generateAttrValue(prop.value, marker(semantic | completion));
 			}
 			else {
 				yield `true`;
