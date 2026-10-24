@@ -4,7 +4,7 @@ import { completionFeatures } from '../features';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, OpenRanges } from '../utils/boundary';
 import { isLiteralWhitelisted } from './bindingReferences';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
@@ -168,9 +168,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		yield code;
 	}
 
-	/** The data of the open ranges, `undefined` for diagnostic directives. */
-	const boundaryMarkers: (VueCodeMarker | undefined)[] = [];
-	const mappingMarkers: VueCodeMarker[] = [];
+	const openRanges = new OpenRanges<VueCodeMarker>();
 
 	/** The data of a segment, or of the mapping range it bounds or maps as part of. */
 	function getMarker(code: Code) {
@@ -179,22 +177,18 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		}
 		const data = code[3];
 		if (data === undefined) {
-			return mappingMarkers.at(-1);
+			return openRanges.mapping;
 		}
 		if ('start' in data) {
-			const current = Array.isArray(data.start) ? undefined : data.start;
-			boundaryMarkers.push(current);
-			if (current) {
-				mappingMarkers.push(current);
+			if (Array.isArray(data.start)) {
+				openRanges.start({ directive: data.start });
+				return;
 			}
-			return current;
+			openRanges.start({ mapping: data.start });
+			return data.start;
 		}
 		if ('end' in data) {
-			const current = boundaryMarkers.pop();
-			if (current) {
-				mappingMarkers.pop();
-			}
-			return current;
+			return openRanges.end()?.mapping;
 		}
 		return data;
 	}

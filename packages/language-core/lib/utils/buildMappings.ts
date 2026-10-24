@@ -1,5 +1,6 @@
 import { isCompletionEnabled, type Mapping, SpanMapKind } from '@volar/language-core';
 import { allFeatures } from '../codegen/features';
+import { OpenRanges } from '../codegen/utils/boundary';
 import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type VueCodeMarker } from '../types';
 
 interface Entry {
@@ -159,7 +160,7 @@ export function createIgnoreDirectives(
 
 function buildExplicitDiagnosticDirectives(chunks: Code[]) {
 	const directives: DiagnosticDirectiveMapping[] = [];
-	const ranges: (DiagnosticDirectiveMapping | undefined)[] = [];
+	const ranges = new OpenRanges<VueCodeMarker>();
 	let generatedStart = 0;
 	for (const segment of chunks) {
 		if (typeof segment === 'string') {
@@ -168,18 +169,26 @@ function buildExplicitDiagnosticDirectives(chunks: Code[]) {
 		}
 		const data = segment[3];
 		if (data && 'start' in data) {
-			let range: DiagnosticDirectiveMapping | undefined;
 			if (Array.isArray(data.start)) {
 				const [, originalLength, , , policy] = data.start;
-				range = [segment[2], originalLength, generatedStart, generatedStart, policy];
-				directives.push(range);
+				const directive: DiagnosticDirectiveMapping = [
+					segment[2],
+					originalLength,
+					generatedStart,
+					generatedStart,
+					policy,
+				];
+				directives.push(directive);
+				ranges.start({ directive });
 			}
-			ranges.push(range);
+			else {
+				ranges.start({ mapping: data.start });
+			}
 		}
 		else if (data && 'end' in data) {
-			const range = ranges.pop();
-			if (range) {
-				range[3] = generatedStart;
+			const directive = ranges.end()?.directive;
+			if (directive) {
+				directive[3] = generatedStart;
 			}
 		}
 		generatedStart += segment[0].length;
@@ -207,9 +216,7 @@ function buildExplicitDiagnosticDirectives(chunks: Code[]) {
  */
 function toItems(chunks: Code[]) {
 	const items: (Entry | Entry[])[] = [];
-	/** The open ranges, `undefined` for diagnostic directives. */
-	const ranges: (Entry[] | undefined)[] = [];
-	const mappingRanges: Entry[][] = [];
+	const ranges = new OpenRanges<Entry[]>();
 	let generatedStart = 0;
 	for (const segment of chunks) {
 		if (typeof segment === 'string') {
@@ -218,7 +225,7 @@ function toItems(chunks: Code[]) {
 		}
 		const [text, , sourceStart, data] = segment;
 		if (data === undefined) {
-			const range = mappingRanges.at(-1);
+			const range = ranges.mapping;
 			if (!range) {
 				throw new Error(`Vue generated segment without data outside of a boundary at ${generatedStart}`);
 			}
@@ -226,31 +233,27 @@ function toItems(chunks: Code[]) {
 		}
 		else if ('start' in data) {
 			if (Array.isArray(data.start)) {
-				ranges.push(undefined);
+				ranges.start({ directive: data.start });
 			}
 			else {
 				const range = [{ generatedStart, length: 0, sourceStart, info: data.start }];
-				ranges.push(range);
-				mappingRanges.push(range);
+				ranges.start({ mapping: range });
 				items.push(range);
 			}
 		}
 		else if ('end' in data) {
-			if (!ranges.length) {
+			const closed = ranges.end();
+			if (!closed) {
 				throw new Error(`Vue boundary end without a start at ${generatedStart}`);
 			}
-			const range = ranges.pop();
-			if (range) {
-				mappingRanges.pop();
-				range.push({ generatedStart, length: 0, sourceStart, info: range[0]!.info });
-			}
+			closed.mapping?.push({ generatedStart, length: 0, sourceStart, info: closed.mapping[0]!.info });
 		}
 		else {
 			items.push({ generatedStart, length: text.length, sourceStart, info: data });
 		}
 		generatedStart += text.length;
 	}
-	if (ranges.length) {
+	if (ranges.size) {
 		throw new Error(`Vue boundaries are not closed at the end of the code`);
 	}
 	return items;
