@@ -237,7 +237,7 @@ export function* generateEventExpression(
 		);
 
 		if (isCompound) {
-			const scope = ctx.scope(true);
+			const scope = ctx.blockScope();
 			scope.declare('$event');
 			scope.read.add('$event');
 

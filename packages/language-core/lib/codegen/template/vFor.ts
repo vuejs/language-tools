@@ -56,7 +56,7 @@ export function* generateVFor(
 		yield endOfLine;
 	}
 
-	const scope = ctx.scope(true);
+	const scope = ctx.blockScope();
 	scope.declare(...bindingNames);
 
 	yield `for (const [`;

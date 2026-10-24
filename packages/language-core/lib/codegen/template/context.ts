@@ -219,7 +219,6 @@ export function createTemplateCodegenContext(scriptLang: string) {
 	// scopes ---------------------------------------------------------------------
 
 	class Scope extends Set<string> {
-		block = false;
 		/** Locals the generated code always reads, so listing them hides no unused diagnostic. */
 		read = new Set<string>();
 		/** The source name may be the hyphenated form of `name`. */
@@ -233,19 +232,30 @@ export function createTemplateCodegenContext(scriptLang: string) {
 
 		end() {
 			scopes.pop();
+		}
+	}
+
+	/**
+	 * A block scope gathers the template identifiers within it as members of
+	 * `__VLS_scope`; completion is mapped only on those members.
+	 */
+	class BlockScope extends Scope {
+		override end() {
+			super.end();
 			return generateScopeMembers(this);
 		}
 	}
 
 	const scopes: Scope[] = [];
 
-	/**
-	 * A block scope gathers the template identifiers within it as members of
-	 * `__VLS_scope`; completion is mapped only on those members.
-	 */
-	function scope(block = false) {
+	function scope() {
 		const scope = new Scope();
-		scope.block = block;
+		scopes.push(scope);
+		return scope;
+	}
+
+	function blockScope() {
+		const scope = new BlockScope();
 		scopes.push(scope);
 		return scope;
 	}
@@ -268,7 +278,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		}
 		for (let i = scopes.length - 1; i >= 0; i--) {
 			const scope = scopes[i]!;
-			if (scope.block) {
+			if (scope instanceof BlockScope) {
 				if (!scope.members.some(member => member[1] === source && member[2] === offset)) {
 					scope.members.push([name, source, offset, features, sourceName]);
 					scopeMemberNames.add(name);
@@ -294,7 +304,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 			...scope.read,
 			...[scope, ...scopes]
 				.flatMap(scope => scope.members.map(([name]) => name))
-				.filter(name => scope.has(name) || scopes.some(scope => scope.block && scope.has(name))),
+				.filter(name => scope.has(name) || scopes.some(scope => scope instanceof BlockScope && scope.has(name))),
 		]);
 		let type = names.Scope;
 		if (locals.size) {
@@ -424,6 +434,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		getInternalVariable,
 		scopes,
 		scope,
+		blockScope,
 		scopeMemberNames,
 		recordScopeMember,
 		contextAccesses,

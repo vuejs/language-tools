@@ -48,7 +48,7 @@ function* generateWorker(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
-	const scope = ctx.scope(true);
+	const scope = ctx.blockScope();
 	const {
 		slotsAssignName,
 		propsAssignName,
