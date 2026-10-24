@@ -138,8 +138,13 @@ function buildSpans(chunks: Code[]): Span[] {
  * whose diagnostics are ignored outside of them is covered by ignore directives without an original range.
  */
 export function buildDiagnosticDirectives(chunks: Code[]) {
-	const explicit = buildExplicitDiagnosticDirectives(chunks);
-	const ignores = createIgnoreDirectives(getIgnoredRanges(chunks), explicit);
+	const directives = collectDiagnosticDirectives(chunks);
+	const explicit = checkExplicitDiagnosticDirectives(directives.filter(directive => !isSynthesizedIgnore(directive)));
+	const ignored = mergeRanges([
+		...getIgnoredRanges(chunks),
+		...directives.filter(isSynthesizedIgnore).map<[number, number]>(directive => [directive[2], directive[3]]),
+	]);
+	const ignores = createIgnoreDirectives(ignored, explicit);
 	return [...explicit, ...ignores].sort((left, right) => left[2] - right[2] || left[3] - right[3]);
 }
 
@@ -158,7 +163,15 @@ export function createIgnoreDirectives(
 		.map<DiagnosticDirectiveMapping>(([start, end]) => [0, 0, start, end, DiagnosticDirectivePolicy.Ignore]);
 }
 
-function buildExplicitDiagnosticDirectives(chunks: Code[]) {
+/**
+ * An ignore directive without an original range, like those `createIgnoreDirectives` creates, ignores the
+ * diagnostics of generated code no directive comment covers; the explicit directives take precedence over it.
+ */
+function isSynthesizedIgnore(directive: DiagnosticDirectiveMapping) {
+	return directive[4] === DiagnosticDirectivePolicy.Ignore && directive[1] === 0;
+}
+
+function collectDiagnosticDirectives(chunks: Code[]) {
 	const directives: DiagnosticDirectiveMapping[] = [];
 	const ranges = new OpenRanges<VueCodeMarker>();
 	let generatedStart = 0;
@@ -193,6 +206,10 @@ function buildExplicitDiagnosticDirectives(chunks: Code[]) {
 		}
 		generatedStart += segment[0].length;
 	}
+	return directives;
+}
+
+function checkExplicitDiagnosticDirectives(directives: DiagnosticDirectiveMapping[]) {
 	const result = directives
 		.filter(directive => directive[4] === DiagnosticDirectivePolicy.Expect || directive[2] < directive[3])
 		.sort((left, right) => left[2] - right[2] || left[3] - right[3]);

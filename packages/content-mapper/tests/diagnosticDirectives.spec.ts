@@ -19,6 +19,20 @@ test('reports an unused @vue-expect-error by the directive name the user wrote',
 	]);
 });
 
+test('leaves required props to fallthrough attributes but still checks the props passed', () => {
+	const result = runTsc([
+		'-p',
+		path.join(repositoryRoot, 'test-workspace/content-mapper-fallthrough/tsconfig.json'),
+		'--noEmit',
+		'--runExternalCode',
+		'--pretty',
+		'false',
+	]);
+	expect(normalizeCompilerOutput(result).replaceAll('\\', '/')).toBe(
+		"test-workspace/content-mapper-fallthrough/WrongTypeProp.vue(6,10): error TS2322: Type 'number' is not assignable to type 'string'.",
+	);
+});
+
 test('ignores synthesized virtual regions without overlapping explicit directives', () => {
 	const mappings: SpanMapping[] = [
 		[2, 2, 0, 2, SpanMapKind.Verbatim, 0],

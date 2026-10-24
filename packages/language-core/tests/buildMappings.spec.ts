@@ -245,6 +245,25 @@ test('keeps ignoring a boundary whose source range crosses a taken one', () => {
 	])).toEqual(toIgnores([0, 5], [6, 8]));
 });
 
+test('merges ignore directives without an original range and leaves explicit directives their ranges', () => {
+	const ignore: DiagnosticDirectiveMapping = [0, 0, 0, 0, DiagnosticDirectivePolicy.Ignore];
+	const expectation: DiagnosticDirectiveMapping = [7, 2, 0, 0, DiagnosticDirectivePolicy.Expect];
+	expect(buildDiagnosticDirectives([
+		['', 'template', 0, start(ignore)],
+		'ab',
+		['', 'template', 0, start(ignore)],
+		'cd',
+		['', 'template', 7, start(expectation)],
+		'ef',
+		['', 'template', 7, end],
+		['', 'template', 0, end],
+		['', 'template', 0, end],
+	])).toEqual([
+		[0, 0, 0, 4, DiagnosticDirectivePolicy.Ignore],
+		[7, 2, 4, 6, DiagnosticDirectivePolicy.Expect],
+	]);
+});
+
 test('leaves the ranges of explicit directives to them', () => {
 	const expectation: DiagnosticDirectiveMapping = [7, 2, 0, 0, DiagnosticDirectivePolicy.Expect];
 	expect(buildDiagnosticDirectives([

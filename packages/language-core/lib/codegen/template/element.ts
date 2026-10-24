@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
-import type { Code } from '../../types';
+import { type Code, DiagnosticDirectivePolicy } from '../../types';
 import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures, VueCodeFeature } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
@@ -231,15 +231,16 @@ export function* generateComponent(
 	const shouldInheritAttrs = hasVBindAttrs(options, ctx, node);
 
 	yield `(`;
-	const boundary2 = yield* Boundary.start(
-		'template',
-		startTagOffset,
-		startTagOffset + tag.length,
-		shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes
-			? { features: 0, ignoreDiagnostics: true }
-			: { features: 0 },
-	);
-	yield `{`;
+	const boundary2 = yield* Boundary.start('template', startTagOffset, startTagOffset + tag.length, { features: 0 });
+	if (shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes) {
+		// the props the fallthrough attributes supply are reported missing at the start of the object
+		const ignore = yield* Boundary.start('template', 0, 0, [0, 0, 0, 0, DiagnosticDirectivePolicy.Ignore]);
+		yield `{`;
+		yield ignore.end();
+	}
+	else {
+		yield `{`;
+	}
 	yield [``, 'template', node.loc.start.offset, { features: VueCodeFeature.PropsCompletion }];
 	yield newLine;
 	yield* propCodes;
