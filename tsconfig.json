@@ -10,7 +10,6 @@
 		{ "path": "./tsconfig.volar/language-service.json" },
 		{ "path": "./tsconfig.volar/source-map.json" },
 		{ "path": "./tsconfig.volar/test-utils.json" },
-		{ "path": "./tsconfig.volar/typescript.json" },
 		{ "path": "./tsconfig.volar/vscode.json" },
 		{ "path": "./extensions/vscode/tsconfig.json" },
 		{ "path": "./packages/component-meta/tsconfig.json" },

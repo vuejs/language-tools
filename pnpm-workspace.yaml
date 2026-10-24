@@ -18,7 +18,6 @@ packages:
   - volar.js/packages/language-service
   - volar.js/packages/source-map
   - volar.js/packages/test-utils
-  - volar.js/packages/typescript
   - volar.js/packages/vscode
 
 allowBuilds:
@@ -37,5 +36,4 @@ overrides:
   '@volar/language-service': workspace:*
   '@volar/source-map': workspace:*
   '@volar/test-utils': workspace:*
-  '@volar/typescript': workspace:*
   '@volar/vscode': workspace:*

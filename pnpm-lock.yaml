@@ -11,7 +11,6 @@ overrides:
   '@volar/language-service': workspace:*
   '@volar/source-map': workspace:*
   '@volar/test-utils': workspace:*
-  '@volar/typescript': workspace:*
   '@volar/vscode': workspace:*
 
 importers:
@@ -326,12 +325,6 @@ importers:
       '@volar/language-service':
         specifier: workspace:*
         version: link:../language-service
-      '@volar/typescript':
-        specifier: workspace:*
-        version: link:../typescript
-      path-browserify:
-        specifier: ^1.0.1
-        version: 1.0.1
       request-light:
         specifier: ^0.7.0
         version: 0.7.0
@@ -350,19 +343,12 @@ importers:
       vscode-uri:
         specifier: ^3.0.8
         version: 3.1.0
-    devDependencies:
-      '@types/path-browserify':
-        specifier: ~1.0.3
-        version: 1.0.3
 
   volar.js/packages/language-service:
     dependencies:
       '@volar/language-core':
         specifier: workspace:*
         version: link:../language-core
-      typescript:
-        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
       vscode-languageserver-protocol:
         specifier: ^3.17.5
         version: 3.17.5
@@ -390,33 +376,8 @@ importers:
         specifier: ^3.0.8
         version: 3.1.0
 
-  volar.js/packages/typescript:
-    dependencies:
-      '@volar/language-core':
-        specifier: workspace:*
-        version: link:../language-core
-      '@volar/language-service':
-        specifier: workspace:*
-        version: link:../language-service
-      path-browserify:
-        specifier: ^1.0.1
-        version: 1.0.1
-      typescript:
-        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-      vscode-uri:
-        specifier: ^3.0.8
-        version: 3.1.0
-    devDependencies:
-      '@types/path-browserify':
-        specifier: ~1.0.3
-        version: 1.0.3
-
   volar.js/packages/vscode:
     dependencies:
-      path-browserify:
-        specifier: ^1.0.1
-        version: 1.0.1
       vscode-languageclient:
         specifier: ^9.0.1
         version: 9.0.1
@@ -424,9 +385,6 @@ importers:
         specifier: ^5.2.0
         version: 5.2.0
     devDependencies:
-      '@types/path-browserify':
-        specifier: ~1.0.3
-        version: 1.0.3
       '@types/vscode':
         specifier: ^1.82.0
         version: 1.88.0
