@@ -36,7 +36,9 @@ export function* generateVSlot(
 				ctx,
 				slotDir.arg.loc.source,
 				slotDir.arg.loc.start.offset,
-				{ features: scriptFeatures },
+				slotDir.arg.isStatic
+					? { features: semanticFeatures | navigationFeatures | completionFeatures }
+					: { features: scriptFeatures },
 				false,
 				true,
 			);

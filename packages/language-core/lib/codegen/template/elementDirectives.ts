@@ -1,7 +1,13 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isBuiltInDirective } from '@vue/shared';
 import type { Code } from '../../types';
-import { ignoreDiagnostics, navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
+import {
+	completionFeatures,
+	ignoreDiagnostics,
+	navigationFeatures,
+	scriptFeatures,
+	semanticFeatures,
+} from '../features';
 import { names } from '../names';
 import { asType, endOfLine, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -173,7 +179,7 @@ export function* generateModifiers(
 				ctx,
 				mod.content,
 				mod.loc.start.offset,
-				{ features: scriptFeatures },
+				{ features: semanticFeatures | navigationFeatures | completionFeatures },
 			);
 			yield `: true, `;
 		}

@@ -14,7 +14,46 @@ interface Range {
 	end: Position;
 }
 
+const tokenTypes = [
+	'namespace',
+	'type',
+	'class',
+	'enum',
+	'interface',
+	'struct',
+	'typeParameter',
+	'parameter',
+	'variable',
+	'property',
+	'enumMember',
+	'event',
+	'function',
+	'method',
+	'macro',
+	'keyword',
+	'modifier',
+	'comment',
+	'string',
+	'number',
+	'regexp',
+	'operator',
+	'decorator',
+];
+const tokenModifiers = [
+	'declaration',
+	'definition',
+	'readonly',
+	'static',
+	'deprecated',
+	'abstract',
+	'async',
+	'modification',
+	'documentation',
+	'defaultLibrary',
+];
+
 export interface LspServer {
+	capabilities: any;
 	request<T = any>(method: string, params: unknown): Promise<T>;
 	notify(method: string, params: unknown): void;
 	close(): void;
@@ -65,6 +104,7 @@ export function startLspServer(cwd: string): Promise<LspServer> {
 	}
 
 	const server: LspServer = {
+		capabilities: undefined,
 		request(method, params) {
 			return new Promise((resolve, reject) => {
 				const id = ++nextId;
@@ -83,9 +123,15 @@ export function startLspServer(cwd: string): Promise<LspServer> {
 	return server.request('initialize', {
 		processId: process.pid,
 		rootUri: pathToFileURL(cwd).href,
-		capabilities: { textDocument: { rename: { prepareSupport: true } } },
+		capabilities: {
+			textDocument: {
+				rename: { prepareSupport: true },
+				semanticTokens: { requests: { full: true }, tokenTypes, tokenModifiers, formats: ['relative'] },
+			},
+		},
 		initializationOptions: { runExternalCode: true },
-	}).then(() => {
+	}).then(result => {
+		server.capabilities = result.capabilities;
 		server.notify('initialized', {});
 		return server;
 	});

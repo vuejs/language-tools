@@ -13,6 +13,7 @@ const propsParent = new LspDocument(path.join(workspace, 'PropsParent.vue'));
 const model = new LspDocument(path.join(workspace, 'Model.vue'));
 const modelParent = new LspDocument(path.join(workspace, 'ModelParent.vue'));
 const tagHighlights = new LspDocument(path.join(workspace, 'TagHighlights.vue'));
+const semanticTokens = new LspDocument(path.join(workspace, 'SemanticTokens.vue'));
 const documents = [
 	shorthand,
 	cssModule,
@@ -23,6 +24,7 @@ const documents = [
 	model,
 	modelParent,
 	tagHighlights,
+	semanticTokens,
 ];
 
 let server: LspServer;
@@ -119,6 +121,38 @@ test('tag names highlight like any other reference to the component or element',
 		'8:3 div',
 	]);
 	expect(await highlights(tagHighlights, tagHighlights.at('const msg', 0, 6))).toEqual(['10:14 msg', '2:6 msg']);
+});
+
+test('semantic tokens come from script and interpolation identifiers only, not template names', async () => {
+	const { tokenTypes, tokenModifiers } = server.capabilities.semanticTokensProvider.legend;
+	const { data }: { data: number[] } = await server.request('textDocument/semanticTokens/full', {
+		textDocument: { uri: semanticTokens.uri },
+	});
+	const tokens: string[] = [];
+	let line = 0;
+	let character = 0;
+	for (let i = 0; i < data.length; i += 5) {
+		line += data[i]!;
+		character = data[i] ? data[i + 1]! : character + data[i + 1]!;
+		const modifiers = tokenModifiers.filter((_: string, bit: number) => data[i + 4]! & (1 << bit));
+		tokens.push(
+			semanticTokens.describe({ start: { line, character }, end: { line, character: character + data[i + 2]! } })
+				+ ` ${[tokenTypes[data[i + 3]!], ...modifiers].join('.')}`,
+		);
+	}
+	// Native tag names, attribute and prop names, directive modifiers, slot names and the `:is`
+	// shorthand get none, though TypeScript would type their generated code as properties, methods or classes.
+	expect(tokens).toEqual([
+		'2:6 vFocus variable.declaration.readonly',
+		'2:17 mounted method.declaration',
+		'3:6 msg variable.declaration.readonly',
+		'4:6 is class.declaration',
+		'8:21 msg variable.readonly',
+		'8:53 msg variable.readonly',
+		'11:22 msg variable.readonly',
+		'12:24 item variable.declaration.readonly',
+		'12:35 item variable.readonly',
+	]);
 });
 
 test('rename leaves template shorthands untouched instead of corrupting them', async () => {
