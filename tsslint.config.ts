@@ -66,6 +66,7 @@ export default defineConfig([{
 			'require-await': true,
 		}),
 		'missing-dependency': (await import('./lint/missing-dependency-rule.ts')).default,
+		'no-floating-generators': (await import('./lint/no-floating-generators-rule.ts')).default,
 		'type-imports': (await import('./lint/type-imports-rule.ts')).default,
 	},
 }]);
