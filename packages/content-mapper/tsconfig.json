@@ -6,6 +6,7 @@
 		]
 	},
 	"references": [
+		{ "path": "../../tsconfig.volar/language-core.json" },
 		{ "path": "../language-core/tsconfig.json" }
 	],
 	"include": ["*.ts"],

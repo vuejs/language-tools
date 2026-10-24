@@ -6,6 +6,14 @@ settings:
 
 overrides:
   typescript@<7: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+  '@volar/kit': workspace:*
+  '@volar/language-core': workspace:*
+  '@volar/language-server': workspace:*
+  '@volar/language-service': workspace:*
+  '@volar/source-map': workspace:*
+  '@volar/test-utils': workspace:*
+  '@volar/typescript': workspace:*
+  '@volar/vscode': workspace:*
 
 importers:
 
@@ -26,6 +34,9 @@ importers:
       '@tsslint/config':
         specifier: 4.0.0-alpha.1
         version: 4.0.0-alpha.1(@tsslint/compat-eslint@4.0.0-alpha.1(eslint@9.39.5))(eslint@9.39.5)
+      '@types/node':
+        specifier: ^26.0.1
+        version: 26.1.1
       dprint:
         specifier: latest
         version: 0.56.0
@@ -35,6 +46,9 @@ importers:
       typescript:
         specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
         version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+      typescript-5:
+        specifier: npm:typescript@~5.9.3
+        version: typescript@5.9.3
       typescript-7:
         specifier: npm:typescript@7.1.0-beta
         version: typescript@7.1.0-beta
@@ -51,8 +65,8 @@ importers:
         specifier: 1.88.0
         version: 1.88.0
       '@volar/vscode':
-        specifier: 2.4.30
-        version: 2.4.30
+        specifier: workspace:*
+        version: link:../../volar.js/packages/vscode
       '@vue/language-server':
         specifier: workspace:*
         version: link:../../packages/language-server
@@ -96,8 +110,8 @@ importers:
   packages/content-mapper:
     dependencies:
       '@volar/language-core':
-        specifier: 2.4.30
-        version: 2.4.30
+        specifier: workspace:*
+        version: link:../../volar.js/packages/language-core
       '@vue/language-core':
         specifier: workspace:*
         version: link:../language-core
@@ -118,8 +132,8 @@ importers:
   packages/language-core:
     dependencies:
       '@volar/language-core':
-        specifier: 2.4.30
-        version: 2.4.30
+        specifier: workspace:*
+        version: link:../../volar.js/packages/language-core
       '@vue/compiler-dom':
         specifier: ^3.5.0
         version: 3.5.40
@@ -158,8 +172,8 @@ importers:
   packages/language-plugin-pug:
     dependencies:
       '@volar/source-map':
-        specifier: 2.4.30
-        version: 2.4.30
+        specifier: workspace:*
+        version: link:../../volar.js/packages/source-map
       muggle-string:
         specifier: ^0.4.1
         version: 0.4.1
@@ -186,8 +200,8 @@ importers:
   packages/language-server:
     dependencies:
       '@volar/language-server':
-        specifier: 2.4.30
-        version: 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
+        specifier: workspace:*
+        version: link:../../volar.js/packages/language-server
       '@vue/content-mapper':
         specifier: workspace:*
         version: link:../content-mapper
@@ -214,8 +228,8 @@ importers:
         version: link:../component-meta
     devDependencies:
       '@volar/test-utils':
-        specifier: 2.4.30
-        version: 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
+        specifier: workspace:*
+        version: link:../../volar.js/packages/test-utils
       typescript-7:
         specifier: npm:typescript@7.1.0-beta
         version: typescript@7.1.0-beta
@@ -223,8 +237,8 @@ importers:
   packages/language-service:
     dependencies:
       '@volar/language-service':
-        specifier: 2.4.30
-        version: 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
+        specifier: workspace:*
+        version: link:../../volar.js/packages/language-service
       '@vue/language-core':
         specifier: workspace:*
         version: link:../language-core
@@ -236,25 +250,25 @@ importers:
         version: 1.0.1
       volar-service-css:
         specifier: 0.0.71
-        version: 0.0.71(@volar/language-service@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2))
+        version: 0.0.71(@volar/language-service@volar.js+packages+language-service)
       volar-service-emmet:
         specifier: 0.0.71
-        version: 0.0.71(@volar/language-service@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2))
+        version: 0.0.71(@volar/language-service@volar.js+packages+language-service)
       volar-service-html:
         specifier: 0.0.71
-        version: 0.0.71(@volar/language-service@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2))
+        version: 0.0.71(@volar/language-service@volar.js+packages+language-service)
       volar-service-json:
         specifier: 0.0.71
-        version: 0.0.71(@volar/language-service@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2))
+        version: 0.0.71(@volar/language-service@volar.js+packages+language-service)
       volar-service-pug:
         specifier: 0.0.71
-        version: 0.0.71(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
+        version: 0.0.71
       volar-service-pug-beautify:
         specifier: 0.0.71
-        version: 0.0.71(@volar/language-service@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2))
+        version: 0.0.71(@volar/language-service@volar.js+packages+language-service)
       volar-service-typescript:
         specifier: 0.0.71
-        version: 0.0.71(@volar/language-service@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2))
+        version: 0.0.71(@volar/language-service@volar.js+packages+language-service)
       vscode-html-languageservice:
         specifier: ^5.6.2
         version: 5.6.2
@@ -269,8 +283,8 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
       '@volar/kit':
-        specifier: 2.4.30
-        version: 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
+        specifier: workspace:*
+        version: link:../../volar.js/packages/kit
       '@vue/compiler-dom':
         specifier: ^3.5.0
         version: 3.5.40
@@ -301,6 +315,149 @@ importers:
       vue-component-type-helpers:
         specifier: workspace:*
         version: link:../packages/component-type-helpers
+
+  volar.js/packages/kit:
+    dependencies:
+      '@volar/language-service':
+        specifier: workspace:*
+        version: link:../language-service
+      '@volar/typescript':
+        specifier: workspace:*
+        version: link:../typescript
+      typesafe-path:
+        specifier: ^0.2.2
+        version: 0.2.2
+      typescript:
+        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+      vscode-languageserver-textdocument:
+        specifier: ^1.0.11
+        version: 1.0.12
+      vscode-uri:
+        specifier: ^3.0.8
+        version: 3.1.0
+
+  volar.js/packages/language-core:
+    dependencies:
+      '@volar/source-map':
+        specifier: workspace:*
+        version: link:../source-map
+
+  volar.js/packages/language-server:
+    dependencies:
+      '@volar/language-core':
+        specifier: workspace:*
+        version: link:../language-core
+      '@volar/language-service':
+        specifier: workspace:*
+        version: link:../language-service
+      '@volar/typescript':
+        specifier: workspace:*
+        version: link:../typescript
+      path-browserify:
+        specifier: ^1.0.1
+        version: 1.0.1
+      request-light:
+        specifier: ^0.7.0
+        version: 0.7.0
+      typescript:
+        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+      vscode-languageserver:
+        specifier: ^9.0.1
+        version: 9.0.1
+      vscode-languageserver-protocol:
+        specifier: ^3.17.5
+        version: 3.17.5
+      vscode-languageserver-textdocument:
+        specifier: ^1.0.11
+        version: 1.0.12
+      vscode-uri:
+        specifier: ^3.0.8
+        version: 3.1.0
+    devDependencies:
+      '@types/path-browserify':
+        specifier: ~1.0.3
+        version: 1.0.3
+
+  volar.js/packages/language-service:
+    dependencies:
+      '@volar/language-core':
+        specifier: workspace:*
+        version: link:../language-core
+      typescript:
+        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+      vscode-languageserver-protocol:
+        specifier: ^3.17.5
+        version: 3.17.5
+      vscode-languageserver-textdocument:
+        specifier: ^1.0.11
+        version: 1.0.12
+      vscode-uri:
+        specifier: ^3.0.8
+        version: 3.1.0
+
+  volar.js/packages/source-map: {}
+
+  volar.js/packages/test-utils:
+    dependencies:
+      '@volar/language-core':
+        specifier: workspace:*
+        version: link:../language-core
+      '@volar/language-server':
+        specifier: workspace:*
+        version: link:../language-server
+      vscode-languageserver-textdocument:
+        specifier: ^1.0.11
+        version: 1.0.12
+      vscode-uri:
+        specifier: ^3.0.8
+        version: 3.1.0
+
+  volar.js/packages/typescript:
+    dependencies:
+      '@volar/language-core':
+        specifier: workspace:*
+        version: link:../language-core
+      '@volar/language-service':
+        specifier: workspace:*
+        version: link:../language-service
+      path-browserify:
+        specifier: ^1.0.1
+        version: 1.0.1
+      typescript:
+        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+      vscode-uri:
+        specifier: ^3.0.8
+        version: 3.1.0
+    devDependencies:
+      '@types/path-browserify':
+        specifier: ~1.0.3
+        version: 1.0.3
+
+  volar.js/packages/vscode:
+    dependencies:
+      path-browserify:
+        specifier: ^1.0.1
+        version: 1.0.1
+      vscode-languageclient:
+        specifier: ^9.0.1
+        version: 9.0.1
+      vscode-nls:
+        specifier: ^5.2.0
+        version: 5.2.0
+    devDependencies:
+      '@types/path-browserify':
+        specifier: ~1.0.3
+        version: 1.0.3
+      '@types/vscode':
+        specifier: ^1.82.0
+        version: 1.88.0
+      '@volar/language-server':
+        specifier: workspace:*
+        version: link:../language-server
 
 packages:
 
@@ -1191,50 +1348,6 @@ packages:
 
   '@vitest/utils@4.1.11':
     resolution: {integrity: sha512-zTCVGpyFsGWBhllOyKlTw/vnr6D9qxsfSDyfbyZmTyjHw5N/VuvzHpHoQjm2ZJzn4RJgx5w4r7V0er69CmLgPQ==}
-
-  '@volar/kit@2.4.30':
-    resolution: {integrity: sha512-VocLtumfXnqnPQEWc9Yx7uC1uOh9gyjVNlrn2+6Zx/z9aM6yTLhPK8lSqM9Ilu81XRa48I00lcYJWLi2BLxx8Q==}
-    peerDependencies:
-      typescript: <7
-
-  '@volar/language-core@2.4.30':
-    resolution: {integrity: sha512-73fjwEV8wat6aOZ6U/y/hqtE30ocrIWECg67b0txGczOMNw+MffLmvJ5fnFfN9drVUEYZzLdaNo6VAy6G6avMw==}
-
-  '@volar/language-server@2.4.30':
-    resolution: {integrity: sha512-tcP9fzzUBbsLIFHhgnRU4ncQjMn9G9Vax0ffkQmdCrXVEYqRroUepmyC5AVgiju5bCiLD6a55qen5iOTQHkb3g==}
-    peerDependencies:
-      typescript: <7
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-
-  '@volar/language-service@2.4.30':
-    resolution: {integrity: sha512-w/xDsASiqC71ggCOm7sTDXDNk/l72XEptodeRC68tgZ0e5QM4hM3zAqBGC7mBctvhrpYwKfMG+t9xcUo2hEFtA==}
-    peerDependencies:
-      typescript: <7
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-
-  '@volar/source-map@2.4.28':
-    resolution: {integrity: sha512-yX2BDBqJkRXfKw8my8VarTyjv48QwxdJtvRgUpNE5erCsgEUdI2DsLbpa+rOQVAJYshY99szEcRDmyHbF10ggQ==}
-
-  '@volar/source-map@2.4.30':
-    resolution: {integrity: sha512-zym1ob/KwDDyN+0jGVtxwbxJSRRnUvv5HspCtz3yEfVVdCG4/dzxJktMGPAgemqRuVs81O0o/y0q3qOUErR8kg==}
-
-  '@volar/test-utils@2.4.30':
-    resolution: {integrity: sha512-juUg/EoBxFA/7FgbzznnF7gg2v1pYNMnvLpsm7sGZXw0fa9i20R40V6eftcjudSHH02SLqkuislpgJzskrvQKQ==}
-
-  '@volar/typescript@2.4.30':
-    resolution: {integrity: sha512-/DgA5tgYFPfrLFuSjIMXMGHk1LQv2+P8eny6+BhGNzFJELWIW7UZlc56ZLIRFhLsPpMfIFxM8/HvOPBggrjTZg==}
-    peerDependencies:
-      typescript: <7
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-
-  '@volar/vscode@2.4.30':
-    resolution: {integrity: sha512-M14YULOrwOzvQtKSp4/RkaA+ligpDeDL1P0+wjZ29WRIcw/oeH0KfMfUM8CxMF92Q0anllWan2wUIUWR7gGfAA==}
 
   '@vscode-tmlanguage-snapshot/core@2.0.0':
     resolution: {integrity: sha512-9jrkEZuhcs71fEVmbkQ7H2z/4pqTVQEOiauhNA8oYDggPKesGB9VfEQnH6CV3DOFm7kbjfbmefRXMK6sgHMxjw==}
@@ -2225,6 +2338,11 @@ packages:
     engines: {node: '>=20.19'}
     hasBin: true
 
+  typescript@5.9.3:
+    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
   typescript@7.1.0-beta:
     resolution: {integrity: sha512-cjWjZAJDsmZzsNC5GwHNlW0YPM65jZa5oR0KyQcYX3KSVIfTvtBq//vewISyatKk4OLi5grZjHhIVE9fdrw1UQ==}
     engines: {node: '>=16.20.0'}
@@ -2343,7 +2461,7 @@ packages:
   volar-service-css@0.0.71:
     resolution: {integrity: sha512-wRRFt9BpjMKCazcgOh67MSjUjiWUCAh99DyYSDIOTuxaRjEtDC7PpB0k1Y1wbJIW/pVtMUSVbpPo3UGSm0Byxw==}
     peerDependencies:
-      '@volar/language-service': ~2.4.0
+      '@volar/language-service': workspace:*
     peerDependenciesMeta:
       '@volar/language-service':
         optional: true
@@ -2351,7 +2469,7 @@ packages:
   volar-service-emmet@0.0.71:
     resolution: {integrity: sha512-zqjzt6bN95e3CUstBm0PBFAJnrfz0ZAARka87fart46/gNCLLuP3Vujy8V/J8HEziTFLnfkgIASLFYPUhonJcA==}
     peerDependencies:
-      '@volar/language-service': ~2.4.0
+      '@volar/language-service': workspace:*
     peerDependenciesMeta:
       '@volar/language-service':
         optional: true
@@ -2359,7 +2477,7 @@ packages:
   volar-service-html@0.0.71:
     resolution: {integrity: sha512-e8tHPhgQ7ooLfudAEIku+kgd9pWkq3SSz8RbnQDI1+Eb8wbenkLGHqoirLqz5ORLV6wIMr2Iv08RWBG5eOcgpw==}
     peerDependencies:
-      '@volar/language-service': ~2.4.0
+      '@volar/language-service': workspace:*
     peerDependenciesMeta:
       '@volar/language-service':
         optional: true
@@ -2367,7 +2485,7 @@ packages:
   volar-service-json@0.0.71:
     resolution: {integrity: sha512-behyNhAG5UEXfvbIOWdE62XsPkp/e5W0V3sz3AW6zy7vgWLzgvElR77YSlcu708GwKu7OOFl5m9sUGVfqLIriQ==}
     peerDependencies:
-      '@volar/language-service': ~2.4.0
+      '@volar/language-service': workspace:*
     peerDependenciesMeta:
       '@volar/language-service':
         optional: true
@@ -2375,7 +2493,7 @@ packages:
   volar-service-pug-beautify@0.0.71:
     resolution: {integrity: sha512-4oxv7xGwT6TxxuFZdXj9EdqUUUWSd1oz9H47z4s/shT9YVLKwrty+9ACbdQsjyWZTp6ES/EtcuSqKuPhz3Uhaw==}
     peerDependencies:
-      '@volar/language-service': ~2.4.0
+      '@volar/language-service': workspace:*
     peerDependenciesMeta:
       '@volar/language-service':
         optional: true
@@ -2386,7 +2504,7 @@ packages:
   volar-service-typescript@0.0.71:
     resolution: {integrity: sha512-yTtM/BVT6hoyEYnDtaCyAtNhdNeS/mhTTABlBOdw3NNiRBUin3IznFJpgfjer4c6RYopiPjjQjc9VFhxVl1mLw==}
     peerDependencies:
-      '@volar/language-service': ~2.4.0
+      '@volar/language-service': workspace:*
     peerDependenciesMeta:
       '@volar/language-service':
         optional: true
@@ -3253,70 +3371,6 @@ snapshots:
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.0
 
-  '@volar/kit@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)':
-    dependencies:
-      '@volar/language-service': 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
-      '@volar/typescript': 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
-      typesafe-path: 0.2.2
-      typescript: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-      vscode-languageserver-textdocument: 1.0.12
-      vscode-uri: 3.1.0
-
-  '@volar/language-core@2.4.30':
-    dependencies:
-      '@volar/source-map': 2.4.30
-
-  '@volar/language-server@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)':
-    dependencies:
-      '@volar/language-core': 2.4.30
-      '@volar/language-service': 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
-      '@volar/typescript': 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
-      path-browserify: 1.0.1
-      request-light: 0.7.0
-      vscode-languageserver: 9.0.1
-      vscode-languageserver-protocol: 3.17.5
-      vscode-languageserver-textdocument: 1.0.12
-      vscode-uri: 3.1.0
-    optionalDependencies:
-      typescript: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-
-  '@volar/language-service@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)':
-    dependencies:
-      '@volar/language-core': 2.4.30
-      vscode-languageserver-protocol: 3.17.5
-      vscode-languageserver-textdocument: 1.0.12
-      vscode-uri: 3.1.0
-    optionalDependencies:
-      typescript: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-
-  '@volar/source-map@2.4.28': {}
-
-  '@volar/source-map@2.4.30': {}
-
-  '@volar/test-utils@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)':
-    dependencies:
-      '@volar/language-core': 2.4.30
-      '@volar/language-server': 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
-      vscode-languageserver-textdocument: 1.0.12
-      vscode-uri: 3.1.0
-    transitivePeerDependencies:
-      - typescript
-
-  '@volar/typescript@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)':
-    dependencies:
-      '@volar/language-core': 2.4.30
-      '@volar/language-service': 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
-      path-browserify: 1.0.1
-      vscode-uri: 3.1.0
-    optionalDependencies:
-      typescript: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-
-  '@volar/vscode@2.4.30':
-    dependencies:
-      path-browserify: 1.0.1
-      vscode-languageclient: 9.0.1
-      vscode-nls: 5.2.0
-
   '@vscode-tmlanguage-snapshot/core@2.0.0': {}
 
   '@vscode/emmet-helper@2.11.0':
@@ -3400,7 +3454,7 @@ snapshots:
 
   '@vue/language-plugin-pug@3.2.9':
     dependencies:
-      '@volar/source-map': 2.4.28
+      '@volar/source-map': link:volar.js/packages/source-map
       muggle-string: 0.4.1
       pug-lexer: 5.0.1
       pug-parser: 6.0.0
@@ -4315,6 +4369,8 @@ snapshots:
       '@typescript-native-bridge/win32-arm64': 6.0.3-bridge.16.tsgo.7.0.2
       '@typescript-native-bridge/win32-x64': 6.0.3-bridge.16.tsgo.7.0.2
 
+  typescript@5.9.3: {}
+
   typescript@7.1.0-beta:
     optionalDependencies:
       '@typescript/typescript-aix-ppc64': 7.1.0-beta
@@ -4395,55 +4451,53 @@ snapshots:
     transitivePeerDependencies:
       - msw
 
-  volar-service-css@0.0.71(@volar/language-service@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)):
+  volar-service-css@0.0.71(@volar/language-service@volar.js+packages+language-service):
     dependencies:
       vscode-css-languageservice: 6.3.10
       vscode-languageserver-textdocument: 1.0.12
       vscode-uri: 3.1.0
     optionalDependencies:
-      '@volar/language-service': 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
+      '@volar/language-service': link:volar.js/packages/language-service
 
-  volar-service-emmet@0.0.71(@volar/language-service@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)):
+  volar-service-emmet@0.0.71(@volar/language-service@volar.js+packages+language-service):
     dependencies:
       '@emmetio/css-parser': 0.4.1
       '@emmetio/html-matcher': 1.3.0
       '@vscode/emmet-helper': 2.11.0
       vscode-uri: 3.1.0
     optionalDependencies:
-      '@volar/language-service': 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
+      '@volar/language-service': link:volar.js/packages/language-service
 
-  volar-service-html@0.0.71(@volar/language-service@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)):
+  volar-service-html@0.0.71(@volar/language-service@volar.js+packages+language-service):
     dependencies:
       vscode-html-languageservice: 5.6.2
       vscode-languageserver-textdocument: 1.0.12
       vscode-uri: 3.1.0
     optionalDependencies:
-      '@volar/language-service': 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
+      '@volar/language-service': link:volar.js/packages/language-service
 
-  volar-service-json@0.0.71(@volar/language-service@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)):
+  volar-service-json@0.0.71(@volar/language-service@volar.js+packages+language-service):
     dependencies:
       vscode-json-languageservice: 5.7.2
       vscode-uri: 3.1.0
     optionalDependencies:
-      '@volar/language-service': 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
+      '@volar/language-service': link:volar.js/packages/language-service
 
-  volar-service-pug-beautify@0.0.71(@volar/language-service@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)):
+  volar-service-pug-beautify@0.0.71(@volar/language-service@volar.js+packages+language-service):
     dependencies:
       '@johnsoncodehk/pug-beautify': 0.2.2
     optionalDependencies:
-      '@volar/language-service': 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
+      '@volar/language-service': link:volar.js/packages/language-service
 
-  volar-service-pug@0.0.71(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2):
+  volar-service-pug@0.0.71:
     dependencies:
-      '@volar/language-service': 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
+      '@volar/language-service': link:volar.js/packages/language-service
       '@vue/language-plugin-pug': 3.2.9
-      volar-service-html: 0.0.71(@volar/language-service@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2))
+      volar-service-html: 0.0.71(@volar/language-service@volar.js+packages+language-service)
       vscode-html-languageservice: 5.6.2
       vscode-languageserver-textdocument: 1.0.12
-    transitivePeerDependencies:
-      - typescript
 
-  volar-service-typescript@0.0.71(@volar/language-service@2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)):
+  volar-service-typescript@0.0.71(@volar/language-service@volar.js+packages+language-service):
     dependencies:
       path-browserify: 1.0.1
       semver: 7.8.5
@@ -4452,7 +4506,7 @@ snapshots:
       vscode-nls: 5.2.0
       vscode-uri: 3.1.0
     optionalDependencies:
-      '@volar/language-service': 2.4.30(typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2)
+      '@volar/language-service': link:volar.js/packages/language-service
 
   vscode-css-languageservice@6.3.10:
     dependencies:

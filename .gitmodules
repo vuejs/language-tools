@@ -1,0 +1,4 @@
+[submodule "volar.js"]
+	path = volar.js
+	url = https://github.com/volarjs/volar.js.git
+	branch = v3

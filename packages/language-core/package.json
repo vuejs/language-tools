@@ -19,7 +19,7 @@
 		"generate-names": "node scripts/generate-names.js"
 	},
 	"dependencies": {
-		"@volar/language-core": "2.4.30",
+		"@volar/language-core": "workspace:*",
 		"@vue/compiler-dom": "^3.5.0",
 		"@vue/shared": "^3.5.0",
 		"alien-signals": "^3.2.1",

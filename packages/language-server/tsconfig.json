@@ -1,6 +1,7 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"references": [
+		{ "path": "../../tsconfig.volar/language-server.json" },
 		{ "path": "../content-mapper/tsconfig.json" },
 		{ "path": "../language-core/tsconfig.json" },
 		{ "path": "../language-service/tsconfig.json" },

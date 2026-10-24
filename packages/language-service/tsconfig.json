@@ -6,6 +6,8 @@
 		]
 	},
 	"references": [
+		{ "path": "../../tsconfig.volar/kit.json" },
+		{ "path": "../../tsconfig.volar/language-service.json" },
 		{ "path": "../component-meta/tsconfig.json" },
 		{ "path": "../language-core/tsconfig.json" }
 	],
