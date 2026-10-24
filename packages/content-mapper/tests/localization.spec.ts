@@ -1,26 +1,36 @@
 import { expect, test } from 'vitest';
-import { getUnusedExpectErrorMessage } from '../localization';
+import { getUnusedExpectErrorMessage, unusedExpectErrorMessages } from '../localization';
 
 test('localizes unused expect-error diagnostics', () => {
 	expect(getUnusedExpectErrorMessage('ja')).toBe(
-		"'@ts-expect-error' ディレクティブが使用されていません。",
+		"'@vue-expect-error' ディレクティブが使用されていません。",
 	);
 	expect(getUnusedExpectErrorMessage('zh-Hans')).toBe(
-		'未使用的 "@ts-expect-error" 指令。',
+		'未使用的 "@vue-expect-error" 指令。',
 	);
 	expect(getUnusedExpectErrorMessage('zh-Hant')).toBe(
-		"未使用的 '@ts-expect-error' 指示詞。",
+		"未使用的 '@vue-expect-error' 指示詞。",
 	);
 	expect(getUnusedExpectErrorMessage('pt-PT')).toContain(
-		"'@ts-expect-error'",
+		"'@vue-expect-error'",
 	);
 });
 
 test('falls back to English for unsupported locales', () => {
 	expect(getUnusedExpectErrorMessage('en-US')).toBe(
-		"Unused '@ts-expect-error' directive.",
+		"Unused '@vue-expect-error' directive.",
 	);
 	expect(getUnusedExpectErrorMessage(undefined)).toBe(
-		"Unused '@ts-expect-error' directive.",
+		"Unused '@vue-expect-error' directive.",
 	);
+});
+
+test('every locale names the Vue directive the user wrote', () => {
+	const locales = Object.keys(unusedExpectErrorMessages);
+	expect(locales.length).toBeGreaterThan(0);
+	for (const locale of [undefined, ...locales]) {
+		const message = getUnusedExpectErrorMessage(locale);
+		expect(message).toContain('@vue-expect-error');
+		expect(message).not.toContain('@ts-expect-error');
+	}
 });

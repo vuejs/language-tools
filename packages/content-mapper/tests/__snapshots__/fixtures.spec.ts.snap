@@ -6,11 +6,11 @@ test-workspace/content-mapper/App.vue(7,23): error TS2339: Property 'templateVal
 `;
 
 exports[`content mapper fixtures > test-workspace/content-mapper-directives/tsconfig.json 1`] = `
-"test-workspace/content-mapper-directives/App.vue(13,2): error vue2578: Unused '@ts-expect-error' directive.
-test-workspace/content-mapper-directives/App.vue(16,2): error vue2578: Unused '@ts-expect-error' directive.
+"test-workspace/content-mapper-directives/App.vue(13,2): error vue2578: Unused '@vue-expect-error' directive.
+test-workspace/content-mapper-directives/App.vue(16,2): error vue2578: Unused '@vue-expect-error' directive.
 test-workspace/content-mapper-directives/App.vue(17,10): error TS2339: Property 'childExpectedError' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.
-test-workspace/content-mapper-directives/App.vue(20,2): error vue2578: Unused '@ts-expect-error' directive.
-test-workspace/content-mapper-directives/App.vue(23,2): error vue2578: Unused '@ts-expect-error' directive.
+test-workspace/content-mapper-directives/App.vue(20,2): error vue2578: Unused '@vue-expect-error' directive.
+test-workspace/content-mapper-directives/App.vue(23,2): error vue2578: Unused '@vue-expect-error' directive.
 test-workspace/content-mapper-directives/App.vue(4,6): error TS2339: Property 'childError' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'."
 `;
 
