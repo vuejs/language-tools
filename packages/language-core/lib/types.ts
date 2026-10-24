@@ -53,10 +53,11 @@ export type DiagnosticDirectiveMapping = [
 	unusedExpectDirectiveIndex?: number,
 ];
 
-/** The data of a generated segment. */
+/** The `kind` and `features` of the protocol `Mapping` a generated segment maps by, which the protocol has no object type for. */
 export interface VueCodeMarker {
 	/** `SpanMapFeature` and `VueCodeFeature` bits. */
 	features: number;
+	/** `SpanMapKind.Verbatim` if omitted. */
 	kind?: SpanMapKind;
 }
 

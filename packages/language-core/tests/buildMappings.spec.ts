@@ -103,7 +103,7 @@ test('rejects unbalanced boundaries and segments without data outside of them', 
 	expect(() => buildMappings([['a', 'template', 0, undefined]])).toThrow();
 });
 
-test('maps every segment sharing a shorthand source range as an atom', () => {
+test('maps a segment by the kind written in its data, verbatim if omitted', () => {
 	expect(buildMappings([
 		'{',
 		['a', 'template', 1, navigation],
@@ -111,7 +111,7 @@ test('maps every segment sharing a shorthand source range as an atom', () => {
 		['a', 'template', 1, { ...navigation, kind: SpanMapKind.Atom }],
 		'}',
 	])).toEqual([
-		[1, 1, 1, 1, SpanMapKind.Atom, navigation.features],
+		[1, 1, 1, 1, SpanMapKind.Verbatim, navigation.features],
 		[4, 1, 1, 1, SpanMapKind.Atom, navigation.features],
 	]);
 });

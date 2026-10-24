@@ -10,57 +10,37 @@ interface Entry {
 }
 
 export function buildMappings(chunks: Code[]): Mapping[] {
-	const items = toItems(chunks);
-	const shorthandRanges = new Set<string>();
-	for (const item of items) {
-		if (!isGroup(item)) {
-			if (item.info.kind === SpanMapKind.Atom) {
-				shorthandRanges.add(`${item.sourceStart}:${item.sourceStart + item.length}`);
-			}
-		}
-		else if (item[0]!.info.kind === SpanMapKind.Atom) {
-			for (const { sourceStart, length } of item.slice(1, -1)) {
-				shorthandRanges.add(`${sourceStart}:${sourceStart + length}`);
-			}
-		}
-	}
+	return toItems(chunks).flatMap(item => isGroup(item) ? fromGroup(item) : [toMapping(item)]);
+}
 
-	return items.flatMap(item => isGroup(item) ? fromGroup(item) : [toMapping(item)]);
-
-	function fromGroup(group: Entry[]): Mapping[] {
-		const first = group[0]!;
-		const last = group[group.length - 1]!;
-		const atom: Mapping = [
-			first.generatedStart,
-			last.generatedStart + last.length - first.generatedStart,
-			first.sourceStart,
-			last.sourceStart + last.length - first.sourceStart,
-			isContiguous(group) ? SpanMapKind.Verbatim : SpanMapKind.Atom,
-			first.info.features,
-		];
-		const content = group.length === 3 ? group[1]! : undefined;
-		if (
-			content
-			&& !first.length
-			&& !last.length
-			&& content.sourceStart === atom[2]
-			&& content.length === atom[3]
-			&& isCompletionEnabled(content.info.features)
-		) {
-			atom[5] = 0;
-			return [atom, toMapping(content)];
-		}
-		return [atom];
+function fromGroup(group: Entry[]): Mapping[] {
+	const first = group[0]!;
+	const last = group[group.length - 1]!;
+	const atom: Mapping = [
+		first.generatedStart,
+		last.generatedStart + last.length - first.generatedStart,
+		first.sourceStart,
+		last.sourceStart + last.length - first.sourceStart,
+		isContiguous(group) ? SpanMapKind.Verbatim : SpanMapKind.Atom,
+		first.info.features,
+	];
+	const content = group.length === 3 ? group[1]! : undefined;
+	if (
+		content
+		&& !first.length
+		&& !last.length
+		&& content.sourceStart === atom[2]
+		&& content.length === atom[3]
+		&& isCompletionEnabled(content.info.features)
+	) {
+		atom[5] = 0;
+		return [atom, toMapping(content)];
 	}
+	return [atom];
+}
 
-	function toMapping({ generatedStart, length, sourceStart, info }: Entry): Mapping {
-		const kind = info.kind !== undefined
-			? info.kind
-			: shorthandRanges.has(`${sourceStart}:${sourceStart + length}`)
-			? SpanMapKind.Atom
-			: SpanMapKind.Verbatim;
-		return [generatedStart, length, sourceStart, length, kind, info.features];
-	}
+function toMapping({ generatedStart, length, sourceStart, info }: Entry): Mapping {
+	return [generatedStart, length, sourceStart, length, info.kind ?? SpanMapKind.Verbatim, info.features];
 }
 
 /**
