@@ -1,6 +1,7 @@
+import { SpanMapKind } from '@volar/language-core';
 import type { Code, IRBlock, TypeScript, VueCodeMarker, VueCompilerOptions } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
-import { completionFeatures, ignoreDiagnostics, toAtomKind } from '../features';
+import { completionFeatures, ignoreDiagnostics } from '../features';
 import { names } from '../names';
 import { getRefBrandArgument, getTypeScriptAST, identifierRE } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -71,7 +72,7 @@ export function* generateInterpolation(
 			name,
 			block.name,
 			start + offset,
-			isShorthand ? toAtomKind(identifierFeatures) : identifierFeatures,
+			isShorthand ? { ...identifierFeatures, kind: SpanMapKind.Atom } : identifierFeatures,
 		]];
 
 		yield* generateIdentifier(

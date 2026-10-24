@@ -1,4 +1,4 @@
-import { SpanMapFeature, SpanMapKind } from '@volar/language-core';
+import { SpanMapFeature } from '@volar/language-core';
 import type { VueCodeMarker } from '../types';
 
 /** Feature bits that only Volar's own services read; the content mapper strips them. */
@@ -42,8 +42,4 @@ export const allFeatures = scriptFeatures
 
 export function ignoreDiagnostics(info: VueCodeMarker): VueCodeMarker {
 	return { ...info, ignoreDiagnostics: true };
-}
-
-export function toAtomKind(info: VueCodeMarker): VueCodeMarker {
-	return { ...info, kind: SpanMapKind.Atom };
 }

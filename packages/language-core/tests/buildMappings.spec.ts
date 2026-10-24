@@ -1,6 +1,6 @@
 import { SpanMapKind } from '@volar/language-core';
 import { expect, test } from 'vitest';
-import { completionFeatures, ignoreDiagnostics, navigationFeatures, toAtomKind } from '../lib/codegen/features';
+import { completionFeatures, ignoreDiagnostics, navigationFeatures } from '../lib/codegen/features';
 import {
 	type Code,
 	type CodeBoundary,
@@ -107,7 +107,7 @@ test('maps every segment sharing a shorthand source range as an atom', () => {
 		'{',
 		['a', 'template', 1, navigation],
 		': ',
-		['a', 'template', 1, toAtomKind(navigation)],
+		['a', 'template', 1, { ...navigation, kind: SpanMapKind.Atom }],
 		'}',
 	])).toEqual([
 		[1, 1, 1, 1, SpanMapKind.Atom, navigation.features],

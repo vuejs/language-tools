@@ -1,8 +1,9 @@
+import { SpanMapKind } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isHTMLTag, isMathMLTag, isSVGTag } from '@vue/shared';
 import type { Code, VueCodeMarker, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import { navigationFeatures, scriptFeatures, semanticFeatures, toAtomKind, VueCodeFeature } from '../features';
+import { navigationFeatures, scriptFeatures, semanticFeatures, VueCodeFeature } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, identifierRE, newLine } from '../utils';
@@ -285,7 +286,7 @@ export function* generatePropExp(
 				exp.loc.source,
 				'template',
 				exp.loc.start.offset,
-				toAtomKind({ features: semanticFeatures | navigationFeatures }),
+				{ features: semanticFeatures | navigationFeatures, kind: SpanMapKind.Atom },
 			);
 			yield* generateIdentifier(
 				options,
