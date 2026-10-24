@@ -2,7 +2,7 @@ import { SpanMapKind } from '@volar/language-core';
 import { expect, test } from 'vitest';
 import { codeFeatures, ignoreDiagnostics, toAtomGroup, toAtomKind } from '../lib/codegen/codeFeatures';
 import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../lib/types';
-import { buildDiagnosticDirectives, buildDiagnosticIgnores, buildMappings } from '../lib/utils/buildMappings';
+import { buildDiagnosticDirectives, buildMappings } from '../lib/utils/buildMappings';
 
 const { navigation, navigationAndCompletion, none } = codeFeatures;
 
@@ -168,29 +168,29 @@ test('covers each range a directive is reopened for', () => {
 });
 
 test('ignores diagnostics of segments marked to ignore them', () => {
-	expect(buildDiagnosticIgnores([
+	expect(buildDiagnosticDirectives([
 		['ab', 'template', 0, ignoreDiagnostics(navigation)],
 		['cd', 'template', 2, navigation],
 		['', 'template', 4, ignoreDiagnostics(none)],
-	])).toEqual([[0, 2]]);
+	])).toEqual(toIgnores([0, 2]));
 });
 
 test('lets segments inside an ignored group report diagnostics', () => {
 	const boundary = toAtomGroup(ignoreDiagnostics(none));
-	expect(buildDiagnosticIgnores([
+	expect(buildDiagnosticDirectives([
 		['', 'template', 0, boundary],
 		'{a: ',
 		['b', 'template', 2, navigation],
 		'}',
 		['', 'template', 1, boundary],
-	])).toEqual([[0, 4], [5, 6]]);
+	])).toEqual(toIgnores([0, 4], [5, 6]));
 });
 
 test('lets a reported group inside an ignored group report diagnostics', () => {
 	// generated: {a: (b)}   original: C b
 	const outer = toAtomGroup(ignoreDiagnostics(none));
 	const inner = toAtomGroup(none);
-	expect(buildDiagnosticIgnores([
+	expect(buildDiagnosticDirectives([
 		['', 'template', 0, outer],
 		'{a: ',
 		['', 'template', 2, inner],
@@ -200,14 +200,14 @@ test('lets a reported group inside an ignored group report diagnostics', () => {
 		['', 'template', 3, inner],
 		'}',
 		['', 'template', 1, outer],
-	])).toEqual([[0, 4], [7, 8]]);
+	])).toEqual(toIgnores([0, 4], [7, 8]));
 });
 
 test('keeps ignoring a group whose source range crosses a taken one', () => {
 	// generated: {a: "b"}   original: C a b   (`: "b"` maps to `a b`, which contains `b`)
 	const outer = toAtomGroup(ignoreDiagnostics(none));
 	const inner = toAtomGroup(none);
-	expect(buildDiagnosticIgnores([
+	expect(buildDiagnosticDirectives([
 		['', 'template', 0, outer],
 		'{a',
 		['', 'template', 2, inner],
@@ -217,5 +217,24 @@ test('keeps ignoring a group whose source range crosses a taken one', () => {
 		['', 'template', 5, inner],
 		'}',
 		['', 'template', 1, outer],
-	])).toEqual([[0, 5], [6, 8]]);
+	])).toEqual(toIgnores([0, 5], [6, 8]));
 });
+
+test('leaves the ranges of explicit directives to them', () => {
+	const expectation: DiagnosticDirectiveMapping = [7, 2, 0, 0, DiagnosticDirectivePolicy.Expect];
+	expect(buildDiagnosticDirectives([
+		['ab', 'template', 0, ignoreDiagnostics(navigation)],
+		['', 'template', 7, expectation],
+		['cd', 'template', 2, ignoreDiagnostics(navigation)],
+		['', 'template', 7, expectation],
+		['ef', 'template', 4, ignoreDiagnostics(navigation)],
+	])).toEqual([
+		[0, 0, 0, 2, DiagnosticDirectivePolicy.Ignore],
+		[7, 2, 2, 4, DiagnosticDirectivePolicy.Expect],
+		[0, 0, 4, 6, DiagnosticDirectivePolicy.Ignore],
+	]);
+});
+
+function toIgnores(...ranges: [start: number, end: number][]): DiagnosticDirectiveMapping[] {
+	return ranges.map(([start, end]) => [0, 0, start, end, DiagnosticDirectivePolicy.Ignore]);
+}

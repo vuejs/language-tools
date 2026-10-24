@@ -4,8 +4,6 @@ export function withSynthesizedDiagnosticIgnores(
 	virtualLength: number,
 	mappings: readonly SpanMapping[],
 	directives: readonly DiagnosticDirectiveMapping[],
-	/** Sorted, disjoint virtual ranges whose diagnostics are not reported. */
-	ignoredRanges: readonly [start: number, end: number][] = [],
 ) {
 	const result = [...directives];
 	const blocked = [...directives].sort(
@@ -13,38 +11,17 @@ export function withSynthesizedDiagnosticIgnores(
 	);
 	let virtualStart = 0;
 	let blockedIndex = 0;
-	let ignoredIndex = 0;
 
 	for (const [start, length] of mappings) {
 		if (length) {
-			addReportedRange(start, start + length);
+			addIgnoreRanges(virtualStart, start);
+			virtualStart = start + length;
 		}
 	}
 	addIgnoreRanges(virtualStart, virtualLength);
 
 	result.sort((left, right) => left[2] - right[2] || left[3] - right[3]);
-	return result;
-
-	function addReportedRange(start: number, end: number) {
-		while (ignoredIndex < ignoredRanges.length && ignoredRanges[ignoredIndex]![1] <= start) {
-			ignoredIndex++;
-		}
-		for (let index = ignoredIndex; index < ignoredRanges.length; index++) {
-			const [ignoredStart, ignoredEnd] = ignoredRanges[index]!;
-			if (ignoredStart >= end) {
-				break;
-			}
-			if (start < ignoredStart) {
-				addIgnoreRanges(virtualStart, start);
-				virtualStart = ignoredStart;
-			}
-			start = Math.max(start, ignoredEnd);
-		}
-		if (start < end) {
-			addIgnoreRanges(virtualStart, start);
-			virtualStart = end;
-		}
-	}
+	return mergeSynthesizedIgnores(result);
 
 	function addIgnoreRanges(start: number, end: number) {
 		if (start >= end) {
@@ -79,4 +56,22 @@ export function withSynthesizedDiagnosticIgnores(
 			result.push([0, 0, start, end, DiagnosticDirectivePolicy.Ignore]);
 		}
 	}
+}
+
+function mergeSynthesizedIgnores(directives: DiagnosticDirectiveMapping[]) {
+	const result: DiagnosticDirectiveMapping[] = [];
+	for (const directive of directives) {
+		const previous = result.at(-1);
+		if (previous && isSynthesizedIgnore(previous) && isSynthesizedIgnore(directive) && previous[3] === directive[2]) {
+			result[result.length - 1] = [0, 0, previous[2], directive[3], DiagnosticDirectivePolicy.Ignore];
+		}
+		else {
+			result.push(directive);
+		}
+	}
+	return result;
+}
+
+function isSynthesizedIgnore(directive: DiagnosticDirectiveMapping) {
+	return directive[4] === DiagnosticDirectivePolicy.Ignore && !directive[0] && !directive[1];
 }

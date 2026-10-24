@@ -132,7 +132,6 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 					text.length,
 					mappings,
 					generatedCode.diagnosticDirectives,
-					generatedCode.diagnosticIgnores,
 				),
 			},
 			mappings,

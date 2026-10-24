@@ -17,13 +17,13 @@ test('ignores synthesized virtual regions without overlapping explicit directive
 	]);
 });
 
-test('ignores mapped regions whose diagnostics the code ignores', () => {
+test('merges synthesized ignores with the ignores of mapped regions', () => {
 	const mappings: SpanMapping[] = [
 		[0, 2, 0, 2, SpanMapKind.Verbatim, 0],
 		[4, 2, 0, 2, SpanMapKind.Verbatim, 0],
 	];
 
-	expect(withSynthesizedDiagnosticIgnores(6, mappings, [], [[4, 6]])).toEqual([
+	expect(withSynthesizedDiagnosticIgnores(6, mappings, [[0, 0, 4, 6, DiagnosticDirectivePolicy.Ignore]])).toEqual([
 		[0, 0, 2, 6, DiagnosticDirectivePolicy.Ignore],
 	]);
 });

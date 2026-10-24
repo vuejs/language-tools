@@ -26,7 +26,7 @@ export function buildMappings(chunks: (Code | Segment)[]): Mapping[] {
 }
 
 /** Generated ranges whose diagnostics are not reported, sorted and disjoint. */
-export function buildDiagnosticIgnores(chunks: Code[]) {
+function getIgnoredRanges(chunks: Code[]) {
 	const ignored: [start: number, end: number][] = [];
 	const reported: [start: number, end: number][] = [];
 	const fills: Span[] = [];
@@ -157,9 +157,19 @@ function buildSpans(chunks: (Code | Segment)[]): Span[] {
 
 /**
  * The diagnostic directives of the code, with the virtual ranges their bounding segments enclose; the source
- * offset of the segments is the original start, as it is relative to the file here.
+ * offset of the segments is the original start, as it is relative to the file here. The generated code
+ * whose diagnostics are ignored outside of them is covered by ignore directives without an original range.
  */
 export function buildDiagnosticDirectives(chunks: Code[]) {
+	const explicit = buildExplicitDiagnosticDirectives(chunks);
+	const ignores = subtractRanges(
+		getIgnoredRanges(chunks),
+		explicit.map(directive => [directive[2], directive[3]]),
+	).map<DiagnosticDirectiveMapping>(([start, end]) => [0, 0, start, end, DiagnosticDirectivePolicy.Ignore]);
+	return [...explicit, ...ignores].sort((left, right) => left[2] - right[2] || left[3] - right[3]);
+}
+
+function buildExplicitDiagnosticDirectives(chunks: Code[]) {
 	const directives: DiagnosticDirectiveMapping[] = [];
 	const opened = new Map<DiagnosticDirectiveMapping, DiagnosticDirectiveMapping>();
 	let generatedStart = 0;

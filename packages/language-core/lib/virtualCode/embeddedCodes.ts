@@ -2,7 +2,7 @@ import type { IScriptSnapshot, Mapping, TextChangeRange, VirtualCode } from '@vo
 import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
 import type { Code, DiagnosticDirectiveMapping, IR, IRBlock, VueLanguagePluginReturn } from '../types';
-import { buildDiagnosticDirectives, buildDiagnosticIgnores, buildMappings } from '../utils/buildMappings';
+import { buildDiagnosticDirectives, buildMappings } from '../utils/buildMappings';
 
 export class VueEmbeddedCode {
 	public parentCodeId?: string;
@@ -17,7 +17,6 @@ export class VueEmbeddedCode {
 
 export interface VueGeneratedCode extends VirtualCode {
 	diagnosticDirectives: DiagnosticDirectiveMapping[];
-	diagnosticIgnores: [start: number, end: number][];
 }
 
 export function useEmbeddedCodes(
@@ -53,7 +52,7 @@ export function useEmbeddedCodes(
 			.map(getPluginResult => getPluginResult())
 			.flat()
 			.map(
-				({ code, snapshot, mappings, diagnosticDirectives, diagnosticIgnores }) => {
+				({ code, snapshot, mappings, diagnosticDirectives }) => {
 					const virtualCode: VueGeneratedCode = {
 						id: code.id,
 						languageId: resolveCommonLanguageId(code.lang),
@@ -61,7 +60,6 @@ export function useEmbeddedCodes(
 						mappings,
 						embeddedCodes: [],
 						diagnosticDirectives,
-						diagnosticIgnores,
 					};
 					idToCodeMap.set(code.id, virtualCode);
 					return [code.parentCodeId, virtualCode] as const;
@@ -118,7 +116,6 @@ export function useEmbeddedCodes(
 				snapshot: IScriptSnapshot;
 				mappings: Mapping[];
 				diagnosticDirectives: DiagnosticDirectiveMapping[];
-				diagnosticIgnores: [start: number, end: number][];
 			}[] = [];
 
 			for (const generate of getMap().values()) {
@@ -129,7 +126,6 @@ export function useEmbeddedCodes(
 					snapshot,
 					mappings: buildMappings(content),
 					diagnosticDirectives: buildDiagnosticDirectives(content),
-					diagnosticIgnores: buildDiagnosticIgnores(content),
 				});
 			}
 
