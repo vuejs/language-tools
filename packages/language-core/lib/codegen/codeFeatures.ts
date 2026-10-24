@@ -79,10 +79,6 @@ export function ignoreDiagnostics(info: VueCodeMarker): VueCodeMarker {
 	return { ...info, ignoreDiagnostics: true };
 }
 
-export function toAtomGroup(info: VueCodeMarker): VueCodeMarker {
-	return { ...info, atom: Symbol() };
-}
-
 export function toAtomKind(info: VueCodeMarker): VueCodeMarker {
 	return { ...info, kind: SpanMapKind.Atom };
 }

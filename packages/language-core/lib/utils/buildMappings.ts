@@ -75,36 +75,22 @@ function getIgnoredRanges(chunks: Code[]) {
 }
 
 function buildSpans(chunks: Code[]): Span[] {
-	const entries = toEntries(chunks);
-	const tokenCounts = new Map<symbol, number>();
+	const items = toItems(chunks);
 	const shorthandRanges = new Set<string>();
-	for (const { info, sourceStart, length } of entries) {
-		if (info.atom) {
-			tokenCounts.set(info.atom, (tokenCounts.get(info.atom) ?? 0) + 1);
-		}
-		if (info.kind === SpanMapKind.Atom) {
-			shorthandRanges.add(`${sourceStart}:${sourceStart + length}`);
-		}
-	}
-
-	const spans: (Span | Entry[])[] = [];
-	const groups = new Map<symbol, Entry[]>();
-	for (const entry of entries) {
-		const { atom } = entry.info;
-		if (atom && tokenCounts.get(atom)! > 1) {
-			let group = groups.get(atom);
-			if (!group) {
-				groups.set(atom, group = []);
-				spans.push(group);
+	for (const item of items) {
+		if (!isGroup(item)) {
+			if (item.info.kind === SpanMapKind.Atom) {
+				shorthandRanges.add(`${item.sourceStart}:${item.sourceStart + item.length}`);
 			}
-			group.push(entry);
 		}
-		else if (!atom || entry.length) {
-			spans.push(toSpan(entry));
+		else if (item[0]!.info.kind === SpanMapKind.Atom) {
+			for (const { sourceStart, length } of item.slice(1, -1)) {
+				shorthandRanges.add(`${sourceStart}:${sourceStart + length}`);
+			}
 		}
 	}
 
-	return spans.flatMap(span => isGroup(span) ? fromGroup(span) : [span]);
+	return items.flatMap(item => isGroup(item) ? fromGroup(item) : [toSpan(item)]);
 
 	function fromGroup(group: Entry[]): Span[] {
 		const first = group[0]!;
@@ -202,27 +188,48 @@ function buildExplicitDiagnosticDirectives(chunks: Code[]) {
 	return result;
 }
 
-function toEntries(chunks: Code[]) {
-	const entries: Entry[] = [];
+/**
+ * The segments mapping themselves, and the bounded ranges as groups of their bounds and the segments without
+ * data they enclose, which carry the data of the range.
+ */
+function toItems(chunks: Code[]) {
+	const items: (Entry | Entry[])[] = [];
+	const ranges: Entry[][] = [];
 	let generatedStart = 0;
 	for (const segment of chunks) {
 		if (typeof segment === 'string') {
 			generatedStart += segment.length;
+			continue;
 		}
-		else {
-			const data = segment[3];
-			if (!Array.isArray(data)) {
-				entries.push({
-					generatedStart,
-					length: segment[0].length,
-					sourceStart: segment[2],
-					info: data,
-				});
+		const [text, , sourceStart, data] = segment;
+		if (data === undefined) {
+			const range = ranges.at(-1);
+			if (!range) {
+				throw new Error(`Vue generated segment without data outside of a boundary at ${generatedStart}`);
 			}
-			generatedStart += segment[0].length;
+			range.push({ generatedStart, length: text.length, sourceStart, info: range[0]!.info });
 		}
+		else if ('start' in data) {
+			const range = [{ generatedStart, length: 0, sourceStart, info: data.start }];
+			ranges.push(range);
+			items.push(range);
+		}
+		else if ('end' in data) {
+			const range = ranges.pop();
+			if (!range) {
+				throw new Error(`Vue boundary end without a start at ${generatedStart}`);
+			}
+			range.push({ generatedStart, length: 0, sourceStart, info: range[0]!.info });
+		}
+		else if (!Array.isArray(data)) {
+			items.push({ generatedStart, length: text.length, sourceStart, info: data });
+		}
+		generatedStart += text.length;
 	}
-	return entries;
+	if (ranges.length) {
+		throw new Error(`Vue boundary starting at ${ranges.at(-1)![0]!.generatedStart} is not closed`);
+	}
+	return items;
 }
 
 function isContiguous(group: Entry[]) {
@@ -240,8 +247,8 @@ function isContiguous(group: Entry[]) {
 	return true;
 }
 
-function isGroup(span: Span | Entry[]): span is Entry[] {
-	return Array.isArray(span);
+function isGroup(item: Entry | Entry[]): item is Entry[] {
+	return Array.isArray(item);
 }
 
 /** A feature-less atom only carries diagnostics, so the segments it overlaps take precedence. */

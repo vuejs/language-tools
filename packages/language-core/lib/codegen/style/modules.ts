@@ -67,7 +67,7 @@ export function* generateStyleModules(
 						codeFeatures.navigation,
 					);
 					yield `'`;
-					yield [text, 'main', offset, boundary.features];
+					yield [text, 'main', offset, undefined];
 					yield `'`;
 					yield boundary.end();
 				}

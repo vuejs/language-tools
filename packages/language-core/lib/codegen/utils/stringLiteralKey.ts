@@ -8,7 +8,7 @@ export function* generateStringLiteralKey(
 ): Generator<Code> {
 	const boundary = yield* Boundary.start('template', offset, offset + code.length, features);
 	yield `'`;
-	yield [code, 'template', offset, boundary.features];
+	yield [code, 'template', offset, undefined];
 	yield `'`;
 	yield boundary.end();
 }

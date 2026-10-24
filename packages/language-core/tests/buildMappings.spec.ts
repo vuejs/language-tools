@@ -1,34 +1,39 @@
 import { SpanMapKind } from '@volar/language-core';
 import { expect, test } from 'vitest';
-import { codeFeatures, ignoreDiagnostics, toAtomGroup, toAtomKind } from '../lib/codegen/codeFeatures';
-import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../lib/types';
+import { codeFeatures, ignoreDiagnostics, toAtomKind } from '../lib/codegen/codeFeatures';
+import {
+	type Code,
+	type CodeBoundary,
+	type DiagnosticDirectiveMapping,
+	DiagnosticDirectivePolicy,
+	type VueCodeMarker,
+} from '../lib/types';
 import { buildDiagnosticDirectives, buildMappings } from '../lib/utils/buildMappings';
 
 const { navigation, navigationAndCompletion, none } = codeFeatures;
+const end: CodeBoundary = { end: true };
 
 test('merges a boundary-wrapped token into one atom', () => {
-	const data = toAtomGroup(navigation);
 	expect(buildMappings([
 		'-'.repeat(10),
-		['', 'template', 20, data],
+		['', 'template', 20, start(navigation)],
 		`'`,
-		['a-b', 'template', 20, data],
+		['a-b', 'template', 20, undefined],
 		`'`,
-		['', 'template', 23, data],
+		['', 'template', 23, end],
 	])).toEqual([
 		[10, 5, 20, 3, SpanMapKind.Atom, navigation.features],
 	]);
 });
 
 test('keeps the content of a boundary-wrapped completion token separate', () => {
-	const data = toAtomGroup(navigationAndCompletion);
 	expect(buildMappings([
 		'-'.repeat(10),
-		['', 'template', 20, data],
+		['', 'template', 20, start(navigationAndCompletion)],
 		`'`,
-		['ab', 'template', 20, data],
+		['ab', 'template', 20, undefined],
 		`'`,
-		['', 'template', 22, data],
+		['', 'template', 22, end],
 	])).toEqual([
 		[10, 4, 20, 2, SpanMapKind.Atom, 0],
 		[11, 2, 20, 2, SpanMapKind.Verbatim, navigationAndCompletion.features],
@@ -36,14 +41,13 @@ test('keeps the content of a boundary-wrapped completion token separate', () => 
 });
 
 test('keeps an empty boundary-wrapped completion token as a point', () => {
-	const data = toAtomGroup(navigationAndCompletion);
 	expect(buildMappings([
 		'-'.repeat(10),
-		['', 'template', 20, data],
+		['', 'template', 20, start(navigationAndCompletion)],
 		`'`,
-		['', 'template', 20, data],
+		['', 'template', 20, undefined],
 		`'`,
-		['', 'template', 20, data],
+		['', 'template', 20, end],
 	])).toEqual([
 		[10, 2, 20, 0, SpanMapKind.Atom, 0],
 		[11, 0, 20, 0, SpanMapKind.Verbatim, navigationAndCompletion.features],
@@ -51,32 +55,49 @@ test('keeps an empty boundary-wrapped completion token as a point', () => {
 });
 
 test('merges camelized segments into one atom', () => {
-	const data = toAtomGroup(navigation);
 	expect(buildMappings([
-		['v', 'template', 0, data],
-		['Once', 'template', 2, data],
+		['', 'template', 0, start(navigation)],
+		['v', 'template', 0, undefined],
+		['Once', 'template', 2, undefined],
+		['', 'template', 6, end],
 	])).toEqual([
 		[0, 5, 0, 6, SpanMapKind.Atom, navigation.features],
 	]);
 });
 
-test('merges contiguous group members into one verbatim span', () => {
-	const data = toAtomGroup(navigation);
+test('merges a verbatim copy into one verbatim span', () => {
 	expect(buildMappings([
-		['a', 'template', 0, data],
-		['bc', 'template', 1, data],
+		['', 'template', 0, start(navigation)],
+		['a', 'template', 0, undefined],
+		['bc', 'template', 1, undefined],
+		['', 'template', 3, end],
 	])).toEqual([
 		[0, 3, 0, 3, SpanMapKind.Verbatim, navigation.features],
 	]);
 });
 
-test('keeps a single-use group member as an individual span', () => {
+test('pairs boundaries by nesting and maps a segment without data as part of the innermost one', () => {
+	// generated: (a.b)   original: a-b
 	expect(buildMappings([
-		['Click', 'template', 1, toAtomGroup(navigation)],
-		['', 'template', 6, toAtomGroup(navigation)],
+		['', 'template', 0, start(none)],
+		'(',
+		['', 'template', 0, start(navigation)],
+		['a', 'template', 0, undefined],
+		'.',
+		['b', 'template', 2, undefined],
+		['', 'template', 3, end],
+		')',
+		['', 'template', 3, end],
 	])).toEqual([
-		[0, 5, 1, 5, SpanMapKind.Verbatim, navigation.features],
+		[0, 5, 0, 3, SpanMapKind.Atom, none.features],
+		[1, 3, 0, 3, SpanMapKind.Atom, navigation.features],
 	]);
+});
+
+test('rejects unbalanced boundaries and segments without data outside of them', () => {
+	expect(() => buildMappings([['', 'template', 0, start(none)]])).toThrow();
+	expect(() => buildMappings([['', 'template', 0, end]])).toThrow();
+	expect(() => buildMappings([['a', 'template', 0, undefined]])).toThrow();
 });
 
 test('maps every segment sharing a shorthand source range as an atom', () => {
@@ -92,14 +113,13 @@ test('maps every segment sharing a shorthand source range as an atom', () => {
 	]);
 });
 
-test('lets segments inside a feature-less group stay individual', () => {
-	const boundary = toAtomGroup(none);
+test('lets segments inside a feature-less boundary stay individual', () => {
 	expect(buildMappings([
-		['', 'template', 0, boundary],
+		['', 'template', 0, start(none)],
 		'{a: ',
 		['b', 'template', 2, navigation],
 		'}',
-		['', 'template', 1, boundary],
+		['', 'template', 1, end],
 	])).toEqual([
 		[0, 6, 0, 1, SpanMapKind.Atom, none.features],
 		[4, 1, 2, 1, SpanMapKind.Verbatim, navigation.features],
@@ -175,48 +195,43 @@ test('ignores diagnostics of segments marked to ignore them', () => {
 	])).toEqual(toIgnores([0, 2]));
 });
 
-test('lets segments inside an ignored group report diagnostics', () => {
-	const boundary = toAtomGroup(ignoreDiagnostics(none));
+test('lets segments inside an ignored boundary report diagnostics', () => {
 	expect(buildDiagnosticDirectives([
-		['', 'template', 0, boundary],
+		['', 'template', 0, start(ignoreDiagnostics(none))],
 		'{a: ',
 		['b', 'template', 2, navigation],
 		'}',
-		['', 'template', 1, boundary],
+		['', 'template', 1, end],
 	])).toEqual(toIgnores([0, 4], [5, 6]));
 });
 
-test('lets a reported group inside an ignored group report diagnostics', () => {
+test('lets a reported boundary inside an ignored boundary report diagnostics', () => {
 	// generated: {a: (b)}   original: C b
-	const outer = toAtomGroup(ignoreDiagnostics(none));
-	const inner = toAtomGroup(none);
 	expect(buildDiagnosticDirectives([
-		['', 'template', 0, outer],
+		['', 'template', 0, start(ignoreDiagnostics(none))],
 		'{a: ',
-		['', 'template', 2, inner],
+		['', 'template', 2, start(none)],
 		'(',
 		['b', 'template', 2, navigation],
 		')',
-		['', 'template', 3, inner],
+		['', 'template', 3, end],
 		'}',
-		['', 'template', 1, outer],
+		['', 'template', 1, end],
 	])).toEqual(toIgnores([0, 4], [7, 8]));
 });
 
-test('keeps ignoring a group whose source range crosses a taken one', () => {
+test('keeps ignoring a boundary whose source range crosses a taken one', () => {
 	// generated: {a: "b"}   original: C a b   (`: "b"` maps to `a b`, which contains `b`)
-	const outer = toAtomGroup(ignoreDiagnostics(none));
-	const inner = toAtomGroup(none);
 	expect(buildDiagnosticDirectives([
-		['', 'template', 0, outer],
+		['', 'template', 0, start(ignoreDiagnostics(none))],
 		'{a',
-		['', 'template', 2, inner],
+		['', 'template', 2, start(none)],
 		': "',
 		['b', 'template', 4, navigation],
 		'"',
-		['', 'template', 5, inner],
+		['', 'template', 5, end],
 		'}',
-		['', 'template', 1, outer],
+		['', 'template', 1, end],
 	])).toEqual(toIgnores([0, 5], [6, 8]));
 });
 
@@ -237,4 +252,8 @@ test('leaves the ranges of explicit directives to them', () => {
 
 function toIgnores(...ranges: [start: number, end: number][]): DiagnosticDirectiveMapping[] {
 	return ranges.map(([start, end]) => [0, 0, start, end, DiagnosticDirectivePolicy.Ignore]);
+}
+
+function start(data: VueCodeMarker): CodeBoundary {
+	return { start: data };
 }

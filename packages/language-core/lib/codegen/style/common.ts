@@ -23,7 +23,7 @@ export function* generateClassProperty(
 			ignoreDiagnostics(codeFeatures.navigation),
 		);
 		yield `'`;
-		yield [className, source, offset + 1, boundary.features];
+		yield [className, source, offset + 1, undefined];
 		yield `'`;
 		yield boundary.end();
 	}
@@ -39,7 +39,7 @@ export function* generateStyleSrc(src: Exclude<IRAttr, true>): Generator<Code> {
 		codeFeatures.navigation,
 	);
 	yield `'`;
-	yield [src.text, 'main', src.offset, boundary.features];
+	yield [src.text, 'main', src.offset, undefined];
 	yield `'`;
 	yield boundary.end();
 }

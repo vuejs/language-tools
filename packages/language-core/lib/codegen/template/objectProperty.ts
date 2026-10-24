@@ -49,7 +49,7 @@ export function* generateObjectProperty(
 		else {
 			const boundary = yield* Boundary.start('template', offset, offset + code.length, features);
 			yield `'`;
-			yield* generateCamelized(code, 'template', offset, boundary.features);
+			yield* generateCamelized(code, 'template', offset);
 			yield `'`;
 			yield boundary.end();
 		}

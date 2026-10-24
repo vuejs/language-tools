@@ -75,7 +75,7 @@ function* generateWorker(
 			src !== script.src.text ? { features: codeFeatures.all.features & ~SpanMapFeature.Rename } : codeFeatures.all,
 		);
 		yield `'`;
-		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, boundary.features];
+		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, undefined];
 		yield src.slice(script.src.text.length);
 		yield `'`;
 		yield boundary.end();

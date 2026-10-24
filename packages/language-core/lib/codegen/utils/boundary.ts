@@ -1,20 +1,20 @@
-import type { Code, VueCodeMarker } from '../../types';
-import { toAtomGroup } from '../codeFeatures';
+import type { Code, CodeBoundary, VueCodeMarker } from '../../types';
 
+const end: CodeBoundary = Object.freeze({ end: true as const });
+
+/** A range of generated code, bounded by empty segments that pair by nesting. */
 export class Boundary {
 	private constructor(
 		private source: string,
 		private endOffset: number,
-		public features: VueCodeMarker,
 	) {}
 
-	static *start(source: string, start: number, end: number, features: VueCodeMarker): Generator<Code, Boundary> {
-		features = toAtomGroup(features);
-		yield [``, source, start, features];
-		return new Boundary(source, end, features);
+	static *start(source: string, start: number, end: number, data: VueCodeMarker): Generator<Code, Boundary> {
+		yield [``, source, start, { start: data }];
+		return new Boundary(source, end);
 	}
 
 	end(): Code {
-		return [``, this.source, this.endOffset, this.features];
+		return [``, this.source, this.endOffset, end];
 	}
 }

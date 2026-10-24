@@ -144,13 +144,13 @@ export function createTemplateCodegenContext(scriptLang: string) {
 			yield ['', 'template', reopenedRange[0], reopenedRange];
 			reopenedInfo = reopenedRange = undefined;
 		}
+		const marker = getMarker(code);
 		if (
-			typeof code === 'object'
+			marker
 			&& info?.diagnosticDirectiveEnded
 			&& info.ignoreError
 			&& !reopenedRange
-			&& !Array.isArray(code[3])
-			&& !code[3].ignoreDiagnostics
+			&& !marker.ignoreDiagnostics
 		) {
 			const ignore = info.diagnosticDirectives!.find(directive => directive[4] === DiagnosticDirectivePolicy.Ignore)!;
 			reopenedInfo = info;
@@ -158,6 +158,30 @@ export function createTemplateCodegenContext(scriptLang: string) {
 			yield ['', 'template', reopenedRange[0], reopenedRange];
 		}
 		yield code;
+	}
+
+	const boundaryMarkers: VueCodeMarker[] = [];
+
+	/** The data of a segment, or of the range it bounds or maps as part of. */
+	function getMarker(code: Code) {
+		if (typeof code === 'string') {
+			return;
+		}
+		const data = code[3];
+		if (data === undefined) {
+			return boundaryMarkers.at(-1);
+		}
+		if (Array.isArray(data)) {
+			return;
+		}
+		if ('start' in data) {
+			boundaryMarkers.push(data.start);
+			return data.start;
+		}
+		if ('end' in data) {
+			return boundaryMarkers.pop();
+		}
+		return data;
 	}
 
 	function* generateDiagnosticDirectiveRangesEnd(): Generator<Code> {

@@ -151,7 +151,6 @@ export function* generateStyleScopedClassReference(
 		className,
 		block.name,
 		offset,
-		boundary.features,
 		classNameEscapeRE,
 	);
 	yield `'`;

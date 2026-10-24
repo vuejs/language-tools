@@ -58,11 +58,16 @@ export interface VueCodeMarker {
 	/** `SpanMapFeature` and `VueCodeFeature` bits. */
 	features: number;
 	kind?: SpanMapKind;
-	/** Segments sharing the symbol map as one atom spanning all of them. */
-	atom?: symbol;
 	/** Diagnostics within the segment are not reported, unless a segment nested in it reports them. */
 	ignoreDiagnostics?: true;
 }
+
+/**
+ * The data of an empty segment bounding a range of generated code. A start carries what the range is: the span
+ * from its source offset to the one of its end, which the enclosed segments without data map only as part of.
+ * An end closes the innermost open range.
+ */
+export type CodeBoundary = { start: VueCodeMarker } | { end: true };
 
 /**
  * A segment of generated code. An empty segment whose data is a diagnostic directive opens its virtual range,
@@ -74,7 +79,7 @@ export type Code =
 		text: string,
 		source: string | undefined,
 		sourceOffset: number,
-		data: VueCodeMarker | DiagnosticDirectiveMapping,
+		data: VueCodeMarker | CodeBoundary | DiagnosticDirectiveMapping | undefined,
 	];
 
 export interface VueCompilerOptions {

@@ -178,12 +178,13 @@ export function* generateEventArg(
 	const boundary = yield* Boundary.start('template', start, start + name.length, features);
 	if (identifierRE.test(camelize(name))) {
 		yield directive;
-		yield* generateCamelized(name, 'template', start, boundary.features);
+		yield* generateCamelized(name, 'template', start);
+		yield boundary.end();
 	}
 	else {
 		yield `'`;
 		yield directive;
-		yield* generateCamelized(name, 'template', start, boundary.features);
+		yield* generateCamelized(name, 'template', start);
 		yield `'`;
 		yield boundary.end();
 	}
