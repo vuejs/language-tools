@@ -23,7 +23,7 @@ Vue language support extension for VSCode, providing a full development experien
 
 Search for `Vue (Official)` or `Vue.volar` in the VSCode extension marketplace and click install.
 
-The version 4 alphas are not on the Marketplace. To try one, build a VSIX from its tag (e.g. `v4.0.0-alpha.0`) and install it with `Extensions: Install from VSIX...`:
+The version 4 alphas are not on the Marketplace. To try one, build a VSIX from its tag (e.g. `v4.0.0-alpha.0`; for later tags, clone with `--recurse-submodules`) and install it with `Extensions: Install from VSIX...`:
 
 ```sh
 pnpm install --frozen-lockfile && pnpm run build
