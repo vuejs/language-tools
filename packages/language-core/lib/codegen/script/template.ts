@@ -1,6 +1,6 @@
 import { BindingFlag } from '../../parsers/utils';
 import type { Code } from '../../types';
-import { ignoreDiagnostics, navigationFeatures } from '../features';
+import { navigationFeatures } from '../features';
 import { names } from '../names';
 import {
 	asType,
@@ -115,7 +115,7 @@ function* generateTemplateComponents(
 			script,
 			components.start,
 			components.end,
-			ignoreDiagnostics({ features: navigationFeatures }),
+			{ features: navigationFeatures, ignoreDiagnostics: true },
 		);
 		yield endOfLine;
 		types.push(`typeof ${names.componentsOption}`);
@@ -152,7 +152,7 @@ function* generateTemplateDirectives(
 			script,
 			directives.start,
 			directives.end,
-			ignoreDiagnostics({ features: navigationFeatures }),
+			{ features: navigationFeatures, ignoreDiagnostics: true },
 		);
 		yield endOfLine;
 		types.push(`${names.ResolveDirectives}<typeof ${names.directivesOption}>`);

@@ -1,7 +1,7 @@
 import { SpanMapKind } from '@volar/language-core';
 import type { Code, IRBlock, TypeScript, VueCodeMarker, VueCompilerOptions } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
-import { completionFeatures, ignoreDiagnostics } from '../features';
+import { completionFeatures } from '../features';
 import { names } from '../names';
 import { getRefBrandArgument, getTypeScriptAST, identifierRE } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -130,7 +130,7 @@ function* generateNonIdentifierCode(
 		code.slice(0, 1),
 		source,
 		offset,
-		data.ignoreDiagnostics ? ignoreDiagnostics({ features: 0 }) : { features: 0 },
+		data.ignoreDiagnostics ? { features: 0, ignoreDiagnostics: true } : { features: 0 },
 	];
 	if (code.length > 1) {
 		yield [code.slice(1), source, offset + 1, data];

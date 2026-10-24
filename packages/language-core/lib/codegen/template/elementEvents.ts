@@ -3,7 +3,7 @@ import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { getUnwrappedExpression } from '../../parsers/utils';
 import type { Code, TypeScript, VueCodeMarker } from '../../types';
-import { ignoreDiagnostics, navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
+import { navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { names } from '../names';
 import {
 	endOfLine,
@@ -140,7 +140,7 @@ export function* generateElementEvents(
 					source,
 					offset!,
 					emitPrefix.slice(0, -1),
-					ignoreDiagnostics({ features: navigationFeatures }),
+					{ features: navigationFeatures, ignoreDiagnostics: true },
 				);
 				yield `} */${newLine}`;
 				// in JS, the JSDoc above types the property, and fails to parse for a non-identifier name

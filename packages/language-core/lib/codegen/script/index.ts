@@ -3,7 +3,7 @@ import * as path from 'path-browserify';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRBlock, IRScript, IRScriptSetup, IRStyle, VueCompilerOptions } from '../../types';
-import { ignoreDiagnostics, navigationFeatures, scriptFeatures } from '../features';
+import { navigationFeatures, scriptFeatures } from '../features';
 import { names } from '../names';
 import { generateStyleModuleImports } from '../style/modules';
 import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
@@ -41,7 +41,7 @@ function* generateSyntheticDefaultExport(exportedExpression: string): Generator<
 		'main',
 		0,
 		0,
-		ignoreDiagnostics({ features: navigationFeatures & ~SpanMapFeature.Rename }),
+		{ features: navigationFeatures & ~SpanMapFeature.Rename, ignoreDiagnostics: true },
 	);
 	yield `export default ${exportedExpression};`;
 	yield boundary.end();

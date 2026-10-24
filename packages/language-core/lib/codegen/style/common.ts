@@ -1,5 +1,5 @@
 import type { Code, IRAttr } from '../../types';
-import { ignoreDiagnostics, navigationFeatures } from '../features';
+import { navigationFeatures } from '../features';
 import { identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 
@@ -13,14 +13,14 @@ export function* generateClassProperty(
 	const className = classNameWithDot.slice(1);
 	// An unquoted name maps verbatim, so it can be both a definition and renamed.
 	if (identifierRE.test(className)) {
-		yield [className, source, offset + 1, ignoreDiagnostics({ features: navigationFeatures })];
+		yield [className, source, offset + 1, { features: navigationFeatures, ignoreDiagnostics: true }];
 	}
 	else {
 		const boundary = yield* Boundary.start(
 			source,
 			offset,
 			offset + classNameWithDot.length,
-			ignoreDiagnostics({ features: navigationFeatures }),
+			{ features: navigationFeatures, ignoreDiagnostics: true },
 		);
 		yield `'`;
 		yield [className, source, offset + 1, undefined];

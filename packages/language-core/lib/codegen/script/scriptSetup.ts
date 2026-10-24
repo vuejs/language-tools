@@ -1,7 +1,7 @@
 import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRScriptSetup, TextRange } from '../../types';
-import { completionFeatures, ignoreDiagnostics, navigationFeatures, scriptFeatures } from '../features';
+import { completionFeatures, navigationFeatures, scriptFeatures } from '../features';
 import { names } from '../names';
 import {
 	asType,
@@ -80,7 +80,7 @@ export function* generateGeneric(
 			scriptSetup,
 			scriptSetupRanges.defineProps.arg.start,
 			scriptSetupRanges.defineProps.arg.end,
-			ignoreDiagnostics({ features: navigationFeatures }),
+			{ features: navigationFeatures, ignoreDiagnostics: true },
 		);
 		yield endOfLine;
 		propTypes.push(
@@ -496,7 +496,7 @@ function* generatePublicProps(
 			scriptSetup,
 			scriptSetupRanges.withDefaults.arg.start,
 			scriptSetupRanges.withDefaults.arg.end,
-			ignoreDiagnostics({ features: navigationFeatures }),
+			{ features: navigationFeatures, ignoreDiagnostics: true },
 		);
 		yield endOfLine;
 		yield `void ${names.defaults}${endOfLine}`;
@@ -624,7 +624,7 @@ function* generateModelProp(
 			getRangeText(scriptSetup, defineModel.name),
 			scriptSetup.name,
 			defineModel.name.start,
-			ignoreDiagnostics({ features: navigationFeatures }),
+			{ features: navigationFeatures, ignoreDiagnostics: true },
 		);
 	}
 	else {

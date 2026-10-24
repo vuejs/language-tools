@@ -1,6 +1,6 @@
 import { SpanMapKind } from '@volar/language-core';
 import { expect, test } from 'vitest';
-import { completionFeatures, ignoreDiagnostics, navigationFeatures } from '../lib/codegen/features';
+import { completionFeatures, navigationFeatures } from '../lib/codegen/features';
 import {
 	type Code,
 	type CodeBoundary,
@@ -199,15 +199,15 @@ test('pairs directive and mapping boundaries by nesting', () => {
 
 test('ignores diagnostics of segments marked to ignore them', () => {
 	expect(buildDiagnosticDirectives([
-		['ab', 'template', 0, ignoreDiagnostics(navigation)],
+		['ab', 'template', 0, { ...navigation, ignoreDiagnostics: true }],
 		['cd', 'template', 2, navigation],
-		['', 'template', 4, ignoreDiagnostics(none)],
+		['', 'template', 4, { ...none, ignoreDiagnostics: true }],
 	])).toEqual(toIgnores([0, 2]));
 });
 
 test('lets segments inside an ignored boundary report diagnostics', () => {
 	expect(buildDiagnosticDirectives([
-		['', 'template', 0, start(ignoreDiagnostics(none))],
+		['', 'template', 0, start({ ...none, ignoreDiagnostics: true })],
 		'{a: ',
 		['b', 'template', 2, navigation],
 		'}',
@@ -218,7 +218,7 @@ test('lets segments inside an ignored boundary report diagnostics', () => {
 test('lets a reported boundary inside an ignored boundary report diagnostics', () => {
 	// generated: {a: (b)}   original: C b
 	expect(buildDiagnosticDirectives([
-		['', 'template', 0, start(ignoreDiagnostics(none))],
+		['', 'template', 0, start({ ...none, ignoreDiagnostics: true })],
 		'{a: ',
 		['', 'template', 2, start(none)],
 		'(',
@@ -233,7 +233,7 @@ test('lets a reported boundary inside an ignored boundary report diagnostics', (
 test('keeps ignoring a boundary whose source range crosses a taken one', () => {
 	// generated: {a: "b"}   original: C a b   (`: "b"` maps to `a b`, which contains `b`)
 	expect(buildDiagnosticDirectives([
-		['', 'template', 0, start(ignoreDiagnostics(none))],
+		['', 'template', 0, start({ ...none, ignoreDiagnostics: true })],
 		'{a',
 		['', 'template', 2, start(none)],
 		': "',
@@ -248,11 +248,11 @@ test('keeps ignoring a boundary whose source range crosses a taken one', () => {
 test('leaves the ranges of explicit directives to them', () => {
 	const expectation: DiagnosticDirectiveMapping = [7, 2, 0, 0, DiagnosticDirectivePolicy.Expect];
 	expect(buildDiagnosticDirectives([
-		['ab', 'template', 0, ignoreDiagnostics(navigation)],
+		['ab', 'template', 0, { ...navigation, ignoreDiagnostics: true }],
 		['', 'template', 7, start(expectation)],
-		['cd', 'template', 2, ignoreDiagnostics(navigation)],
+		['cd', 'template', 2, { ...navigation, ignoreDiagnostics: true }],
 		['', 'template', 7, end],
-		['ef', 'template', 4, ignoreDiagnostics(navigation)],
+		['ef', 'template', 4, { ...navigation, ignoreDiagnostics: true }],
 	])).toEqual([
 		[0, 0, 0, 2, DiagnosticDirectivePolicy.Ignore],
 		[7, 2, 2, 4, DiagnosticDirectivePolicy.Expect],

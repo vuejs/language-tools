@@ -3,14 +3,7 @@ import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
 import type { Code } from '../../types';
 import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import {
-	completionFeatures,
-	ignoreDiagnostics,
-	navigationFeatures,
-	scriptFeatures,
-	semanticFeatures,
-	VueCodeFeature,
-} from '../features';
+import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures, VueCodeFeature } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
@@ -161,11 +154,14 @@ export function* generateComponent(
 					}
 					for (const name of new Set([tag, capitalize(tag)])) {
 						yield ` | typeof ${options.setupBindings.has(camelize(name)) ? '' : `${names.components}.`}`;
-						yield* generateCamelized(name, 'template', offset, ignoreDiagnostics({ features: navigationFeatures }));
+						yield* generateCamelized(name, 'template', offset, {
+							features: navigationFeatures,
+							ignoreDiagnostics: true,
+						});
 					}
 					if (tag.includes('-')) {
 						yield ` | typeof ${names.components}[`;
-						yield* generateStringLiteralKey(tag, offset, ignoreDiagnostics({ features: navigationFeatures }));
+						yield* generateStringLiteralKey(tag, offset, { features: navigationFeatures, ignoreDiagnostics: true });
 						yield `]`;
 					}
 				}
@@ -240,7 +236,7 @@ export function* generateComponent(
 		startTagOffset,
 		startTagOffset + tag.length,
 		shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes
-			? ignoreDiagnostics({ features: 0 })
+			? { features: 0, ignoreDiagnostics: true }
 			: { features: 0 },
 	);
 	yield `{`;

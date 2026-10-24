@@ -1,5 +1,4 @@
 import { SpanMapFeature } from '@volar/language-core';
-import type { VueCodeMarker } from '../types';
 
 /** Feature bits that only Volar's own services read; the content mapper strips them. */
 export enum VueCodeFeature {
@@ -39,7 +38,3 @@ export const structureFeatures = SpanMapFeature.FoldingRanges
 export const allFeatures = scriptFeatures
 	| structureFeatures
 	| SpanMapFeature.Formatting;
-
-export function ignoreDiagnostics(info: VueCodeMarker): VueCodeMarker {
-	return { ...info, ignoreDiagnostics: true };
-}

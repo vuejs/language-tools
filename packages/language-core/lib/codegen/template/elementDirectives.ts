@@ -1,13 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isBuiltInDirective } from '@vue/shared';
 import type { Code } from '../../types';
-import {
-	completionFeatures,
-	ignoreDiagnostics,
-	navigationFeatures,
-	scriptFeatures,
-	semanticFeatures,
-} from '../features';
+import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { names } from '../names';
 import { asType, endOfLine, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -97,7 +91,7 @@ function* generateIdentifier(
 		'template',
 		prop.loc.start.offset,
 		isBuiltInDirective(prop.name)
-			? ignoreDiagnostics({ features: semanticFeatures | navigationFeatures })
+			? { features: semanticFeatures | navigationFeatures, ignoreDiagnostics: true }
 			: { features: semanticFeatures | navigationFeatures },
 	);
 	if (!isBuiltInDirective(prop.name)) {

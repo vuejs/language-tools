@@ -1,6 +1,6 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRScriptSetup } from '../../types';
-import { ignoreDiagnostics, navigationFeatures } from '../features';
+import { navigationFeatures } from '../features';
 import { names } from '../names';
 import { asType, generateSfcBlockSection, newLine } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
@@ -160,7 +160,7 @@ function* generateRuntimePropsOption(
 			scriptSetup,
 			arg.start,
 			arg.end,
-			ignoreDiagnostics({ features: navigationFeatures }),
+			{ features: navigationFeatures, ignoreDiagnostics: true },
 		);
 	}
 }
