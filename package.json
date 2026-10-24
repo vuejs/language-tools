@@ -3,7 +3,7 @@
 	"packageManager": "pnpm@11.9.0",
 	"scripts": {
 		"build": "npm run build:volar && tsc -b",
-		"build:volar": "node node_modules/typescript-5/bin/tsc -b volar.js/packages/kit volar.js/packages/test-utils volar.js/packages/vscode",
+		"build:volar": "node node_modules/typescript-5/bin/tsc -b volar.js/packages/test-utils volar.js/packages/vscode",
 		"build:ext": "pnpm --dir extensions/vscode exec rolldown --config",
 		"watch": "npm run build:volar && tsc -b -w",
 		"watch:volar": "npm run build:volar -- -w",

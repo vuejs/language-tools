@@ -56,26 +56,6 @@ const plugins = createVueLanguageServicePlugins(ts);
 | `vue-suggest-define-assignment` | Assignment suggestions for `defineProps`, etc. |
 | `css` | CSS language service, supporting v-bind and CSS Modules |
 
-## Usage with @volar/kit
-
-To use the language service in a Node.js environment (e.g., for linting or testing):
-
-```typescript
-import { createLanguage, createVueLanguagePlugin } from '@vue/language-core';
-import { createLanguageService, createVueLanguageServicePlugins } from '@vue/language-service';
-import ts from 'typescript';
-
-const language = createLanguage([
-  createVueLanguagePlugin(ts, vueCompilerOptions, asFileName),
-]);
-
-const service = createLanguageService(
-  language,
-  createVueLanguageServicePlugins(ts),
-  env,
-);
-```
-
 ## Related Packages
 
 - [`@vue/language-core`](../language-core) - Core module

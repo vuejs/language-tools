@@ -6,7 +6,6 @@ settings:
 
 overrides:
   typescript@<7: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-  '@volar/kit': workspace:*
   '@volar/language-core': workspace:*
   '@volar/language-server': workspace:*
   '@volar/language-service': workspace:*
@@ -282,9 +281,6 @@ importers:
       '@types/path-browserify':
         specifier: ^1.0.3
         version: 1.0.3
-      '@volar/kit':
-        specifier: workspace:*
-        version: link:../../volar.js/packages/kit
       '@vue/compiler-dom':
         specifier: ^3.5.0
         version: 3.5.40
@@ -315,27 +311,6 @@ importers:
       vue-component-type-helpers:
         specifier: workspace:*
         version: link:../packages/component-type-helpers
-
-  volar.js/packages/kit:
-    dependencies:
-      '@volar/language-service':
-        specifier: workspace:*
-        version: link:../language-service
-      '@volar/typescript':
-        specifier: workspace:*
-        version: link:../typescript
-      typesafe-path:
-        specifier: ^0.2.2
-        version: 0.2.2
-      typescript:
-        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-      vscode-languageserver-textdocument:
-        specifier: ^1.0.11
-        version: 1.0.12
-      vscode-uri:
-        specifier: ^3.0.8
-        version: 3.1.0
 
   volar.js/packages/language-core:
     dependencies:
@@ -2326,9 +2301,6 @@ packages:
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
     engines: {node: '>= 0.8.0'}
-
-  typesafe-path@0.2.2:
-    resolution: {integrity: sha512-OJabfkAg1WLZSqJAJ0Z6Sdt3utnbzr/jh+NAHoyWHJe8CMSy79Gm085094M9nvTPy22KzTVn5Zq5mbapCI/hPA==}
 
   typescript-auto-import-cache@0.3.6:
     resolution: {integrity: sha512-RpuHXrknHdVdK7wv/8ug3Fr0WNsNi5l5aB8MYYuXhq2UH5lnEB1htJ1smhtD5VeCsGr2p8mUDtd83LCQDFVgjQ==}
@@ -4352,8 +4324,6 @@ snapshots:
   type-check@0.4.0:
     dependencies:
       prelude-ls: 1.2.1
-
-  typesafe-path@0.2.2: {}
 
   typescript-auto-import-cache@0.3.6:
     dependencies:

@@ -1,4 +1,3 @@
-import { createServiceEnvironment } from '@volar/kit/lib/createServiceEnvironment';
 import {
 	createLanguage,
 	createLanguageService,
@@ -12,8 +11,8 @@ import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { createVueLanguageServicePlugins } from '../..';
 import { asCoreTypeScript } from '../../lib/utils';
+import { createTestEnvironment } from './environment';
 
-// TODO: migrate to @volar/kit
 export function createAutoInserter(
 	languages: LanguagePlugin<URI>[],
 	services: LanguageServicePlugin[],
@@ -21,7 +20,7 @@ export function createAutoInserter(
 	let settings = {};
 
 	const fakeUri = URI.parse('file:///dummy.txt');
-	const env = createServiceEnvironment(() => settings);
+	const env = createTestEnvironment(() => settings);
 	const language = createLanguage(languages, createUriMap(false), () => {});
 	const languageService = createLanguageService(language, services, env, {});
 

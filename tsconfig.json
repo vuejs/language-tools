@@ -5,7 +5,6 @@
 		"allowImportingTsExtensions": true
 	},
 	"references": [
-		{ "path": "./tsconfig.volar/kit.json" },
 		{ "path": "./tsconfig.volar/language-core.json" },
 		{ "path": "./tsconfig.volar/language-server.json" },
 		{ "path": "./tsconfig.volar/language-service.json" },

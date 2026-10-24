@@ -36,7 +36,6 @@
 	"devDependencies": {
 		"@types/node": "^26.0.1",
 		"@types/path-browserify": "^1.0.3",
-		"@volar/kit": "workspace:*",
 		"@vue/compiler-dom": "^3.5.0",
 		"typescript": "<7",
 		"vscode-css-languageservice": "^6.3.10",
