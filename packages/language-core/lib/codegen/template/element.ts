@@ -3,11 +3,12 @@ import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
 import type { Code } from '../../types';
 import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import { codeFeatures } from '../codeFeatures';
+import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures, VueCodeFeature } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
+import { generateExportDeclareEqual } from '../script';
 import { endOfLine, generateTypedVar, identifierRE, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
@@ -15,7 +16,7 @@ import { generateElementDirectives } from './elementDirectives';
 import { generateElementEvents } from './elementEvents';
 import { type FailedPropExpressions, generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
-import { generateInterpolation } from './interpolation';
+import { generateIdentifier, generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
@@ -65,8 +66,8 @@ export function* generateComponent(
 			ctx,
 			options.template,
 			isIsShorthand
-				? codeFeatures.withoutHighlightAndCompletion
-				: codeFeatures.all,
+				? { features: semanticFeatures | navigationFeatures }
+				: { features: scriptFeatures },
 			tag,
 			startTagOffset,
 			`(`,
@@ -78,7 +79,7 @@ export function* generateComponent(
 				options,
 				ctx,
 				options.template,
-				codeFeatures.withoutCompletion,
+				{ features: scriptFeatures & ~completionFeatures },
 				tag,
 				endTagOffset,
 				`(`,
@@ -93,26 +94,35 @@ export function* generateComponent(
 			camelize(tag),
 			tag,
 		]);
-		const matchedImportedComponent = [...originalNames].find(name => options.importedComponents.has(name));
-		if (matchedImportedComponent) {
-			// navigation & auto import support
+		// Like `@vue/compiler-sfc`, a tag refers to the setup binding of its name, whatever it is imported from;
+		// referencing it like a template expression keeps navigation and auto import support.
+		const matchedBinding = [...originalNames].find(name => options.setupBindings.has(name));
+		if (matchedBinding) {
+			const camelizedTag = matchedBinding[0]! + tag.slice(1);
 			yield `const ${componentVar} = `;
-			yield* generateCamelized(
-				matchedImportedComponent[0]! + tag.slice(1),
+			yield* generateIdentifier(
+				options,
+				ctx,
+				generateCamelized(camelizedTag, 'template', startTagOffset, {
+					features: semanticFeatures | navigationFeatures,
+				}),
+				matchedBinding,
 				'template',
 				startTagOffset,
-				{
-					...codeFeatures.withoutHighlightAndCompletion,
-					...codeFeatures.importCompletionOnly,
-				},
+				startTagOffset + tag.length,
 			);
 			if (endTagOffset !== undefined) {
 				yield ` || `;
-				yield* generateCamelized(
-					matchedImportedComponent[0]! + tag.slice(1),
+				yield* generateIdentifier(
+					options,
+					ctx,
+					generateCamelized(camelizedTag, 'template', endTagOffset, {
+						features: semanticFeatures | navigationFeatures,
+					}),
+					matchedBinding,
 					'template',
 					endTagOffset,
-					codeFeatures.withoutHighlightAndCompletion,
+					endTagOffset + tag.length,
 				);
 			}
 			yield endOfLine;
@@ -123,7 +133,6 @@ export function* generateComponent(
 				yield originalNames.has(options.componentName)
 					? `, typeof ${names.export}`
 					: `, void`;
-				yield `, ${options.vueCompilerOptions.checkUnknownComponents}`;
 				for (const name of originalNames) {
 					yield `, '${name}'`;
 				}
@@ -131,35 +140,34 @@ export function* generateComponent(
 				yield* generateStringLiteralKey(
 					tag,
 					startTagOffset,
-					{
-						...codeFeatures.semanticWithoutHighlight,
-						...codeFeatures.verification,
-					},
+					{ features: semanticFeatures },
 				);
 				yield `]`;
 			});
 
 			if (identifierRE.test(camelize(tag))) {
-				// navigation support
-				yield `/** @ts-ignore @type {`;
+				// navigation support; TypeScript does not check the type of a JSDoc on an expression statement
+				yield `/** @type {`;
 				for (const offset of [startTagOffset, endTagOffset]) {
 					if (offset === undefined) {
 						continue;
 					}
 					for (const name of new Set([tag, capitalize(tag)])) {
 						yield ` | typeof ${options.setupBindings.has(camelize(name)) ? '' : `${names.components}.`}`;
-						yield* generateCamelized(name, 'template', offset, codeFeatures.navigation);
+						const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
+						yield* generateCamelized(name, 'template', offset, { features: navigationFeatures });
+						yield ignore.end();
 					}
 					if (tag.includes('-')) {
 						yield ` | typeof ${names.components}[`;
-						yield* generateStringLiteralKey(tag, offset, codeFeatures.navigation);
+						const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
+						yield* generateStringLiteralKey(tag, offset, { features: navigationFeatures });
+						yield ignore.end();
 						yield `]`;
 					}
 				}
 				yield `} */${newLine}`;
-				// auto import support
-				yield* generateCamelized(tag, 'template', startTagOffset, codeFeatures.importCompletionOnly);
-				yield endOfLine;
+				yield `${componentVar}${endOfLine}`;
 			}
 		}
 	}
@@ -182,7 +190,6 @@ export function* generateComponent(
 		ctx,
 		node,
 		props,
-		options.vueCompilerOptions.checkUnknownProps,
 		failedPropExps,
 	)];
 	const propsStr = toString(propCodes);
@@ -199,25 +206,13 @@ export function* generateComponent(
 	//   type (`any` for `DefineComponent`), so function expressions report implicit `any`, and typing it like
 	//   `$props` instead would report every props error a second time. The copy is not mapped to the template.
 	yield `// @ts-ignore${newLine}`;
-	yield `const ${functionalVar} = ${
-		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
-	}(${componentVar}, new ${componentVar}({${newLine}`;
-	yield `// @ts-ignore${newLine}`;
-	yield propsStr
-		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
-		.replace(/\n/g, ' ');
+	yield `const ${functionalVar} = ${names.asFunctionalComponent0}(${componentVar}, new ${componentVar}({${newLine}`;
+	// unmapped copy for inference only
+	yield propsStr;
 	yield `}))${endOfLine}`;
 
-	yield `const `;
-	const boundary = yield* Boundary.start(
-		'template',
-		node.loc.start.offset,
-		node.loc.end.offset,
-		codeFeatures.doNotReportTs6133,
-	);
-	yield vnodeVar;
-	yield boundary.end();
-	yield ` = ${functionalVar}`;
+	yield* generateExportDeclareEqual(options.template.name, vnodeVar, node.loc.start.offset, node.loc.end.offset);
+	yield functionalVar;
 
 	const commentInfo = ctx.getCommentInfo();
 	if (commentInfo.generic) {
@@ -226,10 +221,10 @@ export function* generateComponent(
 			'template',
 			offset,
 			offset + content.length,
-			codeFeatures.verification,
+			{ features: 0 },
 		);
 		yield `<`;
-		yield [content, 'template', offset, codeFeatures.all];
+		yield [content, 'template', offset, { features: scriptFeatures }];
 		yield `>`;
 		yield boundary.end();
 	}
@@ -237,21 +232,23 @@ export function* generateComponent(
 	const shouldInheritAttrs = hasVBindAttrs(options, ctx, node);
 
 	yield `(`;
-	const boundary2 = yield* Boundary.start(
-		'template',
-		startTagOffset,
-		startTagOffset + tag.length,
-		shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes
-			? {}
-			: codeFeatures.verification,
-	);
-	yield `{`;
-	yield [``, 'template', node.loc.start.offset, { __propsCompletion: true }];
+	const boundary2 = yield* Boundary.start('template', startTagOffset, startTagOffset + tag.length, { features: 0 });
+	if (shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes) {
+		// the props the fallthrough attributes supply are reported missing at the start of the object
+		const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
+		yield `{`;
+		yield ignore.end();
+	}
+	else {
+		yield `{`;
+	}
+	yield [``, 'template', node.loc.start.offset, { features: VueCodeFeature.PropsCompletion }];
 	yield newLine;
 	yield* propCodes;
 	yield `}`;
 	yield boundary2.end();
 	yield `, ...${names.functionalComponentArgsRest}(${functionalVar}))${endOfLine}`;
+	yield `void ${vnodeVar}${endOfLine}`;
 
 	yield* generateFailedExpressions(options, ctx, failedPropExps);
 	yield* generateElementEvents(
@@ -333,15 +330,13 @@ export function* generateElement(
 	const [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
 	const failedPropExps: FailedPropExpressions[] = [];
 
-	yield `${
-		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalElement0 : names.asFunctionalElement1
-	}(${names.intrinsics}`;
+	yield `${names.asFunctionalElement0}(${names.intrinsics}`;
 	yield* generatePropertyAccess(
 		options,
 		ctx,
 		node.tag,
 		startTagOffset,
-		codeFeatures.withoutHighlightAndCompletion,
+		{ features: semanticFeatures | navigationFeatures },
 	);
 	if (endTagOffset !== undefined) {
 		yield `, `;
@@ -351,7 +346,7 @@ export function* generateElement(
 			ctx,
 			node.tag,
 			endTagOffset,
-			codeFeatures.withoutHighlightAndCompletion,
+			{ features: semanticFeatures | navigationFeatures },
 		);
 	}
 	yield `)(`;
@@ -359,7 +354,7 @@ export function* generateElement(
 		'template',
 		startTagOffset,
 		startTagOffset + node.tag.length,
-		codeFeatures.verification,
+		{ features: 0 },
 	);
 	yield `{${newLine}`;
 	yield* generateElementProps(
@@ -367,7 +362,6 @@ export function* generateElement(
 		ctx,
 		node,
 		node.props,
-		options.vueCompilerOptions.checkUnknownProps,
 		failedPropExps,
 		`typeof ${names.intrinsics}['${node.tag}']`,
 	);
@@ -398,6 +392,7 @@ export function* generateElement(
 
 	yield* generateStyleScopedClassReferences(options, node);
 
+	yield* ctx.generateDiagnosticDirectiveEnd();
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}
@@ -413,14 +408,12 @@ export function* generateFragment(
 
 	// special case for <template v-for="..." :key="..." />
 	if (node.props.length) {
-		yield `${
-			options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalElement0 : names.asFunctionalElement1
-		}(${names.intrinsics}.template)(`;
+		yield `${names.asFunctionalElement0}(${names.intrinsics}.template)(`;
 		const boundary = yield* Boundary.start(
 			'template',
 			startTagOffset,
 			startTagOffset + node.tag.length,
-			codeFeatures.verification,
+			{ features: 0 },
 		);
 		yield `{${newLine}`;
 		yield* generateElementProps(
@@ -428,7 +421,6 @@ export function* generateFragment(
 			ctx,
 			node,
 			node.props,
-			options.vueCompilerOptions.checkUnknownProps,
 			failedPropExps,
 			`typeof ${names.intrinsics}.template`,
 		);
@@ -439,6 +431,7 @@ export function* generateFragment(
 		yield* generateFailedExpressions(options, ctx, failedPropExps);
 	}
 
+	yield* ctx.generateDiagnosticDirectiveEnd();
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}
@@ -454,7 +447,7 @@ function* generateFailedExpressions(
 			options,
 			ctx,
 			options.template,
-			codeFeatures.all,
+			{ features: scriptFeatures },
 			node.loc.source,
 			node.loc.start.offset,
 			prefix,

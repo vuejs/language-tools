@@ -4,7 +4,7 @@
 // Meta info
 export const publisher = 'Vue';
 export const name = 'volar';
-export const version = '3.3.13';
+export const version = '4.0.0-alpha.0';
 export const displayName = 'Vue (Official)';
 export const description = 'Language Support for Vue';
 export const extensionId = `${publisher}.${name}`;
@@ -89,7 +89,7 @@ export interface ConfigKeyTypeMap {
 	'vue.editor.reactivityVisualization': boolean;
 	'vue.editor.templateInterpolationDecorators': boolean;
 	'vue.server.path': string | undefined;
-	'vue.server.includeLanguages': string[];
+	'vue.server.includeLanguages': unknown[];
 	'vue.codeActions.askNewComponentName': boolean;
 	'vue.hover.rich': boolean;
 	'vue.suggest.componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
@@ -154,7 +154,7 @@ export interface ConfigShorthandTypeMap {
 	editorReactivityVisualization: boolean;
 	editorTemplateInterpolationDecorators: boolean;
 	serverPath: string | undefined;
-	serverIncludeLanguages: string[];
+	serverIncludeLanguages: unknown[];
 	codeActionsAskNewComponentName: boolean;
 	hoverRich: boolean;
 	suggestComponentNameCasing: 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
@@ -248,12 +248,12 @@ export const configs = {
 	} as ConfigItem<'vue.server.path'>,
 	/**
 	 * @key `vue.server.includeLanguages`
-	 * @default `["vue"]`
+	 * @default `["vue",{"language":"markdown","pattern":"**\/*.vue.md"}]`
 	 * @type `array`
 	 */
 	serverIncludeLanguages: {
 		key: 'vue.server.includeLanguages',
-		default: ['vue'],
+		default: ['vue', { 'language': 'markdown', 'pattern': '**/*.vue.md' }],
 	} as ConfigItem<'vue.server.includeLanguages'>,
 	/**
 	 * @key `vue.codeActions.askNewComponentName`
@@ -435,7 +435,7 @@ export interface ScopedConfigKeyTypeMap {
 	'editor.reactivityVisualization': boolean;
 	'editor.templateInterpolationDecorators': boolean;
 	'server.path': string | undefined;
-	'server.includeLanguages': string[];
+	'server.includeLanguages': unknown[];
 	'codeActions.askNewComponentName': boolean;
 	'hover.rich': boolean;
 	'suggest.componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
@@ -473,7 +473,7 @@ export const scopedConfigs = {
 		'editor.reactivityVisualization': true,
 		'editor.templateInterpolationDecorators': true,
 		'server.path': undefined,
-		'server.includeLanguages': ['vue'],
+		'server.includeLanguages': ['vue', { 'language': 'markdown', 'pattern': '**/*.vue.md' }],
 		'codeActions.askNewComponentName': true,
 		'hover.rich': false,
 		'suggest.componentNameCasing': 'preferPascalCase',
@@ -511,7 +511,7 @@ export interface NestedConfigs {
 		};
 		'server': {
 			'path': string | undefined;
-			'includeLanguages': string[];
+			'includeLanguages': unknown[];
 		};
 		'codeActions': {
 			'askNewComponentName': boolean;
@@ -574,7 +574,7 @@ export interface NestedScopedConfigs {
 	};
 	'server': {
 		'path': string | undefined;
-		'includeLanguages': string[];
+		'includeLanguages': unknown[];
 	};
 	'codeActions': {
 		'askNewComponentName': boolean;

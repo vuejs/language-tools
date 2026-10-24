@@ -1,5 +1,5 @@
-import type { Code, IRStyle, VueCompilerOptions } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import type { Code, IRStyle, TypeScript, VueCompilerOptions } from '../../types';
+import { scriptFeatures } from '../features';
 import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
@@ -8,7 +8,7 @@ import { references as styleScopedClassReferences } from '../template/styleScope
 import { endOfLine } from '../utils';
 
 export interface StyleCodegenOptions {
-	typescript: typeof import('typescript');
+	typescript: TypeScript;
 	vueCompilerOptions: VueCompilerOptions;
 	styles: readonly IRStyle[];
 	scriptLang: string;
@@ -25,15 +25,8 @@ function generate(options: StyleCodegenOptions) {
 	for (const style of options.styles) {
 		styleScopedClassReferences.delete(style);
 	}
-	const ctx = createTemplateCodegenContext();
-	const codeGenerator = generateWorker(options, ctx);
-	const codes: Code[] = [];
-	for (const code of codeGenerator) {
-		if (typeof code === 'object') {
-			code[3] = ctx.resolveCodeFeatures(code[3]);
-		}
-		codes.push(code);
-	}
+	const ctx = createTemplateCodegenContext(options.scriptLang);
+	const codes: Code[] = [...generateWorker(options, ctx)];
 	return { ...ctx, codes };
 }
 
@@ -41,7 +34,7 @@ function* generateWorker(
 	options: StyleCodegenOptions,
 	ctx: TemplateCodegenContext,
 ) {
-	const scope = ctx.scope();
+	const scope = ctx.blockScope();
 	yield* generateStyleScopedClasses(options, ctx);
 	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);
@@ -58,7 +51,7 @@ function* generateCssVars(
 				options,
 				ctx,
 				style,
-				codeFeatures.all,
+				{ features: scriptFeatures },
 				binding.text,
 				binding.offset,
 				`(`,

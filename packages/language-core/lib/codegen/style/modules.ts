@@ -1,11 +1,29 @@
-import type { Code } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import type { Code, IRStyle } from '../../types';
+import { navigationFeatures } from '../features';
 import { names } from '../names';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateTypeAlias, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import type { StyleCodegenOptions } from '.';
-import { generateClassProperty, generateStyleImports } from './common';
+import { generateClassProperty, generateStyleSrc } from './common';
+
+/**
+ * `<style module src>` is typed by an ordinary import of the src, so whatever types that module
+ * (a CSS content mapper, an ambient declaration) types the CSS module; Vue does not read the file.
+ */
+export function* generateStyleModuleImports(styles: readonly IRStyle[]): Generator<Code> {
+	for (const style of styles) {
+		if (style.module && typeof style.src === 'object') {
+			yield `import ${getStyleModuleImportName(style)} from `;
+			yield* generateStyleSrc(style.src);
+			yield endOfLine;
+		}
+	}
+}
+
+function getStyleModuleImportName(style: IRStyle) {
+	return `__VLS_${style.name}`;
+}
 
 export function* generateStyleModules(
 	{ vueCompilerOptions, styles, scriptLang }: StyleCodegenOptions,
@@ -30,7 +48,7 @@ export function* generateStyleModules(
 						`$style`,
 						'main',
 						offset,
-						codeFeatures.verification,
+						{ features: 0 },
 					];
 				}
 				else if (identifierRE.test(text)) {
@@ -38,7 +56,7 @@ export function* generateStyleModules(
 						text,
 						'main',
 						offset,
-						codeFeatures.navigationAndVerification,
+						{ features: navigationFeatures },
 					];
 				}
 				else {
@@ -46,10 +64,10 @@ export function* generateStyleModules(
 						'main',
 						offset,
 						offset + text.length,
-						codeFeatures.navigationAndVerification,
+						{ features: navigationFeatures },
 					);
 					yield `'`;
-					yield [text, 'main', offset, boundary.features];
+					yield [text, 'main', offset, undefined];
 					yield `'`;
 					yield boundary.end();
 				}
@@ -59,8 +77,8 @@ export function* generateStyleModules(
 				yield `Record<string, string> & `;
 			}
 			yield `${names.PrettifyGlobal}<{}`;
-			if (vueCompilerOptions.resolveStyleImports) {
-				yield* generateStyleImports(style);
+			if (typeof style.src === 'object') {
+				yield `${newLine} & typeof ${getStyleModuleImportName(style)}`;
 			}
 			for (const className of style.classNames) {
 				yield* generateClassProperty(

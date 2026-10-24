@@ -9,15 +9,16 @@ export function* generateIntersectMerge(...codes: Code[]): Generator<Code> {
 	}
 }
 
-export function* generateSpreadMerge(...codes: Code[]): Generator<Code> {
-	if (codes.length <= 1) {
-		yield* codes;
+/** Spreads the expressions, each a string or the codes it generates. */
+export function* generateSpreadMerge(...exps: (string | Code[])[]): Generator<Code> {
+	if (exps.length <= 1) {
+		yield* exps.flat();
 	}
 	else {
 		yield `{${newLine}`;
-		for (const code of codes) {
+		for (const exp of exps) {
 			yield `...`;
-			yield code;
+			yield* typeof exp === 'string' ? [exp] : exp;
 			yield `,${newLine}`;
 		}
 		yield `}`;

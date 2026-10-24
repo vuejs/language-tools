@@ -23,6 +23,13 @@ Vue language support extension for VSCode, providing a full development experien
 
 Search for `Vue (Official)` or `Vue.volar` in the VSCode extension marketplace and click install.
 
+The version 4 alphas are not on the Marketplace. To try one, build a VSIX from its tag (e.g. `v4.0.0-alpha.0`; for later tags, clone with `--recurse-submodules`) and install it with `Extensions: Install from VSIX...`:
+
+```sh
+pnpm install --frozen-lockfile && pnpm run build
+cd extensions/vscode && npx @vscode/vsce package --no-dependencies
+```
+
 ## Configuration
 
 ### Editor Settings
@@ -72,7 +79,7 @@ Search for `Vue (Official)` or `Vue.volar` in the VSCode extension marketplace a
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `vue.server.path` | `string` | - | Custom language server path |
-| `vue.server.includeLanguages` | `string[]` | `["vue"]` | Language IDs to process |
+| `vue.server.includeLanguages` | `(string \| { language, pattern })[]` | `["vue", { "language": "markdown", "pattern": "**/*.vue.md" }]` | Documents to process: language IDs, or a language ID with a glob pattern |
 | `vue.trace.server` | `string` | `off` | Server trace level |
 
 ## Commands
@@ -82,17 +89,17 @@ Search for `Vue (Official)` or `Vue.volar` in the VSCode extension marketplace a
 | `Vue: Welcome` | Open the welcome page |
 | `Vue: Restart Server` | Restart the language server |
 
-## Using Workspace TypeScript
+## TypeScript 7 Setup
 
-It is recommended to use the TypeScript version from your project instead of the one built into VSCode:
+Version 4 type-checks `.vue` files through TypeScript 7.1 content mappers, served by the TypeScript (Native Preview) extension.
 
-1. Create `.vscode/settings.json` in your project root
-2. Add the following settings:
+1. Install [TypeScript (Native Preview)](https://marketplace.visualstudio.com/items?itemName=TypeScriptTeam.native-preview)
+2. Install TypeScript 7.1 in your project: `npm i -D typescript@beta`
+3. Point Native Preview at it in `.vscode/settings.json`, because its bundled TypeScript (7.0) has no content mappers:
 
 ```json
 {
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "js/ts.tsdk.path": "node_modules/typescript/lib"
 }
 ```
 
@@ -101,7 +108,7 @@ It is recommended to use the TypeScript version from your project instead of the
 If you encounter any issues, you can try the following steps:
 
 1. **Reload Window**: Run the `Developer: Reload Window` command in VSCode
-2. **Check `vue-tsc`**: Run `npx vue-tsc --noEmit` in the command line to check for type errors
+2. **Type-check**: Run `npx tsc --noEmit --runExternalCode` in the command line to check for type errors
 3. **Check Output Channel**: In VSCode's "Output" panel, select `Vue Language Server` to see if there are any error messages
 
 If the problem persists, feel free to open an issue on [GitHub Issues](https://github.com/vuejs/language-tools/issues).

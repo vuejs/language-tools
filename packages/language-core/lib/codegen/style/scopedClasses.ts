@@ -4,13 +4,13 @@ import type { TemplateCodegenContext } from '../template/context';
 import { generateStyleScopedClassReference } from '../template/styleScopedClasses';
 import { endOfLine, generateTypeAlias, isTsLang } from '../utils';
 import type { StyleCodegenOptions } from '.';
-import { generateClassProperty, generateStyleImports } from './common';
+import { generateClassProperty } from './common';
 
 export function* generateStyleScopedClasses(
 	{ vueCompilerOptions, styles, scriptLang }: StyleCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
-	const { resolveStyleClassNames, resolveStyleImports } = vueCompilerOptions;
+	const { resolveStyleClassNames } = vueCompilerOptions;
 	if (!resolveStyleClassNames) {
 		return;
 	}
@@ -25,9 +25,6 @@ export function* generateStyleScopedClasses(
 	yield* generateTypeAlias(names.StyleScopedClasses, scriptLang, function*() {
 		yield `{}`;
 		for (const style of scopedStyles) {
-			if (resolveStyleImports) {
-				yield* generateStyleImports(style);
-			}
 			for (const className of style.classNames) {
 				if (!visited.has(className.text)) {
 					visited.add(className.text);

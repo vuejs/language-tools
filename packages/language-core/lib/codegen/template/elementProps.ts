@@ -1,8 +1,9 @@
+import { SpanMapKind } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
-import { camelize } from '@vue/shared';
-import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
+import { camelize, isHTMLTag, isMathMLTag, isSVGTag } from '@vue/shared';
+import type { Code, VueCodeMarker, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import { codeFeatures } from '../codeFeatures';
+import { navigationFeatures, scriptFeatures, semanticFeatures, VueCodeFeature } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, identifierRE, newLine } from '../utils';
@@ -27,7 +28,6 @@ export function* generateElementProps(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	props: CompilerDOM.ElementNode['props'],
-	checkUnknownProps: boolean,
 	failedPropExps?: FailedPropExpressions[],
 	// type of the object the props are passed to, if any
 	attrsType?: string,
@@ -46,7 +46,7 @@ export function* generateElementProps(
 			) {
 				if (!isComponent) {
 					yield `...{ `;
-					yield* generateEventArg(options, prop.arg.loc.source, prop.arg.loc.start.offset);
+					yield* generateEventArg(prop.arg.loc.source, prop.arg.loc.start.offset);
 					yield `: `;
 					yield* generateEventExpression(
 						options,
@@ -120,7 +120,7 @@ export function* generateElementProps(
 
 			const shouldSpread = propName === 'style' || propName === 'class';
 			const shouldCamelize = getShouldCamelize(options, node, prop, propName);
-			const features = getPropsCodeFeatures(checkUnknownProps);
+			const features = getPropsCodeFeatures();
 
 			if (shouldSpread) {
 				yield `...{ `;
@@ -129,15 +129,19 @@ export function* generateElementProps(
 				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				codeFeatures.verification,
+				{ features: 0 },
 			);
 			if (prop.arg) {
+				// the key of a same-name shorthand maps to the name its value maps to
+				const isShorthandName = prop.exp?.loc.start.offset === prop.arg.loc.start.offset
+					&& propName === prop.arg.loc.source
+					&& identifierRE.test(propName);
 				yield* generateObjectProperty(
 					options,
 					ctx,
 					propName,
 					prop.arg.loc.start.offset,
-					features,
+					isShorthandName ? { ...features, kind: SpanMapKind.Atom } : features,
 					shouldCamelize,
 				);
 			}
@@ -146,7 +150,7 @@ export function* generateElementProps(
 					'template',
 					prop.loc.start.offset,
 					prop.loc.start.offset + 'v-model'.length,
-					codeFeatures.withoutHighlightAndCompletion,
+					{ features: semanticFeatures | navigationFeatures },
 				);
 				yield propName;
 				yield boundary2.end();
@@ -157,7 +161,7 @@ export function* generateElementProps(
 				'template',
 				argLoc.start.offset,
 				argLoc.end.offset,
-				codeFeatures.verification,
+				{ features: 0 },
 			);
 			yield* generatePropExp(options, ctx, prop, prop.exp);
 			yield boundary3.end();
@@ -184,7 +188,7 @@ export function* generateElementProps(
 
 			const shouldSpread = prop.name === 'style' || prop.name === 'class';
 			const shouldCamelize = getShouldCamelize(options, node, prop, prop.name);
-			const features = getPropsCodeFeatures(checkUnknownProps);
+			const features = getPropsCodeFeatures();
 
 			if (shouldSpread) {
 				yield `...{ `;
@@ -193,7 +197,7 @@ export function* generateElementProps(
 				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				codeFeatures.verification,
+				{ features: 0 },
 			);
 			const prefix = options.template.content.slice(prop.loc.start.offset, prop.loc.start.offset + 1);
 			if (prefix === '.' || prefix === '#') {
@@ -217,7 +221,7 @@ export function* generateElementProps(
 				yield `{}`;
 			}
 			else if (prop.value) {
-				yield* generateAttrValue(prop.value, codeFeatures.withoutNavigation);
+				yield* generateAttrValue(prop.value, { features: scriptFeatures & ~navigationFeatures });
 			}
 			else {
 				yield `true`;
@@ -241,7 +245,7 @@ export function* generateElementProps(
 					'template',
 					prop.exp.loc.start.offset,
 					prop.exp.loc.end.offset,
-					codeFeatures.verification,
+					{ features: 0 },
 				);
 				yield `...`;
 				yield* generatePropExp(
@@ -271,7 +275,7 @@ export function* generatePropExp(
 			options,
 			ctx,
 			options.template,
-			codeFeatures.all,
+			{ features: scriptFeatures },
 			exp.loc.source,
 			exp.loc.start.offset,
 			`(`,
@@ -286,10 +290,7 @@ export function* generatePropExp(
 				exp.loc.source,
 				'template',
 				exp.loc.start.offset,
-				{
-					...codeFeatures.withoutHighlightAndCompletion,
-					__shorthandExpression: 'html',
-				},
+				{ features: semanticFeatures | navigationFeatures, kind: SpanMapKind.Atom },
 			);
 			yield* generateIdentifier(
 				options,
@@ -308,7 +309,7 @@ export function* generatePropExp(
 
 function* generateAttrValue(
 	node: CompilerDOM.TextNode,
-	features: VueCodeInformation,
+	features: VueCodeMarker,
 ): Generator<Code> {
 	const quote = node.loc.source.startsWith("'") ? "'" : '"';
 	const [content, offset] = normalizeAttributeValue(node);
@@ -337,56 +338,64 @@ function getShouldCamelize(
 		);
 }
 
-function getPropsCodeFeatures(checkUnknownProps: boolean): VueCodeInformation {
-	return {
-		...codeFeatures.withoutHighlightAndCompletion,
-		...checkUnknownProps
-			? codeFeatures.verification
-			: codeFeatures.doNotReportTs2353AndTs2561,
-		__propsCompletion: true,
-	};
+function getPropsCodeFeatures(): VueCodeMarker {
+	return { features: semanticFeatures | navigationFeatures | VueCodeFeature.PropsCompletion };
 }
 
-function getModelPropName(node: CompilerDOM.ElementNode, vueCompilerOptions: VueCompilerOptions) {
-	for (const modelName in vueCompilerOptions.experimentalModelPropName) {
-		const tags = vueCompilerOptions.experimentalModelPropName[modelName];
-		for (const tag in tags) {
-			if (node.tag === tag || node.tag === hyphenateTag(tag)) {
-				const val = tags[tag];
-				if (typeof val === 'object') {
-					const arr = Array.isArray(val) ? val : [val];
-					for (const attrs of arr) {
-						let failed = false;
-						for (const attr in attrs) {
-							const attrNode = node.props.find(
-								prop => prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === attr,
-							) as CompilerDOM.AttributeNode | undefined;
-							if (!attrNode || attrNode.value?.content !== attrs[attr]) {
-								failed = true;
-								break;
-							}
-						}
-						if (!failed) {
-							// all match
-							return modelName || undefined;
-						}
-					}
-				}
-			}
-		}
+/**
+ * The prop that an argument-less `v-model` binds, or `undefined` for none, in which case its expression is
+ * only checked on its own.
+ */
+export function getModelPropName(
+	node: CompilerDOM.ElementNode,
+	vueCompilerOptions: VueCompilerOptions,
+): string | undefined {
+	const tag = hyphenateTag(node.tag);
+	const isElement = node.tagType === CompilerDOM.ElementTypes.ELEMENT;
+	if (
+		Object.hasOwn(vueCompilerOptions.vModelPropName, tag)
+		// an entry of a native tag does not apply to a component of the same name, e.g. `<Input>`
+		&& (isElement || node.tagType === CompilerDOM.ElementTypes.COMPONENT && !isNativeTag(tag))
+	) {
+		return vueCompilerOptions.vModelPropName[tag] || undefined;
 	}
-
-	for (const modelName in vueCompilerOptions.experimentalModelPropName) {
-		const tags = vueCompilerOptions.experimentalModelPropName[modelName];
-		for (const tag in tags) {
-			if (node.tag === tag || node.tag === hyphenateTag(tag)) {
-				const attrs = tags[tag];
-				if (attrs === true) {
-					return modelName || undefined;
-				}
-			}
-		}
+	if (isElement) {
+		return getNativeModelPropName(node);
 	}
-
 	return 'modelValue';
+}
+
+// Follows the runtime directive that `transformModel` of `@vue/compiler-dom` picks:
+// https://github.com/vuejs/core/blob/v3.5.40/packages/compiler-dom/src/transforms/vModel.ts#L48-L100
+// `vModelText` writes `el.value`; the value of `vModelCheckbox` may be an array, a `Set` or a
+// `true-value`, `vModelRadio` compares with `:value`, and `vModelDynamic` picks one of them at runtime,
+// so those bind no prop.
+function getNativeModelPropName(node: CompilerDOM.ElementNode): string | undefined {
+	switch (node.tag) {
+		case 'textarea':
+		case 'select':
+			return 'value';
+		case 'input': {
+			const type = CompilerDOM.findProp(node, 'type');
+			if (type) {
+				if (type.type === CompilerDOM.NodeTypes.DIRECTIVE) {
+					return;
+				}
+				switch (type.value?.content) {
+					case 'radio':
+					case 'checkbox':
+					case 'file':
+						return;
+				}
+				return 'value';
+			}
+			return CompilerDOM.hasDynamicKeyVBind(node) ? undefined : 'value';
+		}
+	}
+	// `@vue/compiler-dom` rejects `v-model` on other elements
+	return 'modelValue';
+}
+
+function isNativeTag(tag: string) {
+	return isHTMLTag(tag) || isSVGTag(tag) || isMathMLTag(tag);
 }

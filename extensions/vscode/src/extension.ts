@@ -19,11 +19,68 @@ import * as focusMode from './focusMode';
 import * as interpolationDecorators from './interpolationDecorators';
 import { restrictFormattingEditsToRange } from './rangeFormatting';
 import * as reactivityVisualization from './reactivityVisualization';
-import { registerModuleTransform } from './registerModuleTransform';
 import * as welcome from './welcome';
 
 let serverPath = resolveServerPath();
-const neededRestart = !patchTypeScriptExtension();
+
+/**
+ * Content mappers for files outside any tsconfig, registered with TypeScript and passed to the language
+ * server. Each contribution runs its own mapper process, since the host keys processes by contribution.
+ */
+const inferredContentMappers = [
+	{
+		package: '@vue/content-mapper',
+		extensions: ['.vue'],
+		options: { languageFeatures: true, target: 99, format: 'sfc' },
+	},
+	{
+		package: '@vue/content-mapper',
+		extensions: ['.vue.md'],
+		options: { languageFeatures: true, target: 99, format: 'vitepress' },
+	},
+];
+
+/** Resolves with the first TypeScript SDK; `latestTypeScriptSdk` follows later TypeScript language server restarts. */
+let typescriptSdk: Promise<TypeScriptSDK> = Promise.reject(new Error('TypeScript (Native Preview) is not installed.'));
+let latestTypeScriptSdk: TypeScriptSDK | undefined;
+typescriptSdk.catch(() => {});
+
+/** Answers the Vue language server's `vue/typescriptApiConnection` request with a fresh pipe to the TypeScript API. */
+async function getTypeScriptApiConnection() {
+	const sdk = latestTypeScriptSdk ?? await typescriptSdk;
+	if (!sdk.packageJsonPath) {
+		throw new Error(
+			'The selected TypeScript 7 installation has no API package. Select a `typescript` package installation in TypeScript (Native Preview).',
+		);
+	}
+	return { pipe: await sdk.initializeAPIConnection(), packageJsonPath: sdk.packageJsonPath };
+}
+
+/** The subset of `typescript/vscode`'s `TypeScriptSDK` used to connect the Vue language server to the TypeScript API. */
+interface TypeScriptSDK {
+	readonly packageJsonPath: string | undefined;
+	initializeAPIConnection(pipe?: string): Promise<string>;
+}
+
+interface TypeScriptNativePreviewAPI {
+	onLanguageServerInitialized?(listener: (sdk: TypeScriptSDK) => unknown): vscode.Disposable;
+	registerContentMappers(
+		contributorId: string,
+		contributions: readonly {
+			extensions: readonly string[];
+			inferredProjectContribution?: {
+				options?: Readonly<Record<string, unknown>>;
+				manifest: {
+					name: string;
+					version?: string;
+					exec: readonly string[];
+					cwd?: vscode.Uri;
+					dynamicConfig?: boolean;
+				};
+			};
+		}[],
+	): vscode.Disposable;
+}
 
 for (
 	const incompatibleExtensionId of [
@@ -50,35 +107,20 @@ export = defineExtension(() => {
 	let client: lsp.BaseLanguageClient | undefined;
 
 	const context = extensionContext.value!;
+	registerTypeScriptContentMapper(context);
 	const volarLabs = createLabsInfo();
 	const activeTextEditor = useActiveTextEditor();
 	const visibleTextEditors = useVisibleTextEditors();
 	const { stop } = watch(activeTextEditor, () => {
 		if (
 			!visibleTextEditors.value.some(
-				editor => config.server.includeLanguages.includes(editor.document.languageId),
+				editor => vscode.languages.match(getIncludeLanguages(), editor.document),
 			)
 		) {
 			return;
 		}
 
 		nextTick(() => stop());
-
-		if (neededRestart) {
-			vscode.window.showInformationMessage(
-				'Please restart the extension host to activate Vue support.',
-				'Restart Extension Host',
-				'Reload Window',
-			).then(action => {
-				if (action === 'Restart Extension Host') {
-					vscode.commands.executeCommand('workbench.action.restartExtensionHost');
-				}
-				else if (action === 'Reload Window') {
-					vscode.commands.executeCommand('workbench.action.reloadWindow');
-				}
-			});
-			return;
-		}
 
 		watch(() => [
 			config.server.path,
@@ -127,20 +169,20 @@ export = defineExtension(() => {
 
 		volarLabs.addLanguageClient(client);
 
-		const selectors = config.server.includeLanguages;
+		const selectors = getIncludeLanguages();
 
 		activateAutoInsertion(selectors, client);
 		activateDocumentDropEdit(selectors, client);
 
 		focusMode.activate(selectors);
-		interpolationDecorators.activate(selectors);
-		reactivityVisualization.activate(selectors);
+		interpolationDecorators.activate(selectors, client);
+		reactivityVisualization.activate(selectors, client);
 		welcome.activate(context);
 	}, { immediate: true });
 
 	useCommand('vue.welcome', () => welcome.execute(context));
 	useCommand('vue.action.restartServer', async () => {
-		await vscode.commands.executeCommand('typescript.restartTsServer');
+		await vscode.commands.executeCommand('typescript.native-preview.restart').then(undefined, () => {});
 		await client?.stop();
 		client?.outputChannel.clear();
 		await client?.start();
@@ -152,6 +194,10 @@ export = defineExtension(() => {
 
 	return volarLabs.extensionExports;
 });
+
+function getIncludeLanguages() {
+	return config.server.includeLanguages as lsp.DocumentSelector;
+}
 
 function launch(serverPath: string, tsdk: string) {
 	const args = ['--tsdk=' + tsdk];
@@ -205,7 +251,8 @@ function launch(serverPath: string, tsdk: string) {
 					return edits;
 				},
 			},
-			documentSelector: config.server.includeLanguages,
+			documentSelector: getIncludeLanguages(),
+			initializationOptions: { contentMappers: inferredContentMappers },
 			markdown: {
 				isTrusted: true,
 				supportHtml: true,
@@ -214,17 +261,7 @@ function launch(serverPath: string, tsdk: string) {
 		},
 	);
 
-	client.onNotification('tsserver/request', ([seq, command, args]) => {
-		vscode.commands.executeCommand<{ body?: unknown } | undefined>(
-			'typescript.tsserverRequest',
-			command,
-			args,
-			{ isAsync: true, lowPriority: true },
-		).then(
-			res => client.sendNotification('tsserver/response', [seq, res?.body]),
-			() => client.sendNotification('tsserver/response', [seq, undefined]),
-		);
-	});
+	client.onRequest('vue/typescriptApiConnection', getTypeScriptApiConnection);
 	client.start();
 
 	return client;
@@ -247,6 +284,64 @@ function resolveTsdkPath() {
 	}
 }
 
+function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
+	const nativePreview = vscode.extensions.getExtension<TypeScriptNativePreviewAPI>(
+		'TypeScriptTeam.native-preview',
+	);
+	if (!nativePreview) {
+		return;
+	}
+
+	const activated = Promise.resolve(nativePreview.activate());
+	typescriptSdk = activated.then(api => {
+		const onLanguageServerInitialized = api?.onLanguageServerInitialized?.bind(api);
+		if (!onLanguageServerInitialized) {
+			throw new Error('TypeScript (Native Preview) is too old to provide its API to other extensions.');
+		}
+		return new Promise(resolve => {
+			// Fires after every TypeScript language server (re)start
+			context.subscriptions.push(onLanguageServerInitialized(sdk => {
+				latestTypeScriptSdk = sdk;
+				resolve(sdk);
+			}));
+		});
+	});
+	typescriptSdk.catch(() => {});
+
+	void activated.then(api => {
+		if (!api?.registerContentMappers) {
+			return;
+		}
+		const tsdk = resolveTsdkPath();
+		if (!tsdk) {
+			return;
+		}
+		const typescriptPath = path.join(tsdk, 'typescript.js');
+		const createContribution = ({ extensions, options }: typeof inferredContentMappers[number]) => ({
+			extensions,
+			inferredProjectContribution: {
+				options,
+				manifest: {
+					name: '@vue/content-mapper',
+					version: require('../package.json').version,
+					exec: [
+						process.execPath,
+						path.join(context.extensionPath, 'dist', 'content-mapper-server.js'),
+						`--worker=${path.join(context.extensionPath, 'dist', 'content-mapper-worker.js')}`,
+						`--typescript=${typescriptPath}`,
+					],
+					cwd: vscode.Uri.file(context.extensionPath),
+					dynamicConfig: true,
+				},
+			},
+		});
+		context.subscriptions.push(api.registerContentMappers(
+			'Vue.volar',
+			inferredContentMappers.map(createContribution),
+		));
+	}, error => logger.logger.value?.error(String(error)));
+}
+
 function resolveServerPath() {
 	if (!config.server.path) {
 		return;
@@ -260,127 +355,8 @@ function resolveServerPath() {
 				.map(({ uri }) => path.join(uri.fsPath, config.server.path!)) ?? []
 	) {
 		try {
-			const entryFile = require.resolve('./index.js', { paths: [serverPath] });
-			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-			// allow tsserver inherit the per-window path without mutating the shared plugin shim
-			process.env.VUE_TYPESCRIPT_PLUGIN_PATH = tsPluginPath;
-			return entryFile;
+			return require.resolve('./index.js', { paths: [serverPath] });
 		}
 		catch {}
 	}
-}
-
-function patchTypeScriptExtension() {
-	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
-	if (tsExtension.isActive) {
-		return false;
-	}
-
-	const child_process = require('node:child_process');
-	const extensionJsPath = require.resolve('./dist/extension.js', { paths: [tsExtension.extensionPath] });
-	const { publisher, name } = require('../package.json');
-	const vueExtension = vscode.extensions.getExtension(`${publisher}.${name}`)!;
-	const tsPluginName = 'vue-typescript-plugin-pack';
-
-	vueExtension.packageJSON.contributes.typescriptServerPlugins = [
-		{
-			name: tsPluginName,
-			enableForWorkspaceTypeScriptVersions: true,
-			configNamespace: 'typescript',
-			languages: config.server.includeLanguages,
-		},
-		{
-			name: 'vue-reactivity-analysis-plugin-pack',
-			enableForWorkspaceTypeScriptVersions: true,
-		},
-	];
-
-	registerModuleTransform(extensionJsPath, text => {
-		const id = String.raw`[\w$]+(?:\.[\w$]+)?`;
-
-		// patch jsTsLanguageModes
-		// before 1.110: t.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]
-		// since 1.110:  "javascriptreact",Oh=[Ma,Ua,bl,Ns]
-		text = text.replace(
-			new RegExp(
-				String
-					.raw`(\.jsTsLanguageModes=\[${id},${id},${id},${id}\])|("javascriptreact",(${id})=\[(${id},${id},${id},${id})\])`,
-			),
-			(_match, oldFormat, _newFull, newLhs, newElements) => {
-				if (oldFormat) {
-					return oldFormat + '.concat("vue")';
-				}
-				return `"javascriptreact",${newLhs}=[${newElements}].concat("vue")`;
-			},
-		);
-		// patch isSupportedLanguageMode (4 language IDs)
-		// before 1.110: .languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]
-		// since 1.110:  .languages.match([bl,Ns,Ma,Ua],r)>0
-		text = text.replace(
-			new RegExp(String.raw`\.languages\.match\(\[(${id},${id},${id},${id})\]`),
-			(_, ids) => `.languages.match([${ids}].concat("vue")`,
-		);
-		// patch isTypeScriptDocument (2 language IDs)
-		// before 1.110: .languages.match([t.typescript,t.typescriptreact]
-		// since 1.110:  .languages.match([bl,Ns],r)>0
-		text = text.replace(
-			new RegExp(String.raw`\.languages\.match\(\[(${id},${id})\]`),
-			(_, ids) => `.languages.match([${ids}].concat("vue")`,
-		);
-		// patch standardFileExtensions
-		text = text.replace(
-			new RegExp(String.raw`registerExtensionLanguageProvider\((${id}),${id}\)\{`),
-			(match, id) => `${match}if(${id}.languageIds.includes("vue"))${id}.standardFileExtensions.push("vue");`,
-		);
-		// patch getJsTsFileBeingMoved
-		text = text.replace(
-			new RegExp(String.raw`.RelativePattern\(${id},"\*\*\/\*\.\{ts,tsx,js,jsx`),
-			match => `${match},vue`,
-		);
-
-		// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
-		// before 1.110: "--globalPlugins",i.plugins
-		// since 1.110:  "--globalPlugins",o.plugins.map(v=>v.name).join(","))
-		text = text.replace(
-			/"--globalPlugins",([\w$]+)\.plugins/,
-			s => s + `.sort((a,b)=>(b.name==="${tsPluginName}"?-1:0)-(a.name==="${tsPluginName}"?-1:0))`,
-		);
-
-		return text;
-	});
-
-	const patchTsserverPath = path.join(__dirname, 'patch-tsserver.js');
-
-	const spawn = child_process.spawn;
-	child_process.spawn = (...args: any[]) => {
-		if (Array.isArray(args[1])) {
-			const index = args[1].findIndex(arg => typeof arg === 'string' && isTsserverFile(arg));
-			if (index !== -1) {
-				args[1].splice(index, 0, '--require', patchTsserverPath);
-			}
-		}
-		return spawn(...args);
-	};
-
-	const fork = child_process.fork;
-	child_process.fork = (...args: any[]) => {
-		if (typeof args[0] === 'string' && isTsserverFile(args[0])) {
-			const optionsIndex = Array.isArray(args[1]) ? 2 : 1;
-			const options = args[optionsIndex] ??= {};
-			options.execArgv = [...options.execArgv ?? process.execArgv, '--require', patchTsserverPath];
-		}
-		return fork(...args);
-	};
-
-	function isTsserverFile(file: string) {
-		return path.isAbsolute(file) && path.basename(file) === 'tsserver.js';
-	}
-
-	const loadedModule = require.cache[extensionJsPath];
-	if (loadedModule) {
-		delete require.cache[extensionJsPath];
-		const patchedModule = require(extensionJsPath);
-		Object.assign(loadedModule.exports, patchedModule);
-	}
-	return true;
 }

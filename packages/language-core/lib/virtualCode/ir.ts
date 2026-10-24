@@ -1,7 +1,8 @@
+import type { IScriptSnapshot } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { computed, setActiveSub } from 'alien-signals';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type {
 	IR,
 	IRAttr,
@@ -11,15 +12,16 @@ import type {
 	IRScriptSetup,
 	IRStyle,
 	IRTemplate,
+	TypeScript,
 	VueLanguagePluginReturn,
 } from '../types';
 import { computedArray, reactiveArray } from '../utils/signals';
 
 export function useIR(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	plugins: VueLanguagePluginReturn[],
 	fileName: string,
-	getSnapshot: () => ts.IScriptSnapshot,
+	getSnapshot: () => IScriptSnapshot,
 	getParseSfcResult: () => SFCParseResult | undefined,
 ): IR {
 	const getUntrackedSnapshot = () => {
@@ -119,7 +121,7 @@ export function useIR(
 				generic: undefined,
 				genericOffset: 0,
 				attrs: {},
-				ast: ts.createSourceFile('', '', 99 satisfies ts.ScriptTarget.Latest, false, ts.ScriptKind.TS),
+				ast: ts.createSourceFile('/dummy.ts', '', 99 satisfies ts.ScriptTarget.Latest, false, ts.ScriptKind.TS),
 			};
 		}
 		return getOriginalScriptSetup();
@@ -139,10 +141,6 @@ export function useIR(
 					}
 				}
 			});
-			const getImports = computedArray(
-				() => getIr()?.imports ?? [],
-				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
-			);
 			const getBindings = computedArray(
 				() => getIr()?.bindings ?? [],
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
@@ -161,9 +159,6 @@ export function useIR(
 					},
 					get scoped() {
 						return getScoped();
-					},
-					get imports() {
-						return getImports();
 					},
 					get bindings() {
 						return getBindings();
@@ -214,7 +209,7 @@ export function useIR(
 
 	function useParseTemplateResult(base: IRBlock) {
 		return computed<{
-			snapshot: ts.IScriptSnapshot;
+			snapshot: IScriptSnapshot;
 			template: string;
 			errors: CompilerDOM.CompilerError[];
 			warnings: CompilerDOM.CompilerError[];

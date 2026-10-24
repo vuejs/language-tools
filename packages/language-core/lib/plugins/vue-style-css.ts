@@ -2,11 +2,10 @@ import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
 	return {
-		version: 2.2,
+		version: 4,
 
 		compileSFCStyle(_lang, style) {
 			return {
-				imports: [...parseCssImports(style)],
 				bindings: [...parseCssBindings(style)],
 				classNames: [...parseCssClassNames(style)],
 			};
@@ -16,17 +15,10 @@ const plugin: VueLanguagePlugin = () => {
 
 export default plugin;
 
-const cssImportRE = /(?<=@import\s+url\()(["']?).*?\1(?=\))|(?<=@import\b\s*)(["']).*?\2/g;
 const cssBindingRE = /\bv-bind\s*\(/g;
 const cssClassNameRE = /\.[a-z_][-\w]*(?=[\s.,+~>:#)[{])/gi;
 const commentRE = /(?<=\/\*)[\s\S]*?(?=\*\/)|(?<=\/\/)[\s\S]*?(?=\n)/g;
 const fragmentRE = /(?<={)[^{]*(?=(?<!\\);)/g;
-
-function* parseCssImports(css: string) {
-	for (const match of css.matchAll(cssImportRE)) {
-		yield trimQuotes(match[0], match.index);
-	}
-}
 
 function* parseCssBindings(css: string) {
 	css = fillBlank(css, commentRE);

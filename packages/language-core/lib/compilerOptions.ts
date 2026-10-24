@@ -1,125 +1,16 @@
 import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import picomatch from 'picomatch';
-import type * as ts from 'typescript';
 import type { RawPlugin, RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from './types';
 import { hyphenateTag } from './utils/shared';
 
-interface ParseConfigHost extends Omit<ts.ParseConfigHost, 'readDirectory'> {}
-
-export interface ParsedCommandLine extends Omit<ts.ParsedCommandLine, 'fileNames'> {
-	vueOptions: VueCompilerOptions;
-}
-
-export function createParsedCommandLineByJson(
-	ts: typeof import('typescript'),
-	host: ParseConfigHost,
-	rootDir: string,
-	json: any,
-	configFileName?: string,
-): ParsedCommandLine {
-	const extendedPaths = new Set<string>();
-	const proxyHost = {
-		...host,
-		readFile(fileName: string) {
-			if (!fileName.endsWith('/package.json')) {
-				extendedPaths.add(fileName);
-			}
-			return host.readFile(fileName);
-		},
-		readDirectory() {
-			return [];
-		},
-	};
-	const config = ts.readJsonConfigFile(rootDir, () => JSON.stringify(json));
-	const parsed = ts.parseJsonSourceFileConfigFileContent(
-		config,
-		proxyHost,
-		rootDir,
-		{},
-		configFileName,
-	);
-	const resolver = new CompilerOptionsResolver(ts, host.readFile);
-
-	for (const extendPath of [...extendedPaths].reverse()) {
-		try {
-			const configFile = ts.readJsonConfigFile(extendPath, host.readFile);
-			const obj = ts.convertToObject(configFile, []);
-			const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
-			resolver.addConfig(rawOptions, path.dirname(configFile.fileName));
-		}
-		catch {}
-	}
-
-	resolver.addConfig(json?.vueCompilerOptions ?? {}, rootDir);
-
-	return {
-		...parsed,
-		vueOptions: resolver.build(),
-	};
-}
-
-export function createParsedCommandLine(
-	ts: typeof import('typescript'),
-	host: ParseConfigHost,
-	configFileName: string,
-): ParsedCommandLine {
-	try {
-		const extendedPaths = new Set<string>();
-		const proxyHost = {
-			...host,
-			readFile(fileName: string) {
-				if (!fileName.endsWith('/package.json')) {
-					extendedPaths.add(fileName);
-				}
-				return host.readFile(fileName);
-			},
-			readDirectory() {
-				return [];
-			},
-		};
-		const config = ts.readJsonConfigFile(configFileName, proxyHost.readFile);
-		const parsed = ts.parseJsonSourceFileConfigFileContent(
-			config,
-			proxyHost,
-			path.dirname(configFileName),
-			{},
-			configFileName,
-		);
-		const resolver = new CompilerOptionsResolver(ts, host.readFile);
-
-		for (const extendPath of [...extendedPaths].reverse()) {
-			try {
-				const configFile = ts.readJsonConfigFile(extendPath, host.readFile);
-				const obj = ts.convertToObject(configFile, []);
-				const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
-				resolver.addConfig(rawOptions, path.dirname(configFile.fileName));
-			}
-			catch {}
-		}
-
-		return {
-			...parsed,
-			vueOptions: resolver.build(),
-		};
-	}
-	catch {}
-
-	return {
-		options: {},
-		errors: [],
-		vueOptions: getDefaultCompilerOptions(),
-	};
-}
-
 export class CompilerOptionsResolver {
-	options: Omit<RawVueCompilerOptions, 'target' | 'strictTemplates' | 'typesRoot' | 'plugins'> = {};
+	options: Omit<RawVueCompilerOptions, 'target' | 'typesRoot' | 'plugins'> = {};
 	target: number | undefined;
 	typesRoot: string | undefined;
 	plugins: VueLanguagePlugin[] = [];
 
 	constructor(
-		public ts: typeof import('typescript'),
 		public readFile: (fileName: string) => string | undefined,
 	) {}
 
@@ -133,14 +24,6 @@ export class CompilerOptionsResolver {
 					else {
 						this.target = options[key];
 					}
-					break;
-				case 'strictTemplates':
-					const strict = !!options.strictTemplates;
-					this.options.strictVModel ??= strict;
-					this.options.checkUnknownProps ??= strict;
-					this.options.checkUnknownEvents ??= strict;
-					this.options.checkUnknownDirectives ??= strict;
-					this.options.checkUnknownComponents ??= strict;
 					break;
 				case 'typesRoot':
 					if (options[key] !== undefined) {
@@ -173,7 +56,6 @@ export class CompilerOptionsResolver {
 		defaults = getDefaultCompilerOptions(
 			this.target,
 			this.options.lib,
-			undefined,
 			this.typesRoot,
 		),
 	): VueCompilerOptions {
@@ -193,12 +75,17 @@ export class CompilerOptionsResolver {
 				...defaults.fallthroughComponentNames,
 				...this.options.fallthroughComponentNames ?? [],
 			].map(hyphenateTag),
-			// https://github.com/vuejs/core/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
-			// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
-			experimentalModelPropName: Object.fromEntries(
-				Object.entries(
-					this.options.experimentalModelPropName ?? defaults.experimentalModelPropName,
-				).map(([k, v]) => [camelize(k), v]),
+			// a later entry of the same normalized tag wins, so the project overrides the defaults
+			// and an SFC root comment overrides the project
+			vModelPropName: Object.fromEntries(
+				Object.entries({
+					...defaults.vModelPropName,
+					...this.options.vModelPropName,
+				}).flatMap(([tag, prop]): [string, string | false][] =>
+					// other values, such as the prop-keyed shape of `experimentalModelPropName`, are reported by the
+					// content mapper's option diagnostics
+					prop === false || typeof prop === 'string' ? [[hyphenateTag(tag), prop && camelize(prop)]] : []
+				),
 			),
 		};
 		// Compiling a glob costs far more than testing it, and codegen tests every prop against these
@@ -209,22 +96,17 @@ export class CompilerOptionsResolver {
 	}
 
 	resolveVueVersion(folder: string): number | undefined {
-		const packageJsonPath = this.ts.findConfigFile(
-			folder,
-			fileName => this.readFile(fileName) !== undefined,
-			'node_modules/vue/package.json',
-		);
-		if (!packageJsonPath) {
-			return;
+		for (let dir = folder;; dir = path.dirname(dir)) {
+			const packageJsonContent = this.readFile(path.join(dir, 'node_modules/vue/package.json'));
+			if (packageJsonContent) {
+				const version: string = JSON.parse(packageJsonContent).version;
+				const [majorVersion, minorVersion] = version.split('.');
+				return Number(majorVersion + '.' + minorVersion);
+			}
+			if (path.dirname(dir) === dir) {
+				return;
+			}
 		}
-		const packageJsonContent = this.readFile(packageJsonPath);
-		if (!packageJsonContent) {
-			return;
-		}
-		const packageJson = JSON.parse(packageJsonContent);
-		const version: string = packageJson.version;
-		const [majorVersion, minorVersion] = version.split('.');
-		return Number(majorVersion + '.' + minorVersion);
 	}
 }
 
@@ -256,7 +138,6 @@ function resolvePlugins(list: RawPlugin[], rootDir: string): VueLanguagePlugin[]
 export function getDefaultCompilerOptions(
 	target = 99,
 	lib = 'vue',
-	strictTemplates = false,
 	typesRoot = typeof __dirname !== 'undefined'
 		? path.join(__dirname.replace(/\\/g, '/'), '..', 'types')
 		: '@vue/language-core/types',
@@ -268,16 +149,10 @@ export function getDefaultCompilerOptions(
 		target,
 		lib,
 		typesRoot,
-		extensions: ['.vue'],
-		vitePressExtensions: [],
-		petiteVueExtensions: [],
+		format: 'sfc',
+		globalTemplateContext: false,
 		jsxSlots: false,
 		strictCssModules: false,
-		strictVModel: strictTemplates,
-		checkUnknownProps: strictTemplates,
-		checkUnknownEvents: strictTemplates,
-		checkUnknownDirectives: strictTemplates,
-		checkUnknownComponents: strictTemplates,
 		inferComponentDollarEl: false,
 		inferComponentDollarRefs: false,
 		inferTemplateDollarAttrs: false,
@@ -288,7 +163,6 @@ export function getDefaultCompilerOptions(
 		vapor: false,
 		fallthroughAttributes: false,
 		checkRequiredFallthroughAttributes: false,
-		resolveStyleImports: false,
 		resolveStyleClassNames: 'scoped',
 		fallthroughComponentNames: [
 			'Transition',
@@ -317,15 +191,6 @@ export function getDefaultCompilerOptions(
 			useTemplateRef: ['useTemplateRef', 'templateRef'],
 		},
 		plugins: [],
-		experimentalModelPropName: {
-			'': {
-				input: true,
-			},
-			value: {
-				input: { type: 'text' },
-				textarea: true,
-				select: true,
-			},
-		},
+		vModelPropName: {},
 	};
 }

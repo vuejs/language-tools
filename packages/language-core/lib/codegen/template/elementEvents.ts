@@ -1,9 +1,9 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { getUnwrappedExpression } from '../../parsers/utils';
-import type { Code, VueCodeInformation } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import type { Code, TypeScript, VueCodeMarker } from '../../types';
+import { navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { names } from '../names';
 import {
 	endOfLine,
@@ -14,9 +14,10 @@ import {
 	isTsLang,
 	newLine,
 } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
+import { getModelPropName } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 
@@ -39,15 +40,24 @@ export function* generateElementEvents(
 			offset: number | undefined;
 		}[];
 	}> = {};
+	const writeBacks: { prop: CompilerDOM.DirectiveNode; propName: string }[] = [];
 
 	for (const prop of node.props) {
+		if (prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'model' && !prop.arg) {
+			const propName = getModelPropName(node, options.vueCompilerOptions);
+			// a tag mapped to another prop, like a custom element, has `v-model` write back from that prop
+			// as the runtime directives of native elements do, not from an `update:modelValue` event
+			if (propName !== undefined && propName !== 'modelValue') {
+				writeBacks.push({ prop, propName });
+				continue;
+			}
+		}
 		if (
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& (
 				prop.name === 'on'
 					&& (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
-				|| options.vueCompilerOptions.strictVModel
-					&& prop.name === 'model'
+				|| prop.name === 'model'
 					&& (!prop.arg || prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
 			)
 		) {
@@ -88,6 +98,19 @@ export function* generateElementEvents(
 		}
 	}
 
+	for (const { prop, propName } of writeBacks) {
+		const writeBackVar = ctx.getInternalVariable();
+		yield `const ${writeBackVar} = `;
+		yield* generateModelEventExpression(
+			options,
+			ctx,
+			prop,
+			`[${names.ModelWriteBack}<typeof ${getPropsVar()}, '${propName}'>]`,
+		);
+		yield endOfLine;
+		yield `void ${writeBackVar}${endOfLine}`;
+	}
+
 	if (!Object.keys(definitions).length) {
 		return;
 	}
@@ -99,11 +122,10 @@ export function* generateElementEvents(
 
 	for (const { propPrefix, emitPrefix, propName, emitName, items } of Object.values(definitions)) {
 		const eventVar = ctx.getInternalVariable();
-		const eventType = `${
-			options.vueCompilerOptions.checkUnknownEvents ? '' : 'Record<string, unknown> & '
-		}Partial<${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
-			camelize(emitName)
-		}'>>`;
+		const eventType =
+			`Partial<${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
+				camelize(emitName)
+			}'>>`;
 		if (isTsLang(options.scriptLang)) {
 			yield `const ${eventVar}: ${eventType} = {${newLine}`;
 		}
@@ -114,11 +136,18 @@ export function* generateElementEvents(
 			const argsType = `${names.EventArgs}<${eventType}, '${propName}'>`;
 			if (prop.name === 'on') {
 				yield `/** @type {typeof ${emitsVar}.`;
-				yield* generateEventArg(options, source, offset!, emitPrefix.slice(0, -1), codeFeatures.navigation);
+				const ignore = yield* Boundary.start(source, 0, 0, synthesizedIgnore);
+				yield* generateEventArg(
+					source,
+					offset!,
+					emitPrefix.slice(0, -1),
+					{ features: navigationFeatures },
+				);
+				yield ignore.end();
 				yield `} */${newLine}`;
 				// in JS, the JSDoc above types the property, and fails to parse for a non-identifier name
 				const emitArgName = getEventArgName(source, emitPrefix.slice(0, -1));
-				yield* generateEventArg(options, source, offset!, propPrefix.slice(0, -1));
+				yield* generateEventArg(source, offset!, propPrefix.slice(0, -1));
 				yield `: `;
 				yield* generateEventExpression(
 					options,
@@ -143,19 +172,12 @@ export function* generateElementEvents(
 }
 
 export function* generateEventArg(
-	options: TemplateCodegenOptions,
 	name: string,
 	start: number,
 	directive = 'on',
-	features?: VueCodeInformation,
+	features?: VueCodeMarker,
 ): Generator<Code> {
-	features ??= {
-		...codeFeatures.semanticWithoutHighlight,
-		...codeFeatures.navigationWithoutRename,
-		...options.vueCompilerOptions.checkUnknownEvents
-			? codeFeatures.verification
-			: codeFeatures.doNotReportTs2353AndTs2561,
-	};
+	features ??= { features: semanticFeatures | navigationFeatures };
 
 	if (directive.length) {
 		name = capitalize(name);
@@ -163,12 +185,13 @@ export function* generateEventArg(
 	const boundary = yield* Boundary.start('template', start, start + name.length, features);
 	if (identifierRE.test(camelize(name))) {
 		yield directive;
-		yield* generateCamelized(name, 'template', start, boundary.features);
+		yield* generateCamelized(name, 'template', start);
+		yield boundary.end();
 	}
 	else {
 		yield `'`;
 		yield directive;
-		yield* generateCamelized(name, 'template', start, boundary.features);
+		yield* generateCamelized(name, 'template', start);
 		yield `'`;
 		yield boundary.end();
 	}
@@ -206,7 +229,7 @@ export function* generateEventExpression(
 			options,
 			ctx,
 			options.template,
-			codeFeatures.all,
+			{ features: scriptFeatures },
 			prop.exp.content,
 			prop.exp.loc.start.offset,
 			isCompound ? `` : `(`,
@@ -214,8 +237,9 @@ export function* generateEventExpression(
 		);
 
 		if (isCompound) {
-			const scope = ctx.scope();
+			const scope = ctx.blockScope();
 			scope.declare('$event');
+			scope.read.add('$event');
 
 			const accessMark = ctx.accessLog.length;
 			const codes: Code[] = [];
@@ -276,7 +300,7 @@ export function* generateModelEventExpression(
 			options,
 			ctx,
 			options.template,
-			codeFeatures.verification,
+			{ features: 0 },
 			prop.exp.content,
 			prop.exp.loc.start.offset,
 			undefined,
@@ -323,7 +347,7 @@ function* generateReasserts(
 	}
 }
 
-export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.SourceFile) {
+export function isCompoundExpression(ts: TypeScript, ast: ts.SourceFile) {
 	if (ast.statements.length === 0) {
 		return false;
 	}
@@ -347,7 +371,7 @@ export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.So
 	return true;
 }
 
-function isSingleExpression(ts: typeof import('typescript'), ast: ts.SourceFile) {
+function isSingleExpression(ts: TypeScript, ast: ts.SourceFile) {
 	if (ast.statements.length === 1 && ast.text[ast.endOfFileToken.pos - 1] !== ';') {
 		const statement = ast.statements[0]!;
 		if (ts.isExpressionStatement(statement)) {

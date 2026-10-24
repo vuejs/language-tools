@@ -20,7 +20,7 @@ import { createVueLanguageServicePlugins } from '@vue/language-service';
 import * as ts from 'typescript';
 
 // Create Vue language service plugins
-// The optional second argument `client` is used for communication with @vue/typescript-plugin
+// The optional second argument `client` answers the type-aware requests of `lib/requests`
 const plugins = createVueLanguageServicePlugins(ts);
 ```
 
@@ -45,7 +45,6 @@ const plugins = createVueLanguageServicePlugins(ts);
 | `vue-format-per-block` | Formatting per block |
 | `vue-compiler-dom-errors` | Vue compiler error diagnostics |
 | `vue-directive-comments` | Directive comment support (`<!-- @vue-skip -->`, etc.) |
-| `vue-component-semantic-tokens` | Component semantic tokens |
 | `vue-inlayhints` | Inlay hints (destructured props, inline handlers, etc.) |
 | `vue-missing-props-hints` | Hints for missing required props |
 | `vue-autoinsert-dotvalue` | Auto-insertion of `.value` for ref variables |
@@ -54,31 +53,8 @@ const plugins = createVueLanguageServicePlugins(ts);
 | `vue-template-ref-links` | Template ref links |
 | `vue-extract-file` | Extract component refactoring |
 | `vue-document-drop` | Auto-generation of import on file drop |
-| `vue-document-highlights` | Document highlights |
 | `vue-suggest-define-assignment` | Assignment suggestions for `defineProps`, etc. |
-| `vue-twoslash-queries` | Twoslash query support (`// ^?`) |
 | `css` | CSS language service, supporting v-bind and CSS Modules |
-| `typescript-semantic-tokens` | TypeScript semantic tokens |
-
-## Usage with @volar/kit
-
-To use the language service in a Node.js environment (e.g., for linting or testing):
-
-```typescript
-import { createLanguage, createVueLanguagePlugin } from '@vue/language-core';
-import { createLanguageService, createVueLanguageServicePlugins } from '@vue/language-service';
-import ts from 'typescript';
-
-const language = createLanguage([
-  createVueLanguagePlugin(ts, compilerOptions, vueCompilerOptions, asFileName),
-]);
-
-const service = createLanguageService(
-  language,
-  createVueLanguageServicePlugins(ts),
-  env,
-);
-```
 
 ## Related Packages
 

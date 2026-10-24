@@ -1,0 +1,13 @@
+{
+	"extends": "../tsconfig.base.json",
+	"compilerOptions": {
+		"noUnusedLocals": false,
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	},
+	"contentMappers": [
+		{ "package": "@vue/content-mapper", "extensions": [".vue"] }
+	],
+	"include": ["src"]
+}

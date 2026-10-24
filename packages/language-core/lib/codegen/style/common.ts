@@ -1,7 +1,7 @@
-import type { Code, IRStyle } from '../../types';
-import { codeFeatures } from '../codeFeatures';
-import { newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
+import type { Code, IRAttr } from '../../types';
+import { navigationFeatures } from '../features';
+import { identifierRE, newLine } from '../utils';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 
 export function* generateClassProperty(
 	source: string,
@@ -10,43 +10,38 @@ export function* generateClassProperty(
 	propertyType: string,
 ): Generator<Code> {
 	yield `${newLine} & { `;
-	const boundary = yield* Boundary.start(
-		source,
-		offset,
-		offset + classNameWithDot.length,
-		codeFeatures.navigation,
-	);
-	yield `'`;
-	yield [classNameWithDot.slice(1), source, offset + 1, boundary.features];
-	yield `'`;
-	yield boundary.end();
+	const className = classNameWithDot.slice(1);
+	// An unquoted name maps verbatim, so it can be both a definition and renamed.
+	const ignore = yield* Boundary.start(source, 0, 0, synthesizedIgnore);
+	if (identifierRE.test(className)) {
+		yield [className, source, offset + 1, { features: navigationFeatures }];
+	}
+	else {
+		const boundary = yield* Boundary.start(
+			source,
+			offset,
+			offset + classNameWithDot.length,
+			{ features: navigationFeatures },
+		);
+		yield `'`;
+		yield [className, source, offset + 1, undefined];
+		yield `'`;
+		yield boundary.end();
+	}
+	yield ignore.end();
 	yield `: ${propertyType}`;
 	yield ` }`;
 }
 
-export function* generateStyleImports(style: IRStyle): Generator<Code> {
-	if (typeof style.src === 'object') {
-		yield `${newLine} & typeof import(`;
-		const boundary = yield* Boundary.start(
-			'main',
-			style.src.offset,
-			style.src.offset + style.src.text.length,
-			codeFeatures.navigationAndVerification,
-		);
-		yield `'`;
-		yield [style.src.text, 'main', style.src.offset, boundary.features];
-		yield `'`;
-		yield boundary.end();
-		yield `).default`;
-	}
-	for (const { text, offset } of style.imports) {
-		yield `${newLine} & typeof import('`;
-		yield [
-			text,
-			style.name,
-			offset,
-			codeFeatures.navigationAndVerification,
-		];
-		yield `').default`;
-	}
+export function* generateStyleSrc(src: Exclude<IRAttr, true>): Generator<Code> {
+	const boundary = yield* Boundary.start(
+		'main',
+		src.offset,
+		src.offset + src.text.length,
+		{ features: navigationFeatures },
+	);
+	yield `'`;
+	yield [src.text, 'main', src.offset, undefined];
+	yield `'`;
+	yield boundary.end();
 }

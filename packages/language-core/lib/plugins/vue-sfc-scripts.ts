@@ -1,9 +1,10 @@
-import { codeFeatures } from '../codegen/codeFeatures';
+import { SpanMapFeature } from '@volar/language-core';
+import { structureFeatures } from '../codegen/features';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
 	return {
-		version: 2.2,
+		version: 4,
 
 		getEmbeddedCodes(_fileName, ir) {
 			const names: {
@@ -30,7 +31,7 @@ const plugin: VueLanguagePlugin = () => {
 					script.content,
 					script.name,
 					0,
-					codeFeatures.structureAndFormat,
+					{ features: structureFeatures | SpanMapFeature.Formatting },
 				]);
 			}
 		},

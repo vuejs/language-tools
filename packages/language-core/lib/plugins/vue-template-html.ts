@@ -18,7 +18,7 @@ const shouldAddSuffixRE = /(?<=<[^>/]+)$/;
 
 const plugin: VueLanguagePlugin = () => {
 	return {
-		version: 2.2,
+		version: 4,
 
 		compileSFCTemplate(lang, template, options) {
 			if (lang === 'html' || lang === 'md') {

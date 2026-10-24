@@ -1,6 +1,7 @@
-import type { Code, IRBlock, VueCodeInformation, VueCompilerOptions } from '../../types';
+import { SpanMapKind } from '@volar/language-core';
+import type { Code, IRBlock, TypeScript, VueCodeMarker, VueCompilerOptions } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
-import { codeFeatures } from '../codeFeatures';
+import { completionFeatures } from '../features';
 import { names } from '../names';
 import { getRefBrandArgument, getTypeScriptAST, identifierRE } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -9,11 +10,11 @@ import type { TemplateCodegenContext } from './context';
 
 export function* generateInterpolation(
 	options: IdentifierOptions & {
-		typescript: typeof import('typescript');
+		typescript: TypeScript;
 	},
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
-	features: VueCodeInformation,
+	features: VueCodeMarker,
 	code: string,
 	start: number,
 	prefix: string = '',
@@ -24,9 +25,15 @@ export function* generateInterpolation(
 		yield prefix;
 	}
 
+	const memberFeatures: VueCodeMarker = { features: features.features & completionFeatures };
+	const featuresWithoutCompletion: VueCodeMarker = {
+		...features,
+		features: features.features & ~completionFeatures,
+	};
+
 	let prevEnd = 0;
 	for (
-		const [name, offset, isShorthand, isNarrowing, inTypeQuery, isNewOperand] of forEachIdentifiers(
+		const [name, offset, isShorthand, isNarrowing, inTypeQuery, isNewOperand, skipped] of forEachIdentifiers(
 			options.typescript,
 			ctx,
 			block,
@@ -36,17 +43,11 @@ export function* generateInterpolation(
 			inNarrowing,
 		)
 	) {
-		if (isShorthand) {
-			yield* generateNonIdentifierCode(
-				code.slice(prevEnd, offset + name.length),
-				block.name,
-				start + prevEnd,
-				features,
-				prevEnd > 0,
-			);
-			yield `: `;
+		const isMember = ctx.recordScopeMember(name, block.name, start + offset, memberFeatures);
+		if (skipped && !isMember) {
+			continue;
 		}
-		else if (prevEnd < offset) {
+		if (prevEnd < offset) {
 			yield* generateNonIdentifierCode(
 				code.slice(prevEnd, offset),
 				block.name,
@@ -55,15 +56,20 @@ export function* generateInterpolation(
 				prevEnd > 0,
 			);
 		}
+		prevEnd = offset + name.length;
 
-		const codes: Code[] = [[
-			name,
-			block.name,
-			start + offset,
-			isShorthand
-				? { ...features, __shorthandExpression: 'js' as const }
-				: features,
-		]];
+		const identifierFeatures = isMember ? featuresWithoutCompletion : features;
+		if (skipped) {
+			yield [name, block.name, start + offset, identifierFeatures];
+			continue;
+		}
+		const marker = isShorthand ? { ...identifierFeatures, kind: SpanMapKind.Atom } : identifierFeatures;
+		if (isShorthand) {
+			yield [name, block.name, start + offset, marker];
+			yield `: `;
+		}
+
+		const codes: Code[] = [[name, block.name, start + offset, marker]];
 
 		yield* generateIdentifier(
 			options,
@@ -77,8 +83,6 @@ export function* generateInterpolation(
 			inTypeQuery,
 			isNewOperand,
 		);
-
-		prevEnd = offset + name.length;
 	}
 
 	if (prevEnd < code.length) {
@@ -97,18 +101,18 @@ export function* generateInterpolation(
 }
 
 /**
- * Yield a code chunk, cutting the boundary character off as verification-only.
+ * Yield a code chunk, cutting the boundary character off as diagnostics-only.
  *
  * Adjacent mappings share the boundary offset (closed interval), so both the
  * neighbouring token's end and this chunk's start claim the same source offset.
- * Downgrading the boundary character to verification-only keeps content-sensitive
+ * Downgrading the boundary character to diagnostics-only keeps content-sensitive
  * features (rename / navigation) from firing on the neighbouring chunk.
  */
 function* generateNonIdentifierCode(
 	code: string,
 	source: string,
 	offset: number,
-	data: VueCodeInformation,
+	data: VueCodeMarker,
 	shouldCut = true,
 ): Generator<Code> {
 	if (!code.length) {
@@ -118,7 +122,12 @@ function* generateNonIdentifierCode(
 		yield [code, source, offset, data];
 		return;
 	}
-	yield [code.slice(0, 1), source, offset, { verification: data.verification }];
+	yield [
+		code.slice(0, 1),
+		source,
+		offset,
+		{ features: 0 },
+	];
 	if (code.length > 1) {
 		yield [code.slice(1), source, offset + 1, data];
 	}
@@ -164,7 +173,7 @@ export function* generateIdentifier(
 			source,
 			start,
 			end,
-			codeFeatures.verification,
+			{ features: 0 },
 		);
 		yield `value`;
 		yield boundary.end();
@@ -179,7 +188,7 @@ export function* generateIdentifier(
 				source,
 				start,
 				end,
-				codeFeatures.verification,
+				{ features: 0 },
 			);
 			yield `value`;
 			yield boundary.end();
@@ -204,7 +213,7 @@ export function* generateIdentifier(
 			source,
 			start,
 			end,
-			codeFeatures.verification,
+			{ features: 0 },
 		);
 		if (ctx.dollarVars.has(name)) {
 			yield names.dollars;
@@ -220,7 +229,7 @@ export function* generateIdentifier(
 }
 
 function* forEachIdentifiers(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
 	code: string,
@@ -228,8 +237,8 @@ function* forEachIdentifiers(
 	suffix: string,
 	inNarrowing: boolean,
 ): Generator<IdentifierAccess> {
-	if (identifierRE.test(code) && !shouldIdentifierSkipped(ctx, code)) {
-		yield [code, 0, false, inNarrowing, false, false];
+	if (identifierRE.test(code)) {
+		yield [code, 0, false, inNarrowing, false, false, shouldIdentifierSkipped(ctx, code)];
 		return;
 	}
 
@@ -245,11 +254,16 @@ function* forEachIdentifiers(
 			inNarrowing,
 		)
 	) {
-		if (skipped) {
-			continue;
-		}
-		const text = getNodeText(ts, id, ast);
-		yield [text, getStartEnd(ts, id, ast).start - prefix.length, isShorthand, isNarrowing, inTypeQuery, isNewOperand];
+		const text = getNodeText(id, ast);
+		yield [
+			text,
+			getStartEnd(id, ast).start - prefix.length,
+			isShorthand,
+			isNarrowing,
+			inTypeQuery,
+			isNewOperand,
+			skipped,
+		];
 	}
 	scope.end();
 }
@@ -261,4 +275,5 @@ type IdentifierAccess = [
 	isNarrowing: boolean,
 	inTypeQuery: boolean,
 	isNewOperand: boolean,
+	skipped: boolean,
 ];

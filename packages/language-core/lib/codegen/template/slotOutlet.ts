@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { getElementTagOffsets, normalizeAttributeValue } from '../../utils/shared';
-import { codeFeatures } from '../codeFeatures';
+import { navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { endOfLine, newLine } from '../utils';
@@ -40,7 +40,7 @@ export function* generateSlotOutlet(
 			let codes: Generator<Code> | Code[];
 			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
 				const [content, offset] = normalizeAttributeValue(nameProp.value);
-				codes = generatePropertyAccess(options, ctx, content, offset, codeFeatures.navigationAndVerification);
+				codes = generatePropertyAccess(options, ctx, content, offset, { features: navigationFeatures });
 			}
 			else if (
 				nameProp.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -65,7 +65,7 @@ export function* generateSlotOutlet(
 				'template',
 				nameProp.loc.start.offset,
 				nameProp.loc.end.offset,
-				codeFeatures.verification,
+				{ features: 0 },
 			);
 			yield options.slotsAssignName ?? names.slots;
 			yield* codes;
@@ -76,14 +76,14 @@ export function* generateSlotOutlet(
 				'template',
 				startTagOffset,
 				startTagEndOffset,
-				codeFeatures.verification,
+				{ features: 0 },
 			);
 			yield `${options.slotsAssignName ?? names.slots}[`;
 			const boundary2 = yield* Boundary.start(
 				'template',
 				startTagOffset,
 				startTagEndOffset,
-				codeFeatures.verification,
+				{ features: 0 },
 			);
 			yield `'default'`;
 			yield boundary2.end();
@@ -96,7 +96,7 @@ export function* generateSlotOutlet(
 			'template',
 			startTagOffset,
 			startTagEndOffset,
-			codeFeatures.verification,
+			{ features: 0 },
 		);
 		yield `{${newLine}`;
 		yield* generateElementProps(
@@ -104,7 +104,6 @@ export function* generateSlotOutlet(
 			ctx,
 			node,
 			node.props.filter(prop => prop !== nameProp),
-			true,
 			undefined,
 			`Parameters<typeof ${slotVar}>[0]`,
 		);
@@ -119,7 +118,6 @@ export function* generateSlotOutlet(
 			ctx,
 			node,
 			node.props.filter(prop => prop !== nameProp),
-			options.vueCompilerOptions.checkUnknownProps,
 		);
 		yield `}${endOfLine}`;
 
@@ -149,8 +147,8 @@ export function* generateSlotOutlet(
 				ctx,
 				options.template,
 				isShortHand
-					? codeFeatures.withoutHighlightAndCompletion
-					: codeFeatures.all,
+					? { features: semanticFeatures | navigationFeatures }
+					: { features: scriptFeatures },
 				nameProp.exp.content,
 				nameProp.exp.loc.start.offset,
 			);
@@ -168,6 +166,7 @@ export function* generateSlotOutlet(
 			});
 		}
 	}
+	yield* ctx.generateDiagnosticDirectiveEnd();
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}

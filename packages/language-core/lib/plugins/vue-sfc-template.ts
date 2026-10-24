@@ -1,9 +1,9 @@
-import { codeFeatures } from '../codegen/codeFeatures';
+import { allFeatures } from '../codegen/features';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
 	return {
-		version: 2.2,
+		version: 4,
 
 		getEmbeddedCodes(_fileName, ir) {
 			if (ir.template?.lang === 'html') {
@@ -21,7 +21,7 @@ const plugin: VueLanguagePlugin = () => {
 					ir.template.content,
 					ir.template.name,
 					0,
-					codeFeatures.full,
+					{ features: allFeatures },
 				]);
 			}
 		},

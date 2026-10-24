@@ -1,5 +1,5 @@
 <script setup lang="ts">
-let Comp: new () => {
+let Comp!: new () => {
 	$props: {};
 	$slots: {
 		[key: string]: string;

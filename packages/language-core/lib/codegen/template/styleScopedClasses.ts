@@ -1,11 +1,12 @@
+import { SpanMapKind } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Code, IRBlock } from '../../types';
-import { getNodeText, normalizeAttributeValue } from '../../utils/shared';
-import { codeFeatures } from '../codeFeatures';
+import { getNodeText, isStringLiteralLike, normalizeAttributeValue } from '../../utils/shared';
+import { completionFeatures, navigationFeatures } from '../features';
 import { names } from '../names';
 import { endOfLine, forEachNode, getTypeScriptAST } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { generateEscaped } from '../utils/escaped';
 import type { TemplateCodegenOptions } from './index';
 
@@ -38,9 +39,9 @@ export function* generateStyleScopedClassReferences(
 			const content = '(' + prop.exp.content + ')';
 			const startOffset = prop.exp.loc.start.offset - 1;
 			const ast = getTypeScriptAST(ts, template, content);
-			const literals: ts.StringLiteralLike[] = [];
+			const literals: (ts.StringLiteral | ts.NoSubstitutionTemplateLiteral)[] = [];
 
-			for (const node of forEachNode(ts, ast)) {
+			for (const node of forEachNode(ast)) {
 				if (
 					!ts.isExpressionStatement(node)
 					|| !ts.isParenthesizedExpression(node.expression)
@@ -49,7 +50,7 @@ export function* generateStyleScopedClassReferences(
 				}
 				const { expression } = node.expression;
 
-				if (ts.isStringLiteralLike(expression)) {
+				if (isStringLiteralLike(ts, expression)) {
 					literals.push(expression);
 				}
 				else if (ts.isArrayLiteralExpression(expression)) {
@@ -70,7 +71,7 @@ export function* generateStyleScopedClassReferences(
 			function* walkArrayLiteral(node: ts.ArrayLiteralExpression) {
 				const { elements } = node;
 				for (const element of elements) {
-					if (ts.isStringLiteralLike(element)) {
+					if (isStringLiteralLike(ts, element)) {
 						literals.push(element);
 					}
 					else if (ts.isObjectLiteralExpression(element)) {
@@ -85,7 +86,7 @@ export function* generateStyleScopedClassReferences(
 					if (ts.isPropertyAssignment(property)) {
 						const { name } = property;
 						if (ts.isIdentifier(name)) {
-							const text = getNodeText(ts, name, ast);
+							const text = getNodeText(name, ast);
 							yield* generateStyleScopedClassReference(template, text, name.end - text.length + startOffset);
 						}
 						else if (ts.isStringLiteral(name)) {
@@ -93,14 +94,16 @@ export function* generateStyleScopedClassReferences(
 						}
 						else if (ts.isComputedPropertyName(name)) {
 							const { expression } = name;
-							if (ts.isStringLiteralLike(expression)) {
+							if (isStringLiteralLike(ts, expression)) {
 								literals.push(expression);
 							}
 						}
 					}
 					else if (ts.isShorthandPropertyAssignment(property)) {
-						const text = getNodeText(ts, property.name, ast);
-						yield* generateStyleScopedClassReference(template, text, property.name.end - text.length + startOffset);
+						const text = getNodeText(property.name, ast);
+						const offset = property.name.end - text.length + startOffset;
+						// the name is also the value, which maps to it
+						yield* generateStyleScopedClassReference(template, text, offset, offset, SpanMapKind.Atom);
 					}
 				}
 			}
@@ -121,10 +124,11 @@ export function* generateStyleScopedClassReference(
 	className: string,
 	offset: number,
 	fullStart = offset,
+	kind?: SpanMapKind,
 ): Generator<Code> {
 	if (!className) {
 		yield `/** @type {${names.StyleScopedClasses}['`;
-		yield ['', 'template', offset, codeFeatures.completion];
+		yield ['', 'template', offset, { features: completionFeatures }];
 		yield `']} */${endOfLine}`;
 		return;
 	}
@@ -140,21 +144,22 @@ export function* generateStyleScopedClassReference(
 	}
 
 	yield `/** @type {${names.StyleScopedClasses}[`;
+	const ignore = yield* Boundary.start(block.name, 0, 0, synthesizedIgnore);
 	const boundary = yield* Boundary.start(
 		block.name,
 		fullStart,
 		offset + className.length,
-		codeFeatures.navigationAndCompletion,
+		{ features: navigationFeatures | completionFeatures, kind },
 	);
 	yield `'`;
 	yield* generateEscaped(
 		className,
 		block.name,
 		offset,
-		boundary.features,
 		classNameEscapeRE,
 	);
 	yield `'`;
 	yield boundary.end();
+	yield ignore.end();
 	yield `]} */${endOfLine}`;
 }

@@ -1,79 +1,28 @@
-import { shouldReportDiagnostics } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
-import type { Code, VueCodeInformation } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type VueCodeMarker } from '../../types';
+import { completionFeatures } from '../features';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { endOfLine, isTsLang, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
-import { generateCamelized } from '../utils/camelized';
+import { asType, endOfLine, isTsLang, newLine } from '../utils';
+import { Boundary, isSynthesizedIgnore, OpenRanges } from '../utils/boundary';
+import { isLiteralWhitelisted } from './bindingReferences';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
 const directiveCommentRE = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)-->$/;
 
-// Reserved words can never be auto-imported bindings, and emitting them as
-// bare array elements is a syntax error (#5267: `[class,]`).
-const reservedWords = new Set([
-	'arguments',
-	'await',
-	'break',
-	'case',
-	'catch',
-	'class',
-	'const',
-	'continue',
-	'debugger',
-	'default',
-	'delete',
-	'do',
-	'else',
-	'enum',
-	'eval',
-	'export',
-	'extends',
-	'false',
-	'finally',
-	'for',
-	'function',
-	'if',
-	'implements',
-	'import',
-	'in',
-	'instanceof',
-	'interface',
-	'let',
-	'new',
-	'null',
-	'package',
-	'private',
-	'protected',
-	'public',
-	'return',
-	'static',
-	'super',
-	'switch',
-	'this',
-	'throw',
-	'true',
-	'try',
-	'typeof',
-	'var',
-	'void',
-	'while',
-	'with',
-	'yield',
-]);
-
-export function createTemplateCodegenContext() {
+export function createTemplateCodegenContext(scriptLang: string) {
 	// directive comments ---------------------------------------------------------
 
 	const stack: {
 		ignoreError?: boolean;
+		ignoreErrorNode?: CompilerDOM.CommentNode;
 		expectError?: {
-			token: number;
 			node: CompilerDOM.CommentNode;
 		};
+		diagnosticDirectives?: DiagnosticDirectiveMapping[];
+		diagnosticDirectiveBoundary?: [DiagnosticDirectiveMapping, Boundary];
+		diagnosticDirectiveEnded?: boolean;
 		generic?: {
 			content: string;
 			offset: number;
@@ -110,11 +59,11 @@ export function createTemplateCodegenContext() {
 					}
 					case 'ignore': {
 						info.ignoreError = true;
+						info.ignoreErrorNode = comment;
 						break;
 					}
 					case 'expect-error': {
 						info.expectError = {
-							token: 0,
 							node: comment,
 						};
 						break;
@@ -132,54 +81,131 @@ export function createTemplateCodegenContext() {
 				}
 			}
 		}
+		for (
+			const [policy, directiveNode] of [
+				[DiagnosticDirectivePolicy.Ignore, info.ignoreErrorNode],
+				[DiagnosticDirectivePolicy.Expect, info.expectError?.node],
+			] as const
+		) {
+			if (directiveNode) {
+				(info.diagnosticDirectives ??= []).push([
+					directiveNode.loc.start.offset,
+					directiveNode.loc.end.offset - directiveNode.loc.start.offset,
+					0,
+					0,
+					policy,
+				]);
+			}
+		}
 		stack.push(info);
 		return true;
 	}
 
-	function* exit(): Generator<Code> {
-		const info = stack.pop()!;
-		commentBuffer.length = 0;
-		if (info.expectError !== undefined) {
-			const boundary = yield* Boundary.start(
-				'template',
-				info.expectError.node.loc.start.offset,
-				info.expectError.node.loc.end.offset,
-				{
-					verification: {
-						shouldReport: () => info.expectError!.token === 0,
-					},
-				},
-			);
-			yield `// @ts-expect-error`;
-			yield boundary.end();
-			yield `${newLine}${endOfLine}`;
+	function* generateDiagnosticDirectiveStart(): Generator<Code> {
+		const info = stack.at(-1);
+		const ignore = info?.diagnosticDirectives?.find(directive => directive[4] === DiagnosticDirectivePolicy.Ignore);
+		for (const directive of info?.diagnosticDirectives ?? []) {
+			yield* generateDiagnosticDirectiveComment(directive);
+			const boundary = yield* Boundary.start('template', directive[0], directive[0], directive);
+			// an expectation alongside an ignore stays empty
+			if (ignore && directive !== ignore) {
+				yield boundary.end();
+			}
+			else {
+				info!.diagnosticDirectiveBoundary = [directive, boundary];
+			}
 		}
 	}
 
-	function resolveCodeFeatures(features: VueCodeInformation): VueCodeInformation {
-		if (features.verification && stack.length) {
-			const data = stack[stack.length - 1]!;
-			if (data.ignoreError) {
-				return {
-					...features,
-					verification: false,
-				};
-			}
-			if (data.expectError !== undefined) {
-				return {
-					...features,
-					verification: {
-						shouldReport: (source, code) => {
-							if (shouldReportDiagnostics(features, source, code)) {
-								data.expectError!.token++;
-							}
-							return false;
-						},
-					},
-				};
-			}
+	function* generateDiagnosticDirectiveEnd(): Generator<Code> {
+		const info = stack.at(-1);
+		if (!info || info.diagnosticDirectiveEnded) {
+			return;
 		}
-		return features;
+		info.diagnosticDirectiveEnded = true;
+		if (info.diagnosticDirectiveBoundary) {
+			const [directive, boundary] = info.diagnosticDirectiveBoundary;
+			// closed first, as the mapping after it already belongs to the range an ignore directive reopens
+			yield boundary.end();
+			yield* generateDiagnosticDirectiveComment(directive);
+		}
+	}
+
+	function* generateDiagnosticDirectiveComment(directive: DiagnosticDirectiveMapping): Generator<Code> {
+		// an empty mapping at the directive comment, which Volar's own features see
+		yield ['', 'template', directive[0], { features: 0 }];
+	}
+
+	function exit() {
+		stack.pop();
+		commentBuffer.length = 0;
+	}
+
+	let reopenedInfo: typeof stack[number] | undefined;
+	let reopenedBoundary: Boundary | undefined;
+
+	/**
+	 * The code a node generates after its end (an `else if` condition, the siblings in a `<template v-if>`)
+	 * is still the node's, so its ignore directive covers that code with another range.
+	 */
+	function* generateWithDiagnosticDirectiveRanges(code: Code): Generator<Code> {
+		const info = stack.at(-1);
+		if (reopenedBoundary && reopenedInfo !== info) {
+			yield* generateDiagnosticDirectiveRangesEnd();
+		}
+		const current = getMarker(code);
+		if (
+			current
+			&& info?.diagnosticDirectiveEnded
+			&& info.ignoreError
+			&& !reopenedBoundary
+			&& !synthesizedIgnores
+		) {
+			const ignore = info.diagnosticDirectives!.find(directive => directive[4] === DiagnosticDirectivePolicy.Ignore)!;
+			reopenedInfo = info;
+			reopenedBoundary = yield* Boundary.start('template', ignore[0], ignore[0], ignore);
+		}
+		yield code;
+	}
+
+	const openRanges = new OpenRanges<VueCodeMarker>();
+	let synthesizedIgnores = 0;
+
+	/** The data of a segment, or of the mapping range it bounds or maps as part of. */
+	function getMarker(code: Code) {
+		if (typeof code === 'string') {
+			return;
+		}
+		const data = code[3];
+		if (data === undefined) {
+			return openRanges.mapping;
+		}
+		if ('start' in data) {
+			if (Array.isArray(data.start)) {
+				openRanges.start({ directive: data.start });
+				if (isSynthesizedIgnore(data.start)) {
+					synthesizedIgnores++;
+				}
+				return;
+			}
+			openRanges.start({ mapping: data.start });
+			return data.start;
+		}
+		if ('end' in data) {
+			const range = openRanges.end();
+			if (range?.directive && isSynthesizedIgnore(range.directive)) {
+				synthesizedIgnores--;
+			}
+			return range?.mapping;
+		}
+		return data;
+	}
+
+	function* generateDiagnosticDirectiveRangesEnd(): Generator<Code> {
+		if (reopenedBoundary) {
+			yield reopenedBoundary.end();
+			reopenedInfo = reopenedBoundary = undefined;
+		}
 	}
 
 	// internal variables ---------------------------------------------------------
@@ -193,6 +219,11 @@ export function createTemplateCodegenContext() {
 	// scopes ---------------------------------------------------------------------
 
 	class Scope extends Set<string> {
+		/** Locals the generated code always reads, so listing them hides no unused diagnostic. */
+		read = new Set<string>();
+		/** The source name may be the hyphenated form of `name`. */
+		members: [name: string, source: string, offset: number, features: VueCodeMarker, sourceName: string][] = [];
+
 		declare(...variables: string[]) {
 			for (const name of variables) {
 				this.add(name);
@@ -201,7 +232,17 @@ export function createTemplateCodegenContext() {
 
 		end() {
 			scopes.pop();
-			return generateAutoImport();
+		}
+	}
+
+	/**
+	 * A block scope gathers the template identifiers within it as members of
+	 * `__VLS_scope`; completion is mapped only on those members.
+	 */
+	class BlockScope extends Scope {
+		override end() {
+			super.end();
+			return generateScopeMembers(this);
 		}
 	}
 
@@ -213,10 +254,82 @@ export function createTemplateCodegenContext() {
 		return scope;
 	}
 
+	function blockScope() {
+		const scope = new BlockScope();
+		scopes.push(scope);
+		return scope;
+	}
+
+	const scopeMemberNames = new Set<string>();
+
+	/**
+	 * Returns false when the name is a local of the expression itself, which
+	 * keeps its own completion.
+	 */
+	function recordScopeMember(
+		name: string,
+		source: string,
+		offset: number,
+		features: VueCodeMarker,
+		sourceName = name,
+	) {
+		if (isLiteralWhitelisted(name) || name === 'require' || name.startsWith('__VLS_')) {
+			return false;
+		}
+		for (let i = scopes.length - 1; i >= 0; i--) {
+			const scope = scopes[i]!;
+			if (scope instanceof BlockScope) {
+				if (!scope.members.some(member => member[1] === source && member[2] === offset)) {
+					scope.members.push([name, source, offset, features, sourceName]);
+					scopeMemberNames.add(name);
+				}
+				return true;
+			}
+			if (scope.has(name)) {
+				return false;
+			}
+		}
+		return false;
+	}
+
+	function* generateScopeMembers(scope: Scope): Generator<Code> {
+		const completionMembers = scope.members.filter(([, , , features]) => features.features & completionFeatures);
+		if (!completionMembers.length) {
+			return;
+		}
+		generatedTypes.add(names.Scope);
+		// Only referenced locals are listed: a type query reads the variable,
+		// which would hide its unused diagnostic.
+		const locals = new Set([
+			...scope.read,
+			...[scope, ...scopes]
+				.flatMap(scope => scope.members.map(([name]) => name))
+				.filter(name => scope.has(name) || scopes.some(scope => scope instanceof BlockScope && scope.has(name))),
+		]);
+		let type = names.Scope;
+		if (locals.size) {
+			type += ` & { ${[...locals].map(name => `${name}: typeof ${name}`).join(`; `)} }`;
+		}
+		yield `{${newLine}`;
+		yield `const ${names.scope} = ${asType(type, scriptLang)}${endOfLine}`;
+		yield `[`;
+		for (const [, source, offset, features, sourceName] of completionMembers) {
+			// The completion of a member lists the members of the scope whatever its name, so the edges of each
+			// identifier map around `constructor`, which resolves on any object without being listed, instead of a
+			// name the scope may not have.
+			yield `${names.scope}.`;
+			yield [``, source, offset, features];
+			yield `constructor`;
+			yield [``, source, offset + sourceName.length, features];
+			yield `,`;
+		}
+		yield `]${endOfLine}`;
+		yield `}${newLine}`;
+	}
+
 	// context accesses -----------------------------------------------------------
 
-	/** Per name and source, the offsets of the accesses and their source text, which may be the hyphenated name. */
-	const contextAccesses = new Map<string, Map<string, Map<number, string>>>();
+	const contextAccesses = new Set<string>();
 	const dotValueAccesses = new Set<string>();
 
 	// Ordered log of accessed names; event-handler closures slice from a mark
@@ -225,41 +338,13 @@ export function createTemplateCodegenContext() {
 
 	function accessVariable(source: string, name: string, offset?: number, dotValue = false, sourceName = name) {
 		accessLog.push(name);
-		let map = contextAccesses.get(name);
-		if (!map) {
-			contextAccesses.set(name, map = new Map());
-		}
-		let arr = map.get(source);
-		if (!arr) {
-			map.set(source, arr = new Map());
-		}
+		contextAccesses.add(name);
 		if (offset !== undefined) {
-			arr.set(offset, sourceName);
+			recordScopeMember(name, source, offset, { features: 0 }, sourceName);
 		}
 		if (dotValue) {
 			dotValueAccesses.add(name);
 		}
-	}
-
-	function* generateAutoImport(): Generator<Code> {
-		const all = [...contextAccesses.entries()];
-		if (!all.some(([, offsets]) => offsets.size)) {
-			return;
-		}
-		yield `// @ts-ignore${newLine}`; // #2304
-		yield `[`;
-		for (const [varName, map] of all) {
-			for (const [source, offsets] of map) {
-				if (!reservedWords.has(varName)) {
-					for (const [offset, sourceName] of offsets) {
-						yield* generateCamelized(sourceName, source, offset, codeFeatures.importCompletionOnly);
-						yield `,`;
-					}
-				}
-				offsets.clear();
-			}
-		}
-		yield `]${endOfLine}`;
 	}
 
 	// conditions -----------------------------------------------------------------
@@ -341,16 +426,21 @@ export function createTemplateCodegenContext() {
 	return {
 		getCommentInfo,
 		enter,
+		generateDiagnosticDirectiveStart,
+		generateDiagnosticDirectiveEnd,
 		exit,
-		resolveCodeFeatures,
+		generateWithDiagnosticDirectiveRanges,
+		generateDiagnosticDirectiveRangesEnd,
 		getInternalVariable,
 		scopes,
 		scope,
+		blockScope,
+		scopeMemberNames,
+		recordScopeMember,
 		contextAccesses,
 		dotValueAccesses,
 		accessLog,
 		accessVariable,
-		generateAutoImport,
 		conditions,
 		generateConditionGuards,
 		hoistVars,

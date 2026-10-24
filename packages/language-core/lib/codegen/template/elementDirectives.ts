@@ -1,10 +1,10 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isBuiltInDirective } from '@vue/shared';
 import type { Code } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { names } from '../names';
 import { asType, endOfLine, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
@@ -33,10 +33,10 @@ export function* generateElementDirectives(
 				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				codeFeatures.verification,
+				{ features: 0 },
 			);
 			// vapor custom directives receive a value getter instead of a vdom binding object
-			yield* generateIdentifier(options, ctx, prop);
+			yield* generateIdentifier(ctx, prop);
 			yield `(${names.nonNull}(null), `;
 			yield* generateValue(options, ctx, prop, false);
 			yield* generateArg(options, ctx, prop, false);
@@ -48,7 +48,7 @@ export function* generateElementDirectives(
 		else {
 			const hookVar = ctx.getInternalVariable();
 			yield `const ${hookVar} = ${names.asFunctionalDirective}(`;
-			yield* generateIdentifier(options, ctx, prop);
+			yield* generateIdentifier(ctx, prop);
 			yield `, ${
 				asType(`import('${options.vueCompilerOptions.lib}').ObjectDirective`, options.scriptLang)
 			})${endOfLine}`;
@@ -56,7 +56,7 @@ export function* generateElementDirectives(
 				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				codeFeatures.verification,
+				{ features: 0 },
 			);
 			yield `${hookVar}(${names.nonNull}(null), { ...${names.directiveBindingRestFields}, `;
 			yield* generateArg(options, ctx, prop);
@@ -73,7 +73,6 @@ export function* generateElementDirectives(
 }
 
 function* generateIdentifier(
-	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
@@ -83,20 +82,19 @@ function* generateIdentifier(
 		'template',
 		startOffset,
 		startOffset + rawName.length,
-		codeFeatures.verification,
+		{ features: 0 },
 	);
 	yield names.directives;
 	yield `.`;
-	yield* generateCamelized(
-		rawName,
-		'template',
-		prop.loc.start.offset,
-		{
-			...codeFeatures.withoutHighlightAndCompletion,
-			verification: options.vueCompilerOptions.checkUnknownDirectives && !isBuiltInDirective(prop.name),
-		},
-	);
-	if (!isBuiltInDirective(prop.name)) {
+	const builtIn = isBuiltInDirective(prop.name);
+	const ignore = builtIn ? yield* Boundary.start('template', 0, 0, synthesizedIgnore) : undefined;
+	yield* generateCamelized(rawName, 'template', prop.loc.start.offset, {
+		features: semanticFeatures | navigationFeatures,
+	});
+	if (ignore) {
+		yield ignore.end();
+	}
+	else {
 		ctx.accessVariable('template', camelize(rawName), prop.loc.start.offset, false, rawName);
 	}
 	yield boundary.end();
@@ -116,7 +114,7 @@ function* generateArg(
 				'template',
 				startOffset,
 				startOffset + arg.content.length,
-				codeFeatures.verification,
+				{ features: 0 },
 			);
 			yield `arg`;
 			yield boundary.end();
@@ -126,7 +124,7 @@ function* generateArg(
 			yield* generateStringLiteralKey(
 				arg.content,
 				startOffset,
-				codeFeatures.all,
+				{ features: scriptFeatures },
 			);
 		}
 		else {
@@ -134,7 +132,7 @@ function* generateArg(
 				options,
 				ctx,
 				options.template,
-				codeFeatures.all,
+				{ features: scriptFeatures },
 				arg.content,
 				startOffset,
 				`(`,
@@ -162,7 +160,7 @@ export function* generateModifiers(
 				'template',
 				modifiers[0]!.loc.start.offset - 1,
 				modifiers.at(-1)!.loc.end.offset,
-				codeFeatures.verification,
+				{ features: 0 },
 			);
 			yield propertyName;
 			yield boundary.end();
@@ -175,7 +173,7 @@ export function* generateModifiers(
 				ctx,
 				mod.content,
 				mod.loc.start.offset,
-				codeFeatures.withoutHighlight,
+				{ features: semanticFeatures | navigationFeatures | completionFeatures },
 			);
 			yield `: true, `;
 		}
@@ -198,7 +196,7 @@ function* generateValue(
 			'template',
 			exp.loc.start.offset,
 			exp.loc.end.offset,
-			codeFeatures.verification,
+			{ features: 0 },
 		);
 		if (asBindingProperty) {
 			yield `value`;

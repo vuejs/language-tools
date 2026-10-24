@@ -1,6 +1,6 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRScriptSetup } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import { navigationFeatures } from '../features';
 import { names } from '../names';
 import { asType, generateSfcBlockSection, newLine } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
@@ -120,7 +120,7 @@ function* generateTypePropsOption(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	hasEmitsOption: boolean,
-): Generator<Code> {
+): Generator<string> {
 	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
 		const attrsType = hasEmitsOption
 			? `Omit<${names.InheritedAttrs}, keyof ${names.EmitProps}>`
@@ -138,7 +138,7 @@ function* generateRuntimePropsOption(
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 	hasEmitsOption: boolean,
-): Generator<Code> {
+): Generator<string | Code[]> {
 	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
 		const attrsType = hasEmitsOption
 			? `Omit<${names.InheritedAttrs}, keyof ${names.EmitProps}>`
@@ -156,6 +156,12 @@ function* generateRuntimePropsOption(
 	}
 	if (scriptSetupRanges.defineProps?.arg) {
 		const { arg } = scriptSetupRanges.defineProps;
-		yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation);
+		yield [...generateSfcBlockSection(
+			scriptSetup,
+			arg.start,
+			arg.end,
+			{ features: navigationFeatures },
+			true,
+		)];
 	}
 }

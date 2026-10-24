@@ -1,10 +1,10 @@
 import { replaceSourceRange } from 'muggle-string';
-import { codeFeatures } from '../codegen/codeFeatures';
+import { allFeatures, structureFeatures } from '../codegen/features';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
 	return {
-		version: 2.2,
+		version: 4,
 
 		getEmbeddedCodes() {
 			return [{
@@ -15,7 +15,7 @@ const plugin: VueLanguagePlugin = () => {
 
 		resolveEmbeddedCode(_fileName, ir, embeddedFile) {
 			if (embeddedFile.id === 'root_tags') {
-				embeddedFile.content.push([ir.content, undefined, 0, codeFeatures.full]);
+				embeddedFile.content.push([ir.content, undefined, 0, { features: allFeatures }]);
 				for (
 					const block of [
 						ir.template,
@@ -43,7 +43,7 @@ const plugin: VueLanguagePlugin = () => {
 							'',
 							undefined,
 							block.startTagEnd + offset,
-							codeFeatures.structure,
+							{ features: structureFeatures },
 						],
 						ir.content.slice(
 							block.startTagEnd + offset,

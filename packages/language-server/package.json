@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-server",
-	"version": "3.3.13",
+	"version": "4.0.0-alpha.0",
 	"license": "MIT",
 	"files": [
 		"bin",
@@ -22,15 +22,18 @@
 		"typescript": "*"
 	},
 	"dependencies": {
-		"@volar/language-server": "2.4.30",
+		"@volar/language-server": "workspace:*",
+		"@vue/content-mapper": "workspace:*",
 		"@vue/language-core": "workspace:*",
 		"@vue/language-service": "workspace:*",
-		"@vue/typescript-plugin": "workspace:*",
-		"vscode-uri": "^3.1.0"
+		"@vue/shared": "^3.5.0",
+		"laplacenoma": "^0.0.3",
+		"vscode-uri": "^3.1.0",
+		"vue-component-meta": "workspace:*"
 	},
 	"devDependencies": {
-		"@typescript/server-harness": "latest",
-		"@volar/test-utils": "2.4.30",
-		"typescript": "latest"
+		"@volar/test-utils": "workspace:*",
+		"typescript": "<7",
+		"typescript-7": "npm:typescript@7.1.0-beta"
 	}
 }

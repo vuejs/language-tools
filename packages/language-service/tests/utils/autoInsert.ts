@@ -1,4 +1,3 @@
-import { createServiceEnvironment } from '@volar/kit/lib/createServiceEnvironment';
 import {
 	createLanguage,
 	createLanguageService,
@@ -11,8 +10,9 @@ import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { createVueLanguageServicePlugins } from '../..';
+import { asCoreTypeScript } from '../../lib/utils';
+import { createTestEnvironment } from './environment';
 
-// TODO: migrate to @volar/kit
 export function createAutoInserter(
 	languages: LanguagePlugin<URI>[],
 	services: LanguageServicePlugin[],
@@ -20,7 +20,7 @@ export function createAutoInserter(
 	let settings = {};
 
 	const fakeUri = URI.parse('file:///dummy.txt');
-	const env = createServiceEnvironment(() => settings);
+	const env = createTestEnvironment(() => settings);
 	const language = createLanguage(languages, createUriMap(false), () => {});
 	const languageService = createLanguageService(language, services, env, {});
 
@@ -60,12 +60,16 @@ export function createAutoInserter(
 // util
 
 const vueCompilerOptions = getDefaultCompilerOptions();
-const vueLanguagePlugin = createVueLanguagePlugin<URI>(
-	ts,
-	{},
+const vuePlugin = createVueLanguagePlugin<URI>(
+	asCoreTypeScript(ts),
 	vueCompilerOptions,
 	() => '',
 );
+const vueLanguagePlugin: typeof vuePlugin = {
+	...vuePlugin,
+	createVirtualCode: (uri, languageId, snapshot, ctx) =>
+		languageId === 'vue' ? vuePlugin.createVirtualCode!(uri, languageId, snapshot, ctx) : undefined,
+};
 const vueServicePLugins = createVueLanguageServicePlugins(ts);
 const autoInserter = createAutoInserter([vueLanguagePlugin], vueServicePLugins);
 

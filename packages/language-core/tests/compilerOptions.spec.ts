@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import * as ts from 'typescript';
 import { afterEach, describe, expect, it } from 'vitest';
 import { CompilerOptionsResolver } from '../lib/compilerOptions';
 import { createPlugins } from '../lib/plugins';
+import { ts } from './typescript';
 
 const PLUGIN_NAME = '@fixture/vue-language-plugin-pug';
 
@@ -19,7 +19,7 @@ function writePluginPackage(rootDir: string, tag: string) {
 		path.join(packageDir, 'index.js'),
 		`module.exports = () => ({
 			name: ${JSON.stringify(PLUGIN_NAME)},
-			version: 2.2,
+			version: 4,
 			compileSFCTemplate(lang) {
 				if (lang === 'pug') {
 					return {
@@ -41,7 +41,7 @@ function writeNamedPluginPackage(rootDir: string, specifier: string, factoryName
 		JSON.stringify({ name: specifier, main: 'index.js' }),
 	);
 	const factories = factoryNames
-		.map(name => `function ${name}() {\n\treturn { name: ${JSON.stringify(name)}, version: 2.2 };\n}`)
+		.map(name => `function ${name}() {\n\treturn { name: ${JSON.stringify(name)}, version: 4 };\n}`)
 		.join(',\n');
 	fs.writeFileSync(
 		path.join(packageDir, 'index.js'),
@@ -71,7 +71,7 @@ describe('CompilerOptionsResolver', () => {
 		writePluginPackage(layerDir, 'base');
 		writePluginPackage(clientDir, 'client');
 
-		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: [PLUGIN_NAME] }, layerDir);
 		resolver.addConfig({ plugins: [PLUGIN_NAME] }, clientDir);
 
@@ -84,7 +84,6 @@ describe('CompilerOptionsResolver', () => {
 				'@vue/language-core': {} as any,
 				typescript: ts,
 			},
-			compilerOptions: {},
 			vueCompilerOptions,
 			config: {},
 		});
@@ -104,7 +103,7 @@ describe('CompilerOptionsResolver', () => {
 		writeNamedPluginPackage(baseDir, '@fixture/base', ['basePlugin']);
 		writeNamedPluginPackage(appDir, '@fixture/app', ['appPlugin']);
 
-		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: ['@fixture/base'] }, baseDir);
 		resolver.addConfig({ plugins: ['@fixture/app'] }, appDir);
 
@@ -117,13 +116,13 @@ describe('CompilerOptionsResolver', () => {
 		const appDir = path.join(tmpDir, 'app');
 		writeNamedPluginPackage(baseDir, '@fixture/base', ['basePlugin']);
 
-		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: ['@fixture/base'] }, baseDir);
-		resolver.addConfig({ strictTemplates: true }, appDir);
+		resolver.addConfig({ jsxSlots: true }, appDir);
 
 		const vueCompilerOptions = resolver.build();
 		expect(vueCompilerOptions.plugins.map(plugin => plugin.name)).toEqual(['basePlugin']);
-		expect(vueCompilerOptions.checkUnknownProps).toBe(true);
+		expect(vueCompilerOptions.jsxSlots).toBe(true);
 	});
 
 	it('clears the inherited plugins with an empty array', () => {
@@ -132,7 +131,7 @@ describe('CompilerOptionsResolver', () => {
 		const appDir = path.join(tmpDir, 'app');
 		writeNamedPluginPackage(baseDir, '@fixture/base', ['basePlugin']);
 
-		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: ['@fixture/base'] }, baseDir);
 		resolver.addConfig({ plugins: [] }, appDir);
 
@@ -143,7 +142,7 @@ describe('CompilerOptionsResolver', () => {
 		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-array-'));
 		writeNamedPluginPackage(tmpDir, '@fixture/multi', ['firstPlugin', 'secondPlugin']);
 
-		const resolver = new CompilerOptionsResolver(ts, () => undefined);
+		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: ['@fixture/multi'] }, tmpDir);
 
 		expect(resolver.build().plugins.map(plugin => plugin.name)).toEqual(['firstPlugin', 'secondPlugin']);
@@ -152,8 +151,8 @@ describe('CompilerOptionsResolver', () => {
 	it('has no plugins when no config declares them', () => {
 		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-none-'));
 
-		const resolver = new CompilerOptionsResolver(ts, () => undefined);
-		resolver.addConfig({ strictTemplates: true }, tmpDir);
+		const resolver = new CompilerOptionsResolver(() => undefined);
+		resolver.addConfig({ jsxSlots: true }, tmpDir);
 
 		expect(resolver.build().plugins).toEqual([]);
 	});

@@ -1,9 +1,9 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import type * as ts from 'typescript';
-import type { Code } from '../../types';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type { Code, TypeScript } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getStartEnd } from '../../utils/shared';
-import { codeFeatures } from '../codeFeatures';
+import { scriptFeatures } from '../features';
 import { names } from '../names';
 import { asType, endOfLine, getTypeScriptAST, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
@@ -18,7 +18,6 @@ export function* generateVFor(
 ): Generator<Code> {
 	const { source } = node.parseResult;
 	const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
-	const scope = ctx.scope();
 	let bindingNames: string[] = [];
 	const defaultInitializerRanges: [number, number][] = [];
 
@@ -30,7 +29,7 @@ export function* generateVFor(
 		const initializers: ts.Expression[] = [];
 		collectDefaultInitializers(options.typescript, declaration.name, initializers);
 		for (const initializer of initializers) {
-			const { start, end } = getStartEnd(options.typescript, initializer, collectAst);
+			const { start, end } = getStartEnd(initializer, collectAst);
 			defaultInitializerRanges.push([start - wrap.length, end - wrap.length]);
 		}
 		defaultInitializerRanges.sort((a, b) => a[0] - b[0]);
@@ -47,7 +46,7 @@ export function* generateVFor(
 			options,
 			ctx,
 			options.template,
-			codeFeatures.all,
+			{ features: scriptFeatures },
 			source.content,
 			source.loc.start.offset,
 			`(`,
@@ -57,6 +56,7 @@ export function* generateVFor(
 		yield endOfLine;
 	}
 
+	const scope = ctx.blockScope();
 	scope.declare(...bindingNames);
 
 	yield `for (const [`;
@@ -68,14 +68,14 @@ export function* generateVFor(
 					leftExpressionText.slice(lastOffset, start),
 					'template',
 					leftExpressionRange.start + lastOffset,
-					codeFeatures.all,
+					{ features: scriptFeatures },
 				];
 			}
 			yield* generateInterpolation(
 				options,
 				ctx,
 				options.template,
-				codeFeatures.all,
+				{ features: scriptFeatures },
 				leftExpressionText.slice(start, end),
 				leftExpressionRange.start + start,
 			);
@@ -86,7 +86,7 @@ export function* generateVFor(
 				leftExpressionText.slice(lastOffset),
 				'template',
 				leftExpressionRange.start + lastOffset,
-				codeFeatures.all,
+				{ features: scriptFeatures },
 			];
 		}
 	}
@@ -133,7 +133,7 @@ export function parseVForNode(node: CompilerDOM.ForNode) {
 }
 
 function collectDefaultInitializers(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	pattern: ts.BindingName,
 	out: ts.Expression[],
 ) {
@@ -144,7 +144,7 @@ function collectDefaultInitializers(
 		if (!ts.isBindingElement(element)) {
 			continue;
 		}
-		if (!ts.isIdentifier(element.name)) {
+		if (element.name && !ts.isIdentifier(element.name)) {
 			collectDefaultInitializers(ts, element.name, out);
 		}
 		if (element.initializer) {

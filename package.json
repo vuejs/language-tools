@@ -2,9 +2,12 @@
 	"private": true,
 	"packageManager": "pnpm@11.9.0",
 	"scripts": {
-		"build": "tsc -b",
-		"watch": "tsc -b -w",
-		"watch:ext": "node extensions/vscode/scripts/write-plugins.ts --dev && npm run watch",
+		"build": "npm run build:volar && tsc -b",
+		"build:volar": "node node_modules/typescript-5/bin/tsc -b volar.js/packages/test-utils volar.js/packages/vscode",
+		"build:ext": "pnpm --dir extensions/vscode exec rolldown --config",
+		"watch": "npm run build:volar && tsc -b -w",
+		"watch:volar": "npm run build:volar -- -w",
+		"watch:ext": "npm run build:ext && npm run watch",
 		"test": "npm run build && vitest run",
 		"test:grammar": "vitest run extensions/vscode/tests/grammar.spec.ts",
 		"format": "dprint fmt",
@@ -14,12 +17,15 @@
 	"devDependencies": {
 		"@lerna-lite/cli": "latest",
 		"@lerna-lite/version": "latest",
-		"@tsslint/cli": "latest",
-		"@tsslint/compat-eslint": "latest",
-		"@tsslint/config": "latest",
-		"@typescript-eslint/eslint-plugin": "latest",
+		"@tsslint/cli": "4.0.0-alpha.1",
+		"@tsslint/compat-eslint": "4.0.0-alpha.1",
+		"@tsslint/config": "4.0.0-alpha.1",
+		"@types/node": "^26.0.1",
 		"dprint": "latest",
-		"typescript": "latest",
+		"eslint": "^9.39.0",
+		"typescript": "<7",
+		"typescript-5": "npm:typescript@~5.9.3",
+		"typescript-7": "npm:typescript@7.1.0-beta",
 		"vitest": "latest"
 	}
 }

@@ -1,12 +1,12 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { replaceSourceRange } from 'muggle-string';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
-import { codeFeatures } from '../codeFeatures';
+import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { names } from '../names';
 import { endOfLine, getTypeScriptAST, isTsLang, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -30,7 +30,9 @@ export function* generateVSlot(
 				ctx,
 				slotDir.arg.loc.source,
 				slotDir.arg.loc.start.offset,
-				slotDir.arg.isStatic ? codeFeatures.withoutHighlight : codeFeatures.all,
+				slotDir.arg.isStatic
+					? { features: semanticFeatures | navigationFeatures | completionFeatures }
+					: { features: scriptFeatures },
 				false,
 				true,
 			);
@@ -40,7 +42,7 @@ export function* generateVSlot(
 				'template',
 				slotDir.loc.start.offset,
 				slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
-				codeFeatures.withoutHighlightAndCompletion,
+				{ features: semanticFeatures | navigationFeatures },
 			);
 			yield `default`;
 			yield boundary.end();
@@ -48,24 +50,28 @@ export function* generateVSlot(
 	}
 	else {
 		yield `const { `;
-		// #932: reference for implicit default slot
+		// #932: reference for implicit default slot, anchored at the element's `<`
+		// because a mapped range may not contain the element's other mappings
+		const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
 		const boundary = yield* Boundary.start(
 			'template',
 			node.loc.start.offset,
-			node.loc.end.offset,
-			codeFeatures.navigation,
+			node.loc.start.offset + 1,
+			{ features: navigationFeatures },
 		);
 		yield `default`;
 		yield boundary.end();
+		yield ignore.end();
 	}
 	yield `: ${slotVar} } = ${names.nonNull}(${ctxVar}.slots)${endOfLine}`;
 
-	const scope = ctx.scope();
+	const scope = ctx.blockScope();
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = getTypeScriptAST(options.typescript, options.template, `(${slotDir.exp.content}) => {}`);
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
 		scope.declare(...collectBindingNames(options.typescript, slotAst, slotAst));
 	}
+	yield* ctx.generateDiagnosticDirectiveEnd();
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}
@@ -88,7 +94,7 @@ export function* generateVSlot(
 							? '#'.length
 							: 'v-slot:'.length
 					),
-					codeFeatures.completion,
+					{ features: completionFeatures },
 				];
 				yield `']} */${endOfLine}`;
 			}
@@ -116,7 +122,7 @@ function* generateSlotParameters(
 		options,
 		ctx,
 		options.template,
-		codeFeatures.all,
+		{ features: scriptFeatures },
 		ast.text,
 		startOffset,
 	)];
@@ -135,7 +141,7 @@ function* generateSlotParameters(
 				ast.text.slice(name.end, type.end),
 				'template',
 				startOffset + name.end,
-				codeFeatures.all,
+				{ features: scriptFeatures },
 			]);
 			replaceSourceRange(interpolation, 'template', startOffset + name.end, startOffset + type.end);
 		}
@@ -154,7 +160,7 @@ function* generateSlotParameters(
 			'template',
 			exp.loc.start.offset,
 			exp.loc.end.offset,
-			codeFeatures.verification,
+			{ features: 0 },
 		);
 		yield `(`;
 		yield* types.flatMap(type => type ? [`_`, type, `, `] : `_, `);

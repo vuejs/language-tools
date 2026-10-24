@@ -1,7 +1,7 @@
 import type { InlayHint, InlayHintKind, LanguageServicePlugin } from '@volar/language-service';
 import { collectBindingIdentifiers, tsCodegen } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { resolveEmbeddedCode } from '../utils';
+import { asClassicNode, asCoreNode, asCoreTypeScript, resolveEmbeddedCode } from '../utils';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
@@ -40,7 +40,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 							for (
 								const [prop, isShorthand] of findDestructuredProps(
 									ts,
-									ir.scriptSetup.ast,
+									asClassicNode(ir.scriptSetup.ast),
 									scriptSetupRanges.defineProps.destructured.keys(),
 								)
 							) {
@@ -202,12 +202,12 @@ export function findDestructuredProps(
 			&& ts.isCallExpression(initializer)
 			&& initializer.expression.getText(ast) === 'defineProps';
 
-		for (const { id } of collectBindingIdentifiers(ts, name)) {
+		for (const { id } of collectBindingIdentifiers(asCoreTypeScript(ts), asCoreNode(name))) {
 			if (isDefineProps) {
-				excludedIds.add(id);
+				excludedIds.add(asClassicNode(id));
 			}
 			else {
-				registerLocalBinding(id, scope);
+				registerLocalBinding(asClassicNode(id), scope);
 			}
 		}
 	}
@@ -247,8 +247,8 @@ export function findDestructuredProps(
 		}
 
 		for (const p of parameters) {
-			for (const { id } of collectBindingIdentifiers(ts, p)) {
-				registerLocalBinding(id);
+			for (const { id } of collectBindingIdentifiers(asCoreTypeScript(ts), asCoreNode(p))) {
+				registerLocalBinding(asClassicNode(id));
 			}
 		}
 	}

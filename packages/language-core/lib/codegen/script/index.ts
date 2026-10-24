@@ -1,11 +1,13 @@
+import { SpanMapFeature } from '@volar/language-core';
 import * as path from 'path-browserify';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
-import type { Code, IRBlock, IRScript, IRScriptSetup, VueCompilerOptions } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import type { Code, IRBlock, IRScript, IRScriptSetup, IRStyle, VueCompilerOptions } from '../../types';
+import { navigationFeatures, scriptFeatures } from '../features';
 import { names } from '../names';
+import { generateStyleModuleImports } from '../style/modules';
 import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateGeneric, generateMacros, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
 import { generateTemplate } from './template';
@@ -14,6 +16,7 @@ export interface ScriptCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	script: IRScript | undefined;
 	scriptSetup: IRScriptSetup | undefined;
+	styles: readonly IRStyle[];
 	fileName: string;
 	scriptLang: string;
 	scriptRanges: ScriptRanges | undefined;
@@ -24,9 +27,23 @@ export interface ScriptCodegenOptions {
 	localComponents: Set<string>;
 	localDirectives: Set<string>;
 	dotValueBindings: Set<string>;
+	/** Setup bindings that template and style expressions reference. */
+	scopeBindings: Set<string>;
 }
 
 export { generate as generateScript };
+
+function* generateSyntheticDefaultExport(exportedExpression: string): Generator<Code> {
+	// keep the synthetic default export navigable: go-to-definition on
+	// `import Foo from './Foo.vue'` targets the whole statement, which maps to the SFC top;
+	// a rename reaching it would insert the new name there
+	const ignore = yield* Boundary.start('main', 0, 0, synthesizedIgnore);
+	const boundary = yield* Boundary.start('main', 0, 0, { features: navigationFeatures & ~SpanMapFeature.Rename });
+	yield `export default ${exportedExpression};`;
+	yield boundary.end();
+	yield ignore.end();
+	yield newLine;
+}
 
 function generate(options: ScriptCodegenOptions) {
 	const ctx = createScriptCodegenContext(options);
@@ -58,18 +75,15 @@ function* generateWorker(
 			'main',
 			script.src.offset,
 			script.src.offset + script.src.text.length,
-			{
-				...codeFeatures.all,
-				...src !== script.src.text ? codeFeatures.navigationWithoutRename : {},
-			},
+			src !== script.src.text ? { features: scriptFeatures & ~SpanMapFeature.Rename } : { features: scriptFeatures },
 		);
 		yield `'`;
-		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, boundary.features];
+		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, undefined];
 		yield src.slice(script.src.text.length);
 		yield `'`;
 		yield boundary.end();
 		yield endOfLine;
-		yield `export default ${names.src}${endOfLine}`;
+		yield* generateSyntheticDefaultExport(names.src);
 
 		yield* generateTemplate(options, names.src);
 	}
@@ -93,12 +107,12 @@ function* generateWorker(
 			);
 		}
 		else {
-			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
-			yield `export default ${exportExpression}${endOfLine}`;
+			yield* generateSfcBlockSection(script, 0, script.content.length, { features: scriptFeatures });
+			yield* generateSyntheticDefaultExport(exportExpression);
 		}
 
 		// <script setup>
-		yield* generateExportDeclareEqual(scriptSetup, names.export);
+		yield* generateComponentDeclareEqual(scriptSetup, names.export);
 		if (scriptSetup.generic) {
 			yield* generateGeneric(
 				options,
@@ -134,7 +148,7 @@ function* generateWorker(
 		yield* generateMacros(options);
 
 		if (scriptSetup.generic) {
-			yield* generateExportDeclareEqual(scriptSetup, names.export);
+			yield* generateComponentDeclareEqual(scriptSetup, names.export);
 			yield* generateGeneric(
 				options,
 				ctx,
@@ -158,10 +172,10 @@ function* generateWorker(
 				scriptSetup,
 				scriptSetupRanges,
 				generateTemplate(options),
-				generateExportDeclareEqual(scriptSetup, names.export),
+				generateComponentDeclareEqual(scriptSetup, names.export),
 			);
 		}
-		yield `export default ${exportExpression}${endOfLine}`;
+		yield* generateSyntheticDefaultExport(exportExpression);
 	}
 	// only <script>
 	else if (script && scriptRanges) {
@@ -179,15 +193,17 @@ function* generateWorker(
 			);
 		}
 		else {
-			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
-			yield* generateExportDeclareEqual(script, names.export);
+			yield* generateSfcBlockSection(script, 0, script.content.length, { features: scriptFeatures });
+			yield* generateComponentDeclareEqual(script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 			yield* generateTemplate(options, names.export);
-			yield `export default ${exportExpression}${endOfLine}`;
+			yield* generateSyntheticDefaultExport(exportExpression);
 		}
 	}
 
 	yield* ctx.localTypes.generate();
+	// after the user's code, which may start with `/// <reference>` or `// @ts-nocheck`
+	yield* generateStyleModuleImports(options.styles);
 }
 
 function* generateScriptWithExportDefault(
@@ -227,28 +243,28 @@ function* generateScriptWithExportDefault(
 		});
 	}
 
-	yield* generateSfcBlockSection(script, 0, expression.start, codeFeatures.all);
+	yield* generateSfcBlockSection(script, 0, expression.start, { features: scriptFeatures });
 	yield exportExpression;
-	yield* generateSfcBlockSection(script, expression.end, exportDefault.end, codeFeatures.all);
+	yield* generateSfcBlockSection(script, expression.end, exportDefault.end, { features: scriptFeatures });
 	yield endOfLine;
 	if (templateGenerator) {
 		yield* templateGenerator;
 	}
-	yield* generateExportDeclareEqual(script, varName);
+	yield* generateComponentDeclareEqual(script, varName);
 	if (wrapLeft && wrapRight) {
 		yield wrapLeft;
-		yield* generateSfcBlockSection(script, expression.start, expression.end, codeFeatures.all);
+		yield* generateSfcBlockSection(script, expression.start, expression.end, { features: scriptFeatures });
 		yield wrapRight;
 	}
 	else {
-		yield* generateSfcBlockSection(script, expression.start, expression.end, codeFeatures.all);
+		yield* generateSfcBlockSection(script, expression.start, expression.end, { features: scriptFeatures });
 	}
 	yield endOfLine;
-	yield* generateSfcBlockSection(script, exportDefault.end, script.content.length, codeFeatures.all);
+	yield* generateSfcBlockSection(script, exportDefault.end, script.content.length, { features: scriptFeatures });
 }
 
 function* generateGlobalTypesReference(
-	{ typesRoot, lib, target, checkUnknownProps }: VueCompilerOptions,
+	{ typesRoot, lib, target }: VueCompilerOptions,
 	fileName: string,
 ): Generator<Code> {
 	let typesPath: string;
@@ -267,17 +283,26 @@ function* generateGlobalTypesReference(
 		typesPath = typesRoot;
 	}
 	yield `/// <reference types=${JSON.stringify(typesPath + '/template-helpers.d.ts')} />${newLine}`;
-	if (!checkUnknownProps) {
-		yield `/// <reference types=${JSON.stringify(typesPath + '/props-fallback.d.ts')} />${newLine}`;
-	}
 	if (lib === 'vue' && target < 3.5) {
 		yield `/// <reference types=${JSON.stringify(typesPath + '/vue-3.4-shims.d.ts')} />${newLine}`;
 	}
 }
 
-function* generateExportDeclareEqual(block: IRBlock, name: string): Generator<Code> {
+// The component declaration has no source of its own: map it to the tag name of its block,
+// so that its declaration emit errors (e.g. a private type of a generic component) report there.
+function* generateComponentDeclareEqual(block: IRBlock, name: string): Generator<Code> {
+	const tagNameStart = block.start + 1;
+	yield* generateExportDeclareEqual('main', name, tagNameStart, tagNameStart + 'script'.length);
+}
+
+export function* generateExportDeclareEqual(
+	source: string,
+	name: string,
+	start: number,
+	end: number,
+): Generator<Code> {
 	yield `const `;
-	const boundary = yield* Boundary.start(block.name, 0, block.content.length, codeFeatures.doNotReportTs6133);
+	const boundary = yield* Boundary.start(source, start, end, { features: 0 });
 	yield name;
 	yield boundary.end();
 	yield ` = `;

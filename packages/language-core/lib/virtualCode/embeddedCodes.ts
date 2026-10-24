@@ -1,9 +1,8 @@
-import type { Mapping, VirtualCode } from '@volar/language-core';
+import type { IScriptSnapshot, Mapping, TextChangeRange, VirtualCode } from '@volar/language-core';
 import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
-import type * as ts from 'typescript';
-import type { Code, IR, IRBlock, VueCodeInformation, VueLanguagePluginReturn } from '../types';
-import { buildMappings } from '../utils/buildMappings';
+import type { Code, DiagnosticDirectiveMapping, IR, IRBlock, VueLanguagePluginReturn } from '../types';
+import { buildDiagnosticDirectives, buildMappings } from '../utils/buildMappings';
 
 export class VueEmbeddedCode {
 	public parentCodeId?: string;
@@ -14,6 +13,10 @@ export class VueEmbeddedCode {
 		public lang: string,
 		public content: Code[],
 	) {}
+}
+
+export interface VueGeneratedCode extends VirtualCode {
+	diagnosticDirectives: DiagnosticDirectiveMapping[];
 }
 
 export function useEmbeddedCodes(
@@ -43,19 +46,20 @@ export function useEmbeddedCodes(
 	const pluginsResult = plugins.map(useEmbeddedCodesForPlugin);
 
 	return computed(() => {
-		const result: VirtualCode[] = [];
-		const idToCodeMap = new Map<string, VirtualCode>();
+		const result: VueGeneratedCode[] = [];
+		const idToCodeMap = new Map<string, VueGeneratedCode>();
 		const virtualCodes = pluginsResult
 			.map(getPluginResult => getPluginResult())
 			.flat()
 			.map(
-				({ code, snapshot, mappings }) => {
-					const virtualCode: VirtualCode = {
+				({ code, snapshot, mappings, diagnosticDirectives }) => {
+					const virtualCode: VueGeneratedCode = {
 						id: code.id,
 						languageId: resolveCommonLanguageId(code.lang),
 						snapshot,
 						mappings,
 						embeddedCodes: [],
+						diagnosticDirectives,
 					};
 					idToCodeMap.set(code.id, virtualCode);
 					return [code.parentCodeId, virtualCode] as const;
@@ -82,7 +86,7 @@ export function useEmbeddedCodes(
 
 	function useEmbeddedCodesForPlugin(plugin: VueLanguagePluginReturn) {
 		const getMap = computed<
-			Map<string, () => { code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot }>
+			Map<string, () => { code: VueEmbeddedCode; snapshot: IScriptSnapshot }>
 		>(
 			prevMap => {
 				if (!plugin.getEmbeddedCodes) {
@@ -90,7 +94,7 @@ export function useEmbeddedCodes(
 				}
 
 				const newCodeList = plugin.getEmbeddedCodes(fileName, ir);
-				const map = new Map<string, () => { code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot }>();
+				const map = new Map<string, () => { code: VueEmbeddedCode; snapshot: IScriptSnapshot }>();
 
 				for (const { id, lang } of newCodeList) {
 					const key = id + '__' + lang;
@@ -109,16 +113,19 @@ export function useEmbeddedCodes(
 		return computed(() => {
 			const result: {
 				code: VueEmbeddedCode;
-				snapshot: ts.IScriptSnapshot;
-				mappings: Mapping<VueCodeInformation>[];
+				snapshot: IScriptSnapshot;
+				mappings: Mapping[];
+				diagnosticDirectives: DiagnosticDirectiveMapping[];
 			}[] = [];
 
 			for (const generate of getMap().values()) {
 				const { code, snapshot } = generate();
+				const content = toSourceContent(code);
 				result.push({
 					code,
 					snapshot,
-					mappings: getMappingsForCode(code),
+					mappings: buildMappings(content),
+					diagnosticDirectives: buildDiagnosticDirectives(content),
 				});
 			}
 
@@ -142,8 +149,8 @@ export function useEmbeddedCodes(
 				}
 			}
 			const newText = toString(code.content);
-			const changeRanges = new Map<ts.IScriptSnapshot, ts.TextChangeRange | undefined>();
-			const snapshot: ts.IScriptSnapshot = {
+			const changeRanges = new Map<IScriptSnapshot, TextChangeRange | undefined>();
+			const snapshot: IScriptSnapshot = {
 				getText: (start, end) => newText.slice(start, end),
 				getLength: () => newText.length,
 				getChangeRange(oldSnapshot) {
@@ -165,8 +172,8 @@ export function useEmbeddedCodes(
 		});
 	}
 
-	function getMappingsForCode(code: VueEmbeddedCode) {
-		const mappings = buildMappings(code.content.map<Code>(segment => {
+	function toSourceContent(code: VueEmbeddedCode) {
+		return code.content.map<Code>(segment => {
 			if (typeof segment === 'string') {
 				return segment;
 			}
@@ -184,34 +191,11 @@ export function useEmbeddedCodes(
 				segment[2] + block.startTagEnd,
 				segment[3],
 			];
-		}));
-		const newMappings: typeof mappings = [];
-		const tokenMappings = new Map<symbol, Mapping>();
-
-		for (let i = 0; i < mappings.length; i++) {
-			const mapping = mappings[i]!;
-			if (mapping.data.__combineToken !== undefined) {
-				const token = mapping.data.__combineToken;
-				if (tokenMappings.has(token)) {
-					const offsetMapping = tokenMappings.get(token)!;
-					offsetMapping.sourceOffsets.push(...mapping.sourceOffsets);
-					offsetMapping.generatedOffsets.push(...mapping.generatedOffsets);
-					offsetMapping.lengths.push(...mapping.lengths);
-				}
-				else {
-					tokenMappings.set(token, mapping);
-					newMappings.push(mapping);
-				}
-				continue;
-			}
-			newMappings.push(mapping);
-		}
-
-		return newMappings;
+		});
 	}
 }
 
-function fullDiffTextChangeRange(oldText: string, newText: string): ts.TextChangeRange | undefined {
+function fullDiffTextChangeRange(oldText: string, newText: string): TextChangeRange | undefined {
 	for (let start = 0; start < oldText.length && start < newText.length; start++) {
 		if (oldText[start] !== newText[start]) {
 			let end = oldText.length;

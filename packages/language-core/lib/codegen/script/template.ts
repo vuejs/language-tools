@@ -1,6 +1,6 @@
 import { BindingFlag } from '../../parsers/utils';
 import type { Code } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import { navigationFeatures } from '../features';
 import { names } from '../names';
 import {
 	asType,
@@ -21,6 +21,7 @@ export function* generateTemplate(
 	yield* generateTemplateCtx(options, selfType);
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
+	yield* generateTemplateScope(options);
 
 	yield `void ${names.ctx}, ${names.components}, ${names.intrinsics}, ${names.directives}${endOfLine}`;
 
@@ -47,14 +48,14 @@ export function* generateTemplate(
 }
 
 function* generateTemplateCtx(
-	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, fileName, scriptLang }: ScriptCodegenOptions,
+	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, scriptLang }: ScriptCodegenOptions,
 	selfType: string | undefined,
 ): Generator<Code> {
-	const exps: Code[] = [];
+	const exps: string[] = [];
 	const emitTypes: string[] = [];
 	const propTypes: string[] = [];
 
-	if (vueCompilerOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {
+	if (vueCompilerOptions.globalTemplateContext) {
 		exps.push(`globalThis`);
 	}
 	if (selfType) {
@@ -114,7 +115,8 @@ function* generateTemplateComponents(
 			script,
 			components.start,
 			components.end,
-			codeFeatures.navigation,
+			{ features: navigationFeatures },
+			true,
 		);
 		yield endOfLine;
 		types.push(`typeof ${names.componentsOption}`);
@@ -132,9 +134,7 @@ function* generateTemplateComponents(
 		yield `${names.LocalComponents} & ${names.GlobalComponents}`;
 	});
 	yield* generateTypedVar('let', names.intrinsics, scriptLang, function*() {
-		yield vueCompilerOptions.target >= 3.3
-			? `import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements`
-			: `globalThis.JSX.IntrinsicElements`;
+		yield `import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements`;
 	});
 }
 
@@ -153,7 +153,8 @@ function* generateTemplateDirectives(
 			script,
 			directives.start,
 			directives.end,
-			codeFeatures.navigation,
+			{ features: navigationFeatures },
+			true,
 		);
 		yield endOfLine;
 		types.push(`${names.ResolveDirectives}<typeof ${names.directivesOption}>`);
@@ -163,7 +164,21 @@ function* generateTemplateDirectives(
 		yield types.length ? types.join(` & `) : `{}`;
 	});
 	yield* generateTypedVar('let', names.directives, scriptLang, function*() {
-		yield `${names.LocalDirectives} & import('${vueCompilerOptions.lib}').GlobalDirectives`;
+		yield `${names.LocalDirectives} & ${names.BuiltInDirectives} & import('${vueCompilerOptions.lib}').GlobalDirectives`;
+	});
+}
+
+function* generateTemplateScope(
+	{ vueCompilerOptions, templateAndStyleTypes, scopeBindings, scriptLang }: ScriptCodegenOptions,
+): Generator<Code> {
+	if (!templateAndStyleTypes.has(names.Scope)) {
+		return;
+	}
+	yield* generateTypeAlias(names.Scope, scriptLang, function*() {
+		yield `typeof ${names.ctx} & ${names.Globals}`;
+		if (scopeBindings.size) {
+			yield ` & ${generateExposedType(vueCompilerOptions.lib, scopeBindings)}`;
+		}
 	});
 }
 

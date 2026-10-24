@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
-import { codeFeatures } from '../codeFeatures';
+import { scriptFeatures } from '../features';
 import { endOfLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement, generateFragment } from './element';
@@ -21,6 +21,9 @@ export function* generateTemplateChild(
 ): Generator<Code> {
 	if (enterNode && !ctx.enter(node)) {
 		return;
+	}
+	if (enterNode) {
+		yield* ctx.generateDiagnosticDirectiveStart();
 	}
 
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
@@ -67,7 +70,7 @@ export function* generateTemplateChild(
 			options,
 			ctx,
 			options.template,
-			codeFeatures.all,
+			{ features: scriptFeatures },
 			content,
 			start,
 			`(`,
@@ -84,7 +87,8 @@ export function* generateTemplateChild(
 	}
 
 	if (enterNode) {
-		yield* ctx.exit();
+		yield* ctx.generateDiagnosticDirectiveEnd();
+		ctx.exit();
 	}
 }
 

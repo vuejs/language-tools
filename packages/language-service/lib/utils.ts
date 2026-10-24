@@ -1,6 +1,54 @@
 import type { LanguageServiceContext, SourceScript } from '@volar/language-service';
-import type { VueVirtualCode } from '@vue/language-core';
+import {
+	type collectBindingIdentifiers,
+	forEachElementNode,
+	type IRTemplate,
+	type TypeScript,
+	type VueVirtualCode,
+} from '@vue/language-core';
+import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
+import type { TextEdit } from './requests';
+
+/*
+ * language-core is typed against the TypeScript 7 AST API, which has no language service, so the language
+ * service runs language-core on the classic API instead; it provides everything language-core reads under
+ * the same names. These convert between the two at that boundary.
+ */
+export function asCoreTypeScript(typescript: typeof import('typescript')) {
+	return typescript as unknown as TypeScript;
+}
+
+export function asClassicNode<T extends ts.Node>(node: CoreNode) {
+	return node as unknown as T;
+}
+
+export function asCoreNode(node: ts.Node) {
+	return node as unknown as CoreNode;
+}
+
+type CoreNode = Parameters<typeof collectBindingIdentifiers>[1];
+
+/**
+ * Places the TypeScript import edits for an SFC whose script has no content: the position TypeScript
+ * picks maps to nothing in the SFC, so the imports go into a new `<script setup>` or the empty block.
+ */
+export function placeScriptImportEdits(root: VueVirtualCode, edits: readonly TextEdit[] | null | undefined) {
+	const descriptor = root.vueSfc?.descriptor;
+	if (!edits?.length || !descriptor) {
+		return edits;
+	}
+	const imports = edits.map(edit => edit.newText.trim()).filter(Boolean).join('\n');
+	const block = descriptor.scriptSetup ?? descriptor.script;
+	if (!block) {
+		return [{ pos: 0, end: 0, newText: `<script setup lang="ts">\n${imports}\n</script>\n\n` }];
+	}
+	if (!block.content.trim()) {
+		const pos = block.loc.start.offset;
+		return [{ pos, end: pos, newText: `\n${imports}${/^\r?\n/.test(block.content) ? '' : '\n'}` }];
+	}
+	return edits;
+}
 
 export function resolveEmbeddedCode(
 	context: LanguageServiceContext,
@@ -24,4 +72,26 @@ export function resolveEmbeddedCode(
 		code,
 		root: sourceScript.generated.root as VueVirtualCode,
 	};
+}
+
+/** The component tag name, in its start or end tag, that `offset` in the template content touches. */
+export function getComponentTagAt(template: IRTemplate, offset: number) {
+	if (!template.ast) {
+		return;
+	}
+	for (const node of forEachElementNode(template.ast)) {
+		// ElementTypes.COMPONENT
+		if (node.tagType !== 1) {
+			continue;
+		}
+		const starts = [node.loc.start.offset + 1];
+		if (!node.isSelfClosing && node.loc.source.endsWith(`</${node.tag}>`)) {
+			starts.push(node.loc.end.offset - node.tag.length - 1);
+		}
+		for (const start of starts) {
+			if (offset >= start && offset <= start + node.tag.length) {
+				return { tag: node.tag, start, end: start + node.tag.length };
+			}
+		}
+	}
 }

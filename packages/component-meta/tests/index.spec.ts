@@ -1,1946 +1,919 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { describe, expect, test } from 'vitest';
-import { type ComponentMetaChecker, createChecker, createCheckerByJson, type MetaCheckerOptions, TypeMeta } from '..';
+import { afterAll, describe, expect, test } from 'vitest';
+import { type ComponentMeta, createChecker, type Declaration, getComponentMeta, getExportNames, type TypeId } from '..';
+import { getComponentMetaOfType } from '../lib/componentMeta';
 
-const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
-	describe(`vue-component-meta ${withTsconfig ? 'w/ tsconfig' : 'w/o tsconfig'}`, () => {
-		test('empty-component', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/empty-component/component.vue',
+const workspace = path.resolve(__dirname, '../../../test-workspace/component-meta');
+const runtimeCore = 'runtime-core.d.ts';
+
+/** A readable form of a type: its structure, the text of leaves and external types, cut at cycles. */
+function print(meta: ComponentMeta, id: TypeId, seen = new Set<TypeId>()): unknown {
+	const type = meta.types[id]!;
+	if (seen.has(id)) {
+		return `<cycle ${type.text}>`;
+	}
+	seen = new Set(seen).add(id);
+	switch (type.kind) {
+		case 'primitive':
+		case 'literal':
+			return type.text;
+		case 'external':
+			return `<external ${type.text} @ ${type.declaration && path.basename(type.declaration.file)}>`;
+		case 'union':
+			return { union: type.types.map(t => print(meta, t, seen)) };
+		case 'array':
+			return { array: print(meta, type.element, seen) };
+		case 'tuple':
+			return { tuple: type.elements.map(t => print(meta, t, seen)) };
+		case 'object':
+			return Object.fromEntries(
+				type.properties.map(p => [p.name + (p.optional ? '?' : ''), print(meta, p.type, seen)]),
 			);
-			const meta = checker.getComponentMeta(componentPath);
+		case 'function':
+			return {
+				parameters: Object.fromEntries(
+					type.parameters.map(p => [
+						(p.rest ? '...' : '') + p.name + (p.optional ? '?' : ''),
+						print(meta, p.type, seen),
+					]),
+				),
+				returns: print(meta, type.returns, seen),
+			};
+	}
+}
 
-			expect(meta.props.map(prop => prop.name)).toMatchInlineSnapshot(`
-				[
-				  "key",
-				  "ref",
-				  "ref_for",
-				  "ref_key",
-				  "onVue:beforeMount",
-				  "onVue:mounted",
-				  "onVue:beforeUpdate",
-				  "onVue:updated",
-				  "onVue:beforeUnmount",
-				  "onVue:unmounted",
-				  "class",
-				  "style",
-				]
-			`);
-			expect(meta.props.filter(prop => !prop.global)).toEqual([]);
-		});
+/** Members by name, with their types printed and line endings normalized, without their declarations. */
+function members<T extends { name: string; type: TypeId; declarations: Declaration[] }>(
+	meta: ComponentMeta,
+	list: T[],
+) {
+	return normalize(
+		Object.fromEntries(
+			list.map(({ name, type, declarations: _, ...rest }) => [name, { ...rest, type: print(meta, type) }]),
+		),
+	);
+}
 
-		test('reference-type-model', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-model/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-
-			const modelValue = meta.props.find(prop => prop.name === 'modelValue');
-			const onUpdateModelValue = meta.events.find(event => event.name === 'update:modelValue');
-
-			expect(modelValue).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "required number modelValue",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "modelValue",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": "number",
-				  "tags": [],
-				  "type": "number",
-				}
-			`);
-			expect(onUpdateModelValue).toBeDefined();
-
-			const foo = meta.props.find(prop => prop.name === 'foo');
-			const onUpdateFoo = meta.events.find(event => event.name === 'update:foo');
-
-			expect(foo).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": "false",
-				  "description": "optional boolean foo with default false",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "foo",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "false",
-				      "true",
-				    ],
-				    "type": "boolean | undefined",
-				  },
-				  "tags": [],
-				  "type": "boolean | undefined",
-				}
-			`);
-			expect(onUpdateFoo).toBeDefined();
-
-			const bar = meta.props.find(prop => prop.name === 'bar');
-			const barModifiers = meta.props.find(prop => prop.name === 'barModifiers');
-			const onUpdateBaz = meta.events.find(event => event.name === 'update:bar');
-
-			expect(bar).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "optional string bar with lazy and trim modifiers",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "bar",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "string",
-				    ],
-				    "type": "string | undefined",
-				  },
-				  "tags": [],
-				  "type": "string | undefined",
-				}
-			`);
-			if (withTsconfig) {
-				expect(barModifiers).toMatchInlineSnapshot(`
-					{
-					  "declarations": [],
-					  "default": undefined,
-					  "description": "",
-					  "getDeclarations": [Function],
-					  "getTypeObject": [Function],
-					  "global": false,
-					  "name": "barModifiers",
-					  "rawType": undefined,
-					  "required": false,
-					  "schema": {
-					    "kind": "enum",
-					    "schema": [
-					      "undefined",
-					      "Partial<Record<"lazy" | "trim", true>>",
-					    ],
-					    "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
-					  },
-					  "tags": [],
-					  "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
-					}
-				`);
+/**
+ * The declarations of members by name, each as its file relative to the workspace and its source text, or as its file
+ * name outside of the workspace.
+ */
+function declarations(list: { name: string; declarations: Declaration[] }[]) {
+	return Object.fromEntries(list.map(member => [
+		member.name,
+		member.declarations.map(({ file, start, end }) => {
+			const relative = path.relative(workspace, file);
+			if (relative.startsWith('..')) {
+				return path.basename(file);
 			}
-			else {
-				expect(barModifiers).toMatchInlineSnapshot(`
-					{
-					  "declarations": [],
-					  "default": undefined,
-					  "description": "",
-					  "getDeclarations": [Function],
-					  "getTypeObject": [Function],
-					  "global": false,
-					  "name": "barModifiers",
-					  "rawType": undefined,
-					  "required": false,
-					  "schema": {
-					    "kind": "enum",
-					    "schema": [
-					      "undefined",
-					      "Partial<Record<"lazy" | "trim", true>>",
-					    ],
-					    "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
-					  },
-					  "tags": [],
-					  "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
-					}
-				`);
-			}
-			expect(onUpdateBaz).toBeDefined();
+			const text = fs.readFileSync(file, 'utf8').slice(start, end).replace(/\r\n/g, '\n');
+			return `${relative.replace(/\\/g, '/')}: ${text}`;
+		}),
+	]));
+}
+
+/** The props declared by the component, by name. */
+function props(meta: ComponentMeta) {
+	return members(meta, declaredProps(meta).map(({ global: _, ...prop }) => prop));
+}
+
+function declaredProps(meta: ComponentMeta) {
+	return meta.props.filter(p => !p.global);
+}
+
+function normalize<T>(value: T): T {
+	return JSON.parse(JSON.stringify(value).replace(/\\r\\n/g, '\\n'));
+}
+
+describe('vue-component-meta', async () => {
+	const checker = await createChecker(path.join(workspace, 'tsconfig.json'));
+	afterAll(() => checker.close());
+	const getMeta = (fileName: string, exportName?: string) =>
+		checker.getComponentMeta(path.join(workspace, fileName), exportName);
+
+	test('empty-component', async () => {
+		const meta = await getMeta('empty-component/component.vue');
+
+		expect(meta.props.map(prop => prop.name)).toEqual([
+			'key',
+			'ref',
+			'ref_for',
+			'ref_key',
+			'onVue:beforeMount',
+			'onVue:mounted',
+			'onVue:beforeUpdate',
+			'onVue:updated',
+			'onVue:beforeUnmount',
+			'onVue:unmounted',
+			'class',
+			'style',
+		]);
+		expect(meta.props.every(prop => prop.global && !prop.required)).toBe(true);
+		expect(meta.props.every(prop => prop.declarations.map(d => path.basename(d.file)).join() === runtimeCore))
+			.toBe(true);
+		expect(meta.events).toEqual([]);
+		expect(meta.slots).toEqual([]);
+		expect(meta.exposed).toEqual([]);
+	});
+
+	test('reference-type-model', async () => {
+		const meta = await getMeta('reference-type-model/component.vue');
+
+		expect(props(meta)).toEqual({
+			modelValue: { required: true, description: 'required number modelValue', tags: [], type: 'number' },
+			foo: {
+				required: false,
+				default: 'false',
+				description: 'optional boolean foo with default false',
+				tags: [],
+				type: { union: ['undefined', 'false', 'true'] },
+			},
+			bar: {
+				required: false,
+				description: 'optional string bar with lazy and trim modifiers',
+				tags: [],
+				type: { union: ['undefined', 'string'] },
+			},
+			barModifiers: {
+				required: false,
+				description: '',
+				tags: [],
+				type: { union: ['undefined', '<external Partial<Record<"lazy" | "trim", true>> @ lib.es5.d.ts>'] },
+			},
 		});
-
-		test('reference-type-props', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-props/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-
-			const foo = meta.props.find(prop => prop.name === 'foo');
-			expect(foo).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "string foo",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "foo",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": "string",
-				  "tags": [
-				    {
-				      "name": "default",
-				      "text": ""rounded"",
-				    },
-				    {
-				      "name": "since",
-				      "text": "v1.0.0",
-				    },
-				    {
-				      "name": "see",
-				      "text": "https://vuejs.org/",
-				    },
-				    {
-				      "name": "example",
-				      "text": "\`\`\`vue
-				<template>
-				  <component foo="straight" />
-				</template>
-				\`\`\`",
-				    },
-				  ],
-				  "type": "string",
-				}
-			`);
-
-			const bar = meta.props.find(prop => prop.name === 'bar');
-			expect(bar).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": "1",
-				  "description": "optional number bar",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "bar",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "number",
-				    ],
-				    "type": "number | undefined",
-				  },
-				  "tags": [],
-				  "type": "number | undefined",
-				}
-			`);
-
-			const baz = meta.props.find(prop => prop.name === 'baz');
-			expect(baz).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": "["foo", "bar"]",
-				  "description": "string array baz",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "baz",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      {
-				        "kind": "array",
-				        "schema": [
-				          "string",
-				        ],
-				        "type": "string[]",
-				      },
-				    ],
-				    "type": "string[] | undefined",
-				  },
-				  "tags": [],
-				  "type": "string[] | undefined",
-				}
-			`);
-
-			const union = meta.props.find(prop => prop.name === 'union');
-			expect(union).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "required union type",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "union",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "string",
-				      "number",
-				    ],
-				    "type": "string | number",
-				  },
-				  "tags": [],
-				  "type": "string | number",
-				}
-			`);
-
-			const unionOptional = meta.props.find(prop => prop.name === 'unionOptional');
-			expect(unionOptional).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "optional union type",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "unionOptional",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "string",
-				      "number",
-				    ],
-				    "type": "string | number | undefined",
-				  },
-				  "tags": [],
-				  "type": "string | number | undefined",
-				}
-			`);
-
-			const nested = meta.props.find(prop => prop.name === 'nested');
-			expect(nested).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "required nested object",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "nested",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": {
-				    "kind": "object",
-				    "schema": {
-				      "nestedProp": {
-				        "declarations": [],
-				        "default": undefined,
-				        "description": "nested prop documentation",
-				        "getDeclarations": [Function],
-				        "getTypeObject": [Function],
-				        "global": false,
-				        "name": "nestedProp",
-				        "rawType": undefined,
-				        "required": true,
-				        "schema": "string",
-				        "tags": [],
-				        "type": "string",
-				      },
-				    },
-				    "type": "MyNestedProps",
-				  },
-				  "tags": [],
-				  "type": "MyNestedProps",
-				}
-			`);
-
-			const nestedIntersection = meta.props.find(prop => prop.name === 'nestedIntersection');
-			expect(nestedIntersection).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "required nested object with intersection",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "nestedIntersection",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": {
-				    "kind": "object",
-				    "schema": {
-				      "additionalProp": {
-				        "declarations": [],
-				        "default": undefined,
-				        "description": "required additional property",
-				        "getDeclarations": [Function],
-				        "getTypeObject": [Function],
-				        "global": false,
-				        "name": "additionalProp",
-				        "rawType": undefined,
-				        "required": true,
-				        "schema": "string",
-				        "tags": [],
-				        "type": "string",
-				      },
-				      "nestedProp": {
-				        "declarations": [],
-				        "default": undefined,
-				        "description": "nested prop documentation",
-				        "getDeclarations": [Function],
-				        "getTypeObject": [Function],
-				        "global": false,
-				        "name": "nestedProp",
-				        "rawType": undefined,
-				        "required": true,
-				        "schema": "string",
-				        "tags": [],
-				        "type": "string",
-				      },
-				    },
-				    "type": "MyNestedProps & { additionalProp: string; }",
-				  },
-				  "tags": [],
-				  "type": "MyNestedProps & { additionalProp: string; }",
-				}
-			`);
-
-			const nestedOptional = meta.props.find(prop => prop.name === 'nestedOptional');
-			if (withTsconfig) {
-				expect(nestedOptional).toMatchInlineSnapshot(`
-					{
-					  "declarations": [],
-					  "default": undefined,
-					  "description": "optional nested object",
-					  "getDeclarations": [Function],
-					  "getTypeObject": [Function],
-					  "global": false,
-					  "name": "nestedOptional",
-					  "rawType": undefined,
-					  "required": false,
-					  "schema": {
-					    "kind": "enum",
-					    "schema": [
-					      "undefined",
-					      "MyIgnoredNestedProps",
-					      {
-					        "kind": "object",
-					        "schema": {
-					          "nestedProp": {
-					            "declarations": [],
-					            "default": undefined,
-					            "description": "nested prop documentation",
-					            "getDeclarations": [Function],
-					            "getTypeObject": [Function],
-					            "global": false,
-					            "name": "nestedProp",
-					            "rawType": undefined,
-					            "required": true,
-					            "schema": "string",
-					            "tags": [],
-					            "type": "string",
-					          },
-					        },
-					        "type": "MyNestedProps",
-					      },
-					    ],
-					    "type": "MyIgnoredNestedProps | MyNestedProps | undefined",
-					  },
-					  "tags": [],
-					  "type": "MyIgnoredNestedProps | MyNestedProps | undefined",
-					}
-				`);
-			}
-			else {
-				expect(nestedOptional).toMatchInlineSnapshot(`
-					{
-					  "declarations": [],
-					  "default": undefined,
-					  "description": "optional nested object",
-					  "getDeclarations": [Function],
-					  "getTypeObject": [Function],
-					  "global": false,
-					  "name": "nestedOptional",
-					  "rawType": undefined,
-					  "required": false,
-					  "schema": {
-					    "kind": "enum",
-					    "schema": [
-					      "undefined",
-					      {
-					        "kind": "object",
-					        "schema": {
-					          "nestedProp": {
-					            "declarations": [],
-					            "default": undefined,
-					            "description": "nested prop documentation",
-					            "getDeclarations": [Function],
-					            "getTypeObject": [Function],
-					            "global": false,
-					            "name": "nestedProp",
-					            "rawType": undefined,
-					            "required": true,
-					            "schema": "string",
-					            "tags": [],
-					            "type": "string",
-					          },
-					        },
-					        "type": "MyNestedProps",
-					      },
-					      "MyIgnoredNestedProps",
-					    ],
-					    "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
-					  },
-					  "tags": [],
-					  "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
-					}
-				`);
-			}
-
-			const array = meta.props.find(prop => prop.name === 'array');
-			expect(array).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "required array object",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "array",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": {
-				    "kind": "array",
-				    "schema": [
-				      {
-				        "kind": "object",
-				        "schema": {
-				          "nestedProp": {
-				            "declarations": [],
-				            "default": undefined,
-				            "description": "nested prop documentation",
-				            "getDeclarations": [Function],
-				            "getTypeObject": [Function],
-				            "global": false,
-				            "name": "nestedProp",
-				            "rawType": undefined,
-				            "required": true,
-				            "schema": "string",
-				            "tags": [],
-				            "type": "string",
-				          },
-				        },
-				        "type": "MyNestedProps",
-				      },
-				    ],
-				    "type": "MyNestedProps[]",
-				  },
-				  "tags": [],
-				  "type": "MyNestedProps[]",
-				}
-			`);
-
-			const arrayOptional = meta.props.find(prop => prop.name === 'arrayOptional');
-			expect(arrayOptional).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "optional array object",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "arrayOptional",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      {
-				        "kind": "array",
-				        "schema": [
-				          {
-				            "kind": "object",
-				            "schema": {
-				              "nestedProp": {
-				                "declarations": [],
-				                "default": undefined,
-				                "description": "nested prop documentation",
-				                "getDeclarations": [Function],
-				                "getTypeObject": [Function],
-				                "global": false,
-				                "name": "nestedProp",
-				                "rawType": undefined,
-				                "required": true,
-				                "schema": "string",
-				                "tags": [],
-				                "type": "string",
-				              },
-				            },
-				            "type": "MyNestedProps",
-				          },
-				        ],
-				        "type": "MyNestedProps[]",
-				      },
-				    ],
-				    "type": "MyNestedProps[] | undefined",
-				  },
-				  "tags": [],
-				  "type": "MyNestedProps[] | undefined",
-				}
-			`);
-
-			const enumValue = meta.props.find(prop => prop.name === 'enumValue');
-			expect(enumValue).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "enum value",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "enumValue",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      {
-				        "kind": "literal",
-				        "type": "MyEnum.Small",
-				        "value": "0",
-				      },
-				      {
-				        "kind": "literal",
-				        "type": "MyEnum.Medium",
-				        "value": "1",
-				      },
-				      {
-				        "kind": "literal",
-				        "type": "MyEnum.Large",
-				        "value": "2",
-				      },
-				    ],
-				    "type": "MyEnum",
-				  },
-				  "tags": [],
-				  "type": "MyEnum",
-				}
-			`);
-
-			const stringEnumValue = meta.props.find(prop => prop.name === 'stringEnumValue');
-			expect(stringEnumValue).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "string enum value",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "stringEnumValue",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      {
-				        "kind": "literal",
-				        "type": "MyStringEnum.Small",
-				        "value": ""small"",
-				      },
-				      {
-				        "kind": "literal",
-				        "type": "MyStringEnum.Medium",
-				        "value": ""medium"",
-				      },
-				      {
-				        "kind": "literal",
-				        "type": "MyStringEnum.Large",
-				        "value": ""large"",
-				      },
-				    ],
-				    "type": "MyStringEnum",
-				  },
-				  "tags": [],
-				  "type": "MyStringEnum",
-				}
-			`);
-
-			const namespaceType = meta.props.find(prop => prop.name === 'namespaceType');
-			expect(namespaceType).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "namespace type",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "namespaceType",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": {
-				    "kind": "object",
-				    "schema": {},
-				    "type": "MyNamespace.MyType",
-				  },
-				  "tags": [],
-				  "type": "MyNamespace.MyType",
-				}
-			`);
-
-			const literalFromContext = meta.props.find(prop => prop.name === 'literalFromContext');
-			if (withTsconfig) {
-				expect(literalFromContext).toMatchInlineSnapshot(`
-					{
-					  "declarations": [],
-					  "default": undefined,
-					  "description": "literal type alias that require context",
-					  "getDeclarations": [Function],
-					  "getTypeObject": [Function],
-					  "global": false,
-					  "name": "literalFromContext",
-					  "rawType": undefined,
-					  "required": true,
-					  "schema": {
-					    "kind": "enum",
-					    "schema": [
-					      ""Addons"",
-					      ""Content"",
-					      ""Display"",
-					      ""Forms"",
-					      ""Interaction"",
-					      ""Uncategorized"",
-					    ],
-					    "type": ""Addons" | "Content" | "Display" | "Forms" | "Interaction" | "Uncategorized"",
-					  },
-					  "tags": [],
-					  "type": ""Addons" | "Content" | "Display" | "Forms" | "Interaction" | "Uncategorized"",
-					}
-				`);
-			}
-			else {
-				expect(literalFromContext).toMatchInlineSnapshot(`
-					{
-					  "declarations": [],
-					  "default": undefined,
-					  "description": "literal type alias that require context",
-					  "getDeclarations": [Function],
-					  "getTypeObject": [Function],
-					  "global": false,
-					  "name": "literalFromContext",
-					  "rawType": undefined,
-					  "required": true,
-					  "schema": {
-					    "kind": "enum",
-					    "schema": [
-					      ""Uncategorized"",
-					      ""Content"",
-					      ""Interaction"",
-					      ""Display"",
-					      ""Forms"",
-					      ""Addons"",
-					    ],
-					    "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
-					  },
-					  "tags": [],
-					  "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
-					}
-				`);
-			}
-
-			const inlined = meta.props.find(prop => prop.name === 'inlined');
-			expect(inlined).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "inlined",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": {
-				    "kind": "object",
-				    "schema": {
-				      "foo": {
-				        "declarations": [],
-				        "default": undefined,
-				        "description": "",
-				        "getDeclarations": [Function],
-				        "getTypeObject": [Function],
-				        "global": false,
-				        "name": "foo",
-				        "rawType": undefined,
-				        "required": true,
-				        "schema": "string",
-				        "tags": [],
-				        "type": "string",
-				      },
-				    },
-				    "type": "{ foo: string; }",
-				  },
-				  "tags": [],
-				  "type": "{ foo: string; }",
-				}
-			`);
-
-			const recursive = meta.props.find(prop => prop.name === 'recursive');
-			expect(recursive).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "recursive",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": {
-				    "kind": "object",
-				    "schema": {
-				      "recursive": {
-				        "declarations": [],
-				        "default": undefined,
-				        "description": "",
-				        "getDeclarations": [Function],
-				        "getTypeObject": [Function],
-				        "global": false,
-				        "name": "recursive",
-				        "rawType": undefined,
-				        "required": true,
-				        "schema": "MyNestedRecursiveProps",
-				        "tags": [],
-				        "type": "MyNestedRecursiveProps",
-				      },
-				    },
-				    "type": "MyNestedRecursiveProps",
-				  },
-				  "tags": [],
-				  "type": "MyNestedRecursiveProps",
-				}
-			`);
+		expect(members(meta, meta.events)).toEqual({
+			'update:modelValue': {
+				description: '',
+				tags: [],
+				type: { parameters: { value: 'number' }, returns: 'void' },
+			},
+			'update:foo': {
+				description: '',
+				tags: [],
+				type: { parameters: { value: 'boolean' }, returns: 'void' },
+			},
+			'update:bar': {
+				description: '',
+				tags: [],
+				type: { parameters: { value: { union: ['undefined', 'string'] } }, returns: 'void' },
+			},
 		});
-
-		test('reference-type-props-destructured', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-props/component-destructure.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-
-			const text = meta.props.find(prop => prop.name === 'text');
-			expect(text?.default).toEqual('"foobar"');
-		});
-
-		test('reference-type-props-non-ascii-default', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-props/component-non-ascii.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-
-			const label = meta.props.find(prop => prop.name === 'label');
-			expect(label?.default).toEqual('"こんにちは"');
-		});
-
-		test('reference-type-props-js', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-props/component-js.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-
-			const foo = meta.props.find(prop => prop.name === 'foo');
-			expect(foo).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "foo",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": "string",
-				  "tags": [],
-				  "type": "string",
-				}
-			`);
-
-			const bar = meta.props.find(prop => prop.name === 'bar');
-			expect(bar).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": "'BAR'",
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "bar",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "string",
-				    ],
-				    "type": "string | undefined",
-				  },
-				  "tags": [],
-				  "type": "string | undefined",
-				}
-			`);
-
-			const baz = meta.props.find(prop => prop.name === 'baz');
-			expect(baz).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "baz",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "string",
-				    ],
-				    "type": "string | undefined",
-				  },
-				  "tags": [],
-				  "type": "string | undefined",
-				}
-			`);
-
-			const xfoo = meta.props.find(prop => prop.name === 'xfoo');
-			expect(xfoo).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "xfoo",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": "string",
-				  "tags": [],
-				  "type": "string",
-				}
-			`);
-
-			const xbar = meta.props.find(prop => prop.name === 'xbar');
-			expect(xbar).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "xbar",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "string",
-				    ],
-				    "type": "string | undefined",
-				  },
-				  "tags": [],
-				  "type": "string | undefined",
-				}
-			`);
-
-			const xbaz = meta.props.find(prop => prop.name === 'xbaz');
-			expect(xbaz).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "xbaz",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "string",
-				    ],
-				    "type": "string | undefined",
-				  },
-				  "tags": [],
-				  "type": "string | undefined",
-				}
-			`);
-		});
-
-		test('reference-type-props-js-setup', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-props/component-js-setup.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-
-			const foo = meta.props.find(prop => prop.name === 'foo');
-			expect(foo).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "foo",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": "string",
-				  "tags": [],
-				  "type": "string",
-				}
-			`);
-
-			const bar = meta.props.find(prop => prop.name === 'bar');
-			expect(bar).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": "'BAR'",
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "bar",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "string",
-				    ],
-				    "type": "string | undefined",
-				  },
-				  "tags": [],
-				  "type": "string | undefined",
-				}
-			`);
-
-			const baz = meta.props.find(prop => prop.name === 'baz');
-			expect(baz).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "baz",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "string",
-				    ],
-				    "type": "string | undefined",
-				  },
-				  "tags": [],
-				  "type": "string | undefined",
-				}
-			`);
-
-			const xfoo = meta.props.find(prop => prop.name === 'xfoo');
-			expect(xfoo).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "xfoo",
-				  "rawType": undefined,
-				  "required": true,
-				  "schema": "string",
-				  "tags": [],
-				  "type": "string",
-				}
-			`);
-
-			const xbar = meta.props.find(prop => prop.name === 'xbar');
-			expect(xbar).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "xbar",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "string",
-				    ],
-				    "type": "string | undefined",
-				  },
-				  "tags": [],
-				  "type": "string | undefined",
-				}
-			`);
-
-			const xbaz = meta.props.find(prop => prop.name === 'xbaz');
-			expect(xbaz).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": undefined,
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "xbaz",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "string",
-				    ],
-				    "type": "string | undefined",
-				  },
-				  "tags": [],
-				  "type": "string | undefined",
-				}
-			`);
-
-			const hello = meta.props.find(prop => prop.name === 'hello');
-			expect(hello).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": "'Hello'",
-				  "description": "The hello property.",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "hello",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "string",
-				    ],
-				    "type": "string | undefined",
-				  },
-				  "tags": [
-				    {
-				      "name": "since",
-				      "text": "v1.0.0",
-				    },
-				  ],
-				  "type": "string | undefined",
-				}
-			`);
-
-			const numberOrStringProp = meta.props.find(prop => prop.name === 'numberOrStringProp');
-			expect(numberOrStringProp).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": "42",
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "numberOrStringProp",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "string",
-				      "number",
-				    ],
-				    "type": "string | number | undefined",
-				  },
-				  "tags": [],
-				  "type": "string | number | undefined",
-				}
-			`);
-
-			const arrayProps = meta.props.find(prop => prop.name === 'arrayProps');
-			expect(arrayProps).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": "[42, 43, 44]",
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "arrayProps",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      {
-				        "kind": "array",
-				        "schema": [
-				          "unknown",
-				        ],
-				        "type": "unknown[]",
-				      },
-				    ],
-				    "type": "unknown[] | undefined",
-				  },
-				  "tags": [],
-				  "type": "unknown[] | undefined",
-				}
-			`);
-		});
-
-		test('reference-type-events', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-events/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-
-			const onFoo = meta.events.find(event => event.name === 'foo');
-			expect(onFoo).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "name": "foo",
-				  "rawType": undefined,
-				  "schema": [
-				    {
-				      "kind": "enum",
-				      "schema": [
-				        "undefined",
-				        {
-				          "kind": "object",
-				          "schema": {
-				            "foo": {
-				              "declarations": [],
-				              "default": undefined,
-				              "description": "",
-				              "getDeclarations": [Function],
-				              "getTypeObject": [Function],
-				              "global": false,
-				              "name": "foo",
-				              "rawType": undefined,
-				              "required": true,
-				              "schema": "string",
-				              "tags": [],
-				              "type": "string",
-				            },
-				          },
-				          "type": "{ foo: string; }",
-				        },
-				      ],
-				      "type": "{ foo: string; } | undefined",
-				    },
-				  ],
-				  "signature": "(event: "foo", data?: { foo: string; } | undefined): void",
-				  "tags": [],
-				  "type": "[data?: { foo: string; } | undefined]",
-				}
-			`);
-
-			const onBar = meta.events.find(event => event.name === 'bar');
-			expect(onBar).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "name": "bar",
-				  "rawType": undefined,
-				  "schema": [
-				    {
-				      "kind": "object",
-				      "schema": {
-				        "arg1": {
-				          "declarations": [],
-				          "default": undefined,
-				          "description": "",
-				          "getDeclarations": [Function],
-				          "getTypeObject": [Function],
-				          "global": false,
-				          "name": "arg1",
-				          "rawType": undefined,
-				          "required": true,
-				          "schema": "number",
-				          "tags": [],
-				          "type": "number",
-				        },
-				        "arg2": {
-				          "declarations": [],
-				          "default": undefined,
-				          "description": "",
-				          "getDeclarations": [Function],
-				          "getTypeObject": [Function],
-				          "global": false,
-				          "name": "arg2",
-				          "rawType": undefined,
-				          "required": false,
-				          "schema": "any",
-				          "tags": [],
-				          "type": "any",
-				        },
-				      },
-				      "type": "{ arg1: number; arg2?: any; }",
-				    },
-				  ],
-				  "signature": "(event: "bar", value: { arg1: number; arg2?: any; }): void",
-				  "tags": [],
-				  "type": "[value: { arg1: number; arg2?: any; }]",
-				}
-			`);
-
-			const onBaz = meta.events.find(event => event.name === 'baz');
-			expect(onBaz).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "name": "baz",
-				  "rawType": undefined,
-				  "schema": [],
-				  "signature": "(event: "baz"): void",
-				  "tags": [],
-				  "type": "[]",
-				}
-			`);
-		});
-
-		test('reference-type-events w/ generic', () => {
-			const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/generic/component.vue');
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Function);
-
-			const onBar = meta.events.find(event => event.name === 'bar');
-			expect(onBar).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "name": "bar",
-				  "rawType": undefined,
-				  "schema": [
-				    "number",
-				  ],
-				  "signature": "(e: "bar", data: number): void",
-				  "tags": [],
-				  "type": "[number]",
-				}
-			`);
-		});
-
-		test('reference-type-slots', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-slots/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-
-			const a = meta.slots.find(slot =>
-				slot.name === 'default'
-				&& slot.type === '{ num: number; }'
-			);
-			const b = meta.slots.find(slot =>
-				slot.name === 'named-slot'
-				&& slot.type === '{ str: string; }'
-			);
-			const c = meta.slots.find(slot =>
-				slot.name === 'vbind'
-				&& slot.type === '{ num: number; str: string; }'
-			);
-			const d = meta.slots.find(slot => slot.name === 'no-bind');
-
-			expect(a).toBeDefined();
-			expect(b).toBeDefined();
-			expect(c).toBeDefined();
-			expect(d).toBeDefined();
-		});
-
-		test('reference-type-slots w/ defineSlots', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-slots/component-define-slots.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-
-			const a = meta.slots.find(slot =>
-				slot.name === 'default'
-				&& slot.type === '{ num: number; }'
-			);
-			const b = meta.slots.find(slot =>
-				slot.name === 'named-slot'
-				&& slot.type === '{ str: string; }'
-			);
-			const c = meta.slots.find(slot =>
-				slot.name === 'vbind'
-				&& slot.type === '{ num: number; str: string; }'
-			);
-			const d = meta.slots.find(slot => slot.name === 'no-bind');
-
-			expect(a).toBeDefined();
-			expect(b).toBeDefined();
-			expect(c).toBeDefined();
-			expect(d).toBeDefined();
-
-			expect(c).toStrictEqual(expect.objectContaining(
-				{
-					description: 'Slot with tags',
-					tags: [
-						{
-							name: 'deprecated',
-							text: 'do not use',
-						},
-					],
-				},
-			));
-		});
-
-		test('reference-type-slots w/ generic', () => {
-			const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/generic/component.vue');
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Function);
-
-			expect(meta.slots.find(slot =>
-				slot.name === 'default'
-				&& slot.type === '{ foo: number; }'
-			)).toBeDefined();
-		});
-
-		test('reference-type-exposed', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-exposed/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-
-			const counter = meta.exposed.find(exposed => exposed.name === 'counter');
-			const oldCounter = meta.exposed.find(exposed => exposed.name === 'oldCounter');
-
-			expect(counter).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "description": "a counter string",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "name": "counter",
-				  "rawType": undefined,
-				  "schema": "string",
-				  "tags": [],
-				  "type": "string",
-				}
-			`);
-			expect(oldCounter).toStrictEqual(expect.objectContaining(
-				{
-					description: 'an oldCounter string',
-					tags: [
-						{
-							name: 'deprecated',
-							text: 'use counter instead',
-						},
-					],
-				},
-			));
-			expect(meta.exposed.find(({ name }) => ['label', 'click', 'default'].includes(name))).toBeUndefined();
-			expect(meta.props.find(({ name }) => name === 'label')).toBeDefined();
-			expect(meta.events.find(({ name }) => name === 'click')).toBeDefined();
-			expect(meta.slots.find(({ name }) => name === 'default')).toBeDefined();
-		});
-
-		test('options-api expose array', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/reference-type-exposed/component-options-api.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-			expect(meta.exposed.map(({ name }) => name)).toStrictEqual(expect.arrayContaining(['increment', 'reset']));
-
-			const reset = meta.exposed.find(exposed => exposed.name === 'reset');
-
-			expect(reset).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "description": "Resets the counter to zero",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "name": "reset",
-				  "rawType": undefined,
-				  "schema": {
-				    "kind": "event",
-				    "schema": undefined,
-				    "type": "(): void",
-				  },
-				  "tags": [],
-				  "type": "() => void",
-				}
-			`);
-		});
-
-		test('component with both props and events', () => {
-			const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/#5546/main.vue');
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-
-			// Nothing special about this prop
-			expect(meta.props.find(prop => prop.name === 'title')).toBeDefined();
-			// Event
-			expect(meta.props.find(prop => prop.name === 'onClose')).toBeUndefined();
-			expect(meta.events.find(event => event.name === 'close')).toBeDefined();
-			// Prop that starts with `on`
-			expect(meta.props.find(prop => prop.name === 'onCompleted')).toBeDefined();
-		});
-
-		test('non-component', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/non-component/component.ts',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Unknown);
-		});
-
-		test('ts-component', () => {
-			const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/ts-component/component.ts');
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-
-			const a = meta.props.find(prop =>
-				prop.name === 'foo'
-				&& prop.required
-				&& prop.type === 'string'
-			);
-			const b = meta.props.find(prop =>
-				prop.name === 'bar'
-				&& !prop.required
-				&& prop.type === 'number | undefined'
-			);
-
-			expect(a).toBeDefined();
-			expect(b).toBeDefined();
-		});
-
-		test('ts-component.tsx', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/ts-component/component-tsx.tsx',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-
-			const a = meta.props.find(prop =>
-				prop.name === 'foo'
-				&& prop.required
-				&& prop.type === 'string'
-			);
-			const b = meta.props.find(prop =>
-				prop.name === 'bar'
-				&& !prop.required
-				&& prop.type === 'number | undefined'
-			);
-
-			expect(a).toBeDefined();
-			expect(b).toBeDefined();
-		});
-
-		test('ts-named-exports', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/ts-named-export/component.ts',
-			);
-
-			const exportNames = checker.getExportNames(componentPath);
-			expect(exportNames).toEqual(['Foo', 'Bar']);
-
-			const Foo = checker.getComponentMeta(componentPath, 'Foo');
-			const Bar = checker.getComponentMeta(componentPath, 'Bar');
-
-			expect(Foo.type).toEqual(TypeMeta.Class);
-			expect(Bar.type).toEqual(TypeMeta.Class);
-
-			const a = Foo.props.find(prop =>
-				prop.name === 'foo'
-				&& prop.required
-				&& prop.type === 'string'
-			);
-			const b = Bar.props.find(prop =>
-				prop.name === 'bar'
-				&& !prop.required
-				&& prop.type === 'number | undefined'
-			);
-
-			expect(a).toBeDefined();
-			expect(b).toBeDefined();
-		});
-
-		test('options-api', () => {
-			const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/options-api/component.ts');
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-
-			const submitEvent = meta.events.find(evt => evt.name === 'submit');
-			expect(submitEvent).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "description": "",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "name": "submit",
-				  "rawType": undefined,
-				  "schema": [
-				    {
-				      "kind": "object",
-				      "schema": {
-				        "email": {
-				          "declarations": [],
-				          "default": undefined,
-				          "description": "email of user",
-				          "getDeclarations": [Function],
-				          "getTypeObject": [Function],
-				          "global": false,
-				          "name": "email",
-				          "rawType": undefined,
-				          "required": true,
-				          "schema": "string",
-				          "tags": [],
-				          "type": "string",
-				        },
-				        "password": {
-				          "declarations": [],
-				          "default": undefined,
-				          "description": "password of same user",
-				          "getDeclarations": [Function],
-				          "getTypeObject": [Function],
-				          "global": false,
-				          "name": "password",
-				          "rawType": undefined,
-				          "required": true,
-				          "schema": "string",
-				          "tags": [],
-				          "type": "string",
-				        },
-				      },
-				      "type": "SubmitPayload",
-				    },
-				  ],
-				  "signature": "(event: "submit", args_0: SubmitPayload): void",
-				  "tags": [],
-				  "type": "[SubmitPayload]",
-				}
-			`);
-
-			const propNumberDefault = meta.props.find(prop => prop.name === 'numberDefault');
-			expect(propNumberDefault).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": "42",
-				  "description": "Default number",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "numberDefault",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "number",
-				    ],
-				    "type": "number | undefined",
-				  },
-				  "tags": [],
-				  "type": "number | undefined",
-				}
-			`);
-
-			const propObjectDefault = meta.props.find(prop => prop.name === 'objectDefault');
-			expect(propObjectDefault).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": "{
-				    foo: 'bar',
-				}",
-				  "description": "Default function Object",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "objectDefault",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      "Record<string, any>",
-				    ],
-				    "type": "Record<string, any> | undefined",
-				  },
-				  "tags": [],
-				  "type": "Record<string, any> | undefined",
-				}
-			`);
-
-			const propArrayDefault = meta.props.find(prop => prop.name === 'arrayDefault');
-			expect(propArrayDefault).toMatchInlineSnapshot(`
-				{
-				  "declarations": [],
-				  "default": "[1, 2, 3]",
-				  "description": "Default function Array",
-				  "getDeclarations": [Function],
-				  "getTypeObject": [Function],
-				  "global": false,
-				  "name": "arrayDefault",
-				  "rawType": undefined,
-				  "required": false,
-				  "schema": {
-				    "kind": "enum",
-				    "schema": [
-				      "undefined",
-				      {
-				        "kind": "array",
-				        "schema": [
-				          "unknown",
-				        ],
-				        "type": "unknown[]",
-				      },
-				    ],
-				    "type": "unknown[] | undefined",
-				  },
-				  "tags": [],
-				  "type": "unknown[] | undefined",
-				}
-			`);
-		});
-
-		test('js-component (script setup)', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/js-component/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-			expect(
-				meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.type, prop.required]),
-			).toEqual([
-				['bar', 'number | undefined', false],
-				['foo', 'string', true],
-			]);
-			expect(meta.slots.map(slot => [slot.name, slot.type])).toEqual([['header', '{ count: number; }']]);
-		});
-
-		test('js-component (options api)', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/js-component/component-options.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.type).toEqual(TypeMeta.Class);
-			expect(
-				meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.type, prop.required]),
-			).toEqual([
-				['foo', 'string', true],
-			]);
-			expect(meta.events.map(event => event.name)).toEqual(['change']);
-		});
-
-		test('component-name-description (vue)', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/component-name-description/component.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.name).toBe('MyComponent');
-			expect(meta.description).toBe('My awesome component description');
-			expect(meta.type).toEqual(TypeMeta.Class);
-		});
-
-		test('component-name-description (ts)', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/component-name-description/component-ts.ts',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.name).toBe('TsComponent');
-			expect(meta.description).toBe('TypeScript component with description');
-			expect(meta.type).toEqual(TypeMeta.Class);
-		});
-
-		test('component-no-name (vue)', () => {
-			const componentPath = path.resolve(
-				__dirname,
-				'../../../test-workspace/component-meta/component-name-description/component-no-name.vue',
-			);
-			const meta = checker.getComponentMeta(componentPath);
-
-			expect(meta.name).toBeUndefined();
-			expect(meta.description).toBeUndefined();
-			expect(meta.type).toEqual(TypeMeta.Class);
+		// `defineModel` declares no props in the source
+		expect(declarations(declaredProps(meta))).toEqual({ modelValue: [], foo: [], bar: [], barModifiers: [] });
+		expect(declarations(meta.events)).toEqual({
+			'update:bar': [runtimeCore],
+			'update:foo': [runtimeCore],
+			'update:modelValue': [runtimeCore],
 		});
 	});
 
-const checkerOptions: MetaCheckerOptions = {
-	schema: { ignore: ['MyIgnoredNestedProps'] },
-	printer: { newLine: 1 },
-};
-const tsconfigChecker = createChecker(
-	path.resolve(__dirname, '../../../test-workspace/component-meta/tsconfig.json'),
-	checkerOptions,
-);
-const noTsConfigChecker = createCheckerByJson(
-	path.resolve(__dirname, '../../../test-workspace/component-meta'),
-	{
-		'extends': '../tsconfig.base.json',
-		'include': [
-			'**/*',
-		],
-	},
-	checkerOptions,
-);
+	test('reference-type-props', async () => {
+		const meta = await getMeta('reference-type-props/component.vue');
+		const nestedProps = { nestedProp: 'string' };
 
-worker(tsconfigChecker, true);
-worker(noTsConfigChecker, false);
+		expect(props(meta)).toEqual({
+			foo: {
+				required: true,
+				description: 'string foo',
+				tags: [
+					{ name: 'default', text: '"rounded"' },
+					{ name: 'since', text: 'v1.0.0' },
+					{ name: 'see', text: 'https://vuejs.org/' },
+					{
+						name: 'example',
+						text: '```vue\n<template>\n  <component foo="straight" />\n</template>\n```',
+					},
+				],
+				type: 'string',
+			},
+			bar: {
+				required: false,
+				default: '1',
+				description: 'optional number bar',
+				tags: [],
+				type: { union: ['undefined', 'number'] },
+			},
+			baz: {
+				required: false,
+				default: `['foo', 'bar']`,
+				description: 'string array baz',
+				tags: [],
+				type: { union: ['undefined', { array: 'string' }] },
+			},
+			union: {
+				required: true,
+				description: 'required union type',
+				tags: [],
+				type: { union: ['string', 'number'] },
+			},
+			unionOptional: {
+				required: false,
+				description: 'optional union type',
+				tags: [],
+				type: { union: ['undefined', 'string', 'number'] },
+			},
+			nested: { required: true, description: 'required nested object', tags: [], type: nestedProps },
+			nestedIntersection: {
+				required: true,
+				description: 'required nested object with intersection',
+				tags: [],
+				type: { nestedProp: 'string', additionalProp: 'string' },
+			},
+			nestedOptional: {
+				required: false,
+				description: 'optional nested object',
+				tags: [],
+				type: { union: ['undefined', nestedProps, nestedProps] },
+			},
+			array: { required: true, description: 'required array object', tags: [], type: { array: nestedProps } },
+			arrayOptional: {
+				required: false,
+				description: 'optional array object',
+				tags: [],
+				type: { union: ['undefined', { array: nestedProps }] },
+			},
+			enumValue: {
+				required: true,
+				description: 'enum value',
+				tags: [],
+				type: { union: ['MyEnum.Small', 'MyEnum.Medium', 'MyEnum.Large'] },
+			},
+			stringEnumValue: {
+				required: true,
+				description: 'string enum value',
+				tags: [],
+				type: { union: ['MyStringEnum.Small', 'MyStringEnum.Medium', 'MyStringEnum.Large'] },
+			},
+			namespaceType: { required: true, description: 'namespace type', tags: [], type: {} },
+			literalFromContext: {
+				required: true,
+				description: 'literal type alias that require context',
+				tags: [],
+				type: { union: ['"Addons"', '"Content"', '"Display"', '"Forms"', '"Interaction"', '"Uncategorized"'] },
+			},
+			inlined: { required: true, description: '', tags: [], type: { foo: 'string' } },
+			recursive: {
+				required: true,
+				description: '',
+				tags: [],
+				type: { recursive: '<cycle MyNestedRecursiveProps>' },
+			},
+		});
+		const myProps = (text: string) => [`reference-type-props/my-props.ts: ${text}`];
+		expect(declarations(declaredProps(meta))).toEqual({
+			foo: myProps('foo: string;'),
+			bar: myProps('bar?: number;'),
+			baz: myProps('baz?: string[];'),
+			union: myProps('union: string | number;'),
+			unionOptional: myProps('unionOptional?: string | number;'),
+			nested: myProps('nested: MyNestedProps;'),
+			nestedIntersection: myProps(
+				'nestedIntersection: MyNestedProps & {\n\t\t/**\n\t\t * required additional property\n\t\t */\n\t\tadditionalProp: string;\n\t};',
+			),
+			nestedOptional: myProps('nestedOptional?: MyNestedProps | MyIgnoredNestedProps;'),
+			array: myProps('array: MyNestedProps[];'),
+			arrayOptional: myProps('arrayOptional?: MyNestedProps[];'),
+			enumValue: myProps('enumValue: MyEnum;'),
+			stringEnumValue: myProps('stringEnumValue: MyStringEnum;'),
+			namespaceType: myProps('namespaceType: MyNamespace.MyType;'),
+			literalFromContext: myProps('literalFromContext: MyCategories;'),
+			inlined: myProps('inlined: { foo: string };'),
+			recursive: myProps('recursive: MyNestedRecursiveProps;'),
+		});
+	});
 
-describe('project scope', () => {
-	const scopedChecker = createCheckerByJson(
-		path.resolve(__dirname, '../../../test-workspace/component-meta'),
-		{
-			'extends': '../tsconfig.base.json',
-			'include': [
-				'empty-component/**/*',
+	test('reference-type-props: texts and documentation of nested types', async () => {
+		const meta = await getMeta('reference-type-props/component.vue');
+		const prop = (name: string) => meta.types[meta.props.find(p => p.name === name)!.type]!;
+
+		expect(prop('nested')).toEqual({
+			text: 'MyNestedProps',
+			kind: 'object',
+			properties: [
+				{ name: 'nestedProp', optional: false, description: 'nested prop documentation', type: expect.any(Number) },
 			],
-		},
-		checkerOptions,
-	);
-	const outsidePath = path.resolve(
-		__dirname,
-		'../../../test-workspace/component-meta/reference-type-props/component.vue',
-	);
-
-	test('component outside the project', () => {
-		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow();
-		expect(() => scopedChecker.getComponentMeta(outsidePath)).toThrow();
+		});
+		const intersection = prop('nestedIntersection');
+		expect(intersection.text).toBe('MyNestedProps & { additionalProp: string; }');
+		expect(intersection.kind === 'object' && intersection.properties.map(p => p.description)).toEqual([
+			'nested prop documentation',
+			'required additional property',
+		]);
+		expect(prop('enumValue').text).toBe('MyEnum');
+		expect(prop('literalFromContext').text).toBe(
+			'"Addons" | "Content" | "Display" | "Forms" | "Interaction" | "Uncategorized"',
+		);
 	});
 
-	test('component outside the project (program unchanged)', () => {
-		const before = scopedChecker.getProgram()!.getRootFileNames();
+	test('reference-type-props-destructured', async () => {
+		const componentPath = path.join(workspace, 'reference-type-props/component-destructure.vue');
+		const meta = await checker.getComponentMeta(componentPath);
 
-		expect(() => scopedChecker.getExportNames(outsidePath)).toThrow();
-		expect(scopedChecker.getProgram()!.getRootFileNames()).toEqual(before);
+		expect(props(meta)).toEqual({
+			text: { required: true, default: `'foobar'`, description: '', tags: [], type: 'string' },
+		});
+
+		const text = meta.props.find(prop => prop.name === 'text')!;
+		expect(text.declarations.length).toBe(1);
+		const [{ file, start, end }] = text.declarations as [Declaration];
+		expect(path.relative(workspace, file)).toBe(path.join('reference-type-props', 'component-destructure.vue'));
+		expect(fs.readFileSync(componentPath, 'utf8').slice(start, end)).toBe('text: string;');
 	});
 
-	test('component outside the project w/ updateFile', () => {
-		scopedChecker.updateFile(outsidePath, fs.readFileSync(outsidePath, 'utf8'));
+	test('reference-type-props-non-ascii-default', async () => {
+		const meta = await getMeta('reference-type-props/component-non-ascii.vue');
 
-		expect(scopedChecker.getExportNames(outsidePath)).toContain('default');
+		expect(props(meta).label).toMatchObject({ required: false, default: `'こんにちは'` });
+		expect(declarations(declaredProps(meta))).toEqual({
+			label: ['reference-type-props/component-non-ascii.vue: label?: string;'],
+		});
+	});
+
+	test('reference-type-props-js', async () => {
+		const meta = await getMeta('reference-type-props/component-js.vue');
+		const optionalString = { union: ['undefined', 'string'] };
+
+		expect(props(meta)).toEqual({
+			foo: { required: true, description: '', tags: [], type: 'string' },
+			bar: { required: false, default: `'BAR'`, description: '', tags: [], type: optionalString },
+			baz: { required: false, description: '', tags: [], type: optionalString },
+			xfoo: { required: true, description: '', tags: [], type: 'string' },
+			xbar: { required: false, description: '', tags: [], type: optionalString },
+			xbaz: { required: false, description: '', tags: [], type: optionalString },
+		});
+		const componentJs = (text: string) => [`reference-type-props/component-js.vue: ${text}`];
+		expect(declarations(declaredProps(meta))).toEqual({
+			foo: componentJs('foo: {\n\t\ttype: String,\n\t\trequired: true\n\t}'),
+			bar: componentJs(`bar: {\n\t\ttype: String,\n\t\tdefault: 'BAR',\n\t}`),
+			baz: componentJs('baz: {\n\t\ttype: String\n\t}'),
+			xfoo: componentJs('xfoo: StringRequired'),
+			xbar: componentJs('xbar: StringEmpty'),
+			xbaz: componentJs('xbaz: StringUndefined'),
+		});
+	});
+
+	test('reference-type-props-js-setup', async () => {
+		const meta = await getMeta('reference-type-props/component-js-setup.vue');
+		const optionalString = { union: ['undefined', 'string'] };
+
+		expect(props(meta)).toEqual({
+			foo: { required: true, description: '', tags: [], type: 'string' },
+			bar: { required: false, default: `'BAR'`, description: '', tags: [], type: optionalString },
+			baz: { required: false, description: '', tags: [], type: optionalString },
+			xfoo: { required: true, description: '', tags: [], type: 'string' },
+			xbar: { required: false, description: '', tags: [], type: optionalString },
+			xbaz: { required: false, description: '', tags: [], type: optionalString },
+			hello: {
+				required: false,
+				default: `'Hello'`,
+				description: 'The hello property.',
+				tags: [{ name: 'since', text: 'v1.0.0' }],
+				type: optionalString,
+			},
+			numberOrStringProp: {
+				required: false,
+				default: '42',
+				description: '',
+				tags: [],
+				type: { union: ['undefined', 'string', 'number'] },
+			},
+			arrayProps: {
+				required: false,
+				default: '[42, 43, 44]',
+				description: '',
+				tags: [],
+				type: { union: ['undefined', { array: 'unknown' }] },
+			},
+		});
+		// the props of a runtime `defineProps` in script setup have no declarations in the source
+		expect(declaredProps(meta).every(prop => !prop.declarations.length)).toBe(true);
+	});
+
+	test('reference-type-events', async () => {
+		const meta = await getMeta('reference-type-events/component.vue');
+
+		expect(members(meta, meta.events)).toEqual({
+			foo: {
+				description: '',
+				tags: [],
+				type: { parameters: { 'data?': { union: ['undefined', { foo: 'string' }] } }, returns: 'void' },
+			},
+			bar: {
+				description: '',
+				tags: [],
+				type: { parameters: { value: { arg1: 'number', 'arg2?': 'any' } }, returns: 'void' },
+			},
+			baz: { description: '', tags: [], type: { parameters: {}, returns: 'void' } },
+		});
+		expect(meta.events.map(event => meta.types[event.type]!.text)).toEqual([
+			'(value: { arg1: number; arg2?: any; }) => void',
+			'() => void',
+			'(data?: { foo: string; } | undefined) => void',
+		]);
+		// the props of the events are not props of the component
+		expect(meta.props.filter(prop => !prop.global)).toEqual([]);
+		expect(declarations(meta.events)).toEqual({ foo: [runtimeCore], bar: [runtimeCore], baz: [runtimeCore] });
+	});
+
+	test('reference-type-events w/ tuple syntax', async () => {
+		const meta = await getMeta('reference-type-exposed/component.vue');
+
+		expect(members(meta, meta.events)).toEqual({
+			click: {
+				description: '',
+				tags: [],
+				type: { parameters: { event: '<external Event @ lib.dom.d.ts>' }, returns: 'void' },
+			},
+		});
+	});
+
+	test('reference-type-events w/ rest parameters', async () => {
+		const meta = await getMeta('js-component/component-options.vue');
+		const change = meta.types[meta.events[0]!.type]!;
+
+		expect(change.text).toBe('(...args: any[]) => void');
+		expect(print(meta, meta.events[0]!.type)).toEqual({
+			parameters: { '...args': { array: 'any' } },
+			returns: 'void',
+		});
+	});
+
+	test('reference-type-events w/ generic', async () => {
+		const meta = await getMeta('generic/component.vue');
+
+		expect(members(meta, meta.events)).toEqual({
+			bar: { description: '', tags: [], type: { parameters: { data: 'number' }, returns: 'void' } },
+			'update:title': { description: '', tags: [], type: { parameters: { value: 'string' }, returns: 'void' } },
+		});
+		expect(props(meta)).toEqual({
+			foo: { required: true, description: '', tags: [], type: 'number' },
+			title: { required: true, description: '', tags: [], type: 'string' },
+		});
+		expect(declarations(meta.events)).toEqual({
+			bar: [`generic/component.vue: (e: 'bar', data: number): void`],
+			'update:title': ['template-helpers.d.ts'],
+		});
+		expect(declarations(declaredProps(meta))).toEqual({
+			foo: ['generic/component.vue: foo: number'],
+			title: [],
+		});
+	});
+
+	test('reference-type-slots', async () => {
+		const expected = {
+			'no-bind': { description: '', tags: [], type: {} },
+			default: { description: '', tags: [], type: { num: 'number' } },
+			'named-slot': { description: '', tags: [], type: { str: 'string' } },
+			vbind: { description: '', tags: [], type: { num: 'number', str: 'string' } },
+		};
+		for (const file of ['component.vue', 'component-no-script.vue']) {
+			const meta = await getMeta(`reference-type-slots/${file}`);
+			expect(members(meta, meta.slots)).toEqual(expected);
+			// the names of the `<slot>` elements in the template
+			expect(declarations(meta.slots)).toEqual({
+				'no-bind': [`reference-type-slots/${file}: no-bind`],
+				default: [`reference-type-slots/${file}: slot`],
+				'named-slot': [`reference-type-slots/${file}: named-slot`],
+				vbind: [`reference-type-slots/${file}: vbind`],
+			});
+		}
+	});
+
+	test('reference-type-slots w/ defineSlots', async () => {
+		const meta = await getMeta('reference-type-slots/component-define-slots.vue');
+
+		expect(members(meta, meta.slots)).toEqual({
+			default: { description: 'Default slot', tags: [], type: { num: 'number' } },
+			'named-slot': { description: '', tags: [], type: { str: 'string' } },
+			vbind: {
+				description: 'Slot with tags',
+				tags: [{ name: 'deprecated', text: 'do not use' }],
+				type: { num: 'number', str: 'string' },
+			},
+			// a slot without parameters has no props
+			'no-bind': { description: '', tags: [], type: 'any' },
+		});
+		const mySlots = (text: string) => [`reference-type-slots/my-slots.ts: ${text}`];
+		expect(declarations(meta.slots)).toEqual({
+			default: mySlots('default: (props: { num: number }) => VNode[];'),
+			'named-slot': mySlots(`'named-slot': (props: { str: string }) => VNode[];`),
+			vbind: mySlots('vbind: (props: { num: number; str: string }) => VNode[];'),
+			'no-bind': mySlots(`'no-bind': () => VNode[];`),
+		});
+	});
+
+	test('reference-type-slots w/ generic', async () => {
+		const meta = await getMeta('generic/component.vue');
+
+		expect(members(meta, meta.slots)).toEqual({
+			default: { description: '', tags: [], type: { foo: 'number' } },
+		});
+		expect(declarations(meta.slots)).toEqual({
+			default: ['generic/component.vue: default?: (props: { foo: number }) => any'],
+		});
+	});
+
+	test('generic type parameters', async () => {
+		const meta = await getMeta('#4577/main.vue');
+
+		expect(props(meta)).toEqual({
+			nonGeneric: { required: true, description: '', tags: [], type: 'string' },
+			rows: { required: true, description: '', tags: [], type: { array: 'Row' } },
+		});
+		expect(members(meta, meta.slots)).toEqual({
+			default: { description: '', tags: [], type: { row: 'Row' } },
+		});
+	});
+
+	test('reference-type-exposed', async () => {
+		const meta = await getMeta('reference-type-exposed/component.vue');
+
+		expect(members(meta, meta.exposed)).toEqual({
+			counter: { description: 'a counter string', tags: [], type: 'string' },
+			oldCounter: {
+				description: 'an oldCounter string',
+				tags: [{ name: 'deprecated', text: 'use counter instead' }],
+				type: 'string',
+			},
+		});
+		// props, events and slots are not exposed
+		expect(Object.keys(props(meta))).toEqual(['label']);
+		expect(meta.events.map(event => event.name)).toEqual(['click']);
+		expect(meta.slots.map(slot => slot.name)).toEqual(['default']);
+		expect(declarations(meta.exposed)).toEqual({
+			counter: ['reference-type-exposed/my-exposed.ts: counter: Ref<string>;'],
+			oldCounter: ['reference-type-exposed/my-exposed.ts: oldCounter: Ref<string>;'],
+		});
+		expect(declarations(declaredProps(meta))).toEqual({
+			label: ['reference-type-exposed/component.vue: label: string'],
+		});
+		expect(declarations(meta.events)).toEqual({ click: [runtimeCore] });
+		expect(declarations(meta.slots)).toEqual({
+			default: ['reference-type-exposed/component.vue: default: () => VNode[]'],
+		});
+	});
+
+	test('options-api expose array', async () => {
+		const meta = await getMeta('reference-type-exposed/component-options-api.vue');
+
+		expect(members(meta, meta.exposed)).toEqual({
+			reset: {
+				description: 'Resets the counter to zero',
+				tags: [],
+				type: { parameters: {}, returns: 'void' },
+			},
+			increment: {
+				description: 'Increments the counter by one',
+				tags: [],
+				type: { parameters: {}, returns: 'void' },
+			},
+		});
+		const component = (text: string) => [`reference-type-exposed/component-options-api.vue: ${text}`];
+		expect(declarations(meta.exposed)).toEqual({
+			reset: component('reset() {\n      (this as any).counter = 0;\n    }'),
+			increment: component('increment() {\n      (this as any).counter += 1;\n    }'),
+		});
+	});
+
+	test('component with both props and events', async () => {
+		const meta = await getMeta('#5546/main.vue');
+
+		expect(props(meta)).toEqual({
+			title: { required: true, description: '', tags: [], type: 'string' },
+			// a prop that starts with `on` but is not an event
+			onCompleted: { required: true, description: '', tags: [], type: { parameters: {}, returns: 'void' } },
+		});
+		expect(members(meta, meta.events)).toEqual({
+			close: { description: '', tags: [], type: { parameters: {}, returns: 'void' } },
+		});
+		expect(declarations(declaredProps(meta))).toEqual({
+			title: ['#5546/main.vue: title: string;'],
+			onCompleted: ['#5546/main.vue: onCompleted: () => void;'],
+		});
+		expect(declarations(meta.events)).toEqual({ close: [runtimeCore] });
+	});
+
+	test('non-component', async () => {
+		const meta = await getMeta('non-component/component.ts');
+
+		expect(meta).toEqual({
+			name: undefined,
+			description: undefined,
+			props: [],
+			events: [],
+			slots: [],
+			exposed: [],
+			types: [],
+		});
+	});
+
+	test('ts-component', async () => {
+		const expected = {
+			foo: { required: true, description: 'string foo', tags: [], type: 'string' },
+			bar: { required: false, description: 'optional number bar', tags: [], type: { union: ['undefined', 'number'] } },
+		};
+		for (const file of ['component.ts', 'component-tsx.tsx']) {
+			const meta = await getMeta(`ts-component/${file}`);
+			expect(props(meta)).toEqual(expected);
+			expect(declarations(declaredProps(meta))).toEqual({
+				foo: ['ts-component/PropDefinitions.ts: foo: string;'],
+				bar: ['ts-component/PropDefinitions.ts: bar?: number;'],
+			});
+		}
+	});
+
+	test('ts-named-exports', async () => {
+		const fileName = 'ts-named-export/component.ts';
+
+		expect(await checker.getExportNames(path.join(workspace, fileName))).toEqual(['Foo', 'Bar']);
+		const foo = await getMeta(fileName, 'Foo');
+		const bar = await getMeta(fileName, 'Bar');
+		expect(props(foo)).toEqual({
+			foo: { required: true, description: '', tags: [], type: 'string' },
+		});
+		expect(props(bar)).toEqual({
+			bar: { required: false, description: '', tags: [], type: { union: ['undefined', 'number'] } },
+		});
+		expect(declarations(declaredProps(foo))).toEqual({ foo: ['ts-named-export/component.ts: foo: string'] });
+		expect(declarations(declaredProps(bar))).toEqual({ bar: ['ts-named-export/component.ts: bar?: number'] });
+	});
+
+	test('options-api', async () => {
+		const meta = await getMeta('options-api/component.ts');
+		const unknownArray = { union: ['undefined', { array: 'unknown' }] };
+
+		expect(members(meta, meta.events)).toEqual({
+			submit: {
+				description: '',
+				tags: [],
+				type: { parameters: { arg0: { email: 'string', password: 'string' } }, returns: 'void' },
+			},
+		});
+		const submit = meta.types[meta.events[0]!.type]!;
+		const payload = submit.kind === 'function' ? meta.types[submit.parameters[0]!.type] : undefined;
+		expect(payload?.kind === 'object' && payload.properties.map(p => p.description)).toEqual([
+			'email of user',
+			'password of same user',
+		]);
+		expect(props(meta)).toEqual({
+			numberDefault: {
+				required: false,
+				default: '42',
+				description: 'Default number',
+				tags: [],
+				type: { union: ['undefined', 'number'] },
+			},
+			objectDefault: {
+				required: false,
+				default: `{\n\t\t\t\tfoo: 'bar',\n\t\t\t}`,
+				description: 'Default function Object',
+				tags: [],
+				type: { union: ['undefined', '<external Record<string, any> @ lib.es5.d.ts>'] },
+			},
+			arrayDefault: {
+				required: false,
+				default: '[1, 2, 3]',
+				description: 'Default function Array',
+				tags: [],
+				type: unknownArray,
+			},
+			complexDefault: {
+				required: false,
+				default: expect.stringMatching(/^\(props: any\) => \{/),
+				description: 'Default function more complex',
+				tags: [],
+				type: unknownArray,
+			},
+		});
+		const component = (text: string) => [`options-api/component.ts: ${text}`];
+		expect(declarations(declaredProps(meta))).toEqual({
+			numberDefault: component('numberDefault: {\n\t\t\ttype: Number,\n\t\t\tdefault: 42,\n\t\t}'),
+			objectDefault: component(
+				`objectDefault: {\n\t\t\ttype: Object,\n\t\t\tdefault: () => ({\n\t\t\t\tfoo: 'bar',\n\t\t\t}),\n\t\t}`,
+			),
+			arrayDefault: component('arrayDefault: {\n\t\t\ttype: Array,\n\t\t\tdefault: () => [1, 2, 3],\n\t\t}'),
+			complexDefault: [expect.stringMatching(/^options-api\/component\.ts: complexDefault: \{\n\t\t\ttype: Array,/)],
+		});
+		expect(declarations(meta.events)).toEqual({ submit: [runtimeCore] });
+	});
+
+	test('js-component (script setup)', async () => {
+		const meta = await getMeta('js-component/component.vue');
+
+		expect(props(meta)).toEqual({
+			bar: { required: false, default: '1', description: '', tags: [], type: { union: ['undefined', 'number'] } },
+			foo: { required: true, description: '', tags: [], type: 'string' },
+		});
+		expect(members(meta, meta.slots)).toEqual({
+			header: { description: '', tags: [], type: { count: 'number' } },
+		});
+		expect(meta.description).toBeUndefined();
+		expect(declarations(declaredProps(meta))).toEqual({ bar: [], foo: [] });
+		expect(declarations(meta.slots)).toEqual({ header: ['js-component/component.vue: header'] });
+	});
+
+	test('js-component (options api)', async () => {
+		const meta = await getMeta('js-component/component-options.vue');
+
+		expect(props(meta)).toEqual({
+			foo: { required: true, description: '', tags: [], type: 'string' },
+		});
+		expect(meta.events.map(event => event.name)).toEqual(['change']);
+		expect(declarations(declaredProps(meta))).toEqual({
+			foo: ['js-component/component-options.vue: foo: {\n\t\t\ttype: String,\n\t\t\trequired: true\n\t\t}'],
+		});
+		expect(declarations(meta.events)).toEqual({ change: [runtimeCore] });
+	});
+
+	test('component-name-description (vue)', async () => {
+		const meta = await getMeta('component-name-description/component.vue');
+
+		expect(meta.name).toBe('MyComponent');
+		expect(meta.description).toBe('My awesome component description');
+		expect(props(meta).title).toMatchObject({ required: true, description: 'The title prop' });
+		expect(declarations(declaredProps(meta))).toEqual({
+			title: ['component-name-description/component.vue: title: {\n\t\t\ttype: String,\n\t\t\trequired: true,\n\t\t}'],
+		});
+	});
+
+	test('component-name-description (ts)', async () => {
+		const meta = await getMeta('component-name-description/component-ts.ts');
+
+		expect(meta.name).toBe('TsComponent');
+		expect(meta.description).toBe('TypeScript component with description');
+		expect(props(meta).message).toMatchObject({ required: true, description: 'The message prop' });
+	});
+
+	test('component-no-name (vue)', async () => {
+		const meta = await getMeta('component-name-description/component-no-name.vue');
+
+		expect(meta.name).toBeUndefined();
+		expect(meta.description).toBeUndefined();
+		expect(props(meta).value).toMatchObject({ required: true, description: 'The value prop' });
+	});
+
+	test('global props', async () => {
+		const meta = await getMeta('reference-type-props/component.vue');
+		const global = Object.fromEntries(meta.props.filter(p => p.global).map(p => [p.name, p]));
+
+		expect(global.key?.required).toBe(false);
+		expect(print(meta, global.class!.type)).toBe('unknown');
+		expect(meta.types[global.style!.type]!.text).toBe('unknown');
+		expect(declarations(meta.props.filter(p => p.global)).class).toEqual([runtimeCore]);
 	});
 });
 
-describe('checker deleteFile', () => {
-	const rootDir = path.resolve(__dirname, '../../../test-workspace/component-meta');
-	const checker = createCheckerByJson(
-		rootDir,
-		{
-			'extends': '../tsconfig.base.json',
-			'include': [
-				'empty-component/**/*',
-			],
-		},
-		checkerOptions,
-	);
+describe('types', async () => {
+	const checker = await createChecker(path.join(workspace, 'tsconfig.json'));
+	afterAll(() => checker.close());
 
-	// in-memory files
-	const consumerPath = path.join(rootDir, 'empty-component/delete-file-consumer.vue');
-	const depPath = path.join(rootDir, 'empty-component/delete-file-dep.ts');
+	test('a type is resolved once and shared by id', async () => {
+		const meta = await checker.getComponentMeta(path.join(workspace, 'reference-type-props/component.vue'));
+		const typeOf = (name: string) => meta.props.find(p => p.name === name)!.type;
+		const nested = typeOf('nested');
+		const array = meta.types[typeOf('array')]!;
+		const arrayOptional = meta.types[typeOf('arrayOptional')]!;
 
-	test('deleted in-memory file no longer resolves', () => {
-		checker.updateFile(depPath, `export interface DepProps { foo: string }`);
-		checker.updateFile(
-			consumerPath,
-			`<script setup lang="ts">
-import type { DepProps } from './delete-file-dep';
-defineProps<DepProps>();
-</script>`,
-		);
+		expect(array.kind === 'array' && array.element).toBe(nested);
+		expect(arrayOptional.kind === 'union' && arrayOptional.types[1]).toBe(typeOf('array'));
+		const nestedOptional = meta.types[typeOf('nestedOptional')]!;
+		expect(nestedOptional.kind === 'union' && nestedOptional.types).toContain(nested);
+		expect(meta.types.filter(t => t.text === 'MyNestedProps').length).toBe(1);
+	});
 
-		const propNames = (p: string) => checker.getComponentMeta(p).props.map(prop => prop.name);
-		expect(propNames(consumerPath)).toContain('foo');
+	test('a recursive type refers to itself', async () => {
+		const meta = await checker.getComponentMeta(path.join(workspace, 'reference-type-props/component.vue'));
+		const id = meta.props.find(p => p.name === 'recursive')!.type;
+		const type = meta.types[id]!;
 
-		checker.deleteFile(depPath);
+		expect(type.kind === 'object' && type.properties[0]!.type).toBe(id);
+	});
 
-		expect(propNames(consumerPath)).not.toContain('foo');
+	test('results are plain data', async () => {
+		const meta = await checker.getComponentMeta(path.join(workspace, 'reference-type-props/component.vue'));
 
-		checker.deleteFile(consumerPath);
+		expect(meta.props.some(prop => prop.declarations.length)).toBe(true);
+		expect(JSON.parse(JSON.stringify(meta))).toEqual(meta);
+		// every id refers to an entry of the table
+		const ids = JSON.stringify(meta).match(/"(?:type|element|returns)":\d+/g)!.map(m => Number(m.split(':')[1]));
+		expect(ids.every(id => id >= 0 && id < meta.types.length)).toBe(true);
+	});
 
-		expect(() => checker.getComponentMeta(consumerPath)).toThrow();
+	test('the declaration of an external type', async () => {
+		const meta = await checker.getComponentMeta(path.join(workspace, 'reference-type-model/component.vue'));
+		const partial = meta.types.find(t => t.kind === 'external' && t.text.startsWith('Partial'));
+
+		expect(partial?.kind).toBe('external');
+		const { file, start, end } = (partial as { declaration: { file: string; start: number; end: number } })
+			.declaration;
+		expect(path.basename(file)).toBe('lib.es5.d.ts');
+		expect(fs.readFileSync(file, 'utf8').slice(start, end)).toMatch(/^type Partial<T> = \{/);
+	});
+
+	test('types declared in the project keep their structure', async () => {
+		const meta = await checker.getComponentMeta(path.join(workspace, 'reference-type-props/component.vue'));
+
+		for (const type of meta.types) {
+			if (type.kind === 'external') {
+				const relative = path.relative(workspace, type.declaration!.file);
+				expect(relative.startsWith('..')).toBe(true);
+			}
+		}
+	});
+});
+
+describe('project scope', async () => {
+	const scopedChecker = await createChecker(path.join(workspace, 'tsconfig.scope.json'));
+	afterAll(() => scopedChecker.close());
+
+	test('component outside the project', async () => {
+		const outsidePath = path.join(workspace, 'reference-type-props/component.vue');
+		await expect(scopedChecker.getExportNames(outsidePath)).rejects.toThrow();
+		await expect(scopedChecker.getComponentMeta(outsidePath)).rejects.toThrow();
+	});
+
+	test('missing export', async () => {
+		const componentPath = path.join(workspace, 'empty-component/component.vue');
+		await expect(scopedChecker.getComponentMeta(componentPath, 'missing')).rejects.toThrow();
+	});
+
+	test('reads the files from disk on every query', async () => {
+		const consumerPath = path.join(workspace, 'empty-component/disk-consumer.vue');
+		const depPath = path.join(workspace, 'empty-component/disk-dep.ts');
+		const propNames = async () => (await scopedChecker.getComponentMeta(consumerPath)).props.map(prop => prop.name);
+		try {
+			fs.writeFileSync(depPath, `export interface DepProps { foo: string }\n`);
+			fs.writeFileSync(
+				consumerPath,
+				`<script setup lang="ts">\nimport type { DepProps } from './disk-dep';\ndefineProps<DepProps>();\n</script>\n`,
+			);
+			expect(await propNames()).toContain('foo');
+
+			fs.writeFileSync(depPath, `export interface DepProps { bar: string }\n`);
+			const names = await propNames();
+			expect(names).toContain('bar');
+			expect(names).not.toContain('foo');
+
+			fs.rmSync(consumerPath);
+			await expect(scopedChecker.getComponentMeta(consumerPath)).rejects.toThrow();
+		}
+		finally {
+			fs.rmSync(consumerPath, { force: true });
+			fs.rmSync(depPath, { force: true });
+		}
+	});
+});
+
+describe('checker', () => {
+	const tsconfig = path.join(workspace, 'tsconfig.json');
+	const propsPath = path.join(workspace, 'reference-type-props/component.vue');
+	const eventsPath = path.join(workspace, 'reference-type-events/component.vue');
+
+	test('await using', async () => {
+		await using checker = await createChecker(tsconfig);
+		expect(await checker.getExportNames(propsPath)).toEqual(['default']);
+	});
+
+	test('getComponentMetas', async () => {
+		await using checker = await createChecker(tsconfig);
+		expect(await checker.getComponentMetas([propsPath, eventsPath])).toEqual([
+			await checker.getComponentMeta(propsPath),
+			await checker.getComponentMeta(eventsPath),
+		]);
+	});
+});
+
+describe('project', async () => {
+	const tsconfig = path.join(workspace, 'tsconfig.json').replace(/\\/g, '/');
+	const eventsPath = path.join(workspace, 'reference-type-events/component.vue');
+	const ts = { ...await import('typescript/ast'), ...await import('typescript/async') };
+
+	test('getComponentMeta / getExportNames / getComponentMetaOfType', async () => {
+		await using checker = await createChecker(tsconfig);
+		const api = new ts.API({ cwd: workspace, runExternalCode: true });
+		const snapshot = await api.createSnapshot({ openProjects: [tsconfig] });
+		try {
+			const project = snapshot.getConfiguredProject(tsconfig)!;
+			expect(await getExportNames(project, eventsPath)).toEqual(['default']);
+
+			const meta = await getComponentMeta(ts, project, eventsPath);
+			expect(meta).toEqual(await checker.getComponentMeta(eventsPath));
+			expect(meta.events.length).toBeGreaterThan(0);
+
+			// a component known only by its type has no declaration to read the name, description and defaults from
+			const moduleSymbol = await project.checker.getSymbolOfSourceFile(eventsPath.replace(/\\/g, '/'));
+			const defaultExport = await project.checker.getMemberInModuleExports(moduleSymbol!, 'default');
+			const type = await project.checker.getTypeOfSymbol(defaultExport!);
+			expect(await getComponentMetaOfType(ts, project, type, undefined)).toEqual({
+				...meta,
+				name: undefined,
+				description: undefined,
+			});
+		}
+		finally {
+			await snapshot.dispose();
+			await api.close();
+		}
 	});
 });

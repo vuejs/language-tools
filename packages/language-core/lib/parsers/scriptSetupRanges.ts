@@ -1,7 +1,7 @@
-import type * as ts from 'typescript';
-import type { TextRange, VueCompilerOptions } from '../types';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type { TextRange, TypeScript, VueCompilerOptions } from '../types';
 import { collectBindingIdentifiers } from '../utils/collectBindings';
-import { getNodeText, getStartEnd } from '../utils/shared';
+import { getNodeText, getStartEnd, isFunctionLikeDeclaration, isStringLiteralLike } from '../utils/shared';
 import { getClosestMultiLineCommentRange, parseBindings } from './utils';
 
 const tsCheckRE = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
@@ -56,7 +56,7 @@ export interface UseTemplateRef extends CallExpressionRange {
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> {}
 
 export function parseScriptSetupRanges(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	sourceFile: ts.SourceFile,
 	vueCompilerOptions: VueCompilerOptions,
 ) {
@@ -81,7 +81,7 @@ export function parseScriptSetupRanges(
 	let foundNonImportExportNode = false;
 	let importSectionEndOffset = 0;
 
-	ts.forEachChild(sourceFile, node => {
+	sourceFile.forEachChild(node => {
 		if (
 			foundNonImportExportNode
 			|| ts.isImportDeclaration(node)
@@ -106,14 +106,14 @@ export function parseScriptSetupRanges(
 			importSectionEndOffset = commentRange.pos;
 		}
 		else {
-			importSectionEndOffset = getStartEnd(ts, node, sourceFile).start;
+			importSectionEndOffset = getStartEnd(node, sourceFile).start;
 		}
 		foundNonImportExportNode = true;
 	});
-	ts.forEachChild(sourceFile, node => visitNode(node, [sourceFile]));
+	sourceFile.forEachChild(node => visitNode(node, [sourceFile]));
 
 	return {
-		bindings: parseBindings(ts, sourceFile, vueCompilerOptions.extensions),
+		bindings: parseBindings(ts, sourceFile),
 		leadingCommentEndOffset,
 		importSectionEndOffset,
 		defineModel,
@@ -165,7 +165,7 @@ export function parseScriptSetupRanges(
 					options = node.arguments[1];
 				}
 				else if (node.arguments.length >= 1) {
-					if (ts.isStringLiteralLike(node.arguments[0]!)) {
+					if (isStringLiteralLike(ts, node.arguments[0]!)) {
 						propName = node.arguments[0];
 					}
 					else {
@@ -198,7 +198,7 @@ export function parseScriptSetupRanges(
 								if (ts.isPropertyAssignment(property)) {
 									defaultValue = _getStartEnd(initializer);
 								}
-								if (ts.isFunctionLike(initializer) && initializer.parameters.length) {
+								if (isFunctionLikeDeclaration(ts, initializer) && initializer.parameters.length) {
 									const firstArg = initializer.parameters[0]!;
 									if (!firstArg.dotDotDotToken && !firstArg.type) {
 										defaultPropsArg = _getStartEnd(firstArg);
@@ -217,7 +217,7 @@ export function parseScriptSetupRanges(
 				}
 
 				let name: TextRange | undefined;
-				if (propName && ts.isStringLiteralLike(propName)) {
+				if (propName && isStringLiteralLike(ts, propName)) {
 					name = _getStartEnd(propName);
 				}
 
@@ -332,8 +332,8 @@ export function parseScriptSetupRanges(
 			}
 		}
 
-		ts.forEachChild(node, child => {
-			if (ts.isFunctionLike(node)) {
+		node.forEachChild(child => {
+			if (isFunctionLikeDeclaration(ts, node)) {
 				return;
 			}
 			parents.push(node);
@@ -361,16 +361,16 @@ export function parseScriptSetupRanges(
 	}
 
 	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(ts, node, sourceFile);
+		return getStartEnd(node, sourceFile);
 	}
 
 	function _getNodeText(node: ts.Node) {
-		return getNodeText(ts, node, sourceFile);
+		return getNodeText(node, sourceFile);
 	}
 }
 
 function getStatementRange(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	parents: ts.Node[],
 	node: ts.Node,
 	ast: ts.SourceFile,
@@ -379,8 +379,8 @@ function getStatementRange(
 	for (let i = parents.length - 1; i >= 0; i--) {
 		const statement = parents[i]!;
 		if (ts.isStatement(statement)) {
-			ts.forEachChild(statement, child => {
-				const range = getStartEnd(ts, child, ast);
+			statement.forEachChild(child => {
+				const range = getStartEnd(child, ast);
 				statementRange ??= range;
 				statementRange.end = range.end;
 			});
@@ -388,7 +388,7 @@ function getStatementRange(
 		}
 	}
 	if (!statementRange) {
-		statementRange = getStartEnd(ts, node, ast);
+		statementRange = getStartEnd(node, ast);
 	}
 	return statementRange;
 }

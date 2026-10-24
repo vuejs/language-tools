@@ -533,7 +533,13 @@
 			"path": "./#6228/tsconfig.json"
 		},
 		{
+			"path": "./#6240/tsconfig.json"
+		},
+		{
 			"path": "./#625/tsconfig.json"
+		},
+		{
+			"path": "./#6288/tsconfig.json"
 		},
 		{
 			"path": "./_failed_#3632/tsconfig.json"
@@ -551,6 +557,9 @@
 			"path": "./_failed_cssModuleDuplicate/tsconfig.json"
 		},
 		{
+			"path": "./_failed_cssModuleSrc/tsconfig.json"
+		},
+		{
 			"path": "./_failed_directive_arity/tsconfig.json"
 		},
 		{
@@ -560,10 +569,13 @@
 			"path": "./_failed_directives/tsconfig.json"
 		},
 		{
+			"path": "./_failed_expect_error_props_copy/tsconfig.json"
+		},
+		{
 			"path": "./_failed_fragment_props/tsconfig.json"
 		},
 		{
-			"path": "./_failed_unknownComponent/tsconfig.json"
+			"path": "./_failed_vueIgnoreScope/tsconfig.json"
 		},
 		{
 			"path": "./attrs/tsconfig.json"
@@ -579,6 +591,9 @@
 		},
 		{
 			"path": "./cssModule/tsconfig.json"
+		},
+		{
+			"path": "./cssModuleSrc/tsconfig.json"
 		},
 		{
 			"path": "./dataAttributes/tsconfig.json"
@@ -717,6 +732,9 @@
 		},
 		{
 			"path": "./v-if/tsconfig.json"
+		},
+		{
+			"path": "./vModelPropName/tsconfig.json"
 		},
 		{
 			"path": "./withDefaults/tsconfig.json"

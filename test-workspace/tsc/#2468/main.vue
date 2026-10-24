@@ -1,10 +1,10 @@
 <script setup lang="ts">
-let Foo: new () => {
+let Foo!: new () => {
 	$props: {
 		onFoo: () => void;
 	};
 };
-let Bar: (props: { foo: string }) => {};
+let Bar!: (props: { foo: string }) => {};
 </script>
 
 <template>

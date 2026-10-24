@@ -1,24 +1,49 @@
-import type { CodeMapping, VirtualCode } from '@volar/language-core';
+import { type IScriptSnapshot, type Mapping, SpanMapKind, type VirtualCode } from '@volar/language-core';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import { computed, signal } from 'alien-signals';
-import type * as ts from 'typescript';
-import { codeFeatures } from '../codegen/codeFeatures';
-import type { IR, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
+import { allFeatures } from '../codegen/features';
+import type { IR, TypeScript, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
 import { useEmbeddedCodes } from './embeddedCodes';
+
+export type { VueGeneratedCode } from './embeddedCodes';
 import { useIR } from './ir';
+import { petiteVueParser } from './parsers/petiteVue';
+import { sfcParser } from './parsers/sfc';
+import { vitePressParser } from './parsers/vitepress';
+
+type SfcParser = Pick<VueLanguagePluginReturn, 'parseSFC' | 'updateSFC'>;
+
+const builtInParsers: Record<VueCompilerOptions['format'], SfcParser> = {
+	sfc: sfcParser,
+	vitepress: vitePressParser,
+	'petite-vue': petiteVueParser,
+};
+
+const rootLanguageIds: Record<VueCompilerOptions['format'], string> = {
+	sfc: 'vue',
+	vitepress: 'markdown',
+	'petite-vue': 'html',
+};
+
+export function getRootLanguageId(vueCompilerOptions: VueCompilerOptions) {
+	return rootLanguageIds[vueCompilerOptions.format] ?? 'vue';
+}
 
 export class VueVirtualCode implements VirtualCode {
 	readonly id = 'main';
 
 	private _snapshot: {
-		(): ts.IScriptSnapshot;
-		(newSnapshot: ts.IScriptSnapshot): void;
+		(): IScriptSnapshot;
+		(newSnapshot: IScriptSnapshot): void;
 	};
 	private _parsedSfcResult: () => ReturnType<typeof this.parseSfc>;
 	private _ir: IR;
 	private _embeddedCodes: () => VirtualCode[];
-	private _mappings: () => CodeMapping[];
+	private _mappings: () => Mapping[];
 
+	get languageId() {
+		return getRootLanguageId(this.vueCompilerOptions);
+	}
 	get snapshot() {
 		return this._snapshot();
 	}
@@ -41,11 +66,10 @@ export class VueVirtualCode implements VirtualCode {
 
 	constructor(
 		public fileName: string,
-		public languageId: string,
-		public initSnapshot: ts.IScriptSnapshot,
+		public initSnapshot: IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
 		plugins: VueLanguagePluginReturn[],
-		ts: typeof import('typescript'),
+		ts: TypeScript,
 	) {
 		this._snapshot = signal(initSnapshot);
 		this._parsedSfcResult = computed(lastResult => this.parseSfc(plugins, lastResult));
@@ -58,25 +82,21 @@ export class VueVirtualCode implements VirtualCode {
 		);
 		this._embeddedCodes = useEmbeddedCodes(plugins, fileName, this._ir);
 		this._mappings = computed(() => {
-			return [{
-				sourceOffsets: [0],
-				generatedOffsets: [0],
-				lengths: [this._snapshot().getLength()],
-				data: codeFeatures.full,
-			}];
+			const length = this._snapshot().getLength();
+			return [[0, length, 0, length, SpanMapKind.Verbatim, allFeatures]];
 		});
 	}
 
-	update(newSnapshot: ts.IScriptSnapshot) {
+	update(newSnapshot: IScriptSnapshot) {
 		this._snapshot(newSnapshot);
 	}
 
 	private parseSfc(
 		plugins: VueLanguagePluginReturn[],
 		lastResult?: {
-			snapshot: ts.IScriptSnapshot;
+			snapshot: IScriptSnapshot;
 			result: SFCParseResult;
-			plugin: VueLanguagePluginReturn;
+			plugin: SfcParser;
 		},
 	) {
 		const snapshot = this.snapshot;
@@ -101,9 +121,9 @@ export class VueVirtualCode implements VirtualCode {
 			}
 		}
 
-		for (const plugin of plugins) {
-			const sfc = plugin.parseSFC2?.(this.fileName, this.languageId, snapshot.getText(0, snapshot.getLength()))
-				?? plugin.parseSFC?.(this.fileName, snapshot.getText(0, snapshot.getLength()));
+		const content = snapshot.getText(0, snapshot.getLength());
+		for (const plugin of [...plugins, builtInParsers[this.vueCompilerOptions.format] ?? sfcParser]) {
+			const sfc = plugin.parseSFC?.(this.fileName, content);
 			if (sfc) {
 				return {
 					snapshot,

@@ -1,20 +1,15 @@
-import type { Mapping } from '@volar/source-map';
+import { type Mapping, SpanMapKind } from '@volar/source-map';
 import type { Segment } from 'muggle-string';
 
-export function buildMappings<T>(chunks: Segment<T>[]) {
+export function buildMappings(chunks: Segment<any>[]) {
 	let length = 0;
-	const mappings: Mapping<T>[] = [];
+	const mappings: Mapping[] = [];
 	for (const segment of chunks) {
 		if (typeof segment === 'string') {
 			length += segment.length;
 		}
 		else {
-			mappings.push({
-				sourceOffsets: [segment[2]],
-				generatedOffsets: [length],
-				lengths: [segment[0].length],
-				data: segment[3]!,
-			});
+			mappings.push([length, segment[0].length, segment[2], segment[0].length, SpanMapKind.Verbatim, 0]);
 			length += segment[0].length;
 		}
 	}

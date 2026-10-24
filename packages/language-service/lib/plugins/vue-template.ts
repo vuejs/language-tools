@@ -17,12 +17,11 @@ import {
 	type VueVirtualCode,
 } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import { create as createHtmlService, resolveReference } from 'volar-service-html';
+import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
-import { applyCompletionEntryDetails, convertCompletionInfo } from 'volar-service-typescript/lib/utils/lspConverters';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
-import type { PropertyMeta } from 'vue-component-meta';
+import type { PropMeta, TypeId, TypeNode } from 'vue-component-meta';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
@@ -46,60 +45,30 @@ const DIRECTIVE_V_FOR_NAME = 'v-for';
 // Templates
 const V_FOR_SNIPPET = '="${1:value} in ${2:source}"';
 
+interface AutoImportData {
+	__vue__autoImport: {
+		fileName: string;
+		component: import('../requests').AutoImportComponent;
+	};
+}
+
 let customData: html.IHTMLDataProvider[];
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
 
 export function create(
-	ts: typeof import('typescript'),
 	languageId: 'html' | 'jade',
-	tsserver: import('@vue/typescript-plugin/lib/requests').Requests,
+	tsserver: import('../requests').Requests,
 ): LanguageServicePlugin {
 	const defaultDataProvider = html.getDefaultHTMLDataProvider();
 	let htmlData: html.IHTMLDataProvider[] = [defaultDataProvider];
 	// htmlData is shared by every project's service instance
 	// lock for avoid concurrent requests from different projects
 	let htmlDataLock = Promise.resolve();
-	let modulePathCache:
-		| Map<string, Promise<string | null | undefined> | string | null | undefined>
-		| undefined;
 
 	const onDidChangeCustomDataListeners = new Set<() => void>();
 	const serviceOptions: Parameters<typeof createHtmlService>[0] = {
 		useDefaultDataProvider: false,
-		getDocumentContext: context => ({
-			resolveReference(ref, base) {
-				let baseUri = URI.parse(base);
-				const decoded = context.decodeEmbeddedDocumentUri(baseUri);
-				if (decoded) {
-					baseUri = decoded[0];
-				}
-				if (
-					modulePathCache
-					&& baseUri.scheme === 'file'
-					&& !ref.startsWith('./')
-					&& !ref.startsWith('../')
-				) {
-					const map = modulePathCache;
-					if (!map.has(ref)) {
-						const fileName = baseUri.fsPath.replace(/\\/g, '/');
-						const promise = tsserver.resolveModuleName(fileName, ref);
-						map.set(ref, promise);
-						if (promise instanceof Promise) {
-							promise.then(res => map.set(ref, res));
-						}
-					}
-					const cached = modulePathCache.get(ref);
-					if (cached instanceof Promise) {
-						throw cached;
-					}
-					if (cached) {
-						return URI.file(cached).toString();
-					}
-				}
-				return resolveReference(ref, baseUri, context.env.workspaceFolders);
-			},
-		}),
 		getCustomData() {
 			return customData?.length ? htmlData.concat(customData) : htmlData;
 		},
@@ -163,10 +132,7 @@ export function create(
 					const info = resolveEmbeddedCode(context, document.uri);
 					const codegen = info && tsCodegen.get(info.root.ir);
 					if (codegen) {
-						const componentNames = new Set([
-							...codegen.getImportedComponents(),
-							...codegen.getLocalComponents(),
-						]);
+						const componentNames = codegen.getLocalComponents();
 						voidElements = defaultDataProvider.provideTags()
 							.filter(tag => tag.void)
 							.map(tag => tag.name)
@@ -254,47 +220,29 @@ export function create(
 						htmlCompletion: CompletionList,
 						info: NonNullable<ReturnType<typeof resolveEmbeddedCode>>,
 					) {
-						const autoImportPlaceholderIndex = htmlCompletion.items.findIndex(item =>
-							item.label === AUTO_IMPORT_PLACEHOLDER
-						);
-						if (autoImportPlaceholderIndex === -1) {
+						const placeholderIndex = htmlCompletion.items.findIndex(item => item.label === AUTO_IMPORT_PLACEHOLDER);
+						if (placeholderIndex === -1) {
 							return;
 						}
-						const offset = document.offsetAt(position);
-						const map = context.language.maps.get(info.code, info.script);
-						let spliced = false;
-						for (const [sourceOffset] of map.toSourceLocation(offset)) {
-							const autoImport = await tsserver.getAutoImportSuggestions(
-								info.root.fileName,
-								sourceOffset,
-							);
-							if (!autoImport) {
-								continue;
-							}
-							const tsCompletion = convertCompletionInfo(ts, autoImport, document, position, entry => entry.data);
-							const placeholder = htmlCompletion.items[autoImportPlaceholderIndex]!;
-							for (const tsItem of tsCompletion.items) {
-								if (placeholder.textEdit) {
-									const newText = tsItem.textEdit?.newText ?? tsItem.label;
-									tsItem.textEdit = {
-										...placeholder.textEdit,
-										newText: tagNameCasing === TagNameCasing.Kebab
-											? hyphenateTag(newText)
-											: newText,
-									};
-								}
-								else {
-									tsItem.textEdit = undefined;
-								}
-							}
-							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1, ...tsCompletion.items);
-							spliced = true;
-							lastCompletionDocument = document;
-							break;
-						}
-						if (!spliced) {
-							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1);
-						}
+						const placeholder = htmlCompletion.items[placeholderIndex]!;
+						const { fileName } = info.root;
+						const components = await tsserver.getAutoImportComponents(fileName) ?? [];
+						const items = components
+							.filter(component => !componentSet.has(component.name))
+							.map((component): html.CompletionItem => ({
+								label: component.name,
+								kind: 6 satisfies typeof CompletionItemKind.Variable,
+								labelDetails: { description: component.description },
+								textEdit: placeholder.textEdit && {
+									...placeholder.textEdit,
+									newText: tagNameCasing === TagNameCasing.Kebab
+										? hyphenateTag(component.name)
+										: component.name,
+								},
+								data: { __vue__autoImport: { fileName, component } } satisfies AutoImportData,
+							}));
+						htmlCompletion.items.splice(placeholderIndex, 1, ...items);
+						lastCompletionDocument = document;
 					}
 
 					function resolveComponentItemKinds(htmlCompletion: CompletionList) {
@@ -339,9 +287,9 @@ export function create(
 				},
 
 				async resolveCompletionItem(item) {
-					const data = item.data as import('@vue/typescript-plugin/lib/common').VueCompletionData;
+					const data = item.data as AutoImportData | undefined;
 
-					if (data?.__vue__autoImport || data?.__vue__componentAutoImport) {
+					if (data?.__vue__autoImport) {
 						const embeddedUri = URI.parse(lastCompletionDocument!.uri);
 						const decoded = context.decodeEmbeddedDocumentUri(embeddedUri);
 						if (!decoded) {
@@ -351,8 +299,9 @@ export function create(
 						if (!sourceScript) {
 							return item;
 						}
-						const details = await tsserver.resolveAutoImportCompletionEntry(data);
-						if (details) {
+						const { fileName, component } = data.__vue__autoImport;
+						const edits = await tsserver.getComponentImportEdits(fileName, component);
+						if (edits) {
 							const virtualCode = sourceScript.generated!.embeddedCodes.get(decoded[1])!;
 							const sourceDocument = context.documents.get(
 								sourceScript.id,
@@ -371,14 +320,13 @@ export function create(
 								embeddedDocument,
 								context,
 							);
-							applyCompletionEntryDetails(
-								ts,
-								item,
-								details,
-								sourceDocument,
-								fileName => URI.file(fileName),
-								() => undefined,
-							);
+							item.additionalTextEdits = edits.map(edit => ({
+								range: {
+									start: sourceDocument.positionAt(edit.pos),
+									end: sourceDocument.positionAt(edit.end),
+								},
+								newText: edit.newText,
+							}));
 							transformedItems.add(item);
 						}
 					}
@@ -424,7 +372,7 @@ export function create(
 						if (offset >= tagStart && offset <= tagEnd) {
 							const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
 							const props = meta?.props.filter(p => !p.global);
-							const modelProps = new Set<PropertyMeta>();
+							const modelProps = new Set<PropMeta>();
 							let tableContents: string[] = [];
 
 							for (const event of meta?.events ?? []) {
@@ -446,13 +394,13 @@ export function create(
 								}
 							}
 
-							if (props?.length) {
+							if (meta && props?.length) {
 								let table =
 									`<tr><th align="left">Prop</th><th align="left">Description</th><th align="left">Default</th></tr>\n`;
 								for (const p of props) {
 									table += `<tr>
 											<td>${printName(p, modelProps.has(p))}</td>
-											<td>${printDescription(p)}</td>
+											<td>${printDescription(p, meta.types)}</td>
 											<td>${p.default ? `<code>${p.default}</code>` : ''}</td>
 										</tr>\n`;
 								}
@@ -464,7 +412,7 @@ export function create(
 								for (const e of meta.events) {
 									table += `<tr>
 											<td>${printName(e)}</td>
-											<td colspan="2">${printDescription(e)}</td>
+											<td colspan="2">${printDescription(e, meta.types)}</td>
 										</tr>\n`;
 								}
 								tableContents.push(table);
@@ -475,7 +423,7 @@ export function create(
 								for (const s of meta.slots) {
 									table += `<tr>
 											<td>${printName(s)}</td>
-											<td colspan="2">${printDescription(s)}</td>
+											<td colspan="2">${printDescription(s, meta.types)}</td>
 										</tr>\n`;
 								}
 								tableContents.push(table);
@@ -486,7 +434,7 @@ export function create(
 								for (const e of meta.exposed) {
 									table += `<tr>
 											<td>${printName(e)}</td>
-											<td colspan="2">${printDescription(e)}</td>
+											<td colspan="2">${printDescription(e, meta.types)}</td>
 										</tr>\n`;
 								}
 								tableContents.push(table);
@@ -527,12 +475,12 @@ export function create(
 						return name;
 					}
 
-					function printDescription(meta: { description?: string; type: string }) {
-						let desc = `<code>${meta.type}</code>`;
-						if (meta.description) {
+					function printDescription(member: { description?: string; type: TypeId }, types: TypeNode[]) {
+						let desc = `<code>${types[member.type]?.text}</code>`;
+						if (member.description) {
 							// blank line for terminate HTML to support markdown
 							// see: https://github.github.com/gfm/#example-118
-							desc = `\n\n${meta.description}<br>${desc}`;
+							desc = `\n\n${member.description}<br>${desc}`;
 						}
 						return desc;
 					}
@@ -545,25 +493,6 @@ export function create(
 							return contents.some(hasContents);
 						}
 						return !!contents.value;
-					}
-				},
-
-				async provideDocumentLinks(document, token) {
-					modulePathCache = new Map();
-					while (true) {
-						try {
-							const result = await baseServiceInstance.provideDocumentLinks?.(document, token);
-							modulePathCache = undefined;
-							return result;
-						}
-						catch (e) {
-							if (e instanceof Promise) {
-								await e;
-							}
-							else {
-								throw e;
-							}
-						}
 					}
 				},
 			};
@@ -637,7 +566,6 @@ export function create(
 						};
 					},
 					provide({ components, elements }) {
-						const codegen = tsCodegen.get(root.ir);
 						const names = new Set<string>();
 						const tags = new Map<string, html.ITagData>();
 
@@ -646,16 +574,6 @@ export function create(
 						}
 						for (const tag of elements) {
 							names.add(tag);
-						}
-						if (codegen) {
-							for (
-								const name of [
-									...codegen.getImportedComponents(),
-									...codegen.getLocalComponents(),
-								]
-							) {
-								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name);
-							}
 						}
 
 						for (const name of names) {

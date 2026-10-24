@@ -1,9 +1,11 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"references": [
+		{ "path": "../../tsconfig.volar/language-server.json" },
+		{ "path": "../content-mapper/tsconfig.json" },
 		{ "path": "../language-core/tsconfig.json" },
 		{ "path": "../language-service/tsconfig.json" },
-		{ "path": "../typescript-plugin/tsconfig.json" }
+		{ "path": "../component-meta/tsconfig.json" }
 	],
 	"include": ["*", "lib/**/*"],
 	"exclude": ["tests"]

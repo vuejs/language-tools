@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-plugin-pug",
-	"version": "3.3.13",
+	"version": "4.0.0-alpha.0",
 	"license": "MIT",
 	"files": [
 		"index.d.ts",
@@ -15,7 +15,7 @@
 		"directory": "packages/language-plugin-pug"
 	},
 	"dependencies": {
-		"@volar/source-map": "2.4.30",
+		"@volar/source-map": "workspace:*",
 		"muggle-string": "^0.4.1",
 		"pug-lexer": "^5.0.1",
 		"pug-parser": "^6.0.0",
@@ -24,7 +24,6 @@
 	"devDependencies": {
 		"@types/node": "^26.0.1",
 		"@vue/compiler-dom": "^3.5.0",
-		"@vue/language-core": "workspace:*",
-		"typescript": "latest"
+		"@vue/language-core": "workspace:*"
 	}
 }

@@ -1,0 +1,63 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generated code of js components type checks > diagnostics 1`] = `
+[
+  "Main.vue.js: error TS2322: Type 'number' is not assignable to type 'string'.",
+  "Main.vue.js: error TS2339: Property 'Missing' does not exist on type '{}'.",
+  "Main.vue.js: error TS2339: Property 'custom' does not exist on type 'Omit<{}, never>'.",
+  "Main.vue.js: error TS2339: Property 'missing-comp' does not exist on type '{}'.",
+  "Main.vue.js: error TS2339: Property 'ping' does not exist on type 'Omit<{ bar: (n: number) => void; foo: () => void; "update:a": (value: string) => void; }, never>'.",
+  "Main.vue.js: error TS2345: Argument of type 'number' is not assignable to parameter of type 'never'.",
+  "Main.vue.js: error TS2345: Argument of type 'undefined' is not assignable to parameter of type 'never'.",
+]
+`;
+
+exports[`generated code of js components type checks > lines under @ts-ignore 1`] = `
+[
+  "Main.vue.js: const __VLS_1",
+  "Main.vue.js: const __VLS_9",
+  "Main.vue.js: const __VLS_1",
+  "Main.vue.js: const __VLS_2",
+  "Main.vue.js: const __VLS_3",
+  "Main.vue.js: const __VLS_3",
+  "Main.vue.js: const __VLS_4",
+  "Main.vue.js: const __VLS_4",
+  "Main.vue.js: const __VLS_5",
+  "Main.vue.js: const __VLS_5",
+  "Main.vue.js: const __VLS_6",
+  "Main.vue.js: const __VLS_6",
+  "Main.vue.js: const __VLS_7",
+]
+`;
+
+exports[`generated code of ts components type checks > diagnostics 1`] = `
+[
+  "Main.vue.ts: error TS2322: Type 'number' is not assignable to type 'string'.",
+  "Main.vue.ts: error TS2339: Property 'Missing' does not exist on type '{}'.",
+  "Main.vue.ts: error TS2339: Property 'missing-comp' does not exist on type '{}'.",
+  "Main.vue.ts: error TS2345: Argument of type 'number' is not assignable to parameter of type 'never'.",
+  "Main.vue.ts: error TS2345: Argument of type 'number' is not assignable to parameter of type 'never'.",
+  "Main.vue.ts: error TS2345: Argument of type 'undefined' is not assignable to parameter of type 'never'.",
+]
+`;
+
+exports[`generated code of ts components type checks > lines under @ts-ignore 1`] = `
+[
+  "Main.vue.ts: const __VLS_1",
+  "Main.vue.ts: const __VLS_9",
+  "Main.vue.ts: const __VLS_1",
+  "Main.vue.ts: const __VLS_2",
+  "Main.vue.ts: const __VLS_2",
+  "Main.vue.ts: const __VLS_3",
+  "Main.vue.ts: const __VLS_4",
+  "Main.vue.ts: const __VLS_4",
+  "Main.vue.ts: const __VLS_5",
+  "Main.vue.ts: const __VLS_6",
+  "Main.vue.ts: const __VLS_6",
+  "Main.vue.ts: const __VLS_7",
+  "Main.vue.ts: const __VLS_7",
+  "Main.vue.ts: const __VLS_8",
+  "Main.vue.ts: const __VLS_8",
+  "Main.vue.ts: const __VLS_9",
+]
+`;

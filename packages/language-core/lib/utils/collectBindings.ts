@@ -1,24 +1,25 @@
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type { TypeScript } from '../types';
 import { getNodeText, getStartEnd } from './shared';
 
 export function collectBindingNames(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	node: ts.Node,
 	ast: ts.SourceFile,
 ) {
-	return collectBindingIdentifiers(ts, node).map(({ id }) => getNodeText(ts, id, ast));
+	return collectBindingIdentifiers(ts, node).map(({ id }) => getNodeText(id, ast));
 }
 
 export function collectBindingRanges(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	node: ts.Node,
 	ast: ts.SourceFile,
 ) {
-	return collectBindingIdentifiers(ts, node).map(({ id }) => getStartEnd(ts, id, ast));
+	return collectBindingIdentifiers(ts, node).map(({ id }) => getStartEnd(id, ast));
 }
 
 export function collectBindingIdentifiers(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	node: ts.Node,
 	results: {
 		id: ts.Identifier;
@@ -33,13 +34,13 @@ export function collectBindingIdentifiers(
 	}
 	else if (ts.isArrayBindingPattern(node) || ts.isObjectBindingPattern(node)) {
 		for (const el of node.elements) {
-			if (ts.isBindingElement(el)) {
+			if (ts.isBindingElement(el) && el.name) {
 				collectBindingIdentifiers(ts, el.name, results, !!el.dotDotDotToken, el.initializer);
 			}
 		}
 	}
 	else {
-		ts.forEachChild(node, node => collectBindingIdentifiers(ts, node, results, false));
+		node.forEachChild(node => collectBindingIdentifiers(ts, node, results, false));
 	}
 	return results;
 }

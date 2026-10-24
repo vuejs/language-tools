@@ -5,7 +5,7 @@ import { AttrNameCasing, getAttrNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
 
 export function create(
-	{ getComponentProps }: import('@vue/typescript-plugin/lib/requests').Requests,
+	{ getComponentProps }: import('../requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-missing-props-hints',

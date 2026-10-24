@@ -1,21 +1,19 @@
-import type * as ts from 'typescript';
-import type { Code, IRTemplate, VueCompilerOptions } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import type { Code, IRTemplate, TypeScript, VueCompilerOptions } from '../../types';
+import { navigationFeatures } from '../features';
 import { names } from '../names';
 import { endOfLine, generateTypeAlias, generateTypedVar, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
 import { references as styleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
 
 export interface TemplateCodegenOptions {
-	typescript: typeof ts;
+	typescript: TypeScript;
 	vueCompilerOptions: VueCompilerOptions;
 	template: IRTemplate;
 	isVapor: boolean;
 	scriptLang: string;
-	importedComponents: Set<string>;
 	setupRefs: Set<string>;
 	setupConsts: Set<string>;
 	setupBindings: Set<string>;
@@ -36,15 +34,13 @@ export { generate as generateTemplate };
 function generate(options: TemplateCodegenOptions) {
 	// The references registry accumulates across codegen passes; start clean.
 	styleScopedClassReferences.delete(options.template);
-	const ctx = createTemplateCodegenContext();
+	const ctx = createTemplateCodegenContext(options.scriptLang);
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
 	for (const code of codeGenerator) {
-		if (typeof code === 'object') {
-			code[3] = ctx.resolveCodeFeatures(code[3]);
-		}
-		codes.push(code);
+		codes.push(...ctx.generateWithDiagnosticDirectiveRanges(code));
 	}
+	codes.push(...ctx.generateDiagnosticDirectiveRangesEnd());
 	return { ...ctx, codes };
 }
 
@@ -52,7 +48,7 @@ function* generateWorker(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
-	const scope = ctx.scope();
+	const scope = ctx.blockScope();
 	const {
 		slotsAssignName,
 		propsAssignName,
@@ -136,20 +132,26 @@ function* generateSlotsType(
 		}
 		for (const slot of ctx.slots) {
 			yield `${newLine}& { `;
+			const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
 			if (slot.name && slot.offset !== undefined) {
 				yield* generateObjectProperty(
 					options,
 					ctx,
 					slot.name,
 					slot.offset,
-					codeFeatures.navigation,
+					{ features: navigationFeatures },
 				);
 			}
 			else {
-				const boundary = yield* Boundary.start('template', ...slot.tagRange, codeFeatures.navigation);
+				const boundary = yield* Boundary.start(
+					'template',
+					...slot.tagRange,
+					{ features: navigationFeatures },
+				);
 				yield `default`;
 				yield boundary.end();
 			}
+			yield ignore.end();
 			yield `?: (props: typeof ${slot.propsVar}) => any }`;
 		}
 	});
@@ -202,13 +204,15 @@ function* generateTemplateRefsType(
 					yield ` | `;
 				}
 				yield `{ `;
+				const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
 				yield* generateObjectProperty(
 					options,
 					ctx,
 					name,
 					offset,
-					codeFeatures.navigation,
+					{ features: navigationFeatures },
 				);
+				yield ignore.end();
 				yield `: ${typeExp} }`;
 			}
 			if (refs.length >= 2) {

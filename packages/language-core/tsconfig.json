@@ -5,6 +5,9 @@
 			"node"
 		]
 	},
+	"references": [
+		{ "path": "../../tsconfig.volar/language-core.json" }
+	],
 	"include": ["*", "lib/**/*"],
 	"exclude": ["tests"]
 }

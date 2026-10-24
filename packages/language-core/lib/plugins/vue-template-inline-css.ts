@@ -1,12 +1,12 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { codeFeatures } from '../codegen/codeFeatures';
+import { scriptFeatures } from '../codegen/features';
 import type { Code, VueLanguagePlugin } from '../types';
 import { forEachElementNode } from '../utils/forEachTemplateNode';
 import { normalizeAttributeValue } from '../utils/shared';
 
 const plugin: VueLanguagePlugin = () => {
 	return {
-		version: 2.2,
+		version: 4,
 
 		getEmbeddedCodes(_fileName, ir) {
 			if (!ir.template?.ast) {
@@ -37,7 +37,7 @@ function* generate(templateAst: NonNullable<CompilerDOM.RootNode>): Generator<Co
 			) {
 				yield `x { `;
 				const [content, offset] = normalizeAttributeValue(prop.value);
-				yield [content, 'template', offset, codeFeatures.all];
+				yield [content, 'template', offset, { features: scriptFeatures }];
 				yield ` }\n`;
 			}
 		}

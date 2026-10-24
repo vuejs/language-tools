@@ -1,7 +1,7 @@
-import type { Code, VueCodeInformation } from '../../types';
+import type { Code, VueCodeMarker } from '../../types';
 import { Boundary } from './boundary';
 
-export function* generateUnicode(code: string, offset: number, features: VueCodeInformation): Generator<Code> {
+export function* generateUnicode(code: string, offset: number, features: VueCodeMarker): Generator<Code> {
 	if (needToUnicode(code)) {
 		const boundary = yield* Boundary.start('template', offset, offset + code.length, features);
 		yield toUnicode(code);

@@ -5,7 +5,7 @@
   <a href="https://github.com/vuejs/language-tools/blob/master/LICENSE"><img src="https://img.shields.io/github/license/vuejs/language-tools.svg?labelColor=18181B&color=1584FC" alt="License"></a>
 </p>
 
-The core module for Vue Language Tools, responsible for parsing Vue Single File Components (SFCs) and transforming them into virtual code structures that TypeScript can understand. This package is a low-level dependency for `@vue/language-server` and `vue-tsc`.
+The core module for Vue Language Tools, responsible for parsing Vue Single File Components (SFCs) and transforming them into virtual code structures that TypeScript can understand. This package is a low-level dependency for `@vue/language-server` and `@vue/content-mapper`.
 
 ## Installation
 
@@ -22,28 +22,17 @@ Creates a Vue language plugin for integration with Volar language services.
 ```typescript
 import { createVueLanguagePlugin } from '@vue/language-core';
 import type { LanguagePlugin } from '@volar/language-core';
-import ts from 'typescript';
 
 const plugin: LanguagePlugin<string> = createVueLanguagePlugin(
-  ts,
-  compilerOptions,    // ts.CompilerOptions
+  ts, // TypeScript
   vueCompilerOptions, // VueCompilerOptions
   (scriptId) => scriptId  // asFileName: Converts scriptId to a file name
 );
 ```
 
-### `createParsedCommandLine`
+`ts` is the TypeScript 7 `typescript/ast` module plus a synchronous `createSourceFile`, which TypeScript 7 only offers through its API process (`@vue/content-mapper` builds it from `typescript/sync`). The classic `typescript` module provides the same names, so `@vue/language-server` passes that instead.
 
-Parses TypeScript and Vue compiler options from `tsconfig.json`.
-
-```typescript
-import { createParsedCommandLine } from '@vue/language-core';
-import ts from 'typescript';
-
-const parsed = createParsedCommandLine(ts, ts.sys, '/path/to/tsconfig.json');
-// parsed.options: ts.CompilerOptions
-// parsed.vueOptions: VueCompilerOptions
-```
+The plugin parses every file it is given by `vueCompilerOptions.format`; the host creates one plugin per `@vue/content-mapper` entry (with that entry's `format`) and routes to it only the files of that entry's `extensions`. Nothing in the generated code depends on other entries: like `@vue/compiler-sfc`, a template tag refers to the `<script setup>` binding of its name whatever it is imported from, and a file's own component name is its file name without the last extension.
 
 ### `parse`
 
@@ -69,16 +58,20 @@ const msg = 'Hello'
 
 ## `vueCompilerOptions`
 
-Configure Vue compiler behavior through the `vueCompilerOptions` field in `tsconfig.json`:
+[`@vue/content-mapper`](../content-mapper) takes these options from its `contentMappers` entry's `options`, and `CompilerOptionsResolver` resolves them:
 
 ```jsonc
 {
-  "compilerOptions": { /* ... */ },
-  "vueCompilerOptions": {
-    "target": 3.5,
-    "strictTemplates": true,
-    "plugins": ["@vue/language-plugin-pug"]
-  }
+  "contentMappers": [
+    {
+      "package": "@vue/content-mapper",
+      "extensions": [".vue"],
+      "options": {
+        "target": 3.5,
+        "plugins": ["@vue/language-plugin-pug"]
+      }
+    }
+  ]
 }
 ```
 
@@ -87,22 +80,14 @@ Configure Vue compiler behavior through the `vueCompilerOptions` field in `tscon
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `target` | `number \| 'auto'` | `'auto'` | Vue version. `'auto'` reads from `node_modules/vue/package.json`. |
-| `extensions` | `string[]` | `['.vue']` | File extensions to be treated as Vue SFCs. |
-| `vitePressExtensions` | `string[]` | `[]` | File extensions to be treated as VitePress Markdown. |
-| `petiteVueExtensions` | `string[]` | `[]` | File extensions to be treated as Petite Vue HTML. |
+| `format` | `'sfc' \| 'vitepress' \| 'petite-vue'` | `'sfc'` | Built-in parser: a Vue SFC, VitePress markdown or a petite-vue HTML page. |
 | `plugins` | `string[]` | `[]` | Custom language plugins, e.g., [`@vue/language-plugin-pug`](../language-plugin-pug). |
 
 ### Type Checking Options
 
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `strictTemplates` | `boolean` | `false` | A convenience option that enables the four `check*` options below and `strictVModel`. |
-| `checkUnknownProps` | `boolean` | `false` | Check for unknown props. |
-| `checkUnknownEvents` | `boolean` | `false` | Check for unknown events. |
-| `checkUnknownComponents` | `boolean` | `false` | Check for unknown components. |
-| `checkUnknownDirectives` | `boolean` | `false` | Check for unknown directives. |
-| `strictVModel` | `boolean` | `false` | Strictly check v-model bindings. |
-| `strictCssModules` | `boolean` | `false` | Strictly check CSS Modules class names (not affected by `strictTemplates`). |
+| `strictCssModules` | `boolean` | `false` | Strictly check CSS Modules class names. |
 
 ### Advanced Options
 
@@ -116,20 +101,23 @@ Configure Vue compiler behavior through the `vueCompilerOptions` field in `tscon
 | `jsxSlots` | `boolean` | `false` | Use JSX-style slots types. |
 | `dataAttributes` | `string[]` | `[]` | Allowed data-* attribute patterns. |
 | `htmlAttributes` | `string[]` | `['aria-*']` | Allowed HTML attribute patterns. |
-| `resolveStyleImports` | `boolean` | `false` | Resolve import statements in styles. |
 | `resolveStyleClassNames` | `boolean \| 'scoped'` | `'scoped'` | Resolve class names in styles. |
 
 ## Built-in Plugins
 
-This package includes the following built-in plugins to handle different file types and blocks:
+This package includes the following built-in plugins to handle different file types and blocks.
 
-### File Parsing Plugins
+### File Parsing
 
-| Plugin | Function | Controlled By |
-| :--- | :--- | :--- |
-| `file-vue` | Parses `.vue` files into an SFC structure. | `extensions` |
-| `file-md` | Parses Markdown files into an SFC structure. | `vitePressExtensions` |
-| `file-html` | Parses HTML files into an SFC structure. | `petiteVueExtensions` |
+A plugin's `parseSFC(fileName, content)` hook can parse a file into SFC blocks; the first plugin returning a result wins. Otherwise the built-in parser of the file's format is used:
+
+| `format` | Parses |
+| :--- | :--- |
+| `sfc` | A Vue SFC. |
+| `vitepress` | VitePress markdown: `<script>` / `<style>` blocks are lifted out and the rest becomes the template. |
+| `petite-vue` | A petite-vue HTML page: `<script>` / `<style>` blocks are lifted out and the rest becomes the template. |
+
+Plugins must declare `version: 4`. Version 4 removed the `getLanguageId`, `isValidFile` and `parseSFC2` hooks: a plugin that only parses some files checks the file name in `parseSFC` and returns `undefined` for the others.
 
 ### Virtual Code Generation Plugins
 
@@ -155,7 +143,7 @@ This package includes the following built-in plugins to handle different file ty
 
 - [`@vue/language-server`](../language-server) - Language Server
 - [`@vue/language-service`](../language-service) - Language Service
-- [`vue-tsc`](../tsc) - Command-line Type Checker
+- [`@vue/content-mapper`](../content-mapper) - Content mapper for native TypeScript
 
 ## License
 

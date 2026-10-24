@@ -1,4 +1,4 @@
-import type { Code, VueCodeInformation } from '../../types';
+import type { Code, VueCodeMarker } from '../../types';
 import { identifierRE } from '../utils';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
@@ -10,7 +10,7 @@ export function* generatePropertyAccess(
 	ctx: TemplateCodegenContext,
 	code: string,
 	offset: number,
-	features: VueCodeInformation,
+	features: VueCodeMarker,
 ): Generator<Code> {
 	if (code.startsWith('[') && code.endsWith(']')) {
 		yield* generateInterpolation(

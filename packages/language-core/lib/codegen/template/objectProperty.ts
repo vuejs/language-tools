@@ -1,5 +1,5 @@
 import { camelize } from '@vue/shared';
-import type { Code, VueCodeInformation } from '../../types';
+import type { Code, VueCodeMarker } from '../../types';
 import { names } from '../names';
 import { identifierRE } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -14,7 +14,7 @@ export function* generateObjectProperty(
 	ctx: TemplateCodegenContext,
 	code: string,
 	offset: number,
-	features: VueCodeInformation,
+	features: VueCodeMarker,
 	shouldCamelize = false,
 	shouldBeConstant = false,
 ): Generator<Code> {
@@ -49,7 +49,7 @@ export function* generateObjectProperty(
 		else {
 			const boundary = yield* Boundary.start('template', offset, offset + code.length, features);
 			yield `'`;
-			yield* generateCamelized(code, 'template', offset, boundary.features);
+			yield* generateCamelized(code, 'template', offset);
 			yield `'`;
 			yield boundary.end();
 		}

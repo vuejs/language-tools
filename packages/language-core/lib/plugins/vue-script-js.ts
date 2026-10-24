@@ -1,9 +1,9 @@
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
 	return {
-		version: 2.2,
+		version: 4,
 
 		compileSFCScript(lang, script) {
 			if (lang === 'js' || lang === 'ts' || lang === 'jsx' || lang === 'tsx') {

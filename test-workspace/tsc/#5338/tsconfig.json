@@ -3,8 +3,15 @@
 	"compilerOptions": {
 		"exactOptionalPropertyTypes": true
 	},
-	"vueCompilerOptions": {
-		"target": 3.5
-	},
+	"contentMappers": [
+		{
+			"package": "@vue/content-mapper",
+			"extensions": [".vue"],
+			"options": {
+				"languageFeatures": false,
+				"target": 3.5
+			}
+		}
+	],
 	"include": ["**/*"]
 }

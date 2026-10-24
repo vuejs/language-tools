@@ -1,6 +1,14 @@
-import type * as ts from 'typescript';
-import type { Code, IRBlock, IRScript, IRScriptSetup, VueCodeInformation, VueCompilerOptions } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type {
+	Code,
+	IRBlock,
+	IRScript,
+	IRScriptSetup,
+	TypeScript,
+	VueCodeMarker,
+	VueCompilerOptions,
+} from '../../types';
+import { Boundary, synthesizedIgnore } from './boundary';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
@@ -62,7 +70,7 @@ export function getRefBrandArgument(vueCompilerOptions: VueCompilerOptions, lang
 
 const cacheMaps = new WeakMap<IRBlock, [content: string, Map<string, [ts.SourceFile, usages: number]>]>();
 
-export function getTypeScriptAST(ts: typeof import('typescript'), block: IRBlock, text: string): ts.SourceFile {
+export function getTypeScriptAST(ts: TypeScript, block: IRBlock, text: string): ts.SourceFile {
 	if (!cacheMaps.has(block)) {
 		cacheMaps.set(block, [block.content, new Map()]);
 	}
@@ -92,20 +100,26 @@ export function* generateSfcBlockSection(
 	block: IRScript | IRScriptSetup,
 	start: number,
 	end: number,
-	features: VueCodeInformation,
+	features: VueCodeMarker,
+	ignoreDiagnostics = false,
 ): Generator<Code> {
 	const text = block.content.slice(start, end);
+	const ignore = ignoreDiagnostics ? yield* Boundary.start(block.name, 0, 0, synthesizedIgnore) : undefined;
 	yield [text, block.name, start, features];
+	if (ignore) {
+		yield ignore.end();
+	}
 
 	// #3632
 	if ('parseDiagnostics' in block.ast) {
 		const textEnd = text.trimEnd().length;
-		for (const diag of block.ast.parseDiagnostics as ts.DiagnosticWithLocation[]) {
+		for (const diag of block.ast.parseDiagnostics as { start: number; length: number }[]) {
 			const diagStart = diag.start;
 			const diagEnd = diag.start + diag.length;
 			if (diagStart >= textEnd && diagEnd <= end) {
-				yield `;`;
-				yield ['', block.name, end, codeFeatures.verification];
+				// map the synthesized terminator to the end of the section, so that
+				// truncation parse errors resolve back to the original block
+				yield [';', block.name, end, { features: 0 }];
 				yield newLine;
 				break;
 			}
@@ -113,9 +127,9 @@ export function* generateSfcBlockSection(
 	}
 }
 
-export function* forEachNode(ts: typeof import('typescript'), node: ts.Node): Generator<ts.Node> {
+export function* forEachNode(node: ts.Node): Generator<ts.Node> {
 	const children: ts.Node[] = [];
-	ts.forEachChild(node, child => {
+	node.forEachChild(child => {
 		children.push(child);
 	});
 	for (const child of children) {
