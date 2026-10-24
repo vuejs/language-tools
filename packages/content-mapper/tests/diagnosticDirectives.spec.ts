@@ -35,39 +35,9 @@ test('starts expectations at the node anchor', () => {
 		originalLength: 10,
 	};
 	const [result] = toDiagnosticDirectives([
-		{
-			sourceOffsets: [5],
-			generatedOffsets: [10],
-			lengths: [0],
-			data: {
-				__diagnosticDirective: {
-					directive,
-					phase: 'anchor',
-				},
-			},
-		},
-		{
-			sourceOffsets: [20],
-			generatedOffsets: [30],
-			lengths: [5],
-			data: {
-				__diagnosticDirective: {
-					directive,
-					phase: 'content',
-				},
-			},
-		},
-		{
-			sourceOffsets: [5],
-			generatedOffsets: [40],
-			lengths: [0],
-			data: {
-				__diagnosticDirective: {
-					directive,
-					phase: 'end',
-				},
-			},
-		},
+		{ directive, phase: 'anchor', generatedStart: 10, generatedLength: 0, sourceStart: 5 },
+		{ directive, phase: 'content', generatedStart: 30, generatedLength: 5, sourceStart: 20 },
+		{ directive, phase: 'end', generatedStart: 40, generatedLength: 0, sourceStart: 5 },
 	]);
 
 	expect(result).toEqual([5, 10, 10, 40, DiagnosticDirectivePolicy.Expect]);

@@ -23,12 +23,8 @@ import { vOnClickOutside } from '@vueuse/components';
 	const script = [...forEachEmbeddedCode(root)].find(code => code.id === 'script_ts')!;
 
 	const spans = script.mappings
-		.map(mapping =>
-			mapping.sourceOffsets.map((offset, i) => [offset, offset + (mapping.lengths[i] ?? 0)] as const)
-				.filter(([rangeStart, rangeEnd]) => rangeEnd > rangeStart)
-		)
-		.filter(ranges => ranges.length && ranges.every(([rangeStart, rangeEnd]) => rangeStart >= start && rangeEnd <= end))
-		.map(ranges => [Math.min(...ranges.map(range => range[0])), Math.max(...ranges.map(range => range[1]))]);
+		.map(([, , sourceStart, sourceLength]): [number, number] => [sourceStart, sourceStart + sourceLength])
+		.filter(([rangeStart, rangeEnd]) => rangeEnd > rangeStart && rangeStart >= start && rangeEnd <= end);
 
 	expect(spans.length).toBeGreaterThan(0);
 	for (const span of spans) {

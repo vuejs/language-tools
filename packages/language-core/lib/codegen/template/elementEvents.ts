@@ -170,11 +170,9 @@ export function* generateEventArg(
 	directive = 'on',
 	features?: VueCodeInformation,
 ): Generator<Code> {
-	features ??= {
-		...codeFeatures.semanticWithoutHighlight,
-		...codeFeatures.navigationWithoutRename,
-		...codeFeatures.verification,
-	};
+	features ??= codeFeatures.semanticWithoutHighlight
+		| codeFeatures.navigationWithoutRename
+		| codeFeatures.verification;
 
 	if (directive.length) {
 		name = capitalize(name);

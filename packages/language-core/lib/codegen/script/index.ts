@@ -1,3 +1,4 @@
+import { SpanMapFeature } from '@volar/language-core';
 import * as path from 'path-browserify';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
@@ -71,10 +72,7 @@ function* generateWorker(
 			'main',
 			script.src.offset,
 			script.src.offset + script.src.text.length,
-			{
-				...codeFeatures.all,
-				...src !== script.src.text ? codeFeatures.navigationWithoutRename : {},
-			},
+			src !== script.src.text ? codeFeatures.all & ~SpanMapFeature.Rename : codeFeatures.all,
 		);
 		yield `'`;
 		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, boundary.features];

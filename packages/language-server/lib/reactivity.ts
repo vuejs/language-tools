@@ -112,13 +112,8 @@ export function getInterpolationRanges(virtualCode: VueVirtualCode) {
 			)
 			|| (code.id.startsWith('style_') && code.id.endsWith('_inline_ts'))
 		) {
-			for (const mapping of code.mappings) {
-				for (let i = 0; i < mapping.sourceOffsets.length; i++) {
-					ranges.push([
-						mapping.sourceOffsets[i]!,
-						mapping.sourceOffsets[i]! + mapping.lengths[i]!,
-					]);
-				}
+			for (const [, , start, length] of code.mappings) {
+				ranges.push([start, start + length]);
 			}
 		}
 	}

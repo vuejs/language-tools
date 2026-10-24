@@ -1,9 +1,11 @@
-import type { CodeMapping, IScriptSnapshot, VirtualCode } from '@volar/language-core';
+import { type IScriptSnapshot, type Mapping, SpanMapKind, type VirtualCode } from '@volar/language-core';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import { computed, signal } from 'alien-signals';
 import { codeFeatures } from '../codegen/codeFeatures';
 import type { IR, TypeScript, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
 import { useEmbeddedCodes } from './embeddedCodes';
+
+export type { VueGeneratedCode } from './embeddedCodes';
 import { useIR } from './ir';
 import { petiteVueParser } from './parsers/petiteVue';
 import { sfcParser } from './parsers/sfc';
@@ -37,7 +39,7 @@ export class VueVirtualCode implements VirtualCode {
 	private _parsedSfcResult: () => ReturnType<typeof this.parseSfc>;
 	private _ir: IR;
 	private _embeddedCodes: () => VirtualCode[];
-	private _mappings: () => CodeMapping[];
+	private _mappings: () => Mapping[];
 
 	get languageId() {
 		return getRootLanguageId(this.vueCompilerOptions);
@@ -80,12 +82,8 @@ export class VueVirtualCode implements VirtualCode {
 		);
 		this._embeddedCodes = useEmbeddedCodes(plugins, fileName, this._ir);
 		this._mappings = computed(() => {
-			return [{
-				sourceOffsets: [0],
-				generatedOffsets: [0],
-				lengths: [this._snapshot().getLength()],
-				data: codeFeatures.full,
-			}];
+			const length = this._snapshot().getLength();
+			return [[0, length, 0, length, SpanMapKind.Verbatim, codeFeatures.full]];
 		});
 	}
 

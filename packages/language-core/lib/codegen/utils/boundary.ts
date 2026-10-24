@@ -1,4 +1,5 @@
 import type { Code, VueCodeInformation } from '../../types';
+import { toAtomGroup } from '../codeFeatures';
 
 export class Boundary {
 	private constructor(
@@ -8,7 +9,7 @@ export class Boundary {
 	) {}
 
 	static *start(source: string, start: number, end: number, features: VueCodeInformation): Generator<Code, Boundary> {
-		features = { ...features, __combineToken: Symbol() };
+		features = toAtomGroup(features);
 		yield [``, source, start, features];
 		return new Boundary(source, end, features);
 	}

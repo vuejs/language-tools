@@ -1,5 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import type { Code, VueCodeInformation } from '../../types';
+import type { Code, VueCodeInformation, VueDiagnosticDirective } from '../../types';
+import { codeFeatures, getCodeFeatures, withCodeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
@@ -19,7 +20,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 			node: CompilerDOM.CommentNode;
 		};
 		diagnosticDirectives?: {
-			directive: NonNullable<VueCodeInformation['__diagnosticDirective']>['directive'];
+			directive: VueDiagnosticDirective['directive'];
 			originalStart: number;
 		}[];
 		diagnosticDirectiveEnded?: boolean;
@@ -130,51 +131,39 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		commentBuffer.length = 0;
 	}
 
-	function resolveCodeFeatures(features: VueCodeInformation): VueCodeInformation {
-		if (features.verification && stack.length) {
+	function resolveCodeFeatures(info: VueCodeInformation): VueCodeInformation {
+		const features = getCodeFeatures(info);
+		if (features & codeFeatures.verification && stack.length) {
 			const data = stack[stack.length - 1]!;
-			if (data.ignoreError) {
-				const directive = data.diagnosticDirectives?.find(
-					info => info.directive.policy === 'ignore',
-				);
-				return {
-					...features,
-					verification: false,
-					__diagnosticDirective: directive && {
-						directive: directive.directive,
-						phase: 'content',
-					},
-				};
-			}
-			if (data.expectError !== undefined) {
-				const directive = data.diagnosticDirectives?.find(
-					info => info.directive.policy === 'expect',
-				);
-				return {
-					...features,
-					verification: {
-						shouldReport: () => false,
-					},
-					__diagnosticDirective: directive && {
-						directive: directive.directive,
-						phase: 'content',
-					},
-				};
+			const policy = data.ignoreError ? 'ignore' : data.expectError !== undefined ? 'expect' : undefined;
+			if (policy) {
+				const directive = data.diagnosticDirectives?.find(info => info.directive.policy === policy);
+				const resolved = policy === 'ignore' ? withCodeFeatures(info, features & ~codeFeatures.verification) : info;
+				return directive
+					? {
+						...typeof resolved === 'number' ? { features: resolved } : resolved,
+						diagnosticDirective: {
+							directive: directive.directive,
+							phase: 'content',
+						},
+					}
+					: resolved;
 			}
 		}
-		return features;
+		return info;
 	}
 
 	function diagnosticDirectiveMarker(
 		info: NonNullable<typeof stack[number]['diagnosticDirectives']>[number],
-		phase: NonNullable<VueCodeInformation['__diagnosticDirective']>['phase'],
+		phase: VueDiagnosticDirective['phase'],
 	): Code {
 		return [
 			'',
 			'template',
 			info.originalStart,
 			{
-				__diagnosticDirective: {
+				features: 0,
+				diagnosticDirective: {
 					directive: info.directive,
 					phase,
 				},
@@ -257,7 +246,9 @@ export function createTemplateCodegenContext(scriptLang: string) {
 	}
 
 	function* generateScopeMembers(scope: Scope): Generator<Code> {
-		const completionMembers = scope.members.filter(([, , , features]) => features.completion);
+		const completionMembers = scope.members.filter(([, , , features]) =>
+			getCodeFeatures(features) & codeFeatures.completion
+		);
 		if (!completionMembers.length) {
 			return;
 		}
@@ -304,7 +295,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		accessLog.push(name);
 		contextAccesses.add(name);
 		if (offset !== undefined) {
-			recordScopeMember(name, source, offset, {}, sourceName);
+			recordScopeMember(name, source, offset, 0, sourceName);
 		}
 		if (dotValue) {
 			dotValueAccesses.add(name);

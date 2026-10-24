@@ -77,15 +77,8 @@ export function create(): LanguageServicePlugin {
 				}
 
 				const offset = document.offsetAt(position) + block.startTagEnd;
-				for (const { sourceOffsets, lengths, data } of script.mappings) {
-					if (!sourceOffsets.length || !isRenameEnabled(data)) {
-						continue;
-					}
-
-					const start = sourceOffsets[0]!;
-					const end = sourceOffsets.at(-1)! + lengths.at(-1)!;
-
-					if (offset >= start && offset <= end) {
+				for (const [, , start, length, , features] of script.mappings) {
+					if (isRenameEnabled(features) && offset >= start && offset <= start + length) {
 						return true;
 					}
 				}

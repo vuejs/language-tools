@@ -121,7 +121,9 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			configuration.languageFeatures,
 			unverifiedRanges,
 		);
-		const diagnosticDirectives = toDiagnosticDirectives(serviceScript.code.mappings);
+		const diagnosticDirectives = toDiagnosticDirectives(
+			(serviceScript.code as vue.VueGeneratedCode).diagnosticDirectives,
+		);
 		return {
 			text,
 			extension: serviceScript.extension,

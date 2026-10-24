@@ -1,108 +1,87 @@
-import type { VueCodeInformation } from '../types';
+import { SpanMapFeature, SpanMapKind } from '@volar/language-core';
+import type { VueCodeInformation, VueCodeMarker } from '../types';
 
-export const codeFeatures = defineCodeFeatures({
-	full: {
-		verification: true,
-		completion: true,
-		semantic: true,
-		navigation: true,
-		structure: true,
-		format: true,
-	},
+export enum VueCodeFeature {
+	PropsCompletion = 1 << 21,
+}
+
+const semantic = SpanMapFeature.Hover
+	| SpanMapFeature.SignatureHelp
+	| SpanMapFeature.InlayHints
+	| SpanMapFeature.SemanticTokens;
+const semanticWithoutHighlight = semantic & ~SpanMapFeature.SemanticTokens;
+const completion = SpanMapFeature.Completion
+	| SpanMapFeature.AutoInsert;
+const navigation = SpanMapFeature.Definition
+	| SpanMapFeature.TypeDefinition
+	| SpanMapFeature.Implementation
+	| SpanMapFeature.References
+	| SpanMapFeature.DocumentHighlights
+	| SpanMapFeature.Rename
+	| SpanMapFeature.CallHierarchy
+	| SpanMapFeature.CodeActions
+	| SpanMapFeature.LinkedEditing;
+const navigationWithoutRename = navigation & ~SpanMapFeature.Rename;
+const structure = SpanMapFeature.FoldingRanges
+	| SpanMapFeature.SelectionRanges
+	| SpanMapFeature.DocumentSymbols
+	| SpanMapFeature.CodeLens;
+const format = SpanMapFeature.Formatting;
+const verification = SpanMapFeature.Verification;
+
+export const codeFeatures = {
+	full: verification | completion | semantic | navigation | structure | format,
 	/** @internal */
-	all: {
-		verification: true,
-		completion: true,
-		semantic: true,
-		navigation: true,
-	},
+	all: verification | completion | semantic | navigation,
 	/** @internal */
-	verification: {
-		verification: true,
-	},
+	verification,
 	/** @internal */
-	completion: {
-		completion: true,
-	},
+	completion,
 	/** @internal */
-	withoutCompletion: {
-		verification: true,
-		semantic: true,
-		navigation: true,
-	},
+	withoutCompletion: verification | semantic | navigation,
 	/** @internal */
-	navigation: {
-		navigation: true,
-	},
+	navigation,
 	/** @internal */
-	navigationWithoutRename: {
-		navigation: { shouldRename: () => false },
-	},
+	navigationWithoutRename,
 	/** @internal */
-	navigationAndCompletion: {
-		navigation: true,
-		completion: true,
-	},
+	navigationAndCompletion: navigation | completion,
 	/** @internal */
-	navigationAndVerification: {
-		navigation: true,
-		verification: true,
-	},
+	navigationAndVerification: navigation | verification,
 	/** @internal */
-	withoutNavigation: {
-		verification: true,
-		completion: true,
-		semantic: true,
-	},
+	withoutNavigation: verification | completion | semantic,
 	/** @internal */
-	semanticWithoutHighlight: {
-		semantic: { shouldHighlight: () => false },
-	},
+	semanticWithoutHighlight,
 	/** @internal */
-	withoutHighlight: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
-		navigation: true,
-		completion: true,
-	},
+	withoutHighlight: semanticWithoutHighlight | verification | navigation | completion,
 	/** @internal */
-	withoutHighlightAndCompletion: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
-		navigation: true,
-	},
+	withoutHighlightAndCompletion: semanticWithoutHighlight | verification | navigation,
 	/** @internal */
-	tagName: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
-		navigation: true,
-	},
+	tagName: semanticWithoutHighlight | verification | navigation,
 	/** @internal */
-	withoutSemantic: {
-		verification: true,
-		navigation: true,
-		completion: true,
-	},
+	withoutSemantic: verification | navigation | completion,
 	/** @internal */
-	structure: {
-		structure: true,
-	},
+	structure,
 	/** @internal */
-	structureAndFormat: {
-		structure: true,
-		format: true,
-	},
+	structureAndFormat: structure | format,
 	/** @internal */
-	format: {
-		format: true,
-	},
-});
+	format,
+} satisfies Record<string, number>;
 
 /** @deprecated use `codeFeatures.full` instead */
 export const allCodeFeatures = codeFeatures.full;
 
-function defineCodeFeatures<T extends Record<string, VueCodeInformation>>(features: T) {
-	return features as {
-		[K in keyof T]: VueCodeInformation;
-	};
+export function getCodeFeatures(info: VueCodeInformation) {
+	return typeof info === 'number' ? info : info.features;
+}
+
+export function withCodeFeatures(info: VueCodeInformation, features: number): VueCodeInformation {
+	return typeof info === 'number' ? features : { ...info, features };
+}
+
+export function toAtomGroup(info: VueCodeInformation): VueCodeMarker {
+	return typeof info === 'number' ? { features: info, atom: Symbol() } : { ...info, atom: Symbol() };
+}
+
+export function toAtomKind(info: VueCodeInformation): VueCodeMarker {
+	return { ...typeof info === 'number' ? { features: info } : info, kind: SpanMapKind.Atom };
 }

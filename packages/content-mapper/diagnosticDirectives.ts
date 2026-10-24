@@ -1,8 +1,8 @@
-import type { Mapping, VueCodeInformation } from '@vue/language-core';
+import type { DiagnosticDirectiveMarker } from '@vue/language-core';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type SpanMapping } from './protocol';
 
 interface DirectiveState {
-	directive: NonNullable<VueCodeInformation['__diagnosticDirective']>['directive'];
+	directive: DiagnosticDirectiveMarker['directive'];
 	originalStart: number;
 	contentRanges: [start: number, end: number][];
 	anchor?: number;
@@ -10,43 +10,31 @@ interface DirectiveState {
 }
 
 export function toDiagnosticDirectives(
-	mappings: readonly Mapping[],
+	markers: readonly DiagnosticDirectiveMarker[],
 ): DiagnosticDirectiveMapping[] {
 	const states = new Map<DirectiveState['directive'], DirectiveState>();
 
-	for (const mapping of mappings) {
-		const marker = getMarker(mapping.data);
-		if (!marker) {
-			continue;
+	for (const { directive, phase, generatedStart, generatedLength, sourceStart } of markers) {
+		let state = states.get(directive);
+		if (!state) {
+			state = {
+				directive,
+				originalStart: sourceStart,
+				contentRanges: [],
+			};
+			states.set(directive, state);
 		}
-		for (let index = 0; index < mapping.generatedOffsets.length; index++) {
-			const virtualOffset = mapping.generatedOffsets[index];
-			const originalStart = mapping.sourceOffsets[index];
-			if (virtualOffset === undefined || originalStart === undefined) {
-				continue;
+		if (phase === 'anchor') {
+			state.anchor = generatedStart;
+			state.originalStart = sourceStart;
+		}
+		else if (phase === 'content') {
+			if (generatedLength > 0) {
+				state.contentRanges.push([generatedStart, generatedStart + generatedLength]);
 			}
-			let state = states.get(marker.directive);
-			if (!state) {
-				state = {
-					directive: marker.directive,
-					originalStart,
-					contentRanges: [],
-				};
-				states.set(marker.directive, state);
-			}
-			if (marker.phase === 'anchor') {
-				state.anchor = virtualOffset;
-				state.originalStart = originalStart;
-			}
-			else if (marker.phase === 'content') {
-				const length = mapping.lengths[index];
-				if (length !== undefined && length > 0) {
-					state.contentRanges.push([virtualOffset, virtualOffset + length]);
-				}
-			}
-			else if (marker.phase === 'end') {
-				state.end = virtualOffset;
-			}
+		}
+		else {
+			state.end = generatedStart;
 		}
 	}
 
@@ -169,15 +157,5 @@ export function withSynthesizedDiagnosticIgnores(
 		if (start < end) {
 			result.push([0, 0, start, end, DiagnosticDirectivePolicy.Ignore]);
 		}
-	}
-}
-
-function getMarker(data: unknown) {
-	if (
-		typeof data === 'object'
-		&& data !== null
-		&& '__diagnosticDirective' in data
-	) {
-		return (data as VueCodeInformation).__diagnosticDirective;
 	}
 }

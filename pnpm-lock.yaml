@@ -12,6 +12,7 @@ overrides:
   '@volar/source-map': workspace:*
   '@volar/test-utils': workspace:*
   '@volar/vscode': workspace:*
+  '@vue/language-plugin-pug': workspace:*
 
 importers:
 
@@ -1317,9 +1318,6 @@ packages:
 
   '@vue/compiler-vapor@3.6.0-rc.6':
     resolution: {integrity: sha512-v1gDBuonEGJhz08iipPn1Sh70YUnpnSD1x4q1LThvkW5I98DAhkIrD9Vd6JWgRrRxogT/rDl2xYLG8ev5gtFTA==}
-
-  '@vue/language-plugin-pug@3.2.9':
-    resolution: {integrity: sha512-EaRtg3/1TQo9D20nBex1G3NtWElJbSgiiisZe6TwiNKpSCRwFmmvuAkz+AfMmsQc53si3zbkApU8RF0o6ULQag==}
 
   '@vue/reactivity@3.6.0-rc.6':
     resolution: {integrity: sha512-1P1ajlaqASZWdsdmquL64ioZ2VtMnS5kl8BoFzRLEFOsBZFUh9zkM5H1cuGlmCU8HkypvZwuyUtqO4od7rJNNw==}
@@ -3382,14 +3380,6 @@ snapshots:
       estree-walker: 2.0.2
       source-map-js: 1.2.1
 
-  '@vue/language-plugin-pug@3.2.9':
-    dependencies:
-      '@volar/source-map': link:volar.js/packages/source-map
-      muggle-string: 0.4.1
-      pug-lexer: 5.0.1
-      pug-parser: 6.0.0
-      vscode-languageserver-textdocument: 1.0.12
-
   '@vue/reactivity@3.6.0-rc.6':
     dependencies:
       '@vue/shared': 3.6.0-rc.6
@@ -4420,7 +4410,7 @@ snapshots:
   volar-service-pug@0.0.71:
     dependencies:
       '@volar/language-service': link:volar.js/packages/language-service
-      '@vue/language-plugin-pug': 3.2.9
+      '@vue/language-plugin-pug': link:packages/language-plugin-pug
       volar-service-html: 0.0.71(@volar/language-service@volar.js+packages+language-service)
       vscode-html-languageservice: 5.6.2
       vscode-languageserver-textdocument: 1.0.12

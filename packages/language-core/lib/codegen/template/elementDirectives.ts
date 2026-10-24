@@ -90,10 +90,9 @@ function* generateIdentifier(
 		rawName,
 		'template',
 		prop.loc.start.offset,
-		{
-			...codeFeatures.withoutHighlightAndCompletion,
-			verification: !isBuiltInDirective(prop.name),
-		},
+		isBuiltInDirective(prop.name)
+			? codeFeatures.withoutHighlightAndCompletion & ~codeFeatures.verification
+			: codeFeatures.withoutHighlightAndCompletion,
 	);
 	if (!isBuiltInDirective(prop.name)) {
 		ctx.accessVariable('template', camelize(rawName), prop.loc.start.offset, false, rawName);

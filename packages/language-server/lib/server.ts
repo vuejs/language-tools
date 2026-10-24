@@ -7,6 +7,7 @@ import {
 	createLanguage,
 	createVueLanguagePlugin,
 	isCompletionEnabled,
+	isDefinitionEnabled,
 	isSemanticTokensEnabled,
 	type LanguagePlugin,
 	tsCodegen,
@@ -334,7 +335,7 @@ export function startServer(ts: typeof import('typescript')) {
 								script.sourceScript,
 								script.virtualCode,
 								position,
-								data => !!data.navigation,
+								isDefinitionEnabled,
 							);
 							for (const offset of offsets) {
 								name ??= await api.getUnresolvedName(fileName, offset);

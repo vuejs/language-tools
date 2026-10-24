@@ -1,7 +1,6 @@
-import type { CodeInformation } from '@volar/language-core';
+import type { SpanMapKind } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
-import type { Segment } from 'muggle-string';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { VueEmbeddedCode } from './virtualCode/embeddedCodes';
 
@@ -38,20 +37,26 @@ export type RawPlugin =
 		name: string;
 	};
 
-export interface VueCodeInformation extends CodeInformation {
-	__propsCompletion?: boolean;
-	__shorthandExpression?: 'html' | 'js';
-	__combineToken?: symbol;
-	__diagnosticDirective?: {
-		directive: {
-			policy: 'ignore' | 'expect';
-			originalLength: number;
-		};
-		phase: 'anchor' | 'content' | 'end';
+export interface VueDiagnosticDirective {
+	directive: {
+		policy: 'ignore' | 'expect';
+		originalLength: number;
 	};
+	phase: 'anchor' | 'content' | 'end';
 }
 
-export type Code = Segment<VueCodeInformation>;
+export interface VueCodeMarker {
+	features: number;
+	kind?: SpanMapKind;
+	/** Segments sharing the symbol map as one atom spanning all of them. */
+	atom?: symbol;
+	diagnosticDirective?: VueDiagnosticDirective;
+}
+
+/** The `SpanMapFeature` bits of a segment, or a marker carrying them. */
+export type VueCodeInformation = number | VueCodeMarker;
+
+export type Code = string | [text: string, source: string | undefined, sourceOffset: number, data: VueCodeInformation];
 
 export interface VueCompilerOptions {
 	target: number;

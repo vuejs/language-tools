@@ -37,3 +37,5 @@ overrides:
   '@volar/source-map': workspace:*
   '@volar/test-utils': workspace:*
   '@volar/vscode': workspace:*
+  # volar-service-pug feeds its baseParse mappings to @volar/language-service, so both must share one format
+  '@vue/language-plugin-pug': workspace:*

@@ -1,4 +1,5 @@
 import type { Code, VueCodeInformation } from '../../types';
+import { toAtomGroup } from '../codeFeatures';
 
 export function* generateEscaped(
 	text: string,
@@ -8,8 +9,8 @@ export function* generateEscaped(
 	escapeTarget: RegExp,
 ): Generator<Code> {
 	const parts = text.split(escapeTarget);
-	if (!features.__combineToken) {
-		features = { ...features, __combineToken: Symbol() };
+	if (typeof features === 'number' || !features.atom) {
+		features = toAtomGroup(features);
 	}
 	let isEscapeTarget = false;
 

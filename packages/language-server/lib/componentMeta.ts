@@ -6,7 +6,7 @@ import {
 	names,
 	type SourceScript,
 	tsCodegen,
-	type VueCodeInformation,
+	VueCodeFeature,
 	type VueVirtualCode,
 } from '@vue/language-core';
 import type { AutoImportExport, ComponentPropInfo, ExtractPropsInfo } from '@vue/language-service/lib/requests';
@@ -284,7 +284,7 @@ export function getComponentPropsOffset(
 		sourceScript,
 		virtualCode,
 		template.startTagEnd + node.loc.start.offset,
-		data => !!data.__propsCompletion,
+		features => !!(features & VueCodeFeature.PropsCompletion),
 	);
 }
 
@@ -294,7 +294,7 @@ export function toServiceScriptOffset(
 	sourceScript: SourceScript<URI>,
 	virtualCode: VueVirtualCode,
 	sourceOffset: number,
-	filter: (data: VueCodeInformation) => boolean,
+	filter: (features: number) => boolean,
 ): number | undefined {
 	return toServiceScriptOffsets(language, sourceScript, virtualCode, sourceOffset, filter)[0];
 }
@@ -308,7 +308,7 @@ export function toServiceScriptOffsets(
 	sourceScript: SourceScript<URI>,
 	virtualCode: VueVirtualCode,
 	sourceOffset: number,
-	filter: (data: VueCodeInformation) => boolean,
+	filter: (features: number) => boolean,
 ) {
 	const serviceScript = getServiceScript(virtualCode);
 	if (!serviceScript) {
@@ -318,7 +318,7 @@ export function toServiceScriptOffsets(
 	for (
 		const [offset, mapping] of language.maps.get(serviceScript.code, sourceScript).toGeneratedLocation(sourceOffset)
 	) {
-		if (filter(mapping.data)) {
+		if (filter(mapping[5])) {
 			offsets.push(offset);
 		}
 	}
@@ -333,14 +333,14 @@ export function toSourceOffset(
 	sourceScript: SourceScript<URI>,
 	virtualCode: VueVirtualCode,
 	offset: number,
-	filter: (data: VueCodeInformation) => boolean,
+	filter: (features: number) => boolean,
 ) {
 	const serviceScript = getServiceScript(virtualCode);
 	if (!serviceScript) {
 		return;
 	}
 	for (const [sourceOffset, mapping] of language.maps.get(serviceScript.code, sourceScript).toSourceLocation(offset)) {
-		if (filter(mapping.data)) {
+		if (filter(mapping[5])) {
 			return sourceOffset;
 		}
 	}

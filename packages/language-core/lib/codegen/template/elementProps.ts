@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isHTMLTag, isMathMLTag, isSVGTag } from '@vue/shared';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import { codeFeatures } from '../codeFeatures';
+import { codeFeatures, toAtomKind, VueCodeFeature } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, identifierRE, newLine } from '../utils';
@@ -285,10 +285,7 @@ export function* generatePropExp(
 				exp.loc.source,
 				'template',
 				exp.loc.start.offset,
-				{
-					...codeFeatures.withoutHighlightAndCompletion,
-					__shorthandExpression: 'html',
-				},
+				toAtomKind(codeFeatures.withoutHighlightAndCompletion),
 			);
 			yield* generateIdentifier(
 				options,
@@ -337,11 +334,7 @@ function getShouldCamelize(
 }
 
 function getPropsCodeFeatures(): VueCodeInformation {
-	return {
-		...codeFeatures.withoutHighlightAndCompletion,
-		...codeFeatures.verification,
-		__propsCompletion: true,
-	};
+	return codeFeatures.withoutHighlightAndCompletion | codeFeatures.verification | VueCodeFeature.PropsCompletion;
 }
 
 /**

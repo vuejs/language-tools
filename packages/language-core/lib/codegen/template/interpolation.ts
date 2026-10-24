@@ -1,6 +1,6 @@
 import type { Code, IRBlock, TypeScript, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
-import { codeFeatures } from '../codeFeatures';
+import { codeFeatures, getCodeFeatures, toAtomKind, withCodeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import { getRefBrandArgument, getTypeScriptAST, identifierRE } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -24,8 +24,8 @@ export function* generateInterpolation(
 		yield prefix;
 	}
 
-	const { completion, ...featuresWithoutCompletion } = features;
-	const memberFeatures: VueCodeInformation = completion ? { completion } : {};
+	const memberFeatures = getCodeFeatures(features) & codeFeatures.completion;
+	const featuresWithoutCompletion = withCodeFeatures(features, getCodeFeatures(features) & ~codeFeatures.completion);
 
 	let prevEnd = 0;
 	for (
@@ -68,9 +68,7 @@ export function* generateInterpolation(
 			name,
 			block.name,
 			start + offset,
-			isShorthand
-				? { ...identifierFeatures, __shorthandExpression: 'js' as const }
-				: identifierFeatures,
+			isShorthand ? toAtomKind(identifierFeatures) : identifierFeatures,
 		]];
 
 		yield* generateIdentifier(
@@ -124,7 +122,7 @@ function* generateNonIdentifierCode(
 		yield [code, source, offset, data];
 		return;
 	}
-	yield [code.slice(0, 1), source, offset, { verification: data.verification }];
+	yield [code.slice(0, 1), source, offset, getCodeFeatures(data) & codeFeatures.verification];
 	if (code.length > 1) {
 		yield [code.slice(1), source, offset + 1, data];
 	}

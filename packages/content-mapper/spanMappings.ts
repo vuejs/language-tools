@@ -1,10 +1,10 @@
-import type { Mapping } from '@vue/language-core';
+import {
+	type Mapping,
+	SpanMapFeature as VolarSpanMapFeature,
+	SpanMapKind as VolarSpanMapKind,
+} from '@vue/language-core';
 import { SpanMapFeature, SpanMapKind, type SpanMapping } from './protocol';
 
-const semanticFeatures = SpanMapFeature.Hover
-	| SpanMapFeature.SignatureHelp
-	| SpanMapFeature.InlayHints
-	| SpanMapFeature.SemanticTokens;
 const completionFeatures = SpanMapFeature.Completion
 	| SpanMapFeature.AutoInsert;
 const navigationFeatures = SpanMapFeature.Definition
@@ -16,10 +16,7 @@ const navigationFeatures = SpanMapFeature.Definition
 	| SpanMapFeature.CallHierarchy
 	| SpanMapFeature.CodeActions
 	| SpanMapFeature.LinkedEditing;
-const structureFeatures = SpanMapFeature.FoldingRanges
-	| SpanMapFeature.SelectionRanges
-	| SpanMapFeature.DocumentSymbols
-	| SpanMapFeature.CodeLens;
+const languageFeatureMask = (SpanMapFeature.CodeLens << 1) - 1;
 
 interface Candidate {
 	generatedStart: number;
@@ -29,14 +26,6 @@ interface Candidate {
 	kind: SpanMapKind;
 	features: number;
 	verified: boolean;
-}
-
-interface RawEntry {
-	generatedStart: number;
-	generatedLength: number;
-	originalStart: number;
-	originalLength: number;
-	data: Mapping['data'];
 }
 
 interface IntervalNode {
@@ -57,148 +46,45 @@ export function toSpanMappings(
 	unverifiedRanges: [start: number, end: number][] = [],
 ): SpanMapping[] {
 	const candidates: Candidate[] = [];
-	const entries: (RawEntry & { token?: symbol })[] = [];
-
-	for (const mapping of mappings) {
-		for (let index = 0; index < mapping.lengths.length; index++) {
-			const generatedStart = mapping.generatedOffsets[index];
-			const originalStart = mapping.sourceOffsets[index];
-			const length = mapping.lengths[index];
-			if (
-				generatedStart === undefined
-				|| originalStart === undefined
-				|| length === undefined
-				|| length < 0
-				|| generatedStart < 0
-				|| originalStart < 0
-			) {
-				continue;
-			}
-			entries.push({
-				generatedStart,
-				generatedLength: length,
-				originalStart,
-				originalLength: length,
-				data: mapping.data,
-				token: getCombineToken(mapping.data),
-			});
-		}
-	}
-
-	// Mappings sharing a multi-use __combineToken are chunks of one logical
-	// token: camelized identifiers split into segments, or content wrapped in
-	// synthesized characters (quotes, escapes, `on` prefixes) bracketed by
-	// zero-length boundary markers. Merge each group into a single span so
-	// token-wide diagnostics map back to the original range, matching the
-	// mapping combiner in the vue-tsc pipeline. A token used only once is
-	// decoration (e.g. single-segment camelized names) and stays individual.
-	const tokenCounts = new Map<symbol, number>();
-	for (const entry of entries) {
-		if (entry.token !== undefined) {
-			tokenCounts.set(entry.token, (tokenCounts.get(entry.token) ?? 0) + 1);
-		}
-	}
-	const combineGroups = new Map<symbol, typeof entries>();
-	const merged = new Set<RawEntry>();
-	const wrappers = new Set<RawEntry>();
-	const contents = new Set<RawEntry>();
-	for (const entry of entries) {
-		if (entry.token !== undefined && tokenCounts.get(entry.token)! > 1) {
-			const group = combineGroups.get(entry.token);
-			if (group) {
-				group.push(entry);
-			}
-			else {
-				combineGroups.set(entry.token, [entry]);
-			}
-		}
-	}
-	for (const group of combineGroups.values()) {
-		group.sort((left, right) => left.generatedStart - right.generatedStart);
-		const first = group[0]!;
-		const last = group[group.length - 1]!;
-		const entry: RawEntry = {
-			generatedStart: first.generatedStart,
-			generatedLength: last.generatedStart + last.generatedLength - first.generatedStart,
-			originalStart: first.originalStart,
-			originalLength: last.originalStart + last.originalLength - first.originalStart,
-			data: first.data,
-		};
-		entries.push(entry);
-		merged.add(entry);
-		// Completion needs a position inside the synthesized quotes, but an atom only
-		// projects to its edges: when the wrapped content maps the whole token, it
-		// becomes the span itself and the wrapper only carries diagnostics.
-		const content = group.length === 3 ? group[1]! : undefined;
-		if (
-			content
-			&& first.generatedLength === 0
-			&& last.generatedLength === 0
-			&& content.originalStart === entry.originalStart
-			&& content.originalLength === entry.originalLength
-			&& isCodeInformation(content.data)
-			&& content.data.completion
-		) {
-			wrappers.add(entry);
-			contents.add(content);
-		}
-	}
-	const grouped = new Set([...combineGroups.values()].flat().filter(entry => !contents.has(entry)));
-	const shorthandRanges = new Set<string>();
-	for (const entry of entries) {
-		if (typeof entry.data === 'object' && entry.data !== null && '__shorthandExpression' in entry.data) {
-			shorthandRanges.add(toKey(entry.originalStart, entry.originalStart + entry.originalLength));
-		}
-	}
 	const fills: Candidate[] = [];
 
-	for (const entry of entries) {
-		if (grouped.has(entry)) {
-			continue;
-		}
-		const { generatedStart, generatedLength, originalStart, originalLength, data } = entry;
+	for (const [generatedStart, generatedLength, originalStart, originalLength, kind, data] of mappings) {
+		const generatedEnd = generatedStart + generatedLength;
+		const originalEnd = originalStart + originalLength;
 		if (
-			generatedStart + generatedLength > generatedText.length
-			|| originalStart + originalLength > originalText.length
+			generatedStart < 0
+			|| originalStart < 0
+			|| generatedEnd > generatedText.length
+			|| originalEnd > originalText.length
 		) {
 			continue;
 		}
-
-		const generatedEnd = generatedStart + generatedLength;
-		const originalEnd = originalStart + originalLength;
-		const verbatim = generatedLength === originalLength
-			&& generatedText.slice(generatedStart, generatedEnd)
-				=== originalText.slice(originalStart, originalEnd);
-		const sourceFeatures = wrappers.has(entry) ? 0 : getFeatures(data);
+		const verbatim = kind === VolarSpanMapKind.Verbatim
+			&& generatedLength === originalLength
+			&& generatedText.slice(generatedStart, generatedEnd) === originalText.slice(originalStart, originalEnd);
+		const sourceFeatures = data & languageFeatureMask;
 		let features = languageFeatures ? sourceFeatures : 0;
 		if (generatedLength === 0) {
 			// Zero-length spans only serve as navigation anchors (e.g. the synthetic
-			// default export) and completion points (e.g. an empty slot name); drop
-			// boundary scaffolding and other zero-length markers.
-			if (typeof data !== 'object' || data === null || ('__combineToken' in data && !contents.has(entry))) {
-				continue;
-			}
+			// default export) and completion points (e.g. an empty slot name).
 			features &= navigationFeatures | completionFeatures;
 			if (!features) {
 				continue;
 			}
 		}
-		// Renaming a shorthand (`:foo`, `{ foo }`) would have to expand it, which the
-		// host cannot do; atoms keep its key and value navigable but never edited.
-		const shorthand = shorthandRanges.has(toKey(originalStart, originalEnd));
 		const candidate: Candidate = {
 			generatedStart,
 			generatedEnd,
 			originalStart,
 			originalEnd,
-			kind: verbatim && !shorthand ? SpanMapKind.Verbatim : SpanMapKind.Atom,
+			kind: verbatim ? SpanMapKind.Verbatim : SpanMapKind.Atom,
 			features,
-			verified: isCodeInformation(data) && !!data.verification,
+			verified: !!(data & VolarSpanMapFeature.Verification),
 		};
-		// A feature-less merged token (e.g. a verification boundary around a
-		// props object) only carries diagnostics; let the segments inside it win.
+		// A feature-less atom (e.g. a verification boundary around a props object)
+		// only carries diagnostics; let the segments inside it win.
 		// Decide by the source features so this holds without language features too.
-		if (!sourceFeatures && !verbatim && merged.has(entry)) {
+		if (!sourceFeatures && kind !== VolarSpanMapKind.Verbatim) {
 			fills.push(candidate);
 		}
 		else {
@@ -328,69 +214,6 @@ function splitAtNavigationCopies(candidates: Candidate[]) {
 		}));
 		candidates.splice(index, 1, ...pieces);
 	}
-}
-
-function getCombineToken(data: Mapping['data']): symbol | undefined {
-	if (typeof data === 'object' && data !== null && '__combineToken' in data) {
-		const token = (data as { __combineToken: unknown }).__combineToken;
-		if (typeof token === 'symbol') {
-			return token;
-		}
-	}
-	return undefined;
-}
-
-function getFeatures(data: Mapping['data']) {
-	if (!isCodeInformation(data)) {
-		return 0;
-	}
-	let features = 0;
-	if (data.semantic) {
-		features |= semanticFeatures;
-		if (
-			typeof data.semantic === 'object'
-			&& data.semantic.shouldHighlight?.() === false
-		) {
-			features &= ~SpanMapFeature.SemanticTokens;
-		}
-	}
-	if (data.completion) {
-		features |= completionFeatures;
-	}
-	if (data.navigation) {
-		features |= navigationFeatures;
-		if (typeof data.navigation === 'object') {
-			if (data.navigation.shouldHighlight?.() === false) {
-				features &= ~SpanMapFeature.DocumentHighlights;
-			}
-			if (data.navigation.shouldRename?.() === false) {
-				features &= ~SpanMapFeature.Rename;
-			}
-		}
-	}
-	if (data.structure) {
-		features |= structureFeatures;
-	}
-	if (data.format) {
-		features |= SpanMapFeature.Formatting;
-	}
-	return features;
-}
-
-function isCodeInformation(value: unknown): value is {
-	semantic?: boolean | {
-		shouldHighlight?(): boolean;
-	};
-	completion?: unknown;
-	navigation?: boolean | {
-		shouldHighlight?(): boolean;
-		shouldRename?(): boolean;
-	};
-	structure?: unknown;
-	format?: unknown;
-	verification?: unknown;
-} {
-	return typeof value === 'object' && value !== null;
 }
 
 function rangesOverlap(startA: number, endA: number, startB: number, endB: number) {

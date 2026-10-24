@@ -1,50 +1,31 @@
+import { codeFeatures, type Mapping, SpanMapKind as VolarSpanMapKind, VueCodeFeature } from '@vue/language-core';
 import { expect, test } from 'vitest';
 import { SpanMapFeature, SpanMapKind } from '../protocol';
 import { toSpanMappings } from '../spanMappings';
 
-test('preserves Vue mapping feature intent', () => {
-	const mappings = toSpanMappings(
-		[
-			{
-				sourceOffsets: [0, 1],
-				generatedOffsets: [0, 1],
-				lengths: [1, 1],
-				data: { verification: true },
-			},
-			{
-				sourceOffsets: [2],
-				generatedOffsets: [2],
-				lengths: [1],
-				data: { semantic: true, navigation: true },
-			},
-		],
-		'abc',
-		'abc',
-	);
+const Verbatim = VolarSpanMapKind.Verbatim;
+const Atom = VolarSpanMapKind.Atom;
 
-	expect(mappings).toEqual([
+const navigationBits = SpanMapFeature.Definition
+	| SpanMapFeature.TypeDefinition
+	| SpanMapFeature.Implementation
+	| SpanMapFeature.References
+	| SpanMapFeature.DocumentHighlights
+	| SpanMapFeature.Rename
+	| SpanMapFeature.CallHierarchy
+	| SpanMapFeature.CodeActions
+	| SpanMapFeature.LinkedEditing;
+const completionBits = SpanMapFeature.Completion | SpanMapFeature.AutoInsert;
+
+test('passes language feature bits through and strips the bits outside the protocol', () => {
+	const mappings: Mapping[] = [
+		[0, 1, 0, 1, Verbatim, codeFeatures.verification],
+		[1, 2, 1, 2, Verbatim, codeFeatures.full | VueCodeFeature.PropsCompletion],
+	];
+
+	expect(toSpanMappings(mappings, 'abc', 'abc')).toEqual([
 		[0, 1, 0, 1, SpanMapKind.Verbatim, 0],
-		[1, 1, 1, 1, SpanMapKind.Verbatim, 0],
-		[
-			2,
-			1,
-			2,
-			1,
-			SpanMapKind.Verbatim,
-			SpanMapFeature.Hover
-			| SpanMapFeature.SignatureHelp
-			| SpanMapFeature.Definition
-			| SpanMapFeature.TypeDefinition
-			| SpanMapFeature.Implementation
-			| SpanMapFeature.References
-			| SpanMapFeature.DocumentHighlights
-			| SpanMapFeature.Rename
-			| SpanMapFeature.CallHierarchy
-			| SpanMapFeature.CodeActions
-			| SpanMapFeature.InlayHints
-			| SpanMapFeature.SemanticTokens
-			| SpanMapFeature.LinkedEditing,
-		],
+		[1, 2, 1, 2, SpanMapKind.Verbatim, (SpanMapFeature.CodeLens << 1) - 1],
 	]);
 });
 
@@ -72,46 +53,22 @@ test('feature bits match the host protocol (spanmap.go)', () => {
 });
 
 test('can disable language feature mapping without losing diagnostic spans', () => {
-	expect(toSpanMappings(
-		[{
-			sourceOffsets: [0],
-			generatedOffsets: [0],
-			lengths: [3],
-			data: { semantic: true, navigation: true },
-		}],
-		'abc',
-		'abc',
-		false,
-	)).toEqual([[0, 3, 0, 3, SpanMapKind.Verbatim, 0]]);
+	expect(toSpanMappings([[0, 3, 0, 3, Verbatim, codeFeatures.navigation]], 'abc', 'abc', false))
+		.toEqual([[0, 3, 0, 3, SpanMapKind.Verbatim, 0]]);
+});
+
+test('maps verbatim mappings whose texts differ as atoms', () => {
+	expect(toSpanMappings([[0, 5, 0, 5, Verbatim, codeFeatures.navigation]], 'Click', 'click'))
+		.toEqual([[0, 5, 0, 5, SpanMapKind.Atom, navigationBits]]);
 });
 
 test('keeps exact duplicate projections and removes incompatible overlaps', () => {
 	expect(toSpanMappings(
 		[
-			{
-				sourceOffsets: [0],
-				generatedOffsets: [0],
-				lengths: [2],
-				data: {},
-			},
-			{
-				sourceOffsets: [0],
-				generatedOffsets: [2],
-				lengths: [2],
-				data: {},
-			},
-			{
-				sourceOffsets: [1],
-				generatedOffsets: [4],
-				lengths: [2],
-				data: {},
-			},
-			{
-				sourceOffsets: [4],
-				generatedOffsets: [1],
-				lengths: [2],
-				data: {},
-			},
+			[0, 2, 0, 2, Verbatim, 0],
+			[2, 2, 0, 2, Verbatim, 0],
+			[4, 2, 1, 2, Verbatim, 0],
+			[1, 2, 4, 2, Verbatim, 0],
 		],
 		'abcdefgh',
 		'abefghij',
@@ -122,203 +79,33 @@ test('keeps exact duplicate projections and removes incompatible overlaps', () =
 });
 
 test('keeps zero-length navigation anchors and drops other zero-length markers', () => {
-	const mappings = toSpanMappings(
-		[
-			{
-				sourceOffsets: [0],
-				generatedOffsets: [0],
-				lengths: [3],
-				data: { semantic: true },
-			},
-			{
-				sourceOffsets: [0],
-				generatedOffsets: [3],
-				lengths: [0],
-				data: { navigation: true, semantic: true },
-			},
-			{
-				sourceOffsets: [1],
-				generatedOffsets: [3],
-				lengths: [0],
-				data: { verification: true },
-			},
-			{
-				sourceOffsets: [2],
-				generatedOffsets: [3],
-				lengths: [0],
-				data: { navigation: true, __combineToken: Symbol() },
-			},
-		],
-		'abc',
-		'abc',
-	);
-
-	expect(mappings).toEqual([
-		[
-			0,
-			3,
-			0,
-			3,
-			SpanMapKind.Verbatim,
-			SpanMapFeature.Hover | SpanMapFeature.SignatureHelp | SpanMapFeature.InlayHints | SpanMapFeature.SemanticTokens,
-		],
-		[
-			3,
-			0,
-			0,
-			0,
-			SpanMapKind.Verbatim,
-			SpanMapFeature.Definition
-			| SpanMapFeature.TypeDefinition
-			| SpanMapFeature.Implementation
-			| SpanMapFeature.References
-			| SpanMapFeature.DocumentHighlights
-			| SpanMapFeature.Rename
-			| SpanMapFeature.CallHierarchy
-			| SpanMapFeature.CodeActions
-			| SpanMapFeature.LinkedEditing,
-		],
-	]);
-});
-
-test('flattens static rename and highlight callbacks into feature bits', () => {
-	const [mapping] = toSpanMappings(
-		[{
-			sourceOffsets: [0],
-			generatedOffsets: [0],
-			lengths: [3],
-			data: {
-				semantic: { shouldHighlight: () => false },
-				navigation: {
-					shouldHighlight: () => false,
-					shouldRename: () => false,
-				},
-			},
-		}],
-		'abc',
-		'abc',
-	);
-
-	expect(mapping![5] & SpanMapFeature.Hover).toBeTruthy();
-	expect(mapping![5] & SpanMapFeature.Definition).toBeTruthy();
-	expect(mapping![5] & SpanMapFeature.SemanticTokens).toBeFalsy();
-	expect(mapping![5] & SpanMapFeature.DocumentHighlights).toBeFalsy();
-	expect(mapping![5] & SpanMapFeature.Rename).toBeFalsy();
-});
-
-const navigationBits = SpanMapFeature.Definition
-	| SpanMapFeature.TypeDefinition
-	| SpanMapFeature.Implementation
-	| SpanMapFeature.References
-	| SpanMapFeature.DocumentHighlights
-	| SpanMapFeature.Rename
-	| SpanMapFeature.CallHierarchy
-	| SpanMapFeature.CodeActions
-	| SpanMapFeature.LinkedEditing;
-
-test('merges boundary-wrapped tokens (synthesized quotes) into one span', () => {
-	const data = { navigation: true, __combineToken: Symbol() };
-	// generated: ----------'a-b'   (quotes at 10 and 14, `a-b` at 11..14)
-	// original:  --------------------a-b   (`a-b` at 20..23)
 	expect(toSpanMappings(
 		[
-			{ sourceOffsets: [20], generatedOffsets: [10], lengths: [0], data },
-			{ sourceOffsets: [20], generatedOffsets: [11], lengths: [3], data },
-			{ sourceOffsets: [23], generatedOffsets: [15], lengths: [0], data },
+			[0, 3, 0, 3, Verbatim, codeFeatures.semanticWithoutHighlight],
+			[3, 0, 0, 0, Verbatim, codeFeatures.navigation | codeFeatures.semanticWithoutHighlight],
+			[3, 0, 1, 0, Verbatim, codeFeatures.verification],
+			[3, 0, 2, 0, Verbatim, VueCodeFeature.PropsCompletion],
 		],
-		`----------'a-b'`,
-		`--------------------a-b`,
+		'abc',
+		'abc',
 	)).toEqual([
-		[10, 5, 20, 3, SpanMapKind.Atom, navigationBits],
-	]);
-});
-
-const completionBits = SpanMapFeature.Completion | SpanMapFeature.AutoInsert;
-
-test('keeps the content of a boundary-wrapped completion token inside the quotes', () => {
-	const data = { navigation: true, completion: true, __combineToken: Symbol() };
-	// generated: ----------'ab'   (quotes at 10 and 13, `ab` at 11..13)
-	// original:  --------------------ab   (`ab` at 20..22)
-	expect(toSpanMappings(
-		[
-			{ sourceOffsets: [20], generatedOffsets: [10], lengths: [0], data },
-			{ sourceOffsets: [20], generatedOffsets: [11], lengths: [2], data },
-			{ sourceOffsets: [22], generatedOffsets: [14], lengths: [0], data },
-		],
-		`----------'ab'`,
-		`--------------------ab`,
-	)).toEqual([
-		[10, 1, 20, 2, SpanMapKind.Atom, 0],
-		[11, 2, 20, 2, SpanMapKind.Verbatim, navigationBits | completionBits],
-		[13, 1, 20, 2, SpanMapKind.Atom, 0],
-	]);
-});
-
-test('keeps an empty boundary-wrapped completion token as a point inside the quotes', () => {
-	const data = { navigation: true, completion: true, __combineToken: Symbol() };
-	// generated: ----------''   (quotes at 10 and 11)
-	// original:  --------------------   (empty token at 20)
-	expect(toSpanMappings(
-		[
-			{ sourceOffsets: [20], generatedOffsets: [10], lengths: [0], data },
-			{ sourceOffsets: [20], generatedOffsets: [11], lengths: [0], data },
-			{ sourceOffsets: [20], generatedOffsets: [12], lengths: [0], data },
-		],
-		`----------''`,
-		`--------------------`,
-	)).toEqual([
-		[10, 1, 20, 0, SpanMapKind.Atom, 0],
-		[11, 0, 20, 0, SpanMapKind.Verbatim, navigationBits | completionBits],
+		[0, 3, 0, 3, SpanMapKind.Verbatim, SpanMapFeature.Hover | SpanMapFeature.SignatureHelp | SpanMapFeature.InlayHints],
+		[3, 0, 0, 0, SpanMapKind.Verbatim, navigationBits],
 	]);
 });
 
 test('keeps zero-length completion points', () => {
-	expect(toSpanMappings(
-		[{ sourceOffsets: [1], generatedOffsets: [2], lengths: [0], data: { completion: true } }],
-		'abc',
-		'abc',
-	)).toEqual([
-		[2, 0, 1, 0, SpanMapKind.Verbatim, completionBits],
-	]);
+	expect(toSpanMappings([[2, 0, 1, 0, Verbatim, codeFeatures.completion]], 'abc', 'abc'))
+		.toEqual([[2, 0, 1, 0, SpanMapKind.Verbatim, completionBits]]);
 });
 
-test('merges camelized identifier segments into one span', () => {
-	const data = { navigation: true, __combineToken: Symbol() };
-	// generated: vOnce   (`v` at 0..1, `Once` at 1..5)
-	// original:  v-once  (`v` at 0..1, `once` at 2..6)
-	expect(toSpanMappings(
-		[
-			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [1], data },
-			{ sourceOffsets: [2], generatedOffsets: [1], lengths: [4], data },
-		],
-		'vOnce',
-		'v-once',
-	)).toEqual([
-		[0, 5, 0, 6, SpanMapKind.Atom, navigationBits],
-	]);
-});
-
-test('keeps single-use combine tokens as individual spans', () => {
-	// e.g. `Click` from `@click`: camelized, but a single segment
-	const data = { navigation: true, __combineToken: Symbol() };
-	expect(toSpanMappings(
-		[{ sourceOffsets: [0], generatedOffsets: [0], lengths: [5], data }],
-		'Click',
-		'click',
-	)).toEqual([
-		[0, 5, 0, 5, SpanMapKind.Atom, navigationBits],
-	]);
-});
-
-test('lets segments inside a feature-less merged token win and fills around them', () => {
-	const boundary = { verification: true, __combineToken: Symbol() };
-	// generated: {a: b}   (boundary 0..6 mapped to `C`, `b` at 4..5)
+test('lets segments inside a feature-less atom win and fills around them', () => {
+	// generated: {a: b}   (atom 0..6 mapped to `C`, `b` at 4..5)
 	// original:  C b
 	expect(toSpanMappings(
 		[
-			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [0], data: boundary },
-			{ sourceOffsets: [2], generatedOffsets: [4], lengths: [1], data: { navigation: true } },
-			{ sourceOffsets: [1], generatedOffsets: [6], lengths: [0], data: boundary },
+			[0, 6, 0, 1, Atom, codeFeatures.verification],
+			[4, 1, 2, 1, Verbatim, codeFeatures.navigation],
 		],
 		'{a: b}',
 		'C b',
@@ -329,13 +116,11 @@ test('lets segments inside a feature-less merged token win and fills around them
 	]);
 });
 
-test('fills around segments inside a merged token without language features', () => {
-	const boundary = { verification: true, __combineToken: Symbol() };
+test('fills around segments inside an atom without language features', () => {
 	expect(toSpanMappings(
 		[
-			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [0], data: boundary },
-			{ sourceOffsets: [2], generatedOffsets: [4], lengths: [1], data: { navigation: true, verification: true } },
-			{ sourceOffsets: [1], generatedOffsets: [6], lengths: [0], data: boundary },
+			[0, 6, 0, 1, Atom, codeFeatures.verification],
+			[4, 1, 2, 1, Verbatim, codeFeatures.navigationAndVerification],
 		],
 		'{a: b}',
 		'C b',
@@ -347,15 +132,13 @@ test('fills around segments inside a merged token without language features', ()
 	]);
 });
 
-test('reports fills of an unverified merged token as unverified', () => {
+test('reports fills of an unverified atom as unverified', () => {
 	// e.g. the props object of `checkRequiredFallthroughAttributes`
-	const boundary = { __combineToken: Symbol() };
 	const unverifiedRanges: [number, number][] = [];
 	toSpanMappings(
 		[
-			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [0], data: boundary },
-			{ sourceOffsets: [2], generatedOffsets: [4], lengths: [1], data: { navigation: true, verification: true } },
-			{ sourceOffsets: [1], generatedOffsets: [6], lengths: [0], data: boundary },
+			[0, 6, 0, 1, Atom, 0],
+			[4, 1, 2, 1, Verbatim, codeFeatures.navigationAndVerification],
 		],
 		'{a: b}',
 		'C b',
@@ -365,17 +148,12 @@ test('reports fills of an unverified merged token as unverified', () => {
 	expect(unverifiedRanges).toEqual([[0, 4], [5, 6]]);
 });
 
-test('maps both sides of a shorthand as atoms so rename never edits them', () => {
+test('keeps atoms with equal texts as atoms', () => {
 	// generated: {a: a}   original: {a}
 	expect(toSpanMappings(
 		[
-			{ sourceOffsets: [1], generatedOffsets: [1], lengths: [1], data: { navigation: true } },
-			{
-				sourceOffsets: [1],
-				generatedOffsets: [4],
-				lengths: [1],
-				data: { navigation: true, __shorthandExpression: 'js' },
-			},
+			[1, 1, 1, 1, Atom, codeFeatures.navigation],
+			[4, 1, 1, 1, Atom, codeFeatures.navigation],
 		],
 		'{a: a}',
 		'{a}',
@@ -391,8 +169,8 @@ test('cuts a verbatim section at a navigation-only copy of its content', () => {
 	const unverifiedRanges: [number, number][] = [];
 	expect(toSpanMappings(
 		[
-			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [5], data: { navigation: true, verification: true } },
-			{ sourceOffsets: [2], generatedOffsets: [6], lengths: [1], data: { navigation: true } },
+			[0, 5, 0, 5, Verbatim, codeFeatures.navigationAndVerification],
+			[6, 1, 2, 1, Verbatim, codeFeatures.navigation],
 		],
 		'f(x); x',
 		'f(x);',
@@ -411,8 +189,8 @@ test('reports segments mapped without verification as unverified', () => {
 	const unverifiedRanges: [number, number][] = [];
 	toSpanMappings(
 		[
-			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [1], data: { navigation: true, verification: true } },
-			{ sourceOffsets: [2], generatedOffsets: [2], lengths: [1], data: { navigation: true } },
+			[0, 1, 0, 1, Verbatim, codeFeatures.navigationAndVerification],
+			[2, 1, 2, 1, Verbatim, codeFeatures.navigation],
 		],
 		'abc',
 		'abc',
@@ -427,8 +205,8 @@ test('cuts a verbatim section at a copy that also offers completion', () => {
 	// original:  ('a');
 	expect(toSpanMappings(
 		[
-			{ sourceOffsets: [0], generatedOffsets: [0], lengths: [5], data: { verification: true } },
-			{ sourceOffsets: [2], generatedOffsets: [7], lengths: [1], data: { navigation: true, completion: true } },
+			[0, 5, 0, 5, Verbatim, codeFeatures.verification],
+			[7, 1, 2, 1, Verbatim, codeFeatures.navigationAndCompletion],
 		],
 		`('a'); a`,
 		`('a');`,

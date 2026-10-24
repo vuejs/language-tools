@@ -1,5 +1,6 @@
 import { capitalize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
+import { toAtomGroup } from '../codeFeatures';
 
 export function* generateCamelized(
 	code: string,
@@ -8,8 +9,8 @@ export function* generateCamelized(
 	features: VueCodeInformation,
 ): Generator<Code> {
 	const parts = code.split('-');
-	if (!features.__combineToken) {
-		features = { ...features, __combineToken: Symbol() };
+	if (typeof features === 'number' || !features.atom) {
+		features = toAtomGroup(features);
 	}
 
 	for (let i = 0; i < parts.length; i++) {
