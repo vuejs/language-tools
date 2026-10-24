@@ -3,7 +3,7 @@ import * as vue from '@vue/language-core';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { toDiagnosticDirectives, withSynthesizedDiagnosticIgnores } from './diagnosticDirectives';
+import { withSynthesizedDiagnosticIgnores } from './diagnosticDirectives';
 import type {
 	OpenProjectParams,
 	OpenProjectResult,
@@ -120,7 +120,6 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			configuration.languageFeatures,
 		);
 		const generatedCode = serviceScript.code as vue.VueGeneratedCode;
-		const diagnosticDirectives = toDiagnosticDirectives(generatedCode.diagnosticDirectives);
 		return {
 			text,
 			extension: serviceScript.extension,
@@ -132,7 +131,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 				directives: withSynthesizedDiagnosticIgnores(
 					text.length,
 					mappings,
-					diagnosticDirectives,
+					generatedCode.diagnosticDirectives,
 					generatedCode.diagnosticIgnores,
 				),
 			},

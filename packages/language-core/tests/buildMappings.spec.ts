@@ -1,8 +1,8 @@
 import { SpanMapKind } from '@volar/language-core';
 import { expect, test } from 'vitest';
 import { codeFeatures, ignoreDiagnostics, toAtomGroup, toAtomKind } from '../lib/codegen/codeFeatures';
-import type { Code } from '../lib/types';
-import { buildDiagnosticDirectiveMarkers, buildDiagnosticIgnores, buildMappings } from '../lib/utils/buildMappings';
+import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../lib/types';
+import { buildDiagnosticDirectives, buildDiagnosticIgnores, buildMappings } from '../lib/utils/buildMappings';
 
 const { navigation, navigationAndCompletion, none } = codeFeatures;
 
@@ -106,35 +106,64 @@ test('lets segments inside a feature-less group stay individual', () => {
 	]);
 });
 
-test('collects diagnostic directive markers outside the mappings', () => {
-	const directive = { policy: 'ignore' as const, originalLength: 3 };
+test('keeps diagnostic directives out of the mappings', () => {
+	const directive: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Ignore];
 	const chunks: Code[] = [
-		['', 'template', 5, { features: 0, diagnosticDirective: { directive, phase: 'anchor' } }],
-		['abc', 'template', 5, { features: none, diagnosticDirective: { directive, phase: 'content' } }],
+		['', 'template', 5, directive],
+		['abc', 'template', 5, none],
+		['', 'template', 5, directive],
 	];
 	expect(buildMappings(chunks)).toEqual([
-		[0, 0, 5, 0, SpanMapKind.Verbatim, 0],
 		[0, 3, 5, 3, SpanMapKind.Verbatim, none],
 	]);
-	expect(buildDiagnosticDirectiveMarkers(chunks)).toEqual([
-		{ directive, phase: 'anchor', generatedStart: 0, generatedLength: 0, sourceStart: 5 },
-		{ directive, phase: 'content', generatedStart: 0, generatedLength: 3, sourceStart: 5 },
+	expect(buildDiagnosticDirectives(chunks)).toEqual([
+		[5, 3, 0, 3, DiagnosticDirectivePolicy.Ignore],
 	]);
 });
 
-test('extends the directive content of a group over the code between its members', () => {
-	const directive = { policy: 'ignore' as const, originalLength: 3 };
-	const info = { ...toAtomGroup(none), diagnosticDirective: { directive, phase: 'content' as const } };
-	expect(buildDiagnosticDirectiveMarkers([
-		['', 'template', 5, info],
-		['a', 'template', 5, { features: navigation, diagnosticDirective: { directive, phase: 'content' } }],
-		'.value',
-		['', 'template', 6, info],
+test('takes the original start of a directive from the source offset of its segments', () => {
+	const directive: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Expect];
+	expect(buildDiagnosticDirectives([
+		'-'.repeat(10),
+		['', undefined, 105, directive],
+		'abc',
+		['', undefined, 105, directive],
 	])).toEqual([
-		{ directive, phase: 'content', generatedStart: 0, generatedLength: 0, sourceStart: 5 },
-		{ directive, phase: 'content', generatedStart: 0, generatedLength: 1, sourceStart: 5 },
-		{ directive, phase: 'content', generatedStart: 7, generatedLength: 0, sourceStart: 6 },
-		{ directive, phase: 'content', generatedStart: 0, generatedLength: 7, sourceStart: 5 },
+		[105, 3, 10, 13, DiagnosticDirectivePolicy.Expect],
+	]);
+});
+
+test('keeps an unclosed expectation empty and drops empty ignores', () => {
+	const ignore: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Ignore];
+	const expectation: DiagnosticDirectiveMapping = [9, 3, 0, 0, DiagnosticDirectivePolicy.Expect];
+	const empty: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Ignore];
+	expect(buildDiagnosticDirectives([
+		['', 'template', 5, ignore],
+		['', 'template', 9, expectation],
+		'abc',
+		['', 'template', 5, ignore],
+		['', 'template', 5, empty],
+		['', 'template', 5, empty],
+	])).toEqual([
+		[9, 3, 0, 0, DiagnosticDirectivePolicy.Expect],
+		[5, 3, 0, 3, DiagnosticDirectivePolicy.Ignore],
+	]);
+});
+
+test('covers each range a directive is reopened for', () => {
+	const directive: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Ignore];
+	const reopened: DiagnosticDirectiveMapping = [...directive];
+	expect(buildDiagnosticDirectives([
+		['', 'template', 5, directive],
+		'abc',
+		['', 'template', 5, directive],
+		'-',
+		['', 'template', 5, reopened],
+		'de',
+		['', 'template', 5, reopened],
+	])).toEqual([
+		[5, 3, 0, 3, DiagnosticDirectivePolicy.Ignore],
+		[5, 3, 4, 6, DiagnosticDirectivePolicy.Ignore],
 	]);
 });
 

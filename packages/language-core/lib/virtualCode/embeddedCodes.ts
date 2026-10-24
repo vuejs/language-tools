@@ -1,13 +1,8 @@
 import type { IScriptSnapshot, Mapping, TextChangeRange, VirtualCode } from '@volar/language-core';
 import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
-import type { Code, IR, IRBlock, VueLanguagePluginReturn } from '../types';
-import {
-	buildDiagnosticDirectiveMarkers,
-	buildDiagnosticIgnores,
-	buildMappings,
-	type DiagnosticDirectiveMarker,
-} from '../utils/buildMappings';
+import type { Code, DiagnosticDirectiveMapping, IR, IRBlock, VueLanguagePluginReturn } from '../types';
+import { buildDiagnosticDirectives, buildDiagnosticIgnores, buildMappings } from '../utils/buildMappings';
 
 export class VueEmbeddedCode {
 	public parentCodeId?: string;
@@ -21,7 +16,7 @@ export class VueEmbeddedCode {
 }
 
 export interface VueGeneratedCode extends VirtualCode {
-	diagnosticDirectives: DiagnosticDirectiveMarker[];
+	diagnosticDirectives: DiagnosticDirectiveMapping[];
 	diagnosticIgnores: [start: number, end: number][];
 }
 
@@ -122,7 +117,7 @@ export function useEmbeddedCodes(
 				code: VueEmbeddedCode;
 				snapshot: IScriptSnapshot;
 				mappings: Mapping[];
-				diagnosticDirectives: DiagnosticDirectiveMarker[];
+				diagnosticDirectives: DiagnosticDirectiveMapping[];
 				diagnosticIgnores: [start: number, end: number][];
 			}[] = [];
 
@@ -133,7 +128,7 @@ export function useEmbeddedCodes(
 					code,
 					snapshot,
 					mappings: buildMappings(content),
-					diagnosticDirectives: buildDiagnosticDirectiveMarkers(content),
+					diagnosticDirectives: buildDiagnosticDirectives(content),
 					diagnosticIgnores: buildDiagnosticIgnores(content),
 				});
 			}

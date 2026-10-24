@@ -26,14 +26,7 @@ function generate(options: StyleCodegenOptions) {
 		styleScopedClassReferences.delete(style);
 	}
 	const ctx = createTemplateCodegenContext(options.scriptLang);
-	const codeGenerator = generateWorker(options, ctx);
-	const codes: Code[] = [];
-	for (const code of codeGenerator) {
-		if (typeof code === 'object') {
-			code[3] = ctx.resolveCodeFeatures(code[3]);
-		}
-		codes.push(code);
-	}
+	const codes: Code[] = [...generateWorker(options, ctx)];
 	return { ...ctx, codes };
 }
 

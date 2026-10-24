@@ -38,11 +38,9 @@ function generate(options: TemplateCodegenOptions) {
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
 	for (const code of codeGenerator) {
-		if (typeof code === 'object') {
-			code[3] = ctx.resolveCodeFeatures(code[3]);
-		}
-		codes.push(code);
+		codes.push(...ctx.generateWithDiagnosticDirectiveRanges(code));
 	}
+	codes.push(...ctx.generateDiagnosticDirectiveRangesEnd());
 	return { ...ctx, codes };
 }
 

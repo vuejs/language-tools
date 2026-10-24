@@ -37,20 +37,27 @@ export type RawPlugin =
 		name: string;
 	};
 
-export interface VueDiagnosticDirective {
-	directive: {
-		policy: 'ignore' | 'expect';
-		originalLength: number;
-	};
-	phase: 'anchor' | 'content' | 'end';
+/** The diagnostic directive policies of the Content Mapper protocol of TypeScript 7.1. */
+export enum DiagnosticDirectivePolicy {
+	Ignore,
+	Expect,
 }
+
+/** A diagnostic directive of the Content Mapper protocol of TypeScript 7.1. */
+export type DiagnosticDirectiveMapping = [
+	originalStart: number,
+	originalLength: number,
+	virtualStart: number,
+	virtualEnd: number,
+	policy: DiagnosticDirectivePolicy,
+	unusedExpectDirectiveIndex?: number,
+];
 
 export interface VueCodeMarker {
 	features: number;
 	kind?: SpanMapKind;
 	/** Segments sharing the symbol map as one atom spanning all of them. */
 	atom?: symbol;
-	diagnosticDirective?: VueDiagnosticDirective;
 	/** Diagnostics within the segment are not reported, unless a segment nested in it reports them. */
 	ignoreDiagnostics?: true;
 }
@@ -58,7 +65,18 @@ export interface VueCodeMarker {
 /** The `SpanMapFeature` bits of a segment, or a marker carrying them. */
 export type VueCodeInformation = number | VueCodeMarker;
 
-export type Code = string | [text: string, source: string | undefined, sourceOffset: number, data: VueCodeInformation];
+/**
+ * A segment of generated code. An empty segment whose data is a diagnostic directive opens its virtual range,
+ * and the next one with the same directive closes it; its source offset is the original start of the directive.
+ */
+export type Code =
+	| string
+	| [
+		text: string,
+		source: string | undefined,
+		sourceOffset: number,
+		data: VueCodeInformation | DiagnosticDirectiveMapping,
+	];
 
 export interface VueCompilerOptions {
 	target: number;

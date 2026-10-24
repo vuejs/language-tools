@@ -1,5 +1,10 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import type { Code, VueCodeInformation, VueDiagnosticDirective } from '../../types';
+import {
+	type Code,
+	type DiagnosticDirectiveMapping,
+	DiagnosticDirectivePolicy,
+	type VueCodeInformation,
+} from '../../types';
 import { codeFeatures, getCodeFeatures, isDiagnosticsIgnored } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
@@ -19,10 +24,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		expectError?: {
 			node: CompilerDOM.CommentNode;
 		};
-		diagnosticDirectives?: {
-			directive: VueDiagnosticDirective['directive'];
-			originalStart: number;
-		}[];
+		diagnosticDirectives?: DiagnosticDirectiveMapping[];
 		diagnosticDirectiveEnded?: boolean;
 		generic?: {
 			content: string;
@@ -84,29 +86,27 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		}
 		for (
 			const [policy, directiveNode] of [
-				['ignore', info.ignoreErrorNode],
-				['expect', info.expectError?.node],
+				[DiagnosticDirectivePolicy.Ignore, info.ignoreErrorNode],
+				[DiagnosticDirectivePolicy.Expect, info.expectError?.node],
 			] as const
 		) {
-			if (!directiveNode) {
-				continue;
-			}
-			(info.diagnosticDirectives ??= []).push({
-				directive: {
+			if (directiveNode) {
+				(info.diagnosticDirectives ??= []).push([
+					directiveNode.loc.start.offset,
+					directiveNode.loc.end.offset - directiveNode.loc.start.offset,
+					0,
+					0,
 					policy,
-					originalLength: directiveNode.loc.end.offset - directiveNode.loc.start.offset,
-				},
-				originalStart: directiveNode.loc.start.offset,
-			});
+				]);
+			}
 		}
 		stack.push(info);
 		return true;
 	}
 
 	function* generateDiagnosticDirectiveStart(): Generator<Code> {
-		const info = stack.at(-1);
-		for (const directive of info?.diagnosticDirectives ?? []) {
-			yield diagnosticDirectiveMarker(directive, 'anchor');
+		for (const directive of stack.at(-1)?.diagnosticDirectives ?? []) {
+			yield* generateDiagnosticDirectiveBound(directive);
 		}
 	}
 
@@ -116,14 +116,19 @@ export function createTemplateCodegenContext(scriptLang: string) {
 			return;
 		}
 		info.diagnosticDirectiveEnded = true;
-		const hasIgnore = info.diagnosticDirectives?.some(
-			directive => directive.directive.policy === 'ignore',
-		);
+		const ignore = info.diagnosticDirectives?.find(directive => directive[4] === DiagnosticDirectivePolicy.Ignore);
 		for (const directive of info.diagnosticDirectives ?? []) {
-			if (directive.directive.policy === 'ignore' || !hasIgnore) {
-				yield diagnosticDirectiveMarker(directive, 'end');
+			// an expectation alongside an ignore stays empty
+			if (directive === ignore || !ignore) {
+				yield* generateDiagnosticDirectiveBound(directive);
 			}
 		}
+	}
+
+	function* generateDiagnosticDirectiveBound(directive: DiagnosticDirectiveMapping): Generator<Code> {
+		// an empty mapping at the directive comment, which Volar's own features see
+		yield ['', 'template', directive[0], 0];
+		yield ['', 'template', directive[0], directive];
 	}
 
 	function exit() {
@@ -131,41 +136,40 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		commentBuffer.length = 0;
 	}
 
-	function resolveCodeFeatures(info: VueCodeInformation): VueCodeInformation {
-		const data = stack.at(-1);
-		if (!data || isDiagnosticsIgnored(info) || (typeof info === 'object' && info.diagnosticDirective)) {
-			return info;
+	let reopenedInfo: typeof stack[number] | undefined;
+	let reopenedRange: DiagnosticDirectiveMapping | undefined;
+
+	/**
+	 * The code a node generates after its end (an `else if` condition, the siblings in a `<template v-if>`)
+	 * is still the node's, so its ignore directive covers that code with another range.
+	 */
+	function* generateWithDiagnosticDirectiveRanges(code: Code): Generator<Code> {
+		const info = stack.at(-1);
+		if (reopenedRange && reopenedInfo !== info) {
+			yield ['', 'template', reopenedRange[0], reopenedRange];
+			reopenedInfo = reopenedRange = undefined;
 		}
-		const policy = data.ignoreError ? 'ignore' : 'expect';
-		const directive = data.diagnosticDirectives?.find(info => info.directive.policy === policy);
-		if (!directive) {
-			return info;
+		if (
+			typeof code === 'object'
+			&& info?.diagnosticDirectiveEnded
+			&& info.ignoreError
+			&& !reopenedRange
+			&& !Array.isArray(code[3])
+			&& !isDiagnosticsIgnored(code[3])
+		) {
+			const ignore = info.diagnosticDirectives!.find(directive => directive[4] === DiagnosticDirectivePolicy.Ignore)!;
+			reopenedInfo = info;
+			reopenedRange = [...ignore];
+			yield ['', 'template', reopenedRange[0], reopenedRange];
 		}
-		return {
-			...typeof info === 'number' ? { features: info } : info,
-			diagnosticDirective: {
-				directive: directive.directive,
-				phase: 'content',
-			},
-		};
+		yield code;
 	}
 
-	function diagnosticDirectiveMarker(
-		info: NonNullable<typeof stack[number]['diagnosticDirectives']>[number],
-		phase: VueDiagnosticDirective['phase'],
-	): Code {
-		return [
-			'',
-			'template',
-			info.originalStart,
-			{
-				features: 0,
-				diagnosticDirective: {
-					directive: info.directive,
-					phase,
-				},
-			},
-		];
+	function* generateDiagnosticDirectiveRangesEnd(): Generator<Code> {
+		if (reopenedRange) {
+			yield ['', 'template', reopenedRange[0], reopenedRange];
+			reopenedInfo = reopenedRange = undefined;
+		}
 	}
 
 	// internal variables ---------------------------------------------------------
@@ -381,7 +385,8 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		generateDiagnosticDirectiveStart,
 		generateDiagnosticDirectiveEnd,
 		exit,
-		resolveCodeFeatures,
+		generateWithDiagnosticDirectiveRanges,
+		generateDiagnosticDirectiveRangesEnd,
 		getInternalVariable,
 		scopes,
 		scope,

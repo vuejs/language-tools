@@ -1,3 +1,5 @@
+import type { DiagnosticDirectiveMapping } from '@vue/language-core';
+
 export interface InitializeParams {
 	locale?: string;
 	positionEncodings: PositionEncoding[];
@@ -61,19 +63,7 @@ export interface UnusedExpectDirectiveDiagnostic {
 	messageText: string;
 }
 
-export enum DiagnosticDirectivePolicy {
-	Ignore,
-	Expect,
-}
-
-export type DiagnosticDirectiveMapping = [
-	originalStart: number,
-	originalLength: number,
-	virtualStart: number,
-	virtualEnd: number,
-	policy: DiagnosticDirectivePolicy,
-	unusedExpectDirectiveIndex?: number,
-];
+export { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '@vue/language-core';
 
 export type PositionEncoding = 'utf-8' | 'utf-16';
 export type VirtualExtension =

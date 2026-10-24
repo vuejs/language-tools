@@ -1,6 +1,11 @@
 import { type Mapping, SpanMapFeature, SpanMapKind } from '@volar/language-core';
 import type { Segment } from 'muggle-string';
-import type { Code, VueCodeInformation, VueDiagnosticDirective } from '../types';
+import {
+	type Code,
+	type DiagnosticDirectiveMapping,
+	DiagnosticDirectivePolicy,
+	type VueCodeInformation,
+} from '../types';
 
 const languageFeatureMask = (SpanMapFeature.CodeLens << 1) - 1;
 
@@ -14,12 +19,6 @@ interface Entry {
 interface Span {
 	mapping: Mapping;
 	ignoreDiagnostics: boolean;
-}
-
-export interface DiagnosticDirectiveMarker extends VueDiagnosticDirective {
-	generatedStart: number;
-	generatedLength: number;
-	sourceStart: number;
 }
 
 export function buildMappings(chunks: (Code | Segment)[]): Mapping[] {
@@ -156,32 +155,50 @@ function buildSpans(chunks: (Code | Segment)[]): Span[] {
 	}
 }
 
-export function buildDiagnosticDirectiveMarkers(chunks: Code[]) {
-	const markers: DiagnosticDirectiveMarker[] = [];
-	const groups = new Map<symbol, DiagnosticDirectiveMarker>();
-	for (const { generatedStart, length, sourceStart, info } of toEntries(chunks)) {
-		if (typeof info === 'object' && info.diagnosticDirective) {
-			const marker: DiagnosticDirectiveMarker = {
-				...info.diagnosticDirective,
-				generatedStart,
-				generatedLength: length,
-				sourceStart,
-			};
-			markers.push(marker);
-			// the content of a group also spans the unmapped code between its members
-			if (info.atom && marker.phase === 'content') {
-				const group = groups.get(info.atom);
-				if (group) {
-					group.generatedLength = generatedStart + length - group.generatedStart;
-				}
-				else {
-					groups.set(info.atom, { ...marker });
-				}
+/**
+ * The diagnostic directives of the code, with the virtual ranges their bounding segments enclose; the source
+ * offset of the segments is the original start, as it is relative to the file here.
+ */
+export function buildDiagnosticDirectives(chunks: Code[]) {
+	const directives: DiagnosticDirectiveMapping[] = [];
+	const opened = new Map<DiagnosticDirectiveMapping, DiagnosticDirectiveMapping>();
+	let generatedStart = 0;
+	for (const segment of chunks) {
+		if (typeof segment === 'string') {
+			generatedStart += segment.length;
+			continue;
+		}
+		const data = segment[3];
+		if (Array.isArray(data)) {
+			const range = opened.get(data);
+			if (range) {
+				range[3] = generatedStart;
+				opened.delete(data);
+			}
+			else {
+				const [, originalLength, , , policy] = data;
+				const range: DiagnosticDirectiveMapping = [segment[2], originalLength, generatedStart, generatedStart, policy];
+				opened.set(data, range);
+				directives.push(range);
 			}
 		}
+		generatedStart += segment[0].length;
 	}
-	markers.push(...groups.values());
-	return markers;
+	const result = directives
+		.filter(directive => directive[4] === DiagnosticDirectivePolicy.Expect || directive[2] < directive[3])
+		.sort((left, right) => left[2] - right[2] || left[3] - right[3]);
+	for (let index = 1; index < result.length; index++) {
+		const previous = result[index - 1]!;
+		const current = result[index]!;
+		if (current[2] < previous[3]) {
+			throw new Error(
+				`Vue diagnostic directive virtual ranges overlap: ${previous[2]}:${previous[3]} and ${current[2]}:${
+					current[3]
+				}`,
+			);
+		}
+	}
+	return result;
 }
 
 function toEntries(chunks: (Code | Segment)[]) {
@@ -192,12 +209,15 @@ function toEntries(chunks: (Code | Segment)[]) {
 			generatedStart += segment.length;
 		}
 		else {
-			entries.push({
-				generatedStart,
-				length: segment[0].length,
-				sourceStart: segment[2],
-				info: segment[3] ?? 0,
-			});
+			const data = segment[3];
+			if (!Array.isArray(data)) {
+				entries.push({
+					generatedStart,
+					length: segment[0].length,
+					sourceStart: segment[2],
+					info: data ?? 0,
+				});
+			}
 			generatedStart += segment[0].length;
 		}
 	}
