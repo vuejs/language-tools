@@ -161,6 +161,18 @@ test('rename leaves template shorthands untouched instead of corrupting them', a
 	expect(await rename(shorthand, shorthand.at('const foo ', 0, 6))).toEqual(['9:6 foo -> NEW']);
 });
 
+test('renaming a default import does not insert text at the top of the imported SFC', async () => {
+	const position = tagHighlights.at('import TypeProps', 0, 7);
+	// the synthetic `export default` of TypeProps.vue maps to its top, and references reach it
+	expect(await references(tagHighlights, position)).toContain('TypeProps:0:0 ');
+	expect(await rename(tagHighlights, position)).toEqual([
+		'1:7 TypeProps -> NEW',
+		'7:15 TypeProps -> NEW',
+		'7:3 TypeProps -> NEW',
+		'9:2 TypeProps -> NEW',
+	]);
+});
+
 test('CSS module classes rename from either side', async () => {
 	const expected = ['1:21 foo -> NEW', '5:1 foo -> NEW'];
 	expect(await rename(cssModule, cssModule.at('$style.foo', 0, 7))).toEqual(expected);

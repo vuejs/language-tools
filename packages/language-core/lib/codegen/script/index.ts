@@ -35,8 +35,14 @@ export { generate as generateScript };
 
 function* generateSyntheticDefaultExport(exportedExpression: string): Generator<Code> {
 	// keep the synthetic default export navigable: go-to-definition on
-	// `import Foo from './Foo.vue'` targets the whole statement, which maps to the SFC top
-	const boundary = yield* Boundary.start('main', 0, 0, ignoreDiagnostics({ features: navigationFeatures }));
+	// `import Foo from './Foo.vue'` targets the whole statement, which maps to the SFC top;
+	// a rename reaching it would insert the new name there
+	const boundary = yield* Boundary.start(
+		'main',
+		0,
+		0,
+		ignoreDiagnostics({ features: navigationFeatures & ~SpanMapFeature.Rename }),
+	);
 	yield `export default ${exportedExpression};`;
 	yield boundary.end();
 	yield newLine;
