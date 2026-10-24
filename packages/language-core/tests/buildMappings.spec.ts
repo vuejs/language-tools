@@ -1,12 +1,6 @@
 import { SpanMapKind } from '@volar/language-core';
 import { expect, test } from 'vitest';
-import {
-	completion,
-	ignoreDiagnostics,
-	marker,
-	navigation as navigationFeatures,
-	toAtomKind,
-} from '../lib/codegen/features';
+import { completion, ignoreDiagnostics, navigation as navigationFeatures, toAtomKind } from '../lib/codegen/features';
 import {
 	type Code,
 	type CodeBoundary,
@@ -16,9 +10,9 @@ import {
 } from '../lib/types';
 import { buildDiagnosticDirectives, buildMappings } from '../lib/utils/buildMappings';
 
-const navigation = marker(navigationFeatures);
-const navigationAndCompletion = marker(navigationFeatures | completion);
-const none = marker(0);
+const navigation = { features: navigationFeatures };
+const navigationAndCompletion = { features: navigationFeatures | completion };
+const none = { features: 0 };
 const end: CodeBoundary = { end: true };
 
 test('merges a boundary-wrapped token into one atom', () => {

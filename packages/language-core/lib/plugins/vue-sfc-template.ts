@@ -1,4 +1,4 @@
-import { allFeatures, marker } from '../codegen/features';
+import { allFeatures } from '../codegen/features';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
@@ -21,7 +21,7 @@ const plugin: VueLanguagePlugin = () => {
 					ir.template.content,
 					ir.template.name,
 					0,
-					marker(allFeatures),
+					{ features: allFeatures },
 				]);
 			}
 		},

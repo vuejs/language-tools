@@ -3,7 +3,7 @@ import { replaceSourceRange } from 'muggle-string';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
-import { completion, ignoreDiagnostics, marker, navigation, scriptFeatures, semantic } from '../features';
+import { completion, ignoreDiagnostics, navigation, scriptFeatures, semantic } from '../features';
 import { names } from '../names';
 import { endOfLine, getTypeScriptAST, isTsLang, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -30,7 +30,7 @@ export function* generateVSlot(
 				ctx,
 				slotDir.arg.loc.source,
 				slotDir.arg.loc.start.offset,
-				marker(scriptFeatures),
+				{ features: scriptFeatures },
 				false,
 				true,
 			);
@@ -40,7 +40,7 @@ export function* generateVSlot(
 				'template',
 				slotDir.loc.start.offset,
 				slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
-				marker(semantic | navigation),
+				{ features: semantic | navigation },
 			);
 			yield `default`;
 			yield boundary.end();
@@ -54,7 +54,7 @@ export function* generateVSlot(
 			'template',
 			node.loc.start.offset,
 			node.loc.start.offset + 1,
-			ignoreDiagnostics(marker(navigation)),
+			ignoreDiagnostics({ features: navigation }),
 		);
 		yield `default`;
 		yield boundary.end();
@@ -90,7 +90,7 @@ export function* generateVSlot(
 							? '#'.length
 							: 'v-slot:'.length
 					),
-					marker(completion),
+					{ features: completion },
 				];
 				yield `']} */${endOfLine}`;
 			}
@@ -118,7 +118,7 @@ function* generateSlotParameters(
 		options,
 		ctx,
 		options.template,
-		marker(scriptFeatures),
+		{ features: scriptFeatures },
 		ast.text,
 		startOffset,
 	)];
@@ -137,7 +137,7 @@ function* generateSlotParameters(
 				ast.text.slice(name.end, type.end),
 				'template',
 				startOffset + name.end,
-				marker(scriptFeatures),
+				{ features: scriptFeatures },
 			]);
 			replaceSourceRange(interpolation, 'template', startOffset + name.end, startOffset + type.end);
 		}
@@ -156,7 +156,7 @@ function* generateSlotParameters(
 			'template',
 			exp.loc.start.offset,
 			exp.loc.end.offset,
-			marker(0),
+			{ features: 0 },
 		);
 		yield `(`;
 		yield* types.flatMap(type => type ? [`_`, type, `, `] : `_, `);

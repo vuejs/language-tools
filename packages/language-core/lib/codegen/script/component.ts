@@ -1,6 +1,6 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRScriptSetup } from '../../types';
-import { ignoreDiagnostics, marker, navigation } from '../features';
+import { ignoreDiagnostics, navigation } from '../features';
 import { names } from '../names';
 import { asType, generateSfcBlockSection, newLine } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
@@ -156,6 +156,6 @@ function* generateRuntimePropsOption(
 	}
 	if (scriptSetupRanges.defineProps?.arg) {
 		const { arg } = scriptSetupRanges.defineProps;
-		yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, ignoreDiagnostics(marker(navigation)));
+		yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, ignoreDiagnostics({ features: navigation }));
 	}
 }

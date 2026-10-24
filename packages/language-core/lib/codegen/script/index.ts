@@ -3,7 +3,7 @@ import * as path from 'path-browserify';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRBlock, IRScript, IRScriptSetup, IRStyle, VueCompilerOptions } from '../../types';
-import { ignoreDiagnostics, marker, navigation, scriptFeatures } from '../features';
+import { ignoreDiagnostics, navigation, scriptFeatures } from '../features';
 import { names } from '../names';
 import { generateStyleModuleImports } from '../style/modules';
 import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
@@ -36,7 +36,7 @@ export { generate as generateScript };
 function* generateSyntheticDefaultExport(exportedExpression: string): Generator<Code> {
 	// keep the synthetic default export navigable: go-to-definition on
 	// `import Foo from './Foo.vue'` targets the whole statement, which maps to the SFC top
-	const boundary = yield* Boundary.start('main', 0, 0, ignoreDiagnostics(marker(navigation)));
+	const boundary = yield* Boundary.start('main', 0, 0, ignoreDiagnostics({ features: navigation }));
 	yield `export default ${exportedExpression};`;
 	yield boundary.end();
 	yield newLine;
@@ -72,7 +72,7 @@ function* generateWorker(
 			'main',
 			script.src.offset,
 			script.src.offset + script.src.text.length,
-			src !== script.src.text ? marker(scriptFeatures & ~SpanMapFeature.Rename) : marker(scriptFeatures),
+			src !== script.src.text ? { features: scriptFeatures & ~SpanMapFeature.Rename } : { features: scriptFeatures },
 		);
 		yield `'`;
 		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, undefined];
@@ -104,7 +104,7 @@ function* generateWorker(
 			);
 		}
 		else {
-			yield* generateSfcBlockSection(script, 0, script.content.length, marker(scriptFeatures));
+			yield* generateSfcBlockSection(script, 0, script.content.length, { features: scriptFeatures });
 			yield* generateSyntheticDefaultExport(exportExpression);
 		}
 
@@ -190,7 +190,7 @@ function* generateWorker(
 			);
 		}
 		else {
-			yield* generateSfcBlockSection(script, 0, script.content.length, marker(scriptFeatures));
+			yield* generateSfcBlockSection(script, 0, script.content.length, { features: scriptFeatures });
 			yield* generateComponentDeclareEqual(script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 			yield* generateTemplate(options, names.export);
@@ -240,9 +240,9 @@ function* generateScriptWithExportDefault(
 		});
 	}
 
-	yield* generateSfcBlockSection(script, 0, expression.start, marker(scriptFeatures));
+	yield* generateSfcBlockSection(script, 0, expression.start, { features: scriptFeatures });
 	yield exportExpression;
-	yield* generateSfcBlockSection(script, expression.end, exportDefault.end, marker(scriptFeatures));
+	yield* generateSfcBlockSection(script, expression.end, exportDefault.end, { features: scriptFeatures });
 	yield endOfLine;
 	if (templateGenerator) {
 		yield* templateGenerator;
@@ -250,14 +250,14 @@ function* generateScriptWithExportDefault(
 	yield* generateComponentDeclareEqual(script, varName);
 	if (wrapLeft && wrapRight) {
 		yield wrapLeft;
-		yield* generateSfcBlockSection(script, expression.start, expression.end, marker(scriptFeatures));
+		yield* generateSfcBlockSection(script, expression.start, expression.end, { features: scriptFeatures });
 		yield wrapRight;
 	}
 	else {
-		yield* generateSfcBlockSection(script, expression.start, expression.end, marker(scriptFeatures));
+		yield* generateSfcBlockSection(script, expression.start, expression.end, { features: scriptFeatures });
 	}
 	yield endOfLine;
-	yield* generateSfcBlockSection(script, exportDefault.end, script.content.length, marker(scriptFeatures));
+	yield* generateSfcBlockSection(script, exportDefault.end, script.content.length, { features: scriptFeatures });
 }
 
 function* generateGlobalTypesReference(
@@ -299,7 +299,7 @@ export function* generateExportDeclareEqual(
 	end: number,
 ): Generator<Code> {
 	yield `const `;
-	const boundary = yield* Boundary.start(source, start, end, marker(0));
+	const boundary = yield* Boundary.start(source, start, end, { features: 0 });
 	yield name;
 	yield boundary.end();
 	yield ` = `;

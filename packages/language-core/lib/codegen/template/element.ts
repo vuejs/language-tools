@@ -3,7 +3,7 @@ import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
 import type { Code } from '../../types';
 import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import { ignoreDiagnostics, marker, navigation, scriptFeatures, semantic, VueCodeFeature } from '../features';
+import { ignoreDiagnostics, navigation, scriptFeatures, semantic, VueCodeFeature } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
@@ -66,8 +66,8 @@ export function* generateComponent(
 			ctx,
 			options.template,
 			isIsShorthand
-				? marker(semantic | navigation)
-				: marker(scriptFeatures),
+				? { features: semantic | navigation }
+				: { features: scriptFeatures },
 			tag,
 			startTagOffset,
 			`(`,
@@ -79,7 +79,7 @@ export function* generateComponent(
 				options,
 				ctx,
 				options.template,
-				marker(semantic | navigation),
+				{ features: semantic | navigation },
 				tag,
 				endTagOffset,
 				`(`,
@@ -103,7 +103,7 @@ export function* generateComponent(
 			yield* generateIdentifier(
 				options,
 				ctx,
-				generateCamelized(camelizedTag, 'template', startTagOffset, marker(semantic | navigation)),
+				generateCamelized(camelizedTag, 'template', startTagOffset, { features: semantic | navigation }),
 				matchedBinding,
 				'template',
 				startTagOffset,
@@ -114,7 +114,7 @@ export function* generateComponent(
 				yield* generateIdentifier(
 					options,
 					ctx,
-					generateCamelized(camelizedTag, 'template', endTagOffset, marker(semantic | navigation)),
+					generateCamelized(camelizedTag, 'template', endTagOffset, { features: semantic | navigation }),
 					matchedBinding,
 					'template',
 					endTagOffset,
@@ -136,7 +136,7 @@ export function* generateComponent(
 				yield* generateStringLiteralKey(
 					tag,
 					startTagOffset,
-					marker(semantic),
+					{ features: semantic },
 				);
 				yield `]`;
 			});
@@ -150,11 +150,11 @@ export function* generateComponent(
 					}
 					for (const name of new Set([tag, capitalize(tag)])) {
 						yield ` | typeof ${options.setupBindings.has(camelize(name)) ? '' : `${names.components}.`}`;
-						yield* generateCamelized(name, 'template', offset, ignoreDiagnostics(marker(navigation)));
+						yield* generateCamelized(name, 'template', offset, ignoreDiagnostics({ features: navigation }));
 					}
 					if (tag.includes('-')) {
 						yield ` | typeof ${names.components}[`;
-						yield* generateStringLiteralKey(tag, offset, ignoreDiagnostics(marker(navigation)));
+						yield* generateStringLiteralKey(tag, offset, ignoreDiagnostics({ features: navigation }));
 						yield `]`;
 					}
 				}
@@ -213,10 +213,10 @@ export function* generateComponent(
 			'template',
 			offset,
 			offset + content.length,
-			marker(0),
+			{ features: 0 },
 		);
 		yield `<`;
-		yield [content, 'template', offset, marker(scriptFeatures)];
+		yield [content, 'template', offset, { features: scriptFeatures }];
 		yield `>`;
 		yield boundary.end();
 	}
@@ -229,11 +229,11 @@ export function* generateComponent(
 		startTagOffset,
 		startTagOffset + tag.length,
 		shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes
-			? ignoreDiagnostics(marker(0))
-			: marker(0),
+			? ignoreDiagnostics({ features: 0 })
+			: { features: 0 },
 	);
 	yield `{`;
-	yield [``, 'template', node.loc.start.offset, marker(VueCodeFeature.PropsCompletion)];
+	yield [``, 'template', node.loc.start.offset, { features: VueCodeFeature.PropsCompletion }];
 	yield newLine;
 	yield* propCodes;
 	yield `}`;
@@ -327,7 +327,7 @@ export function* generateElement(
 		ctx,
 		node.tag,
 		startTagOffset,
-		marker(semantic | navigation),
+		{ features: semantic | navigation },
 	);
 	if (endTagOffset !== undefined) {
 		yield `, `;
@@ -337,7 +337,7 @@ export function* generateElement(
 			ctx,
 			node.tag,
 			endTagOffset,
-			marker(semantic | navigation),
+			{ features: semantic | navigation },
 		);
 	}
 	yield `)(`;
@@ -345,7 +345,7 @@ export function* generateElement(
 		'template',
 		startTagOffset,
 		startTagOffset + node.tag.length,
-		marker(0),
+		{ features: 0 },
 	);
 	yield `{${newLine}`;
 	yield* generateElementProps(
@@ -404,7 +404,7 @@ export function* generateFragment(
 			'template',
 			startTagOffset,
 			startTagOffset + node.tag.length,
-			marker(0),
+			{ features: 0 },
 		);
 		yield `{${newLine}`;
 		yield* generateElementProps(
@@ -438,7 +438,7 @@ function* generateFailedExpressions(
 			options,
 			ctx,
 			options.template,
-			marker(scriptFeatures),
+			{ features: scriptFeatures },
 			node.loc.source,
 			node.loc.start.offset,
 			prefix,

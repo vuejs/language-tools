@@ -1,5 +1,4 @@
 import { SpanMapFeature } from '@volar/language-core';
-import { marker } from '../codegen/features';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
@@ -31,10 +30,10 @@ const plugin: VueLanguagePlugin = () => {
 					script.content,
 					script.name,
 					0,
-					marker(
-						SpanMapFeature.FoldingRanges | SpanMapFeature.SelectionRanges | SpanMapFeature.DocumentSymbols
+					{
+						features: SpanMapFeature.FoldingRanges | SpanMapFeature.SelectionRanges | SpanMapFeature.DocumentSymbols
 							| SpanMapFeature.CodeLens | SpanMapFeature.Formatting,
-					),
+					},
 				]);
 			}
 		},

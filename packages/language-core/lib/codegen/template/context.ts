@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type VueCodeMarker } from '../../types';
-import { completion, marker } from '../features';
+import { completion } from '../features';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
@@ -133,7 +133,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 
 	function* generateDiagnosticDirectiveComment(directive: DiagnosticDirectiveMapping): Generator<Code> {
 		// an empty mapping at the directive comment, which Volar's own features see
-		yield ['', 'template', directive[0], marker(0)];
+		yield ['', 'template', directive[0], { features: 0 }];
 	}
 
 	function exit() {
@@ -328,7 +328,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		accessLog.push(name);
 		contextAccesses.add(name);
 		if (offset !== undefined) {
-			recordScopeMember(name, source, offset, marker(0), sourceName);
+			recordScopeMember(name, source, offset, { features: 0 }, sourceName);
 		}
 		if (dotValue) {
 			dotValueAccesses.add(name);

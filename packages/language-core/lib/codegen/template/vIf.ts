@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { toString } from 'muggle-string';
 import type { Code } from '../../types';
-import { marker, scriptFeatures } from '../features';
+import { scriptFeatures } from '../features';
 import { newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -36,7 +36,7 @@ export function* generateVIf(
 				options,
 				ctx,
 				options.template,
-				marker(scriptFeatures),
+				{ features: scriptFeatures },
 				branch.condition.content,
 				branch.condition.loc.start.offset,
 				`(`,

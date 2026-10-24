@@ -36,17 +36,6 @@ export const allFeatures = scriptFeatures
 	| SpanMapFeature.DocumentSymbols
 	| SpanMapFeature.CodeLens;
 
-const markers = new Map<number, VueCodeMarker>();
-
-/** The shared, frozen marker of the feature bits; derive new markers from it instead of mutating it. */
-export function marker(features: number): VueCodeMarker {
-	let result = markers.get(features);
-	if (!result) {
-		markers.set(features, result = Object.freeze({ features }));
-	}
-	return result;
-}
-
 export function ignoreDiagnostics(info: VueCodeMarker): VueCodeMarker {
 	return { ...info, ignoreDiagnostics: true };
 }

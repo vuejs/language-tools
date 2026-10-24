@@ -8,7 +8,6 @@ import type {
 	VueCodeMarker,
 	VueCompilerOptions,
 } from '../../types';
-import { marker } from '../features';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
@@ -114,7 +113,7 @@ export function* generateSfcBlockSection(
 			if (diagStart >= textEnd && diagEnd <= end) {
 				// map the synthesized terminator to the end of the section, so that
 				// truncation parse errors resolve back to the original block
-				yield [';', block.name, end, marker(0)];
+				yield [';', block.name, end, { features: 0 }];
 				yield newLine;
 				break;
 			}

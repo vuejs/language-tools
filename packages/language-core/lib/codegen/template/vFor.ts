@@ -3,7 +3,7 @@ import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Code, TypeScript } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getStartEnd } from '../../utils/shared';
-import { marker, scriptFeatures } from '../features';
+import { scriptFeatures } from '../features';
 import { names } from '../names';
 import { asType, endOfLine, getTypeScriptAST, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
@@ -46,7 +46,7 @@ export function* generateVFor(
 			options,
 			ctx,
 			options.template,
-			marker(scriptFeatures),
+			{ features: scriptFeatures },
 			source.content,
 			source.loc.start.offset,
 			`(`,
@@ -68,14 +68,14 @@ export function* generateVFor(
 					leftExpressionText.slice(lastOffset, start),
 					'template',
 					leftExpressionRange.start + lastOffset,
-					marker(scriptFeatures),
+					{ features: scriptFeatures },
 				];
 			}
 			yield* generateInterpolation(
 				options,
 				ctx,
 				options.template,
-				marker(scriptFeatures),
+				{ features: scriptFeatures },
 				leftExpressionText.slice(start, end),
 				leftExpressionRange.start + start,
 			);
@@ -86,7 +86,7 @@ export function* generateVFor(
 				leftExpressionText.slice(lastOffset),
 				'template',
 				leftExpressionRange.start + lastOffset,
-				marker(scriptFeatures),
+				{ features: scriptFeatures },
 			];
 		}
 	}

@@ -1,6 +1,5 @@
 import { SpanMapFeature } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
-import { marker } from '../codegen/features';
 import { isCompoundExpression } from '../codegen/template/elementEvents';
 import { parseInterpolationNode } from '../codegen/template/templateChild';
 import { parseVForNode } from '../codegen/template/vFor';
@@ -258,7 +257,7 @@ const plugin: VueLanguagePlugin = ({ modules: { typescript: ts } }) => {
 					code,
 					'template',
 					offset,
-					marker(SpanMapFeature.Formatting),
+					{ features: SpanMapFeature.Formatting },
 				],
 				wrapper[1],
 			]);

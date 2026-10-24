@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isBuiltInDirective } from '@vue/shared';
 import type { Code } from '../../types';
-import { ignoreDiagnostics, marker, navigation, scriptFeatures, semantic } from '../features';
+import { ignoreDiagnostics, navigation, scriptFeatures, semantic } from '../features';
 import { names } from '../names';
 import { asType, endOfLine, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -33,7 +33,7 @@ export function* generateElementDirectives(
 				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				marker(0),
+				{ features: 0 },
 			);
 			// vapor custom directives receive a value getter instead of a vdom binding object
 			yield* generateIdentifier(ctx, prop);
@@ -56,7 +56,7 @@ export function* generateElementDirectives(
 				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				marker(0),
+				{ features: 0 },
 			);
 			yield `${hookVar}(${names.nonNull}(null), { ...${names.directiveBindingRestFields}, `;
 			yield* generateArg(options, ctx, prop);
@@ -82,7 +82,7 @@ function* generateIdentifier(
 		'template',
 		startOffset,
 		startOffset + rawName.length,
-		marker(0),
+		{ features: 0 },
 	);
 	yield names.directives;
 	yield `.`;
@@ -91,8 +91,8 @@ function* generateIdentifier(
 		'template',
 		prop.loc.start.offset,
 		isBuiltInDirective(prop.name)
-			? ignoreDiagnostics(marker(semantic | navigation))
-			: marker(semantic | navigation),
+			? ignoreDiagnostics({ features: semantic | navigation })
+			: { features: semantic | navigation },
 	);
 	if (!isBuiltInDirective(prop.name)) {
 		ctx.accessVariable('template', camelize(rawName), prop.loc.start.offset, false, rawName);
@@ -114,7 +114,7 @@ function* generateArg(
 				'template',
 				startOffset,
 				startOffset + arg.content.length,
-				marker(0),
+				{ features: 0 },
 			);
 			yield `arg`;
 			yield boundary.end();
@@ -124,7 +124,7 @@ function* generateArg(
 			yield* generateStringLiteralKey(
 				arg.content,
 				startOffset,
-				marker(scriptFeatures),
+				{ features: scriptFeatures },
 			);
 		}
 		else {
@@ -132,7 +132,7 @@ function* generateArg(
 				options,
 				ctx,
 				options.template,
-				marker(scriptFeatures),
+				{ features: scriptFeatures },
 				arg.content,
 				startOffset,
 				`(`,
@@ -160,7 +160,7 @@ export function* generateModifiers(
 				'template',
 				modifiers[0]!.loc.start.offset - 1,
 				modifiers.at(-1)!.loc.end.offset,
-				marker(0),
+				{ features: 0 },
 			);
 			yield propertyName;
 			yield boundary.end();
@@ -173,7 +173,7 @@ export function* generateModifiers(
 				ctx,
 				mod.content,
 				mod.loc.start.offset,
-				marker(scriptFeatures),
+				{ features: scriptFeatures },
 			);
 			yield `: true, `;
 		}
@@ -196,7 +196,7 @@ function* generateValue(
 			'template',
 			exp.loc.start.offset,
 			exp.loc.end.offset,
-			marker(0),
+			{ features: 0 },
 		);
 		if (asBindingProperty) {
 			yield `value`;

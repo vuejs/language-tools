@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
-import { marker, scriptFeatures } from '../features';
+import { scriptFeatures } from '../features';
 import { endOfLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement, generateFragment } from './element';
@@ -70,7 +70,7 @@ export function* generateTemplateChild(
 			options,
 			ctx,
 			options.template,
-			marker(scriptFeatures),
+			{ features: scriptFeatures },
 			content,
 			start,
 			`(`,

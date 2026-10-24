@@ -1,5 +1,5 @@
 import type { Code, IRStyle, TypeScript, VueCompilerOptions } from '../../types';
-import { marker, scriptFeatures } from '../features';
+import { scriptFeatures } from '../features';
 import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
@@ -51,7 +51,7 @@ function* generateCssVars(
 				options,
 				ctx,
 				style,
-				marker(scriptFeatures),
+				{ features: scriptFeatures },
 				binding.text,
 				binding.offset,
 				`(`,
