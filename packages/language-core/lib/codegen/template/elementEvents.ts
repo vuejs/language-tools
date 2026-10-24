@@ -1,4 +1,3 @@
-import { SpanMapFeature } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
@@ -171,7 +170,7 @@ export function* generateEventArg(
 	directive = 'on',
 	features?: VueCodeMarker,
 ): Generator<Code> {
-	features ??= marker(semantic | (navigation & ~SpanMapFeature.Rename));
+	features ??= marker(semantic | navigation);
 
 	if (directive.length) {
 		name = capitalize(name);

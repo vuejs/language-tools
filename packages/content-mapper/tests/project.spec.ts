@@ -179,7 +179,7 @@ test('maps the synthetic default export to the top of the SFC', () => {
 	expect(anchor![2]).toBe(0);
 	expect(anchor![3]).toBe(0);
 	expect(anchor![5] & SpanMapFeature.Definition).toBeTruthy();
-	expect(anchor![5] & SpanMapFeature.Rename).toBeFalsy();
+	expect(anchor![5] & SpanMapFeature.Rename).toBeTruthy();
 });
 
 test('maps document highlights on tag names like any other reference', () => {
