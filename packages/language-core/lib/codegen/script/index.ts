@@ -72,7 +72,7 @@ function* generateWorker(
 			'main',
 			script.src.offset,
 			script.src.offset + script.src.text.length,
-			src !== script.src.text ? codeFeatures.all & ~SpanMapFeature.Rename : codeFeatures.all,
+			src !== script.src.text ? { features: codeFeatures.all.features & ~SpanMapFeature.Rename } : codeFeatures.all,
 		);
 		yield `'`;
 		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, boundary.features];

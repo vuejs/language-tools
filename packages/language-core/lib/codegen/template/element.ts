@@ -3,7 +3,7 @@ import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
 import type { Code } from '../../types';
 import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import { codeFeatures, ignoreDiagnostics, VueCodeFeature } from '../codeFeatures';
+import { codeFeatures, ignoreDiagnostics } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
@@ -229,11 +229,11 @@ export function* generateComponent(
 		startTagOffset,
 		startTagOffset + tag.length,
 		shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes
-			? ignoreDiagnostics(0)
+			? ignoreDiagnostics(codeFeatures.none)
 			: codeFeatures.none,
 	);
 	yield `{`;
-	yield [``, 'template', node.loc.start.offset, VueCodeFeature.PropsCompletion];
+	yield [``, 'template', node.loc.start.offset, codeFeatures.propsCompletion];
 	yield newLine;
 	yield* propCodes;
 	yield `}`;

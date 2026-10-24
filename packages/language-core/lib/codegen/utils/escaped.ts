@@ -1,15 +1,15 @@
-import type { Code, VueCodeInformation } from '../../types';
+import type { Code, VueCodeMarker } from '../../types';
 import { toAtomGroup } from '../codeFeatures';
 
 export function* generateEscaped(
 	text: string,
 	source: string,
 	offset: number,
-	features: VueCodeInformation,
+	features: VueCodeMarker,
 	escapeTarget: RegExp,
 ): Generator<Code> {
 	const parts = text.split(escapeTarget);
-	if (typeof features === 'number' || !features.atom) {
+	if (!features.atom) {
 		features = toAtomGroup(features);
 	}
 	let isEscapeTarget = false;

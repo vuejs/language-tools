@@ -83,7 +83,7 @@ export class VueVirtualCode implements VirtualCode {
 		this._embeddedCodes = useEmbeddedCodes(plugins, fileName, this._ir);
 		this._mappings = computed(() => {
 			const length = this._snapshot().getLength();
-			return [[0, length, 0, length, SpanMapKind.Verbatim, codeFeatures.full]];
+			return [[0, length, 0, length, SpanMapKind.Verbatim, codeFeatures.full.features]];
 		});
 	}
 

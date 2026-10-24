@@ -1,15 +1,15 @@
 import { capitalize } from '@vue/shared';
-import type { Code, VueCodeInformation } from '../../types';
+import type { Code, VueCodeMarker } from '../../types';
 import { toAtomGroup } from '../codeFeatures';
 
 export function* generateCamelized(
 	code: string,
 	source: string,
 	offset: number,
-	features: VueCodeInformation,
+	features: VueCodeMarker,
 ): Generator<Code> {
 	const parts = code.split('-');
-	if (typeof features === 'number' || !features.atom) {
+	if (!features.atom) {
 		features = toAtomGroup(features);
 	}
 

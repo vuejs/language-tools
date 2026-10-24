@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { getUnwrappedExpression } from '../../parsers/utils';
-import type { Code, TypeScript, VueCodeInformation } from '../../types';
+import type { Code, TypeScript, VueCodeMarker } from '../../types';
 import { codeFeatures, ignoreDiagnostics } from '../codeFeatures';
 import { names } from '../names';
 import {
@@ -168,10 +168,9 @@ export function* generateEventArg(
 	name: string,
 	start: number,
 	directive = 'on',
-	features?: VueCodeInformation,
+	features?: VueCodeMarker,
 ): Generator<Code> {
-	features ??= codeFeatures.semanticWithoutHighlight
-		| codeFeatures.navigationWithoutRename;
+	features ??= codeFeatures.eventName;
 
 	if (directive.length) {
 		name = capitalize(name);

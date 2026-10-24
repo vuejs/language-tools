@@ -1,13 +1,6 @@
-import type { Code, IRBlock, TypeScript, VueCodeInformation, VueCompilerOptions } from '../../types';
+import type { Code, IRBlock, TypeScript, VueCodeMarker, VueCompilerOptions } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
-import {
-	codeFeatures,
-	getCodeFeatures,
-	ignoreDiagnostics,
-	isDiagnosticsIgnored,
-	toAtomKind,
-	withCodeFeatures,
-} from '../codeFeatures';
+import { codeFeatures, ignoreDiagnostics, toAtomKind } from '../codeFeatures';
 import { names } from '../names';
 import { getRefBrandArgument, getTypeScriptAST, identifierRE } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -20,7 +13,7 @@ export function* generateInterpolation(
 	},
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
-	features: VueCodeInformation,
+	features: VueCodeMarker,
 	code: string,
 	start: number,
 	prefix: string = '',
@@ -31,8 +24,11 @@ export function* generateInterpolation(
 		yield prefix;
 	}
 
-	const memberFeatures = getCodeFeatures(features) & codeFeatures.completion;
-	const featuresWithoutCompletion = withCodeFeatures(features, getCodeFeatures(features) & ~codeFeatures.completion);
+	const memberFeatures: VueCodeMarker = { features: features.features & codeFeatures.completion.features };
+	const featuresWithoutCompletion: VueCodeMarker = {
+		...features,
+		features: features.features & ~codeFeatures.completion.features,
+	};
 
 	let prevEnd = 0;
 	for (
@@ -119,7 +115,7 @@ function* generateNonIdentifierCode(
 	code: string,
 	source: string,
 	offset: number,
-	data: VueCodeInformation,
+	data: VueCodeMarker,
 	shouldCut = true,
 ): Generator<Code> {
 	if (!code.length) {
@@ -133,7 +129,7 @@ function* generateNonIdentifierCode(
 		code.slice(0, 1),
 		source,
 		offset,
-		isDiagnosticsIgnored(data) ? ignoreDiagnostics(codeFeatures.none) : codeFeatures.none,
+		data.ignoreDiagnostics ? ignoreDiagnostics(codeFeatures.none) : codeFeatures.none,
 	];
 	if (code.length > 1) {
 		yield [code.slice(1), source, offset + 1, data];

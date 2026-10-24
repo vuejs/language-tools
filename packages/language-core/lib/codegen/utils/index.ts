@@ -5,7 +5,7 @@ import type {
 	IRScript,
 	IRScriptSetup,
 	TypeScript,
-	VueCodeInformation,
+	VueCodeMarker,
 	VueCompilerOptions,
 } from '../../types';
 import { codeFeatures } from '../codeFeatures';
@@ -100,7 +100,7 @@ export function* generateSfcBlockSection(
 	block: IRScript | IRScriptSetup,
 	start: number,
 	end: number,
-	features: VueCodeInformation,
+	features: VueCodeMarker,
 ): Generator<Code> {
 	const text = block.content.slice(start, end);
 	yield [text, block.name, start, features];

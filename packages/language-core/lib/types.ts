@@ -53,7 +53,9 @@ export type DiagnosticDirectiveMapping = [
 	unusedExpectDirectiveIndex?: number,
 ];
 
+/** The data of a generated segment. */
 export interface VueCodeMarker {
+	/** `SpanMapFeature` and `VueCodeFeature` bits. */
 	features: number;
 	kind?: SpanMapKind;
 	/** Segments sharing the symbol map as one atom spanning all of them. */
@@ -61,9 +63,6 @@ export interface VueCodeMarker {
 	/** Diagnostics within the segment are not reported, unless a segment nested in it reports them. */
 	ignoreDiagnostics?: true;
 }
-
-/** The `SpanMapFeature` bits of a segment, or a marker carrying them. */
-export type VueCodeInformation = number | VueCodeMarker;
 
 /**
  * A segment of generated code. An empty segment whose data is a diagnostic directive opens its virtual range,
@@ -75,7 +74,7 @@ export type Code =
 		text: string,
 		source: string | undefined,
 		sourceOffset: number,
-		data: VueCodeInformation | DiagnosticDirectiveMapping,
+		data: VueCodeMarker | DiagnosticDirectiveMapping,
 	];
 
 export interface VueCompilerOptions {

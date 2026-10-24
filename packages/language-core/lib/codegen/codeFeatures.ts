@@ -1,5 +1,5 @@
 import { SpanMapFeature, SpanMapKind } from '@volar/language-core';
-import type { VueCodeInformation, VueCodeMarker } from '../types';
+import type { VueCodeMarker } from '../types';
 
 export enum VueCodeFeature {
 	PropsCompletion = 1 << 21,
@@ -28,62 +28,61 @@ const structure = SpanMapFeature.FoldingRanges
 	| SpanMapFeature.CodeLens;
 const format = SpanMapFeature.Formatting;
 
+/** Shared, frozen markers; derive new markers from them instead of mutating them. */
 export const codeFeatures = {
-	full: completion | semantic | navigation | structure | format,
+	full: marker(completion | semantic | navigation | structure | format),
 	/** @internal */
-	all: completion | semantic | navigation,
+	all: marker(completion | semantic | navigation),
 	/** @internal */
-	none: 0,
+	none: marker(0),
 	/** @internal */
-	completion,
+	completion: marker(completion),
 	/** @internal */
-	withoutCompletion: semantic | navigation,
+	withoutCompletion: marker(semantic | navigation),
 	/** @internal */
-	navigation,
+	navigation: marker(navigation),
 	/** @internal */
-	navigationWithoutRename,
+	navigationWithoutRename: marker(navigationWithoutRename),
 	/** @internal */
-	navigationAndCompletion: navigation | completion,
+	navigationAndCompletion: marker(navigation | completion),
 	/** @internal */
-	withoutNavigation: completion | semantic,
+	withoutNavigation: marker(completion | semantic),
 	/** @internal */
-	semanticWithoutHighlight,
+	semanticWithoutHighlight: marker(semanticWithoutHighlight),
 	/** @internal */
-	withoutHighlight: semanticWithoutHighlight | navigation | completion,
+	withoutHighlight: marker(semanticWithoutHighlight | navigation | completion),
 	/** @internal */
-	withoutHighlightAndCompletion: semanticWithoutHighlight | navigation,
+	withoutHighlightAndCompletion: marker(semanticWithoutHighlight | navigation),
 	/** @internal */
-	tagName: semanticWithoutHighlight | navigation,
+	tagName: marker(semanticWithoutHighlight | navigation),
 	/** @internal */
-	withoutSemantic: navigation | completion,
+	withoutSemantic: marker(navigation | completion),
 	/** @internal */
-	structure,
+	structure: marker(structure),
 	/** @internal */
-	structureAndFormat: structure | format,
+	structureAndFormat: marker(structure | format),
 	/** @internal */
-	format,
-} satisfies Record<string, number>;
+	format: marker(format),
+	/** @internal */
+	propsCompletion: marker(VueCodeFeature.PropsCompletion),
+	/** @internal */
+	propName: marker(semanticWithoutHighlight | navigation | VueCodeFeature.PropsCompletion),
+	/** @internal */
+	eventName: marker(semanticWithoutHighlight | navigationWithoutRename),
+} satisfies Record<string, VueCodeMarker>;
 
-export function getCodeFeatures(info: VueCodeInformation) {
-	return typeof info === 'number' ? info : info.features;
+function marker(features: number): VueCodeMarker {
+	return Object.freeze({ features });
 }
 
-export function withCodeFeatures(info: VueCodeInformation, features: number): VueCodeInformation {
-	return typeof info === 'number' ? features : { ...info, features };
+export function ignoreDiagnostics(info: VueCodeMarker): VueCodeMarker {
+	return { ...info, ignoreDiagnostics: true };
 }
 
-export function ignoreDiagnostics(info: VueCodeInformation): VueCodeMarker {
-	return { ...typeof info === 'number' ? { features: info } : info, ignoreDiagnostics: true };
+export function toAtomGroup(info: VueCodeMarker): VueCodeMarker {
+	return { ...info, atom: Symbol() };
 }
 
-export function isDiagnosticsIgnored(info: VueCodeInformation) {
-	return typeof info === 'object' && !!info.ignoreDiagnostics;
-}
-
-export function toAtomGroup(info: VueCodeInformation): VueCodeMarker {
-	return typeof info === 'number' ? { features: info, atom: Symbol() } : { ...info, atom: Symbol() };
-}
-
-export function toAtomKind(info: VueCodeInformation): VueCodeMarker {
-	return { ...typeof info === 'number' ? { features: info } : info, kind: SpanMapKind.Atom };
+export function toAtomKind(info: VueCodeMarker): VueCodeMarker {
+	return { ...info, kind: SpanMapKind.Atom };
 }

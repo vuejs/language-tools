@@ -16,7 +16,7 @@ test('merges a boundary-wrapped token into one atom', () => {
 		`'`,
 		['', 'template', 23, data],
 	])).toEqual([
-		[10, 5, 20, 3, SpanMapKind.Atom, navigation],
+		[10, 5, 20, 3, SpanMapKind.Atom, navigation.features],
 	]);
 });
 
@@ -31,7 +31,7 @@ test('keeps the content of a boundary-wrapped completion token separate', () => 
 		['', 'template', 22, data],
 	])).toEqual([
 		[10, 4, 20, 2, SpanMapKind.Atom, 0],
-		[11, 2, 20, 2, SpanMapKind.Verbatim, navigationAndCompletion],
+		[11, 2, 20, 2, SpanMapKind.Verbatim, navigationAndCompletion.features],
 	]);
 });
 
@@ -46,7 +46,7 @@ test('keeps an empty boundary-wrapped completion token as a point', () => {
 		['', 'template', 20, data],
 	])).toEqual([
 		[10, 2, 20, 0, SpanMapKind.Atom, 0],
-		[11, 0, 20, 0, SpanMapKind.Verbatim, navigationAndCompletion],
+		[11, 0, 20, 0, SpanMapKind.Verbatim, navigationAndCompletion.features],
 	]);
 });
 
@@ -56,7 +56,7 @@ test('merges camelized segments into one atom', () => {
 		['v', 'template', 0, data],
 		['Once', 'template', 2, data],
 	])).toEqual([
-		[0, 5, 0, 6, SpanMapKind.Atom, navigation],
+		[0, 5, 0, 6, SpanMapKind.Atom, navigation.features],
 	]);
 });
 
@@ -66,7 +66,7 @@ test('merges contiguous group members into one verbatim span', () => {
 		['a', 'template', 0, data],
 		['bc', 'template', 1, data],
 	])).toEqual([
-		[0, 3, 0, 3, SpanMapKind.Verbatim, navigation],
+		[0, 3, 0, 3, SpanMapKind.Verbatim, navigation.features],
 	]);
 });
 
@@ -75,7 +75,7 @@ test('keeps a single-use group member as an individual span', () => {
 		['Click', 'template', 1, toAtomGroup(navigation)],
 		['', 'template', 6, toAtomGroup(navigation)],
 	])).toEqual([
-		[0, 5, 1, 5, SpanMapKind.Verbatim, navigation],
+		[0, 5, 1, 5, SpanMapKind.Verbatim, navigation.features],
 	]);
 });
 
@@ -87,8 +87,8 @@ test('maps every segment sharing a shorthand source range as an atom', () => {
 		['a', 'template', 1, toAtomKind(navigation)],
 		'}',
 	])).toEqual([
-		[1, 1, 1, 1, SpanMapKind.Atom, navigation],
-		[4, 1, 1, 1, SpanMapKind.Atom, navigation],
+		[1, 1, 1, 1, SpanMapKind.Atom, navigation.features],
+		[4, 1, 1, 1, SpanMapKind.Atom, navigation.features],
 	]);
 });
 
@@ -101,8 +101,8 @@ test('lets segments inside a feature-less group stay individual', () => {
 		'}',
 		['', 'template', 1, boundary],
 	])).toEqual([
-		[0, 6, 0, 1, SpanMapKind.Atom, none],
-		[4, 1, 2, 1, SpanMapKind.Verbatim, navigation],
+		[0, 6, 0, 1, SpanMapKind.Atom, none.features],
+		[4, 1, 2, 1, SpanMapKind.Verbatim, navigation.features],
 	]);
 });
 
@@ -114,7 +114,7 @@ test('keeps diagnostic directives out of the mappings', () => {
 		['', 'template', 5, directive],
 	];
 	expect(buildMappings(chunks)).toEqual([
-		[0, 3, 5, 3, SpanMapKind.Verbatim, none],
+		[0, 3, 5, 3, SpanMapKind.Verbatim, none.features],
 	]);
 	expect(buildDiagnosticDirectives(chunks)).toEqual([
 		[5, 3, 0, 3, DiagnosticDirectivePolicy.Ignore],

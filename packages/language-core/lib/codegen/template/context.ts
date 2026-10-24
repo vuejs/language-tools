@@ -1,11 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import {
-	type Code,
-	type DiagnosticDirectiveMapping,
-	DiagnosticDirectivePolicy,
-	type VueCodeInformation,
-} from '../../types';
-import { codeFeatures, getCodeFeatures, isDiagnosticsIgnored } from '../codeFeatures';
+import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type VueCodeMarker } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
@@ -127,7 +122,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 
 	function* generateDiagnosticDirectiveBound(directive: DiagnosticDirectiveMapping): Generator<Code> {
 		// an empty mapping at the directive comment, which Volar's own features see
-		yield ['', 'template', directive[0], 0];
+		yield ['', 'template', directive[0], codeFeatures.none];
 		yield ['', 'template', directive[0], directive];
 	}
 
@@ -155,7 +150,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 			&& info.ignoreError
 			&& !reopenedRange
 			&& !Array.isArray(code[3])
-			&& !isDiagnosticsIgnored(code[3])
+			&& !code[3].ignoreDiagnostics
 		) {
 			const ignore = info.diagnosticDirectives!.find(directive => directive[4] === DiagnosticDirectivePolicy.Ignore)!;
 			reopenedInfo = info;
@@ -187,7 +182,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		/** Locals the generated code always reads, so listing them hides no unused diagnostic. */
 		read = new Set<string>();
 		/** The source name may be the hyphenated form of `name`. */
-		members: [name: string, source: string, offset: number, features: VueCodeInformation, sourceName: string][] = [];
+		members: [name: string, source: string, offset: number, features: VueCodeMarker, sourceName: string][] = [];
 
 		declare(...variables: string[]) {
 			for (const name of variables) {
@@ -224,7 +219,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		name: string,
 		source: string,
 		offset: number,
-		features: VueCodeInformation,
+		features: VueCodeMarker,
 		sourceName = name,
 	) {
 		if (isLiteralWhitelisted(name) || name === 'require' || name.startsWith('__VLS_')) {
@@ -248,7 +243,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 
 	function* generateScopeMembers(scope: Scope): Generator<Code> {
 		const completionMembers = scope.members.filter(([, , , features]) =>
-			getCodeFeatures(features) & codeFeatures.completion
+			features.features & codeFeatures.completion.features
 		);
 		if (!completionMembers.length) {
 			return;
@@ -296,7 +291,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		accessLog.push(name);
 		contextAccesses.add(name);
 		if (offset !== undefined) {
-			recordScopeMember(name, source, offset, 0, sourceName);
+			recordScopeMember(name, source, offset, codeFeatures.none, sourceName);
 		}
 		if (dotValue) {
 			dotValueAccesses.add(name);

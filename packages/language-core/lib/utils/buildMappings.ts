@@ -1,11 +1,5 @@
 import { type Mapping, SpanMapFeature, SpanMapKind } from '@volar/language-core';
-import type { Segment } from 'muggle-string';
-import {
-	type Code,
-	type DiagnosticDirectiveMapping,
-	DiagnosticDirectivePolicy,
-	type VueCodeInformation,
-} from '../types';
+import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type VueCodeMarker } from '../types';
 
 const languageFeatureMask = (SpanMapFeature.CodeLens << 1) - 1;
 
@@ -13,7 +7,7 @@ interface Entry {
 	generatedStart: number;
 	length: number;
 	sourceStart: number;
-	info: VueCodeInformation;
+	info: VueCodeMarker;
 }
 
 interface Span {
@@ -21,7 +15,7 @@ interface Span {
 	ignoreDiagnostics: boolean;
 }
 
-export function buildMappings(chunks: (Code | Segment)[]): Mapping[] {
+export function buildMappings(chunks: Code[]): Mapping[] {
 	return buildSpans(chunks).map(span => span.mapping);
 }
 
@@ -80,26 +74,23 @@ function getIgnoredRanges(chunks: Code[]) {
 	}
 }
 
-function buildSpans(chunks: (Code | Segment)[]): Span[] {
+function buildSpans(chunks: Code[]): Span[] {
 	const entries = toEntries(chunks);
 	const tokenCounts = new Map<symbol, number>();
 	const shorthandRanges = new Set<string>();
 	for (const { info, sourceStart, length } of entries) {
-		if (typeof info === 'object') {
-			if (info.atom) {
-				tokenCounts.set(info.atom, (tokenCounts.get(info.atom) ?? 0) + 1);
-			}
-			if (info.kind === SpanMapKind.Atom) {
-				shorthandRanges.add(`${sourceStart}:${sourceStart + length}`);
-			}
+		if (info.atom) {
+			tokenCounts.set(info.atom, (tokenCounts.get(info.atom) ?? 0) + 1);
+		}
+		if (info.kind === SpanMapKind.Atom) {
+			shorthandRanges.add(`${sourceStart}:${sourceStart + length}`);
 		}
 	}
 
 	const spans: (Span | Entry[])[] = [];
 	const groups = new Map<symbol, Entry[]>();
 	for (const entry of entries) {
-		const { info } = entry;
-		const atom = typeof info === 'object' ? info.atom : undefined;
+		const { atom } = entry.info;
 		if (atom && tokenCounts.get(atom)! > 1) {
 			let group = groups.get(atom);
 			if (!group) {
@@ -124,9 +115,9 @@ function buildSpans(chunks: (Code | Segment)[]): Span[] {
 			first.sourceStart,
 			last.sourceStart + last.length - first.sourceStart,
 			isContiguous(group) ? SpanMapKind.Verbatim : SpanMapKind.Atom,
-			getFeatures(first.info),
+			first.info.features,
 		];
-		const span = { mapping: atom, ignoreDiagnostics: isIgnored(first.info) };
+		const span = { mapping: atom, ignoreDiagnostics: !!first.info.ignoreDiagnostics };
 		const content = group.length === 3 ? group[1]! : undefined;
 		if (
 			content
@@ -134,7 +125,7 @@ function buildSpans(chunks: (Code | Segment)[]): Span[] {
 			&& !last.length
 			&& content.sourceStart === atom[2]
 			&& content.length === atom[3]
-			&& getFeatures(content.info) & SpanMapFeature.Completion
+			&& content.info.features & SpanMapFeature.Completion
 		) {
 			atom[5] = 0;
 			return [span, toSpan(content)];
@@ -143,14 +134,14 @@ function buildSpans(chunks: (Code | Segment)[]): Span[] {
 	}
 
 	function toSpan({ generatedStart, length, sourceStart, info }: Entry): Span {
-		const kind = typeof info === 'object' && info.kind !== undefined
+		const kind = info.kind !== undefined
 			? info.kind
 			: shorthandRanges.has(`${sourceStart}:${sourceStart + length}`)
 			? SpanMapKind.Atom
 			: SpanMapKind.Verbatim;
 		return {
-			mapping: [generatedStart, length, sourceStart, length, kind, getFeatures(info)],
-			ignoreDiagnostics: isIgnored(info),
+			mapping: [generatedStart, length, sourceStart, length, kind, info.features],
+			ignoreDiagnostics: !!info.ignoreDiagnostics,
 		};
 	}
 }
@@ -211,7 +202,7 @@ function buildExplicitDiagnosticDirectives(chunks: Code[]) {
 	return result;
 }
 
-function toEntries(chunks: (Code | Segment)[]) {
+function toEntries(chunks: Code[]) {
 	const entries: Entry[] = [];
 	let generatedStart = 0;
 	for (const segment of chunks) {
@@ -225,7 +216,7 @@ function toEntries(chunks: (Code | Segment)[]) {
 					generatedStart,
 					length: segment[0].length,
 					sourceStart: segment[2],
-					info: data ?? 0,
+					info: data,
 				});
 			}
 			generatedStart += segment[0].length;
@@ -253,17 +244,9 @@ function isGroup(span: Span | Entry[]): span is Entry[] {
 	return Array.isArray(span);
 }
 
-function getFeatures(info: VueCodeInformation) {
-	return typeof info === 'number' ? info : info.features;
-}
-
 /** A feature-less atom only carries diagnostics, so the segments it overlaps take precedence. */
 function isFill(kind: SpanMapKind, features: number) {
 	return kind !== SpanMapKind.Verbatim && !(features & languageFeatureMask);
-}
-
-function isIgnored(info: VueCodeInformation) {
-	return typeof info === 'object' && !!info.ignoreDiagnostics;
 }
 
 function mergeRanges(ranges: [number, number][]) {

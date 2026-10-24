@@ -1,8 +1,8 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isHTMLTag, isMathMLTag, isSVGTag } from '@vue/shared';
-import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
+import type { Code, VueCodeMarker, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import { codeFeatures, toAtomKind, VueCodeFeature } from '../codeFeatures';
+import { codeFeatures, toAtomKind } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, identifierRE, newLine } from '../utils';
@@ -304,7 +304,7 @@ export function* generatePropExp(
 
 function* generateAttrValue(
 	node: CompilerDOM.TextNode,
-	features: VueCodeInformation,
+	features: VueCodeMarker,
 ): Generator<Code> {
 	const quote = node.loc.source.startsWith("'") ? "'" : '"';
 	const [content, offset] = normalizeAttributeValue(node);
@@ -333,8 +333,8 @@ function getShouldCamelize(
 		);
 }
 
-function getPropsCodeFeatures(): VueCodeInformation {
-	return codeFeatures.withoutHighlightAndCompletion | VueCodeFeature.PropsCompletion;
+function getPropsCodeFeatures(): VueCodeMarker {
+	return codeFeatures.propName;
 }
 
 /**

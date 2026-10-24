@@ -1,7 +1,8 @@
 import { SourceMap } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
-import { type Segment, toString } from 'muggle-string';
-import type { VueLanguagePluginReturn } from '../../types';
+import { toString } from 'muggle-string';
+import { codeFeatures } from '../../codegen/codeFeatures';
+import type { Code, VueLanguagePluginReturn } from '../../types';
 import { buildMappings } from '../../utils/buildMappings';
 import { parse } from '../../utils/parseSfc';
 
@@ -40,13 +41,13 @@ export const vitePressParser: Pick<VueLanguagePluginReturn, 'parseSFC'> = {
 			}
 		}
 
-		const codes: Segment[] = [];
+		const codes: Code[] = [];
 
 		for (const { 0: text, index } of content.matchAll(sfcBlockRE)) {
 			if (ambiguousRanges.some(([start, end]) => index >= start && index < end)) {
 				continue;
 			}
-			codes.push([text, undefined, index]);
+			codes.push([text, undefined, index, codeFeatures.none]);
 			codes.push('\n\n');
 			content = content.slice(0, index) + ' '.repeat(text.length) + content.slice(index + text.length);
 		}
@@ -59,7 +60,7 @@ export const vitePressParser: Pick<VueLanguagePluginReturn, 'parseSFC'> = {
 		}
 
 		codes.push('<template>\n');
-		codes.push([content, undefined, 0]);
+		codes.push([content, undefined, 0, codeFeatures.none]);
 		codes.push('\n</template>');
 
 		const mappings = buildMappings(codes);
