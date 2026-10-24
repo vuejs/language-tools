@@ -1,6 +1,7 @@
 import { availableParallelism } from 'node:os';
 import * as path from 'node:path';
 import { Worker } from 'node:worker_threads';
+import { fnv1a } from './hash';
 import type { ContentMapper } from './mapper';
 import type {
 	CloseProjectParams,
@@ -191,7 +192,7 @@ export class TransformPool {
 		while (this.#workers.length < this.workerCount) {
 			this.#workers.push(this.#createWorker());
 		}
-		return this.#workers[hash(fileName) % this.#workers.length];
+		return this.#workers[fnv1a(fileName) % this.#workers.length];
 	}
 
 	#ensureProject(worker: PoolWorker, project: PoolProject) {
@@ -255,13 +256,4 @@ export function readWorkerCount(value = process.env.VUE_CONTENT_MAPPER_WORKERS) 
 		throw new Error(`VUE_CONTENT_MAPPER_WORKERS must be "auto" or a positive integer, received ${value}`);
 	}
 	return count;
-}
-
-function hash(value: string) {
-	let result = 2166136261;
-	for (let index = 0; index < value.length; index++) {
-		result ^= value.charCodeAt(index);
-		result = Math.imul(result, 16777619);
-	}
-	return result >>> 0;
 }

@@ -1,4 +1,5 @@
 import { allFeatures, completionFeatures, type Mapping, navigationFeatures } from '@vue/language-core';
+import { fnv1a } from './hash';
 import { SpanMapKind, type SpanMapping } from './protocol';
 
 interface Candidate {
@@ -219,7 +220,7 @@ class IntervalSet {
 			start,
 			end,
 			maxEnd: end,
-			priority: hashInterval(start, end),
+			priority: fnv1a([start, end]),
 		});
 	}
 }
@@ -277,13 +278,6 @@ function rotateRight(root: IntervalNode) {
 
 function compareIntervals(left: IntervalNode, right: IntervalNode) {
 	return left.start - right.start || left.end - right.end;
-}
-
-function hashInterval(start: number, end: number) {
-	let result = 2166136261;
-	result = Math.imul(result ^ start, 16777619);
-	result = Math.imul(result ^ end, 16777619);
-	return result >>> 0;
 }
 
 function toKey(start: number, end: number) {
