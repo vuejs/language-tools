@@ -130,7 +130,7 @@ function* generateNonIdentifierCode(
 		code.slice(0, 1),
 		source,
 		offset,
-		data.ignoreDiagnostics ? { features: 0, ignoreDiagnostics: true } : { features: 0 },
+		{ features: 0 },
 	];
 	if (code.length > 1) {
 		yield [code.slice(1), source, offset + 1, data];

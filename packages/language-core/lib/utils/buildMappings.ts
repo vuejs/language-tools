@@ -1,6 +1,5 @@
 import { isCompletionEnabled, type Mapping, SpanMapKind } from '@volar/language-core';
-import { allFeatures } from '../codegen/features';
-import { OpenRanges } from '../codegen/utils/boundary';
+import { isSynthesizedIgnore, OpenRanges } from '../codegen/utils/boundary';
 import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type VueCodeMarker } from '../types';
 
 interface Entry {
@@ -10,71 +9,7 @@ interface Entry {
 	info: VueCodeMarker;
 }
 
-interface Span {
-	mapping: Mapping;
-	ignoreDiagnostics: boolean;
-}
-
 export function buildMappings(chunks: Code[]): Mapping[] {
-	return buildSpans(chunks).map(span => span.mapping);
-}
-
-/** Generated ranges whose diagnostics are not reported, sorted and disjoint. */
-function getIgnoredRanges(chunks: Code[]) {
-	const ignored: [start: number, end: number][] = [];
-	const reported: [start: number, end: number][] = [];
-	const fills: Span[] = [];
-	const originals = new Set<string>();
-	const originalRanges: [start: number, end: number][] = [];
-	for (const span of buildSpans(chunks)) {
-		const [start, length, originalStart, originalLength, kind, features] = span.mapping;
-		if (!length) {
-			continue;
-		}
-		if (isFill(kind, features)) {
-			fills.push(span);
-			continue;
-		}
-		(span.ignoreDiagnostics ? ignored : reported).push([start, start + length]);
-		addOriginal(originalStart, originalStart + originalLength);
-	}
-	let owned = mergeRanges([...ignored, ...reported]);
-	const ignoredRanges = subtractRanges(mergeRanges(ignored), mergeRanges(reported));
-
-	// A fill only takes the parts no other segment owns, and is dropped when its
-	// original range crosses one already taken, so its diagnostics fall to the outer segment.
-	fills.sort((left, right) => left.mapping[1] - right.mapping[1]);
-	for (const { mapping: [start, length, originalStart, originalLength], ignoreDiagnostics } of fills) {
-		const originalEnd = originalStart + originalLength;
-		if (!canAddOriginal(originalStart, originalEnd)) {
-			continue;
-		}
-		const free = subtractRanges([[start, start + length]], owned);
-		if (!free.length) {
-			continue;
-		}
-		if (ignoreDiagnostics) {
-			ignoredRanges.push(...free);
-		}
-		owned = mergeRanges([...owned, ...free]);
-		addOriginal(originalStart, originalEnd);
-	}
-	return mergeRanges(ignoredRanges);
-
-	function addOriginal(start: number, end: number) {
-		if (start < end) {
-			originals.add(`${start}:${end}`);
-			originalRanges.push([start, end]);
-		}
-	}
-
-	function canAddOriginal(start: number, end: number) {
-		return originals.has(`${start}:${end}`)
-			|| !originalRanges.some(range => start < range[1] && range[0] < end);
-	}
-}
-
-function buildSpans(chunks: Code[]): Span[] {
 	const items = toItems(chunks);
 	const shorthandRanges = new Set<string>();
 	for (const item of items) {
@@ -90,9 +25,9 @@ function buildSpans(chunks: Code[]): Span[] {
 		}
 	}
 
-	return items.flatMap(item => isGroup(item) ? fromGroup(item) : [toSpan(item)]);
+	return items.flatMap(item => isGroup(item) ? fromGroup(item) : [toMapping(item)]);
 
-	function fromGroup(group: Entry[]): Span[] {
+	function fromGroup(group: Entry[]): Mapping[] {
 		const first = group[0]!;
 		const last = group[group.length - 1]!;
 		const atom: Mapping = [
@@ -103,7 +38,6 @@ function buildSpans(chunks: Code[]): Span[] {
 			isContiguous(group) ? SpanMapKind.Verbatim : SpanMapKind.Atom,
 			first.info.features,
 		];
-		const span = { mapping: atom, ignoreDiagnostics: !!first.info.ignoreDiagnostics };
 		const content = group.length === 3 ? group[1]! : undefined;
 		if (
 			content
@@ -114,21 +48,18 @@ function buildSpans(chunks: Code[]): Span[] {
 			&& isCompletionEnabled(content.info.features)
 		) {
 			atom[5] = 0;
-			return [span, toSpan(content)];
+			return [atom, toMapping(content)];
 		}
-		return [span];
+		return [atom];
 	}
 
-	function toSpan({ generatedStart, length, sourceStart, info }: Entry): Span {
+	function toMapping({ generatedStart, length, sourceStart, info }: Entry): Mapping {
 		const kind = info.kind !== undefined
 			? info.kind
 			: shorthandRanges.has(`${sourceStart}:${sourceStart + length}`)
 			? SpanMapKind.Atom
 			: SpanMapKind.Verbatim;
-		return {
-			mapping: [generatedStart, length, sourceStart, length, kind, info.features],
-			ignoreDiagnostics: !!info.ignoreDiagnostics,
-		};
+		return [generatedStart, length, sourceStart, length, kind, info.features];
 	}
 }
 
@@ -140,10 +71,9 @@ function buildSpans(chunks: Code[]): Span[] {
 export function buildDiagnosticDirectives(chunks: Code[]) {
 	const directives = collectDiagnosticDirectives(chunks);
 	const explicit = checkExplicitDiagnosticDirectives(directives.filter(directive => !isSynthesizedIgnore(directive)));
-	const ignored = mergeRanges([
-		...getIgnoredRanges(chunks),
-		...directives.filter(isSynthesizedIgnore).map<[number, number]>(directive => [directive[2], directive[3]]),
-	]);
+	const ignored = mergeRanges(
+		directives.filter(isSynthesizedIgnore).map<[number, number]>(directive => [directive[2], directive[3]]),
+	);
 	const ignores = createIgnoreDirectives(ignored, explicit);
 	return [...explicit, ...ignores].sort((left, right) => left[2] - right[2] || left[3] - right[3]);
 }
@@ -161,14 +91,6 @@ export function createIgnoreDirectives(
 		.sort((left, right) => left[0] - right[0] || left[1] - right[1]);
 	return subtractRanges(ranges, covered)
 		.map<DiagnosticDirectiveMapping>(([start, end]) => [0, 0, start, end, DiagnosticDirectivePolicy.Ignore]);
-}
-
-/**
- * An ignore directive without an original range, like those `createIgnoreDirectives` creates, ignores the
- * diagnostics of generated code no directive comment covers; the explicit directives take precedence over it.
- */
-function isSynthesizedIgnore(directive: DiagnosticDirectiveMapping) {
-	return directive[4] === DiagnosticDirectivePolicy.Ignore && directive[1] === 0;
 }
 
 function collectDiagnosticDirectives(chunks: Code[]) {
@@ -293,11 +215,6 @@ function isContiguous(group: Entry[]) {
 
 function isGroup(item: Entry | Entry[]): item is Entry[] {
 	return Array.isArray(item);
-}
-
-/** A feature-less atom only carries diagnostics, so the segments it overlaps take precedence. */
-function isFill(kind: SpanMapKind, features: number) {
-	return kind !== SpanMapKind.Verbatim && !(features & allFeatures);
 }
 
 function mergeRanges(ranges: [number, number][]) {

@@ -1,6 +1,22 @@
-import type { Code, CodeBoundary, DiagnosticDirectiveMapping, VueCodeMarker } from '../../types';
+import {
+	type Code,
+	type CodeBoundary,
+	type DiagnosticDirectiveMapping,
+	DiagnosticDirectivePolicy,
+	type VueCodeMarker,
+} from '../../types';
 
 const end: CodeBoundary = Object.freeze({ end: true as const });
+
+/**
+ * An ignore directive without an original range, for generated code whose diagnostics are not the user's;
+ * the explicit directives of directive comments take precedence over it.
+ */
+export const synthesizedIgnore: DiagnosticDirectiveMapping = [0, 0, 0, 0, DiagnosticDirectivePolicy.Ignore];
+
+export function isSynthesizedIgnore(directive: DiagnosticDirectiveMapping) {
+	return directive[4] === DiagnosticDirectivePolicy.Ignore && directive[1] === 0;
+}
 
 /** A range of generated code, bounded by empty segments that pair by nesting. */
 export class Boundary {

@@ -4,7 +4,7 @@ import type { Code } from '../../types';
 import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { names } from '../names';
 import { asType, endOfLine, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
@@ -86,15 +86,15 @@ function* generateIdentifier(
 	);
 	yield names.directives;
 	yield `.`;
-	yield* generateCamelized(
-		rawName,
-		'template',
-		prop.loc.start.offset,
-		isBuiltInDirective(prop.name)
-			? { features: semanticFeatures | navigationFeatures, ignoreDiagnostics: true }
-			: { features: semanticFeatures | navigationFeatures },
-	);
-	if (!isBuiltInDirective(prop.name)) {
+	const builtIn = isBuiltInDirective(prop.name);
+	const ignore = builtIn ? yield* Boundary.start('template', 0, 0, synthesizedIgnore) : undefined;
+	yield* generateCamelized(rawName, 'template', prop.loc.start.offset, {
+		features: semanticFeatures | navigationFeatures,
+	});
+	if (ignore) {
+		yield ignore.end();
+	}
+	else {
 		ctx.accessVariable('template', camelize(rawName), prop.loc.start.offset, false, rawName);
 	}
 	yield boundary.end();

@@ -1,7 +1,7 @@
 import type { Code, IRAttr } from '../../types';
 import { navigationFeatures } from '../features';
 import { identifierRE, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 
 export function* generateClassProperty(
 	source: string,
@@ -12,21 +12,23 @@ export function* generateClassProperty(
 	yield `${newLine} & { `;
 	const className = classNameWithDot.slice(1);
 	// An unquoted name maps verbatim, so it can be both a definition and renamed.
+	const ignore = yield* Boundary.start(source, 0, 0, synthesizedIgnore);
 	if (identifierRE.test(className)) {
-		yield [className, source, offset + 1, { features: navigationFeatures, ignoreDiagnostics: true }];
+		yield [className, source, offset + 1, { features: navigationFeatures }];
 	}
 	else {
 		const boundary = yield* Boundary.start(
 			source,
 			offset,
 			offset + classNameWithDot.length,
-			{ features: navigationFeatures, ignoreDiagnostics: true },
+			{ features: navigationFeatures },
 		);
 		yield `'`;
 		yield [className, source, offset + 1, undefined];
 		yield `'`;
 		yield boundary.end();
 	}
+	yield ignore.end();
 	yield `: ${propertyType}`;
 	yield ` }`;
 }

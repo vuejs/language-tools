@@ -6,7 +6,7 @@ import { collectBindingNames } from '../../utils/collectBindings';
 import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { names } from '../names';
 import { endOfLine, getTypeScriptAST, isTsLang, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -52,14 +52,16 @@ export function* generateVSlot(
 		yield `const { `;
 		// #932: reference for implicit default slot, anchored at the element's `<`
 		// because a mapped range may not contain the element's other mappings
+		const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
 		const boundary = yield* Boundary.start(
 			'template',
 			node.loc.start.offset,
 			node.loc.start.offset + 1,
-			{ features: navigationFeatures, ignoreDiagnostics: true },
+			{ features: navigationFeatures },
 		);
 		yield `default`;
 		yield boundary.end();
+		yield ignore.end();
 	}
 	yield `: ${slotVar} } = ${names.nonNull}(${ctxVar}.slots)${endOfLine}`;
 

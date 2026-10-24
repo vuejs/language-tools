@@ -58,8 +58,6 @@ export interface VueCodeMarker {
 	/** `SpanMapFeature` and `VueCodeFeature` bits. */
 	features: number;
 	kind?: SpanMapKind;
-	/** Diagnostics within the segment are not reported, unless a segment nested in it reports them. */
-	ignoreDiagnostics?: true;
 }
 
 /**

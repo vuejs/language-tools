@@ -8,6 +8,7 @@ import type {
 	VueCodeMarker,
 	VueCompilerOptions,
 } from '../../types';
+import { Boundary, synthesizedIgnore } from './boundary';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
@@ -100,9 +101,14 @@ export function* generateSfcBlockSection(
 	start: number,
 	end: number,
 	features: VueCodeMarker,
+	ignoreDiagnostics = false,
 ): Generator<Code> {
 	const text = block.content.slice(start, end);
+	const ignore = ignoreDiagnostics ? yield* Boundary.start(block.name, 0, 0, synthesizedIgnore) : undefined;
 	yield [text, block.name, start, features];
+	if (ignore) {
+		yield ignore.end();
+	}
 
 	// #3632
 	if ('parseDiagnostics' in block.ast) {

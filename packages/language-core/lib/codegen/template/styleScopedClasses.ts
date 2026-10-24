@@ -5,7 +5,7 @@ import { getNodeText, isStringLiteralLike, normalizeAttributeValue } from '../..
 import { completionFeatures, navigationFeatures } from '../features';
 import { names } from '../names';
 import { endOfLine, forEachNode, getTypeScriptAST } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { generateEscaped } from '../utils/escaped';
 import type { TemplateCodegenOptions } from './index';
 
@@ -140,11 +140,12 @@ export function* generateStyleScopedClassReference(
 	}
 
 	yield `/** @type {${names.StyleScopedClasses}[`;
+	const ignore = yield* Boundary.start(block.name, 0, 0, synthesizedIgnore);
 	const boundary = yield* Boundary.start(
 		block.name,
 		fullStart,
 		offset + className.length,
-		{ features: navigationFeatures | completionFeatures, ignoreDiagnostics: true },
+		{ features: navigationFeatures | completionFeatures },
 	);
 	yield `'`;
 	yield* generateEscaped(
@@ -155,5 +156,6 @@ export function* generateStyleScopedClassReference(
 	);
 	yield `'`;
 	yield boundary.end();
+	yield ignore.end();
 	yield `]} */${endOfLine}`;
 }

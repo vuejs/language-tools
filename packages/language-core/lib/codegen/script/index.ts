@@ -7,7 +7,7 @@ import { navigationFeatures, scriptFeatures } from '../features';
 import { names } from '../names';
 import { generateStyleModuleImports } from '../style/modules';
 import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateGeneric, generateMacros, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
 import { generateTemplate } from './template';
@@ -37,14 +37,11 @@ function* generateSyntheticDefaultExport(exportedExpression: string): Generator<
 	// keep the synthetic default export navigable: go-to-definition on
 	// `import Foo from './Foo.vue'` targets the whole statement, which maps to the SFC top;
 	// a rename reaching it would insert the new name there
-	const boundary = yield* Boundary.start(
-		'main',
-		0,
-		0,
-		{ features: navigationFeatures & ~SpanMapFeature.Rename, ignoreDiagnostics: true },
-	);
+	const ignore = yield* Boundary.start('main', 0, 0, synthesizedIgnore);
+	const boundary = yield* Boundary.start('main', 0, 0, { features: navigationFeatures & ~SpanMapFeature.Rename });
 	yield `export default ${exportedExpression};`;
 	yield boundary.end();
+	yield ignore.end();
 	yield newLine;
 }
 

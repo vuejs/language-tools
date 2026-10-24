@@ -4,7 +4,7 @@ import { completionFeatures } from '../features';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
-import { Boundary, OpenRanges } from '../utils/boundary';
+import { Boundary, isSynthesizedIgnore, OpenRanges } from '../utils/boundary';
 import { isLiteralWhitelisted } from './bindingReferences';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
@@ -159,7 +159,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 			&& info?.diagnosticDirectiveEnded
 			&& info.ignoreError
 			&& !reopenedBoundary
-			&& !current.ignoreDiagnostics
+			&& !synthesizedIgnores
 		) {
 			const ignore = info.diagnosticDirectives!.find(directive => directive[4] === DiagnosticDirectivePolicy.Ignore)!;
 			reopenedInfo = info;
@@ -169,6 +169,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 	}
 
 	const openRanges = new OpenRanges<VueCodeMarker>();
+	let synthesizedIgnores = 0;
 
 	/** The data of a segment, or of the mapping range it bounds or maps as part of. */
 	function getMarker(code: Code) {
@@ -182,13 +183,20 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		if ('start' in data) {
 			if (Array.isArray(data.start)) {
 				openRanges.start({ directive: data.start });
+				if (isSynthesizedIgnore(data.start)) {
+					synthesizedIgnores++;
+				}
 				return;
 			}
 			openRanges.start({ mapping: data.start });
 			return data.start;
 		}
 		if ('end' in data) {
-			return openRanges.end()?.mapping;
+			const range = openRanges.end();
+			if (range?.directive && isSynthesizedIgnore(range.directive)) {
+				synthesizedIgnores--;
+			}
+			return range?.mapping;
 		}
 		return data;
 	}

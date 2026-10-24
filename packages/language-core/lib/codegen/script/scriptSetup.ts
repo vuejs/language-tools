@@ -13,7 +13,7 @@ import {
 	isTsLang,
 	newLine,
 } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { type CodeTransform, generateCodeWithTransforms, insert, replace } from '../utils/transform';
 import { generateComponent } from './component';
@@ -80,7 +80,8 @@ export function* generateGeneric(
 			scriptSetup,
 			scriptSetupRanges.defineProps.arg.start,
 			scriptSetupRanges.defineProps.arg.end,
-			{ features: navigationFeatures, ignoreDiagnostics: true },
+			{ features: navigationFeatures },
+			true,
 		);
 		yield endOfLine;
 		propTypes.push(
@@ -496,7 +497,8 @@ function* generatePublicProps(
 			scriptSetup,
 			scriptSetupRanges.withDefaults.arg.start,
 			scriptSetupRanges.withDefaults.arg.end,
-			{ features: navigationFeatures, ignoreDiagnostics: true },
+			{ features: navigationFeatures },
+			true,
 		);
 		yield endOfLine;
 		yield `void ${names.defaults}${endOfLine}`;
@@ -620,12 +622,14 @@ function* generateModelProp(
 	}
 
 	if (defineModel.name) {
+		const ignore = yield* Boundary.start(scriptSetup.name, 0, 0, synthesizedIgnore);
 		yield* generateCamelized(
 			getRangeText(scriptSetup, defineModel.name),
 			scriptSetup.name,
 			defineModel.name.start,
-			{ features: navigationFeatures, ignoreDiagnostics: true },
+			{ features: navigationFeatures },
 		);
+		yield ignore.end();
 	}
 	else {
 		yield propName;

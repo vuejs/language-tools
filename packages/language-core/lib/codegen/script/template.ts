@@ -51,7 +51,7 @@ function* generateTemplateCtx(
 	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, scriptLang }: ScriptCodegenOptions,
 	selfType: string | undefined,
 ): Generator<Code> {
-	const exps: Code[] = [];
+	const exps: string[] = [];
 	const emitTypes: string[] = [];
 	const propTypes: string[] = [];
 
@@ -115,7 +115,8 @@ function* generateTemplateComponents(
 			script,
 			components.start,
 			components.end,
-			{ features: navigationFeatures, ignoreDiagnostics: true },
+			{ features: navigationFeatures },
+			true,
 		);
 		yield endOfLine;
 		types.push(`typeof ${names.componentsOption}`);
@@ -152,7 +153,8 @@ function* generateTemplateDirectives(
 			script,
 			directives.start,
 			directives.end,
-			{ features: navigationFeatures, ignoreDiagnostics: true },
+			{ features: navigationFeatures },
+			true,
 		);
 		yield endOfLine;
 		types.push(`${names.ResolveDirectives}<typeof ${names.directivesOption}>`);

@@ -14,7 +14,7 @@ import {
 	isTsLang,
 	newLine,
 } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
 import { getModelPropName } from './elementProps';
@@ -136,12 +136,14 @@ export function* generateElementEvents(
 			const argsType = `${names.EventArgs}<${eventType}, '${propName}'>`;
 			if (prop.name === 'on') {
 				yield `/** @type {typeof ${emitsVar}.`;
+				const ignore = yield* Boundary.start(source, 0, 0, synthesizedIgnore);
 				yield* generateEventArg(
 					source,
 					offset!,
 					emitPrefix.slice(0, -1),
-					{ features: navigationFeatures, ignoreDiagnostics: true },
+					{ features: navigationFeatures },
 				);
+				yield ignore.end();
 				yield `} */${newLine}`;
 				// in JS, the JSDoc above types the property, and fails to parse for a non-identifier name
 				const emitArgName = getEventArgName(source, emitPrefix.slice(0, -1));

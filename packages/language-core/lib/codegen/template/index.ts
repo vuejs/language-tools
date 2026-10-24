@@ -2,7 +2,7 @@ import type { Code, IRTemplate, TypeScript, VueCompilerOptions } from '../../typ
 import { navigationFeatures } from '../features';
 import { names } from '../names';
 import { endOfLine, generateTypeAlias, generateTypedVar, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
+import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
 import { references as styleScopedClassReferences } from './styleScopedClasses';
@@ -132,24 +132,26 @@ function* generateSlotsType(
 		}
 		for (const slot of ctx.slots) {
 			yield `${newLine}& { `;
+			const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
 			if (slot.name && slot.offset !== undefined) {
 				yield* generateObjectProperty(
 					options,
 					ctx,
 					slot.name,
 					slot.offset,
-					{ features: navigationFeatures, ignoreDiagnostics: true },
+					{ features: navigationFeatures },
 				);
 			}
 			else {
 				const boundary = yield* Boundary.start(
 					'template',
 					...slot.tagRange,
-					{ features: navigationFeatures, ignoreDiagnostics: true },
+					{ features: navigationFeatures },
 				);
 				yield `default`;
 				yield boundary.end();
 			}
+			yield ignore.end();
 			yield `?: (props: typeof ${slot.propsVar}) => any }`;
 		}
 	});
@@ -202,13 +204,15 @@ function* generateTemplateRefsType(
 					yield ` | `;
 				}
 				yield `{ `;
+				const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
 				yield* generateObjectProperty(
 					options,
 					ctx,
 					name,
 					offset,
-					{ features: navigationFeatures, ignoreDiagnostics: true },
+					{ features: navigationFeatures },
 				);
+				yield ignore.end();
 				yield `: ${typeExp} }`;
 			}
 			if (refs.length >= 2) {
