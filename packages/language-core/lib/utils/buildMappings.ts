@@ -158,16 +158,29 @@ function buildSpans(chunks: (Code | Segment)[]): Span[] {
 
 export function buildDiagnosticDirectiveMarkers(chunks: Code[]) {
 	const markers: DiagnosticDirectiveMarker[] = [];
+	const groups = new Map<symbol, DiagnosticDirectiveMarker>();
 	for (const { generatedStart, length, sourceStart, info } of toEntries(chunks)) {
 		if (typeof info === 'object' && info.diagnosticDirective) {
-			markers.push({
+			const marker: DiagnosticDirectiveMarker = {
 				...info.diagnosticDirective,
 				generatedStart,
 				generatedLength: length,
 				sourceStart,
-			});
+			};
+			markers.push(marker);
+			// the content of a group also spans the unmapped code between its members
+			if (info.atom && marker.phase === 'content') {
+				const group = groups.get(info.atom);
+				if (group) {
+					group.generatedLength = generatedStart + length - group.generatedStart;
+				}
+				else {
+					groups.set(info.atom, { ...marker });
+				}
+			}
 		}
 	}
+	markers.push(...groups.values());
 	return markers;
 }
 

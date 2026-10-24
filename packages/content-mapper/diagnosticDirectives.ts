@@ -57,7 +57,12 @@ export function toDiagnosticDirectives(
 			]);
 		}
 		else {
-			for (const [virtualStart, virtualEnd] of contentRanges) {
+			// The node's own code lies between its anchor and end, including the unmapped code between
+			// its segments; content after the end (e.g. an `else if` condition) is still the node's.
+			const ranges = state.end !== undefined && state.anchor < state.end
+				? mergeRanges([[state.anchor, state.end], ...contentRanges])
+				: contentRanges;
+			for (const [virtualStart, virtualEnd] of ranges) {
 				result.push([
 					state.originalStart,
 					state.directive.originalLength,
@@ -84,7 +89,7 @@ export function toDiagnosticDirectives(
 		return result;
 	}
 
-	result.sort((left, right) => left[2] - right[2]);
+	result.sort((left, right) => left[2] - right[2] || left[3] - right[3]);
 	for (let index = 1; index < result.length; index++) {
 		const previous = result[index - 1]!;
 		const current = result[index]!;
@@ -121,7 +126,7 @@ export function withSynthesizedDiagnosticIgnores(
 	}
 	addIgnoreRanges(virtualStart, virtualLength);
 
-	result.sort((left, right) => left[2] - right[2]);
+	result.sort((left, right) => left[2] - right[2] || left[3] - right[3]);
 	return result;
 
 	function addReportedRange(start: number, end: number) {

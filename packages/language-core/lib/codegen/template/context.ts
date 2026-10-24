@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation, VueDiagnosticDirective } from '../../types';
-import { codeFeatures, getCodeFeatures, ignoreDiagnostics, isDiagnosticsIgnored } from '../codeFeatures';
+import { codeFeatures, getCodeFeatures, isDiagnosticsIgnored } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
@@ -120,7 +120,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 			directive => directive.directive.policy === 'ignore',
 		);
 		for (const directive of info.diagnosticDirectives ?? []) {
-			if (directive.directive.policy === 'expect' && !hasIgnore) {
+			if (directive.directive.policy === 'ignore' || !hasIgnore) {
 				yield diagnosticDirectiveMarker(directive, 'end');
 			}
 		}
@@ -132,24 +132,22 @@ export function createTemplateCodegenContext(scriptLang: string) {
 	}
 
 	function resolveCodeFeatures(info: VueCodeInformation): VueCodeInformation {
-		if (!isDiagnosticsIgnored(info) && !(typeof info === 'object' && info.diagnosticDirective) && stack.length) {
-			const data = stack[stack.length - 1]!;
-			const policy = data.ignoreError ? 'ignore' : data.expectError !== undefined ? 'expect' : undefined;
-			if (policy) {
-				const directive = data.diagnosticDirectives?.find(info => info.directive.policy === policy);
-				const resolved = policy === 'ignore' ? ignoreDiagnostics(info) : info;
-				return directive
-					? {
-						...typeof resolved === 'number' ? { features: resolved } : resolved,
-						diagnosticDirective: {
-							directive: directive.directive,
-							phase: 'content',
-						},
-					}
-					: resolved;
-			}
+		const data = stack.at(-1);
+		if (!data || isDiagnosticsIgnored(info) || (typeof info === 'object' && info.diagnosticDirective)) {
+			return info;
 		}
-		return info;
+		const policy = data.ignoreError ? 'ignore' : 'expect';
+		const directive = data.diagnosticDirectives?.find(info => info.directive.policy === policy);
+		if (!directive) {
+			return info;
+		}
+		return {
+			...typeof info === 'number' ? { features: info } : info,
+			diagnosticDirective: {
+				directive: directive.directive,
+				phase: 'content',
+			},
+		};
 	}
 
 	function diagnosticDirectiveMarker(

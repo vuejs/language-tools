@@ -122,6 +122,22 @@ test('collects diagnostic directive markers outside the mappings', () => {
 	]);
 });
 
+test('extends the directive content of a group over the code between its members', () => {
+	const directive = { policy: 'ignore' as const, originalLength: 3 };
+	const info = { ...toAtomGroup(none), diagnosticDirective: { directive, phase: 'content' as const } };
+	expect(buildDiagnosticDirectiveMarkers([
+		['', 'template', 5, info],
+		['a', 'template', 5, { features: navigation, diagnosticDirective: { directive, phase: 'content' } }],
+		'.value',
+		['', 'template', 6, info],
+	])).toEqual([
+		{ directive, phase: 'content', generatedStart: 0, generatedLength: 0, sourceStart: 5 },
+		{ directive, phase: 'content', generatedStart: 0, generatedLength: 1, sourceStart: 5 },
+		{ directive, phase: 'content', generatedStart: 7, generatedLength: 0, sourceStart: 6 },
+		{ directive, phase: 'content', generatedStart: 0, generatedLength: 7, sourceStart: 5 },
+	]);
+});
+
 test('ignores diagnostics of segments marked to ignore them', () => {
 	expect(buildDiagnosticIgnores([
 		['ab', 'template', 0, ignoreDiagnostics(navigation)],

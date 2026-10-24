@@ -575,6 +575,9 @@
 			"path": "./_failed_fragment_props/tsconfig.json"
 		},
 		{
+			"path": "./_failed_vueIgnoreScope/tsconfig.json"
+		},
+		{
 			"path": "./attrs/tsconfig.json"
 		},
 		{
