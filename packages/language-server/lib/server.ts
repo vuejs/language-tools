@@ -2,7 +2,7 @@ import type { LanguageServer, MessageActionItem } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createConnection, createServer } from '@volar/language-server/node';
 import type { MapperOptions } from '@vue/content-mapper/protocol';
-import { resolveVueCompilerOptions } from '@vue/content-mapper/vueOptions';
+import { resolveMapperOptions } from '@vue/content-mapper/vueOptions';
 import {
 	createLanguage,
 	createVueLanguagePlugin,
@@ -452,7 +452,7 @@ export function startServer(ts: typeof import('typescript')) {
 					routeByExtensions(
 						createVueLanguagePlugin(
 							asCoreTypeScript(ts),
-							resolveVueCompilerOptions(ts.sys.readFile, configFileName, entry.options),
+							resolveMapperOptions(ts.sys.readFile, configFileName, entry.options).vueOptions,
 							asFileName,
 						),
 						entry.extensions,

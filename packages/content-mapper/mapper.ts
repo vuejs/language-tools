@@ -14,7 +14,7 @@ import type {
 } from './protocol';
 import { toSpanMappings } from './spanMappings';
 import { loadTypeScript } from './typescript';
-import { resolveVueCompilerOptions } from './vueOptions';
+import { resolveMapperOptions } from './vueOptions';
 
 interface ProjectConfiguration {
 	plugin: ReturnType<typeof vue.createVueLanguagePlugin<string>>;
@@ -162,22 +162,22 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 				return content;
 			}
 			: readFileIfExists;
-		const rootDir = configFileName
-			? path.dirname(configFileName)
-			: process.cwd();
-		const { languageFeatures, ...mapperOptions } = state.params.options ?? {};
-		const vueOptions = resolveVueCompilerOptions(readFile, configFileName || undefined, state.params.options);
+		const { rootDir, languageFeatures, plugins, vueOptions } = resolveMapperOptions(
+			readFile,
+			configFileName || undefined,
+			state.params.options,
+		);
 		const configuration = {
 			plugin: vue.createVueLanguagePlugin<string>(
 				loadTypeScript(),
 				vueOptions,
 				fileName => fileName,
 			),
-			languageFeatures: languageFeatures !== false,
+			languageFeatures,
 			virtualCodes: new Map(),
 		};
 		if (watchedFiles) {
-			addPluginWatchFiles(watchedFiles, mapperOptions.plugins, rootDir);
+			addPluginWatchFiles(watchedFiles, plugins, rootDir);
 		}
 		state.configurations.set(configFileName, configuration);
 		return configuration;

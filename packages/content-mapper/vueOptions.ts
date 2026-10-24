@@ -3,23 +3,28 @@ import * as path from 'node:path';
 import type { MapperOptions } from './protocol';
 
 /**
- * Resolves the Vue compiler options of one mapper entry from its own `options` alone. The language
- * server calls this too, so both produce the same virtual code.
+ * Resolves one mapper entry from its own `options` alone. The language server calls this too, so
+ * both produce the same virtual code.
  */
-export function resolveVueCompilerOptions(
+export function resolveMapperOptions(
 	readFile: (fileName: string) => string | undefined,
 	configFileName: string | undefined,
 	options: MapperOptions | undefined,
 ) {
-	const rootDir = normalizePath(configFileName ? path.dirname(configFileName) : process.cwd());
-	const { languageFeatures, ...mapperOptions } = options ?? {};
+	const rootDir = configFileName ? path.dirname(configFileName) : process.cwd();
+	const { languageFeatures, ...rawVueOptions } = options ?? {};
 	const resolver = new vue.CompilerOptionsResolver(readFile);
-	resolver.addConfig(mapperOptions as vue.RawVueCompilerOptions, rootDir);
+	resolver.addConfig(rawVueOptions as vue.RawVueCompilerOptions, normalizePath(rootDir));
 	const vueOptions = resolver.build();
 	if (vueOptions.format === 'petite-vue') {
 		vueOptions.globalTemplateContext = true;
 	}
-	return vueOptions;
+	return {
+		rootDir,
+		languageFeatures: languageFeatures !== false,
+		plugins: rawVueOptions.plugins,
+		vueOptions,
+	};
 }
 
 function normalizePath(fileName: string) {
