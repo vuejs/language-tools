@@ -99,9 +99,11 @@ export interface VueCompilerOptions {
 		useTemplateRef: string[];
 	};
 	plugins: VueLanguagePlugin[];
-
-	// experimental
-	experimentalModelPropName: Record<
+	/**
+	 * Prop that an argument-less `v-model` binds, keyed by prop name, then by tag; a tag maps to `true`
+	 * or to the attribute values it must carry. The `''` prop name binds no prop.
+	 */
+	vModelPropName: Record<
 		string,
 		Record<string, boolean | Record<string, string> | Record<string, string>[]>
 	>;

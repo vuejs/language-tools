@@ -345,8 +345,8 @@ function getPropsCodeFeatures(): VueCodeInformation {
 }
 
 function getModelPropName(node: CompilerDOM.ElementNode, vueCompilerOptions: VueCompilerOptions) {
-	for (const modelName in vueCompilerOptions.experimentalModelPropName) {
-		const tags = vueCompilerOptions.experimentalModelPropName[modelName];
+	for (const modelName in vueCompilerOptions.vModelPropName) {
+		const tags = vueCompilerOptions.vModelPropName[modelName];
 		for (const tag in tags) {
 			if (node.tag === tag || node.tag === hyphenateTag(tag)) {
 				const val = tags[tag];
@@ -373,8 +373,8 @@ function getModelPropName(node: CompilerDOM.ElementNode, vueCompilerOptions: Vue
 		}
 	}
 
-	for (const modelName in vueCompilerOptions.experimentalModelPropName) {
-		const tags = vueCompilerOptions.experimentalModelPropName[modelName];
+	for (const modelName in vueCompilerOptions.vModelPropName) {
+		const tags = vueCompilerOptions.vModelPropName[modelName];
 		for (const tag in tags) {
 			if (node.tag === tag || node.tag === hyphenateTag(tag)) {
 				const attrs = tags[tag];

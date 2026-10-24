@@ -77,9 +77,9 @@ export class CompilerOptionsResolver {
 			].map(hyphenateTag),
 			// https://github.com/vuejs/core/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 			// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
-			experimentalModelPropName: Object.fromEntries(
+			vModelPropName: Object.fromEntries(
 				Object.entries(
-					this.options.experimentalModelPropName ?? defaults.experimentalModelPropName,
+					this.options.vModelPropName ?? defaults.vModelPropName,
 				).map(([k, v]) => [camelize(k), v]),
 			),
 		};
@@ -186,7 +186,7 @@ export function getDefaultCompilerOptions(
 			useTemplateRef: ['useTemplateRef', 'templateRef'],
 		},
 		plugins: [],
-		experimentalModelPropName: {
+		vModelPropName: {
 			'': {
 				input: true,
 			},

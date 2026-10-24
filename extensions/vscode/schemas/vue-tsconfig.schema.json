@@ -166,7 +166,7 @@
 					},
 					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
-				"experimentalModelPropName": {
+				"vModelPropName": {
 					"type": "object",
 					"default": {
 						"": {
@@ -178,7 +178,7 @@
 							"select": true
 						}
 					},
-					"markdownDescription": "https://github.com/vuejs/language-tools/issues/1969"
+					"markdownDescription": "Prop that a `v-model` without an argument binds, as `{ [propName]: { [tag]: true | { [attribute]: value } | { [attribute]: value }[] } }`. A tag mapped to attribute values only matches when it carries all of them. Tags matching no entry bind `modelValue`. Setting this replaces the default, which binds `value` on `<textarea>`, `<select>` and `<input type=\"text\">`, and no prop on other `<input>`s.\n\nThe `''` prop name binds no prop, so the bound expression is not checked against the tag's props; TypeScript 7 drops `\"\"` keys from `contentMappers[].options`, so set it in an SFC root comment such as `<!-- @vModelPropName { \"\": { \"MyField\": true } } -->`. Custom elements need an entry, since Vue binds their `v-model` like an `<input>`'s, e.g. `{ \"value\": { \"my-input\": true } }`."
 				}
 			}
 		}

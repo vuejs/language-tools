@@ -17,6 +17,7 @@ test('accepts every documented option', () => {
 		dataAttributes: ['data-*'],
 		macros: { defineProps: ['defineProps'] },
 		plugins: ['@vue/plugin', { name: '@vue/plugin2', custom: 1 }],
+		vModelPropName: { value: { 'my-input': true } },
 	})).toEqual([]);
 });
 
@@ -31,6 +32,12 @@ test('reports options removed in v4 with a migration hint', () => {
 	expect(diagnostics[1]!.messageText).toContain('GlobalComponents');
 	expect(toOptionDiagnostics({ resolveStyleImports: true })).toMatchObject([{
 		path: ['resolveStyleImports'],
+		code: OptionDiagnosticCode.RemovedOption,
+	}]);
+	expect(toOptionDiagnostics({ experimentalModelPropName: {} })).toEqual([{
+		path: ['experimentalModelPropName'],
+		messageText:
+			`Option 'experimentalModelPropName' was removed in v4. It was renamed to \`vModelPropName\`, which takes the same value.`,
 		code: OptionDiagnosticCode.RemovedOption,
 	}]);
 });

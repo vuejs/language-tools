@@ -731,6 +731,9 @@
 			"path": "./v-if/tsconfig.json"
 		},
 		{
+			"path": "./vModelPropName/tsconfig.json"
+		},
+		{
 			"path": "./withDefaults/tsconfig.json"
 		},
 		{
