@@ -6,7 +6,7 @@ import { baseParse } from './lib/baseParse';
 const classRE = /^class\s*=/;
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
-	const { allCodeFeatures, codeFeatures, compileTemplate } = modules['@vue/language-core'];
+	const { codeFeatures, compileTemplate } = modules['@vue/language-core'];
 
 	return {
 		name: require('./package.json').name,
@@ -33,7 +33,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					ir.template.content,
 					ir.template.name,
 					0,
-					codeFeatures?.full ?? allCodeFeatures,
+					codeFeatures.full,
 				]);
 			}
 		},

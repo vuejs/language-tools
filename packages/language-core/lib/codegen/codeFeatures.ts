@@ -64,9 +64,6 @@ export const codeFeatures = {
 	format,
 } satisfies Record<string, number>;
 
-/** @deprecated use `codeFeatures.full` instead */
-export const allCodeFeatures = codeFeatures.full;
-
 export function getCodeFeatures(info: VueCodeInformation) {
 	return typeof info === 'number' ? info : info.features;
 }
