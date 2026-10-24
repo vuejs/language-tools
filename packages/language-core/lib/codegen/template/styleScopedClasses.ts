@@ -1,3 +1,4 @@
+import { SpanMapKind } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Code, IRBlock } from '../../types';
@@ -100,7 +101,9 @@ export function* generateStyleScopedClassReferences(
 					}
 					else if (ts.isShorthandPropertyAssignment(property)) {
 						const text = getNodeText(property.name, ast);
-						yield* generateStyleScopedClassReference(template, text, property.name.end - text.length + startOffset);
+						const offset = property.name.end - text.length + startOffset;
+						// the name is also the value, which maps to it
+						yield* generateStyleScopedClassReference(template, text, offset, offset, SpanMapKind.Atom);
 					}
 				}
 			}
@@ -121,6 +124,7 @@ export function* generateStyleScopedClassReference(
 	className: string,
 	offset: number,
 	fullStart = offset,
+	kind?: SpanMapKind,
 ): Generator<Code> {
 	if (!className) {
 		yield `/** @type {${names.StyleScopedClasses}['`;
@@ -145,7 +149,7 @@ export function* generateStyleScopedClassReference(
 		block.name,
 		fullStart,
 		offset + className.length,
-		{ features: navigationFeatures | completionFeatures },
+		{ features: navigationFeatures | completionFeatures, kind },
 	);
 	yield `'`;
 	yield* generateEscaped(
