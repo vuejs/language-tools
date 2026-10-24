@@ -1,6 +1,13 @@
 import type { Code, IRBlock, TypeScript, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
-import { codeFeatures, getCodeFeatures, toAtomKind, withCodeFeatures } from '../codeFeatures';
+import {
+	codeFeatures,
+	getCodeFeatures,
+	ignoreDiagnostics,
+	isDiagnosticsIgnored,
+	toAtomKind,
+	withCodeFeatures,
+} from '../codeFeatures';
 import { names } from '../names';
 import { getRefBrandArgument, getTypeScriptAST, identifierRE } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -101,11 +108,11 @@ export function* generateInterpolation(
 }
 
 /**
- * Yield a code chunk, cutting the boundary character off as verification-only.
+ * Yield a code chunk, cutting the boundary character off as diagnostics-only.
  *
  * Adjacent mappings share the boundary offset (closed interval), so both the
  * neighbouring token's end and this chunk's start claim the same source offset.
- * Downgrading the boundary character to verification-only keeps content-sensitive
+ * Downgrading the boundary character to diagnostics-only keeps content-sensitive
  * features (rename / navigation) from firing on the neighbouring chunk.
  */
 function* generateNonIdentifierCode(
@@ -122,7 +129,12 @@ function* generateNonIdentifierCode(
 		yield [code, source, offset, data];
 		return;
 	}
-	yield [code.slice(0, 1), source, offset, getCodeFeatures(data) & codeFeatures.verification];
+	yield [
+		code.slice(0, 1),
+		source,
+		offset,
+		isDiagnosticsIgnored(data) ? ignoreDiagnostics(codeFeatures.none) : codeFeatures.none,
+	];
 	if (code.length > 1) {
 		yield [code.slice(1), source, offset + 1, data];
 	}
@@ -168,7 +180,7 @@ export function* generateIdentifier(
 			source,
 			start,
 			end,
-			codeFeatures.verification,
+			codeFeatures.none,
 		);
 		yield `value`;
 		yield boundary.end();
@@ -183,7 +195,7 @@ export function* generateIdentifier(
 				source,
 				start,
 				end,
-				codeFeatures.verification,
+				codeFeatures.none,
 			);
 			yield `value`;
 			yield boundary.end();
@@ -208,7 +220,7 @@ export function* generateIdentifier(
 			source,
 			start,
 			end,
-			codeFeatures.verification,
+			codeFeatures.none,
 		);
 		if (ctx.dollarVars.has(name)) {
 			yield names.dollars;

@@ -18,7 +18,7 @@ test('ignores synthesized virtual regions without overlapping explicit directive
 	]);
 });
 
-test('ignores mapped regions that are not verified', () => {
+test('ignores mapped regions whose diagnostics the code ignores', () => {
 	const mappings: SpanMapping[] = [
 		[0, 2, 0, 2, SpanMapKind.Verbatim, 0],
 		[4, 2, 0, 2, SpanMapKind.Verbatim, 0],

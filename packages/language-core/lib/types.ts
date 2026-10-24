@@ -51,6 +51,8 @@ export interface VueCodeMarker {
 	/** Segments sharing the symbol map as one atom spanning all of them. */
 	atom?: symbol;
 	diagnosticDirective?: VueDiagnosticDirective;
+	/** Diagnostics within the segment are not reported, unless a segment nested in it reports them. */
+	ignoreDiagnostics?: true;
 }
 
 /** The `SpanMapFeature` bits of a segment, or a marker carrying them. */

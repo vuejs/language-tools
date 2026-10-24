@@ -19,7 +19,7 @@ const completionBits = SpanMapFeature.Completion | SpanMapFeature.AutoInsert;
 
 test('passes language feature bits through and strips the bits outside the protocol', () => {
 	const mappings: Mapping[] = [
-		[0, 1, 0, 1, Verbatim, codeFeatures.verification],
+		[0, 1, 0, 1, Verbatim, codeFeatures.none],
 		[1, 2, 1, 2, Verbatim, codeFeatures.full | VueCodeFeature.PropsCompletion],
 	];
 
@@ -83,7 +83,7 @@ test('keeps zero-length navigation anchors and drops other zero-length markers',
 		[
 			[0, 3, 0, 3, Verbatim, codeFeatures.semanticWithoutHighlight],
 			[3, 0, 0, 0, Verbatim, codeFeatures.navigation | codeFeatures.semanticWithoutHighlight],
-			[3, 0, 1, 0, Verbatim, codeFeatures.verification],
+			[3, 0, 1, 0, Verbatim, codeFeatures.none],
 			[3, 0, 2, 0, Verbatim, VueCodeFeature.PropsCompletion],
 		],
 		'abc',
@@ -104,7 +104,7 @@ test('lets segments inside a feature-less atom win and fills around them', () =>
 	// original:  C b
 	expect(toSpanMappings(
 		[
-			[0, 6, 0, 1, Atom, codeFeatures.verification],
+			[0, 6, 0, 1, Atom, codeFeatures.none],
 			[4, 1, 2, 1, Verbatim, codeFeatures.navigation],
 		],
 		'{a: b}',
@@ -119,8 +119,8 @@ test('lets segments inside a feature-less atom win and fills around them', () =>
 test('fills around segments inside an atom without language features', () => {
 	expect(toSpanMappings(
 		[
-			[0, 6, 0, 1, Atom, codeFeatures.verification],
-			[4, 1, 2, 1, Verbatim, codeFeatures.navigationAndVerification],
+			[0, 6, 0, 1, Atom, codeFeatures.none],
+			[4, 1, 2, 1, Verbatim, codeFeatures.navigation],
 		],
 		'{a: b}',
 		'C b',
@@ -130,22 +130,6 @@ test('fills around segments inside an atom without language features', () => {
 		[4, 1, 2, 1, SpanMapKind.Verbatim, 0],
 		[5, 1, 0, 1, SpanMapKind.Atom, 0],
 	]);
-});
-
-test('reports fills of an unverified atom as unverified', () => {
-	// e.g. the props object of `checkRequiredFallthroughAttributes`
-	const unverifiedRanges: [number, number][] = [];
-	toSpanMappings(
-		[
-			[0, 6, 0, 1, Atom, 0],
-			[4, 1, 2, 1, Verbatim, codeFeatures.navigationAndVerification],
-		],
-		'{a: b}',
-		'C b',
-		true,
-		unverifiedRanges,
-	);
-	expect(unverifiedRanges).toEqual([[0, 4], [5, 6]]);
 });
 
 test('keeps atoms with equal texts as atoms', () => {
@@ -166,38 +150,19 @@ test('keeps atoms with equal texts as atoms', () => {
 test('cuts a verbatim section at a navigation-only copy of its content', () => {
 	// generated: f(x); x   (`x` copied from the section at 2..3 to 6..7)
 	// original:  f(x);
-	const unverifiedRanges: [number, number][] = [];
 	expect(toSpanMappings(
 		[
-			[0, 5, 0, 5, Verbatim, codeFeatures.navigationAndVerification],
+			[0, 5, 0, 5, Verbatim, codeFeatures.navigation],
 			[6, 1, 2, 1, Verbatim, codeFeatures.navigation],
 		],
 		'f(x); x',
 		'f(x);',
-		true,
-		unverifiedRanges,
 	)).toEqual([
 		[0, 2, 0, 2, SpanMapKind.Verbatim, navigationBits],
 		[2, 1, 2, 1, SpanMapKind.Verbatim, navigationBits],
 		[3, 2, 3, 2, SpanMapKind.Verbatim, navigationBits],
 		[6, 1, 2, 1, SpanMapKind.Verbatim, navigationBits],
 	]);
-	expect(unverifiedRanges).toEqual([[6, 7]]);
-});
-
-test('reports segments mapped without verification as unverified', () => {
-	const unverifiedRanges: [number, number][] = [];
-	toSpanMappings(
-		[
-			[0, 1, 0, 1, Verbatim, codeFeatures.navigationAndVerification],
-			[2, 1, 2, 1, Verbatim, codeFeatures.navigation],
-		],
-		'abc',
-		'abc',
-		true,
-		unverifiedRanges,
-	);
-	expect(unverifiedRanges).toEqual([[2, 3]]);
 });
 
 test('cuts a verbatim section at a copy that also offers completion', () => {
@@ -205,7 +170,7 @@ test('cuts a verbatim section at a copy that also offers completion', () => {
 	// original:  ('a');
 	expect(toSpanMappings(
 		[
-			[0, 5, 0, 5, Verbatim, codeFeatures.verification],
+			[0, 5, 0, 5, Verbatim, codeFeatures.none],
 			[7, 1, 2, 1, Verbatim, codeFeatures.navigationAndCompletion],
 		],
 		`('a'); a`,

@@ -3,7 +3,7 @@ import * as path from 'path-browserify';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRBlock, IRScript, IRScriptSetup, IRStyle, VueCompilerOptions } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import { codeFeatures, ignoreDiagnostics } from '../codeFeatures';
 import { names } from '../names';
 import { generateStyleModuleImports } from '../style/modules';
 import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
@@ -36,7 +36,7 @@ export { generate as generateScript };
 function* generateSyntheticDefaultExport(exportedExpression: string): Generator<Code> {
 	// keep the synthetic default export navigable: go-to-definition on
 	// `import Foo from './Foo.vue'` targets the whole statement, which maps to the SFC top
-	const boundary = yield* Boundary.start('main', 0, 0, codeFeatures.navigationWithoutRename);
+	const boundary = yield* Boundary.start('main', 0, 0, ignoreDiagnostics(codeFeatures.navigationWithoutRename));
 	yield `export default ${exportedExpression};`;
 	yield boundary.end();
 	yield newLine;
@@ -299,7 +299,7 @@ export function* generateExportDeclareEqual(
 	end: number,
 ): Generator<Code> {
 	yield `const `;
-	const boundary = yield* Boundary.start(source, start, end, codeFeatures.verification);
+	const boundary = yield* Boundary.start(source, start, end, codeFeatures.none);
 	yield name;
 	yield boundary.end();
 	yield ` = `;

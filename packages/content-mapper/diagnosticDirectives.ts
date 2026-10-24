@@ -103,27 +103,47 @@ export function withSynthesizedDiagnosticIgnores(
 	virtualLength: number,
 	mappings: readonly SpanMapping[],
 	directives: readonly DiagnosticDirectiveMapping[],
-	unverifiedRanges: readonly [start: number, end: number][] = [],
+	/** Sorted, disjoint virtual ranges whose diagnostics are not reported. */
+	ignoredRanges: readonly [start: number, end: number][] = [],
 ) {
-	const unverified = new Set(unverifiedRanges.map(([start, end]) => `${start}:${end}`));
 	const result = [...directives];
 	const blocked = [...directives].sort(
 		(left, right) => left[2] - right[2],
 	);
 	let virtualStart = 0;
 	let blockedIndex = 0;
+	let ignoredIndex = 0;
 
-	for (const mapping of mappings) {
-		if (unverified.has(`${mapping[0]}:${mapping[0] + mapping[1]}`)) {
-			continue;
+	for (const [start, length] of mappings) {
+		if (length) {
+			addReportedRange(start, start + length);
 		}
-		addIgnoreRanges(virtualStart, mapping[0]);
-		virtualStart = mapping[0] + mapping[1];
 	}
 	addIgnoreRanges(virtualStart, virtualLength);
 
 	result.sort((left, right) => left[2] - right[2]);
 	return result;
+
+	function addReportedRange(start: number, end: number) {
+		while (ignoredIndex < ignoredRanges.length && ignoredRanges[ignoredIndex]![1] <= start) {
+			ignoredIndex++;
+		}
+		for (let index = ignoredIndex; index < ignoredRanges.length; index++) {
+			const [ignoredStart, ignoredEnd] = ignoredRanges[index]!;
+			if (ignoredStart >= end) {
+				break;
+			}
+			if (start < ignoredStart) {
+				addIgnoreRanges(virtualStart, start);
+				virtualStart = ignoredStart;
+			}
+			start = Math.max(start, ignoredEnd);
+		}
+		if (start < end) {
+			addIgnoreRanges(virtualStart, start);
+			virtualStart = end;
+		}
+	}
 
 	function addIgnoreRanges(start: number, end: number) {
 		if (start >= end) {

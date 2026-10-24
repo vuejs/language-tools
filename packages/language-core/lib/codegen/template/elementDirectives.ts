@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isBuiltInDirective } from '@vue/shared';
 import type { Code } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import { codeFeatures, ignoreDiagnostics } from '../codeFeatures';
 import { names } from '../names';
 import { asType, endOfLine, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -33,7 +33,7 @@ export function* generateElementDirectives(
 				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				codeFeatures.verification,
+				codeFeatures.none,
 			);
 			// vapor custom directives receive a value getter instead of a vdom binding object
 			yield* generateIdentifier(ctx, prop);
@@ -56,7 +56,7 @@ export function* generateElementDirectives(
 				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				codeFeatures.verification,
+				codeFeatures.none,
 			);
 			yield `${hookVar}(${names.nonNull}(null), { ...${names.directiveBindingRestFields}, `;
 			yield* generateArg(options, ctx, prop);
@@ -82,7 +82,7 @@ function* generateIdentifier(
 		'template',
 		startOffset,
 		startOffset + rawName.length,
-		codeFeatures.verification,
+		codeFeatures.none,
 	);
 	yield names.directives;
 	yield `.`;
@@ -91,7 +91,7 @@ function* generateIdentifier(
 		'template',
 		prop.loc.start.offset,
 		isBuiltInDirective(prop.name)
-			? codeFeatures.withoutHighlightAndCompletion & ~codeFeatures.verification
+			? ignoreDiagnostics(codeFeatures.withoutHighlightAndCompletion)
 			: codeFeatures.withoutHighlightAndCompletion,
 	);
 	if (!isBuiltInDirective(prop.name)) {
@@ -114,7 +114,7 @@ function* generateArg(
 				'template',
 				startOffset,
 				startOffset + arg.content.length,
-				codeFeatures.verification,
+				codeFeatures.none,
 			);
 			yield `arg`;
 			yield boundary.end();
@@ -160,7 +160,7 @@ export function* generateModifiers(
 				'template',
 				modifiers[0]!.loc.start.offset - 1,
 				modifiers.at(-1)!.loc.end.offset,
-				codeFeatures.verification,
+				codeFeatures.none,
 			);
 			yield propertyName;
 			yield boundary.end();
@@ -196,7 +196,7 @@ function* generateValue(
 			'template',
 			exp.loc.start.offset,
 			exp.loc.end.offset,
-			codeFeatures.verification,
+			codeFeatures.none,
 		);
 		if (asBindingProperty) {
 			yield `value`;

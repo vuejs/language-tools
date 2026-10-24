@@ -113,17 +113,14 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		}
 
 		const text = serviceScript.code.snapshot.getText(0, serviceScript.code.snapshot.getLength());
-		const unverifiedRanges: [number, number][] = [];
 		const mappings = toSpanMappings(
 			serviceScript.code.mappings,
 			text,
 			params.content,
 			configuration.languageFeatures,
-			unverifiedRanges,
 		);
-		const diagnosticDirectives = toDiagnosticDirectives(
-			(serviceScript.code as vue.VueGeneratedCode).diagnosticDirectives,
-		);
+		const generatedCode = serviceScript.code as vue.VueGeneratedCode;
+		const diagnosticDirectives = toDiagnosticDirectives(generatedCode.diagnosticDirectives);
 		return {
 			text,
 			extension: serviceScript.extension,
@@ -136,7 +133,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 					text.length,
 					mappings,
 					diagnosticDirectives,
-					unverifiedRanges,
+					generatedCode.diagnosticIgnores,
 				),
 			},
 			mappings,

@@ -48,7 +48,7 @@ export function* generateStyleModules(
 						`$style`,
 						'main',
 						offset,
-						codeFeatures.verification,
+						codeFeatures.none,
 					];
 				}
 				else if (identifierRE.test(text)) {
@@ -56,7 +56,7 @@ export function* generateStyleModules(
 						text,
 						'main',
 						offset,
-						codeFeatures.navigationAndVerification,
+						codeFeatures.navigation,
 					];
 				}
 				else {
@@ -64,7 +64,7 @@ export function* generateStyleModules(
 						'main',
 						offset,
 						offset + text.length,
-						codeFeatures.navigationAndVerification,
+						codeFeatures.navigation,
 					);
 					yield `'`;
 					yield [text, 'main', offset, boundary.features];

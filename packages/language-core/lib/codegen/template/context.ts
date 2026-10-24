@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation, VueDiagnosticDirective } from '../../types';
-import { codeFeatures, getCodeFeatures, withCodeFeatures } from '../codeFeatures';
+import { codeFeatures, getCodeFeatures, ignoreDiagnostics, isDiagnosticsIgnored } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
@@ -132,13 +132,12 @@ export function createTemplateCodegenContext(scriptLang: string) {
 	}
 
 	function resolveCodeFeatures(info: VueCodeInformation): VueCodeInformation {
-		const features = getCodeFeatures(info);
-		if (features & codeFeatures.verification && stack.length) {
+		if (!isDiagnosticsIgnored(info) && !(typeof info === 'object' && info.diagnosticDirective) && stack.length) {
 			const data = stack[stack.length - 1]!;
 			const policy = data.ignoreError ? 'ignore' : data.expectError !== undefined ? 'expect' : undefined;
 			if (policy) {
 				const directive = data.diagnosticDirectives?.find(info => info.directive.policy === policy);
-				const resolved = policy === 'ignore' ? withCodeFeatures(info, features & ~codeFeatures.verification) : info;
+				const resolved = policy === 'ignore' ? ignoreDiagnostics(info) : info;
 				return directive
 					? {
 						...typeof resolved === 'number' ? { features: resolved } : resolved,

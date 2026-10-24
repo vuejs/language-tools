@@ -2,7 +2,12 @@ import type { IScriptSnapshot, Mapping, TextChangeRange, VirtualCode } from '@vo
 import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
 import type { Code, IR, IRBlock, VueLanguagePluginReturn } from '../types';
-import { buildDiagnosticDirectiveMarkers, buildMappings, type DiagnosticDirectiveMarker } from '../utils/buildMappings';
+import {
+	buildDiagnosticDirectiveMarkers,
+	buildDiagnosticIgnores,
+	buildMappings,
+	type DiagnosticDirectiveMarker,
+} from '../utils/buildMappings';
 
 export class VueEmbeddedCode {
 	public parentCodeId?: string;
@@ -17,6 +22,7 @@ export class VueEmbeddedCode {
 
 export interface VueGeneratedCode extends VirtualCode {
 	diagnosticDirectives: DiagnosticDirectiveMarker[];
+	diagnosticIgnores: [start: number, end: number][];
 }
 
 export function useEmbeddedCodes(
@@ -52,7 +58,7 @@ export function useEmbeddedCodes(
 			.map(getPluginResult => getPluginResult())
 			.flat()
 			.map(
-				({ code, snapshot, mappings, diagnosticDirectives }) => {
+				({ code, snapshot, mappings, diagnosticDirectives, diagnosticIgnores }) => {
 					const virtualCode: VueGeneratedCode = {
 						id: code.id,
 						languageId: resolveCommonLanguageId(code.lang),
@@ -60,6 +66,7 @@ export function useEmbeddedCodes(
 						mappings,
 						embeddedCodes: [],
 						diagnosticDirectives,
+						diagnosticIgnores,
 					};
 					idToCodeMap.set(code.id, virtualCode);
 					return [code.parentCodeId, virtualCode] as const;
@@ -116,6 +123,7 @@ export function useEmbeddedCodes(
 				snapshot: IScriptSnapshot;
 				mappings: Mapping[];
 				diagnosticDirectives: DiagnosticDirectiveMarker[];
+				diagnosticIgnores: [start: number, end: number][];
 			}[] = [];
 
 			for (const generate of getMap().values()) {
@@ -126,6 +134,7 @@ export function useEmbeddedCodes(
 					snapshot,
 					mappings: buildMappings(content),
 					diagnosticDirectives: buildDiagnosticDirectiveMarkers(content),
+					diagnosticIgnores: buildDiagnosticIgnores(content),
 				});
 			}
 

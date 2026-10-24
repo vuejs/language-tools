@@ -40,7 +40,7 @@ export function* generateSlotOutlet(
 			let codes: Generator<Code> | Code[];
 			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
 				const [content, offset] = normalizeAttributeValue(nameProp.value);
-				codes = generatePropertyAccess(options, ctx, content, offset, codeFeatures.navigationAndVerification);
+				codes = generatePropertyAccess(options, ctx, content, offset, codeFeatures.navigation);
 			}
 			else if (
 				nameProp.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -65,7 +65,7 @@ export function* generateSlotOutlet(
 				'template',
 				nameProp.loc.start.offset,
 				nameProp.loc.end.offset,
-				codeFeatures.verification,
+				codeFeatures.none,
 			);
 			yield options.slotsAssignName ?? names.slots;
 			yield* codes;
@@ -76,14 +76,14 @@ export function* generateSlotOutlet(
 				'template',
 				startTagOffset,
 				startTagEndOffset,
-				codeFeatures.verification,
+				codeFeatures.none,
 			);
 			yield `${options.slotsAssignName ?? names.slots}[`;
 			const boundary2 = yield* Boundary.start(
 				'template',
 				startTagOffset,
 				startTagEndOffset,
-				codeFeatures.verification,
+				codeFeatures.none,
 			);
 			yield `'default'`;
 			yield boundary2.end();
@@ -96,7 +96,7 @@ export function* generateSlotOutlet(
 			'template',
 			startTagOffset,
 			startTagEndOffset,
-			codeFeatures.verification,
+			codeFeatures.none,
 		);
 		yield `{${newLine}`;
 		yield* generateElementProps(

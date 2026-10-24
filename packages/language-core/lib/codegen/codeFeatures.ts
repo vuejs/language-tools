@@ -27,18 +27,17 @@ const structure = SpanMapFeature.FoldingRanges
 	| SpanMapFeature.DocumentSymbols
 	| SpanMapFeature.CodeLens;
 const format = SpanMapFeature.Formatting;
-const verification = SpanMapFeature.Verification;
 
 export const codeFeatures = {
-	full: verification | completion | semantic | navigation | structure | format,
+	full: completion | semantic | navigation | structure | format,
 	/** @internal */
-	all: verification | completion | semantic | navigation,
+	all: completion | semantic | navigation,
 	/** @internal */
-	verification,
+	none: 0,
 	/** @internal */
 	completion,
 	/** @internal */
-	withoutCompletion: verification | semantic | navigation,
+	withoutCompletion: semantic | navigation,
 	/** @internal */
 	navigation,
 	/** @internal */
@@ -46,19 +45,17 @@ export const codeFeatures = {
 	/** @internal */
 	navigationAndCompletion: navigation | completion,
 	/** @internal */
-	navigationAndVerification: navigation | verification,
-	/** @internal */
-	withoutNavigation: verification | completion | semantic,
+	withoutNavigation: completion | semantic,
 	/** @internal */
 	semanticWithoutHighlight,
 	/** @internal */
-	withoutHighlight: semanticWithoutHighlight | verification | navigation | completion,
+	withoutHighlight: semanticWithoutHighlight | navigation | completion,
 	/** @internal */
-	withoutHighlightAndCompletion: semanticWithoutHighlight | verification | navigation,
+	withoutHighlightAndCompletion: semanticWithoutHighlight | navigation,
 	/** @internal */
-	tagName: semanticWithoutHighlight | verification | navigation,
+	tagName: semanticWithoutHighlight | navigation,
 	/** @internal */
-	withoutSemantic: verification | navigation | completion,
+	withoutSemantic: navigation | completion,
 	/** @internal */
 	structure,
 	/** @internal */
@@ -76,6 +73,14 @@ export function getCodeFeatures(info: VueCodeInformation) {
 
 export function withCodeFeatures(info: VueCodeInformation, features: number): VueCodeInformation {
 	return typeof info === 'number' ? features : { ...info, features };
+}
+
+export function ignoreDiagnostics(info: VueCodeInformation): VueCodeMarker {
+	return { ...typeof info === 'number' ? { features: info } : info, ignoreDiagnostics: true };
+}
+
+export function isDiagnosticsIgnored(info: VueCodeInformation) {
+	return typeof info === 'object' && !!info.ignoreDiagnostics;
 }
 
 export function toAtomGroup(info: VueCodeInformation): VueCodeMarker {

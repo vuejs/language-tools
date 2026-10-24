@@ -1,7 +1,7 @@
 import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRScriptSetup, TextRange } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import { codeFeatures, ignoreDiagnostics } from '../codeFeatures';
 import { names } from '../names';
 import {
 	asType,
@@ -49,7 +49,7 @@ export function* generateGeneric(
 			'main',
 			generic.offset,
 			generic.offset + generic.text.length,
-			codeFeatures.verification,
+			codeFeatures.none,
 		);
 		yield `<`;
 		yield [generic.text, 'main', generic.offset, codeFeatures.all];
@@ -80,7 +80,7 @@ export function* generateGeneric(
 			scriptSetup,
 			scriptSetupRanges.defineProps.arg.start,
 			scriptSetupRanges.defineProps.arg.end,
-			codeFeatures.navigation,
+			ignoreDiagnostics(codeFeatures.navigation),
 		);
 		yield endOfLine;
 		propTypes.push(
@@ -274,7 +274,7 @@ export function* generateSetupFunction(
 				insert(callExp.end, function*() {
 					if (isTsLang(options.scriptLang)) {
 						yield ` as ${type}[`;
-						const boundary = yield* Boundary.start(scriptSetup.name, exp.start, exp.end, codeFeatures.verification);
+						const boundary = yield* Boundary.start(scriptSetup.name, exp.start, exp.end, codeFeatures.none);
 						yield `'$style'`;
 						yield boundary.end();
 						yield `])`;
@@ -488,7 +488,7 @@ function* generatePublicProps(
 			scriptSetup,
 			scriptSetupRanges.withDefaults.arg.start,
 			scriptSetupRanges.withDefaults.arg.end,
-			codeFeatures.navigation,
+			ignoreDiagnostics(codeFeatures.navigation),
 		);
 		yield endOfLine;
 		yield `void ${names.defaults}${endOfLine}`;
@@ -616,7 +616,7 @@ function* generateModelProp(
 			getRangeText(scriptSetup, defineModel.name),
 			scriptSetup.name,
 			defineModel.name.start,
-			codeFeatures.navigation,
+			ignoreDiagnostics(codeFeatures.navigation),
 		);
 	}
 	else {

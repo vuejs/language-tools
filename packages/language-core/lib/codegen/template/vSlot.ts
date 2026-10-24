@@ -3,7 +3,7 @@ import { replaceSourceRange } from 'muggle-string';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
-import { codeFeatures } from '../codeFeatures';
+import { codeFeatures, ignoreDiagnostics } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, getTypeScriptAST, isTsLang, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -54,7 +54,7 @@ export function* generateVSlot(
 			'template',
 			node.loc.start.offset,
 			node.loc.start.offset + 1,
-			codeFeatures.navigation,
+			ignoreDiagnostics(codeFeatures.navigation),
 		);
 		yield `default`;
 		yield boundary.end();
@@ -156,7 +156,7 @@ function* generateSlotParameters(
 			'template',
 			exp.loc.start.offset,
 			exp.loc.end.offset,
-			codeFeatures.verification,
+			codeFeatures.none,
 		);
 		yield `(`;
 		yield* types.flatMap(type => type ? [`_`, type, `, `] : `_, `);

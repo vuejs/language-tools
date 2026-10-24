@@ -3,7 +3,7 @@ import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
 import type { Code } from '../../types';
 import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import { codeFeatures, VueCodeFeature } from '../codeFeatures';
+import { codeFeatures, ignoreDiagnostics, VueCodeFeature } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
@@ -136,7 +136,7 @@ export function* generateComponent(
 				yield* generateStringLiteralKey(
 					tag,
 					startTagOffset,
-					codeFeatures.semanticWithoutHighlight | codeFeatures.verification,
+					codeFeatures.semanticWithoutHighlight,
 				);
 				yield `]`;
 			});
@@ -150,11 +150,11 @@ export function* generateComponent(
 					}
 					for (const name of new Set([tag, capitalize(tag)])) {
 						yield ` | typeof ${options.setupBindings.has(camelize(name)) ? '' : `${names.components}.`}`;
-						yield* generateCamelized(name, 'template', offset, codeFeatures.navigation);
+						yield* generateCamelized(name, 'template', offset, ignoreDiagnostics(codeFeatures.navigation));
 					}
 					if (tag.includes('-')) {
 						yield ` | typeof ${names.components}[`;
-						yield* generateStringLiteralKey(tag, offset, codeFeatures.navigation);
+						yield* generateStringLiteralKey(tag, offset, ignoreDiagnostics(codeFeatures.navigation));
 						yield `]`;
 					}
 				}
@@ -213,7 +213,7 @@ export function* generateComponent(
 			'template',
 			offset,
 			offset + content.length,
-			codeFeatures.verification,
+			codeFeatures.none,
 		);
 		yield `<`;
 		yield [content, 'template', offset, codeFeatures.all];
@@ -229,8 +229,8 @@ export function* generateComponent(
 		startTagOffset,
 		startTagOffset + tag.length,
 		shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes
-			? 0
-			: codeFeatures.verification,
+			? ignoreDiagnostics(0)
+			: codeFeatures.none,
 	);
 	yield `{`;
 	yield [``, 'template', node.loc.start.offset, VueCodeFeature.PropsCompletion];
@@ -345,7 +345,7 @@ export function* generateElement(
 		'template',
 		startTagOffset,
 		startTagOffset + node.tag.length,
-		codeFeatures.verification,
+		codeFeatures.none,
 	);
 	yield `{${newLine}`;
 	yield* generateElementProps(
@@ -404,7 +404,7 @@ export function* generateFragment(
 			'template',
 			startTagOffset,
 			startTagOffset + node.tag.length,
-			codeFeatures.verification,
+			codeFeatures.none,
 		);
 		yield `{${newLine}`;
 		yield* generateElementProps(

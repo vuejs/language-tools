@@ -1,8 +1,4 @@
-import {
-	type Mapping,
-	SpanMapFeature as VolarSpanMapFeature,
-	SpanMapKind as VolarSpanMapKind,
-} from '@vue/language-core';
+import { type Mapping, SpanMapKind as VolarSpanMapKind } from '@vue/language-core';
 import { SpanMapFeature, SpanMapKind, type SpanMapping } from './protocol';
 
 const completionFeatures = SpanMapFeature.Completion
@@ -25,7 +21,6 @@ interface Candidate {
 	originalEnd: number;
 	kind: SpanMapKind;
 	features: number;
-	verified: boolean;
 }
 
 interface IntervalNode {
@@ -42,8 +37,6 @@ export function toSpanMappings(
 	generatedText: string,
 	originalText: string,
 	languageFeatures = true,
-	/** Receives virtual ranges that are mapped without verification and must not report diagnostics. */
-	unverifiedRanges: [start: number, end: number][] = [],
 ): SpanMapping[] {
 	const candidates: Candidate[] = [];
 	const fills: Candidate[] = [];
@@ -79,9 +72,8 @@ export function toSpanMappings(
 			originalEnd,
 			kind: verbatim ? SpanMapKind.Verbatim : SpanMapKind.Atom,
 			features,
-			verified: !!(data & VolarSpanMapFeature.Verification),
 		};
-		// A feature-less atom (e.g. a verification boundary around a props object)
+		// A feature-less atom (e.g. a boundary around a props object)
 		// only carries diagnostics; let the segments inside it win.
 		// Decide by the source features so this holds without language features too.
 		if (!sourceFeatures && kind !== VolarSpanMapKind.Verbatim) {
@@ -113,9 +105,6 @@ export function toSpanMappings(
 		generatedIntervals.add(candidate.generatedStart, candidate.generatedEnd);
 		originalIntervals.add(candidate.originalStart, candidate.originalEnd);
 		selected.push(candidate);
-		if (!candidate.verified) {
-			unverifiedRanges.push([candidate.generatedStart, candidate.generatedEnd]);
-		}
 	}
 
 	// Fill the uncovered parts of each feature-less token with pieces of the
@@ -149,9 +138,6 @@ export function toSpanMappings(
 		for (const piece of pieces) {
 			generatedIntervals.add(piece.generatedStart, piece.generatedEnd);
 			selected.push(piece);
-			if (!fill.verified) {
-				unverifiedRanges.push([piece.generatedStart, piece.generatedEnd]);
-			}
 		}
 		originalIntervals.add(fill.originalStart, fill.originalEnd);
 	}

@@ -3,7 +3,7 @@ import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { getUnwrappedExpression } from '../../parsers/utils';
 import type { Code, TypeScript, VueCodeInformation } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import { codeFeatures, ignoreDiagnostics } from '../codeFeatures';
 import { names } from '../names';
 import {
 	endOfLine,
@@ -136,7 +136,7 @@ export function* generateElementEvents(
 			const argsType = `${names.EventArgs}<${eventType}, '${propName}'>`;
 			if (prop.name === 'on') {
 				yield `/** @type {typeof ${emitsVar}.`;
-				yield* generateEventArg(source, offset!, emitPrefix.slice(0, -1), codeFeatures.navigation);
+				yield* generateEventArg(source, offset!, emitPrefix.slice(0, -1), ignoreDiagnostics(codeFeatures.navigation));
 				yield `} */${newLine}`;
 				// in JS, the JSDoc above types the property, and fails to parse for a non-identifier name
 				const emitArgName = getEventArgName(source, emitPrefix.slice(0, -1));
@@ -171,8 +171,7 @@ export function* generateEventArg(
 	features?: VueCodeInformation,
 ): Generator<Code> {
 	features ??= codeFeatures.semanticWithoutHighlight
-		| codeFeatures.navigationWithoutRename
-		| codeFeatures.verification;
+		| codeFeatures.navigationWithoutRename;
 
 	if (directive.length) {
 		name = capitalize(name);
@@ -294,7 +293,7 @@ export function* generateModelEventExpression(
 			options,
 			ctx,
 			options.template,
-			codeFeatures.verification,
+			codeFeatures.none,
 			prop.exp.content,
 			prop.exp.loc.start.offset,
 			undefined,

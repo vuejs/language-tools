@@ -128,7 +128,7 @@ export function* generateElementProps(
 				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				codeFeatures.verification,
+				codeFeatures.none,
 			);
 			if (prop.arg) {
 				yield* generateObjectProperty(
@@ -156,7 +156,7 @@ export function* generateElementProps(
 				'template',
 				argLoc.start.offset,
 				argLoc.end.offset,
-				codeFeatures.verification,
+				codeFeatures.none,
 			);
 			yield* generatePropExp(options, ctx, prop, prop.exp);
 			yield boundary3.end();
@@ -192,7 +192,7 @@ export function* generateElementProps(
 				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				codeFeatures.verification,
+				codeFeatures.none,
 			);
 			const prefix = options.template.content.slice(prop.loc.start.offset, prop.loc.start.offset + 1);
 			if (prefix === '.' || prefix === '#') {
@@ -240,7 +240,7 @@ export function* generateElementProps(
 					'template',
 					prop.exp.loc.start.offset,
 					prop.exp.loc.end.offset,
-					codeFeatures.verification,
+					codeFeatures.none,
 				);
 				yield `...`;
 				yield* generatePropExp(
@@ -334,7 +334,7 @@ function getShouldCamelize(
 }
 
 function getPropsCodeFeatures(): VueCodeInformation {
-	return codeFeatures.withoutHighlightAndCompletion | codeFeatures.verification | VueCodeFeature.PropsCompletion;
+	return codeFeatures.withoutHighlightAndCompletion | VueCodeFeature.PropsCompletion;
 }
 
 /**

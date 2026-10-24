@@ -1,10 +1,10 @@
-import { SpanMapFeature, SpanMapKind } from '@volar/language-core';
+import { SpanMapKind } from '@volar/language-core';
 import { expect, test } from 'vitest';
-import { codeFeatures, toAtomGroup, toAtomKind } from '../lib/codegen/codeFeatures';
+import { codeFeatures, ignoreDiagnostics, toAtomGroup, toAtomKind } from '../lib/codegen/codeFeatures';
 import type { Code } from '../lib/types';
-import { buildDiagnosticDirectiveMarkers, buildMappings } from '../lib/utils/buildMappings';
+import { buildDiagnosticDirectiveMarkers, buildDiagnosticIgnores, buildMappings } from '../lib/utils/buildMappings';
 
-const { navigation, navigationAndCompletion, verification } = codeFeatures;
+const { navigation, navigationAndCompletion, none } = codeFeatures;
 
 test('merges a boundary-wrapped token into one atom', () => {
 	const data = toAtomGroup(navigation);
@@ -93,7 +93,7 @@ test('maps every segment sharing a shorthand source range as an atom', () => {
 });
 
 test('lets segments inside a feature-less group stay individual', () => {
-	const boundary = toAtomGroup(verification);
+	const boundary = toAtomGroup(none);
 	expect(buildMappings([
 		['', 'template', 0, boundary],
 		'{a: ',
@@ -101,7 +101,7 @@ test('lets segments inside a feature-less group stay individual', () => {
 		'}',
 		['', 'template', 1, boundary],
 	])).toEqual([
-		[0, 6, 0, 1, SpanMapKind.Atom, verification],
+		[0, 6, 0, 1, SpanMapKind.Atom, none],
 		[4, 1, 2, 1, SpanMapKind.Verbatim, navigation],
 	]);
 });
@@ -110,14 +110,67 @@ test('collects diagnostic directive markers outside the mappings', () => {
 	const directive = { policy: 'ignore' as const, originalLength: 3 };
 	const chunks: Code[] = [
 		['', 'template', 5, { features: 0, diagnosticDirective: { directive, phase: 'anchor' } }],
-		['abc', 'template', 5, { features: verification, diagnosticDirective: { directive, phase: 'content' } }],
+		['abc', 'template', 5, { features: none, diagnosticDirective: { directive, phase: 'content' } }],
 	];
 	expect(buildMappings(chunks)).toEqual([
 		[0, 0, 5, 0, SpanMapKind.Verbatim, 0],
-		[0, 3, 5, 3, SpanMapKind.Verbatim, SpanMapFeature.Verification],
+		[0, 3, 5, 3, SpanMapKind.Verbatim, none],
 	]);
 	expect(buildDiagnosticDirectiveMarkers(chunks)).toEqual([
 		{ directive, phase: 'anchor', generatedStart: 0, generatedLength: 0, sourceStart: 5 },
 		{ directive, phase: 'content', generatedStart: 0, generatedLength: 3, sourceStart: 5 },
 	]);
+});
+
+test('ignores diagnostics of segments marked to ignore them', () => {
+	expect(buildDiagnosticIgnores([
+		['ab', 'template', 0, ignoreDiagnostics(navigation)],
+		['cd', 'template', 2, navigation],
+		['', 'template', 4, ignoreDiagnostics(none)],
+	])).toEqual([[0, 2]]);
+});
+
+test('lets segments inside an ignored group report diagnostics', () => {
+	const boundary = toAtomGroup(ignoreDiagnostics(none));
+	expect(buildDiagnosticIgnores([
+		['', 'template', 0, boundary],
+		'{a: ',
+		['b', 'template', 2, navigation],
+		'}',
+		['', 'template', 1, boundary],
+	])).toEqual([[0, 4], [5, 6]]);
+});
+
+test('lets a reported group inside an ignored group report diagnostics', () => {
+	// generated: {a: (b)}   original: C b
+	const outer = toAtomGroup(ignoreDiagnostics(none));
+	const inner = toAtomGroup(none);
+	expect(buildDiagnosticIgnores([
+		['', 'template', 0, outer],
+		'{a: ',
+		['', 'template', 2, inner],
+		'(',
+		['b', 'template', 2, navigation],
+		')',
+		['', 'template', 3, inner],
+		'}',
+		['', 'template', 1, outer],
+	])).toEqual([[0, 4], [7, 8]]);
+});
+
+test('keeps ignoring a group whose source range crosses a taken one', () => {
+	// generated: {a: "b"}   original: C a b   (`: "b"` maps to `a b`, which contains `b`)
+	const outer = toAtomGroup(ignoreDiagnostics(none));
+	const inner = toAtomGroup(none);
+	expect(buildDiagnosticIgnores([
+		['', 'template', 0, outer],
+		'{a',
+		['', 'template', 2, inner],
+		': "',
+		['b', 'template', 4, navigation],
+		'"',
+		['', 'template', 5, inner],
+		'}',
+		['', 'template', 1, outer],
+	])).toEqual([[0, 5], [6, 8]]);
 });

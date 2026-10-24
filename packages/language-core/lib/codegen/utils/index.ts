@@ -114,7 +114,7 @@ export function* generateSfcBlockSection(
 			if (diagStart >= textEnd && diagEnd <= end) {
 				// map the synthesized terminator to the end of the section, so that
 				// truncation parse errors resolve back to the original block
-				yield [';', block.name, end, codeFeatures.verification];
+				yield [';', block.name, end, codeFeatures.none];
 				yield newLine;
 				break;
 			}

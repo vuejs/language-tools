@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Code, IRBlock } from '../../types';
 import { getNodeText, isStringLiteralLike, normalizeAttributeValue } from '../../utils/shared';
-import { codeFeatures } from '../codeFeatures';
+import { codeFeatures, ignoreDiagnostics } from '../codeFeatures';
 import { names } from '../names';
 import { endOfLine, forEachNode, getTypeScriptAST } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -144,7 +144,7 @@ export function* generateStyleScopedClassReference(
 		block.name,
 		fullStart,
 		offset + className.length,
-		codeFeatures.navigationAndCompletion,
+		ignoreDiagnostics(codeFeatures.navigationAndCompletion),
 	);
 	yield `'`;
 	yield* generateEscaped(
