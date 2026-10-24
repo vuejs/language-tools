@@ -3,7 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
 import { closeProject, openProject, transformVue } from '../project';
-import { SpanMapFeature } from '../protocol';
+import { DiagnosticDirectivePolicy, SpanMapFeature } from '../protocol';
 
 test('generates a Vue service script with source mappings', () => {
 	const projectHandle = 'test-project';
@@ -243,11 +243,13 @@ test('maps Vue diagnostic directives to virtual regions', () => {
 		code: 2578,
 		messageText: "Unused '@vue-expect-error' directive.",
 	}]);
-	expect(diagnosticDirectives.directives.filter(directive => directive[4] === 1)).toHaveLength(2);
-	expect(diagnosticDirectives.directives.filter(directive => directive[4] === 0).length).toBeGreaterThan(2);
+	expect(diagnosticDirectives.directives.filter(directive => directive[4] === DiagnosticDirectivePolicy.Expect))
+		.toHaveLength(2);
+	expect(diagnosticDirectives.directives.filter(directive => directive[4] === DiagnosticDirectivePolicy.Ignore).length)
+		.toBeGreaterThan(2);
 	for (const directive of diagnosticDirectives.directives) {
 		expect(directive[3] - directive[2]).toBeGreaterThan(0);
-		if (directive[4] === 1) {
+		if (directive[4] === DiagnosticDirectivePolicy.Expect) {
 			expect(content.slice(
 				directive[0],
 				directive[0] + directive[1],

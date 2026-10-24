@@ -1,3 +1,4 @@
+import { createIgnoreDirectives } from '@vue/language-core';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type SpanMapping } from './protocol';
 
 export function withSynthesizedDiagnosticIgnores(
@@ -5,57 +6,23 @@ export function withSynthesizedDiagnosticIgnores(
 	mappings: readonly SpanMapping[],
 	directives: readonly DiagnosticDirectiveMapping[],
 ) {
-	const result = [...directives];
-	const blocked = [...directives].sort(
-		(left, right) => left[2] - right[2],
-	);
+	const unmapped: [start: number, end: number][] = [];
 	let virtualStart = 0;
-	let blockedIndex = 0;
-
 	for (const [start, length] of mappings) {
 		if (length) {
-			addIgnoreRanges(virtualStart, start);
+			if (virtualStart < start) {
+				unmapped.push([virtualStart, start]);
+			}
 			virtualStart = start + length;
 		}
 	}
-	addIgnoreRanges(virtualStart, virtualLength);
+	if (virtualStart < virtualLength) {
+		unmapped.push([virtualStart, virtualLength]);
+	}
 
+	const result = [...directives, ...createIgnoreDirectives(unmapped, directives)];
 	result.sort((left, right) => left[2] - right[2] || left[3] - right[3]);
 	return mergeSynthesizedIgnores(result);
-
-	function addIgnoreRanges(start: number, end: number) {
-		if (start >= end) {
-			return;
-		}
-		while (
-			blockedIndex < blocked.length
-			&& blocked[blockedIndex]![3] <= start
-		) {
-			blockedIndex++;
-		}
-		let cursor = start;
-		for (let index = blockedIndex; index < blocked.length; index++) {
-			const directive = blocked[index]!;
-			if (directive[2] >= end) {
-				break;
-			}
-			addIgnore(cursor, Math.min(directive[2], end));
-			cursor = Math.max(
-				cursor,
-				directive[3],
-			);
-			if (cursor >= end) {
-				return;
-			}
-		}
-		addIgnore(cursor, end);
-	}
-
-	function addIgnore(start: number, end: number) {
-		if (start < end) {
-			result.push([0, 0, start, end, DiagnosticDirectivePolicy.Ignore]);
-		}
-	}
 }
 
 function mergeSynthesizedIgnores(directives: DiagnosticDirectiveMapping[]) {

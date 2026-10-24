@@ -1,4 +1,4 @@
-import { type Mapping, SpanMapFeature, SpanMapKind } from '@volar/language-core';
+import { isCompletionEnabled, type Mapping, SpanMapKind } from '@volar/language-core';
 import { allFeatures } from '../codegen/features';
 import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type VueCodeMarker } from '../types';
 
@@ -110,7 +110,7 @@ function buildSpans(chunks: Code[]): Span[] {
 			&& !last.length
 			&& content.sourceStart === atom[2]
 			&& content.length === atom[3]
-			&& content.info.features & SpanMapFeature.Completion
+			&& isCompletionEnabled(content.info.features)
 		) {
 			atom[5] = 0;
 			return [span, toSpan(content)];
@@ -138,11 +138,23 @@ function buildSpans(chunks: Code[]): Span[] {
  */
 export function buildDiagnosticDirectives(chunks: Code[]) {
 	const explicit = buildExplicitDiagnosticDirectives(chunks);
-	const ignores = subtractRanges(
-		getIgnoredRanges(chunks),
-		explicit.map(directive => [directive[2], directive[3]]),
-	).map<DiagnosticDirectiveMapping>(([start, end]) => [0, 0, start, end, DiagnosticDirectivePolicy.Ignore]);
+	const ignores = createIgnoreDirectives(getIgnoredRanges(chunks), explicit);
 	return [...explicit, ...ignores].sort((left, right) => left[2] - right[2] || left[3] - right[3]);
+}
+
+/**
+ * Ignore directives without an original range over the parts of the virtual ranges, sorted and disjoint, that the
+ * directives, disjoint too, leave uncovered.
+ */
+export function createIgnoreDirectives(
+	ranges: [start: number, end: number][],
+	directives: readonly DiagnosticDirectiveMapping[],
+) {
+	const covered = directives
+		.map<[number, number]>(directive => [directive[2], directive[3]])
+		.sort((left, right) => left[0] - right[0] || left[1] - right[1]);
+	return subtractRanges(ranges, covered)
+		.map<DiagnosticDirectiveMapping>(([start, end]) => [0, 0, start, end, DiagnosticDirectivePolicy.Ignore]);
 }
 
 function buildExplicitDiagnosticDirectives(chunks: Code[]) {
