@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type VueCodeMarker } from '../../types';
-import { codeFeatures } from '../codeFeatures';
+import { completion, marker } from '../features';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
@@ -133,7 +133,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 
 	function* generateDiagnosticDirectiveComment(directive: DiagnosticDirectiveMapping): Generator<Code> {
 		// an empty mapping at the directive comment, which Volar's own features see
-		yield ['', 'template', directive[0], codeFeatures.none];
+		yield ['', 'template', directive[0], marker(0)];
 	}
 
 	function exit() {
@@ -153,13 +153,13 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		if (reopenedBoundary && reopenedInfo !== info) {
 			yield* generateDiagnosticDirectiveRangesEnd();
 		}
-		const marker = getMarker(code);
+		const current = getMarker(code);
 		if (
-			marker
+			current
 			&& info?.diagnosticDirectiveEnded
 			&& info.ignoreError
 			&& !reopenedBoundary
-			&& !marker.ignoreDiagnostics
+			&& !current.ignoreDiagnostics
 		) {
 			const ignore = info.diagnosticDirectives!.find(directive => directive[4] === DiagnosticDirectivePolicy.Ignore)!;
 			reopenedInfo = info;
@@ -182,19 +182,19 @@ export function createTemplateCodegenContext(scriptLang: string) {
 			return mappingMarkers.at(-1);
 		}
 		if ('start' in data) {
-			const marker = Array.isArray(data.start) ? undefined : data.start;
-			boundaryMarkers.push(marker);
-			if (marker) {
-				mappingMarkers.push(marker);
+			const current = Array.isArray(data.start) ? undefined : data.start;
+			boundaryMarkers.push(current);
+			if (current) {
+				mappingMarkers.push(current);
 			}
-			return marker;
+			return current;
 		}
 		if ('end' in data) {
-			const marker = boundaryMarkers.pop();
-			if (marker) {
+			const current = boundaryMarkers.pop();
+			if (current) {
 				mappingMarkers.pop();
 			}
-			return marker;
+			return current;
 		}
 		return data;
 	}
@@ -281,9 +281,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 	}
 
 	function* generateScopeMembers(scope: Scope): Generator<Code> {
-		const completionMembers = scope.members.filter(([, , , features]) =>
-			features.features & codeFeatures.completion.features
-		);
+		const completionMembers = scope.members.filter(([, , , features]) => features.features & completion);
 		if (!completionMembers.length) {
 			return;
 		}
@@ -330,7 +328,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		accessLog.push(name);
 		contextAccesses.add(name);
 		if (offset !== undefined) {
-			recordScopeMember(name, source, offset, codeFeatures.none, sourceName);
+			recordScopeMember(name, source, offset, marker(0), sourceName);
 		}
 		if (dotValue) {
 			dotValueAccesses.add(name);

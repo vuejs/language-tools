@@ -1,4 +1,4 @@
-import { codeFeatures } from '../codegen/codeFeatures';
+import { allFeatures, marker } from '../codegen/features';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
@@ -21,7 +21,7 @@ const plugin: VueLanguagePlugin = () => {
 					customBlock.content,
 					customBlock.name,
 					0,
-					codeFeatures.full,
+					marker(allFeatures),
 				]);
 			}
 		},

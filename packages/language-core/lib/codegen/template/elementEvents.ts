@@ -1,9 +1,10 @@
+import { SpanMapFeature } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { getUnwrappedExpression } from '../../parsers/utils';
 import type { Code, TypeScript, VueCodeMarker } from '../../types';
-import { codeFeatures, ignoreDiagnostics } from '../codeFeatures';
+import { ignoreDiagnostics, marker, navigation, scriptFeatures, semantic } from '../features';
 import { names } from '../names';
 import {
 	endOfLine,
@@ -136,7 +137,7 @@ export function* generateElementEvents(
 			const argsType = `${names.EventArgs}<${eventType}, '${propName}'>`;
 			if (prop.name === 'on') {
 				yield `/** @type {typeof ${emitsVar}.`;
-				yield* generateEventArg(source, offset!, emitPrefix.slice(0, -1), ignoreDiagnostics(codeFeatures.navigation));
+				yield* generateEventArg(source, offset!, emitPrefix.slice(0, -1), ignoreDiagnostics(marker(navigation)));
 				yield `} */${newLine}`;
 				// in JS, the JSDoc above types the property, and fails to parse for a non-identifier name
 				const emitArgName = getEventArgName(source, emitPrefix.slice(0, -1));
@@ -170,7 +171,7 @@ export function* generateEventArg(
 	directive = 'on',
 	features?: VueCodeMarker,
 ): Generator<Code> {
-	features ??= codeFeatures.eventName;
+	features ??= marker(semantic | (navigation & ~SpanMapFeature.Rename));
 
 	if (directive.length) {
 		name = capitalize(name);
@@ -222,7 +223,7 @@ export function* generateEventExpression(
 			options,
 			ctx,
 			options.template,
-			codeFeatures.all,
+			marker(scriptFeatures),
 			prop.exp.content,
 			prop.exp.loc.start.offset,
 			isCompound ? `` : `(`,
@@ -293,7 +294,7 @@ export function* generateModelEventExpression(
 			options,
 			ctx,
 			options.template,
-			codeFeatures.none,
+			marker(0),
 			prop.exp.content,
 			prop.exp.loc.start.offset,
 			undefined,

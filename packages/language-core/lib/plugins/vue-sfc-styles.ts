@@ -1,4 +1,4 @@
-import { codeFeatures } from '../codegen/codeFeatures';
+import { allFeatures, marker } from '../codegen/features';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
@@ -41,7 +41,7 @@ const plugin: VueLanguagePlugin = () => {
 								binding.text,
 								style.name,
 								binding.offset,
-								codeFeatures.full,
+								marker(allFeatures),
 							],
 							');\n',
 						);
@@ -52,7 +52,7 @@ const plugin: VueLanguagePlugin = () => {
 						style.content,
 						style.name,
 						0,
-						codeFeatures.full,
+						marker(allFeatures),
 					]);
 				}
 			}

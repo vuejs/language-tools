@@ -1,12 +1,16 @@
-import { SourceMap } from '@volar/source-map';
+import { SourceMap, SpanMapFeature } from '@volar/source-map';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { VueLanguagePlugin } from '@vue/language-core';
 import { baseParse } from './lib/baseParse';
 
 const classRE = /^class\s*=/;
+const allFeatures = Object.values(SpanMapFeature).reduce<number>(
+	(features, bit) => typeof bit === 'number' ? features | bit : features,
+	0,
+);
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
-	const { codeFeatures, compileTemplate } = modules['@vue/language-core'];
+	const { compileTemplate } = modules['@vue/language-core'];
 
 	return {
 		name: require('./package.json').name,
@@ -33,7 +37,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					ir.template.content,
 					ir.template.name,
 					0,
-					codeFeatures.full,
+					{ features: allFeatures },
 				]);
 			}
 		},

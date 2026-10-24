@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isHTMLTag, isMathMLTag, isSVGTag } from '@vue/shared';
 import type { Code, VueCodeMarker, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import { codeFeatures, toAtomKind } from '../codeFeatures';
+import { marker, navigation, scriptFeatures, semantic, toAtomKind, VueCodeFeature } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, identifierRE, newLine } from '../utils';
@@ -128,7 +128,7 @@ export function* generateElementProps(
 				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				codeFeatures.none,
+				marker(0),
 			);
 			if (prop.arg) {
 				yield* generateObjectProperty(
@@ -145,7 +145,7 @@ export function* generateElementProps(
 					'template',
 					prop.loc.start.offset,
 					prop.loc.start.offset + 'v-model'.length,
-					codeFeatures.withoutHighlightAndCompletion,
+					marker(semantic | navigation),
 				);
 				yield propName;
 				yield boundary2.end();
@@ -156,7 +156,7 @@ export function* generateElementProps(
 				'template',
 				argLoc.start.offset,
 				argLoc.end.offset,
-				codeFeatures.none,
+				marker(0),
 			);
 			yield* generatePropExp(options, ctx, prop, prop.exp);
 			yield boundary3.end();
@@ -192,7 +192,7 @@ export function* generateElementProps(
 				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				codeFeatures.none,
+				marker(0),
 			);
 			const prefix = options.template.content.slice(prop.loc.start.offset, prop.loc.start.offset + 1);
 			if (prefix === '.' || prefix === '#') {
@@ -216,7 +216,7 @@ export function* generateElementProps(
 				yield `{}`;
 			}
 			else if (prop.value) {
-				yield* generateAttrValue(prop.value, codeFeatures.withoutNavigation);
+				yield* generateAttrValue(prop.value, marker(scriptFeatures & ~navigation));
 			}
 			else {
 				yield `true`;
@@ -240,7 +240,7 @@ export function* generateElementProps(
 					'template',
 					prop.exp.loc.start.offset,
 					prop.exp.loc.end.offset,
-					codeFeatures.none,
+					marker(0),
 				);
 				yield `...`;
 				yield* generatePropExp(
@@ -270,7 +270,7 @@ export function* generatePropExp(
 			options,
 			ctx,
 			options.template,
-			codeFeatures.all,
+			marker(scriptFeatures),
 			exp.loc.source,
 			exp.loc.start.offset,
 			`(`,
@@ -285,7 +285,7 @@ export function* generatePropExp(
 				exp.loc.source,
 				'template',
 				exp.loc.start.offset,
-				toAtomKind(codeFeatures.withoutHighlightAndCompletion),
+				toAtomKind(marker(semantic | navigation)),
 			);
 			yield* generateIdentifier(
 				options,
@@ -334,7 +334,7 @@ function getShouldCamelize(
 }
 
 function getPropsCodeFeatures(): VueCodeMarker {
-	return codeFeatures.propName;
+	return marker(semantic | navigation | VueCodeFeature.PropsCompletion);
 }
 
 /**

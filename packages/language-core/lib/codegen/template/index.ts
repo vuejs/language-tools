@@ -1,5 +1,5 @@
 import type { Code, IRTemplate, TypeScript, VueCompilerOptions } from '../../types';
-import { codeFeatures, ignoreDiagnostics } from '../codeFeatures';
+import { ignoreDiagnostics, marker, navigation } from '../features';
 import { names } from '../names';
 import { endOfLine, generateTypeAlias, generateTypedVar, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -138,14 +138,14 @@ function* generateSlotsType(
 					ctx,
 					slot.name,
 					slot.offset,
-					ignoreDiagnostics(codeFeatures.navigation),
+					ignoreDiagnostics(marker(navigation)),
 				);
 			}
 			else {
 				const boundary = yield* Boundary.start(
 					'template',
 					...slot.tagRange,
-					ignoreDiagnostics(codeFeatures.navigation),
+					ignoreDiagnostics(marker(navigation)),
 				);
 				yield `default`;
 				yield boundary.end();
@@ -207,7 +207,7 @@ function* generateTemplateRefsType(
 					ctx,
 					name,
 					offset,
-					ignoreDiagnostics(codeFeatures.navigation),
+					ignoreDiagnostics(marker(navigation)),
 				);
 				yield `: ${typeExp} }`;
 			}

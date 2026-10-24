@@ -1,6 +1,6 @@
 import type { Code, IRBlock, TypeScript, VueCodeMarker, VueCompilerOptions } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
-import { codeFeatures, ignoreDiagnostics, toAtomKind } from '../codeFeatures';
+import { completion, ignoreDiagnostics, marker, toAtomKind } from '../features';
 import { names } from '../names';
 import { getRefBrandArgument, getTypeScriptAST, identifierRE } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -24,10 +24,10 @@ export function* generateInterpolation(
 		yield prefix;
 	}
 
-	const memberFeatures: VueCodeMarker = { features: features.features & codeFeatures.completion.features };
+	const memberFeatures: VueCodeMarker = { features: features.features & completion };
 	const featuresWithoutCompletion: VueCodeMarker = {
 		...features,
-		features: features.features & ~codeFeatures.completion.features,
+		features: features.features & ~completion,
 	};
 
 	let prevEnd = 0;
@@ -129,7 +129,7 @@ function* generateNonIdentifierCode(
 		code.slice(0, 1),
 		source,
 		offset,
-		data.ignoreDiagnostics ? ignoreDiagnostics(codeFeatures.none) : codeFeatures.none,
+		data.ignoreDiagnostics ? ignoreDiagnostics(marker(0)) : marker(0),
 	];
 	if (code.length > 1) {
 		yield [code.slice(1), source, offset + 1, data];
@@ -176,7 +176,7 @@ export function* generateIdentifier(
 			source,
 			start,
 			end,
-			codeFeatures.none,
+			marker(0),
 		);
 		yield `value`;
 		yield boundary.end();
@@ -191,7 +191,7 @@ export function* generateIdentifier(
 				source,
 				start,
 				end,
-				codeFeatures.none,
+				marker(0),
 			);
 			yield `value`;
 			yield boundary.end();
@@ -216,7 +216,7 @@ export function* generateIdentifier(
 			source,
 			start,
 			end,
-			codeFeatures.none,
+			marker(0),
 		);
 		if (ctx.dollarVars.has(name)) {
 			yield names.dollars;

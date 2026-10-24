@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { getElementTagOffsets, normalizeAttributeValue } from '../../utils/shared';
-import { codeFeatures } from '../codeFeatures';
+import { marker, navigation, scriptFeatures, semantic } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { endOfLine, newLine } from '../utils';
@@ -40,7 +40,7 @@ export function* generateSlotOutlet(
 			let codes: Generator<Code> | Code[];
 			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
 				const [content, offset] = normalizeAttributeValue(nameProp.value);
-				codes = generatePropertyAccess(options, ctx, content, offset, codeFeatures.navigation);
+				codes = generatePropertyAccess(options, ctx, content, offset, marker(navigation));
 			}
 			else if (
 				nameProp.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -65,7 +65,7 @@ export function* generateSlotOutlet(
 				'template',
 				nameProp.loc.start.offset,
 				nameProp.loc.end.offset,
-				codeFeatures.none,
+				marker(0),
 			);
 			yield options.slotsAssignName ?? names.slots;
 			yield* codes;
@@ -76,14 +76,14 @@ export function* generateSlotOutlet(
 				'template',
 				startTagOffset,
 				startTagEndOffset,
-				codeFeatures.none,
+				marker(0),
 			);
 			yield `${options.slotsAssignName ?? names.slots}[`;
 			const boundary2 = yield* Boundary.start(
 				'template',
 				startTagOffset,
 				startTagEndOffset,
-				codeFeatures.none,
+				marker(0),
 			);
 			yield `'default'`;
 			yield boundary2.end();
@@ -96,7 +96,7 @@ export function* generateSlotOutlet(
 			'template',
 			startTagOffset,
 			startTagEndOffset,
-			codeFeatures.none,
+			marker(0),
 		);
 		yield `{${newLine}`;
 		yield* generateElementProps(
@@ -147,8 +147,8 @@ export function* generateSlotOutlet(
 				ctx,
 				options.template,
 				isShortHand
-					? codeFeatures.withoutHighlightAndCompletion
-					: codeFeatures.all,
+					? marker(semantic | navigation)
+					: marker(scriptFeatures),
 				nameProp.exp.content,
 				nameProp.exp.loc.start.offset,
 			);

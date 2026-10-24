@@ -1,7 +1,7 @@
 import { type IScriptSnapshot, type Mapping, SpanMapKind, type VirtualCode } from '@volar/language-core';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import { computed, signal } from 'alien-signals';
-import { codeFeatures } from '../codegen/codeFeatures';
+import { allFeatures } from '../codegen/features';
 import type { IR, TypeScript, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
 import { useEmbeddedCodes } from './embeddedCodes';
 
@@ -83,7 +83,7 @@ export class VueVirtualCode implements VirtualCode {
 		this._embeddedCodes = useEmbeddedCodes(plugins, fileName, this._ir);
 		this._mappings = computed(() => {
 			const length = this._snapshot().getLength();
-			return [[0, length, 0, length, SpanMapKind.Verbatim, codeFeatures.full.features]];
+			return [[0, length, 0, length, SpanMapKind.Verbatim, allFeatures]];
 		});
 	}
 
