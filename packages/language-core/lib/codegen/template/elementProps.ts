@@ -2,7 +2,14 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isHTMLTag, isMathMLTag, isSVGTag } from '@vue/shared';
 import type { Code, VueCodeMarker, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import { completion, navigation, scriptFeatures, semantic, toAtomKind, VueCodeFeature } from '../features';
+import {
+	completionFeatures,
+	navigationFeatures,
+	scriptFeatures,
+	semanticFeatures,
+	toAtomKind,
+	VueCodeFeature,
+} from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, identifierRE, newLine } from '../utils';
@@ -145,7 +152,7 @@ export function* generateElementProps(
 					'template',
 					prop.loc.start.offset,
 					prop.loc.start.offset + 'v-model'.length,
-					{ features: semantic | navigation },
+					{ features: semanticFeatures | navigationFeatures },
 				);
 				yield propName;
 				yield boundary2.end();
@@ -216,7 +223,7 @@ export function* generateElementProps(
 				yield `{}`;
 			}
 			else if (prop.value) {
-				yield* generateAttrValue(prop.value, { features: semantic | completion });
+				yield* generateAttrValue(prop.value, { features: semanticFeatures | completionFeatures });
 			}
 			else {
 				yield `true`;
@@ -285,7 +292,7 @@ export function* generatePropExp(
 				exp.loc.source,
 				'template',
 				exp.loc.start.offset,
-				toAtomKind({ features: semantic | navigation }),
+				toAtomKind({ features: semanticFeatures | navigationFeatures }),
 			);
 			yield* generateIdentifier(
 				options,
@@ -334,7 +341,7 @@ function getShouldCamelize(
 }
 
 function getPropsCodeFeatures(): VueCodeMarker {
-	return { features: semantic | navigation | VueCodeFeature.PropsCompletion };
+	return { features: semanticFeatures | navigationFeatures | VueCodeFeature.PropsCompletion };
 }
 
 /**

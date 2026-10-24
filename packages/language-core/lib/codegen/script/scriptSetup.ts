@@ -1,7 +1,7 @@
 import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRScriptSetup, TextRange } from '../../types';
-import { completion, ignoreDiagnostics, navigation, scriptFeatures } from '../features';
+import { completionFeatures, ignoreDiagnostics, navigationFeatures, scriptFeatures } from '../features';
 import { names } from '../names';
 import {
 	asType,
@@ -80,7 +80,7 @@ export function* generateGeneric(
 			scriptSetup,
 			scriptSetupRanges.defineProps.arg.start,
 			scriptSetupRanges.defineProps.arg.end,
-			ignoreDiagnostics({ features: navigation }),
+			ignoreDiagnostics({ features: navigationFeatures }),
 		);
 		yield endOfLine;
 		propTypes.push(
@@ -247,14 +247,18 @@ export function* generateSetupFunction(
 					}
 					else {
 						yield `/** @type {Omit<${type}, '$style'>[`;
-						yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, { features: navigation | completion });
+						yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, {
+							features: navigationFeatures | completionFeatures,
+						});
 						yield `]} */ (`;
 					}
 				}),
 				insert(callExp.end, function*() {
 					if (isTsLang(options.scriptLang)) {
 						yield ` as Omit<${type}, '$style'>[`;
-						yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, { features: navigation | completion });
+						yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, {
+							features: navigationFeatures | completionFeatures,
+						});
 						yield `])`;
 					}
 					else {
@@ -310,7 +314,9 @@ export function* generateSetupFunction(
 				if (arg) {
 					yield names.TemplateRefs;
 					yield `[`;
-					yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, { features: navigation | completion });
+					yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, {
+						features: navigationFeatures | completionFeatures,
+					});
 					yield `]`;
 				}
 				else {
@@ -324,7 +330,9 @@ export function* generateSetupFunction(
 					if (arg) {
 						yield names.TemplateRefs;
 						yield `[`;
-						yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, { features: navigation | completion });
+						yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, {
+							features: navigationFeatures | completionFeatures,
+						});
 						yield `]`;
 					}
 					else {
@@ -488,7 +496,7 @@ function* generatePublicProps(
 			scriptSetup,
 			scriptSetupRanges.withDefaults.arg.start,
 			scriptSetupRanges.withDefaults.arg.end,
-			ignoreDiagnostics({ features: navigation }),
+			ignoreDiagnostics({ features: navigationFeatures }),
 		);
 		yield endOfLine;
 		yield `void ${names.defaults}${endOfLine}`;
@@ -616,7 +624,7 @@ function* generateModelProp(
 			getRangeText(scriptSetup, defineModel.name),
 			scriptSetup.name,
 			defineModel.name.start,
-			ignoreDiagnostics({ features: navigation }),
+			ignoreDiagnostics({ features: navigationFeatures }),
 		);
 	}
 	else {

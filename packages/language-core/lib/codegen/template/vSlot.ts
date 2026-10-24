@@ -3,7 +3,13 @@ import { replaceSourceRange } from 'muggle-string';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
-import { completion, ignoreDiagnostics, navigation, scriptFeatures, semantic } from '../features';
+import {
+	completionFeatures,
+	ignoreDiagnostics,
+	navigationFeatures,
+	scriptFeatures,
+	semanticFeatures,
+} from '../features';
 import { names } from '../names';
 import { endOfLine, getTypeScriptAST, isTsLang, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -40,7 +46,7 @@ export function* generateVSlot(
 				'template',
 				slotDir.loc.start.offset,
 				slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
-				{ features: semantic | navigation },
+				{ features: semanticFeatures | navigationFeatures },
 			);
 			yield `default`;
 			yield boundary.end();
@@ -54,7 +60,7 @@ export function* generateVSlot(
 			'template',
 			node.loc.start.offset,
 			node.loc.start.offset + 1,
-			ignoreDiagnostics({ features: navigation }),
+			ignoreDiagnostics({ features: navigationFeatures }),
 		);
 		yield `default`;
 		yield boundary.end();
@@ -90,7 +96,7 @@ export function* generateVSlot(
 							? '#'.length
 							: 'v-slot:'.length
 					),
-					{ features: completion },
+					{ features: completionFeatures },
 				];
 				yield `']} */${endOfLine}`;
 			}

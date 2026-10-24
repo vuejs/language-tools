@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { getElementTagOffsets, normalizeAttributeValue } from '../../utils/shared';
-import { navigation, scriptFeatures, semantic } from '../features';
+import { navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { endOfLine, newLine } from '../utils';
@@ -40,7 +40,7 @@ export function* generateSlotOutlet(
 			let codes: Generator<Code> | Code[];
 			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
 				const [content, offset] = normalizeAttributeValue(nameProp.value);
-				codes = generatePropertyAccess(options, ctx, content, offset, { features: navigation });
+				codes = generatePropertyAccess(options, ctx, content, offset, { features: navigationFeatures });
 			}
 			else if (
 				nameProp.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -147,7 +147,7 @@ export function* generateSlotOutlet(
 				ctx,
 				options.template,
 				isShortHand
-					? { features: semantic | navigation }
+					? { features: semanticFeatures | navigationFeatures }
 					: { features: scriptFeatures },
 				nameProp.exp.content,
 				nameProp.exp.loc.start.offset,

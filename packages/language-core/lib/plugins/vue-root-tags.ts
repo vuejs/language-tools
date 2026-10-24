@@ -1,6 +1,5 @@
-import { SpanMapFeature } from '@volar/language-core';
 import { replaceSourceRange } from 'muggle-string';
-import { allFeatures } from '../codegen/features';
+import { allFeatures, structureFeatures } from '../codegen/features';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
@@ -44,10 +43,7 @@ const plugin: VueLanguagePlugin = () => {
 							'',
 							undefined,
 							block.startTagEnd + offset,
-							{
-								features: SpanMapFeature.FoldingRanges | SpanMapFeature.SelectionRanges | SpanMapFeature.DocumentSymbols
-									| SpanMapFeature.CodeLens,
-							},
+							{ features: structureFeatures },
 						],
 						ir.content.slice(
 							block.startTagEnd + offset,

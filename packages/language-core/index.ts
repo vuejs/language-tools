@@ -1,4 +1,12 @@
-export { VueCodeFeature } from './lib/codegen/features';
+export {
+	allFeatures,
+	completionFeatures,
+	navigationFeatures,
+	scriptFeatures,
+	semanticFeatures,
+	structureFeatures,
+	VueCodeFeature,
+} from './lib/codegen/features';
 export * from './lib/codegen/template';
 export * from './lib/compilerOptions';
 export * from './lib/languagePlugin';

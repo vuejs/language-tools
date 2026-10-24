@@ -1,4 +1,12 @@
-import { type Mapping, SpanMapKind as VolarSpanMapKind, VueCodeFeature } from '@vue/language-core';
+import {
+	allFeatures,
+	completionFeatures,
+	type Mapping,
+	navigationFeatures,
+	semanticFeatures,
+	SpanMapKind as VolarSpanMapKind,
+	VueCodeFeature,
+} from '@vue/language-core';
 import { expect, test } from 'vitest';
 import { SpanMapFeature, SpanMapKind } from '../protocol';
 import { toSpanMappings } from '../spanMappings';
@@ -6,28 +14,15 @@ import { toSpanMappings } from '../spanMappings';
 const Verbatim = VolarSpanMapKind.Verbatim;
 const Atom = VolarSpanMapKind.Atom;
 
-const navigationBits = SpanMapFeature.Definition
-	| SpanMapFeature.TypeDefinition
-	| SpanMapFeature.Implementation
-	| SpanMapFeature.References
-	| SpanMapFeature.DocumentHighlights
-	| SpanMapFeature.Rename
-	| SpanMapFeature.CallHierarchy
-	| SpanMapFeature.CodeActions
-	| SpanMapFeature.LinkedEditing;
-const completionBits = SpanMapFeature.Completion | SpanMapFeature.AutoInsert;
-const semanticBits = SpanMapFeature.Hover | SpanMapFeature.SignatureHelp | SpanMapFeature.InlayHints;
-const allBits = (SpanMapFeature.CodeLens << 1) - 1;
-
 test('passes language feature bits through and strips the bits outside the protocol', () => {
 	const mappings: Mapping[] = [
 		[0, 1, 0, 1, Verbatim, 0],
-		[1, 2, 1, 2, Verbatim, allBits | VueCodeFeature.PropsCompletion],
+		[1, 2, 1, 2, Verbatim, allFeatures | VueCodeFeature.PropsCompletion],
 	];
 
 	expect(toSpanMappings(mappings, 'abc', 'abc')).toEqual([
 		[0, 1, 0, 1, SpanMapKind.Verbatim, 0],
-		[1, 2, 1, 2, SpanMapKind.Verbatim, allBits],
+		[1, 2, 1, 2, SpanMapKind.Verbatim, allFeatures],
 	]);
 });
 
@@ -52,16 +47,17 @@ test('feature bits match the host protocol (spanmap.go)', () => {
 	expect(SpanMapFeature.AutoInsert).toBe(1 << 17);
 	expect(SpanMapFeature.DocumentSymbols).toBe(1 << 18);
 	expect(SpanMapFeature.CodeLens).toBe(1 << 19);
+	expect(allFeatures).toBe((SpanMapFeature.CodeLens << 1) - 1);
 });
 
 test('can disable language feature mapping without losing diagnostic spans', () => {
-	expect(toSpanMappings([[0, 3, 0, 3, Verbatim, navigationBits]], 'abc', 'abc', false))
+	expect(toSpanMappings([[0, 3, 0, 3, Verbatim, navigationFeatures]], 'abc', 'abc', false))
 		.toEqual([[0, 3, 0, 3, SpanMapKind.Verbatim, 0]]);
 });
 
 test('maps verbatim mappings whose texts differ as atoms', () => {
-	expect(toSpanMappings([[0, 5, 0, 5, Verbatim, navigationBits]], 'Click', 'click'))
-		.toEqual([[0, 5, 0, 5, SpanMapKind.Atom, navigationBits]]);
+	expect(toSpanMappings([[0, 5, 0, 5, Verbatim, navigationFeatures]], 'Click', 'click'))
+		.toEqual([[0, 5, 0, 5, SpanMapKind.Atom, navigationFeatures]]);
 });
 
 test('keeps exact duplicate projections and removes incompatible overlaps', () => {
@@ -83,22 +79,22 @@ test('keeps exact duplicate projections and removes incompatible overlaps', () =
 test('keeps zero-length navigation anchors and drops other zero-length markers', () => {
 	expect(toSpanMappings(
 		[
-			[0, 3, 0, 3, Verbatim, semanticBits],
-			[3, 0, 0, 0, Verbatim, navigationBits | semanticBits],
+			[0, 3, 0, 3, Verbatim, semanticFeatures],
+			[3, 0, 0, 0, Verbatim, navigationFeatures | semanticFeatures],
 			[3, 0, 1, 0, Verbatim, 0],
 			[3, 0, 2, 0, Verbatim, VueCodeFeature.PropsCompletion],
 		],
 		'abc',
 		'abc',
 	)).toEqual([
-		[0, 3, 0, 3, SpanMapKind.Verbatim, SpanMapFeature.Hover | SpanMapFeature.SignatureHelp | SpanMapFeature.InlayHints],
-		[3, 0, 0, 0, SpanMapKind.Verbatim, navigationBits],
+		[0, 3, 0, 3, SpanMapKind.Verbatim, semanticFeatures],
+		[3, 0, 0, 0, SpanMapKind.Verbatim, navigationFeatures],
 	]);
 });
 
 test('keeps zero-length completion points', () => {
-	expect(toSpanMappings([[2, 0, 1, 0, Verbatim, completionBits]], 'abc', 'abc'))
-		.toEqual([[2, 0, 1, 0, SpanMapKind.Verbatim, completionBits]]);
+	expect(toSpanMappings([[2, 0, 1, 0, Verbatim, completionFeatures]], 'abc', 'abc'))
+		.toEqual([[2, 0, 1, 0, SpanMapKind.Verbatim, completionFeatures]]);
 });
 
 test('lets segments inside a feature-less atom win and fills around them', () => {
@@ -107,13 +103,13 @@ test('lets segments inside a feature-less atom win and fills around them', () =>
 	expect(toSpanMappings(
 		[
 			[0, 6, 0, 1, Atom, 0],
-			[4, 1, 2, 1, Verbatim, navigationBits],
+			[4, 1, 2, 1, Verbatim, navigationFeatures],
 		],
 		'{a: b}',
 		'C b',
 	)).toEqual([
 		[0, 4, 0, 1, SpanMapKind.Atom, 0],
-		[4, 1, 2, 1, SpanMapKind.Verbatim, navigationBits],
+		[4, 1, 2, 1, SpanMapKind.Verbatim, navigationFeatures],
 		[5, 1, 0, 1, SpanMapKind.Atom, 0],
 	]);
 });
@@ -122,7 +118,7 @@ test('fills around segments inside an atom without language features', () => {
 	expect(toSpanMappings(
 		[
 			[0, 6, 0, 1, Atom, 0],
-			[4, 1, 2, 1, Verbatim, navigationBits],
+			[4, 1, 2, 1, Verbatim, navigationFeatures],
 		],
 		'{a: b}',
 		'C b',
@@ -138,14 +134,14 @@ test('keeps atoms with equal texts as atoms', () => {
 	// generated: {a: a}   original: {a}
 	expect(toSpanMappings(
 		[
-			[1, 1, 1, 1, Atom, navigationBits],
-			[4, 1, 1, 1, Atom, navigationBits],
+			[1, 1, 1, 1, Atom, navigationFeatures],
+			[4, 1, 1, 1, Atom, navigationFeatures],
 		],
 		'{a: a}',
 		'{a}',
 	)).toEqual([
-		[1, 1, 1, 1, SpanMapKind.Atom, navigationBits],
-		[4, 1, 1, 1, SpanMapKind.Atom, navigationBits],
+		[1, 1, 1, 1, SpanMapKind.Atom, navigationFeatures],
+		[4, 1, 1, 1, SpanMapKind.Atom, navigationFeatures],
 	]);
 });
 
@@ -154,16 +150,16 @@ test('cuts a verbatim section at a navigation-only copy of its content', () => {
 	// original:  f(x);
 	expect(toSpanMappings(
 		[
-			[0, 5, 0, 5, Verbatim, navigationBits],
-			[6, 1, 2, 1, Verbatim, navigationBits],
+			[0, 5, 0, 5, Verbatim, navigationFeatures],
+			[6, 1, 2, 1, Verbatim, navigationFeatures],
 		],
 		'f(x); x',
 		'f(x);',
 	)).toEqual([
-		[0, 2, 0, 2, SpanMapKind.Verbatim, navigationBits],
-		[2, 1, 2, 1, SpanMapKind.Verbatim, navigationBits],
-		[3, 2, 3, 2, SpanMapKind.Verbatim, navigationBits],
-		[6, 1, 2, 1, SpanMapKind.Verbatim, navigationBits],
+		[0, 2, 0, 2, SpanMapKind.Verbatim, navigationFeatures],
+		[2, 1, 2, 1, SpanMapKind.Verbatim, navigationFeatures],
+		[3, 2, 3, 2, SpanMapKind.Verbatim, navigationFeatures],
+		[6, 1, 2, 1, SpanMapKind.Verbatim, navigationFeatures],
 	]);
 });
 
@@ -173,7 +169,7 @@ test('cuts a verbatim section at a copy that also offers completion', () => {
 	expect(toSpanMappings(
 		[
 			[0, 5, 0, 5, Verbatim, 0],
-			[7, 1, 2, 1, Verbatim, navigationBits | completionBits],
+			[7, 1, 2, 1, Verbatim, navigationFeatures | completionFeatures],
 		],
 		`('a'); a`,
 		`('a');`,
@@ -181,6 +177,6 @@ test('cuts a verbatim section at a copy that also offers completion', () => {
 		[0, 2, 0, 2, SpanMapKind.Verbatim, 0],
 		[2, 1, 2, 1, SpanMapKind.Verbatim, 0],
 		[3, 2, 3, 2, SpanMapKind.Verbatim, 0],
-		[7, 1, 2, 1, SpanMapKind.Verbatim, navigationBits | completionBits],
+		[7, 1, 2, 1, SpanMapKind.Verbatim, navigationFeatures | completionFeatures],
 	]);
 });

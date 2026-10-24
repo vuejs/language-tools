@@ -1,6 +1,6 @@
 import { SpanMapKind } from '@volar/language-core';
 import { expect, test } from 'vitest';
-import { completion, ignoreDiagnostics, navigation as navigationFeatures, toAtomKind } from '../lib/codegen/features';
+import { completionFeatures, ignoreDiagnostics, navigationFeatures, toAtomKind } from '../lib/codegen/features';
 import {
 	type Code,
 	type CodeBoundary,
@@ -11,7 +11,7 @@ import {
 import { buildDiagnosticDirectives, buildMappings } from '../lib/utils/buildMappings';
 
 const navigation = { features: navigationFeatures };
-const navigationAndCompletion = { features: navigationFeatures | completion };
+const navigationAndCompletion = { features: navigationFeatures | completionFeatures };
 const none = { features: 0 };
 const end: CodeBoundary = { end: true };
 

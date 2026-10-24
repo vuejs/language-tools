@@ -1,6 +1,6 @@
 import type { Code, IRBlock, TypeScript, VueCodeMarker, VueCompilerOptions } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
-import { completion, ignoreDiagnostics, toAtomKind } from '../features';
+import { completionFeatures, ignoreDiagnostics, toAtomKind } from '../features';
 import { names } from '../names';
 import { getRefBrandArgument, getTypeScriptAST, identifierRE } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -24,10 +24,10 @@ export function* generateInterpolation(
 		yield prefix;
 	}
 
-	const memberFeatures: VueCodeMarker = { features: features.features & completion };
+	const memberFeatures: VueCodeMarker = { features: features.features & completionFeatures };
 	const featuresWithoutCompletion: VueCodeMarker = {
 		...features,
-		features: features.features & ~completion,
+		features: features.features & ~completionFeatures,
 	};
 
 	let prevEnd = 0;

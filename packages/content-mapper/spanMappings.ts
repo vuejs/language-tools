@@ -1,18 +1,11 @@
-import { type Mapping, SpanMapKind as VolarSpanMapKind } from '@vue/language-core';
-import { SpanMapFeature, SpanMapKind, type SpanMapping } from './protocol';
-
-const completionFeatures = SpanMapFeature.Completion
-	| SpanMapFeature.AutoInsert;
-const navigationFeatures = SpanMapFeature.Definition
-	| SpanMapFeature.TypeDefinition
-	| SpanMapFeature.Implementation
-	| SpanMapFeature.References
-	| SpanMapFeature.DocumentHighlights
-	| SpanMapFeature.Rename
-	| SpanMapFeature.CallHierarchy
-	| SpanMapFeature.CodeActions
-	| SpanMapFeature.LinkedEditing;
-const languageFeatureMask = (SpanMapFeature.CodeLens << 1) - 1;
+import {
+	allFeatures,
+	completionFeatures,
+	type Mapping,
+	navigationFeatures,
+	SpanMapKind as VolarSpanMapKind,
+} from '@vue/language-core';
+import { SpanMapKind, type SpanMapping } from './protocol';
 
 interface Candidate {
 	generatedStart: number;
@@ -55,7 +48,7 @@ export function toSpanMappings(
 		const verbatim = kind === VolarSpanMapKind.Verbatim
 			&& generatedLength === originalLength
 			&& generatedText.slice(generatedStart, generatedEnd) === originalText.slice(originalStart, originalEnd);
-		const sourceFeatures = data & languageFeatureMask;
+		const sourceFeatures = data & allFeatures;
 		let features = languageFeatures ? sourceFeatures : 0;
 		if (generatedLength === 0) {
 			// Zero-length spans only serve as navigation anchors (e.g. the synthetic

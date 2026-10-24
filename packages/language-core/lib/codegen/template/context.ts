@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type VueCodeMarker } from '../../types';
-import { completion } from '../features';
+import { completionFeatures } from '../features';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
@@ -281,7 +281,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 	}
 
 	function* generateScopeMembers(scope: Scope): Generator<Code> {
-		const completionMembers = scope.members.filter(([, , , features]) => features.features & completion);
+		const completionMembers = scope.members.filter(([, , , features]) => features.features & completionFeatures);
 		if (!completionMembers.length) {
 			return;
 		}

@@ -1,7 +1,6 @@
 import { type Mapping, SpanMapFeature, SpanMapKind } from '@volar/language-core';
+import { allFeatures } from '../codegen/features';
 import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type VueCodeMarker } from '../types';
-
-const languageFeatureMask = (SpanMapFeature.CodeLens << 1) - 1;
 
 interface Entry {
 	generatedStart: number;
@@ -266,7 +265,7 @@ function isGroup(item: Entry | Entry[]): item is Entry[] {
 
 /** A feature-less atom only carries diagnostics, so the segments it overlaps take precedence. */
 function isFill(kind: SpanMapKind, features: number) {
-	return kind !== SpanMapKind.Verbatim && !(features & languageFeatureMask);
+	return kind !== SpanMapKind.Verbatim && !(features & allFeatures);
 }
 
 function mergeRanges(ranges: [number, number][]) {

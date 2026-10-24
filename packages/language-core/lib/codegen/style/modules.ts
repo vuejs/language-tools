@@ -1,5 +1,5 @@
 import type { Code, IRStyle } from '../../types';
-import { navigation } from '../features';
+import { navigationFeatures } from '../features';
 import { names } from '../names';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateTypeAlias, identifierRE, newLine } from '../utils';
@@ -56,7 +56,7 @@ export function* generateStyleModules(
 						text,
 						'main',
 						offset,
-						{ features: navigation },
+						{ features: navigationFeatures },
 					];
 				}
 				else {
@@ -64,7 +64,7 @@ export function* generateStyleModules(
 						'main',
 						offset,
 						offset + text.length,
-						{ features: navigation },
+						{ features: navigationFeatures },
 					);
 					yield `'`;
 					yield [text, 'main', offset, undefined];

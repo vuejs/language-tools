@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isBuiltInDirective } from '@vue/shared';
 import type { Code } from '../../types';
-import { ignoreDiagnostics, navigation, scriptFeatures, semantic } from '../features';
+import { ignoreDiagnostics, navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { names } from '../names';
 import { asType, endOfLine, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
@@ -91,8 +91,8 @@ function* generateIdentifier(
 		'template',
 		prop.loc.start.offset,
 		isBuiltInDirective(prop.name)
-			? ignoreDiagnostics({ features: semantic | navigation })
-			: { features: semantic | navigation },
+			? ignoreDiagnostics({ features: semanticFeatures | navigationFeatures })
+			: { features: semanticFeatures | navigationFeatures },
 	);
 	if (!isBuiltInDirective(prop.name)) {
 		ctx.accessVariable('template', camelize(rawName), prop.loc.start.offset, false, rawName);

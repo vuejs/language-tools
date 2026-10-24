@@ -6,15 +6,15 @@ export enum VueCodeFeature {
 	PropsCompletion = 1 << 21,
 }
 
-export const completion = SpanMapFeature.Completion
+export const completionFeatures = SpanMapFeature.Completion
 	| SpanMapFeature.AutoInsert;
 
-export const semantic = SpanMapFeature.Hover
+export const semanticFeatures = SpanMapFeature.Hover
 	| SpanMapFeature.SignatureHelp
 	| SpanMapFeature.InlayHints
 	| SpanMapFeature.SemanticTokens;
 
-export const navigation = SpanMapFeature.Definition
+export const navigationFeatures = SpanMapFeature.Definition
 	| SpanMapFeature.TypeDefinition
 	| SpanMapFeature.Implementation
 	| SpanMapFeature.References
@@ -25,16 +25,19 @@ export const navigation = SpanMapFeature.Definition
 	| SpanMapFeature.LinkedEditing;
 
 /** The features of generated script code; the structure and formatting ones belong to whole embedded documents. */
-export const scriptFeatures = completion
-	| semantic
-	| navigation;
+export const scriptFeatures = completionFeatures
+	| semanticFeatures
+	| navigationFeatures;
 
-export const allFeatures = scriptFeatures
-	| SpanMapFeature.Formatting
-	| SpanMapFeature.FoldingRanges
+export const structureFeatures = SpanMapFeature.FoldingRanges
 	| SpanMapFeature.SelectionRanges
 	| SpanMapFeature.DocumentSymbols
 	| SpanMapFeature.CodeLens;
+
+/** Every protocol feature; the other bits of a mapping are Vue's own. */
+export const allFeatures = scriptFeatures
+	| structureFeatures
+	| SpanMapFeature.Formatting;
 
 export function ignoreDiagnostics(info: VueCodeMarker): VueCodeMarker {
 	return { ...info, ignoreDiagnostics: true };
