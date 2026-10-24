@@ -4,7 +4,7 @@ import { collectBindingIdentifiers } from '../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../utils/shared';
 import { getClosestMultiLineCommentRange, parseBindings } from './utils';
 
-const tsCheckRE = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
+const tsCheckRE = /^\/\/(?:\s*@ts-(?:no)?check(?:$|\s)|\/\s*<reference\s)/;
 
 export interface CallExpressionRange {
 	callExp: TextRange;
