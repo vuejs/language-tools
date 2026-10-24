@@ -23,6 +23,10 @@
 # publishes the version in lerna.json, provided the branch HEAD carries its
 # `vX.Y.Z` tag. pnpm skips packages whose version is already on npm, and the
 # marketplaces skip an extension version they already have.
+#
+# @volar/* come from the volar.js submodule as workspace packages. They are not
+# published here: pnpm rewrites `workspace:*` to the submodule's exact versions,
+# so the job stops unless those versions are already on npm.
 
 name: release
 
@@ -80,6 +84,7 @@ jobs:
         with:
           fetch-depth: 0 # lerna reads the previous release tag
           persist-credentials: false
+          submodules: true
 
       - uses: pnpm/action-setup@v6
 
@@ -88,6 +93,19 @@ jobs:
           node-version: 24
 
       - run: pnpm install --frozen-lockfile
+
+      - name: Check the volar.js packages are on npm
+        run: |
+          pnpm -r --filter './volar.js/**' exec node -e '
+            const { name, version } = require("./package.json");
+            const { execFileSync } = require("child_process");
+            try {
+              execFileSync("npm", ["view", `${name}@${version}`, "version"], { stdio: "pipe" });
+            } catch {
+              console.log(`::error::${name}@${version} from the volar.js submodule is not on npm; publish it from volar.js first`);
+              process.exit(1);
+            }
+          '
 
       - run: pnpm run build
 
@@ -118,7 +136,7 @@ jobs:
               --sync-workspace-lock \
               --yes
           fi
-          pnpm -r publish --tag "$DIST_TAG" --no-git-checks
+          pnpm -r --filter '!./volar.js/**' publish --tag "$DIST_TAG" --no-git-checks
           published="$(node -p "require('./lerna.json').version")"
           echo "version=$published" >> "$GITHUB_OUTPUT"
           echo "Published \`$published\` with dist-tag \`$DIST_TAG\`." >> "$GITHUB_STEP_SUMMARY"
@@ -134,6 +152,7 @@ jobs:
         with:
           ref: v${{ needs.release.outputs.version }}
           persist-credentials: false
+          submodules: true
 
       - uses: pnpm/action-setup@v6
 
@@ -142,6 +161,8 @@ jobs:
           node-version: 24
 
       - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run build:volar
 
       - name: Publish to VSCode Marketplace
         working-directory: extensions/vscode
@@ -160,6 +181,7 @@ jobs:
         with:
           ref: v${{ needs.release.outputs.version }}
           persist-credentials: false
+          submodules: true
 
       - uses: pnpm/action-setup@v6
 
@@ -168,6 +190,8 @@ jobs:
           node-version: 24
 
       - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run build:volar
 
       - name: Publish to Open VSX
         working-directory: extensions/vscode
