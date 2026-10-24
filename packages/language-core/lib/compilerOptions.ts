@@ -75,12 +75,17 @@ export class CompilerOptionsResolver {
 				...defaults.fallthroughComponentNames,
 				...this.options.fallthroughComponentNames ?? [],
 			].map(hyphenateTag),
-			// https://github.com/vuejs/core/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
-			// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
+			// a later entry of the same normalized tag wins, so the project overrides the defaults
+			// and an SFC root comment overrides the project
 			vModelPropName: Object.fromEntries(
-				Object.entries(
-					this.options.vModelPropName ?? defaults.vModelPropName,
-				).map(([k, v]) => [camelize(k), v]),
+				Object.entries({
+					...defaults.vModelPropName,
+					...this.options.vModelPropName,
+				}).flatMap(([tag, prop]): [string, string | false][] =>
+					// other values, such as the prop-keyed shape of `experimentalModelPropName`, are reported by the
+					// content mapper's option diagnostics
+					prop === false || typeof prop === 'string' ? [[hyphenateTag(tag), prop && camelize(prop)]] : []
+				),
 			),
 		};
 		// Compiling a glob costs far more than testing it, and codegen tests every prop against these
@@ -186,15 +191,6 @@ export function getDefaultCompilerOptions(
 			useTemplateRef: ['useTemplateRef', 'templateRef'],
 		},
 		plugins: [],
-		vModelPropName: {
-			'': {
-				input: true,
-			},
-			value: {
-				input: { type: 'text' },
-				textarea: true,
-				select: true,
-			},
-		},
+		vModelPropName: {},
 	};
 }

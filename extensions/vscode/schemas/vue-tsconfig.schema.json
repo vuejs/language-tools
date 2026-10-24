@@ -168,17 +168,11 @@
 				},
 				"vModelPropName": {
 					"type": "object",
-					"default": {
-						"": {
-							"input": true
-						},
-						"value": {
-							"input": { "type": "text" },
-							"textarea": true,
-							"select": true
-						}
+					"default": {},
+					"additionalProperties": {
+						"anyOf": [{ "type": "string" }, { "const": false }]
 					},
-					"markdownDescription": "Prop that a `v-model` without an argument binds, as `{ [propName]: { [tag]: true | { [attribute]: value } | { [attribute]: value }[] } }`. A tag mapped to attribute values only matches when it carries all of them. Tags matching no entry bind `modelValue`. Setting this replaces the default, which binds `value` on `<textarea>`, `<select>` and `<input type=\"text\">`, and no prop on other `<input>`s.\n\nThe `''` prop name binds no prop, so the bound expression is not checked against the tag's props; TypeScript 7 drops `\"\"` keys from `contentMappers[].options`, so set it in an SFC root comment such as `<!-- @vModelPropName { \"\": { \"MyField\": true } } -->`. Custom elements need an entry, since Vue binds their `v-model` like an `<input>`'s, e.g. `{ \"value\": { \"my-input\": true } }`."
+					"markdownDescription": "Prop that a `v-model` without an argument binds, keyed by tag, or `false` to bind none and only check the expression on its own. Tags match in any casing (`MyInput` and `my-input` are the same), and entries are merged over the built-in rules, then overridden per file by an SFC root comment such as `<!-- @vModelPropName { \"my-input\": false } -->`.\n\nBuilt-in rules follow `@vue/compiler-dom`: `<textarea>`, `<select>` and text-like `<input>`s bind `value`; checkbox, radio, file and dynamic `:type` `<input>`s bind none; components bind `modelValue`. An entry of a native tag such as `textarea` does not apply to a component of the same name.\n\nCustom elements need an entry, e.g. `{ \"my-input\": \"value\", \"my-switch\": \"checked\" }`: `v-model` then checks the expression against that prop and checks writing the prop's type back to it, instead of listening to `update:modelValue`."
 				}
 			}
 		}

@@ -67,6 +67,7 @@ const raw = {
 	HandlerParameters: '',
 	IsAny: '',
 	IsFunction: '',
+	ModelWriteBack: '',
 	NormalizeEmits: '',
 	OverloadUnion: '',
 	OverloadUnionInner: '',

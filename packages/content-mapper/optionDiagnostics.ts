@@ -24,7 +24,6 @@ const removedOptions: Record<string, string> = {
 	checkUnknownEvents: `Unknown events are always reported, so this option has no equivalent.`,
 	checkUnknownProps: `Unknown props are always reported, so this option has no equivalent.`,
 	extensions: `Set \`extensions\` on the \`contentMappers\` entry instead.`,
-	experimentalModelPropName: `It was renamed to \`vModelPropName\`, which takes the same value.`,
 	resolveStyleImports:
 		`Vue no longer reads CSS imports; \`<style module src>\` is always typed by importing its \`src\`, and CSS files are typed by CSS content mappers or declarations.`,
 };
@@ -61,6 +60,15 @@ export function toOptionDiagnostics(options: Record<string, unknown> | undefined
 				messageText:
 					`Options are flattened in v4: pass them directly under the mapper's \`options\` instead of nesting them in \`vueCompilerOptions\`.`,
 				code: OptionDiagnosticCode.UnknownOption,
+			});
+			continue;
+		}
+		if (key === 'experimentalModelPropName') {
+			diagnostics.push({
+				path,
+				messageText: `Option '${key}' was removed in v4. Use \`vModelPropName\`, which maps each tag to the prop `
+					+ `its \`v-model\` binds or \`false\` for none: ${describeLegacyVModelPropName(value)}`,
+				code: OptionDiagnosticCode.RemovedOption,
 			});
 			continue;
 		}
@@ -105,6 +113,9 @@ function validateValue(
 	}
 	if (key === 'plugins') {
 		return validatePlugins(path, value);
+	}
+	if (key === 'vModelPropName') {
+		return validateVModelPropName(path, value);
 	}
 	if (Array.isArray(defaultValue)) {
 		if (!Array.isArray(value)) {
@@ -151,6 +162,63 @@ function validatePlugins(path: (string | number)[], value: unknown): OptionDiagn
 	}
 	return diagnostics;
 }
+
+function validateVModelPropName(path: (string | number)[], value: unknown): OptionDiagnostic[] {
+	if (!isPlainObject(value)) {
+		return [invalid(path, `Option 'vModelPropName' requires an object.`)];
+	}
+	const entries = Object.entries(value);
+	// the prop-keyed shape of `experimentalModelPropName` maps tags to `true` or to attribute conditions
+	if (entries.some(([, tags]) => isPlainObject(tags))) {
+		return [invalid(
+			path,
+			`Option 'vModelPropName' maps each tag to the prop its \`v-model\` binds or \`false\` for none: `
+				+ describeLegacyVModelPropName(value),
+		)];
+	}
+	return entries
+		.filter(([, prop]) => prop !== false && typeof prop !== 'string')
+		.map(([tag]) => invalid([...path, tag], `Option 'vModelPropName' entries require a prop name or \`false\`.`));
+}
+
+/** Converts the prop-keyed shape of `experimentalModelPropName` and describes what it could not convert. */
+function describeLegacyVModelPropName(value: unknown) {
+	const converted: Record<string, string | false> = {};
+	const conditionedTags: string[] = [];
+	if (isPlainObject(value)) {
+		for (const [prop, tags] of Object.entries(value)) {
+			if (!isPlainObject(tags)) {
+				continue;
+			}
+			for (const [tag, match] of Object.entries(tags)) {
+				if (match !== true) {
+					// the built-in rules of `<input>` follow its `type` like the old attribute conditions did
+					if (tag !== 'input') {
+						conditionedTags.push(tag);
+					}
+				}
+				else if (!(tag in legacyNativeDefaults) || legacyNativeDefaults[tag] !== prop) {
+					converted[tag] = prop || false;
+				}
+			}
+		}
+	}
+	let text = `${JSON.stringify(converted)}.`;
+	if (conditionedTags.length) {
+		text += ` Attribute conditions are not supported, so these tags need an entry of their own: ${
+			conditionedTags.map(tag => `'${tag}'`).join(', ')
+		}.`;
+	}
+	return text
+		+ ` TypeScript 7 drops \`""\` keys from these options, so entries under \`""\` are missing; add them as \`false\`.`;
+}
+
+/** Entries of the old default, which the built-in rules of native elements cover. */
+const legacyNativeDefaults: Record<string, string> = {
+	input: '',
+	textarea: 'value',
+	select: 'value',
+};
 
 function invalid(path: (string | number)[], messageText: string): OptionDiagnostic {
 	return {

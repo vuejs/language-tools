@@ -100,13 +100,10 @@ export interface VueCompilerOptions {
 	};
 	plugins: VueLanguagePlugin[];
 	/**
-	 * Prop that an argument-less `v-model` binds, keyed by prop name, then by tag; a tag maps to `true`
-	 * or to the attribute values it must carry. The `''` prop name binds no prop.
+	 * Prop that an argument-less `v-model` binds, keyed by tag, or `false` to bind none. Entries override
+	 * the built-in rules of native elements, which follow `@vue/compiler-dom`; other tags bind `modelValue`.
 	 */
-	vModelPropName: Record<
-		string,
-		Record<string, boolean | Record<string, string> | Record<string, string>[]>
-	>;
+	vModelPropName: Record<string, string | false>;
 }
 
 export const validVersions = [4] as const;

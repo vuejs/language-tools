@@ -8,9 +8,9 @@
 				"languageFeatures": false,
 				"target": 99,
 				"vModelPropName": {
-					"value": {
-						"my-input": true
-					}
+					"my-input": "value",
+					"MySwitch": "checked",
+					"f-radio-field": false
 				}
 			}
 		}

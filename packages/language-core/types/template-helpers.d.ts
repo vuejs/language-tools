@@ -85,6 +85,9 @@ declare global {
 	type __VLS_IsFunction<T, K> = K extends keyof T ? unknown extends T[K] ? false
 		: true
 		: false;
+	// what `v-model` writes back from the prop it binds; `any` for a prop the component does not declare,
+	// which the props check reports instead
+	type __VLS_ModelWriteBack<Props, K extends PropertyKey> = K extends keyof Props ? Props[K] & {} : any;
 	type __VLS_ResolveEvent<
 		Props,
 		Emits,

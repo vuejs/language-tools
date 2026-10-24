@@ -17,6 +17,7 @@ import {
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
+import { getModelPropName } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 
@@ -39,8 +40,18 @@ export function* generateElementEvents(
 			offset: number | undefined;
 		}[];
 	}> = {};
+	const writeBacks: { prop: CompilerDOM.DirectiveNode; propName: string }[] = [];
 
 	for (const prop of node.props) {
+		if (prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'model' && !prop.arg) {
+			const propName = getModelPropName(node, options.vueCompilerOptions);
+			// a tag mapped to another prop, like a custom element, has `v-model` write back from that prop
+			// as the runtime directives of native elements do, not from an `update:modelValue` event
+			if (propName !== undefined && propName !== 'modelValue') {
+				writeBacks.push({ prop, propName });
+				continue;
+			}
+		}
 		if (
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& (
@@ -85,6 +96,19 @@ export function* generateElementEvents(
 				offset,
 			});
 		}
+	}
+
+	for (const { prop, propName } of writeBacks) {
+		const writeBackVar = ctx.getInternalVariable();
+		yield `const ${writeBackVar} = `;
+		yield* generateModelEventExpression(
+			options,
+			ctx,
+			prop,
+			`[${names.ModelWriteBack}<typeof ${getPropsVar()}, '${propName}'>]`,
+		);
+		yield endOfLine;
+		yield `void ${writeBackVar}${endOfLine}`;
 	}
 
 	if (!Object.keys(definitions).length) {
