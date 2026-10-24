@@ -4,15 +4,14 @@ import {
 	type Mapping,
 	navigationFeatures,
 	semanticFeatures,
-	SpanMapKind as VolarSpanMapKind,
 	VueCodeFeature,
 } from '@vue/language-core';
 import { expect, test } from 'vitest';
 import { SpanMapFeature, SpanMapKind } from '../protocol';
 import { toSpanMappings } from '../spanMappings';
 
-const Verbatim = VolarSpanMapKind.Verbatim;
-const Atom = VolarSpanMapKind.Atom;
+const Verbatim = SpanMapKind.Verbatim;
+const Atom = SpanMapKind.Atom;
 
 test('passes language feature bits through and strips the bits outside the protocol', () => {
 	const mappings: Mapping[] = [

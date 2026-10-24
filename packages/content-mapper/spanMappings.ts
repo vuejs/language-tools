@@ -1,10 +1,4 @@
-import {
-	allFeatures,
-	completionFeatures,
-	type Mapping,
-	navigationFeatures,
-	SpanMapKind as VolarSpanMapKind,
-} from '@vue/language-core';
+import { allFeatures, completionFeatures, type Mapping, navigationFeatures } from '@vue/language-core';
 import { SpanMapKind, type SpanMapping } from './protocol';
 
 interface Candidate {
@@ -45,7 +39,7 @@ export function toSpanMappings(
 		) {
 			continue;
 		}
-		const verbatim = kind === VolarSpanMapKind.Verbatim
+		const verbatim = kind === SpanMapKind.Verbatim
 			&& generatedLength === originalLength
 			&& generatedText.slice(generatedStart, generatedEnd) === originalText.slice(originalStart, originalEnd);
 		const sourceFeatures = data & allFeatures;
@@ -69,7 +63,7 @@ export function toSpanMappings(
 		// A feature-less atom (e.g. a boundary around a props object)
 		// only carries diagnostics; let the segments inside it win.
 		// Decide by the source features so this holds without language features too.
-		if (!sourceFeatures && kind !== VolarSpanMapKind.Verbatim) {
+		if (!sourceFeatures && kind !== SpanMapKind.Verbatim) {
 			fills.push(candidate);
 		}
 		else {
