@@ -132,12 +132,16 @@ export function* generateElementProps(
 				{ features: 0 },
 			);
 			if (prop.arg) {
+				// the key of a same-name shorthand maps to the name its value maps to
+				const isShorthandName = prop.exp?.loc.start.offset === prop.arg.loc.start.offset
+					&& propName === prop.arg.loc.source
+					&& identifierRE.test(propName);
 				yield* generateObjectProperty(
 					options,
 					ctx,
 					propName,
 					prop.arg.loc.start.offset,
-					features,
+					isShorthandName ? { ...features, kind: SpanMapKind.Atom } : features,
 					shouldCamelize,
 				);
 			}

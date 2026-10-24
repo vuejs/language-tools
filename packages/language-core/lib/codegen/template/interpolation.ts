@@ -63,17 +63,13 @@ export function* generateInterpolation(
 			yield [name, block.name, start + offset, identifierFeatures];
 			continue;
 		}
+		const marker = isShorthand ? { ...identifierFeatures, kind: SpanMapKind.Atom } : identifierFeatures;
 		if (isShorthand) {
-			yield [name, block.name, start + offset, identifierFeatures];
+			yield [name, block.name, start + offset, marker];
 			yield `: `;
 		}
 
-		const codes: Code[] = [[
-			name,
-			block.name,
-			start + offset,
-			isShorthand ? { ...identifierFeatures, kind: SpanMapKind.Atom } : identifierFeatures,
-		]];
+		const codes: Code[] = [[name, block.name, start + offset, marker]];
 
 		yield* generateIdentifier(
 			options,
