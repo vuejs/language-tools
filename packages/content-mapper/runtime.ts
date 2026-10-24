@@ -24,7 +24,7 @@ export function runMapperServer(mapper: ContentMapper, options: { workerPath: st
 	let input = Buffer.alloc(0);
 	const workerPath = readArgument('worker') ?? options.workerPath;
 	const transformPool = new TransformPool(mapper, undefined, workerPath);
-	let unusedExpectErrorMessage = "Unused '@ts-expect-error' directive.";
+	let unusedExpectErrorMessage = getUnusedExpectErrorMessage();
 
 	console.log =
 		console.info =

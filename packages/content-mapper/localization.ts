@@ -17,7 +17,7 @@ const unusedExpectErrorMessages: Record<string, string> = {
 	'zh-tw': "未使用的 '@ts-expect-error' 指示詞。",
 };
 
-export function getUnusedExpectErrorMessage(locale: string | undefined) {
+export function getUnusedExpectErrorMessage(locale?: string) {
 	const candidate = locale ? resolveLocaleDirectory(locale) : undefined;
 	return candidate ? unusedExpectErrorMessages[candidate]! : defaultUnusedExpectErrorMessage;
 }

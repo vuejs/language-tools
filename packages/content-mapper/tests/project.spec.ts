@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
+import { getUnusedExpectErrorMessage } from '../localization';
 import { closeProject, openProject, transformVue } from '../project';
 import { DiagnosticDirectivePolicy, SpanMapFeature } from '../protocol';
 
@@ -241,7 +242,7 @@ test('maps Vue diagnostic directives to virtual regions', () => {
 	const diagnosticDirectives = result.diagnosticDirectives!;
 	expect(diagnosticDirectives.unusedExpectDirectiveDiagnostics).toEqual([{
 		code: 2578,
-		messageText: "Unused '@vue-expect-error' directive.",
+		messageText: getUnusedExpectErrorMessage(),
 	}]);
 	expect(diagnosticDirectives.directives.filter(directive => directive[4] === DiagnosticDirectivePolicy.Expect))
 		.toHaveLength(2);

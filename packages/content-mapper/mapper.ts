@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { withSynthesizedDiagnosticIgnores } from './diagnosticDirectives';
+import { getUnusedExpectErrorMessage } from './localization';
 import type {
 	OpenProjectParams,
 	OpenProjectResult,
@@ -126,7 +127,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			diagnosticDirectives: {
 				unusedExpectDirectiveDiagnostics: [{
 					code: 2578,
-					messageText: "Unused '@vue-expect-error' directive.",
+					messageText: getUnusedExpectErrorMessage(),
 				}],
 				directives: withSynthesizedDiagnosticIgnores(
 					text.length,
