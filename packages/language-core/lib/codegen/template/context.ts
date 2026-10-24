@@ -4,6 +4,7 @@ import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
+import { Boundary } from '../utils/boundary';
 import { isLiteralWhitelisted } from './bindingReferences';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
@@ -20,6 +21,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 			node: CompilerDOM.CommentNode;
 		};
 		diagnosticDirectives?: DiagnosticDirectiveMapping[];
+		diagnosticDirectiveBoundary?: [DiagnosticDirectiveMapping, Boundary];
 		diagnosticDirectiveEnded?: boolean;
 		generic?: {
 			content: string;
@@ -100,8 +102,18 @@ export function createTemplateCodegenContext(scriptLang: string) {
 	}
 
 	function* generateDiagnosticDirectiveStart(): Generator<Code> {
-		for (const directive of stack.at(-1)?.diagnosticDirectives ?? []) {
-			yield* generateDiagnosticDirectiveBound(directive);
+		const info = stack.at(-1);
+		const ignore = info?.diagnosticDirectives?.find(directive => directive[4] === DiagnosticDirectivePolicy.Ignore);
+		for (const directive of info?.diagnosticDirectives ?? []) {
+			yield* generateDiagnosticDirectiveComment(directive);
+			const boundary = yield* Boundary.start('template', directive[0], directive[0], directive);
+			// an expectation alongside an ignore stays empty
+			if (ignore && directive !== ignore) {
+				yield boundary.end();
+			}
+			else {
+				info!.diagnosticDirectiveBoundary = [directive, boundary];
+			}
 		}
 	}
 
@@ -111,19 +123,17 @@ export function createTemplateCodegenContext(scriptLang: string) {
 			return;
 		}
 		info.diagnosticDirectiveEnded = true;
-		const ignore = info.diagnosticDirectives?.find(directive => directive[4] === DiagnosticDirectivePolicy.Ignore);
-		for (const directive of info.diagnosticDirectives ?? []) {
-			// an expectation alongside an ignore stays empty
-			if (directive === ignore || !ignore) {
-				yield* generateDiagnosticDirectiveBound(directive);
-			}
+		if (info.diagnosticDirectiveBoundary) {
+			const [directive, boundary] = info.diagnosticDirectiveBoundary;
+			// closed first, as the mapping after it already belongs to the range an ignore directive reopens
+			yield boundary.end();
+			yield* generateDiagnosticDirectiveComment(directive);
 		}
 	}
 
-	function* generateDiagnosticDirectiveBound(directive: DiagnosticDirectiveMapping): Generator<Code> {
+	function* generateDiagnosticDirectiveComment(directive: DiagnosticDirectiveMapping): Generator<Code> {
 		// an empty mapping at the directive comment, which Volar's own features see
 		yield ['', 'template', directive[0], codeFeatures.none];
-		yield ['', 'template', directive[0], directive];
 	}
 
 	function exit() {
@@ -132,7 +142,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 	}
 
 	let reopenedInfo: typeof stack[number] | undefined;
-	let reopenedRange: DiagnosticDirectiveMapping | undefined;
+	let reopenedBoundary: Boundary | undefined;
 
 	/**
 	 * The code a node generates after its end (an `else if` condition, the siblings in a `<template v-if>`)
@@ -140,54 +150,59 @@ export function createTemplateCodegenContext(scriptLang: string) {
 	 */
 	function* generateWithDiagnosticDirectiveRanges(code: Code): Generator<Code> {
 		const info = stack.at(-1);
-		if (reopenedRange && reopenedInfo !== info) {
-			yield ['', 'template', reopenedRange[0], reopenedRange];
-			reopenedInfo = reopenedRange = undefined;
+		if (reopenedBoundary && reopenedInfo !== info) {
+			yield* generateDiagnosticDirectiveRangesEnd();
 		}
 		const marker = getMarker(code);
 		if (
 			marker
 			&& info?.diagnosticDirectiveEnded
 			&& info.ignoreError
-			&& !reopenedRange
+			&& !reopenedBoundary
 			&& !marker.ignoreDiagnostics
 		) {
 			const ignore = info.diagnosticDirectives!.find(directive => directive[4] === DiagnosticDirectivePolicy.Ignore)!;
 			reopenedInfo = info;
-			reopenedRange = [...ignore];
-			yield ['', 'template', reopenedRange[0], reopenedRange];
+			reopenedBoundary = yield* Boundary.start('template', ignore[0], ignore[0], ignore);
 		}
 		yield code;
 	}
 
-	const boundaryMarkers: VueCodeMarker[] = [];
+	/** The data of the open ranges, `undefined` for diagnostic directives. */
+	const boundaryMarkers: (VueCodeMarker | undefined)[] = [];
+	const mappingMarkers: VueCodeMarker[] = [];
 
-	/** The data of a segment, or of the range it bounds or maps as part of. */
+	/** The data of a segment, or of the mapping range it bounds or maps as part of. */
 	function getMarker(code: Code) {
 		if (typeof code === 'string') {
 			return;
 		}
 		const data = code[3];
 		if (data === undefined) {
-			return boundaryMarkers.at(-1);
-		}
-		if (Array.isArray(data)) {
-			return;
+			return mappingMarkers.at(-1);
 		}
 		if ('start' in data) {
-			boundaryMarkers.push(data.start);
-			return data.start;
+			const marker = Array.isArray(data.start) ? undefined : data.start;
+			boundaryMarkers.push(marker);
+			if (marker) {
+				mappingMarkers.push(marker);
+			}
+			return marker;
 		}
 		if ('end' in data) {
-			return boundaryMarkers.pop();
+			const marker = boundaryMarkers.pop();
+			if (marker) {
+				mappingMarkers.pop();
+			}
+			return marker;
 		}
 		return data;
 	}
 
 	function* generateDiagnosticDirectiveRangesEnd(): Generator<Code> {
-		if (reopenedRange) {
-			yield ['', 'template', reopenedRange[0], reopenedRange];
-			reopenedInfo = reopenedRange = undefined;
+		if (reopenedBoundary) {
+			yield reopenedBoundary.end();
+			reopenedInfo = reopenedBoundary = undefined;
 		}
 	}
 

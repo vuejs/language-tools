@@ -1,4 +1,4 @@
-import type { Code, CodeBoundary, VueCodeMarker } from '../../types';
+import type { Code, CodeBoundary, DiagnosticDirectiveMapping, VueCodeMarker } from '../../types';
 
 const end: CodeBoundary = Object.freeze({ end: true as const });
 
@@ -9,7 +9,12 @@ export class Boundary {
 		private endOffset: number,
 	) {}
 
-	static *start(source: string, start: number, end: number, data: VueCodeMarker): Generator<Code, Boundary> {
+	static *start(
+		source: string,
+		start: number,
+		end: number,
+		data: VueCodeMarker | DiagnosticDirectiveMapping,
+	): Generator<Code, Boundary> {
 		yield [``, source, start, { start: data }];
 		return new Boundary(source, end);
 	}

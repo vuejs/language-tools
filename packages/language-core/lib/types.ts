@@ -64,22 +64,20 @@ export interface VueCodeMarker {
 
 /**
  * The data of an empty segment bounding a range of generated code. A start carries what the range is: the span
- * from its source offset to the one of its end, which the enclosed segments without data map only as part of.
+ * from its source offset to the one of its end, which the enclosed segments without data map only as part of,
+ * or a diagnostic directive covering the range, whose original start is the source offset of the start.
  * An end closes the innermost open range.
  */
-export type CodeBoundary = { start: VueCodeMarker } | { end: true };
+export type CodeBoundary = { start: VueCodeMarker | DiagnosticDirectiveMapping } | { end: true };
 
-/**
- * A segment of generated code. An empty segment whose data is a diagnostic directive opens its virtual range,
- * and the next one with the same directive closes it; its source offset is the original start of the directive.
- */
+/** A segment of generated code. */
 export type Code =
 	| string
 	| [
 		text: string,
 		source: string | undefined,
 		sourceOffset: number,
-		data: VueCodeMarker | CodeBoundary | DiagnosticDirectiveMapping | undefined,
+		data: VueCodeMarker | CodeBoundary | undefined,
 	];
 
 export interface VueCompilerOptions {

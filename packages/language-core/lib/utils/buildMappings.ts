@@ -148,7 +148,7 @@ export function buildDiagnosticDirectives(chunks: Code[]) {
 
 function buildExplicitDiagnosticDirectives(chunks: Code[]) {
 	const directives: DiagnosticDirectiveMapping[] = [];
-	const opened = new Map<DiagnosticDirectiveMapping, DiagnosticDirectiveMapping>();
+	const ranges: (DiagnosticDirectiveMapping | undefined)[] = [];
 	let generatedStart = 0;
 	for (const segment of chunks) {
 		if (typeof segment === 'string') {
@@ -156,17 +156,19 @@ function buildExplicitDiagnosticDirectives(chunks: Code[]) {
 			continue;
 		}
 		const data = segment[3];
-		if (Array.isArray(data)) {
-			const range = opened.get(data);
+		if (data && 'start' in data) {
+			let range: DiagnosticDirectiveMapping | undefined;
+			if (Array.isArray(data.start)) {
+				const [, originalLength, , , policy] = data.start;
+				range = [segment[2], originalLength, generatedStart, generatedStart, policy];
+				directives.push(range);
+			}
+			ranges.push(range);
+		}
+		else if (data && 'end' in data) {
+			const range = ranges.pop();
 			if (range) {
 				range[3] = generatedStart;
-				opened.delete(data);
-			}
-			else {
-				const [, originalLength, , , policy] = data;
-				const range: DiagnosticDirectiveMapping = [segment[2], originalLength, generatedStart, generatedStart, policy];
-				opened.set(data, range);
-				directives.push(range);
 			}
 		}
 		generatedStart += segment[0].length;
@@ -194,7 +196,9 @@ function buildExplicitDiagnosticDirectives(chunks: Code[]) {
  */
 function toItems(chunks: Code[]) {
 	const items: (Entry | Entry[])[] = [];
-	const ranges: Entry[][] = [];
+	/** The open ranges, `undefined` for diagnostic directives. */
+	const ranges: (Entry[] | undefined)[] = [];
+	const mappingRanges: Entry[][] = [];
 	let generatedStart = 0;
 	for (const segment of chunks) {
 		if (typeof segment === 'string') {
@@ -203,31 +207,40 @@ function toItems(chunks: Code[]) {
 		}
 		const [text, , sourceStart, data] = segment;
 		if (data === undefined) {
-			const range = ranges.at(-1);
+			const range = mappingRanges.at(-1);
 			if (!range) {
 				throw new Error(`Vue generated segment without data outside of a boundary at ${generatedStart}`);
 			}
 			range.push({ generatedStart, length: text.length, sourceStart, info: range[0]!.info });
 		}
 		else if ('start' in data) {
-			const range = [{ generatedStart, length: 0, sourceStart, info: data.start }];
-			ranges.push(range);
-			items.push(range);
+			if (Array.isArray(data.start)) {
+				ranges.push(undefined);
+			}
+			else {
+				const range = [{ generatedStart, length: 0, sourceStart, info: data.start }];
+				ranges.push(range);
+				mappingRanges.push(range);
+				items.push(range);
+			}
 		}
 		else if ('end' in data) {
-			const range = ranges.pop();
-			if (!range) {
+			if (!ranges.length) {
 				throw new Error(`Vue boundary end without a start at ${generatedStart}`);
 			}
-			range.push({ generatedStart, length: 0, sourceStart, info: range[0]!.info });
+			const range = ranges.pop();
+			if (range) {
+				mappingRanges.pop();
+				range.push({ generatedStart, length: 0, sourceStart, info: range[0]!.info });
+			}
 		}
-		else if (!Array.isArray(data)) {
+		else {
 			items.push({ generatedStart, length: text.length, sourceStart, info: data });
 		}
 		generatedStart += text.length;
 	}
 	if (ranges.length) {
-		throw new Error(`Vue boundary starting at ${ranges.at(-1)![0]!.generatedStart} is not closed`);
+		throw new Error(`Vue boundaries are not closed at the end of the code`);
 	}
 	return items;
 }

@@ -129,9 +129,9 @@ test('lets segments inside a feature-less boundary stay individual', () => {
 test('keeps diagnostic directives out of the mappings', () => {
 	const directive: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Ignore];
 	const chunks: Code[] = [
-		['', 'template', 5, directive],
+		['', 'template', 5, start(directive)],
 		['abc', 'template', 5, none],
-		['', 'template', 5, directive],
+		['', 'template', 5, end],
 	];
 	expect(buildMappings(chunks)).toEqual([
 		[0, 3, 5, 3, SpanMapKind.Verbatim, none.features],
@@ -141,47 +141,55 @@ test('keeps diagnostic directives out of the mappings', () => {
 	]);
 });
 
-test('takes the original start of a directive from the source offset of its segments', () => {
+test('takes the original start of a directive from the source offset of its start', () => {
 	const directive: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Expect];
 	expect(buildDiagnosticDirectives([
 		'-'.repeat(10),
-		['', undefined, 105, directive],
+		['', undefined, 105, start(directive)],
 		'abc',
-		['', undefined, 105, directive],
+		['', undefined, 105, end],
 	])).toEqual([
 		[105, 3, 10, 13, DiagnosticDirectivePolicy.Expect],
 	]);
 });
 
-test('keeps an unclosed expectation empty and drops empty ignores', () => {
+test('keeps an empty expectation and drops empty ignores', () => {
 	const ignore: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Ignore];
 	const expectation: DiagnosticDirectiveMapping = [9, 3, 0, 0, DiagnosticDirectivePolicy.Expect];
-	const empty: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Ignore];
 	expect(buildDiagnosticDirectives([
-		['', 'template', 5, ignore],
-		['', 'template', 9, expectation],
+		['', 'template', 5, start(ignore)],
+		['', 'template', 9, start(expectation)],
+		['', 'template', 9, end],
 		'abc',
-		['', 'template', 5, ignore],
-		['', 'template', 5, empty],
-		['', 'template', 5, empty],
+		['', 'template', 5, end],
+		['', 'template', 5, start(ignore)],
+		['', 'template', 5, end],
 	])).toEqual([
 		[9, 3, 0, 0, DiagnosticDirectivePolicy.Expect],
 		[5, 3, 0, 3, DiagnosticDirectivePolicy.Ignore],
 	]);
 });
 
-test('covers each range a directive is reopened for', () => {
+test('pairs directive and mapping boundaries by nesting', () => {
 	const directive: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Ignore];
-	const reopened: DiagnosticDirectiveMapping = [...directive];
-	expect(buildDiagnosticDirectives([
-		['', 'template', 5, directive],
-		'abc',
-		['', 'template', 5, directive],
+	const chunks: Code[] = [
+		['', 'template', 5, start(directive)],
+		['', 'template', 0, start(navigation)],
+		['a', 'template', 0, undefined],
+		'.',
+		['', 'template', 2, end],
+		['b', 'template', 2, none],
+		['', 'template', 5, end],
 		'-',
-		['', 'template', 5, reopened],
+		['', 'template', 5, start(directive)],
 		'de',
-		['', 'template', 5, reopened],
-	])).toEqual([
+		['', 'template', 5, end],
+	];
+	expect(buildMappings(chunks)).toEqual([
+		[0, 2, 0, 2, SpanMapKind.Atom, navigation.features],
+		[2, 1, 2, 1, SpanMapKind.Verbatim, none.features],
+	]);
+	expect(buildDiagnosticDirectives(chunks)).toEqual([
 		[5, 3, 0, 3, DiagnosticDirectivePolicy.Ignore],
 		[5, 3, 4, 6, DiagnosticDirectivePolicy.Ignore],
 	]);
@@ -239,9 +247,9 @@ test('leaves the ranges of explicit directives to them', () => {
 	const expectation: DiagnosticDirectiveMapping = [7, 2, 0, 0, DiagnosticDirectivePolicy.Expect];
 	expect(buildDiagnosticDirectives([
 		['ab', 'template', 0, ignoreDiagnostics(navigation)],
-		['', 'template', 7, expectation],
+		['', 'template', 7, start(expectation)],
 		['cd', 'template', 2, ignoreDiagnostics(navigation)],
-		['', 'template', 7, expectation],
+		['', 'template', 7, end],
 		['ef', 'template', 4, ignoreDiagnostics(navigation)],
 	])).toEqual([
 		[0, 0, 0, 2, DiagnosticDirectivePolicy.Ignore],
@@ -254,6 +262,6 @@ function toIgnores(...ranges: [start: number, end: number][]): DiagnosticDirecti
 	return ranges.map(([start, end]) => [0, 0, start, end, DiagnosticDirectivePolicy.Ignore]);
 }
 
-function start(data: VueCodeMarker): CodeBoundary {
+function start(data: VueCodeMarker | DiagnosticDirectiveMapping): CodeBoundary {
 	return { start: data };
 }
