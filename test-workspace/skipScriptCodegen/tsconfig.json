@@ -1,0 +1,10 @@
+{
+	"include": ["**/*"],
+	"compilerOptions": {},
+	"vueCompilerOptions": {
+		"skipScriptCodegen": true
+	},
+	"contentMappers": [
+		{ "package": "@vue/content-mapper", "extensions": [".vue"] }
+	]
+}
