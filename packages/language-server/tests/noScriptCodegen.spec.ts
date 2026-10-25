@@ -6,30 +6,25 @@ import { expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server';
 
-// The language server features read the Vue source and its IR, not the code that a script code generation
-// plugin generates for TypeScript 7.1, so they work when the server creates no such plugin. This server cannot
-// resolve @vue/content-mapper, the package of the only such plugin.
+// The language server features read the Vue source, its IR and the verbatim code of its blocks, not the code
+// that a script code generation plugin generates for TypeScript 7.1, so the server creates no such plugin. This
+// server cannot resolve @vue/content-mapper, the package of the only such plugin.
 const serverModule = require.resolve('./noScriptCodegenServer.js');
 
-test('creates no script embedded code', async () => {
+test('creates no generated script code', async () => {
 	const { document } = await openFixture('templateScope', 'fixture.vue');
-	const server = await getLanguageServer(serverModule);
-	try {
-		const ids = await getEmbeddedCodeIds(serverModule, document.uri);
-		expect(ids).toContain('template');
-		expect(ids.filter(id => id.startsWith('script_'))).toEqual([]);
-	}
-	finally {
-		await server.close(document.uri);
-	}
-	// what the server creates by default
-	const defaultServer = await getLanguageServer();
-	await defaultServer.open(document.uri, 'vue', document.getText());
-	try {
-		expect(await getEmbeddedCodeIds(undefined, document.uri)).toContain('script_ts');
-	}
-	finally {
-		await defaultServer.close(document.uri);
+	for (const entry of [serverModule, undefined]) {
+		const server = await getLanguageServer(entry);
+		await server.open(document.uri, 'vue', document.getText());
+		try {
+			const ids = await getEmbeddedCodeIds(entry, document.uri);
+			expect(ids).toContain('template');
+			expect(ids).toContain('scriptsetup_raw');
+			expect(ids.filter(id => /^script_(?:js|jsx|ts|tsx)$/.test(id))).toEqual([]);
+		}
+		finally {
+			await server.close(document.uri);
+		}
 	}
 });
 
@@ -91,27 +86,24 @@ const ul = 1;
 
 test('closes the HTML tag of the template', async () => {
 	expect(
-		await requestAutoInsert(
-			serverModule,
-			`<script setup lang="ts">
+		await requestAutoInsert(`<script setup lang="ts">
 const title = 'hello';
 </script>
 
 <template>
 	<div>|
 </template>
-`,
-		),
+`),
 	).toBe('$0</div>');
 });
 
 test('closes the JSX tag of the script', async () => {
-	const content = `<script setup lang="tsx">
+	expect(
+		await requestAutoInsert(`<script setup lang="tsx">
 const vnode = <div>|;
 </script>
-`;
-	expect(await requestAutoInsert(serverModule, content)).toBe('$0</div>');
-	expect(await requestAutoInsert(undefined, content)).toBe('$0</div>');
+`),
+	).toBe('$0</div>');
 });
 
 test('completes the JSDoc comment template of the script', async () => {
@@ -120,25 +112,21 @@ test('completes the JSDoc comment template of the script', async () => {
 function add(a: number) {}
 </script>
 `;
-	const completeJsDoc = async (entry: string | undefined) => {
-		const server = await getLanguageServer(entry);
-		const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'jsdoc.vue')).toString();
-		const document = await server.open(uri, 'vue', content);
-		try {
-			const completion = await server.vueserver.sendCompletionRequest(
-				uri,
-				document.positionAt(content.indexOf('/**') + '/**'.length),
-			);
-			return completion?.items.map(item => [item.label, item.textEdit?.newText]);
-		}
-		finally {
-			await server.close(uri);
-		}
-	};
-	const items = [['/** */', '/**\n * $0\n * @param a ${1}\n */']];
-	expect(await completeJsDoc(serverModule)).toEqual(items);
-	// one item on the default server, too
-	expect(await completeJsDoc(undefined)).toEqual(items);
+	const server = await getLanguageServer(serverModule);
+	const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'jsdoc.vue')).toString();
+	const document = await server.open(uri, 'vue', content);
+	try {
+		const completion = await server.vueserver.sendCompletionRequest(
+			uri,
+			document.positionAt(content.indexOf('/**') + '/**'.length),
+		);
+		expect(completion?.items.map(item => [item.label, item.textEdit?.newText])).toEqual([
+			['/** */', '/**\n * $0\n * @param a ${1}\n */'],
+		]);
+	}
+	finally {
+		await server.close(uri);
+	}
 });
 
 test('formats the script block', async () => {
@@ -149,16 +137,22 @@ return sum;
 }
 </script>
 `;
-	const formatted = `<script setup lang="ts">
+	const server = await getLanguageServer(serverModule);
+	const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'format.vue')).toString();
+	const document = await server.open(uri, 'vue', content);
+	try {
+		const edits = await server.vueserver.sendDocumentFormattingRequest(uri, { tabSize: 4, insertSpaces: false });
+		expect(TextDocument.applyEdits(document, edits ?? [])).toBe(`<script setup lang="ts">
 function add(a: number) {
 	const sum = a + 1;
 	return sum;
 }
 </script>
-`;
-	expect(await format(serverModule, content)).toBe(formatted);
-	// formats once on the default server, too
-	expect(await format(undefined, content)).toBe(formatted);
+`);
+	}
+	finally {
+		await server.close(uri);
+	}
 });
 
 test('provides the folding ranges and outline of the script blocks', async () => {
@@ -176,31 +170,26 @@ function add(a: number) {
 }
 </script>
 `;
-	const getStructure = async (entry: string | undefined) => {
-		const server = await getLanguageServer(entry);
-		const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'structure.vue')).toString();
-		await server.open(uri, 'vue', content);
-		try {
-			const foldingRanges = await server.vueserver.sendFoldingRangesRequest(uri);
-			const symbols = await server.vueserver.sendDocumentSymbolRequest(uri) as DocumentSymbol[] | null;
-			const toOutline = (symbol: DocumentSymbol): unknown[] => [symbol.name, ...symbol.children?.map(toOutline) ?? []];
-			return {
-				foldingRanges: foldingRanges?.map(range => `${range.startLine}-${range.endLine}`).sort(),
-				outline: symbols?.map(toOutline),
-			};
-		}
-		finally {
-			await server.close(uri);
-		}
-	};
-	const structure = {
+	const server = await getLanguageServer(serverModule);
+	const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'structure.vue')).toString();
+	await server.open(uri, 'vue', content);
+	try {
+		const foldingRanges = await server.vueserver.sendFoldingRangesRequest(uri);
 		// the script blocks and, in them, the object literal, the function and the if block
-		foldingRanges: ['0-3', '1-2', '6-11', '7-10', '8-9'],
-		outline: [['script', ['default', ['name']]], ['script setup', ['add']]],
-	};
-	expect(await getStructure(serverModule)).toEqual(structure);
-	// no duplicate on the default server
-	expect(await getStructure(undefined)).toEqual(structure);
+		expect(foldingRanges?.map(range => `${range.startLine}-${range.endLine}`).sort()).toEqual([
+			'0-3',
+			'1-2',
+			'6-11',
+			'7-10',
+			'8-9',
+		]);
+		const symbols = await server.vueserver.sendDocumentSymbolRequest(uri) as DocumentSymbol[] | null;
+		const toOutline = (symbol: DocumentSymbol): unknown[] => [symbol.name, ...symbol.children?.map(toOutline) ?? []];
+		expect(symbols?.map(toOutline)).toEqual([['script', ['default', ['name']]], ['script setup', ['add']]]);
+	}
+	finally {
+		await server.close(uri);
+	}
 });
 
 test('provides the inlay hints of the template', async () => {
@@ -254,10 +243,10 @@ async function getEmbeddedCodeIds(entry: string | undefined, uri: string) {
 }
 
 /** Opens `content` with its `|` removed, as if the character before `|` was just typed. */
-async function requestAutoInsert(entry: string | undefined, content: string) {
+async function requestAutoInsert(content: string) {
 	const offset = content.indexOf('|');
 	content = content.slice(0, offset) + content.slice(offset + 1);
-	const server = await getLanguageServer(entry);
+	const server = await getLanguageServer(serverModule);
 	const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'autoInsert.vue')).toString();
 	const document = await server.open(uri, 'vue', content);
 	try {
@@ -266,19 +255,6 @@ async function requestAutoInsert(entry: string | undefined, content: string) {
 			selection: document.positionAt(offset),
 			change: { rangeOffset: offset - 1, rangeLength: 0, text: content[offset - 1]! },
 		});
-	}
-	finally {
-		await server.close(uri);
-	}
-}
-
-async function format(entry: string | undefined, content: string) {
-	const server = await getLanguageServer(entry);
-	const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'format.vue')).toString();
-	const document = await server.open(uri, 'vue', content);
-	try {
-		const edits = await server.vueserver.sendDocumentFormattingRequest(uri, { tabSize: 4, insertSpaces: false });
-		return TextDocument.applyEdits(document, edits ?? []);
 	}
 	finally {
 		await server.close(uri);

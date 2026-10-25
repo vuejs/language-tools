@@ -1,5 +1,5 @@
-// The language server where @vue/content-mapper cannot be resolved, as when it is not installed: it runs without
-// a script code generation plugin, as with a Vue Content Mapper other than @vue/content-mapper.
+// The language server where @vue/content-mapper cannot be resolved, as when it is not installed or the project
+// uses another Vue Content Mapper.
 const Module = require('node:module');
 
 const resolveFilename = Module._resolveFilename;

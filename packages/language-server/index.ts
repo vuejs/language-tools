@@ -1,4 +1,3 @@
-import type { VueLanguagePlugin } from '@vue/language-core';
 import { startServer } from './lib/server';
 
 if (process.argv.includes('--version')) {
@@ -24,23 +23,5 @@ else {
 		);
 		process.exit(1);
 	}
-	const scriptPlugins = loadScriptPlugins();
-	startServer(ts, { createPlugins: () => scriptPlugins });
-}
-
-/**
- * The vue-tsx plugin of the optional peer dependency @vue/content-mapper, whose script embedded code gives script
- * blocks the TypeScript syntactic features (formatting, JSDoc comment templates, JSX closing tags); none if it
- * is not installed.
- */
-function loadScriptPlugins(): VueLanguagePlugin[] {
-	try {
-		return [require('@vue/content-mapper/lib/vueTsx').default];
-	}
-	catch (error) {
-		if ((error as NodeJS.ErrnoException).code === 'MODULE_NOT_FOUND') {
-			return [];
-		}
-		throw error;
-	}
+	startServer(ts);
 }

@@ -8,7 +8,6 @@ import {
 	type LanguagePlugin,
 	type RawVueCompilerOptions,
 	resolveVueCompilerOptions,
-	type VueLanguagePlugin,
 	VueVirtualCode,
 } from '@vue/language-core';
 import {
@@ -44,19 +43,7 @@ interface TypeScriptApiConnection {
 	packageJsonPath: string;
 }
 
-export interface ServerOptions {
-	/**
-	 * The script code generation plugins of each Vue language plugin the server creates, none by default. The
-	 * language server features read only the Vue source and its IR, so they do not need any; a script embedded
-	 * code only adds the TypeScript syntactic features of script blocks.
-	 */
-	createPlugins?: () => VueLanguagePlugin[];
-}
-
-export function startServer(
-	ts: typeof import('typescript'),
-	{ createPlugins = () => [] }: ServerOptions = {},
-) {
+export function startServer(ts: typeof import('typescript')) {
 	const connection = createConnection();
 	const server = createServer(connection);
 
@@ -460,7 +447,6 @@ export function startServer(
 						asCoreTypeScript(ts),
 						resolveVueCompilerOptions(ts.sys.readFile, rootDir, entry.options as RawVueCompilerOptions),
 						asFileName,
-						createPlugins(),
 					),
 					entry.extensions,
 				)

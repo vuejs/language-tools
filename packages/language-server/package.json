@@ -19,13 +19,7 @@
 		"directory": "packages/language-server"
 	},
 	"peerDependencies": {
-		"@vue/content-mapper": "workspace:*",
 		"typescript": "*"
-	},
-	"peerDependenciesMeta": {
-		"@vue/content-mapper": {
-			"optional": true
-		}
 	},
 	"dependencies": {
 		"@volar/language-server": "workspace:*",
