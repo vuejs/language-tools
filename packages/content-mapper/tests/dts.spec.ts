@@ -6,8 +6,16 @@ import { repositoryRoot, runTsc } from './utils';
 
 defineDtsEmitTests('component-meta', ['**/*.tsx']);
 defineDtsEmitTests('dts/jsx-slots');
+defineDtsEmitTests('dts/js-script-setup', [], emitted => {
+	// the codegen of a JS component declares only what its `lang="ts"` twin declares
+	expect(emitted.get('runtime-props.d.vue.ts')).toBe(emitted.get('runtime-props-ts.d.vue.ts'));
+});
 
-function defineDtsEmitTests(workspace: string, exclude: string[] = []) {
+function defineDtsEmitTests(
+	workspace: string,
+	exclude: string[] = [],
+	assertEmitted?: (emitted: Map<string, string>) => void,
+) {
 	test(`content mapper declaration emit: ${workspace}`, () => {
 		const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-content-mapper-dts-'));
 		const workspaceRoot = path.join(repositoryRoot, 'test-workspace', workspace);
@@ -53,6 +61,7 @@ function defineDtsEmitTests(workspace: string, exclude: string[] = []) {
 			}
 
 			assertSelfContained(emitted);
+			assertEmitted?.(emitted);
 		}
 		finally {
 			fs.rmSync(outDir, { recursive: true, force: true });
@@ -64,8 +73,10 @@ function defineDtsEmitTests(workspace: string, exclude: string[] = []) {
 // Global `__VLS_` helpers don't exist for .d.ts consumers,
 // recheck each output as plain .ts so no `__VLS_` name dangles.
 function assertSelfContained(emitted: Map<string, string>) {
-	for (const text of emitted.values()) {
+	for (const [file, text] of emitted) {
 		expect(text).not.toContain('/// <reference');
+		const exportedInternals = text.split('\n').filter(line => /^export\b(?!\s+default\b).*\b__VLS_/.test(line));
+		expect(exportedInternals, file).toEqual([]);
 	}
 
 	// inside the repository, so that `vue` resolves as it does for the emitted declarations

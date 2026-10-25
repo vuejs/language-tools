@@ -196,13 +196,10 @@ export default _default;
 `;
 
 exports[`content mapper declaration emit: component-meta > js-component/component.d.vue.ts 1`] = `
-"export type __VLS_LocalComponents = {};
-export type __VLS_GlobalComponents = import('vue').GlobalComponents;
-export type __VLS_LocalDirectives = {};
-declare var __VLS_1: {
+"declare var __VLS_1: {
     count: number;
 };
-export type __VLS_Slots = {} & {
+declare var __VLS_Slots: {} & {
     header?: (props: typeof __VLS_1) => any;
 };
 declare const __VLS_base: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
@@ -226,10 +223,10 @@ declare const __VLS_base: import("vue").DefineComponent<import("vue").ExtractPro
 }>> & Readonly<{}>, {
     bar: number;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
-declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
+declare const __VLS_export: ReturnType<typeof __VLS_WithSlots<typeof __VLS_base, typeof __VLS_Slots>>;
 declare const _default: typeof __VLS_export;
 export default _default;
-export type __VLS_WithSlots<T, S> = T & {
+declare var __VLS_WithSlots: <T, S>() => T & {
     new (): {
         $slots: S;
     };
@@ -240,15 +237,6 @@ export type __VLS_WithSlots<T, S> = T & {
 exports[`content mapper declaration emit: component-meta > js-component/component-options.d.vue.ts 1`] = `
 "declare const _default: typeof __VLS_export;
 export default _default;
-export type __VLS_LocalComponents = {};
-export type __VLS_GlobalComponents = import('vue').GlobalComponents;
-export type __VLS_LocalDirectives = {};
-declare var __VLS_1: {
-    count: number;
-};
-export type __VLS_Slots = {} & {
-    header?: (props: typeof __VLS_1) => any;
-};
 declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
     foo: {
         type: StringConstructor;
@@ -908,6 +896,86 @@ export declare const Bar: import("vue").DefineSetupFnComponent<{
 }, {}, {}, {
     bar?: number;
 } & {}, import("vue").PublicProps>;
+"
+`;
+
+exports[`content mapper declaration emit: dts/js-script-setup > declaration output files 1`] = `
+[
+  "runtime-props-ts.d.vue.ts",
+  "runtime-props.d.vue.ts",
+  "template-types.d.vue.ts",
+]
+`;
+
+exports[`content mapper declaration emit: dts/js-script-setup > runtime-props.d.vue.ts 1`] = `
+"declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
+    label: {
+        type: StringConstructor;
+        required: true;
+    };
+}>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+    go: (...args: any[]) => void;
+}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
+    label: {
+        type: StringConstructor;
+        required: true;
+    };
+}>> & Readonly<{
+    onGo?: ((...args: any[]) => any) | undefined;
+}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+declare const _default: typeof __VLS_export;
+export default _default;
+"
+`;
+
+exports[`content mapper declaration emit: dts/js-script-setup > runtime-props-ts.d.vue.ts 1`] = `
+"declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
+    label: {
+        type: StringConstructor;
+        required: true;
+    };
+}>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+    go: (...args: any[]) => void;
+}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
+    label: {
+        type: StringConstructor;
+        required: true;
+    };
+}>> & Readonly<{
+    onGo?: ((...args: any[]) => any) | undefined;
+}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+declare const _default: typeof __VLS_export;
+export default _default;
+"
+`;
+
+exports[`content mapper declaration emit: dts/js-script-setup > template-types.d.vue.ts 1`] = `
+"declare const model: import("vue").ModelRef<string, string, string, string>;
+declare var __VLS_1: {
+    value: string;
+};
+declare var __VLS_Slots: {} & {
+    footer?: (props: typeof __VLS_1) => any;
+};
+declare const __VLS_base: import("vue").DefineComponent<{
+    modelValue?: typeof model['value'];
+}, {
+    input: Readonly<import("vue").ShallowRef<HTMLInputElement | null, HTMLInputElement | null>>;
+}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+    "update:modelValue": (value: string) => any;
+}, string, import("vue").PublicProps, Readonly<{
+    modelValue?: typeof model['value'];
+}> & Readonly<{
+    "onUpdate:modelValue"?: ((value: string) => any) | undefined;
+}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
+declare const __VLS_export: ReturnType<typeof __VLS_WithSlots<typeof __VLS_base, typeof __VLS_Slots>>;
+declare const _default: typeof __VLS_export;
+export default _default;
+declare var __VLS_WithSlots: <T, S>() => T & {
+    new (): {
+        $slots: S;
+    };
+};
 "
 `;
 

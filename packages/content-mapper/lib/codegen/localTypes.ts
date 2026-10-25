@@ -16,7 +16,7 @@ type __VLS_WithDefaults<P, D> = {
 		: P[K]
 };
 `.trimStart()
-				: jsTypedef(
+				: jsGenericAlias(
 					`P, D`,
 					`__VLS_WithDefaults`,
 					`{ [K in keyof Pick<P, keyof P>]: K extends keyof D ? ${
@@ -29,7 +29,7 @@ type __VLS_WithDefaults<P, D> = {
 		() =>
 			isTs
 				? `type __VLS_PrettifyLocal<T> = (T extends any ? { [K in keyof T]: T[K]; } : { [K in keyof T as K]: T[K]; }) & {}${endOfLine}`
-				: jsTypedef(
+				: jsGenericAlias(
 					`T`,
 					`__VLS_PrettifyLocal`,
 					`(T extends any ? { [K in keyof T]: T[K]; } : { [K in keyof T as K]: T[K]; }) & {}`,
@@ -46,7 +46,7 @@ type __VLS_WithSlots<T, S> = T & {
 	}
 };
 `.trimStart()
-				: jsTypedef(`T, S`, `__VLS_WithSlots`, `T & { new(): { $slots: S; } }`),
+				: jsGenericAlias(`T, S`, `__VLS_WithSlots`, `T & { new(): { $slots: S; } }`),
 	);
 	const PropsChildren = defineHelper(
 		`__VLS_PropsChildren`,
@@ -67,9 +67,9 @@ type __VLS_PropsChildren<S> = {
 	)]?: S;
 };
 `.trimStart()
-				// The single-line form lets the preceding @ts-ignore cover the whole typedef,
+				// The single-line form lets the preceding @ts-ignore cover the whole declaration,
 				// mirroring the inline @ts-ignore guards of the TS form.
-				: `// @ts-ignore${newLine}/** @template S @typedef {{ [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; }} __VLS_PropsChildren */${endOfLine}`,
+				: `// @ts-ignore${newLine}var __VLS_PropsChildren = /** @type {<S>() => { [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; }} */ ({})${endOfLine}`,
 	);
 	const TypePropsToOption = defineHelper(
 		`__VLS_TypePropsToOption`,
@@ -82,7 +82,7 @@ type __VLS_TypePropsToOption<T> = {
 		: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }
 };
 `.trimStart()
-				: jsTypedef(
+				: jsGenericAlias(
 					`T`,
 					`__VLS_TypePropsToOption`,
 					`{ [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueCompilerOptions.lib}').PropType<Required<T>[K]> } : { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true } }`,
@@ -93,7 +93,7 @@ type __VLS_TypePropsToOption<T> = {
 		() =>
 			isTs
 				? `type __VLS_OmitIndexSignature<T> = { [K in keyof T as {} extends Record<K, unknown> ? never : K]: T[K]; }${endOfLine}`
-				: jsTypedef(
+				: jsGenericAlias(
 					`T`,
 					`__VLS_OmitIndexSignature`,
 					`{ [K in keyof T as {} extends Record<K, unknown> ? never : K]: T[K] }`,
@@ -145,12 +145,14 @@ type __VLS_TypePropsToOption<T> = {
 	}
 
 	function reference(name: string, ...typeArgs: string[]) {
-		return `${name}<${typeArgs.join(', ')}>`;
+		const instantiation = `${name}<${typeArgs.join(', ')}>`;
+		return isTs ? instantiation : `ReturnType<typeof ${instantiation}>`;
 	}
 
-	function jsTypedef(params: string, name: string, body: string) {
-		// the trailing `;` keeps the typedef jsdoc from attaching to (and leaking with) the next declaration
-		return `/**${newLine} * @template ${params}${newLine} * @typedef {${body}} ${name}${newLine} */${endOfLine}`;
+	// A top-level `@typedef` would be an export of the JS module, so the alias is
+	// the return type of a generic function type, instantiated by `reference`.
+	function jsGenericAlias(params: string, name: string, body: string) {
+		return `var ${name} = /** @type {<${params}>() => ${body}} */ ({})${endOfLine}`;
 	}
 
 	function defineHelper(name: string, generate: () => string) {

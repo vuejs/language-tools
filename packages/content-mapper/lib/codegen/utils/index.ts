@@ -34,7 +34,9 @@ export function* generateTypedVar(
 	}
 }
 
-// `type name = T;` in TS; `/** @typedef {T} name */;` in JS.
+// `type name = T;` in TS; `var name = /** @type {T} */ ({});` in JS, where every
+// top-level `@typedef` is an export of the module and would leak into the emitted
+// declarations. Refer to the alias through `typeAliasRef`.
 export function* generateTypeAlias(
 	name: string,
 	lang: string,
@@ -46,14 +48,12 @@ export function* generateTypeAlias(
 		yield endOfLine;
 	}
 	else {
-		yield `/** @typedef {`;
-		yield* type();
-		yield `} ${name} */${endOfLine}`;
+		yield* generateTypedVar('var', name, lang, type);
 	}
 }
 
-export function typeAliasRef(name: string, _lang: string): string {
-	return name;
+export function typeAliasRef(name: string, lang: string): string {
+	return isTsLang(lang) ? name : `typeof ${name}`;
 }
 
 // The phantom argument that carries the component library's `Ref` brand into
