@@ -68,6 +68,16 @@ export async function getTagType(
 	}
 }
 
+/**
+ * Whether the tag name starting at `offset` of a Vue file's source text resolves to nothing; undefined when the tag
+ * maps to no code TypeScript checks.
+ */
+export async function isUnresolvedTag(ts: TypeScript, checker: Checker, sourceFile: SourceFile, offset: number) {
+	if (toCheckedPositions(sourceFile, offset, ts.SpanMapFeature.Definition).length) {
+		return !await getTagType(ts, checker, sourceFile, offset);
+	}
+}
+
 /** The type of the expression that `length` characters from `offset` of a Vue file's source text map to. */
 async function getExpressionType(
 	ts: TypeScript,

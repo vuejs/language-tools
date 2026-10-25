@@ -8,7 +8,6 @@ import {
 	createVueLanguagePlugin,
 	getComponentIsBinding,
 	type LanguagePlugin,
-	tsCodegen,
 	VueVirtualCode,
 } from '@vue/language-core';
 import {
@@ -312,7 +311,7 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 					catch {}
 				},
-				async getImportFixes(fileName, position, tag) {
+				async getImportFixes(fileName, position, elementPosition) {
 					try {
 						const script = await getVueScript(fileName);
 						if (!script) {
@@ -320,17 +319,13 @@ export function startServer(ts: typeof import('typescript')) {
 						}
 						const api = await connectTypeScriptApi();
 						let name: string | undefined;
-						if (tag !== undefined) {
-							const tagNames = [tag, camelize(tag), capitalize(camelize(tag))];
-							const setupBindings = tsCodegen.get(script.virtualCode.ir)?.getSetupBindings();
-							const componentNames = await api.getComponentNames(fileName, script.virtualCode);
-							if (
-								!componentNames
-								|| tagNames.some(tagName => setupBindings?.has(tagName) || componentNames.includes(tagName))
-							) {
+						const { template } = script.virtualCode.ir;
+						const element = elementPosition === undefined ? undefined : getElementAt(template, elementPosition);
+						if (element) {
+							if (!template || !await api.isUnresolvedTag(fileName, getTagNameOffset(template, element))) {
 								return;
 							}
-							name = camelize(tag);
+							name = camelize(element.tag);
 						}
 						else {
 							name = await api.getUnresolvedName(fileName, position);
@@ -339,7 +334,7 @@ export function startServer(ts: typeof import('typescript')) {
 							return;
 						}
 						let candidates: { fileName: string; edits: readonly TextEdit[] | undefined }[];
-						if (tag !== undefined) {
+						if (element) {
 							const components = (await api.getAutoImportComponents(fileName) ?? [])
 								.filter(component => component.name === name || component.name === capitalize(name));
 							candidates = await Promise.all(components.map(async component => ({

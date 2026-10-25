@@ -25,6 +25,7 @@ import {
 	getTagType,
 	getUnresolvedName,
 	isRefAtOffset,
+	isUnresolvedTag,
 	toCheckedPositions,
 } from './componentMeta';
 
@@ -69,6 +70,8 @@ export interface TypeScriptProjectResolver {
 	getComponentImportEdits(fileName: string, component: AutoImportComponent): Promise<readonly TextEdit[] | undefined>;
 	/** The name of the identifier at `offset` in the source text of the Vue file `fileName`, when it resolves to nothing. */
 	getUnresolvedName(fileName: string, offset: number): Promise<string | undefined>;
+	/** Whether the tag name starting at `offset` in the source text of the Vue file `fileName` resolves to nothing. */
+	isUnresolvedTag(fileName: string, offset: number): Promise<boolean | undefined>;
 	/** The TypeScript language server's edits that import each named value export called `name` into `fileName`. */
 	getNamedImportFixes(
 		fileName: string,
@@ -260,6 +263,12 @@ export async function connectTypeScriptProjectResolver(
 					}
 				}
 			});
+		},
+		isUnresolvedTag(fileName, offset) {
+			return withSourceFile(
+				fileName,
+				(project, sourceFile) => isUnresolvedTag(ts, project.checker, sourceFile, offset),
+			);
 		},
 		getNamedImportFixes(fileName, name) {
 			return withProject(fileName, async project => {
