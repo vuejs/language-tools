@@ -1,4 +1,4 @@
-import type { GetVirtualFileRequest } from '@volar/language-server/protocol';
+import { AutoInsertRequest, type GetVirtualFileRequest } from '@volar/language-server/protocol';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
@@ -87,6 +87,52 @@ const ul = 1;
 	}
 });
 
+test('closes the HTML tag of the template', async () => {
+	expect(
+		await requestAutoInsert(`<script setup lang="ts">
+const title = 'hello';
+</script>
+
+<template>
+	<div>|
+</template>
+`),
+	).toBe('$0</div>');
+});
+
+// The TypeScript syntactic plugins run on the script embedded code, which only a script code generation plugin creates.
+test.fails('closes the JSX tag of the script', async () => {
+	expect(
+		await requestAutoInsert(`<script setup lang="tsx">
+const vnode = <div>|;
+</script>
+`),
+	).toBe('$0</div>');
+});
+
+test.fails('completes the JSDoc comment template of the script', async () => {
+	const content = `<script setup lang="ts">
+/** */
+function add(a: number) {}
+</script>
+`;
+	const server = await getLanguageServer(serverModule);
+	const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'jsdoc.vue')).toString();
+	const document = await server.open(uri, 'vue', content);
+	try {
+		const completion = await server.vueserver.sendCompletionRequest(
+			uri,
+			document.positionAt(content.indexOf('/**') + '/**'.length),
+		);
+		expect(completion?.items.map(item => [item.label, item.textEdit?.newText])).toEqual([
+			['/** */', '/**\n * $0\n * @param a ${1}\n */'],
+		]);
+	}
+	finally {
+		await server.close(uri);
+	}
+});
+
 test('provides the inlay hints of the template', async () => {
 	const { document, content } = await openFixture('templateScope', 'fixture.vue');
 	const server = await getLanguageServer(serverModule);
@@ -135,6 +181,25 @@ async function getEmbeddedCodeIds(entry: string | undefined, uri: string) {
 	};
 	collect(tree!);
 	return ids;
+}
+
+/** Opens `content` with its `|` removed, as if the character before `|` was just typed. */
+async function requestAutoInsert(content: string) {
+	const offset = content.indexOf('|');
+	content = content.slice(0, offset) + content.slice(offset + 1);
+	const server = await getLanguageServer(serverModule);
+	const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'autoInsert.vue')).toString();
+	const document = await server.open(uri, 'vue', content);
+	try {
+		return await server.vueserver.connection.sendRequest(AutoInsertRequest.type, {
+			textDocument: { uri },
+			selection: document.positionAt(offset),
+			change: { rangeOffset: offset - 1, rangeLength: 0, text: content[offset - 1]! },
+		});
+	}
+	finally {
+		await server.close(uri);
+	}
 }
 
 async function openFixture(dir: string, file: string) {
