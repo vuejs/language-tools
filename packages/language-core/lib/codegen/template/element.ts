@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
 import type { Code } from '../../types';
-import { getComponentIsBinding, getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
+import { getComponentIsBinding, getElementTagOffsets, getTemplateRef, hyphenateTag } from '../../utils/shared';
 import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
@@ -447,18 +447,6 @@ function* generateFailedExpressions(
 			suffix,
 		);
 		yield endOfLine;
-	}
-}
-
-function getTemplateRef(node: CompilerDOM.ElementNode) {
-	for (const prop of node.props) {
-		if (
-			prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
-			&& prop.name === 'ref'
-			&& prop.value
-		) {
-			return normalizeAttributeValue(prop.value);
-		}
 	}
 }
 

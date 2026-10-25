@@ -59,6 +59,19 @@ export function getComponentIsBinding(node: CompilerDOM.ElementNode) {
 	}
 }
 
+/** The name of the static `ref` attribute of an element and the offset of the name in the template. */
+export function getTemplateRef(node: CompilerDOM.ElementNode) {
+	for (const prop of node.props) {
+		if (
+			prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
+			&& prop.name === 'ref'
+			&& prop.value
+		) {
+			return normalizeAttributeValue(prop.value);
+		}
+	}
+}
+
 export function getStartEnd<T extends ts.Node>(
 	node: T,
 	ast: ts.SourceFile,
