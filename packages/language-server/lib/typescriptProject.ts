@@ -296,6 +296,8 @@ export async function connectTypeScriptProjectResolver(
 		},
 		getElementNames(fileName) {
 			return withSourceFile(fileName, async (project, sourceFile) => {
+				// A file-wide list with no source position, read by its generated name until the TypeScript protocol can
+				// carry private data.
 				const intrinsics = findVariable(ts, sourceFile, names.intrinsics);
 				const type = intrinsics && await project.checker.getTypeAtLocation(intrinsics);
 				return type && (await type.getProperties()).map(symbol => symbol.name);
@@ -327,6 +329,8 @@ export async function connectTypeScriptProjectResolver(
 		},
 		getComponentDirectives(fileName) {
 			return withSourceFile(fileName, async (project, sourceFile) => {
+				// A file-wide list with no source position, read by its generated name until the TypeScript protocol can
+				// carry private data.
 				const directives = findVariable(ts, sourceFile, names.directives);
 				const type = directives && await project.checker.getTypeAtLocation(directives);
 				return type && (await type.getProperties())

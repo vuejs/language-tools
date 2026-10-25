@@ -117,6 +117,8 @@ export async function getComponentNames(
 	sourceFile: SourceFile,
 	virtualCode: VueVirtualCode,
 ) {
+	// A file-wide list with no source position, read by its generated name until the TypeScript protocol can carry
+	// private data.
 	const components = findVariable(ts, sourceFile, names.components);
 	if (!components) {
 		return;
@@ -315,6 +317,7 @@ export async function collectExtractProps(
 	return [...result.values()];
 
 	function visit(node: Node) {
+		// Only the generated name tells a template context property from a template local, which the span map does not.
 		if (
 			ts.isPropertyAccessExpression(node)
 			&& ts.isIdentifier(node.expression)
@@ -405,6 +408,8 @@ export async function getComponentSlots(
 	sourceFile: SourceFile,
 	virtualCode: VueVirtualCode,
 ) {
+	// A file-wide list with no source position, read by its generated name until the TypeScript protocol can carry
+	// private data.
 	const codegen = tsCodegen.get(virtualCode.ir);
 	const slots = codegen
 		&& findVariable(ts, sourceFile, codegen.getScriptSetupRanges()?.defineSlots?.name ?? names.slots);
@@ -424,6 +429,8 @@ export async function getElementAttrs(
 ): Promise<ComponentPropInfo[] | undefined> {
 	let type = offset === undefined ? undefined : (await getTagType(ts, checker, sourceFile, offset))?.type;
 	if (!type) {
+		// Tags TypeScript does not check as intrinsic elements (`<template>`, a custom element it checks as a component)
+		// have no position to read, so they are looked up in the file-wide list of intrinsic elements by name.
 		const intrinsics = findVariable(ts, sourceFile, names.intrinsics);
 		const element = intrinsics && await (await checker.getTypeAtLocation(intrinsics)).getProperty(tag);
 		type = element && await checker.getTypeOfSymbol(element);
