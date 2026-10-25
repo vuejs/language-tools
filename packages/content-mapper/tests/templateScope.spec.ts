@@ -1,9 +1,9 @@
 import { createVueLanguagePlugin, type VueVirtualCode } from '@vue/language-core';
+import { loadTypeScript } from '@vue/language-core/lib/typescript';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as ts5 from 'typescript-5';
 import { expect, test } from 'vitest';
-import { loadTypeScript } from '@vue/language-core/lib/typescript';
 import { resolveMapperOptions } from '../vueOptions';
 import { createSnapshot, repositoryRoot } from './utils';
 

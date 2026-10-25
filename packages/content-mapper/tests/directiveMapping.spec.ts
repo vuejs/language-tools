@@ -4,9 +4,9 @@ import {
 	forEachEmbeddedCode,
 	getDefaultCompilerOptions,
 } from '@vue/language-core';
+import { loadTypeScript } from '@vue/language-core/lib/typescript';
 import { expect, test } from 'vitest';
 import vueTsxPlugin from '../lib/vueTsx';
-import { loadTypeScript } from '@vue/language-core/lib/typescript';
 import { createSnapshot } from './utils';
 
 test('mappings within a hyphenated directive name cover the whole name', () => {
