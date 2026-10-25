@@ -1168,6 +1168,23 @@ const list = [1];
 	}
 });
 
+test('Setup bindings complete in template expressions whatever their names', async () => {
+	const labels = (await requestCompletionListToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+<script setup lang="ts">
+const __VLS_foo = 1;
+const used = 1;
+</script>
+<template>{{ used + | }}</template>
+`,
+	)).items
+		.filter(item => item.kind === 6 satisfies typeof CompletionItemKind.Variable)
+		.map(item => item.label);
+	expect(labels).toEqual(['__VLS_foo']);
+});
+
 test('Setup bindings complete as components by type', async () => {
 	const labels = (await requestCompletionListToVueServer(
 		'tsconfigProject/fixture.vue',

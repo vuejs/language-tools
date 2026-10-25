@@ -90,7 +90,7 @@ export function create(
 						...Object.values(info.root.vueCompilerOptions.macros).flat(),
 					]);
 					for (const name of new Set([...locals, ...bindings])) {
-						if (!listed.has(name) && !name.startsWith('__VLS_')) {
+						if (!listed.has(name)) {
 							items.push({
 								label: name,
 								kind: 6 satisfies typeof CompletionItemKind.Variable,
