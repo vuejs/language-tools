@@ -12,7 +12,9 @@ import { computedSet } from './utils/signals';
 import { collectTemplateScope, type InlayHintInfo } from './utils/templateScope';
 
 const validLangs = new Set(['js', 'jsx', 'ts', 'tsx']);
-const scriptAnalyses = new WeakMap<IR, ReturnType<typeof useScriptAnalysis>>();
+const scriptAnalyses = new WeakMap<IR, ScriptAnalysis>();
+
+export type ScriptAnalysis = ReturnType<typeof useScriptAnalysis>;
 
 /** The language of a Vue file's script blocks together: `js`, `jsx`, `ts` or `tsx`. */
 export function getScriptLang(ir: IR) {

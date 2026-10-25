@@ -1,0 +1,132 @@
+import { type Code, getScriptLang, type IR, type ScriptAnalysis, type TypeScript } from '@vue/language-core';
+import { BindingFlag } from '@vue/language-core/lib/parsers/utils';
+import { computed } from 'alien-signals';
+import { generateScript } from './script';
+import { generateStyle } from './style';
+import { generateTemplate } from './template';
+
+/** The generated TypeScript / JavaScript code of a Vue file, and the language TypeScript should see it as. */
+export interface ServiceScript {
+	lang: 'js' | 'jsx' | 'ts' | 'tsx';
+	codes: Code[];
+}
+
+export function generateServiceScript(
+	ts: TypeScript,
+	fileName: string,
+	ir: IR,
+	analysis: ScriptAnalysis,
+): ServiceScript {
+	return useServiceScript(ts, fileName, ir, analysis)();
+}
+
+/**
+ * The code generation of a Vue file as a graph of computed sections over its IR and script analysis, so that a
+ * change regenerates only the sections that read it.
+ */
+export function useServiceScript(
+	ts: TypeScript,
+	fileName: string,
+	ir: IR,
+	analysis: ScriptAnalysis,
+): () => ServiceScript {
+	const {
+		getResolvedOptions,
+		getScriptRanges,
+		getScriptSetupRanges,
+		getBindingFlags,
+		getSetupBindings,
+		getSetupConsts,
+		getSetupRefs,
+		getLocalComponents,
+		getLocalDirectives,
+		getTemplateScope,
+		getScopeBindings,
+		getDotValueBindings,
+		getIsVapor,
+		getScriptSetupBindingNames,
+		getInheritAttrs,
+		getComponentName,
+	} = analysis;
+
+	const hasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
+
+	const getSetupPropsAssignName = computed(() => getScriptSetupRanges()?.defineProps?.name);
+
+	const getSetupSlotsAssignName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
+
+	const getGeneratedTemplate = computed(() => {
+		if (getResolvedOptions().skipTemplateCodegen || !ir.template) {
+			return;
+		}
+		const dotValueBindings = getDotValueBindings();
+		return generateTemplate({
+			typescript: ts,
+			vueCompilerOptions: getResolvedOptions(),
+			template: ir.template,
+			isVapor: getIsVapor(),
+			scriptLang: getScriptLang(ir),
+			componentName: getComponentName(),
+			setupRefs: getSetupRefs(),
+			setupConsts: getSetupConsts(),
+			setupBindings: getSetupBindings(),
+			dotValueBindings,
+			reassertBindings: new Set(
+				[...dotValueBindings].filter(name => (getBindingFlags().get(name) ?? 0) & BindingFlag.Variable),
+			),
+			hasDefineSlots: hasDefineSlots(),
+			propsAssignName: getSetupPropsAssignName(),
+			slotsAssignName: getSetupSlotsAssignName(),
+			inheritAttrs: getInheritAttrs(),
+			templateScope: getTemplateScope(),
+		});
+	});
+
+	const getGeneratedStyle = computed(() => {
+		if (!ir.styles.length) {
+			return;
+		}
+		return generateStyle({
+			typescript: ts,
+			vueCompilerOptions: getResolvedOptions(),
+			styles: ir.styles,
+			scriptLang: getScriptLang(ir),
+			setupRefs: getSetupRefs(),
+			setupConsts: getSetupConsts(),
+			setupBindings: getSetupBindings(),
+			dotValueBindings: getDotValueBindings(),
+			templateScope: getTemplateScope(),
+		});
+	});
+
+	const getGeneratedScript = computed(() => {
+		return generateScript({
+			vueCompilerOptions: getResolvedOptions(),
+			fileName,
+			script: ir.script,
+			scriptSetup: ir.scriptSetup,
+			styles: ir.styles,
+			scriptLang: getScriptLang(ir),
+			setupBindings: getScriptSetupBindingNames(),
+			localComponents: getLocalComponents(),
+			localDirectives: getLocalDirectives(),
+			dotValueBindings: getDotValueBindings(),
+			scopeBindings: getScopeBindings(),
+			scriptRanges: getScriptRanges(),
+			scriptSetupRanges: getScriptSetupRanges(),
+			templateAndStyleTypes: new Set([
+				...getGeneratedTemplate()?.generatedTypes ?? [],
+				...getGeneratedStyle()?.generatedTypes ?? [],
+			]),
+			templateAndStyleCodes: [
+				...getGeneratedStyle()?.codes ?? [],
+				...getGeneratedTemplate()?.codes ?? [],
+			],
+		});
+	});
+
+	return computed(() => ({
+		lang: getScriptLang(ir) as ServiceScript['lang'],
+		codes: getGeneratedScript().codes,
+	}));
+}

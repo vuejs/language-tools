@@ -23,6 +23,6 @@ export * from './lib/utils/templateExpressions';
 export * from './lib/utils/templateScope';
 export * from './lib/virtualCode';
 
-export { getScriptAnalysis, getScriptLang } from './lib/scriptAnalysis';
+export { getScriptAnalysis, getScriptLang, type ScriptAnalysis } from './lib/scriptAnalysis';
 
 export * from '@volar/language-core';
