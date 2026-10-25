@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { withSynthesizedDiagnosticIgnores } from './diagnosticDirectives';
+import vueTsxPlugin, { getServiceScript } from './lib/vueTsx';
 import { getUnusedExpectErrorMessage } from './localization';
 import type {
 	OpenProjectParams,
@@ -103,7 +104,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		if (root) {
 			configuration.virtualCodes.set(params.fileName, root);
 		}
-		const serviceScript = root && vue.getServiceScript(root);
+		const serviceScript = root && getServiceScript(root);
 
 		if (!serviceScript) {
 			return {
@@ -172,7 +173,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 				loadTypeScript(),
 				vueOptions,
 				fileName => fileName,
-				[vue.vueTsxPlugin],
+				[vueTsxPlugin],
 			),
 			languageFeatures,
 			virtualCodes: new Map(),

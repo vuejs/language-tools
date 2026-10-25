@@ -8,6 +8,7 @@
 	"references": [
 		{ "path": "../../tsconfig.volar/language-service.json" },
 		{ "path": "../component-meta/tsconfig.json" },
+		{ "path": "../content-mapper/tsconfig.json" },
 		{ "path": "../language-core/tsconfig.json" }
 	],
 	"include": ["*", "lib/**/*"],

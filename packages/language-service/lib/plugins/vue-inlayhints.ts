@@ -1,5 +1,6 @@
 import type { InlayHint, InlayHintKind, LanguageServicePlugin } from '@volar/language-service';
-import { collectBindingIdentifiers, tsCodegen } from '@vue/language-core';
+import { tsCodegen } from '@vue/content-mapper/lib/vueTsx';
+import { collectBindingIdentifiers } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { asClassicNode, asCoreNode, asCoreTypeScript, resolveEmbeddedCode } from '../utils';
 

@@ -1,4 +1,5 @@
-import { names, type VueVirtualCode } from '@vue/language-core';
+import { names } from '@vue/content-mapper/lib/codegen/names';
+import type { VueVirtualCode } from '@vue/language-core';
 import type {
 	AutoImportComponent,
 	AutoImportExport,

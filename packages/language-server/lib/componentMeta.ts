@@ -1,9 +1,9 @@
+import { names } from '@vue/content-mapper/lib/codegen/names';
 import {
 	forEachElementNode,
 	getElementTagOffsets,
 	getSelfComponentName,
 	type IRTemplate,
-	names,
 	type VueVirtualCode,
 } from '@vue/language-core';
 import type { AutoImportExport, ComponentPropInfo, ExtractPropsInfo } from '@vue/language-service/lib/requests';

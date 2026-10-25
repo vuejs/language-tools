@@ -5,6 +5,8 @@
 	"files": [
 		"*.d.ts",
 		"*.js",
+		"lib/**/*.d.ts",
+		"lib/**/*.js",
 		"README.md"
 	],
 	"sideEffects": true,
@@ -12,6 +14,9 @@
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
 		"directory": "packages/content-mapper"
+	},
+	"scripts": {
+		"generate-names": "node scripts/generate-names.js"
 	},
 	"typescript": {
 		"contentMapper": {
@@ -27,11 +32,16 @@
 	},
 	"dependencies": {
 		"@volar/language-core": "workspace:*",
+		"@vue/compiler-dom": "^3.5.0",
 		"@vue/language-core": "workspace:*",
-		"muggle-string": "^0.4.1"
+		"@vue/shared": "^3.5.0",
+		"alien-signals": "^3.2.1",
+		"muggle-string": "^0.4.1",
+		"path-browserify": "^1.0.1"
 	},
 	"devDependencies": {
 		"@types/node": "^26.0.1",
+		"@types/path-browserify": "^1.0.3",
 		"@vue/compiler-sfc": "^3.5.0",
 		"typescript": "npm:typescript@7.1.0-beta"
 	}

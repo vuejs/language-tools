@@ -6,7 +6,8 @@ import {
 	type LanguagePlugin,
 	type LanguageServicePlugin,
 } from '@volar/language-service';
-import { createVueLanguagePlugin, getDefaultCompilerOptions, vueTsxPlugin } from '@vue/language-core';
+import vueTsxPlugin from '@vue/content-mapper/lib/vueTsx';
+import { createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';

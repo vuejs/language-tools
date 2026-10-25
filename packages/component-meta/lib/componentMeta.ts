@@ -1,4 +1,4 @@
-import { names } from '@vue/language-core';
+import { names } from '@vue/content-mapper/lib/codegen/names';
 import type { Node, SourceFile } from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Project, Symbol, Type } from 'typescript/async' with { 'resolution-mode': 'import' };
 import { inferComponentEmit, inferComponentExposed, inferComponentProps, inferComponentSlots } from './helpers';

@@ -1,4 +1,4 @@
-import { names } from '@vue/language-core';
+import { names } from '@vue/content-mapper/lib/codegen/names';
 import type { Expression, Node, ObjectLiteralExpression, SourceFile } from 'typescript/ast' with {
 	'resolution-mode': 'import',
 };

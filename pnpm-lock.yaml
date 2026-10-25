@@ -87,6 +87,9 @@ importers:
 
   packages/component-meta:
     dependencies:
+      '@vue/content-mapper':
+        specifier: workspace:*
+        version: link:../content-mapper
       '@vue/language-core':
         specifier: workspace:*
         version: link:../language-core
@@ -111,16 +114,31 @@ importers:
       '@volar/language-core':
         specifier: workspace:*
         version: link:../../volar.js/packages/language-core
+      '@vue/compiler-dom':
+        specifier: ^3.5.0
+        version: 3.5.40
       '@vue/language-core':
         specifier: workspace:*
         version: link:../language-core
+      '@vue/shared':
+        specifier: ^3.5.0
+        version: 3.5.40
+      alien-signals:
+        specifier: ^3.2.1
+        version: 3.2.1
       muggle-string:
         specifier: ^0.4.1
         version: 0.4.1
+      path-browserify:
+        specifier: ^1.0.1
+        version: 1.0.1
     devDependencies:
       '@types/node':
         specifier: ^26.0.1
         version: 26.1.1
+      '@types/path-browserify':
+        specifier: ^1.0.3
+        version: 1.0.3
       '@vue/compiler-sfc':
         specifier: ^3.5.0
         version: 3.5.40
@@ -238,6 +256,9 @@ importers:
       '@volar/language-service':
         specifier: workspace:*
         version: link:../../volar.js/packages/language-service
+      '@vue/content-mapper':
+        specifier: workspace:*
+        version: link:../content-mapper
       '@vue/language-core':
         specifier: workspace:*
         version: link:../language-core

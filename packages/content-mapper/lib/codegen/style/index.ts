@@ -1,0 +1,57 @@
+import { type Code, type IRStyle, scriptFeatures, type TypeScript, type VueCompilerOptions } from '@vue/language-core';
+import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
+import { generateInterpolation } from '../template/interpolation';
+import { endOfLine } from '../utils';
+import { generateStyleModules } from './modules';
+import { generateStyleScopedClasses } from './scopedClasses';
+
+export interface StyleCodegenOptions {
+	typescript: TypeScript;
+	vueCompilerOptions: VueCompilerOptions;
+	styles: readonly IRStyle[];
+	scriptLang: string;
+	setupRefs: Set<string>;
+	setupConsts: Set<string>;
+	setupBindings: Set<string>;
+	dotValueBindings: Set<string>;
+}
+
+export { generate as generateStyle };
+
+function generate(options: StyleCodegenOptions) {
+	const ctx = createTemplateCodegenContext(options.scriptLang);
+	const codes: Code[] = [...generateWorker(options, ctx)];
+	return { ...ctx, codes };
+}
+
+function* generateWorker(
+	options: StyleCodegenOptions,
+	ctx: TemplateCodegenContext,
+) {
+	const scope = ctx.blockScope();
+	yield* generateStyleScopedClasses(options, ctx);
+	yield* generateStyleModules(options, ctx);
+	yield* generateCssVars(options, ctx);
+	yield* scope.end();
+}
+
+function* generateCssVars(
+	options: StyleCodegenOptions,
+	ctx: TemplateCodegenContext,
+): Generator<Code> {
+	for (const style of options.styles) {
+		for (const binding of style.bindings) {
+			yield* generateInterpolation(
+				options,
+				ctx,
+				style,
+				{ features: scriptFeatures },
+				binding.text,
+				binding.offset,
+				`(`,
+				`)`,
+			);
+			yield endOfLine;
+		}
+	}
+}

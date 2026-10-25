@@ -30,3 +30,11 @@ export function normalizeCompilerOutput(output: { stdout: string; stderr: string
 		.sort()
 		.join('\n');
 }
+
+export function createSnapshot(text: string) {
+	return {
+		getText: (start: number, end: number) => text.slice(start, end),
+		getLength: () => text.length,
+		getChangeRange: () => undefined,
+	};
+}

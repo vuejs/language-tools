@@ -1,6 +1,7 @@
 import type { LanguageServer, MessageActionItem } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createConnection, createServer } from '@volar/language-server/node';
+import vueTsxPlugin from '@vue/content-mapper/lib/vueTsx';
 import type { MapperOptions } from '@vue/content-mapper/protocol';
 import { resolveMapperOptions } from '@vue/content-mapper/vueOptions';
 import {
@@ -8,7 +9,6 @@ import {
 	createVueLanguagePlugin,
 	getComponentIsBinding,
 	type LanguagePlugin,
-	vueTsxPlugin,
 	VueVirtualCode,
 } from '@vue/language-core';
 import {

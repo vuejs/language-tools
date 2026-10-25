@@ -6,7 +6,8 @@ import {
 } from '@volar/language-service';
 import { getSourceRange } from '@volar/language-service/lib/utils/featureWorkers';
 import type * as CompilerDOM from '@vue/compiler-dom';
-import { collectBindingNames, parseVForNode, tsCodegen } from '@vue/language-core';
+import { tsCodegen } from '@vue/content-mapper/lib/vueTsx';
+import { collectBindingNames, parseVForNode } from '@vue/language-core';
 import { URI } from 'vscode-uri';
 import type { AutoImportExport } from '../requests';
 import { asCoreTypeScript, resolveEmbeddedCode } from '../utils';

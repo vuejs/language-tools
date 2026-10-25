@@ -1,0 +1,178 @@
+import * as CompilerDOM from '@vue/compiler-dom';
+import {
+	type Code,
+	getElementTagOffsets,
+	navigationFeatures,
+	normalizeAttributeValue,
+	scriptFeatures,
+	semanticFeatures,
+} from '@vue/language-core';
+import { Boundary } from '@vue/language-core/lib/utils/boundary';
+import { createVBindShorthandInlayHintInfo } from '../inlayHints';
+import { names } from '../names';
+import { endOfLine, newLine } from '../utils';
+import type { TemplateCodegenContext } from './context';
+import { generateElementProps, generatePropExp } from './elementProps';
+import type { TemplateCodegenOptions } from './index';
+import { generateInterpolation } from './interpolation';
+import { generatePropertyAccess } from './propertyAccess';
+import { generateTemplateChild } from './templateChild';
+
+export function* generateSlotOutlet(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	node: CompilerDOM.SlotOutletNode,
+): Generator<Code> {
+	const [startTagOffset] = getElementTagOffsets(node, options.template);
+	const startTagEndOffset = startTagOffset + node.tag.length;
+	const propsVar = ctx.getInternalVariable();
+	const nameProp = node.props.find(prop => {
+		if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
+			return prop.name === 'name';
+		}
+		if (
+			prop.name === 'bind'
+			&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+		) {
+			return prop.arg.content === 'name';
+		}
+	});
+
+	if (options.hasDefineSlots) {
+		const slotVar = ctx.getInternalVariable();
+		yield `const ${slotVar} = ${names.asFunctionalSlot}(`;
+		if (nameProp) {
+			let codes: Generator<Code> | Code[];
+			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
+				const [content, offset] = normalizeAttributeValue(nameProp.value);
+				codes = generatePropertyAccess(options, ctx, content, offset, { features: navigationFeatures });
+			}
+			else if (
+				nameProp.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			) {
+				codes = [
+					`[`,
+					...generatePropExp(
+						options,
+						ctx,
+						nameProp,
+						nameProp.exp,
+					),
+					`]`,
+				];
+			}
+			else {
+				codes = [`['default']`];
+			}
+
+			const boundary = yield* Boundary.start(
+				'template',
+				nameProp.loc.start.offset,
+				nameProp.loc.end.offset,
+				{ features: 0 },
+			);
+			yield options.slotsAssignName ?? names.slots;
+			yield* codes;
+			yield boundary.end();
+		}
+		else {
+			const boundary = yield* Boundary.start(
+				'template',
+				startTagOffset,
+				startTagEndOffset,
+				{ features: 0 },
+			);
+			yield `${options.slotsAssignName ?? names.slots}[`;
+			const boundary2 = yield* Boundary.start(
+				'template',
+				startTagOffset,
+				startTagEndOffset,
+				{ features: 0 },
+			);
+			yield `'default'`;
+			yield boundary2.end();
+			yield `]`;
+			yield boundary.end();
+		}
+		yield `)${endOfLine}`;
+		yield `${slotVar}(`;
+		const boundary = yield* Boundary.start(
+			'template',
+			startTagOffset,
+			startTagEndOffset,
+			{ features: 0 },
+		);
+		yield `{${newLine}`;
+		yield* generateElementProps(
+			options,
+			ctx,
+			node,
+			node.props.filter(prop => prop !== nameProp),
+			undefined,
+			`Parameters<typeof ${slotVar}>[0]`,
+		);
+		yield `}`;
+		yield boundary.end();
+		yield `)${endOfLine}`;
+	}
+	else {
+		yield `var ${propsVar} = {${newLine}`;
+		yield* generateElementProps(
+			options,
+			ctx,
+			node,
+			node.props.filter(prop => prop !== nameProp),
+		);
+		yield `}${endOfLine}`;
+
+		if (
+			nameProp?.type === CompilerDOM.NodeTypes.ATTRIBUTE
+			&& nameProp.value
+		) {
+			ctx.slots.push({
+				name: nameProp.value.content,
+				offset: nameProp.loc.start.offset + nameProp.loc.source.indexOf(nameProp.value.content, nameProp.name.length),
+				tagRange: [startTagOffset, startTagOffset + node.tag.length],
+				propsVar: ctx.getHoistVariable(propsVar),
+			});
+		}
+		else if (
+			nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+		) {
+			const isShortHand = nameProp.arg?.loc.start.offset === nameProp.exp.loc.start.offset;
+			if (isShortHand) {
+				ctx.inlayHints.push(createVBindShorthandInlayHintInfo(nameProp.exp.loc, 'name'));
+			}
+			const expVar = ctx.getInternalVariable();
+			yield `var ${expVar} = ${names.tryAsConstant}(`;
+			yield* generateInterpolation(
+				options,
+				ctx,
+				options.template,
+				isShortHand
+					? { features: semanticFeatures | navigationFeatures }
+					: { features: scriptFeatures },
+				nameProp.exp.content,
+				nameProp.exp.loc.start.offset,
+			);
+			yield `)${endOfLine}`;
+			ctx.dynamicSlots.push({
+				expVar: ctx.getHoistVariable(expVar),
+				propsVar: ctx.getHoistVariable(propsVar),
+			});
+		}
+		else {
+			ctx.slots.push({
+				name: 'default',
+				tagRange: [startTagOffset, startTagEndOffset],
+				propsVar: ctx.getHoistVariable(propsVar),
+			});
+		}
+	}
+	yield* ctx.generateDiagnosticDirectiveEnd();
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child);
+	}
+}
