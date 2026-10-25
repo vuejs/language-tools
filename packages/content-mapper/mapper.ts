@@ -1,11 +1,12 @@
 import type { IScriptSnapshot } from '@volar/language-core';
 import * as vue from '@vue/language-core';
 import { loadTypeScript } from '@vue/language-core/lib/typescript';
+import { toString } from 'muggle-string';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { withSynthesizedDiagnosticIgnores } from './diagnosticDirectives';
-import vueTsxPlugin, { getServiceScript } from './lib/vueTsx';
+import { type ServiceScript, useServiceScript } from './lib/codegen';
 import { getUnusedExpectErrorMessage } from './localization';
 import type {
 	OpenProjectParams,
@@ -18,11 +19,17 @@ import { toSpanMappings } from './spanMappings';
 import { resolveMapperOptions } from './vueOptions';
 
 interface ProjectConfiguration {
+	ts: vue.TypeScript;
 	plugin: ReturnType<typeof vue.createVueLanguagePlugin<string>>;
 	languageFeatures: boolean;
 	vueOptions: vue.VueCompilerOptions;
 	pluginFiles: string[];
-	virtualCodes: Map<string, NonNullable<ReturnType<NonNullable<ProjectConfiguration['plugin']['createVirtualCode']>>>>;
+	files: Map<string, FileState>;
+}
+
+interface FileState {
+	root: vue.VueVirtualCode;
+	getServiceScript: () => ServiceScript;
 }
 
 interface ProjectState {
@@ -90,21 +97,32 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			getChangeRange: () => undefined,
 		};
 		const ctx = { getAssociatedScript: () => undefined };
-		const previous = configuration.virtualCodes.get(params.fileName);
-		const root = previous
-			? configuration.plugin.updateVirtualCode?.(params.fileName, previous, snapshot, ctx)
-			: configuration.plugin.createVirtualCode?.(
+		let file = configuration.files.get(params.fileName);
+		if (file) {
+			configuration.plugin.updateVirtualCode?.(params.fileName, file.root, snapshot, ctx);
+		}
+		else {
+			const root = configuration.plugin.createVirtualCode?.(
 				params.fileName,
 				configuration.plugin.getLanguageId(params.fileName)!,
 				snapshot,
 				ctx,
 			);
-		if (root) {
-			configuration.virtualCodes.set(params.fileName, root);
+			if (root) {
+				file = {
+					root,
+					getServiceScript: useServiceScript(
+						configuration.ts,
+						params.fileName,
+						root.ir,
+						root.scriptAnalysis,
+					),
+				};
+				configuration.files.set(params.fileName, file);
+			}
 		}
-		const serviceScript = root && getServiceScript(root);
 
-		if (!serviceScript) {
+		if (!file) {
 			return {
 				text: 'export {};\n',
 				extension: '.ts',
@@ -112,17 +130,18 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			};
 		}
 
-		const text = serviceScript.code.snapshot.getText(0, serviceScript.code.snapshot.getLength());
+		const serviceScript = file.getServiceScript();
+		const codes = vue.resolveCodeOffsets(file.root.ir, serviceScript.codes);
+		const text = toString(codes);
 		const mappings = toSpanMappings(
-			serviceScript.code.mappings,
+			vue.buildMappings(codes),
 			text,
 			params.content,
 			configuration.languageFeatures,
 		);
-		const generatedCode = serviceScript.code as vue.VueGeneratedCode;
 		return {
 			text,
-			extension: serviceScript.extension,
+			extension: `.${serviceScript.lang}`,
 			diagnosticDirectives: {
 				unusedExpectDirectiveDiagnostics: [{
 					code: 2578,
@@ -131,7 +150,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 				directives: withSynthesizedDiagnosticIgnores(
 					text.length,
 					mappings,
-					generatedCode.diagnosticDirectives,
+					vue.buildDiagnosticDirectives(codes),
 				),
 			},
 			mappings,
@@ -166,17 +185,14 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			configFileName || undefined,
 			state.params.options,
 		);
+		const ts = loadTypeScript();
 		const configuration: ProjectConfiguration = {
-			plugin: vue.createVueLanguagePlugin<string>(
-				loadTypeScript(),
-				vueOptions,
-				fileName => fileName,
-				[vueTsxPlugin],
-			),
+			ts,
+			plugin: vue.createVueLanguagePlugin<string>(ts, vueOptions, fileName => fileName),
 			languageFeatures,
 			vueOptions,
 			pluginFiles: resolvePluginFiles(plugins, rootDir),
-			virtualCodes: new Map(),
+			files: new Map(),
 		};
 		if (watchedFiles) {
 			for (const fileName of configuration.pluginFiles) {

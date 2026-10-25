@@ -363,6 +363,42 @@ test('watches plugins declared in the mapper entry options', () => {
 	}
 });
 
+test('generates the service script without the embedded code hooks of plugins', () => {
+	const workspace = createWorkspace();
+	const configFileName = path.join(workspace, 'tsconfig.json');
+	fs.writeFileSync(configFileName, JSON.stringify({ compilerOptions: { strict: true } }));
+	fs.writeFileSync(
+		pluginEntry(workspace),
+		`module.exports = () => ({
+	name: 'vue-test-plugin',
+	version: 4,
+	getEmbeddedCodes: () => [{ id: 'script_ts', lang: 'ts' }],
+	resolveEmbeddedCode(_fileName, _ir, embeddedFile) {
+		embeddedFile.content.push('/* from vue-test-plugin */');
+	},
+});\n`,
+	);
+	try {
+		openProject({
+			configFileName,
+			projectHandle: 'embedded-code-plugin-project',
+			compilerOptions: {},
+			options: { plugins: ['vue-test-plugin'] },
+		});
+		const result = transformVue({
+			projectHandle: 'embedded-code-plugin-project',
+			fileName: path.join(workspace, 'App.vue'),
+			content: `<script setup lang="ts">const msg = '';</script>\n<template>{{ msg }}</template>\n`,
+		});
+		closeProject('embedded-code-plugin-project');
+		expect(result.text).toContain('msg');
+		expect(result.text).not.toContain('vue-test-plugin');
+	}
+	finally {
+		fs.rmSync(workspace, { recursive: true, force: true });
+	}
+});
+
 test('transforms a changed file of an open project as a newly opened project does', () => {
 	const fileName = path.resolve(__dirname, 'Changed.vue');
 	const before = `<script setup lang="ts">const before = 1;</script>\n<template>{{ before }}</template>\n`;
