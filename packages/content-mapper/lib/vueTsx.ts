@@ -74,6 +74,7 @@ function useCodegen(
 		getSetupConsts,
 		getSetupRefs,
 		getLocalComponents,
+		getLocalDirectives,
 		getScopeBindings,
 	} = getScriptAnalysis(ts, vueCompilerOptions, fileName, ir);
 
@@ -156,18 +157,6 @@ function useCodegen(
 			dotValueBindings,
 		});
 	};
-
-	const getLocalDirectives = computedSet(() => {
-		const bindings = getSetupBindings();
-		if (!bindings.size) {
-			return bindings;
-		}
-		// `v[A-Z]` is a naming heuristic: without type analysis there is no
-		// reliable signal to tell a directive from a same-named value binding.
-		// This feeds the local-directive type / completion, where false positives
-		// are harmless (they only surface as extra completion candidates).
-		return new Set([...bindings].filter(name => /^v[A-Z]/.test(name)));
-	});
 
 	// First pass: collect bindings used in narrowing positions (output discarded);
 	// the second pass (the computeds below) finalizes every access of these with `.value`.

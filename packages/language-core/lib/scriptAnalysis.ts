@@ -179,6 +179,18 @@ function useScriptAnalysis(
 		);
 	});
 
+	const getLocalDirectives = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
+		}
+		// `v[A-Z]` is a naming heuristic: without type analysis there is no
+		// reliable signal to tell a directive from a same-named value binding.
+		// This feeds the local-directive type / completion, where false positives
+		// are harmless (they only surface as extra completion candidates).
+		return new Set([...bindings].filter(name => /^v[A-Z]/.test(name)));
+	});
+
 	return {
 		getResolvedOptions,
 		getScriptRanges,
@@ -188,6 +200,7 @@ function useScriptAnalysis(
 		getSetupConsts,
 		getSetupRefs,
 		getLocalComponents,
+		getLocalDirectives,
 		getTemplateScope,
 		getScopeBindings,
 		getInlayHints,
