@@ -1,9 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import {
-	type Code,
 	completionFeatures,
-	type DiagnosticDirectiveMapping,
-	DiagnosticDirectivePolicy,
 	directiveCommentRE,
 	type IRBlock,
 	type TemplateBlockScope,
@@ -11,7 +8,8 @@ import {
 	type TemplateScope,
 	type VueCodeMarker,
 } from '@vue/language-core';
-import { Boundary, isSynthesizedIgnore, OpenRanges } from '@vue/language-core/lib/utils/boundary';
+import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../../../protocol';
+import { Boundary, isSynthesizedIgnore, OpenRanges, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine, typeAliasRef } from '../utils';
 
@@ -107,7 +105,7 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 		return true;
 	}
 
-	function* generateDiagnosticDirectiveStart(): Generator<Code> {
+	function* generateDiagnosticDirectiveStart(): Generator<TsCode> {
 		const info = stack.at(-1);
 		const ignore = info?.diagnosticDirectives?.find(directive => directive[4] === DiagnosticDirectivePolicy.Ignore);
 		for (const directive of info?.diagnosticDirectives ?? []) {
@@ -123,7 +121,7 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 		}
 	}
 
-	function* generateDiagnosticDirectiveEnd(): Generator<Code> {
+	function* generateDiagnosticDirectiveEnd(): Generator<TsCode> {
 		const info = stack.at(-1);
 		if (!info || info.diagnosticDirectiveEnded) {
 			return;
@@ -137,7 +135,7 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 		}
 	}
 
-	function* generateDiagnosticDirectiveComment(directive: DiagnosticDirectiveMapping): Generator<Code> {
+	function* generateDiagnosticDirectiveComment(directive: DiagnosticDirectiveMapping): Generator<TsCode> {
 		// an empty mapping at the directive comment, which Volar's own features see
 		yield ['', 'template', directive[0], { features: 0 }];
 	}
@@ -154,7 +152,7 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 	 * The code a node generates after its end (an `else if` condition, the siblings in a `<template v-if>`)
 	 * is still the node's, so its ignore directive covers that code with another range.
 	 */
-	function* generateWithDiagnosticDirectiveRanges(code: Code): Generator<Code> {
+	function* generateWithDiagnosticDirectiveRanges(code: TsCode): Generator<TsCode> {
 		const info = stack.at(-1);
 		if (reopenedBoundary && reopenedInfo !== info) {
 			yield* generateDiagnosticDirectiveRangesEnd();
@@ -178,7 +176,7 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 	let synthesizedIgnores = 0;
 
 	/** The data of a segment, or of the mapping range it bounds or maps as part of. */
-	function getMarker(code: Code) {
+	function getMarker(code: TsCode) {
 		if (typeof code === 'string') {
 			return;
 		}
@@ -207,7 +205,7 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 		return data;
 	}
 
-	function* generateDiagnosticDirectiveRangesEnd(): Generator<Code> {
+	function* generateDiagnosticDirectiveRangesEnd(): Generator<TsCode> {
 		if (reopenedBoundary) {
 			yield reopenedBoundary.end();
 			reopenedInfo = reopenedBoundary = undefined;
@@ -263,7 +261,7 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 	 * A block scope gathers the template identifiers within it as members of
 	 * `__VLS_scope`; completion is mapped only on those members.
 	 */
-	function* exitBlockScope(): Generator<Code> {
+	function* exitBlockScope(): Generator<TsCode> {
 		const scope = blockScopes.pop()!;
 		const completionMembers = scope.members
 			.map(member => [member, memberFeatures.get(member.block)?.get(member.offset)] as const)

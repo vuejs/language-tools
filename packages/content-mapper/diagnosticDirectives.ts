@@ -1,4 +1,4 @@
-import { createIgnoreDirectives } from '@vue/language-core';
+import { createIgnoreDirectives } from './lib/buildMappings';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type SpanMapping } from './protocol';
 
 export function withSynthesizedDiagnosticIgnores(

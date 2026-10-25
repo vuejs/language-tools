@@ -1,7 +1,7 @@
-import type { Code } from '@vue/language-core';
+import type { TsCode } from '../../boundary';
 import { newLine } from './index';
 
-export function* generateIntersectMerge(...codes: Code[]): Generator<Code> {
+export function* generateIntersectMerge(...codes: TsCode[]): Generator<TsCode> {
 	yield codes[0]!;
 	for (let i = 1; i < codes.length; i++) {
 		yield ` & `;
@@ -10,7 +10,7 @@ export function* generateIntersectMerge(...codes: Code[]): Generator<Code> {
 }
 
 /** Spreads the expressions, each a string or the codes it generates. */
-export function* generateSpreadMerge(...exps: (string | Code[])[]): Generator<Code> {
+export function* generateSpreadMerge(...exps: (string | TsCode[])[]): Generator<TsCode> {
 	if (exps.length <= 1) {
 		yield* exps.flat();
 	}

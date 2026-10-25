@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { withSynthesizedDiagnosticIgnores } from './diagnosticDirectives';
+import { buildDiagnosticDirectives, buildMappings } from './lib/buildMappings';
 import { type ServiceScript, useServiceScript } from './lib/codegen';
 import { getUnusedExpectErrorMessage } from './localization';
 import type {
@@ -119,7 +120,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		const codes = vue.resolveCodeOffsets(file.source.ir, serviceScript.codes);
 		const text = toString(codes);
 		const mappings = toSpanMappings(
-			vue.buildMappings(codes),
+			buildMappings(codes),
 			text,
 			params.content,
 			configuration.languageFeatures,
@@ -135,7 +136,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 				directives: withSynthesizedDiagnosticIgnores(
 					text.length,
 					mappings,
-					vue.buildDiagnosticDirectives(codes),
+					buildDiagnosticDirectives(codes),
 				),
 			},
 			mappings,

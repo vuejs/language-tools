@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { type Code, scriptFeatures } from '@vue/language-core';
+import { scriptFeatures } from '@vue/language-core';
 import { toString } from 'muggle-string';
+import type { TsCode } from '../../boundary';
 import { newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -11,7 +12,7 @@ export function* generateVIf(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.IfNode,
-): Generator<Code> {
+): Generator<TsCode> {
 	const originalBlockConditionsLength = ctx.conditions.length;
 
 	for (let i = 0; i < node.branches.length; i++) {

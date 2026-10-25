@@ -1,4 +1,4 @@
-import type { Code } from '@vue/language-core';
+import type { TsCode } from '../../boundary';
 import { names } from '../names';
 import type { TemplateCodegenContext } from '../template/context';
 import { generateStyleScopedClassReference } from '../template/styleScopedClasses';
@@ -9,7 +9,7 @@ import { generateClassProperty } from './common';
 export function* generateStyleScopedClasses(
 	{ vueCompilerOptions, styles, scriptLang }: StyleCodegenOptions,
 	ctx: TemplateCodegenContext,
-): Generator<Code> {
+): Generator<TsCode> {
 	const { resolveStyleClassNames } = vueCompilerOptions;
 	if (!resolveStyleClassNames) {
 		return;
@@ -21,7 +21,7 @@ export function* generateStyleScopedClasses(
 	ctx.generatedTypes.add(names.StyleScopedClasses);
 
 	const visited = new Set<string>();
-	const deferredGenerates: Generator<Code>[] = [];
+	const deferredGenerates: Generator<TsCode>[] = [];
 	yield* generateTypeAlias(names.StyleScopedClasses, scriptLang, function*() {
 		yield `{}`;
 		for (const style of scopedStyles) {

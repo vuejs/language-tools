@@ -1,5 +1,4 @@
 import {
-	buildMappings,
 	createVuePlugins,
 	createVueSource,
 	getDefaultCompilerOptions,
@@ -11,6 +10,7 @@ import { loadTypeScript } from '@vue/language-core/lib/typescript';
 import { toString } from 'muggle-string';
 import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
+import { buildMappings } from '../lib/buildMappings';
 import { generateServiceScript } from '../lib/codegen';
 
 export const repositoryRoot = path.resolve(__dirname, '../../..');

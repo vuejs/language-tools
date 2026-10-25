@@ -1,5 +1,4 @@
 import type { Mapping as SpanMapping } from '@volar/language-core';
-import type { DiagnosticDirectiveMapping } from '@vue/language-core';
 
 export interface InitializeParams {
 	locale?: string;
@@ -64,7 +63,21 @@ export interface UnusedExpectDirectiveDiagnostic {
 	messageText: string;
 }
 
-export { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '@vue/language-core';
+/** The diagnostic directive policies of the Content Mapper protocol of TypeScript 7.1. */
+export enum DiagnosticDirectivePolicy {
+	Ignore,
+	Expect,
+}
+
+/** A diagnostic directive of the Content Mapper protocol of TypeScript 7.1. */
+export type DiagnosticDirectiveMapping = [
+	originalStart: number,
+	originalLength: number,
+	virtualStart: number,
+	virtualEnd: number,
+	policy: DiagnosticDirectivePolicy,
+	unusedExpectDirectiveIndex?: number,
+];
 
 export type PositionEncoding = 'utf-8' | 'utf-16';
 export type VirtualExtension =

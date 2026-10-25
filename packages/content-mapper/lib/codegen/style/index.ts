@@ -1,11 +1,11 @@
 import {
-	type Code,
 	type IRStyle,
 	scriptFeatures,
 	type TemplateScope,
 	type TypeScript,
 	type VueCompilerOptions,
 } from '@vue/language-core';
+import type { TsCode } from '../../boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import { endOfLine } from '../utils';
@@ -28,7 +28,7 @@ export { generate as generateStyle };
 
 function generate(options: StyleCodegenOptions) {
 	const ctx = createTemplateCodegenContext(options.scriptLang, options.templateScope);
-	const codes: Code[] = [...generateWorker(options, ctx)];
+	const codes: TsCode[] = [...generateWorker(options, ctx)];
 	return { ...ctx, codes };
 }
 
@@ -46,7 +46,7 @@ function* generateWorker(
 function* generateCssVars(
 	options: StyleCodegenOptions,
 	ctx: TemplateCodegenContext,
-): Generator<Code> {
+): Generator<TsCode> {
 	for (const style of options.styles) {
 		for (const binding of style.bindings) {
 			yield* generateInterpolation(

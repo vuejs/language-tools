@@ -1,10 +1,16 @@
-import {
-	type Code,
-	type CodeBoundary,
-	type DiagnosticDirectiveMapping,
-	DiagnosticDirectivePolicy,
-	type VueCodeMarker,
-} from '../types';
+import type { CodeSegment, VueCodeMarker } from '@vue/language-core';
+import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../protocol';
+
+/**
+ * The data of an empty segment bounding a range of generated code. A start carries what the range is: the span
+ * from its source offset to the one of its end, which the enclosed segments without data map only as part of,
+ * or a diagnostic directive covering the range, whose original start is the source offset of the start.
+ * An end closes the innermost open range.
+ */
+export type CodeBoundary = { start: VueCodeMarker | DiagnosticDirectiveMapping } | { end: true };
+
+/** A segment of generated TypeScript code. */
+export type TsCode = CodeSegment<VueCodeMarker | CodeBoundary | undefined>;
 
 const end: CodeBoundary = Object.freeze({ end: true as const });
 
@@ -30,12 +36,12 @@ export class Boundary {
 		start: number,
 		end: number,
 		data: VueCodeMarker | DiagnosticDirectiveMapping,
-	): Generator<Code, Boundary> {
+	): Generator<TsCode, Boundary> {
 		yield [``, source, start, { start: data }];
 		return new Boundary(source, end);
 	}
 
-	end(): Code {
+	end(): TsCode {
 		return [``, this.source, this.endOffset, end];
 	}
 }

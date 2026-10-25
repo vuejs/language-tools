@@ -1,15 +1,9 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import {
-	type Code,
-	completionFeatures,
-	navigationFeatures,
-	scriptFeatures,
-	semanticFeatures,
-} from '@vue/language-core';
-import { Boundary, synthesizedIgnore } from '@vue/language-core/lib/utils/boundary';
+import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '@vue/language-core';
 import { getTypeScriptAST } from '@vue/language-core/lib/utils/typescriptAST';
 import { replaceSourceRange } from 'muggle-string';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { endOfLine, isTsLang, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
@@ -24,7 +18,7 @@ export function* generateVSlot(
 	node: CompilerDOM.ElementNode,
 	slotDir: CompilerDOM.DirectiveNode | undefined,
 	ctxVar: string,
-): Generator<Code> {
+): Generator<TsCode> {
 	const slotVar = ctx.getInternalVariable();
 	if (slotDir) {
 		yield `{${newLine}`;
@@ -112,7 +106,7 @@ function* generateSlotParameters(
 	ast: ts.SourceFile,
 	exp: CompilerDOM.SimpleExpressionNode,
 	slotVar: string,
-): Generator<Code> {
+): Generator<TsCode> {
 	const { typescript: ts } = options;
 	const statement = ast.statements[0];
 	if (!statement || !ts.isExpressionStatement(statement) || !ts.isArrowFunction(statement.expression)) {
@@ -121,7 +115,7 @@ function* generateSlotParameters(
 
 	const { expression } = statement;
 	const startOffset = exp.loc.start.offset - 1;
-	const types: (Code | null)[] = [];
+	const types: (TsCode | null)[] = [];
 	const interpolation = [...generateInterpolation(
 		options,
 		ctx,

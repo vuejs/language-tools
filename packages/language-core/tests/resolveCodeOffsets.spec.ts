@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import type { Code, IR, IRBlock } from '../lib/types';
+import type { CodeSegment, IR, IRBlock, VueCodeMarker } from '../lib/types';
 import { resolveCodeOffsets } from '../lib/utils/resolveCodeOffsets';
 
 function block(name: string, startTagEnd: number) {
@@ -14,16 +14,18 @@ const ir = {
 	customBlocks: [block('custom_block_0', 300)],
 } as unknown as IR;
 
+type Segment = CodeSegment<VueCodeMarker | undefined>;
+
 const marker = { features: 1 };
 
 test('rebases the segments of IR blocks to file offsets', () => {
-	expect(resolveCodeOffsets(ir, [
+	expect(resolveCodeOffsets<VueCodeMarker | undefined>(ir, [
 		'text',
 		['a', 'template', 1, marker],
 		['b', 'scriptSetup', 2, undefined],
 		['c', 'style_0', 3, marker],
 		['d', 'custom_block_0', 4, marker],
-	])).toEqual<Code[]>([
+	])).toEqual<Segment[]>([
 		'text',
 		['a', undefined, 11, marker],
 		['b', undefined, 102, undefined],
@@ -33,9 +35,9 @@ test('rebases the segments of IR blocks to file offsets', () => {
 });
 
 test('keeps the segments of other sources untouched', () => {
-	const main: Code = ['m', 'main', 5, marker];
-	const unknown: Code = ['u', 'script', 6, marker];
-	const sourceless: Code = ['s', undefined, 7, marker];
+	const main: Segment = ['m', 'main', 5, marker];
+	const unknown: Segment = ['u', 'script', 6, marker];
+	const sourceless: Segment = ['s', undefined, 7, marker];
 	const result = resolveCodeOffsets(ir, [main, unknown, sourceless]);
 	expect(result[0]).toBe(main);
 	expect(result[1]).toBe(unknown);

@@ -1,4 +1,4 @@
-import type { Code } from '@vue/language-core';
+import type { TsCode } from '../../boundary';
 
 /** The parts map only as part of the enclosing boundary. */
 export function* generateEscaped(
@@ -6,7 +6,7 @@ export function* generateEscaped(
 	source: string,
 	offset: number,
 	escapeTarget: RegExp,
-): Generator<Code> {
+): Generator<TsCode> {
 	const parts = text.split(escapeTarget);
 	let isEscapeTarget = false;
 

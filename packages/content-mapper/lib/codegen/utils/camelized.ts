@@ -1,6 +1,6 @@
-import type { Code, VueCodeMarker } from '@vue/language-core';
-import { Boundary } from '@vue/language-core/lib/utils/boundary';
+import type { VueCodeMarker } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
+import { Boundary, type TsCode } from '../../boundary';
 
 /** Without features, the parts map only as part of the enclosing boundary. */
 export function* generateCamelized(
@@ -8,7 +8,7 @@ export function* generateCamelized(
 	source: string,
 	offset: number,
 	features?: VueCodeMarker,
-): Generator<Code> {
+): Generator<TsCode> {
 	const parts: [text: string, offset: number][] = [];
 	for (const [i, part] of code.split('-').entries()) {
 		if (part !== '') {

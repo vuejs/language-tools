@@ -1,13 +1,12 @@
 import { SpanMapKind } from '@volar/language-core';
 import {
-	type Code,
 	completionFeatures,
 	type IRBlock,
 	type TemplateReference,
 	type VueCodeMarker,
 	type VueCompilerOptions,
 } from '@vue/language-core';
-import { Boundary } from '@vue/language-core/lib/utils/boundary';
+import { Boundary, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { getRefBrandArgument } from '../utils';
 import type { TemplateCodegenContext } from './context';
@@ -21,7 +20,7 @@ export function* generateInterpolation(
 	start: number,
 	prefix: string = '',
 	suffix: string = '',
-): Generator<Code> {
+): Generator<TsCode> {
 	if (prefix) {
 		yield prefix;
 	}
@@ -63,7 +62,7 @@ export function* generateInterpolation(
 			yield `: `;
 		}
 
-		const codes: Code[] = [[name, block.name, start + offset, marker]];
+		const codes: TsCode[] = [[name, block.name, start + offset, marker]];
 
 		yield* generateIdentifier(
 			options,
@@ -105,7 +104,7 @@ function* generateNonIdentifierCode(
 	offset: number,
 	data: VueCodeMarker,
 	shouldCut = true,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (!code.length) {
 		return;
 	}
@@ -145,12 +144,12 @@ interface IdentifierOptions {
 export function* generateIdentifier(
 	options: IdentifierOptions,
 	ctx: TemplateCodegenContext,
-	codes: Iterable<Code>,
+	codes: Iterable<TsCode>,
 	{ name, local, inTypeQuery, isNewOperand }: TemplateReference,
 	source: string,
 	start: number,
 	end: number,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (options.setupConsts.has(name) || local) {
 		yield* codes;
 	}

@@ -37,22 +37,6 @@ export type RawPlugin =
 		name: string;
 	};
 
-/** The diagnostic directive policies of the Content Mapper protocol of TypeScript 7.1. */
-export enum DiagnosticDirectivePolicy {
-	Ignore,
-	Expect,
-}
-
-/** A diagnostic directive of the Content Mapper protocol of TypeScript 7.1. */
-export type DiagnosticDirectiveMapping = [
-	originalStart: number,
-	originalLength: number,
-	virtualStart: number,
-	virtualEnd: number,
-	policy: DiagnosticDirectivePolicy,
-	unusedExpectDirectiveIndex?: number,
-];
-
 /** The `kind` and `features` of the protocol `Mapping` a generated segment maps by, which the protocol has no object type for. */
 export interface VueCodeMarker {
 	/** `SpanMapFeature` bits. */
@@ -61,23 +45,18 @@ export interface VueCodeMarker {
 	kind?: SpanMapKind;
 }
 
-/**
- * The data of an empty segment bounding a range of generated code. A start carries what the range is: the span
- * from its source offset to the one of its end, which the enclosed segments without data map only as part of,
- * or a diagnostic directive covering the range, whose original start is the source offset of the start.
- * An end closes the innermost open range.
- */
-export type CodeBoundary = { start: VueCodeMarker | DiagnosticDirectiveMapping } | { end: true };
-
-/** A segment of generated code. */
-export type Code =
+/** A segment of code: plain text, or text that maps from an offset of a source by its `data`. */
+export type CodeSegment<Data> =
 	| string
 	| [
 		text: string,
 		source: string | undefined,
 		sourceOffset: number,
-		data: VueCodeMarker | CodeBoundary | undefined,
+		data: Data,
 	];
+
+/** A segment of an embedded document, which maps by its own marker alone. */
+export type Code = CodeSegment<VueCodeMarker>;
 
 export interface VueCompilerOptions {
 	target: number;

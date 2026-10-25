@@ -1,7 +1,6 @@
 import { SpanMapKind } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import {
-	type Code,
 	getModelPropName,
 	hyphenateAttr,
 	navigationFeatures,
@@ -10,8 +9,8 @@ import {
 	semanticFeatures,
 	type VueCodeMarker,
 } from '@vue/language-core';
-import { Boundary } from '@vue/language-core/lib/utils/boundary';
 import { camelize } from '@vue/shared';
+import { Boundary, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { asType, identifierRE, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
@@ -37,7 +36,7 @@ export function* generateElementProps(
 	failedPropExps?: FailedPropExpressions[],
 	// type of the object the props are passed to, if any
 	attrsType?: string,
-): Generator<Code> {
+): Generator<TsCode> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
 	for (const prop of props) {
@@ -272,7 +271,7 @@ export function* generatePropExp(
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (!exp) {
 		yield `{}`;
 	}
@@ -314,7 +313,7 @@ export function* generatePropExp(
 function* generateAttrValue(
 	node: CompilerDOM.TextNode,
 	features: VueCodeMarker,
-): Generator<Code> {
+): Generator<TsCode> {
 	const quote = node.loc.source.startsWith("'") ? "'" : '"';
 	const [content, offset] = normalizeAttributeValue(node);
 	yield quote;

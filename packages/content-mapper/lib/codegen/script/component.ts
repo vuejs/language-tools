@@ -1,4 +1,5 @@
-import { type Code, type IRScriptSetup, navigationFeatures, type ScriptSetupRanges } from '@vue/language-core';
+import { type IRScriptSetup, navigationFeatures, type ScriptSetupRanges } from '@vue/language-core';
+import type { TsCode } from '../../boundary';
 import { names } from '../names';
 import { asType, generateSfcBlockSection, newLine, typeAliasRef } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
@@ -10,7 +11,7 @@ export function* generateComponent(
 	ctx: ScriptCodegenContext,
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
-): Generator<Code> {
+): Generator<TsCode> {
 	yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 
 	if (scriptSetupRanges.defineExpose) {
@@ -41,7 +42,7 @@ export function* generateComponent(
 function* generateEmitsOption(
 	options: ScriptCodegenOptions,
 	scriptSetupRanges: ScriptSetupRanges,
-): Generator<Code> {
+): Generator<TsCode> {
 	const typeCodes = options.vueCompilerOptions.target >= 3.5 && !scriptSetupRanges.defineEmits?.hasUnionTypeArg
 		? [...generateTypeEmitsOption(options, scriptSetupRanges)]
 		: [];
@@ -93,7 +94,7 @@ function* generatePropsOption(
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 	hasEmitsOption: boolean,
-): Generator<Code> {
+): Generator<TsCode> {
 	const typeCodes = options.vueCompilerOptions.target >= 3.5 && !scriptSetupRanges.defineProps?.arg
 		? [...generateTypePropsOption(options, ctx, hasEmitsOption)]
 		: [];
@@ -137,7 +138,7 @@ function* generateRuntimePropsOption(
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 	hasEmitsOption: boolean,
-): Generator<string | Code[]> {
+): Generator<string | TsCode[]> {
 	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
 		const attrsType = getInheritedAttrsType(options, hasEmitsOption);
 		const propsType = ctx.localTypes.TypePropsToOption(

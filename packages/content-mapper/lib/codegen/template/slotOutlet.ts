@@ -1,13 +1,12 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import {
-	type Code,
 	getElementTagOffsets,
 	navigationFeatures,
 	normalizeAttributeValue,
 	scriptFeatures,
 	semanticFeatures,
 } from '@vue/language-core';
-import { Boundary } from '@vue/language-core/lib/utils/boundary';
+import { Boundary, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
@@ -21,7 +20,7 @@ export function* generateSlotOutlet(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.SlotOutletNode,
-): Generator<Code> {
+): Generator<TsCode> {
 	const [startTagOffset] = getElementTagOffsets(node, options.template);
 	const startTagEndOffset = startTagOffset + node.tag.length;
 	const propsVar = ctx.getInternalVariable();
@@ -41,7 +40,7 @@ export function* generateSlotOutlet(
 		const slotVar = ctx.getInternalVariable();
 		yield `const ${slotVar} = ${names.asFunctionalSlot}(`;
 		if (nameProp) {
-			let codes: Generator<Code> | Code[];
+			let codes: Generator<TsCode> | TsCode[];
 			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
 				const [content, offset] = normalizeAttributeValue(nameProp.value);
 				codes = generatePropertyAccess(options, ctx, content, offset, { features: navigationFeatures });

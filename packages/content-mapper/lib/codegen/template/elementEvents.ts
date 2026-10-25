@@ -1,6 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import {
-	type Code,
 	getModelPropName,
 	isCompoundExpression,
 	navigationFeatures,
@@ -9,10 +8,10 @@ import {
 	type TypeScript,
 	type VueCodeMarker,
 } from '@vue/language-core';
-import { Boundary, synthesizedIgnore } from '@vue/language-core/lib/utils/boundary';
 import { getTypeScriptAST } from '@vue/language-core/lib/utils/typescriptAST';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { endOfLine, generateTypedVar, getRefBrandArgument, identifierRE, isTsLang, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
@@ -27,7 +26,7 @@ export function* generateElementEvents(
 	componentOriginalVar: string,
 	getCtxVar: () => string,
 	getPropsVar: () => string,
-): Generator<Code> {
+): Generator<TsCode> {
 	const definitions: Record<string, {
 		propPrefix: string;
 		emitPrefix: string;
@@ -175,7 +174,7 @@ export function* generateEventArg(
 	start: number,
 	directive = 'on',
 	features?: VueCodeMarker,
-): Generator<Code> {
+): Generator<TsCode> {
 	features ??= { features: semanticFeatures | navigationFeatures };
 
 	if (directive.length) {
@@ -206,7 +205,7 @@ export function getEventArgName(name: string, directive = 'on') {
 function* generateEventParameter(
 	options: TemplateCodegenOptions,
 	argsType: string,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (isTsLang(options.scriptLang)) {
 		yield `(...[$event]: ${argsType}) => {${newLine}`;
 	}
@@ -220,7 +219,7 @@ export function* generateEventExpression(
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
 	argsType: string,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const ast = getTypeScriptAST(options.typescript, options.template, prop.exp.content);
 		const isCompound = isCompoundExpression(options.typescript, ast);
@@ -239,7 +238,7 @@ export function* generateEventExpression(
 			ctx.enterBlockScope(prop);
 
 			const accessMark = ctx.accessLog.length;
-			const codes: Code[] = [];
+			const codes: TsCode[] = [];
 			for (const code of interpolation) {
 				codes.push(code);
 			}
@@ -277,7 +276,7 @@ export function* generateModelEventExpression(
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
 	argsType: string,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const accessMark = ctx.accessLog.length;
 		const codes = [...generateInterpolation(
@@ -306,7 +305,7 @@ function* generateReasserts(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	accessMark: number,
-): Generator<Code> {
+): Generator<TsCode> {
 	const reasserts = new Set<string>();
 	const collect = (name: string) => {
 		if (options.reassertBindings.has(name) && !ctx.isDeclared(name)) {

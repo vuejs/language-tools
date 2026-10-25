@@ -1,5 +1,5 @@
-import { type Code, type IRStyle, navigationFeatures } from '@vue/language-core';
-import { Boundary } from '@vue/language-core/lib/utils/boundary';
+import { type IRStyle, navigationFeatures } from '@vue/language-core';
+import { Boundary, type TsCode } from '../../boundary';
 import { names } from '../names';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateTypeAlias, identifierRE, newLine } from '../utils';
@@ -10,7 +10,7 @@ import { generateClassProperty, generateStyleSrc } from './common';
  * `<style module src>` is typed by an ordinary import of the src, so whatever types that module
  * (a CSS content mapper, an ambient declaration) types the CSS module; Vue does not read the file.
  */
-export function* generateStyleModuleImports(styles: readonly IRStyle[]): Generator<Code> {
+export function* generateStyleModuleImports(styles: readonly IRStyle[]): Generator<TsCode> {
 	for (const style of styles) {
 		if (style.module && typeof style.src === 'object') {
 			yield `import ${getStyleModuleImportName(style)} from `;
@@ -27,7 +27,7 @@ function getStyleModuleImportName(style: IRStyle) {
 export function* generateStyleModules(
 	{ vueCompilerOptions, styles, scriptLang }: StyleCodegenOptions,
 	ctx: TemplateCodegenContext,
-): Generator<Code> {
+): Generator<TsCode> {
 	const styleModules = styles.filter(style => style.module);
 	if (!styleModules.length) {
 		return;

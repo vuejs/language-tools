@@ -1,5 +1,5 @@
-import type { Code, IRScript, IRScriptSetup, VueCodeMarker, VueCompilerOptions } from '@vue/language-core';
-import { Boundary, synthesizedIgnore } from '@vue/language-core/lib/utils/boundary';
+import type { IRScript, IRScriptSetup, VueCodeMarker, VueCompilerOptions } from '@vue/language-core';
+import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
@@ -20,8 +20,8 @@ export function* generateTypedVar(
 	kind: 'let' | 'var',
 	name: string,
 	lang: string,
-	type: () => Generator<Code>,
-): Generator<Code> {
+	type: () => Generator<TsCode>,
+): Generator<TsCode> {
 	if (isTsLang(lang)) {
 		yield `${kind} ${name}!: `;
 		yield* type();
@@ -40,8 +40,8 @@ export function* generateTypedVar(
 export function* generateTypeAlias(
 	name: string,
 	lang: string,
-	type: () => Generator<Code>,
-): Generator<Code> {
+	type: () => Generator<TsCode>,
+): Generator<TsCode> {
 	if (isTsLang(lang)) {
 		yield `type ${name} = `;
 		yield* type();
@@ -69,7 +69,7 @@ export function* generateSfcBlockSection(
 	end: number,
 	features: VueCodeMarker,
 	ignoreDiagnostics = false,
-): Generator<Code> {
+): Generator<TsCode> {
 	const text = block.content.slice(start, end);
 	const ignore = ignoreDiagnostics ? yield* Boundary.start(block.name, 0, 0, synthesizedIgnore) : undefined;
 	yield [text, block.name, start, features];

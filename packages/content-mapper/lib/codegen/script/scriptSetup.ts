@@ -1,5 +1,4 @@
 import {
-	type Code,
 	completionFeatures,
 	getDefineModelPropName,
 	type IRScriptSetup,
@@ -8,7 +7,7 @@ import {
 	type ScriptSetupRanges,
 	type TextRange,
 } from '@vue/language-core';
-import { Boundary, synthesizedIgnore } from '@vue/language-core/lib/utils/boundary';
+import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import {
 	asType,
@@ -30,7 +29,7 @@ import type { ScriptCodegenOptions } from './index';
 export function* generateScriptSetupImports(
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
-): Generator<Code> {
+): Generator<TsCode> {
 	yield [
 		scriptSetup.content.slice(
 			0,
@@ -48,8 +47,8 @@ export function* generateGeneric(
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 	generic: NonNullable<IRScriptSetup['generic']>,
-	body: Iterable<Code>,
-): Generator<Code> {
+	body: Iterable<TsCode>,
+): Generator<TsCode> {
 	yield `(`;
 	if (typeof generic === 'object') {
 		const boundary = yield* Boundary.start(
@@ -151,9 +150,9 @@ export function* generateSetupFunction(
 	ctx: ScriptCodegenContext,
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
-	body: Iterable<Code>,
-	output?: Iterable<Code>,
-): Generator<Code> {
+	body: Iterable<TsCode>,
+	output?: Iterable<TsCode>,
+): Generator<TsCode> {
 	const transforms: CodeTransform[] = [];
 
 	for (const { defaultPropsArg } of scriptSetupRanges.defineModel) {
@@ -398,7 +397,7 @@ export function* generateSetupFunction(
 // virtual files, where type-only declarations are syntax errors. Imports hoist,
 // so this can be emitted after all user content: leading directives stay ahead
 // of any statement, and the import-section/content junction stays intact.
-export function* generateMacros(options: ScriptCodegenOptions): Generator<Code> {
+export function* generateMacros(options: ScriptCodegenOptions): Generator<TsCode> {
 	if (options.vueCompilerOptions.target >= 3.3) {
 		const scriptSetup = options.scriptSetup;
 		const scriptSetupRanges = options.scriptSetupRanges;
@@ -502,7 +501,7 @@ function* generatePublicProps(
 	ctx: ScriptCodegenContext,
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (scriptSetupRanges.defineProps?.typeArg && scriptSetupRanges.withDefaults?.arg) {
 		yield `const ${names.defaults} = `;
 		yield* generateSfcBlockSection(
@@ -549,14 +548,14 @@ function* generateModels(
 	options: ScriptCodegenOptions,
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (!scriptSetupRanges.defineModel.length) {
 		return;
 	}
 
 	const defaultCodes: string[] = [];
-	const propCodes: Generator<Code>[] = [];
-	const emitCodes: Generator<Code>[] = [];
+	const propCodes: Generator<TsCode>[] = [];
+	const emitCodes: Generator<TsCode>[] = [];
 
 	for (const defineModel of scriptSetupRanges.defineModel) {
 		const propName = getDefineModelPropName(scriptSetup, defineModel);
@@ -623,7 +622,7 @@ function* generateModelProp(
 	defineModel: ScriptSetupRanges['defineModel'][number],
 	propName: string,
 	modelType: string,
-): Generator<Code> {
+): Generator<TsCode> {
 	// In JS the alias body lives inside a JSDoc comment; user comments could
 	// contain `*/` and terminate it early, so they are dropped.
 	if (defineModel.comments && isTsLang(options.scriptLang)) {
@@ -660,7 +659,7 @@ function* generateModelEmit(
 	defineModel: ScriptSetupRanges['defineModel'][number],
 	propName: string,
 	modelType: string,
-): Generator<Code> {
+): Generator<TsCode> {
 	yield `'update:${propName}': [value: `;
 	yield modelType;
 	if (!defineModel.required && !defineModel.defaultValue) {

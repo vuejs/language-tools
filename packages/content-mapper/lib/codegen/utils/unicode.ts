@@ -1,7 +1,7 @@
-import type { Code, VueCodeMarker } from '@vue/language-core';
-import { Boundary } from '@vue/language-core/lib/utils/boundary';
+import type { VueCodeMarker } from '@vue/language-core';
+import { Boundary, type TsCode } from '../../boundary';
 
-export function* generateUnicode(code: string, offset: number, features: VueCodeMarker): Generator<Code> {
+export function* generateUnicode(code: string, offset: number, features: VueCodeMarker): Generator<TsCode> {
 	if (needToUnicode(code)) {
 		const boundary = yield* Boundary.start('template', offset, offset + code.length, features);
 		yield toUnicode(code);

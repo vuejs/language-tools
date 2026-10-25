@@ -1,6 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import {
-	type Code,
 	completionFeatures,
 	getComponentIsBinding,
 	getElementTagOffsets,
@@ -10,9 +9,9 @@ import {
 	scriptFeatures,
 	semanticFeatures,
 } from '@vue/language-core';
-import { Boundary, synthesizedIgnore } from '@vue/language-core/lib/utils/boundary';
 import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
+import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
 import { endOfLine, generateTypedVar, identifierRE, newLine, typeAliasRef } from '../utils';
@@ -33,7 +32,7 @@ export function* generateComponent(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-): Generator<Code> {
+): Generator<TsCode> {
 	let { tag, props } = node;
 	let [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
 	let isExpression = false;
@@ -325,7 +324,7 @@ export function* generateElement(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-): Generator<Code> {
+): Generator<TsCode> {
 	const [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
 	const failedPropExps: FailedPropExpressions[] = [];
 
@@ -401,7 +400,7 @@ export function* generateFragment(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-): Generator<Code> {
+): Generator<TsCode> {
 	const [startTagOffset] = getElementTagOffsets(node, options.template);
 	const failedPropExps: FailedPropExpressions[] = [];
 
@@ -440,7 +439,7 @@ function* generateFailedExpressions(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	failedPropExps: FailedPropExpressions[],
-): Generator<Code> {
+): Generator<TsCode> {
 	for (const { node, prefix, suffix } of failedPropExps) {
 		yield* generateInterpolation(
 			options,

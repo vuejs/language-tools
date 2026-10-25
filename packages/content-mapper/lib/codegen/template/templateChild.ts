@@ -1,5 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { type Code, hyphenateTag, parseInterpolationNode, scriptFeatures } from '@vue/language-core';
+import { hyphenateTag, parseInterpolationNode, scriptFeatures } from '@vue/language-core';
+import type { TsCode } from '../../boundary';
 import { endOfLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement, generateFragment } from './element';
@@ -16,7 +17,7 @@ export function* generateTemplateChild(
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
 	enterNode = true,
 	treatTemplateAsFragment = false,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (enterNode && !ctx.enter(node)) {
 		return;
 	}

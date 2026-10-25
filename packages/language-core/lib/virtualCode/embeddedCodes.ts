@@ -1,8 +1,8 @@
 import type { IScriptSnapshot, Mapping, TextChangeRange, VirtualCode } from '@volar/language-core';
 import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
-import type { Code, DiagnosticDirectiveMapping, IR, VueLanguagePluginReturn } from '../types';
-import { buildDiagnosticDirectives, buildMappings } from '../utils/buildMappings';
+import type { Code, IR, VueLanguagePluginReturn } from '../types';
+import { buildMappings } from '../utils/buildMappings';
 import { resolveCodeOffsets } from '../utils/resolveCodeOffsets';
 
 export class VueEmbeddedCode {
@@ -16,10 +16,6 @@ export class VueEmbeddedCode {
 	) {}
 }
 
-export interface VueGeneratedCode extends VirtualCode {
-	diagnosticDirectives: DiagnosticDirectiveMapping[];
-}
-
 export function useEmbeddedCodes(
 	plugins: VueLanguagePluginReturn[],
 	fileName: string,
@@ -28,20 +24,19 @@ export function useEmbeddedCodes(
 	const pluginsResult = plugins.map(useEmbeddedCodesForPlugin);
 
 	return computed(() => {
-		const result: VueGeneratedCode[] = [];
-		const idToCodeMap = new Map<string, VueGeneratedCode>();
+		const result: VirtualCode[] = [];
+		const idToCodeMap = new Map<string, VirtualCode>();
 		const virtualCodes = pluginsResult
 			.map(getPluginResult => getPluginResult())
 			.flat()
 			.map(
-				({ code, snapshot, mappings, diagnosticDirectives }) => {
-					const virtualCode: VueGeneratedCode = {
+				({ code, snapshot, mappings }) => {
+					const virtualCode: VirtualCode = {
 						id: code.id,
 						languageId: resolveCommonLanguageId(code.lang),
 						snapshot,
 						mappings,
 						embeddedCodes: [],
-						diagnosticDirectives,
 					};
 					idToCodeMap.set(code.id, virtualCode);
 					return [code.parentCodeId, virtualCode] as const;
@@ -97,17 +92,14 @@ export function useEmbeddedCodes(
 				code: VueEmbeddedCode;
 				snapshot: IScriptSnapshot;
 				mappings: Mapping[];
-				diagnosticDirectives: DiagnosticDirectiveMapping[];
 			}[] = [];
 
 			for (const generate of getMap().values()) {
 				const { code, snapshot } = generate();
-				const content = resolveCodeOffsets(ir, code.content);
 				result.push({
 					code,
 					snapshot,
-					mappings: buildMappings(content),
-					diagnosticDirectives: buildDiagnosticDirectives(content),
+					mappings: buildMappings(resolveCodeOffsets(ir, code.content)),
 				});
 			}
 

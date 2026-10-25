@@ -1,12 +1,11 @@
 import {
-	type Code,
 	type IRTemplate,
 	navigationFeatures,
 	type TemplateScope,
 	type TypeScript,
 	type VueCompilerOptions,
 } from '@vue/language-core';
-import { Boundary, synthesizedIgnore } from '@vue/language-core/lib/utils/boundary';
+import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { endOfLine, generateTypeAlias, generateTypedVar, newLine, typeAliasRef } from '../utils';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
@@ -40,7 +39,7 @@ export { generate as generateTemplate };
 function generate(options: TemplateCodegenOptions) {
 	const ctx = createTemplateCodegenContext(options.scriptLang, options.templateScope);
 	const codeGenerator = generateWorker(options, ctx);
-	const codes: Code[] = [];
+	const codes: TsCode[] = [];
 	for (const code of codeGenerator) {
 		codes.push(...ctx.generateWithDiagnosticDirectiveRanges(code));
 	}
@@ -51,7 +50,7 @@ function generate(options: TemplateCodegenOptions) {
 function* generateWorker(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-): Generator<Code> {
+): Generator<TsCode> {
 	const { vueCompilerOptions, template } = options;
 
 	ctx.enterBlockScope(template);
@@ -110,7 +109,7 @@ function* generateWorker(
 function* generateSlotsType(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (options.hasDefineSlots) {
 		ctx.generatedTypes.add(names.Slots);
 		return;
@@ -155,7 +154,7 @@ function* generateSlotsType(
 function* generateInheritedAttrsType(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (!ctx.inheritedAttrVars.size) {
 		return;
 	}
@@ -173,7 +172,7 @@ function* generateInheritedAttrsType(
 function* generateTemplateRefsType(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (
 		!ctx.templateRefs.size
 		|| !(
@@ -220,7 +219,7 @@ function* generateTemplateRefsType(
 function* generateRootElType(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (!ctx.singleRootElTypes.size || ctx.singleRootNodes.has(null)) {
 		return;
 	}

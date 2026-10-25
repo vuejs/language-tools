@@ -1,13 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import {
-	type Code,
-	completionFeatures,
-	navigationFeatures,
-	scriptFeatures,
-	semanticFeatures,
-} from '@vue/language-core';
-import { Boundary, synthesizedIgnore } from '@vue/language-core/lib/utils/boundary';
+import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '@vue/language-core';
 import { camelize, isBuiltInDirective } from '@vue/shared';
+import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { asType, endOfLine, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
@@ -22,7 +16,7 @@ export function* generateElementDirectives(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-): Generator<Code> {
+): Generator<TsCode> {
 	for (const prop of node.props) {
 		if (
 			prop.type !== CompilerDOM.NodeTypes.DIRECTIVE
@@ -80,7 +74,7 @@ export function* generateElementDirectives(
 function* generateIdentifier(
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
-): Generator<Code> {
+): Generator<TsCode> {
 	const rawName = 'v-' + prop.name;
 	const startOffset = prop.loc.start.offset;
 	const boundary = yield* Boundary.start(
@@ -110,7 +104,7 @@ function* generateArg(
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
 	asBindingProperty = true,
-): Generator<Code> {
+): Generator<TsCode> {
 	const { arg } = prop;
 	if (arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const startOffset = arg.loc.start.offset + arg.loc.source.indexOf(arg.content);
@@ -157,7 +151,7 @@ export function* generateModifiers(
 	prop: CompilerDOM.DirectiveNode,
 	propertyName: string = 'modifiers',
 	asBindingProperty = true,
-): Generator<Code> {
+): Generator<TsCode> {
 	const { modifiers } = prop;
 	if (modifiers.length) {
 		if (asBindingProperty) {
@@ -194,7 +188,7 @@ function* generateValue(
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
 	asBindingProperty = true,
-): Generator<Code> {
+): Generator<TsCode> {
 	const { exp } = prop;
 	if (exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const boundary = yield* Boundary.start(

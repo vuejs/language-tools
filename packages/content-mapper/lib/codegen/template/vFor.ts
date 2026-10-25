@@ -1,5 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { type Code, parseVForAliases, scriptFeatures } from '@vue/language-core';
+import { parseVForAliases, scriptFeatures } from '@vue/language-core';
+import type { TsCode } from '../../boundary';
 import { names } from '../names';
 import { asType, endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
@@ -11,7 +12,7 @@ export function* generateVFor(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ForNode,
-): Generator<Code> {
+): Generator<TsCode> {
 	const { source } = node.parseResult;
 	const { leftExpressionRange, leftExpressionText, defaultInitializerRanges } = parseVForAliases(
 		options.typescript,

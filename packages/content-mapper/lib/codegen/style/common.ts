@@ -1,5 +1,5 @@
-import { type Code, type IRAttr, navigationFeatures } from '@vue/language-core';
-import { Boundary, synthesizedIgnore } from '@vue/language-core/lib/utils/boundary';
+import { type IRAttr, navigationFeatures } from '@vue/language-core';
+import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { identifierRE, newLine } from '../utils';
 
 export function* generateClassProperty(
@@ -7,7 +7,7 @@ export function* generateClassProperty(
 	classNameWithDot: string,
 	offset: number,
 	propertyType: string,
-): Generator<Code> {
+): Generator<TsCode> {
 	yield `${newLine} & { `;
 	const className = classNameWithDot.slice(1);
 	// An unquoted name maps verbatim, so it can be both a definition and renamed.
@@ -32,7 +32,7 @@ export function* generateClassProperty(
 	yield ` }`;
 }
 
-export function* generateStyleSrc(src: Exclude<IRAttr, true>): Generator<Code> {
+export function* generateStyleSrc(src: Exclude<IRAttr, true>): Generator<TsCode> {
 	const boundary = yield* Boundary.start(
 		'main',
 		src.offset,

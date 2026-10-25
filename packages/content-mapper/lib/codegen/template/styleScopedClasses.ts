@@ -1,13 +1,12 @@
 import type { SpanMapKind } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import {
-	type Code,
 	completionFeatures,
 	forEachStyleScopedClassReference,
 	type IRBlock,
 	navigationFeatures,
 } from '@vue/language-core';
-import { Boundary, synthesizedIgnore } from '@vue/language-core/lib/utils/boundary';
+import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { endOfLine, typeAliasRef } from '../utils';
 import { generateEscaped } from '../utils/escaped';
@@ -18,7 +17,7 @@ const classNameEscapeRE = /([\\'])/;
 export function* generateStyleScopedClassReferences(
 	{ template, typescript: ts, scriptLang }: TemplateCodegenOptions,
 	node: CompilerDOM.ElementNode,
-): Generator<Code> {
+): Generator<TsCode> {
 	for (const [className, offset, fullStart, kind] of forEachStyleScopedClassReference(ts, template, node)) {
 		yield* generateStyleScopedClassReference(template, scriptLang, className, offset, fullStart, kind);
 	}
@@ -31,7 +30,7 @@ export function* generateStyleScopedClassReference(
 	offset: number,
 	fullStart = offset,
 	kind?: SpanMapKind,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (!className) {
 		yield `/** @type {${typeAliasRef(names.StyleScopedClasses, scriptLang)}['`;
 		yield ['', 'template', offset, { features: completionFeatures }];

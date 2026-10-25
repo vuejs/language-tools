@@ -1,6 +1,6 @@
-import type { Code, VueCodeMarker } from '@vue/language-core';
-import { Boundary } from '@vue/language-core/lib/utils/boundary';
+import type { VueCodeMarker } from '@vue/language-core';
 import { camelize } from '@vue/shared';
+import { Boundary, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { identifierRE } from '../utils';
 import { generateCamelized } from '../utils/camelized';
@@ -17,7 +17,7 @@ export function* generateObjectProperty(
 	features: VueCodeMarker,
 	shouldCamelize = false,
 	shouldBeConstant = false,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (code.startsWith('[') && code.endsWith(']')) {
 		if (shouldBeConstant) {
 			yield* generateInterpolation(

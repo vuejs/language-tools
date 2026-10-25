@@ -5,8 +5,6 @@ import type { TypeScript, VueCompilerOptions, VueLanguagePluginReturn } from '..
 import { createVueSource, type VueSource } from '../vueSource';
 import { useEmbeddedCodes } from './embeddedCodes';
 
-export type { VueGeneratedCode } from './embeddedCodes';
-
 const rootLanguageIds: Record<VueCompilerOptions['format'], string> = {
 	sfc: 'vue',
 	vitepress: 'markdown',

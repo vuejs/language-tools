@@ -1,5 +1,6 @@
-import { type Code, navigationFeatures } from '@vue/language-core';
+import { navigationFeatures } from '@vue/language-core';
 import { BindingFlag } from '@vue/language-core/lib/parsers/utils';
+import type { TsCode } from '../../boundary';
 import { names } from '../names';
 import {
 	asType,
@@ -17,7 +18,7 @@ import type { ScriptCodegenOptions } from './index';
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	selfType?: string,
-): Generator<Code> {
+): Generator<TsCode> {
 	yield* generateTemplateCtx(options, selfType);
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
@@ -50,7 +51,7 @@ export function* generateTemplate(
 function* generateTemplateCtx(
 	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, scriptLang }: ScriptCodegenOptions,
 	selfType: string | undefined,
-): Generator<Code> {
+): Generator<TsCode> {
 	const exps: string[] = [];
 	const emitTypes: string[] = [];
 	const propTypes: string[] = [];
@@ -102,7 +103,7 @@ function* generateTemplateCtx(
 
 function* generateTemplateComponents(
 	{ vueCompilerOptions, script, scriptRanges, localComponents, scriptLang }: ScriptCodegenOptions,
-): Generator<Code> {
+): Generator<TsCode> {
 	const types: string[] = [];
 
 	if (localComponents.size) {
@@ -140,7 +141,7 @@ function* generateTemplateComponents(
 
 function* generateTemplateDirectives(
 	{ vueCompilerOptions, script, scriptRanges, localDirectives, scriptLang }: ScriptCodegenOptions,
-): Generator<Code> {
+): Generator<TsCode> {
 	const types: string[] = [];
 
 	if (localDirectives.size) {
@@ -172,7 +173,7 @@ function* generateTemplateDirectives(
 
 function* generateTemplateScope(
 	{ vueCompilerOptions, templateAndStyleTypes, scopeBindings, scriptLang }: ScriptCodegenOptions,
-): Generator<Code> {
+): Generator<TsCode> {
 	if (!templateAndStyleTypes.has(names.Scope)) {
 		return;
 	}

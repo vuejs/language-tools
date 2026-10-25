@@ -1,11 +1,11 @@
-import type { Code, VueCodeMarker } from '@vue/language-core';
-import { Boundary } from '@vue/language-core/lib/utils/boundary';
+import type { VueCodeMarker } from '@vue/language-core';
+import { Boundary, type TsCode } from '../../boundary';
 
 export function* generateStringLiteralKey(
 	code: string,
 	offset: number,
 	features: VueCodeMarker,
-): Generator<Code> {
+): Generator<TsCode> {
 	const boundary = yield* Boundary.start('template', offset, offset + code.length, features);
 	yield `'`;
 	yield [code, 'template', offset, undefined];

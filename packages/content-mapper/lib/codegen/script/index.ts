@@ -1,6 +1,5 @@
 import { SpanMapFeature } from '@volar/language-core';
 import {
-	type Code,
 	type IRBlock,
 	type IRScript,
 	type IRScriptSetup,
@@ -11,8 +10,8 @@ import {
 	type ScriptSetupRanges,
 	type VueCompilerOptions,
 } from '@vue/language-core';
-import { Boundary, synthesizedIgnore } from '@vue/language-core/lib/utils/boundary';
 import * as path from 'path-browserify';
+import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { generateStyleModuleImports } from '../style/modules';
 import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
@@ -30,7 +29,7 @@ export interface ScriptCodegenOptions {
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateAndStyleTypes: Set<string>;
-	templateAndStyleCodes: Code[];
+	templateAndStyleCodes: TsCode[];
 	setupBindings: Set<string>;
 	localComponents: Set<string>;
 	localDirectives: Set<string>;
@@ -41,7 +40,7 @@ export interface ScriptCodegenOptions {
 
 export { generate as generateScript };
 
-function* generateSyntheticDefaultExport(exportedExpression: string): Generator<Code> {
+function* generateSyntheticDefaultExport(exportedExpression: string): Generator<TsCode> {
 	// keep the synthetic default export navigable: go-to-definition on
 	// `import Foo from './Foo.vue'` targets the whole statement, which maps to the SFC top;
 	// a rename reaching it would insert the new name there
@@ -62,7 +61,7 @@ function generate(options: ScriptCodegenOptions) {
 function* generateWorker(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-): Generator<Code> {
+): Generator<TsCode> {
 	const { script, scriptRanges, scriptSetup, scriptSetupRanges, vueCompilerOptions, fileName } = options;
 	const exportExpression = asType(`typeof ${names.export}`, options.scriptLang);
 
@@ -219,8 +218,8 @@ function* generateScriptWithExportDefault(
 	vueCompilerOptions: VueCompilerOptions,
 	varName: string,
 	exportExpression: string,
-	templateGenerator?: Generator<Code>,
-): Generator<Code> {
+	templateGenerator?: Generator<TsCode>,
+): Generator<TsCode> {
 	const componentOptions = scriptRanges.exportDefault?.options;
 	const { expression, isObjectLiteral } = componentOptions ?? exportDefault;
 
@@ -256,7 +255,7 @@ function* generateScriptWithExportDefault(
 function* generateGlobalTypesReference(
 	{ typesRoot, lib, target }: VueCompilerOptions,
 	fileName: string,
-): Generator<Code> {
+): Generator<TsCode> {
 	let typesPath: string;
 	if (path.isAbsolute(typesRoot)) {
 		let relativePath = path.relative(path.dirname(fileName), typesRoot);
@@ -280,7 +279,7 @@ function* generateGlobalTypesReference(
 
 // The component declaration has no source of its own: map it to the tag name of its block,
 // so that its declaration emit errors (e.g. a private type of a generic component) report there.
-function* generateComponentDeclareEqual(block: IRBlock, name: string): Generator<Code> {
+function* generateComponentDeclareEqual(block: IRBlock, name: string): Generator<TsCode> {
 	const tagNameStart = block.start + 1;
 	yield* generateExportDeclareEqual('main', name, tagNameStart, tagNameStart + 'script'.length);
 }
@@ -290,7 +289,7 @@ export function* generateExportDeclareEqual(
 	name: string,
 	start: number,
 	end: number,
-): Generator<Code> {
+): Generator<TsCode> {
 	yield `const `;
 	const boundary = yield* Boundary.start(source, start, end, { features: 0 });
 	yield name;
