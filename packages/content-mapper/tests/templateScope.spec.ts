@@ -62,14 +62,15 @@ test('the template scope and inlay hints of the Vue files of test-workspace', ()
 		const [configFile, entry] = findMapperEntry(fileName);
 		const { vueOptions } = resolveMapperOptions(ts5.sys.readFile, configFile, entry?.options);
 		const plugin = createVueLanguagePlugin<string>(ts, vueOptions, id => id);
-		const content = fs.readFileSync(fileName, 'utf8');
+		// offsets independent of the line endings of the checkout
+		const content = fs.readFileSync(fileName, 'utf8').replaceAll('\r\n', '\n');
 		const root = plugin.createVirtualCode!(fileName, 'vue', createSnapshot(content), {} as any) as VueVirtualCode;
 		const { getScopeBindings, getTemplateScope, getInlayHints } = root.scriptAnalysis;
 		const { templateNames, styleNames } = getTemplateScope();
 		const scopeBindings = getScopeBindings();
 		const inlayHints = getInlayHints();
 		if (templateNames.size || styleNames.size || scopeBindings.size || inlayHints.length) {
-			result[path.relative(workspace, fileName)] = {
+			result[path.relative(workspace, fileName).replaceAll('\\', '/')] = {
 				templateNames: [...templateNames].join(' '),
 				styleNames: [...styleNames].join(' '),
 				scopeBindings: [...scopeBindings].join(' '),
