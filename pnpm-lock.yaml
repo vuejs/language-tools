@@ -216,9 +216,6 @@ importers:
       '@volar/language-server':
         specifier: workspace:*
         version: link:../../volar.js/packages/language-server
-      '@vue/content-mapper':
-        specifier: workspace:*
-        version: link:../content-mapper
       '@vue/language-core':
         specifier: workspace:*
         version: link:../language-core
@@ -244,6 +241,9 @@ importers:
       '@volar/test-utils':
         specifier: workspace:*
         version: link:../../volar.js/packages/test-utils
+      '@vue/content-mapper':
+        specifier: workspace:*
+        version: link:../content-mapper
       typescript-7:
         specifier: npm:typescript@7.1.0-beta
         version: typescript@7.1.0-beta

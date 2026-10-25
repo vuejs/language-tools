@@ -1,7 +1,6 @@
 import type { LanguageServer, MessageActionItem } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createConnection, createServer } from '@volar/language-server/node';
-import vueTsxPlugin from '@vue/content-mapper/lib/vueTsx';
 import {
 	createLanguage,
 	createVueLanguagePlugin,
@@ -47,15 +46,16 @@ interface TypeScriptApiConnection {
 
 export interface ServerOptions {
 	/**
-	 * The script code generation plugins of each Vue language plugin the server creates. The language server
-	 * features read only the Vue source and its IR, so they do not need any.
+	 * The script code generation plugins of each Vue language plugin the server creates, none by default. The
+	 * language server features read only the Vue source and its IR, so they do not need any; a script embedded
+	 * code only adds the TypeScript syntactic features of script blocks.
 	 */
 	createPlugins?: () => VueLanguagePlugin[];
 }
 
 export function startServer(
 	ts: typeof import('typescript'),
-	{ createPlugins = () => [vueTsxPlugin] }: ServerOptions = {},
+	{ createPlugins = () => [] }: ServerOptions = {},
 ) {
 	const connection = createConnection();
 	const server = createServer(connection);

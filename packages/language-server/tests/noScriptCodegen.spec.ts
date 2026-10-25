@@ -6,7 +6,8 @@ import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server';
 
 // The language server features read the Vue source and its IR, not the code that a script code generation
-// plugin generates for TypeScript 7.1, so they work when the server creates no such plugin.
+// plugin generates for TypeScript 7.1, so they work when the server creates no such plugin. This server cannot
+// resolve @vue/content-mapper, the package of the only such plugin.
 const serverModule = require.resolve('./noScriptCodegenServer.js');
 
 test('creates no script embedded code', async () => {

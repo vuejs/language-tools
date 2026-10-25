@@ -13,6 +13,8 @@ A Vue language server based on the [Language Server Protocol](https://microsoft.
 npm install @vue/language-server
 ```
 
+The server works with any Vue Content Mapper of TypeScript 7.1. If the optional peer dependency [`@vue/content-mapper`](https://www.npmjs.com/package/@vue/content-mapper) is installed next to it, the `vue-language-server` command also uses its script code generation, which adds the TypeScript syntactic features of script blocks (formatting, JSDoc comment templates, JSX closing tags). `startServer` does not.
+
 ## Command-Line Usage
 
 After installation, the `vue-language-server` command is available:
