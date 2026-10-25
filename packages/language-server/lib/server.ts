@@ -452,19 +452,19 @@ export function startServer(
 			const contentMappers = configFileName ? project!.contentMappers : inferredContentMappers;
 			const rootDir = (configFileName ? path.dirname(configFileName) : process.cwd()).replace(/\\/g, '/');
 			watchExtensions(getComponentModuleExtensions(contentMappers));
-			const vuePlugins = (contentMappers ?? [])
-				.filter(entry => entry.package === '@vue/content-mapper')
-				.map(entry =>
-					routeByExtensions(
-						createVueLanguagePlugin(
-							asCoreTypeScript(ts),
-							resolveVueCompilerOptions(ts.sys.readFile, rootDir, entry.options as RawVueCompilerOptions),
-							asFileName,
-							createPlugins(),
-						),
-						entry.extensions,
-					)
-				);
+			// Whichever Content Mapper an entry names, its files that the client syncs to this server, which it
+			// selects by Vue language ids, are Vue files.
+			const vuePlugins = (contentMappers ?? []).map(entry =>
+				routeByExtensions(
+					createVueLanguagePlugin(
+						asCoreTypeScript(ts),
+						resolveVueCompilerOptions(ts.sys.readFile, rootDir, entry.options as RawVueCompilerOptions),
+						asFileName,
+						createPlugins(),
+					),
+					entry.extensions,
+				)
+			);
 			const language = createLanguage<URI>(
 				[
 					{

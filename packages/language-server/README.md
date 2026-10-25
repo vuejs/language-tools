@@ -84,6 +84,7 @@ Besides LSP, the client that starts this server must connect it to the editor's 
 1. Start the server with [`--tsdk`](#--tsdk-parameter-required).
 2. Start the TypeScript 7 language server (`tsc --lsp --stdio`) with `initializationOptions: { runExternalCode: true }`, so that it loads the `contentMappers` of the project's tsconfig. `tsc --lsp` has no `--runExternalCode` flag.
 3. Answer [`vue/typescriptApiConnection`](#vuetypescriptapiconnection-required).
+   The server treats the files of every `contentMappers` entry that the client syncs to it as Vue files, whichever Content Mapper the entry names, and reads the entry's `options` as [`vueCompilerOptions`](../language-core#vuecompileroptions); so the client should sync only Vue documents (e.g. the `vue` language id).
 4. Optionally, pass `initializationOptions: { contentMappers: [...] }` to this server, in the tsconfig `contentMappers` format (e.g. `[{ "package": "@vue/content-mapper", "extensions": [".vue"] }]`), for files outside any tsconfig.
 
 ### `vue/typescriptApiConnection` (required)

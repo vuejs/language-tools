@@ -18,7 +18,7 @@ afterAll(async () => {
 	(await typescriptServer)?.close();
 });
 
-test('a .vue file no @vue/content-mapper entry covers gets no Vue language features', async () => {
+test('a .vue file no content mapper entry covers gets no Vue language features', async () => {
 	await vueserver.initialize(URI.file(testWorkspacePath).toString(), {});
 	const uri = URI.file(`${testWorkspacePath}/fixture.vue`).toString();
 	await vueserver.openInMemoryDocument(uri, 'vue', '<');

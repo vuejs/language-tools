@@ -32,7 +32,7 @@ const plugin: LanguagePlugin<string> = createVueLanguagePlugin(
 
 `ts` is the TypeScript 7 `typescript/ast` module plus a synchronous `createSourceFile`, which TypeScript 7 only offers through its API process (`@vue/content-mapper` builds it from `typescript/sync`). The classic `typescript` module provides the same names, so `@vue/language-server` passes that instead.
 
-The plugin parses every file it is given by `vueCompilerOptions.format`; the host creates one plugin per `@vue/content-mapper` entry (with that entry's `format`) and routes to it only the files of that entry's `extensions`. Nothing in the generated code depends on other entries: like `@vue/compiler-sfc`, a template tag refers to the `<script setup>` binding of its name whatever it is imported from, and a file's own component name is its file name without the last extension.
+The plugin parses every file it is given by `vueCompilerOptions.format`; the host creates one plugin per `contentMappers` entry (with that entry's `format`) and routes to it only the files of that entry's `extensions`. Nothing in the generated code depends on other entries: like `@vue/compiler-sfc`, a template tag refers to the `<script setup>` binding of its name whatever it is imported from, and a file's own component name is its file name without the last extension.
 
 ### `parse`
 
@@ -58,7 +58,7 @@ const msg = 'Hello'
 
 ## `vueCompilerOptions`
 
-[`@vue/content-mapper`](../content-mapper) takes these options from its `contentMappers` entry's `options`, and `CompilerOptionsResolver` resolves them:
+[`@vue/content-mapper`](../content-mapper) takes these options from its `contentMappers` entry's `options`, and `resolveVueCompilerOptions` resolves them. `@vue/language-server` reads them from the entry of a Vue file the same way, whichever Content Mapper the entry names, so another Vue Content Mapper that accepts these keys in its `options` gets the same language server behavior:
 
 ```jsonc
 {
