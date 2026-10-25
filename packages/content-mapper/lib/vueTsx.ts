@@ -175,24 +175,6 @@ function useCodegen(
 	const getGeneratedTemplate = computed(() => generateTemplatePass(getDotValueBindings()));
 	const getGeneratedStyle = computed(() => generateStylePass(getDotValueBindings()));
 
-	const getReferencedBindings = computedSet(() => {
-		const bindings = getSetupBindings();
-		if (!bindings.size) {
-			return bindings;
-		}
-		return new Set([
-			...getGeneratedTemplate()?.contextAccesses.keys() ?? [],
-			...getGeneratedStyle()?.contextAccesses.keys() ?? [],
-		].filter(name => bindings.has(name)));
-	});
-
-	const getUsedSetupBindings = computedSet(() => {
-		return new Set([
-			...getReferencedBindings(),
-			...getLocalComponents(),
-		]);
-	});
-
 	const getGeneratedScript = computed(() => {
 		return generateScript({
 			vueCompilerOptions: getResolvedOptions(),
@@ -226,6 +208,5 @@ function useCodegen(
 		getGeneratedTemplate,
 		getSetupBindings,
 		getLocalComponents,
-		getUsedSetupBindings,
 	};
 }
