@@ -162,7 +162,12 @@ export interface VueLanguagePluginReturn {
 		oldResult: CompilerDOM.CodegenResult,
 		textChange: { start: number; end: number; newText: string },
 	): CompilerDOM.CodegenResult | undefined;
+	/**
+	 * Lists the embedded documents of a file for the language service, like the template or a style block. They
+	 * never reach TypeScript: the TypeScript code of a file is generated from its IR alone.
+	 */
 	getEmbeddedCodes?(fileName: string, ir: IR): { id: string; lang: string }[];
+	/** Fills in the content of an embedded document that a plugin listed in `getEmbeddedCodes`. */
 	resolveEmbeddedCode?(fileName: string, ir: IR, embeddedFile: VueEmbeddedCode): void;
 }
 

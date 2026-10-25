@@ -10,13 +10,9 @@ import vueTemplateInlineCssPlugin from './plugins/vue-template-inline-css';
 import vueTemplateInlineTsPlugin from './plugins/vue-template-inline-ts';
 import { validVersions, type VueLanguagePlugin } from './types';
 
-export function createPlugins(
-	pluginContext: Parameters<VueLanguagePlugin>[0],
-	scriptPlugins: VueLanguagePlugin[] = [],
-) {
+export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 	const plugins: VueLanguagePlugin[] = [
 		vueRootTagsPlugin,
-		...scriptPlugins,
 		vueScriptJsPlugin,
 		vueStyleCss,
 		vueTemplateHtmlPlugin,

@@ -9,11 +9,6 @@ export function createVueLanguagePlugin<T>(
 	ts: TypeScript,
 	vueCompilerOptions: VueCompilerOptions,
 	asFileName: (scriptId: T) => string,
-	/**
-	 * Plugins that generate the TypeScript / JavaScript code of a Vue file; that code generation lives outside
-	 * this package, so a Vue file has no generated script unless they are given.
-	 */
-	scriptPlugins: VueLanguagePlugin[] = [],
 ): LanguagePlugin<T, VueVirtualCode> {
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
@@ -24,7 +19,7 @@ export function createVueLanguagePlugin<T>(
 		vueCompilerOptions,
 		config: {},
 	};
-	const plugins = createPlugins(pluginContext, scriptPlugins);
+	const plugins = createPlugins(pluginContext);
 
 	return {
 		// Every file passed in is parsed by `vueCompilerOptions.format`; the host routes to this plugin only the
