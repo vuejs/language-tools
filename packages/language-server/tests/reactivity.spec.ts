@@ -22,6 +22,23 @@ test('reactivity analysis of a Vue file maps the dependents back to the SFC', as
 	});
 });
 
+test('reactivity analysis of a Vue file reads its script blocks as written', async () => {
+	const content = `<script setup lang="ts">
+import { useTemplateRef, watchEffect } from 'vue';
+const el = useTemplateRef('el');
+watchEffect(() => el.value);
+</script>
+
+<template><div ref="el"></div></template>
+`;
+	const document = await open('tsconfigProject/fixture.vue', 'vue', content);
+	expect(slice(content, await analyze(document.uri, content.indexOf('el = use')))).toEqual({
+		dependencyRanges: [],
+		dependentRanges: ['el.value'],
+	});
+	expect(await analyze(document.uri, content.indexOf('ref="el"'))).toBeFalsy();
+});
+
 test('reactivity analysis of a script the client sends', async () => {
 	const uri = URI.file(`${testWorkspacePath}/tsconfigProject/composable.ts`).toString();
 	expect(slice(script, await analyze(uri, script.indexOf('count = ref') + 1, script))).toEqual({

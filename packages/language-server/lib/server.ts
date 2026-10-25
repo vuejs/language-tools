@@ -377,13 +377,7 @@ export function startServer(ts: typeof import('typescript')) {
 				}
 				const script = await getVueScript(fileName);
 				if (script) {
-					return reactivityAnalyzer.analyzeVueScript(
-						script.language,
-						script.sourceScript,
-						script.virtualCode,
-						fileName,
-						offset,
-					);
+					return reactivityAnalyzer.analyzeVueScript(script.virtualCode, fileName, offset);
 				}
 			},
 		);

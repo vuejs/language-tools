@@ -1,13 +1,6 @@
-import {
-	forEachEmbeddedCode,
-	getServiceScript,
-	type Language,
-	type SourceScript,
-	type VueVirtualCode,
-} from '@vue/language-core';
+import { forEachEmbeddedCode, getScriptLang, type VueVirtualCode } from '@vue/language-core';
 import { createAnalyzer } from 'laplacenoma';
 import rulesVue from 'laplacenoma/rules/vue';
-import type { URI } from 'vscode-uri';
 
 export interface ReactivityAnalysisParams {
 	textDocument: { uri: string };
@@ -45,7 +38,7 @@ export function createReactivityAnalyzer(ts: typeof import('typescript')) {
 		fileExists: fileName => fileName === currentFileName,
 	});
 
-	function analyze(fileName: string, text: string, offset: number, isMapped?: (range: Range) => boolean) {
+	function analyze(fileName: string, text: string, offset: number) {
 		if (fileName !== currentFileName || text !== currentText) {
 			currentFileName = fileName;
 			currentText = text;
@@ -55,7 +48,7 @@ export function createReactivityAnalyzer(ts: typeof import('typescript')) {
 		return analyzer.analyze(sourceFile, offset, {
 			typescript: ts,
 			languageService,
-			toSourceRange: (pos, end) => !isMapped || isMapped({ pos, end }) ? { pos, end } : undefined,
+			toSourceRange: (pos, end) => ({ pos, end }),
 		});
 	}
 
@@ -63,38 +56,21 @@ export function createReactivityAnalyzer(ts: typeof import('typescript')) {
 		analyzeScript(fileName: string, text: string, offset: number): ReactivityAnalysisResult | undefined {
 			return analyze(fileName, text, offset);
 		},
-		/** Analyzes the service script of a Vue file, in source offsets; code without a source counterpart is skipped. */
+		/** Analyzes the script blocks of a Vue file in its source offsets, with the rest of the file blanked out. */
 		analyzeVueScript(
-			language: Language<URI>,
-			sourceScript: SourceScript<URI>,
 			virtualCode: VueVirtualCode,
 			fileName: string,
 			offset: number,
 		): ReactivityAnalysisResult | undefined {
-			const serviceScript = getServiceScript(virtualCode);
-			if (!serviceScript) {
-				return;
-			}
-			const map = language.maps.get(serviceScript.code, sourceScript);
-			const toSourceRange = ({ pos, end }: Range): Range | undefined => {
-				for (const [start, mappedEnd] of map.toSourceRange(pos, end, false)) {
-					return { pos: start, end: mappedEnd };
+			const { ir, snapshot } = virtualCode;
+			let text = snapshot.getText(0, snapshot.getLength()).replace(/[^\r\n]/g, ' ');
+			for (const block of [ir.script, ir.scriptSetup]) {
+				if (block) {
+					text = text.slice(0, block.startTagEnd) + block.content
+						+ text.slice(block.startTagEnd + block.content.length);
 				}
-			};
-			const [generated] = map.toGeneratedLocation(offset);
-			if (!generated) {
-				return;
 			}
-			const result = analyze(
-				fileName + serviceScript.extension,
-				serviceScript.code.snapshot.getText(0, serviceScript.code.snapshot.getLength()),
-				generated[0],
-				range => !!toSourceRange(range),
-			);
-			return result && {
-				dependencyRanges: result.dependencyRanges.map(range => toSourceRange(range)!),
-				dependentRanges: result.dependentRanges.map(range => toSourceRange(range)!),
-			};
+			return analyze(`${fileName}.${getScriptLang(ir)}`, text, offset);
 		},
 	};
 }
