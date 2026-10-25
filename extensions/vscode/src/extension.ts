@@ -312,11 +312,6 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 		if (!api?.registerContentMappers) {
 			return;
 		}
-		const tsdk = resolveTsdkPath();
-		if (!tsdk) {
-			return;
-		}
-		const typescriptPath = path.join(tsdk, 'typescript.js');
 		const createContribution = ({ extensions, options }: typeof inferredContentMappers[number]) => ({
 			extensions,
 			inferredProjectContribution: {
@@ -328,7 +323,6 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 						process.execPath,
 						path.join(context.extensionPath, 'dist', 'content-mapper-server.js'),
 						`--worker=${path.join(context.extensionPath, 'dist', 'content-mapper-worker.js')}`,
-						`--typescript=${typescriptPath}`,
 					],
 					cwd: vscode.Uri.file(context.extensionPath),
 					dynamicConfig: true,
