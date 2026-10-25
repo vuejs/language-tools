@@ -1,22 +1,12 @@
-import {
-	createVueLanguagePlugin,
-	forEachEmbeddedCode,
-	getDefaultCompilerOptions,
-	type VueCompilerOptions,
-} from '@vue/language-core';
-import { loadTypeScript } from '@vue/language-core/lib/typescript';
+import { getDefaultCompilerOptions, type VueCompilerOptions } from '@vue/language-core';
 import { expect, it } from 'vitest';
 import { names } from '../lib/codegen/names';
-import vueTsxPlugin from '../lib/vueTsx';
-import { createSnapshot } from './utils';
+import { generate } from './utils';
 
 function generateScript(fileName: string, format: VueCompilerOptions['format'], content: string) {
 	const vueCompilerOptions = getDefaultCompilerOptions();
 	vueCompilerOptions.format = format;
-	const plugin = createVueLanguagePlugin<string>(loadTypeScript(), vueCompilerOptions, id => id, [vueTsxPlugin]);
-	const code = plugin.createVirtualCode!(fileName, 'vue', createSnapshot(content), undefined as any)!;
-	const script = [...forEachEmbeddedCode(code)].find(code => code.id === 'script_ts')!;
-	return script.snapshot.getText(0, script.snapshot.getLength());
+	return generate(fileName, content, vueCompilerOptions).text;
 }
 
 it.each([

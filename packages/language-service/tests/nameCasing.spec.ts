@@ -1,5 +1,4 @@
 import { createUriMap, type LanguageServiceContext } from '@volar/language-service';
-import vueTsxPlugin from '@vue/content-mapper/lib/vueTsx';
 import { createLanguage, createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
@@ -12,7 +11,6 @@ const vueLanguagePlugin = createVueLanguagePlugin<URI>(
 	asCoreTypeScript(ts),
 	getDefaultCompilerOptions(),
 	uri => uri.path,
-	[vueTsxPlugin],
 );
 
 function createTestContext() {

@@ -1,6 +1,5 @@
 import { createLanguage, createLanguageService, createUriMap } from '@volar/language-service';
-import vueTsxPlugin from '@vue/content-mapper/lib/vueTsx';
-import { createVueLanguagePlugin, getDefaultCompilerOptions, type VueLanguagePlugin } from '@vue/language-core';
+import { createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
 import * as ts from 'typescript';
 import { expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
@@ -8,11 +7,9 @@ import { createVueLanguageServicePlugins } from '..';
 import { asCoreTypeScript } from '../lib/utils';
 import { createTestEnvironment } from './utils/environment';
 
-// The TypeScript syntactic features of script blocks come from the verbatim code of each block, so the generated
-// script code of vue-tsx, when a host adds it, neither adds to nor changes them.
-test('script blocks have the same TypeScript syntactic features with vue-tsx', async () => {
-	const features = await getSyntacticFeatures([]);
-	expect(features).toEqual({
+// The TypeScript syntactic features of script blocks come from the verbatim code of each block.
+test('script blocks have TypeScript syntactic features', async () => {
+	expect(await getSyntacticFeatures()).toEqual({
 		// the block, the JSDoc comment, the function and the JSX element
 		foldingRanges: ['0-5', '1-1', '2-4', '4-4'],
 		outline: [['script setup', ['add', ['sum']]]],
@@ -27,15 +24,13 @@ function add(a: number) {
 </script>
 `,
 	});
-	expect(await getSyntacticFeatures([vueTsxPlugin])).toEqual(features);
 });
 
-async function getSyntacticFeatures(scriptPlugins: VueLanguagePlugin[]) {
+async function getSyntacticFeatures() {
 	const vuePlugin = createVueLanguagePlugin<URI>(
 		asCoreTypeScript(ts),
 		getDefaultCompilerOptions(),
 		uri => uri.path,
-		scriptPlugins,
 	);
 	const language = createLanguage<URI>([vuePlugin], createUriMap(false), () => {});
 	const languageService = createLanguageService(

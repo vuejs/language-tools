@@ -1,22 +1,17 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import {
-	createVueLanguagePlugin,
 	type TemplateBlockScope,
 	type TemplateExpression,
 	type TemplateScope,
-	type VueCompilerOptions,
 	type VueVirtualCode,
 } from '@vue/language-core';
-import { loadTypeScript } from '@vue/language-core/lib/typescript';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as ts5 from 'typescript-5';
-import { expect, test, vi } from 'vitest';
-import vueTsx, { getServiceScript } from '../lib/vueTsx';
+import { expect, test } from 'vitest';
 import { resolveMapperOptions } from '../vueOptions';
-import { createSnapshot, repositoryRoot } from './utils';
+import { createVueRoot, generateFromRoot, repositoryRoot } from './utils';
 
-const ts = loadTypeScript();
 const workspace = path.join(repositoryRoot, 'test-workspace');
 
 interface MapperEntry {
@@ -61,11 +56,6 @@ function findVueFiles(dir: string): string[] {
 	}).sort();
 }
 
-function createRoot(fileName: string, content: string, vueOptions: VueCompilerOptions) {
-	const plugin = createVueLanguagePlugin<string>(ts, vueOptions, id => id, [vueTsx]);
-	return plugin.createVirtualCode!(fileName, 'vue', createSnapshot(content), {} as any) as VueVirtualCode;
-}
-
 /** The generated code of `root`, and the entries of its template scope that the code generation read. */
 function generateWithReads(root: VueVirtualCode) {
 	const templateScope = root.scriptAnalysis.getTemplateScope();
@@ -89,8 +79,7 @@ function generateWithReads(root: VueVirtualCode) {
 }
 
 function getText(root: VueVirtualCode) {
-	const { snapshot } = getServiceScript(root)!.code;
-	return snapshot.getText(0, snapshot.getLength());
+	return generateFromRoot(root).text;
 }
 
 function getEntries(templateScope: TemplateScope) {
@@ -115,7 +104,7 @@ test('the code generation reads the scope of every expression and block scope th
 		const [configFile, entry] = findMapperEntry(fileName);
 		const { vueOptions } = resolveMapperOptions(ts5.sys.readFile, configFile, entry?.options);
 		const content = fs.readFileSync(fileName, 'utf8');
-		const { templateScope, reads } = generateWithReads(createRoot(fileName, content, vueOptions));
+		const { templateScope, reads } = generateWithReads(createVueRoot(fileName, content, vueOptions));
 		for (const [name, value] of getEntries(templateScope)) {
 			expressions++;
 			if (!reads.has(value)) {
@@ -142,7 +131,7 @@ let value = 1;
 
 /** A root with its own IR, which the tests may change: the IR of a file is shared by the roots of its content. */
 function createSourceRoot(name: string) {
-	return createRoot(
+	return createVueRoot(
 		`/${name}.vue`,
 		`${source}<!-- ${name} -->\n`,
 		resolveMapperOptions(ts5.sys.readFile, undefined, undefined).vueOptions,
@@ -158,19 +147,9 @@ test('the code generation fails for an expression that the template scope does n
 	>;
 	expect(expressions.delete(start)).toBe(true);
 
-	const report = vi.spyOn(console, 'error').mockImplementation(() => {});
-	try {
-		// Volar reports the error of the plugin and leaves the code empty
-		expect(getText(root)).toBe('');
-		expect(report).toHaveBeenCalledWith(
-			expect.objectContaining({
-				message: `The template scope has no expression \`value + item\` at offset ${start} of template.`,
-			}),
-		);
-	}
-	finally {
-		report.mockRestore();
-	}
+	expect(() => getText(root)).toThrow(
+		`The template scope has no expression \`value + item\` at offset ${start} of template.`,
+	);
 });
 
 test('the code generation reads the locals and the members of a template expression from the template scope', () => {
