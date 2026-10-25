@@ -1,9 +1,9 @@
+import { navigationFeatures } from '../../features';
 import type { Code, IRStyle } from '../../types';
-import { navigationFeatures } from '../features';
+import { Boundary } from '../../utils/boundary';
 import { names } from '../names';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateTypeAlias, identifierRE, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
 import type { StyleCodegenOptions } from '.';
 import { generateClassProperty, generateStyleSrc } from './common';
 

@@ -1,11 +1,11 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import { scriptFeatures } from '../../features';
 import type { Code, TypeScript } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getStartEnd } from '../../utils/shared';
 import { parseVForNode } from '../../utils/templateExpressions';
 import { getTypeScriptAST } from '../../utils/typescriptAST';
-import { scriptFeatures } from '../features';
 import { names } from '../names';
 import { asType, endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';

@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { toString } from 'muggle-string';
+import { scriptFeatures } from '../../features';
 import type { Code } from '../../types';
-import { scriptFeatures } from '../features';
 import { newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';

@@ -1,11 +1,11 @@
 import * as CompilerDOM from '@vue/compiler-dom';
+import { navigationFeatures, scriptFeatures, semanticFeatures } from '../../features';
 import type { Code } from '../../types';
+import { Boundary } from '../../utils/boundary';
 import { getElementTagOffsets, normalizeAttributeValue } from '../../utils/shared';
-import { navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { endOfLine, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 import { generateElementProps, generatePropExp } from './elementProps';
 import type { TemplateCodegenOptions } from './index';

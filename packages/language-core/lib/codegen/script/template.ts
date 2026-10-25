@@ -1,6 +1,6 @@
+import { navigationFeatures } from '../../features';
 import { BindingFlag } from '../../parsers/utils';
 import type { Code } from '../../types';
-import { navigationFeatures } from '../features';
 import { names } from '../names';
 import {
 	asType,

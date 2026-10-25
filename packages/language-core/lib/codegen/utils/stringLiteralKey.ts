@@ -1,5 +1,5 @@
 import type { Code, VueCodeMarker } from '../../types';
-import { Boundary } from './boundary';
+import { Boundary } from '../../utils/boundary';
 
 export function* generateStringLiteralKey(
 	code: string,

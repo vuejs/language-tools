@@ -1,8 +1,8 @@
 import { camelize } from '@vue/shared';
 import type { Code, VueCodeMarker } from '../../types';
+import { Boundary } from '../../utils/boundary';
 import { names } from '../names';
 import { identifierRE } from '../utils';
-import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';

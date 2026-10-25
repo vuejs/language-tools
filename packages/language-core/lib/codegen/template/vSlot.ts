@@ -1,13 +1,13 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { replaceSourceRange } from 'muggle-string';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '../../features';
 import type { Code } from '../../types';
+import { Boundary, synthesizedIgnore } from '../../utils/boundary';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getTypeScriptAST } from '../../utils/typescriptAST';
-import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { names } from '../names';
 import { endOfLine, isTsLang, newLine } from '../utils';
-import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';

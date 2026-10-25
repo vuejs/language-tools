@@ -1,14 +1,14 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
+import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '../../features';
 import type { Code } from '../../types';
+import { Boundary, synthesizedIgnore } from '../../utils/boundary';
 import { getComponentIsBinding, getElementTagOffsets, getTemplateRef, hyphenateTag } from '../../utils/shared';
-import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
 import { endOfLine, generateTypedVar, identifierRE, newLine } from '../utils';
-import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';

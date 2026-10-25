@@ -1,11 +1,11 @@
 import type { SpanMapKind } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
+import { completionFeatures, navigationFeatures } from '../../features';
 import type { Code, IRBlock } from '../../types';
+import { Boundary, synthesizedIgnore } from '../../utils/boundary';
 import { forEachStyleScopedClassReference } from '../../utils/styleScopedClasses';
-import { completionFeatures, navigationFeatures } from '../features';
 import { names } from '../names';
 import { endOfLine } from '../utils';
-import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { generateEscaped } from '../utils/escaped';
 import type { TemplateCodegenOptions } from './index';
 

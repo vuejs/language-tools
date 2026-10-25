@@ -1,5 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { scriptFeatures } from '../codegen/features';
+import { scriptFeatures } from '../features';
 import type { Code, VueLanguagePlugin } from '../types';
 import { forEachElementNode } from '../utils/forEachTemplateNode';
 import { normalizeAttributeValue } from '../utils/shared';

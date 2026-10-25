@@ -1,6 +1,6 @@
+import { navigationFeatures } from '../../features';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRScriptSetup } from '../../types';
-import { navigationFeatures } from '../features';
 import { names } from '../names';
 import { asType, generateSfcBlockSection, newLine } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';

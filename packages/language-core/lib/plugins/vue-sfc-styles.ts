@@ -1,4 +1,4 @@
-import { allFeatures } from '../codegen/features';
+import { allFeatures } from '../features';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {

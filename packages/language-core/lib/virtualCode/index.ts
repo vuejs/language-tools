@@ -1,7 +1,7 @@
 import { type IScriptSnapshot, type Mapping, SpanMapKind, type VirtualCode } from '@volar/language-core';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import { computed, signal } from 'alien-signals';
-import { allFeatures } from '../codegen/features';
+import { allFeatures } from '../features';
 import { getScriptAnalysis } from '../scriptAnalysis';
 import type { IR, TypeScript, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
 import { useEmbeddedCodes } from './embeddedCodes';

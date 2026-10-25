@@ -1,13 +1,13 @@
 import { SpanMapKind } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isHTMLTag, isMathMLTag, isSVGTag } from '@vue/shared';
+import { navigationFeatures, scriptFeatures, semanticFeatures } from '../../features';
 import type { Code, VueCodeMarker, VueCompilerOptions } from '../../types';
+import { Boundary } from '../../utils/boundary';
 import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import { navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, identifierRE, newLine } from '../utils';
-import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
 import type { TemplateCodegenContext } from './context';

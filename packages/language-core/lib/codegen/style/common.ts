@@ -1,7 +1,7 @@
+import { navigationFeatures } from '../../features';
 import type { Code, IRAttr } from '../../types';
-import { navigationFeatures } from '../features';
+import { Boundary, synthesizedIgnore } from '../../utils/boundary';
 import { identifierRE, newLine } from '../utils';
-import { Boundary, synthesizedIgnore } from '../utils/boundary';
 
 export function* generateClassProperty(
 	source: string,

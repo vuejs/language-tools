@@ -1,6 +1,6 @@
 import { isCompletionEnabled, type Mapping, SpanMapKind } from '@volar/language-core';
-import { isSynthesizedIgnore, OpenRanges } from '../codegen/utils/boundary';
 import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type VueCodeMarker } from '../types';
+import { isSynthesizedIgnore, OpenRanges } from './boundary';
 
 interface Entry {
 	generatedStart: number;

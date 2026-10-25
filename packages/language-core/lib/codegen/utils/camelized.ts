@@ -1,6 +1,6 @@
 import { capitalize } from '@vue/shared';
 import type { Code, VueCodeMarker } from '../../types';
-import { Boundary } from './boundary';
+import { Boundary } from '../../utils/boundary';
 
 /** Without features, the parts map only as part of the enclosing boundary. */
 export function* generateCamelized(

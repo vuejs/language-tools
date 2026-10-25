@@ -1,13 +1,13 @@
 import { SpanMapFeature } from '@volar/language-core';
 import * as path from 'path-browserify';
+import { navigationFeatures, scriptFeatures } from '../../features';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRBlock, IRScript, IRScriptSetup, IRStyle, VueCompilerOptions } from '../../types';
-import { navigationFeatures, scriptFeatures } from '../features';
+import { Boundary, synthesizedIgnore } from '../../utils/boundary';
 import { names } from '../names';
 import { generateStyleModuleImports } from '../style/modules';
 import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
-import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateGeneric, generateMacros, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
 import { generateTemplate } from './template';

@@ -1,5 +1,5 @@
+import { scriptFeatures } from '../../features';
 import type { Code, IRStyle, TypeScript, VueCompilerOptions } from '../../types';
-import { scriptFeatures } from '../features';
 import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';

@@ -1,5 +1,5 @@
 import { SpanMapFeature } from '@volar/language-core';
-import { structureFeatures } from '../codegen/features';
+import { structureFeatures } from '../features';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {

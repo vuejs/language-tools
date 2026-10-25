@@ -1,11 +1,11 @@
 import { SpanMapKind } from '@volar/language-core';
+import { completionFeatures } from '../../features';
 import type { Code, IRBlock, TypeScript, VueCodeMarker, VueCompilerOptions } from '../../types';
+import { Boundary } from '../../utils/boundary';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { getTypeScriptAST } from '../../utils/typescriptAST';
-import { completionFeatures } from '../features';
 import { names } from '../names';
 import { getRefBrandArgument, identifierRE } from '../utils';
-import { Boundary } from '../utils/boundary';
 import { forEachDeclarations, shouldIdentifierSkipped } from './bindingReferences';
 import type { TemplateCodegenContext } from './context';
 

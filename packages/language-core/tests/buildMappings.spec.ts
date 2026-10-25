@@ -1,7 +1,6 @@
 import { SpanMapKind } from '@volar/language-core';
 import { expect, test } from 'vitest';
-import { completionFeatures, navigationFeatures } from '../lib/codegen/features';
-import { synthesizedIgnore } from '../lib/codegen/utils/boundary';
+import { completionFeatures, navigationFeatures } from '../lib/features';
 import {
 	type Code,
 	type CodeBoundary,
@@ -9,6 +8,7 @@ import {
 	DiagnosticDirectivePolicy,
 	type VueCodeMarker,
 } from '../lib/types';
+import { synthesizedIgnore } from '../lib/utils/boundary';
 import { buildDiagnosticDirectives, buildMappings } from '../lib/utils/buildMappings';
 
 const navigation = { features: navigationFeatures };

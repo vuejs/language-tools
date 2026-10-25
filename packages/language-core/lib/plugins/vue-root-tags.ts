@@ -1,5 +1,5 @@
 import { replaceSourceRange } from 'muggle-string';
-import { allFeatures, structureFeatures } from '../codegen/features';
+import { allFeatures, structureFeatures } from '../features';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {

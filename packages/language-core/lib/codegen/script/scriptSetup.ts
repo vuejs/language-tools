@@ -1,7 +1,8 @@
 import { camelize } from '@vue/shared';
+import { completionFeatures, navigationFeatures, scriptFeatures } from '../../features';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRScriptSetup, TextRange } from '../../types';
-import { completionFeatures, navigationFeatures, scriptFeatures } from '../features';
+import { Boundary, synthesizedIgnore } from '../../utils/boundary';
 import { names } from '../names';
 import {
 	asType,
@@ -13,7 +14,6 @@ import {
 	isTsLang,
 	newLine,
 } from '../utils';
-import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { type CodeTransform, generateCodeWithTransforms, insert, replace } from '../utils/transform';
 import { generateComponent } from './component';

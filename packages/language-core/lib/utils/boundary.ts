@@ -4,7 +4,7 @@ import {
 	type DiagnosticDirectiveMapping,
 	DiagnosticDirectivePolicy,
 	type VueCodeMarker,
-} from '../../types';
+} from '../types';
 
 const end: CodeBoundary = Object.freeze({ end: true as const });
 

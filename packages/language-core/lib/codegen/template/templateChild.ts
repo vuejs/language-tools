@@ -1,8 +1,8 @@
 import * as CompilerDOM from '@vue/compiler-dom';
+import { scriptFeatures } from '../../features';
 import type { Code } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
 import { parseInterpolationNode } from '../../utils/templateExpressions';
-import { scriptFeatures } from '../features';
 import { endOfLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement, generateFragment } from './element';

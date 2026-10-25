@@ -1,3 +1,5 @@
+export * from './lib/codegen/template';
+export * from './lib/compilerOptions';
 export {
 	allFeatures,
 	completionFeatures,
@@ -5,9 +7,7 @@ export {
 	scriptFeatures,
 	semanticFeatures,
 	structureFeatures,
-} from './lib/codegen/features';
-export * from './lib/codegen/template';
-export * from './lib/compilerOptions';
+} from './lib/features';
 export * from './lib/languagePlugin';
 export * from './lib/parsers/scriptRanges';
 export * from './lib/parsers/scriptSetupRanges';

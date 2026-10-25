@@ -1,10 +1,10 @@
 import * as CompilerDOM from '@vue/compiler-dom';
+import { completionFeatures } from '../../features';
 import { type Code, type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, type VueCodeMarker } from '../../types';
-import { completionFeatures } from '../features';
+import { Boundary, isSynthesizedIgnore, OpenRanges } from '../../utils/boundary';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
-import { Boundary, isSynthesizedIgnore, OpenRanges } from '../utils/boundary';
 import { isLiteralWhitelisted } from './bindingReferences';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;

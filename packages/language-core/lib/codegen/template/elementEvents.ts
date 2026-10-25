@@ -1,13 +1,13 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import { navigationFeatures, scriptFeatures, semanticFeatures } from '../../features';
 import type { Code, TypeScript, VueCodeMarker } from '../../types';
+import { Boundary, synthesizedIgnore } from '../../utils/boundary';
 import { isCompoundExpression } from '../../utils/templateExpressions';
 import { getTypeScriptAST } from '../../utils/typescriptAST';
-import { navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { names } from '../names';
 import { endOfLine, generateTypedVar, getRefBrandArgument, identifierRE, isTsLang, newLine } from '../utils';
-import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
 import { getModelPropName } from './elementProps';

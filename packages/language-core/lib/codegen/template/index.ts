@@ -1,8 +1,8 @@
+import { navigationFeatures } from '../../features';
 import type { Code, IRTemplate, TypeScript, VueCompilerOptions } from '../../types';
-import { navigationFeatures } from '../features';
+import { Boundary, synthesizedIgnore } from '../../utils/boundary';
 import { names } from '../names';
 import { endOfLine, generateTypeAlias, generateTypedVar, newLine } from '../utils';
-import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
 import { generateTemplateChild } from './templateChild';

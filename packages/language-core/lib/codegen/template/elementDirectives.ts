@@ -1,10 +1,10 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isBuiltInDirective } from '@vue/shared';
+import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '../../features';
 import type { Code } from '../../types';
-import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
+import { Boundary, synthesizedIgnore } from '../../utils/boundary';
 import { names } from '../names';
 import { asType, endOfLine, newLine } from '../utils';
-import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';

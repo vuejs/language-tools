@@ -1,5 +1,5 @@
 import type { Code, IRScript, IRScriptSetup, VueCodeMarker, VueCompilerOptions } from '../../types';
-import { Boundary, synthesizedIgnore } from './boundary';
+import { Boundary, synthesizedIgnore } from '../../utils/boundary';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
