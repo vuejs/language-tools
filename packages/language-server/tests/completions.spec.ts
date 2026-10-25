@@ -1001,12 +1001,9 @@ test('Auto insert defines', async () => {
 	`);
 });
 
+// `testFn` is saved in `tsconfigProject/functions.ts`: TypeScript 7 can leave an export only an open document has
+// out of its auto-import data, so whether it imported one would depend on the timing of the previous test's close.
 test('#5847', async () => {
-	await prepareDocument(
-		'tsconfigProject/fixture.ts',
-		'typescript',
-		`export function testFn() { console.log('testFn'); }`,
-	);
 	const content = `
 <script setup lang="ts"></script>
 
@@ -1014,11 +1011,11 @@ test('#5847', async () => {
 `;
 	expect(
 		await requestCompletionItemToVueServer('tsconfigProject/fixture.vue', 'vue', content, 'testFn'),
-	).toMatchObject({ kind: 3, labelDetails: { description: 'fixture.ts' } });
+	).toMatchObject({ kind: 3, labelDetails: { description: 'functions.ts' } });
 	expect(await applyCompletionItem('tsconfigProject/fixture.vue', content, 'testFn')).toMatchInlineSnapshot(`
 		"
 		<script setup lang="ts">
-		import { testFn } from './fixture';
+		import { testFn } from './functions';
 		</script>
 
 		<template>{{ testFn }}</template>
@@ -1027,11 +1024,6 @@ test('#5847', async () => {
 });
 
 test('Not-imported exports skip setup bindings of the same name', async () => {
-	await prepareDocument(
-		'tsconfigProject/fixture.ts',
-		'typescript',
-		`export function testFn() { console.log('testFn'); }`,
-	);
 	const content = `
 <script setup lang="ts">
 const testFn = 1;
