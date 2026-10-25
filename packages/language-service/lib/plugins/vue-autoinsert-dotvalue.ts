@@ -19,7 +19,7 @@ export function create(
 			return {
 				async provideAutoInsertSnippet(document, selection, change) {
 					const info = resolveEmbeddedCode(context, document.uri);
-					if (!info?.code.id.startsWith('script_')) {
+					if (info?.code.id !== 'main') {
 						return;
 					}
 
@@ -32,35 +32,20 @@ export function create(
 						return;
 					}
 
-					let sourceOffset: number | undefined;
-
 					const { ir } = info.root;
-					const scriptBlocks = [ir.script, ir.scriptSetup].filter(block => !!block);
-					const map = context.language.maps.get(info.code, info.script);
-
-					if (!scriptBlocks.length) {
+					const offset = document.offsetAt(selection);
+					const block = [ir.script, ir.scriptSetup].find(block =>
+						block && offset >= block.startTagEnd && offset <= block.endTagStart
+					);
+					if (!block) {
 						return;
 					}
 
-					for (const [offset] of map.toSourceLocation(document.offsetAt(selection))) {
-						sourceOffset = offset;
-						break;
-					}
-
-					if (sourceOffset === undefined) {
+					if (shouldSkip(ts, asClassicNode<ts.SourceFile>(block.ast), offset - block.startTagEnd, false)) {
 						return;
 					}
 
-					for (const { ast, startTagEnd, endTagStart } of scriptBlocks) {
-						if (sourceOffset < startTagEnd || sourceOffset > endTagStart) {
-							continue;
-						}
-						if (shouldSkip(ts, asClassicNode<ts.SourceFile>(ast), sourceOffset - startTagEnd, false)) {
-							return;
-						}
-					}
-
-					if (await isRefAtPosition(info.root.fileName, sourceOffset)) {
+					if (await isRefAtPosition(info.root.fileName, offset)) {
 						return '${1:.value}';
 					}
 				},
