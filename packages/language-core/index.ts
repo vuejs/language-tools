@@ -19,6 +19,7 @@ export * from './lib/utils/collectBindings';
 export * from './lib/utils/forEachTemplateNode';
 export * from './lib/utils/parseSfc';
 export * from './lib/utils/shared';
+export * from './lib/utils/styleScopedClasses';
 export * from './lib/virtualCode';
 
 export { names } from './lib/codegen/names';
