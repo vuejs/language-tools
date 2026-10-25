@@ -20,6 +20,8 @@ import { resolveMapperOptions } from './vueOptions';
 interface ProjectConfiguration {
 	plugin: ReturnType<typeof vue.createVueLanguagePlugin<string>>;
 	languageFeatures: boolean;
+	vueOptions: vue.VueCompilerOptions;
+	pluginFiles: string[];
 	virtualCodes: Map<string, NonNullable<ReturnType<NonNullable<ProjectConfiguration['plugin']['createVirtualCode']>>>>;
 }
 
@@ -63,9 +65,9 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		// The entry's options arrive in `params`, but resolving `target: 'auto'` and the entry's `plugins`
 		// still reads dynamic inputs, so the configuration is always created through the watching host.
 		const watchedFiles = new Set<string>();
-		createConfiguration(state, params.configFileName, watchedFiles);
+		const configuration = createConfiguration(state, params.configFileName, watchedFiles);
 		return {
-			configIdentity: createIdentity(params, watchedFiles),
+			configIdentity: createIdentity(params, configuration),
 			watchedFiles: [...watchedFiles].sort(),
 			optionDiagnostics: frontend.toOptionDiagnostics?.(params.options),
 		};
@@ -168,7 +170,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			configFileName || undefined,
 			state.params.options,
 		);
-		const configuration = {
+		const configuration: ProjectConfiguration = {
 			plugin: vue.createVueLanguagePlugin<string>(
 				loadTypeScript(),
 				vueOptions,
@@ -176,10 +178,14 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 				[vueTsxPlugin],
 			),
 			languageFeatures,
+			vueOptions,
+			pluginFiles: resolvePluginFiles(plugins, rootDir),
 			virtualCodes: new Map(),
 		};
 		if (watchedFiles) {
-			addPluginWatchFiles(watchedFiles, plugins, rootDir);
+			for (const fileName of configuration.pluginFiles) {
+				watchedFiles.add(fileName);
+			}
 		}
 		state.configurations.set(configFileName, configuration);
 		return configuration;
@@ -194,14 +200,21 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 	};
 }
 
-function createIdentity(params: OpenProjectParams, watchedFiles: Iterable<string>) {
-	const hash = createHash('sha256');
-	hash.update(JSON.stringify(params.options ?? null));
-	for (const fileName of [...watchedFiles].sort()) {
-		hash.update(fileName);
-		hash.update(readFileIfExists(fileName) ?? '');
-	}
-	return hash.digest('hex');
+/**
+ * Fingerprints the effective configuration rather than the files it was read from, so projects whose
+ * configurations resolve the same, e.g. each through its own `node_modules/vue`, share their transforms
+ * in the host's cache.
+ */
+function createIdentity(params: OpenProjectParams, configuration: ProjectConfiguration) {
+	const { plugins, isDataAttribute, isHtmlAttribute, ...vueOptions } = configuration.vueOptions;
+	return createHash('sha256')
+		.update(JSON.stringify([
+			params.options ?? null,
+			configuration.languageFeatures,
+			vueOptions,
+			configuration.pluginFiles.map(fileName => readFileIfExists(fileName) ?? null),
+		]))
+		.digest('hex');
 }
 
 function readFileIfExists(fileName: string) {
@@ -211,9 +224,10 @@ function readFileIfExists(fileName: string) {
 	catch {}
 }
 
-function addPluginWatchFiles(watchedFiles: Set<string>, plugins: unknown, rootDir: string) {
+function resolvePluginFiles(plugins: unknown, rootDir: string) {
+	const fileNames: string[] = [];
 	if (!Array.isArray(plugins)) {
-		return;
+		return fileNames;
 	}
 	for (const plugin of plugins) {
 		const name = typeof plugin === 'string' ? plugin : plugin?.name;
@@ -221,8 +235,9 @@ function addPluginWatchFiles(watchedFiles: Set<string>, plugins: unknown, rootDi
 			continue;
 		}
 		try {
-			watchedFiles.add(require.resolve(name, { paths: [rootDir] }));
+			fileNames.push(require.resolve(name, { paths: [rootDir] }));
 		}
 		catch {}
 	}
+	return fileNames;
 }

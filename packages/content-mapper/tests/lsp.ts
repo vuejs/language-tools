@@ -59,11 +59,11 @@ export interface LspServer {
 	close(): void;
 }
 
-export function startLspServer(cwd: string): Promise<LspServer> {
+export function startLspServer(cwd: string, env: NodeJS.ProcessEnv = {}): Promise<LspServer> {
 	const proc: ChildProcess = spawn(
 		process.execPath,
 		[path.join(repositoryRoot, 'node_modules/typescript-7/bin/tsc'), '--lsp', '--stdio'],
-		{ cwd, env: { ...process.env, VUE_CONTENT_MAPPER_WORKERS: '1' } },
+		{ cwd, env: { ...process.env, VUE_CONTENT_MAPPER_WORKERS: '1', ...env } },
 	);
 	const pending = new Map<number, (message: any) => void>();
 	let buffer = Buffer.alloc(0);

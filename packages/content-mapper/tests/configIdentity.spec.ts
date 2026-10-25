@@ -1,0 +1,81 @@
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { afterAll, expect, test } from 'vitest';
+import { closeProject, openProject } from '../project';
+import type { MapperOptions } from '../protocol';
+
+const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'vue-config-identity-')));
+let nextHandle = 0;
+
+afterAll(() => fs.rmSync(root, { recursive: true, force: true }));
+
+function createProject(name: string, files: Record<string, string>) {
+	const dir = path.join(root, name);
+	for (const [fileName, content] of Object.entries(files)) {
+		fs.mkdirSync(path.dirname(path.join(dir, fileName)), { recursive: true });
+		fs.writeFileSync(path.join(dir, fileName), content);
+	}
+	return path.join(dir, 'tsconfig.json');
+}
+
+function open(configFileName: string, options?: MapperOptions) {
+	const projectHandle = `identity-${nextHandle++}`;
+	const opened = openProject({ configFileName, projectHandle, compilerOptions: {}, options });
+	closeProject(projectHandle);
+	return opened;
+}
+
+const vuePackage = (version: string) => JSON.stringify({ name: 'vue', version });
+const plugin = (name: string) => `module.exports = () => ({ version: 4, name: ${JSON.stringify(name)} });\n`;
+
+test('projects with different tsconfig files but the same effective options share an identity', () => {
+	const a = createProject('same-a', {
+		'tsconfig.json': '{ "compilerOptions": { "strict": true } }',
+		'node_modules/vue/package.json': vuePackage('3.5.0'),
+	});
+	const b = createProject('same-b', {
+		'tsconfig.json': '{ "extends": "./base.json", "include": ["src"] }',
+		'base.json': '{ "compilerOptions": { "strict": false } }',
+		'node_modules/vue/package.json': vuePackage('3.5.13'),
+	});
+	const openedA = open(a, { strictTemplates: true });
+	const openedB = open(b, { strictTemplates: true });
+
+	expect(openedA.configIdentity).toBe(openedB.configIdentity);
+	expect(openedA.watchedFiles).toEqual([path.join(path.dirname(a), 'node_modules/vue/package.json')]);
+	expect(openedB.watchedFiles).toEqual([path.join(path.dirname(b), 'node_modules/vue/package.json')]);
+});
+
+test('an effective option that differs gives another identity', () => {
+	const vue35 = createProject('target-35', {
+		'tsconfig.json': '{}',
+		'node_modules/vue/package.json': vuePackage('3.5.0'),
+	});
+	const vue34 = createProject('target-34', {
+		'tsconfig.json': '{}',
+		'node_modules/vue/package.json': vuePackage('3.4.0'),
+	});
+	expect(open(vue35).configIdentity).not.toBe(open(vue34).configIdentity);
+
+	// Equal entry options, but `typesRoot` resolves relative to each project.
+	const typesA = createProject('types-a', { 'tsconfig.json': '{}' });
+	const typesB = createProject('types-b', { 'tsconfig.json': '{}' });
+	expect(open(typesA, { target: 3.5, typesRoot: './types' }).configIdentity)
+		.not.toBe(open(typesB, { target: 3.5, typesRoot: './types' }).configIdentity);
+
+	expect(open(vue35, { strictTemplates: true }).configIdentity).not.toBe(open(vue35).configIdentity);
+});
+
+test('a plugin file that differs gives another identity', () => {
+	const options = { target: 3.5, plugins: ['./plugin.cjs'] };
+	const a = createProject('plugin-a', { 'tsconfig.json': '{}', 'plugin.cjs': plugin('same') });
+	const b = createProject('plugin-b', { 'tsconfig.json': '{}', 'plugin.cjs': plugin('same') });
+	const identity = open(a, options).configIdentity;
+	expect(open(b, options).configIdentity).toBe(identity);
+
+	fs.writeFileSync(path.join(path.dirname(b), 'plugin.cjs'), plugin('changed'));
+	const opened = open(b, options);
+	expect(opened.configIdentity).not.toBe(identity);
+	expect(opened.watchedFiles).toEqual([path.join(path.dirname(b), 'plugin.cjs')]);
+});
