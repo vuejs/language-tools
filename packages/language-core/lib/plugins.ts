@@ -8,13 +8,15 @@ import vueStyleCss from './plugins/vue-style-css';
 import vueTemplateHtmlPlugin from './plugins/vue-template-html';
 import vueTemplateInlineCssPlugin from './plugins/vue-template-inline-css';
 import vueTemplateInlineTsPlugin from './plugins/vue-template-inline-ts';
-import vueTsx from './plugins/vue-tsx';
 import { validVersions, type VueLanguagePlugin } from './types';
 
-export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
+export function createPlugins(
+	pluginContext: Parameters<VueLanguagePlugin>[0],
+	scriptPlugins: VueLanguagePlugin[] = [],
+) {
 	const plugins: VueLanguagePlugin[] = [
 		vueRootTagsPlugin,
-		vueTsx,
+		...scriptPlugins,
 		vueScriptJsPlugin,
 		vueStyleCss,
 		vueTemplateHtmlPlugin,

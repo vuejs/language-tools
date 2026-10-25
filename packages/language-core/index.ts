@@ -24,7 +24,7 @@ export * from './lib/utils/templateExpressions';
 export * from './lib/virtualCode';
 
 export { names } from './lib/codegen/names';
-export { tsCodegen } from './lib/plugins/vue-tsx';
+export { default as vueTsxPlugin, getServiceScript, tsCodegen } from './lib/plugins/vue-tsx';
 export { getScriptAnalysis, getScriptLang } from './lib/scriptAnalysis';
 
 export * from '@volar/language-core';

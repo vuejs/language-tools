@@ -8,6 +8,7 @@ import {
 	createVueLanguagePlugin,
 	getComponentIsBinding,
 	type LanguagePlugin,
+	vueTsxPlugin,
 	VueVirtualCode,
 } from '@vue/language-core';
 import {
@@ -443,6 +444,7 @@ export function startServer(ts: typeof import('typescript')) {
 							asCoreTypeScript(ts),
 							resolveMapperOptions(ts.sys.readFile, configFileName, entry.options).vueOptions,
 							asFileName,
+							[vueTsxPlugin],
 						),
 						entry.extensions,
 					)

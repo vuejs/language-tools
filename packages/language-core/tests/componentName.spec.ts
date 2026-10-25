@@ -3,6 +3,7 @@ import { expect, it } from 'vitest';
 import { names } from '../lib/codegen/names';
 import { getDefaultCompilerOptions } from '../lib/compilerOptions';
 import { createVueLanguagePlugin } from '../lib/languagePlugin';
+import vueTsxPlugin from '../lib/plugins/vue-tsx';
 import type { VueCompilerOptions } from '../lib/types';
 import { getBaseNameWithoutExtension } from '../lib/utils/shared';
 import { createSnapshot, ts } from './typescript';
@@ -10,7 +11,7 @@ import { createSnapshot, ts } from './typescript';
 function generateScript(fileName: string, format: VueCompilerOptions['format'], content: string) {
 	const vueCompilerOptions = getDefaultCompilerOptions();
 	vueCompilerOptions.format = format;
-	const plugin = createVueLanguagePlugin<string>(ts, vueCompilerOptions, id => id);
+	const plugin = createVueLanguagePlugin<string>(ts, vueCompilerOptions, id => id, [vueTsxPlugin]);
 	const code = plugin.createVirtualCode!(fileName, 'vue', createSnapshot(content), undefined as any)!;
 	const script = [...forEachEmbeddedCode(code)].find(code => code.id === 'script_ts')!;
 	return script.snapshot.getText(0, script.snapshot.getLength());

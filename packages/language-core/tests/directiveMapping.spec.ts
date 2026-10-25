@@ -1,10 +1,16 @@
 import { expect, test } from 'vitest';
-import { createLanguage, createVueLanguagePlugin, forEachEmbeddedCode, getDefaultCompilerOptions } from '../index';
+import {
+	createLanguage,
+	createVueLanguagePlugin,
+	forEachEmbeddedCode,
+	getDefaultCompilerOptions,
+	vueTsxPlugin,
+} from '../index';
 import { createSnapshot, ts } from './typescript';
 
 test('mappings within a hyphenated directive name cover the whole name', () => {
 	const language = createLanguage<string>(
-		[createVueLanguagePlugin<string>(ts, getDefaultCompilerOptions(), fileName => fileName)],
+		[createVueLanguagePlugin<string>(ts, getDefaultCompilerOptions(), fileName => fileName, [vueTsxPlugin])],
 		new Map(),
 		() => {},
 	);

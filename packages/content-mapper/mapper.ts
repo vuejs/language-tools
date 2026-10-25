@@ -172,6 +172,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 				loadTypeScript(),
 				vueOptions,
 				fileName => fileName,
+				[vue.vueTsxPlugin],
 			),
 			languageFeatures,
 			virtualCodes: new Map(),

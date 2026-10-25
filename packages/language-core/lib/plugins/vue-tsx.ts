@@ -1,3 +1,4 @@
+import { forEachEmbeddedCode, type VirtualCode } from '@volar/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { computed } from 'alien-signals';
 import { generateScript } from '../codegen/script';
@@ -18,6 +19,7 @@ const plugin: VueLanguagePlugin = ({
 }) => {
 	return {
 		version: 4,
+		name: 'vue-tsx',
 
 		getEmbeddedCodes(_fileName, ir) {
 			const lang = getScriptLang(ir);
@@ -38,6 +40,18 @@ const plugin: VueLanguagePlugin = ({
 };
 
 export default plugin;
+
+/** The generated TypeScript / JavaScript code of a Vue file, and the extension TypeScript should see it with. */
+export function getServiceScript(root: VirtualCode) {
+	for (const code of forEachEmbeddedCode(root)) {
+		if (serviceScriptRE.test(code.id)) {
+			return {
+				code,
+				extension: '.' + code.id.slice('script_'.length) as '.js' | '.jsx' | '.ts' | '.tsx',
+			};
+		}
+	}
+}
 
 function useCodegen(
 	ts: TypeScript,

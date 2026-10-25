@@ -5,7 +5,7 @@ import {
 	type LanguagePlugin,
 	type LanguageServicePlugin,
 } from '@volar/language-service';
-import { createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
+import { createVueLanguagePlugin, getDefaultCompilerOptions, vueTsxPlugin } from '@vue/language-core';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
@@ -64,6 +64,7 @@ const vuePlugin = createVueLanguagePlugin<URI>(
 	asCoreTypeScript(ts),
 	vueCompilerOptions,
 	() => '',
+	[vueTsxPlugin],
 );
 const vueLanguagePlugin: typeof vuePlugin = {
 	...vuePlugin,

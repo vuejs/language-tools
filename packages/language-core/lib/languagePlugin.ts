@@ -1,8 +1,7 @@
-import { forEachEmbeddedCode, type LanguagePlugin, type VirtualCode } from '@volar/language-core';
+import type { LanguagePlugin } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as LanguageCore from '../index';
 import { createPlugins } from './plugins';
-import { serviceScriptRE } from './plugins/vue-tsx';
 import type { TypeScript, VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
 import { getRootLanguageId, VueVirtualCode } from './virtualCode';
 
@@ -26,6 +25,11 @@ export function createVueLanguagePlugin<T>(
 	ts: TypeScript,
 	vueCompilerOptions: VueCompilerOptions,
 	asFileName: (scriptId: T) => string,
+	/**
+	 * Plugins that generate the TypeScript / JavaScript code of a Vue file; that code generation lives outside
+	 * this package, so a Vue file has no generated script unless they are given.
+	 */
+	scriptPlugins: VueLanguagePlugin[] = [],
 ): LanguagePlugin<T, VueVirtualCode> {
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
@@ -36,7 +40,7 @@ export function createVueLanguagePlugin<T>(
 		vueCompilerOptions,
 		config: {},
 	};
-	const plugins = createPlugins(pluginContext);
+	const plugins = createPlugins(pluginContext, scriptPlugins);
 	const fileRegistry = getVueFileRegistry(vueCompilerOptions, plugins);
 
 	return {
@@ -64,16 +68,4 @@ export function createVueLanguagePlugin<T>(
 			fileRegistry.delete(String(scriptId));
 		},
 	};
-}
-
-/** The generated TypeScript / JavaScript code of a Vue file, and the extension TypeScript should see it with. */
-export function getServiceScript(root: VirtualCode) {
-	for (const code of forEachEmbeddedCode(root)) {
-		if (serviceScriptRE.test(code.id)) {
-			return {
-				code,
-				extension: '.' + code.id.slice('script_'.length) as '.js' | '.jsx' | '.ts' | '.tsx',
-			};
-		}
-	}
 }
