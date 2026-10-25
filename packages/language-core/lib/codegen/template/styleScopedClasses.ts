@@ -11,9 +11,6 @@ import type { TemplateCodegenOptions } from './index';
 
 const classNameEscapeRE = /([\\'])/;
 
-// For language-service/lib/plugins/vue-scoped-class-links.ts usage
-export const references: WeakMap<IRBlock, [version: string, [className: string, offset: number][]]> = new WeakMap();
-
 export function* generateStyleScopedClassReferences(
 	{ template, typescript: ts }: TemplateCodegenOptions,
 	node: CompilerDOM.ElementNode,
@@ -35,16 +32,6 @@ export function* generateStyleScopedClassReference(
 		yield ['', 'template', offset, { features: completionFeatures }];
 		yield `']} */${endOfLine}`;
 		return;
-	}
-
-	const cache = references.get(block);
-	if (!cache || cache[0] !== block.content) {
-		const arr: [className: string, offset: number][] = [];
-		references.set(block, [block.content, arr]);
-		arr.push([className, offset]);
-	}
-	else {
-		cache[1].push([className, offset]);
 	}
 
 	yield `/** @type {${names.StyleScopedClasses}[`;

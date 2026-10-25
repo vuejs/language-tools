@@ -1,8 +1,10 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
-import { references } from '@vue/language-core/lib/codegen/template/styleScopedClasses';
-import { resolveEmbeddedCode } from '../utils';
+import { forEachElementNode, forEachStyleScopedClassReference } from '@vue/language-core';
+import { asCoreTypeScript, resolveEmbeddedCode } from '../utils';
 
-export function create(): LanguageServicePlugin {
+export function create(ts: typeof import('typescript')): LanguageServicePlugin {
+	const coreTs = asCoreTypeScript(ts);
+
 	return {
 		name: 'vue-scoped-class-links',
 		capabilities: {
@@ -16,14 +18,26 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 					const { ir } = info.root;
-					if (!ir.template) {
+					const { template } = ir;
+					if (!template?.ast) {
 						return;
 					}
 					const { resolveStyleClassNames } = info.root.vueCompilerOptions;
 					if (!resolveStyleClassNames) {
 						return;
 					}
-					const scopedClasses = references.get(ir.template)?.[1] ?? [];
+					const scopedClasses: [className: string, offset: number][] = [];
+					for (const node of forEachElementNode(template.ast)) {
+						// ElementTypes.ELEMENT, ElementTypes.COMPONENT
+						if (node.tagType !== 0 && node.tagType !== 1) {
+							continue;
+						}
+						for (const [className, offset] of forEachStyleScopedClassReference(coreTs, template, node)) {
+							if (className) {
+								scopedClasses.push([className, offset]);
+							}
+						}
+					}
 					const styleClasses = new Map<string, string[]>();
 
 					for (const style of ir.styles) {

@@ -5,7 +5,6 @@ import { endOfLine, generateTypeAlias, generateTypedVar, newLine } from '../util
 import { Boundary, synthesizedIgnore } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
-import { references as styleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
 
 export interface TemplateCodegenOptions {
@@ -32,8 +31,6 @@ export interface TemplateCodegenOptions {
 export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
-	// The references registry accumulates across codegen passes; start clean.
-	styleScopedClassReferences.delete(options.template);
 	const ctx = createTemplateCodegenContext(options.scriptLang);
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];

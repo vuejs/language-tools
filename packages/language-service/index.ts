@@ -44,7 +44,7 @@ export function createVueLanguageServicePlugins(
 		createVueAutoSpacePlugin(),
 		createVueCompilerDomErrorsPlugin(),
 		createVueDirectiveCommentsPlugin(),
-		createVueScopedClassLinksPlugin(),
+		createVueScopedClassLinksPlugin(ts),
 		createVueSfcPlugin(),
 		createVueTemplateRefLinksPlugin(),
 		createEmmetPlugin({

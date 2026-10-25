@@ -127,6 +127,29 @@ test('Template ref links reach every static ref attribute of an element or compo
 	]);
 });
 
+test('Scoped class links reach the class names of skipped elements', async () => {
+	const links = await requestDocumentLinks(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<template>
+			<div class="kept"></div>
+			<!-- @vue-skip -->
+			<div class="skipped"></div>
+		</template>
+
+		<style scoped>
+		.kept {}
+		.skipped {}
+		</style>
+	`,
+	);
+	expect(links.map(link => [link.range.start, link.target!.slice(link.target!.indexOf('#'))])).toEqual([
+		[{ line: 2, character: 15 }, '#L9%2C3-L9%2C8'],
+		[{ line: 4, character: 15 }, '#L10%2C3-L10%2C11'],
+	]);
+});
+
 const openedDocuments: TextDocument[] = [];
 
 afterEach(async () => {
