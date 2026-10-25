@@ -1,8 +1,9 @@
 import type { IScriptSnapshot, Mapping, TextChangeRange, VirtualCode } from '@volar/language-core';
 import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
-import type { Code, DiagnosticDirectiveMapping, IR, IRBlock, VueLanguagePluginReturn } from '../types';
+import type { Code, DiagnosticDirectiveMapping, IR, VueLanguagePluginReturn } from '../types';
 import { buildDiagnosticDirectives, buildMappings } from '../utils/buildMappings';
+import { resolveCodeOffsets } from '../utils/resolveCodeOffsets';
 
 export class VueEmbeddedCode {
 	public parentCodeId?: string;
@@ -24,25 +25,6 @@ export function useEmbeddedCodes(
 	fileName: string,
 	ir: IR,
 ) {
-	const getNameToBlockMap = computed(() => {
-		const blocks: Record<string, IRBlock> = {};
-		if (ir.template) {
-			blocks[ir.template.name] = ir.template;
-		}
-		if (ir.script) {
-			blocks[ir.script.name] = ir.script;
-		}
-		if (ir.scriptSetup) {
-			blocks[ir.scriptSetup.name] = ir.scriptSetup;
-		}
-		for (const block of ir.styles) {
-			blocks[block.name] = block;
-		}
-		for (const block of ir.customBlocks) {
-			blocks[block.name] = block;
-		}
-		return blocks;
-	});
 	const pluginsResult = plugins.map(useEmbeddedCodesForPlugin);
 
 	return computed(() => {
@@ -120,7 +102,7 @@ export function useEmbeddedCodes(
 
 			for (const generate of getMap().values()) {
 				const { code, snapshot } = generate();
-				const content = toSourceContent(code);
+				const content = resolveCodeOffsets(ir, code.content);
 				result.push({
 					code,
 					snapshot,
@@ -169,28 +151,6 @@ export function useEmbeddedCodes(
 				code,
 				snapshot,
 			};
-		});
-	}
-
-	function toSourceContent(code: VueEmbeddedCode) {
-		return code.content.map<Code>(segment => {
-			if (typeof segment === 'string') {
-				return segment;
-			}
-			const source = segment[1];
-			if (source === undefined) {
-				return segment;
-			}
-			const block = getNameToBlockMap()[source];
-			if (!block) {
-				return segment;
-			}
-			return [
-				segment[0],
-				undefined,
-				segment[2] + block.startTagEnd,
-				segment[3],
-			];
 		});
 	}
 }
