@@ -1,5 +1,5 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
-import { tsCodegen } from '@vue/language-core';
+import { forEachElementNode, getTemplateRef } from '@vue/language-core';
 import { resolveEmbeddedCode } from '../utils';
 
 export function create(): LanguageServicePlugin {
@@ -17,8 +17,6 @@ export function create(): LanguageServicePlugin {
 					}
 
 					const { ir } = info.root;
-					const codegen = tsCodegen.get(ir);
-
 					if (!ir.scriptSetup) {
 						return;
 					}
@@ -34,7 +32,20 @@ export function create(): LanguageServicePlugin {
 						templateVirtualCode.snapshot,
 					);
 
-					const templateRefs = codegen?.getGeneratedTemplate()?.templateRefs;
+					const templateRefs = new Map<string, number[]>();
+					if (ir.template?.ast) {
+						for (const node of forEachElementNode(ir.template.ast)) {
+							// ElementTypes.ELEMENT, ElementTypes.COMPONENT
+							const ref = (node.tagType === 0 || node.tagType === 1) && getTemplateRef(node);
+							if (ref) {
+								let offsets = templateRefs.get(ref[0]);
+								if (!offsets) {
+									templateRefs.set(ref[0], offsets = []);
+								}
+								offsets.push(ref[1]);
+							}
+						}
+					}
 					const useTemplateRefs = info.root.scriptAnalysis.getScriptSetupRanges()?.useTemplateRef ?? [];
 
 					return useTemplateRefs.flatMap(({ arg }) => {
@@ -47,7 +58,7 @@ export function create(): LanguageServicePlugin {
 							end: document.positionAt(arg.end - 1),
 						};
 
-						return templateRefs?.get(name)?.map(({ offset }) => {
+						return templateRefs.get(name)?.map(offset => {
 							const start = templateDocument.positionAt(offset);
 							const end = templateDocument.positionAt(offset + name.length);
 							return {
