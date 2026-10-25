@@ -1,8 +1,8 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { camelize, capitalize, hyphenate } from '@vue/shared';
+import { camelize, capitalize, hyphenate, isHTMLTag, isMathMLTag, isSVGTag } from '@vue/shared';
 import * as path from 'path-browserify';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
-import type { IRTemplate, TextRange, TypeScript } from '../types';
+import type { IRTemplate, TextRange, TypeScript, VueCompilerOptions } from '../types';
 
 export { hyphenate as hyphenateTag } from '@vue/shared';
 
@@ -127,4 +127,62 @@ export function getBaseNameWithoutExtension(fileName: string) {
 /** The name a Vue file's template refers to the file's own component by. */
 export function getSelfComponentName(fileName: string) {
 	return capitalize(camelize(getBaseNameWithoutExtension(fileName)));
+}
+
+/**
+ * The prop that an argument-less `v-model` binds, or `undefined` for none, in which case its expression is
+ * only checked on its own.
+ */
+export function getModelPropName(
+	node: CompilerDOM.ElementNode,
+	vueCompilerOptions: VueCompilerOptions,
+): string | undefined {
+	const tag = hyphenate(node.tag);
+	const isElement = node.tagType === CompilerDOM.ElementTypes.ELEMENT;
+	if (
+		Object.hasOwn(vueCompilerOptions.vModelPropName, tag)
+		// an entry of a native tag does not apply to a component of the same name, e.g. `<Input>`
+		&& (isElement || node.tagType === CompilerDOM.ElementTypes.COMPONENT && !isNativeTag(tag))
+	) {
+		return vueCompilerOptions.vModelPropName[tag] || undefined;
+	}
+	if (isElement) {
+		return getNativeModelPropName(node);
+	}
+	return 'modelValue';
+}
+
+// Follows the runtime directive that `transformModel` of `@vue/compiler-dom` picks:
+// https://github.com/vuejs/core/blob/v3.5.40/packages/compiler-dom/src/transforms/vModel.ts#L48-L100
+// `vModelText` writes `el.value`; the value of `vModelCheckbox` may be an array, a `Set` or a
+// `true-value`, `vModelRadio` compares with `:value`, and `vModelDynamic` picks one of them at runtime,
+// so those bind no prop.
+function getNativeModelPropName(node: CompilerDOM.ElementNode): string | undefined {
+	switch (node.tag) {
+		case 'textarea':
+		case 'select':
+			return 'value';
+		case 'input': {
+			const type = CompilerDOM.findProp(node, 'type');
+			if (type) {
+				if (type.type === CompilerDOM.NodeTypes.DIRECTIVE) {
+					return;
+				}
+				switch (type.value?.content) {
+					case 'radio':
+					case 'checkbox':
+					case 'file':
+						return;
+				}
+				return 'value';
+			}
+			return CompilerDOM.hasDynamicKeyVBind(node) ? undefined : 'value';
+		}
+	}
+	// `@vue/compiler-dom` rejects `v-model` on other elements
+	return 'modelValue';
+}
+
+function isNativeTag(tag: string) {
+	return isHTMLTag(tag) || isSVGTag(tag) || isMathMLTag(tag);
 }

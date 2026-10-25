@@ -71,6 +71,8 @@ function useCodegen(
 		getScriptSetupRanges,
 		getBindingFlags,
 		getSetupBindings,
+		getSetupConsts,
+		getSetupRefs,
 		getLocalComponents,
 	} = getScriptAnalysis(ts, vueCompilerOptions, fileName, ir);
 
@@ -79,33 +81,6 @@ function useCodegen(
 	);
 
 	const getScriptSetupBindings = computedSet(() => new Set(getScriptSetupRanges()?.bindings.keys()));
-
-	const getSetupConsts = computedSet(() => {
-		const names = new Set<string>();
-		for (const [name, flags] of getBindingFlags()) {
-			if (flags & BindingFlag.Const) {
-				names.add(name);
-			}
-		}
-		const { defineProps } = getScriptSetupRanges() ?? {};
-		if (defineProps?.destructured) {
-			for (const name of defineProps.destructured.keys()) {
-				names.add(name);
-			}
-			if (defineProps.destructuredRest) {
-				names.add(defineProps.destructuredRest);
-			}
-		}
-		return names;
-	});
-
-	const getSetupRefs = computedSet(() => {
-		return new Set(
-			getScriptSetupRanges()?.useTemplateRef
-				.map(({ name }) => name)
-				.filter(name => name !== undefined),
-		);
-	});
 
 	const hasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 

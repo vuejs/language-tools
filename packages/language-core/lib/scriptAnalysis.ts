@@ -89,6 +89,33 @@ function useScriptAnalysis(
 
 	const getSetupBindings = computedSet(() => new Set(getBindingFlags().keys()));
 
+	const getSetupConsts = computedSet(() => {
+		const names = new Set<string>();
+		for (const [name, flags] of getBindingFlags()) {
+			if (flags & BindingFlag.Const) {
+				names.add(name);
+			}
+		}
+		const { defineProps } = getScriptSetupRanges() ?? {};
+		if (defineProps?.destructured) {
+			for (const name of defineProps.destructured.keys()) {
+				names.add(name);
+			}
+			if (defineProps.destructuredRest) {
+				names.add(defineProps.destructuredRest);
+			}
+		}
+		return names;
+	});
+
+	const getSetupRefs = computedSet(() => {
+		return new Set(
+			getScriptSetupRanges()?.useTemplateRef
+				.map(({ name }) => name)
+				.filter(name => name !== undefined),
+		);
+	});
+
 	const getLocalComponents = computedSet(() => {
 		const bindings = getSetupBindings();
 		if (!bindings.size) {
@@ -107,6 +134,8 @@ function useScriptAnalysis(
 		getScriptSetupRanges,
 		getBindingFlags,
 		getSetupBindings,
+		getSetupConsts,
+		getSetupRefs,
 		getLocalComponents,
 	};
 }

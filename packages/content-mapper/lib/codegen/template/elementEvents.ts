@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import {
 	type Code,
+	getModelPropName,
 	isCompoundExpression,
 	navigationFeatures,
 	scriptFeatures,
@@ -16,7 +17,6 @@ import { names } from '../names';
 import { endOfLine, generateTypedVar, getRefBrandArgument, identifierRE, isTsLang, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
-import { getModelPropName } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 

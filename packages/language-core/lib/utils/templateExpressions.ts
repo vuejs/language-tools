@@ -61,3 +61,25 @@ export function isCompoundExpression(ts: TypeScript, ast: ts.SourceFile) {
 	}
 	return true;
 }
+
+/** The default values in the destructuring pattern of a `v-for` alias. */
+export function collectDefaultInitializers(
+	ts: TypeScript,
+	pattern: ts.BindingName,
+	out: ts.Expression[],
+) {
+	if (ts.isIdentifier(pattern)) {
+		return;
+	}
+	for (const element of pattern.elements) {
+		if (!ts.isBindingElement(element)) {
+			continue;
+		}
+		if (element.name && !ts.isIdentifier(element.name)) {
+			collectDefaultInitializers(ts, element.name, out);
+		}
+		if (element.initializer) {
+			out.push(element.initializer);
+		}
+	}
+}

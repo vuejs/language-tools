@@ -2,10 +2,10 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import {
 	type Code,
 	collectBindingNames,
+	collectDefaultInitializers,
 	getStartEnd,
 	parseVForNode,
 	scriptFeatures,
-	type TypeScript,
 } from '@vue/language-core';
 import { getTypeScriptAST } from '@vue/language-core/lib/utils/typescriptAST';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
@@ -115,25 +115,4 @@ export function* generateVFor(
 
 	yield* scope.end();
 	yield `}${newLine}`;
-}
-
-function collectDefaultInitializers(
-	ts: TypeScript,
-	pattern: ts.BindingName,
-	out: ts.Expression[],
-) {
-	if (ts.isIdentifier(pattern)) {
-		return;
-	}
-	for (const element of pattern.elements) {
-		if (!ts.isBindingElement(element)) {
-			continue;
-		}
-		if (element.name && !ts.isIdentifier(element.name)) {
-			collectDefaultInitializers(ts, element.name, out);
-		}
-		if (element.initializer) {
-			out.push(element.initializer);
-		}
-	}
 }

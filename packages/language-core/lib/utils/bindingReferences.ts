@@ -1,14 +1,20 @@
-import {
-	collectBindingNames,
-	getNodeText,
-	isFunctionLikeDeclaration,
-	isTypeAssertionExpression,
-	type TypeScript,
-} from '@vue/language-core';
-import { forEachNode } from '@vue/language-core/lib/utils/typescriptAST';
 import { isGloballyAllowed, makeMap } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
-import type { TemplateCodegenContext } from './context';
+import type { TypeScript } from '../types';
+import { collectBindingNames } from './collectBindings';
+import { getNodeText, isFunctionLikeDeclaration, isTypeAssertionExpression } from './shared';
+import { forEachNode } from './typescriptAST';
+
+/** The scopes of the locals that template expressions declare around the identifiers they reference. */
+export interface ExpressionScopes {
+	scopes: readonly Set<string>[];
+	scope(): ExpressionScope;
+}
+
+export interface ExpressionScope extends Set<string> {
+	declare(...names: string[]): void;
+	end(): void;
+}
 
 // https://github.com/vuejs/core/blob/fb0c3ca519f1fccf52049cd6b8db3a67a669afe9/packages/compiler-core/src/transforms/transformExpression.ts#L47
 export const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
@@ -26,8 +32,8 @@ export function* forEachDeclarations(
 	ts: TypeScript,
 	node: ts.Node,
 	ast: ts.SourceFile,
-	ctx: TemplateCodegenContext,
-	scope: ReturnType<TemplateCodegenContext['scope']>,
+	ctx: ExpressionScopes,
+	scope: ExpressionScope,
 	inNarrowing: boolean,
 ): Generator<DeclarationItem> {
 	if (ts.isIdentifier(node)) {
@@ -378,8 +384,8 @@ function* forEachNarrowedBy(
 	ts: TypeScript,
 	condition: ts.Expression | undefined,
 	ast: ts.SourceFile,
-	ctx: TemplateCodegenContext,
-	scope: ReturnType<TemplateCodegenContext['scope']>,
+	ctx: ExpressionScopes,
+	scope: ExpressionScope,
 	body: () => Generator<DeclarationItem>,
 ): Generator<DeclarationItem> {
 	// The condition's declarations come first (narrowing positions), then the body.
@@ -393,7 +399,7 @@ function predeclareFunctionDeclarations(
 	ts: TypeScript,
 	statements: readonly ts.Statement[],
 	ast: ts.SourceFile,
-	scope: ReturnType<TemplateCodegenContext['scope']>,
+	scope: ExpressionScope,
 ) {
 	for (const statement of statements) {
 		if (ts.isFunctionDeclaration(statement) && statement.name) {
@@ -406,8 +412,8 @@ function* forEachDeclarationsInAssignmentTarget(
 	ts: TypeScript,
 	node: ts.Node,
 	ast: ts.SourceFile,
-	ctx: TemplateCodegenContext,
-	scope: ReturnType<TemplateCodegenContext['scope']>,
+	ctx: ExpressionScopes,
+	scope: ExpressionScope,
 ): Generator<DeclarationItem> {
 	if (ts.isIdentifier(node)) {
 		yield {
@@ -474,8 +480,8 @@ function* forEachDeclarationsInBinding(
 	ts: TypeScript,
 	node: ts.BindingElement | ts.ParameterDeclaration | ts.VariableDeclaration,
 	ast: ts.SourceFile,
-	ctx: TemplateCodegenContext,
-	scope: ReturnType<TemplateCodegenContext['scope']>,
+	ctx: ExpressionScopes,
+	scope: ExpressionScope,
 ): Generator<DeclarationItem> {
 	if ('propertyName' in node && node.propertyName && ts.isComputedPropertyName(node.propertyName)) {
 		yield* forEachDeclarations(ts, node.propertyName.expression, ast, ctx, scope, true);
@@ -501,7 +507,7 @@ function* forEachDeclarationsInFunction(
 		| ts.AccessorDeclaration
 		| ts.ConstructorDeclaration,
 	ast: ts.SourceFile,
-	ctx: TemplateCodegenContext,
+	ctx: ExpressionScopes,
 ): Generator<DeclarationItem> {
 	const scope = ctx.scope();
 	if (ts.isFunctionExpression(node) && node.name) {
@@ -531,8 +537,8 @@ function* forEachDeclarationsInClass(
 	ts: TypeScript,
 	node: ts.ClassDeclaration | ts.ClassExpression,
 	ast: ts.SourceFile,
-	ctx: TemplateCodegenContext,
-	scope: ReturnType<TemplateCodegenContext['scope']>,
+	ctx: ExpressionScopes,
+	scope: ExpressionScope,
 ): Generator<DeclarationItem> {
 	for (const typeParam of node.typeParameters ?? []) {
 		yield* forEachDeclarationsInTypeNode(ts, typeParam, ast, ctx, scope);
@@ -598,8 +604,8 @@ function* forEachDeclarationsInTypeNode(
 	ts: TypeScript,
 	node: ts.Node,
 	ast: ts.SourceFile,
-	ctx: TemplateCodegenContext,
-	scope: ReturnType<TemplateCodegenContext['scope']>,
+	ctx: ExpressionScopes,
+	scope: ExpressionScope,
 ): Generator<DeclarationItem> {
 	if (ts.isTypeQueryNode(node)) {
 		let id = node.exprName;
@@ -630,7 +636,7 @@ function* forEachDeclarationsInTypeNode(
 }
 
 export function shouldIdentifierSkipped(
-	ctx: TemplateCodegenContext,
+	ctx: ExpressionScopes,
 	text: string,
 ) {
 	return ctx.scopes.some(scope => scope.has(text))

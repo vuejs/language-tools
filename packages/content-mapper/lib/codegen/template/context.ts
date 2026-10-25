@@ -10,7 +10,7 @@ import { Boundary, isSynthesizedIgnore, OpenRanges } from '@vue/language-core/li
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
-import { isLiteralWhitelisted } from './bindingReferences';
+import { isLiteralWhitelisted } from '@vue/language-core/lib/utils/bindingReferences';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
