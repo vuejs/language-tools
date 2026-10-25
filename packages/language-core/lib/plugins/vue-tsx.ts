@@ -26,7 +26,7 @@ const plugin: VueLanguagePlugin = ({
 		version: 4,
 
 		getEmbeddedCodes(_fileName, ir) {
-			const lang = computeLang(ir);
+			const lang = getScriptLang(ir);
 			return [{ lang, id: 'script_' + lang }];
 		},
 
@@ -43,7 +43,8 @@ const plugin: VueLanguagePlugin = ({
 	};
 };
 
-function computeLang(ir: IR) {
+/** The language of a Vue file's script blocks together: `js`, `jsx`, `ts` or `tsx`. */
+export function getScriptLang(ir: IR) {
 	let lang = ir.scriptSetup?.lang ?? ir.script?.lang;
 	if (ir.script && ir.scriptSetup) {
 		if (ir.scriptSetup.lang !== 'js') {
@@ -179,7 +180,7 @@ function useCodegen(
 			vueCompilerOptions: getResolvedOptions(),
 			template: ir.template,
 			isVapor: getIsVapor(),
-			scriptLang: computeLang(ir),
+			scriptLang: getScriptLang(ir),
 			componentName: getComponentName(),
 			setupRefs: getSetupRefs(),
 			setupConsts: getSetupConsts(),
@@ -203,7 +204,7 @@ function useCodegen(
 			typescript: ts,
 			vueCompilerOptions: getResolvedOptions(),
 			styles: ir.styles,
-			scriptLang: computeLang(ir),
+			scriptLang: getScriptLang(ir),
 			setupRefs: getSetupRefs(),
 			setupConsts: getSetupConsts(),
 			setupBindings: getSetupBindings(),
@@ -286,7 +287,7 @@ function useCodegen(
 			script: ir.script,
 			scriptSetup: ir.scriptSetup,
 			styles: ir.styles,
-			scriptLang: computeLang(ir),
+			scriptLang: getScriptLang(ir),
 			setupBindings: getScriptSetupBindings(),
 			localComponents: getLocalComponents(),
 			localDirectives: getLocalDirectives(),
