@@ -253,9 +253,6 @@ importers:
       '@volar/language-service':
         specifier: workspace:*
         version: link:../../volar.js/packages/language-service
-      '@vue/content-mapper':
-        specifier: workspace:*
-        version: link:../content-mapper
       '@vue/language-core':
         specifier: workspace:*
         version: link:../language-core
@@ -302,6 +299,9 @@ importers:
       '@vue/compiler-dom':
         specifier: ^3.5.0
         version: 3.5.40
+      '@vue/content-mapper':
+        specifier: workspace:*
+        version: link:../content-mapper
       typescript:
         specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
         version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
