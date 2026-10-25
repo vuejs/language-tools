@@ -1,6 +1,5 @@
 import { forEachEmbeddedCode, type VirtualCode } from '@volar/language-core';
 import {
-	getBaseNameWithoutExtension,
 	getScriptAnalysis,
 	getScriptLang,
 	type IR,
@@ -9,8 +8,6 @@ import {
 	type VueLanguagePlugin,
 } from '@vue/language-core';
 import { BindingFlag } from '@vue/language-core/lib/parsers/utils';
-import { computedSet } from '@vue/language-core/lib/utils/signals';
-import { camelize, capitalize } from '@vue/shared';
 import { computed } from 'alien-signals';
 import { generateScript } from './codegen/script';
 import { generateStyle } from './codegen/style';
@@ -78,46 +75,17 @@ function useCodegen(
 		getTemplateScope,
 		getScopeBindings,
 		getDotValueBindings,
+		getIsVapor,
+		getScriptSetupBindingNames,
+		getInheritAttrs,
+		getComponentName,
 	} = getScriptAnalysis(ts, vueCompilerOptions, fileName, ir);
-
-	const getIsVapor = computed(() =>
-		getResolvedOptions().vapor || !!(ir.scriptSetup?.attrs.vapor || ir.template?.attrs.vapor)
-	);
-
-	const getScriptSetupBindings = computedSet(() => new Set(getScriptSetupRanges()?.bindings.keys()));
 
 	const hasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
 	const getSetupPropsAssignName = computed(() => getScriptSetupRanges()?.defineProps?.name);
 
 	const getSetupSlotsAssignName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
-
-	const getInheritAttrs = computed(() => {
-		const value = getScriptSetupRanges()?.defineOptions?.inheritAttrs
-			?? getScriptRanges()?.exportDefault?.options?.inheritAttrs;
-		return value !== 'false';
-	});
-
-	const getComponentName = computed(() => {
-		let name: string;
-		const componentOptions = getScriptRanges()?.exportDefault?.options;
-		if (ir.script && componentOptions?.name) {
-			name = ir.script.content.slice(
-				componentOptions.name.start + 1,
-				componentOptions.name.end - 1,
-			);
-		}
-		else {
-			const { defineOptions } = getScriptSetupRanges() ?? {};
-			if (ir.scriptSetup && defineOptions?.name) {
-				name = defineOptions.name;
-			}
-			else {
-				name = getBaseNameWithoutExtension(fileName);
-			}
-		}
-		return capitalize(camelize(name));
-	});
 
 	const getGeneratedTemplate = computed(() => {
 		if (getResolvedOptions().skipTemplateCodegen || !ir.template) {
@@ -171,7 +139,7 @@ function useCodegen(
 			scriptSetup: ir.scriptSetup,
 			styles: ir.styles,
 			scriptLang: getScriptLang(ir),
-			setupBindings: getScriptSetupBindings(),
+			setupBindings: getScriptSetupBindingNames(),
 			localComponents: getLocalComponents(),
 			localDirectives: getLocalDirectives(),
 			dotValueBindings: getDotValueBindings(),

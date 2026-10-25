@@ -98,6 +98,7 @@ export type TemplateScope = ReturnType<typeof collectTemplateScope>;
 
 export interface TemplateScopeOptions {
 	vueCompilerOptions: VueCompilerOptions;
+	isVapor: boolean;
 	setupBindings: Set<string>;
 	setupConsts: Set<string>;
 	setupRefs: Set<string>;
@@ -138,7 +139,7 @@ class BlockScope extends Scope {
  * reads `expressions` and `blockScopes` by the offset of each expression and by the node of each block scope.
  */
 export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateScopeOptions) {
-	const { vueCompilerOptions, setupBindings, setupConsts, setupRefs, hasDefineSlots } = options;
+	const { vueCompilerOptions, isVapor, setupBindings, setupConsts, setupRefs, hasDefineSlots } = options;
 	const templateNames = new Set<string>();
 	const styleNames = new Set<string>();
 	const contextAccesses: ContextAccess[] = [];
@@ -158,7 +159,6 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 
 	if (!vueCompilerOptions.skipTemplateCodegen && ir.template) {
 		const template = ir.template;
-		const isVapor = vueCompilerOptions.vapor || !!(ir.scriptSetup?.attrs.vapor || template.attrs.vapor);
 		const scope = openScope(new BlockScope());
 		if (options.slotsAssignName) {
 			scope.declare(options.slotsAssignName);

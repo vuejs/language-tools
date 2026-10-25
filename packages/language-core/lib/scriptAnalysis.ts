@@ -7,6 +7,7 @@ import { parseScriptSetupRanges } from './parsers/scriptSetupRanges';
 import { BindingFlag } from './parsers/utils';
 import { parseVueCompilerOptions } from './parsers/vueCompilerOptions';
 import type { IR, TypeScript, VueCompilerOptions } from './types';
+import { getBaseNameWithoutExtension } from './utils/shared';
 import { computedSet } from './utils/signals';
 import { collectTemplateScope, type InlayHintInfo } from './utils/templateScope';
 
@@ -117,10 +118,46 @@ function useScriptAnalysis(
 		);
 	});
 
+	const getIsVapor = computed(() =>
+		getResolvedOptions().vapor || !!(ir.scriptSetup?.attrs.vapor || ir.template?.attrs.vapor)
+	);
+
+	/** The names that `<script setup>` alone declares, without the ones of `<script>`. */
+	const getScriptSetupBindingNames = computedSet(() => new Set(getScriptSetupRanges()?.bindings.keys()));
+
+	const getInheritAttrs = computed(() => {
+		const value = getScriptSetupRanges()?.defineOptions?.inheritAttrs
+			?? getScriptRanges()?.exportDefault?.options?.inheritAttrs;
+		return value !== 'false';
+	});
+
+	/** The name of the component: its `name` option, its `defineOptions` name, or the name of the file. */
+	const getComponentName = computed(() => {
+		let name: string;
+		const componentOptions = getScriptRanges()?.exportDefault?.options;
+		if (ir.script && componentOptions?.name) {
+			name = ir.script.content.slice(
+				componentOptions.name.start + 1,
+				componentOptions.name.end - 1,
+			);
+		}
+		else {
+			const { defineOptions } = getScriptSetupRanges() ?? {};
+			if (ir.scriptSetup && defineOptions?.name) {
+				name = defineOptions.name;
+			}
+			else {
+				name = getBaseNameWithoutExtension(fileName);
+			}
+		}
+		return capitalize(camelize(name));
+	});
+
 	const getTemplateScope = computed(() => {
 		const scriptSetupRanges = getScriptSetupRanges();
 		return collectTemplateScope(ts, ir, {
 			vueCompilerOptions: getResolvedOptions(),
+			isVapor: getIsVapor(),
 			setupBindings: getSetupBindings(),
 			setupConsts: getSetupConsts(),
 			setupRefs: getSetupRefs(),
@@ -205,6 +242,10 @@ function useScriptAnalysis(
 		getSetupBindings,
 		getSetupConsts,
 		getSetupRefs,
+		getIsVapor,
+		getScriptSetupBindingNames,
+		getInheritAttrs,
+		getComponentName,
 		getLocalComponents,
 		getLocalDirectives,
 		getTemplateScope,
