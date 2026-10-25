@@ -1,4 +1,3 @@
-import { names } from '@vue/content-mapper/lib/codegen/names';
 import type { VueVirtualCode } from '@vue/language-core';
 import type {
 	AutoImportComponent,
@@ -15,12 +14,13 @@ import type { ComponentMeta, TypeScript } from 'vue-component-meta';
 import { getComponentMetaOfType } from 'vue-component-meta/lib/componentMeta';
 import {
 	collectExtractProps,
-	findVariable,
 	getComponentDefinition,
+	getComponentDirectives,
 	getComponentNames,
 	getComponentProps,
 	getComponentSlots,
 	getElementAttrs,
+	getElementNames,
 	getNamedValueExports,
 	getProjectValueExports,
 	getTagType,
@@ -33,7 +33,6 @@ import {
 type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
 type Project = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Project;
 
-const directiveRE = /^v[A-Z]/;
 const defaultImportRE = /\bimport\s+[\w$]+(?=\s*(?:,|from\b))/;
 const scriptExtensions = ['.ts', '.tsx', '.js', '.jsx', '.mts', '.cts', '.mjs', '.cjs'];
 
@@ -86,7 +85,7 @@ export interface TypeScriptProjectResolver {
 	/** The metadata of the component whose tag name starts at `offset` in the source text of the Vue file `fileName`. */
 	getComponentMeta(fileName: string, offset: number): Promise<ComponentMeta | undefined>;
 	/** The intrinsic element names available in the template of the Vue file `fileName`. */
-	getElementNames(fileName: string): Promise<string[] | undefined>;
+	getElementNames(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
 	/**
 	 * The props of the component whose tag name starts at `offset` in the source text of the Vue file `fileName` or,
 	 * given `expressionLength`, of the component that the expression of that length at `offset` evaluates to.
@@ -102,11 +101,16 @@ export interface TypeScriptProjectResolver {
 	 * The attributes of the intrinsic element whose tag name starts at `offset` in the source text of the Vue file
 	 * `fileName`, or else of the intrinsic element `tag`.
 	 */
-	getElementAttrs(fileName: string, offset: number | undefined, tag: string): Promise<ComponentPropInfo[] | undefined>;
+	getElementAttrs(
+		fileName: string,
+		virtualCode: VueVirtualCode,
+		offset: number | undefined,
+		tag: string,
+	): Promise<ComponentPropInfo[] | undefined>;
 	/** The component names available in the template of the Vue file `fileName`. */
 	getComponentNames(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
 	/** The directive names (`vFoo`) available in the template of the Vue file `fileName`. */
-	getComponentDirectives(fileName: string): Promise<string[] | undefined>;
+	getComponentDirectives(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
 	/** The template context properties that the code between `start` and `end` in the source text of the Vue file `fileName` reads. */
 	collectExtractProps(fileName: string, start: number, end: number): Promise<ExtractPropsInfo[] | undefined>;
 	/** Whether the identifier at `offset` in the source text of the Vue file `fileName` is a `Ref`. */
@@ -297,14 +301,11 @@ export async function connectTypeScriptProjectResolver(
 				return component && await getComponentMetaOfType(ts, project, component.type, component.node);
 			});
 		},
-		getElementNames(fileName) {
-			return withSourceFile(fileName, async (project, sourceFile) => {
-				// A file-wide list with no source position, read by its generated name until the TypeScript protocol can
-				// carry private data.
-				const intrinsics = findVariable(ts, sourceFile, names.intrinsics);
-				const type = intrinsics && await project.checker.getTypeAtLocation(intrinsics);
-				return type && (await type.getProperties()).map(symbol => symbol.name);
-			});
+		getElementNames(fileName, virtualCode) {
+			return withSourceFile(
+				fileName,
+				(project, sourceFile) => getElementNames(ts, project.program, project.checker, sourceFile, virtualCode),
+			);
 		},
 		getComponentProps(fileName, offset, expressionLength) {
 			return withSourceFile(
@@ -318,28 +319,24 @@ export async function connectTypeScriptProjectResolver(
 				(project, sourceFile) => getComponentSlots(ts, project.checker, sourceFile, virtualCode),
 			);
 		},
-		getElementAttrs(fileName, offset, tag) {
+		getElementAttrs(fileName, virtualCode, offset, tag) {
 			return withSourceFile(
 				fileName,
-				(project, sourceFile) => getElementAttrs(ts, project.checker, sourceFile, offset, tag),
+				(project, sourceFile) =>
+					getElementAttrs(ts, project.program, project.checker, sourceFile, virtualCode, offset, tag),
 			);
 		},
 		getComponentNames(fileName, virtualCode) {
 			return withSourceFile(
 				fileName,
-				(project, sourceFile) => getComponentNames(ts, project.checker, sourceFile, virtualCode),
+				(project, sourceFile) => getComponentNames(ts, project.program, project.checker, sourceFile, virtualCode),
 			);
 		},
-		getComponentDirectives(fileName) {
-			return withSourceFile(fileName, async (project, sourceFile) => {
-				// A file-wide list with no source position, read by its generated name until the TypeScript protocol can
-				// carry private data.
-				const directives = findVariable(ts, sourceFile, names.directives);
-				const type = directives && await project.checker.getTypeAtLocation(directives);
-				return type && (await type.getProperties())
-					.map(symbol => symbol.name)
-					.filter(name => directiveRE.test(name));
-			});
+		getComponentDirectives(fileName, virtualCode) {
+			return withSourceFile(
+				fileName,
+				(project, sourceFile) => getComponentDirectives(ts, project.program, project.checker, sourceFile, virtualCode),
+			);
 		},
 		collectExtractProps(fileName, start, end) {
 			return withSourceFile(

@@ -222,7 +222,10 @@ export function startServer(
 				},
 				async getComponentDirectives(fileName) {
 					try {
-						return await (await connectTypeScriptApi()).getComponentDirectives(fileName);
+						const script = await getVueScript(fileName);
+						if (script) {
+							return await (await connectTypeScriptApi()).getComponentDirectives(fileName, script.virtualCode);
+						}
 					}
 					catch {}
 				},
@@ -275,11 +278,13 @@ export function startServer(
 				},
 				async getElementAttrs(fileName, position) {
 					try {
-						const template = (await getVueScript(fileName))?.virtualCode.ir.template;
+						const virtualCode = (await getVueScript(fileName))?.virtualCode;
+						const template = virtualCode?.ir.template;
 						const element = getElementAt(template, position);
-						if (template && element) {
+						if (virtualCode && template && element) {
 							return await (await connectTypeScriptApi()).getElementAttrs(
 								fileName,
+								virtualCode,
 								// ElementTypes.ELEMENT
 								element.tagType === 0 ? getTagNameOffset(template, element) : undefined,
 								element.tag,
@@ -290,7 +295,10 @@ export function startServer(
 				},
 				async getElementNames(fileName) {
 					try {
-						return await (await connectTypeScriptApi()).getElementNames(fileName);
+						const script = await getVueScript(fileName);
+						if (script) {
+							return await (await connectTypeScriptApi()).getElementNames(fileName, script.virtualCode);
+						}
 					}
 					catch {}
 				},

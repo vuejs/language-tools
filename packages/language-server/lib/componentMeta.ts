@@ -3,10 +3,13 @@ import {
 	forEachElementNode,
 	getElementTagOffsets,
 	getSelfComponentName,
+	getStartEnd,
 	type IRTemplate,
+	type TextRange,
 	type VueVirtualCode,
 } from '@vue/language-core';
 import type { AutoImportExport, ComponentPropInfo, ExtractPropsInfo } from '@vue/language-service/lib/requests';
+import { capitalize } from '@vue/shared';
 import * as path from 'node:path';
 import type { TypeScript } from 'vue-component-meta';
 import { inferComponentProps } from 'vue-component-meta/lib/helpers';
@@ -20,6 +23,8 @@ type Checker = import('typescript-7/async', { with: { 'resolution-mode': 'import
 type Program = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Program;
 type Symbol = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Symbol;
 type Type = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Type;
+
+const directiveRE = /^v[A-Z]/;
 
 /**
  * The positions of the text TypeScript checks for `sourceFile` that `offset`, an offset of the file's source text, maps
@@ -107,34 +112,122 @@ async function getDefaultImportName(ts: TypeScript, sourceFile: SourceFile, symb
 }
 
 /**
- * The component names available in a Vue file's template: the registered components, the file itself, and the
- * setup bindings whose type is a component.
+ * The module `specifier` as the code TypeScript checks for `fileName` resolves it, which is the module the template
+ * of a Vue file is checked against; undefined when that code does not import it.
+ */
+export async function getModuleSymbol(
+	ts: TypeScript,
+	program: Program,
+	checker: Checker,
+	fileName: string,
+	specifier: string,
+) {
+	for (const mode of [ts.ModuleKind.ESNext, ts.ModuleKind.CommonJS]) {
+		const resolved = await program.getResolvedModule(fileName, specifier, mode);
+		if (resolved) {
+			return await checker.getSymbolOfSourceFile(resolved.resolvedFileName);
+		}
+	}
+}
+
+/** The properties of the interface or type alias that `moduleSymbol`, or the namespaces in `path`, export as `name`. */
+async function getExportedTypeProperties(checker: Checker, moduleSymbol: Symbol, ...path: string[]) {
+	let symbol: Symbol | undefined = moduleSymbol;
+	for (const name of path) {
+		symbol = symbol && await checker.getMemberInModuleExports(symbol, name);
+	}
+	return symbol && await (await checker.getDeclaredTypeOfSymbol(symbol)).getProperties();
+}
+
+/** The property names of the type of the script block expression at `range` of a Vue file, e.g. a component option. */
+async function getOptionNames(
+	ts: TypeScript,
+	checker: Checker,
+	sourceFile: SourceFile,
+	block: { startTagEnd: number } | undefined,
+	range: TextRange | undefined,
+) {
+	if (!block || !range) {
+		return [];
+	}
+	const type = await getExpressionType(
+		ts,
+		checker,
+		sourceFile,
+		block.startTagEnd + range.start,
+		range.end - range.start,
+	);
+	return type ? (await type.getProperties()).map(symbol => symbol.name) : [];
+}
+
+/**
+ * The component names available in a Vue file's template: the local and registered components, the global
+ * components of Vue, the file itself, and the setup bindings whose type is a component.
  */
 export async function getComponentNames(
 	ts: TypeScript,
+	program: Program,
 	checker: Checker,
 	sourceFile: SourceFile,
 	virtualCode: VueVirtualCode,
 ) {
-	// A file-wide list with no source position, read by its generated name until the TypeScript protocol can carry
-	// private data.
-	const components = findVariable(ts, sourceFile, names.components);
-	if (!components) {
+	const { ir, scriptAnalysis } = virtualCode;
+	const { lib, target } = scriptAnalysis.getResolvedOptions();
+	const vue = await getModuleSymbol(ts, program, checker, sourceFile.fileName, lib);
+	if (!vue) {
 		return;
 	}
-	const componentNames = (await (await checker.getTypeAtLocation(components)).getProperties())
-		.map(symbol => symbol.name)
-		.filter(name => !name.includes('$') && !name.startsWith('_'));
-	componentNames.push(getSelfComponentName(virtualCode.fileName));
+	const componentNames = [
+		...scriptAnalysis.getLocalComponents(),
+		...await getOptionNames(
+			ts,
+			checker,
+			sourceFile,
+			ir.script,
+			scriptAnalysis.getScriptRanges()?.exportDefault?.options?.components,
+		),
+		...(await getExportedTypeProperties(checker, vue, 'GlobalComponents') ?? []).map(symbol => symbol.name),
+	];
+	if (target < 3.5) {
+		for (const name of ['Transition', 'TransitionGroup', 'KeepAlive', 'Suspense', 'Teleport']) {
+			if (await checker.getMemberInModuleExports(vue, name)) {
+				componentNames.push(name);
+			}
+		}
+	}
+	const filteredNames = componentNames.filter(name => !name.includes('$') && !name.startsWith('_'));
+	filteredNames.push(getSelfComponentName(virtualCode.fileName));
 
-	for (const binding of virtualCode.scriptAnalysis.getSetupBindings()) {
-		const symbol = await checker.resolveName(binding, ts.SymbolFlags.Value, components);
-		if (symbol && await isComponentType(await getTypeOfSymbol(ts, checker, symbol, components))) {
-			componentNames.push(binding);
+	const location = getSetupScopeNode(ts, sourceFile, virtualCode);
+	if (location) {
+		for (const binding of scriptAnalysis.getSetupBindings()) {
+			const symbol = await checker.resolveName(binding, ts.SymbolFlags.Value, location);
+			if (symbol && await isComponentType(await getTypeOfSymbol(ts, checker, symbol, location))) {
+				filteredNames.push(binding);
+			}
 		}
 	}
 
-	return [...new Set(componentNames)];
+	return [...new Set(filteredNames)];
+}
+
+/**
+ * A node of the code TypeScript checks for a Vue file in the scope of its setup bindings: where the last mapped
+ * statement of its script setup, or else its script, maps to.
+ */
+function getSetupScopeNode(ts: TypeScript, sourceFile: SourceFile, { ir }: VueVirtualCode) {
+	for (const block of [ir.scriptSetup, ir.script]) {
+		if (!block) {
+			continue;
+		}
+		for (const statement of [...block.ast.statements].reverse()) {
+			const offset = block.startTagEnd + getStartEnd(statement, block.ast).start;
+			const [position] = toCheckedPositions(sourceFile, offset, ts.SpanMapFeature.Definition);
+			if (position !== undefined) {
+				return getNodeAt(sourceFile, position, false);
+			}
+		}
+	}
 }
 
 export interface ProjectValueExport extends AutoImportExport {
@@ -400,21 +493,85 @@ export async function getComponentProps(
 	return props;
 }
 
-/** The names of the slots a Vue file declares. */
+/** The names of the slots a Vue file declares with `defineSlots`. */
 export async function getComponentSlots(
 	ts: TypeScript,
 	checker: Checker,
 	sourceFile: SourceFile,
 	virtualCode: VueVirtualCode,
 ) {
-	// A file-wide list with no source position, read by its generated name until the TypeScript protocol can carry
-	// private data.
-	const slots = findVariable(
+	const { scriptSetup } = virtualCode.ir;
+	const defineSlots = virtualCode.scriptAnalysis.getScriptSetupRanges()?.defineSlots;
+	if (!scriptSetup || !defineSlots) {
+		return;
+	}
+	for (
+		const position of toCheckedPositions(
+			sourceFile,
+			scriptSetup.startTagEnd + defineSlots.exp.start,
+			ts.SpanMapFeature.Definition,
+		)
+	) {
+		const callee = getNodeAt(sourceFile, position, false);
+		const call = callee.parent;
+		if (call && ts.isCallExpression(call) && call.expression === callee) {
+			return (await (await checker.getTypeAtLocation(call)).getProperties()).map(symbol => symbol.name);
+		}
+	}
+}
+
+/** The intrinsic elements of Vue (`JSX.IntrinsicElements` of `<lib>/jsx-runtime`) as a Vue file's template sees them. */
+async function getIntrinsicElements(
+	ts: TypeScript,
+	program: Program,
+	checker: Checker,
+	sourceFile: SourceFile,
+	virtualCode: VueVirtualCode,
+) {
+	const { lib } = virtualCode.scriptAnalysis.getResolvedOptions();
+	const jsxRuntime = await getModuleSymbol(ts, program, checker, sourceFile.fileName, `${lib}/jsx-runtime`);
+	return jsxRuntime && await getExportedTypeProperties(checker, jsxRuntime, 'JSX', 'IntrinsicElements');
+}
+
+/** The intrinsic element names available in a Vue file's template. */
+export async function getElementNames(
+	ts: TypeScript,
+	program: Program,
+	checker: Checker,
+	sourceFile: SourceFile,
+	virtualCode: VueVirtualCode,
+) {
+	return (await getIntrinsicElements(ts, program, checker, sourceFile, virtualCode))?.map(symbol => symbol.name);
+}
+
+/**
+ * The directive names (`vFoo`) available in a Vue file's template: the local and registered directives and the
+ * global directives of Vue.
+ */
+export async function getComponentDirectives(
+	ts: TypeScript,
+	program: Program,
+	checker: Checker,
+	sourceFile: SourceFile,
+	virtualCode: VueVirtualCode,
+) {
+	const { ir, scriptAnalysis } = virtualCode;
+	const vue = await getModuleSymbol(ts, program, checker, sourceFile.fileName, scriptAnalysis.getResolvedOptions().lib);
+	if (!vue) {
+		return;
+	}
+	const directiveOptions = await getOptionNames(
 		ts,
+		checker,
 		sourceFile,
-		virtualCode.scriptAnalysis.getScriptSetupRanges()?.defineSlots?.name ?? names.slots,
+		ir.script,
+		scriptAnalysis.getScriptRanges()?.exportDefault?.options?.directives,
 	);
-	return slots && (await (await checker.getTypeAtLocation(slots)).getProperties()).map(symbol => symbol.name);
+	return [
+		...scriptAnalysis.getLocalDirectives(),
+		...directiveOptions.map(name => `v${capitalize(name)}`),
+		...(await getExportedTypeProperties(checker, vue, 'GlobalDirectives') ?? []).map(symbol => symbol.name),
+	].filter(name => directiveRE.test(name));
 }
 
 /**
@@ -423,17 +580,19 @@ export async function getComponentSlots(
  */
 export async function getElementAttrs(
 	ts: TypeScript,
+	program: Program,
 	checker: Checker,
 	sourceFile: SourceFile,
+	virtualCode: VueVirtualCode,
 	offset: number | undefined,
 	tag: string,
 ): Promise<ComponentPropInfo[] | undefined> {
 	let type = offset === undefined ? undefined : (await getTagType(ts, checker, sourceFile, offset))?.type;
 	if (!type) {
 		// Tags TypeScript does not check as intrinsic elements (`<template>`, a custom element it checks as a component)
-		// have no position to read, so they are looked up in the file-wide list of intrinsic elements by name.
-		const intrinsics = findVariable(ts, sourceFile, names.intrinsics);
-		const element = intrinsics && await (await checker.getTypeAtLocation(intrinsics)).getProperty(tag);
+		// have no position to read, so they are looked up in the intrinsic elements of Vue by name.
+		const element = (await getIntrinsicElements(ts, program, checker, sourceFile, virtualCode))
+			?.find(symbol => symbol.name === tag);
 		type = element && await checker.getTypeOfSymbol(element);
 	}
 	if (!type) {
