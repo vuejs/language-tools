@@ -22,6 +22,7 @@ export * from './lib/utils/shared';
 export * from './lib/virtualCode';
 
 export { names } from './lib/codegen/names';
-export { getScriptLang, tsCodegen } from './lib/plugins/vue-tsx';
+export { tsCodegen } from './lib/plugins/vue-tsx';
+export { getScriptAnalysis, getScriptLang } from './lib/scriptAnalysis';
 
 export * from '@volar/language-core';

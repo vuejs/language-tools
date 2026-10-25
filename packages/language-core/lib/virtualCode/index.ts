@@ -2,6 +2,7 @@ import { type IScriptSnapshot, type Mapping, SpanMapKind, type VirtualCode } fro
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import { computed, signal } from 'alien-signals';
 import { allFeatures } from '../codegen/features';
+import { getScriptAnalysis } from '../scriptAnalysis';
 import type { IR, TypeScript, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
 import { useEmbeddedCodes } from './embeddedCodes';
 
@@ -63,13 +64,16 @@ export class VueVirtualCode implements VirtualCode {
 	get mappings() {
 		return this._mappings();
 	}
+	get scriptAnalysis() {
+		return getScriptAnalysis(this.ts, this.vueCompilerOptions, this.fileName, this._ir);
+	}
 
 	constructor(
 		public fileName: string,
 		public initSnapshot: IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
 		plugins: VueLanguagePluginReturn[],
-		ts: TypeScript,
+		private ts: TypeScript,
 	) {
 		this._snapshot = signal(initSnapshot);
 		this._parsedSfcResult = computed(lastResult => this.parseSfc(plugins, lastResult));

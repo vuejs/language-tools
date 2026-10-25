@@ -1,22 +1,16 @@
 import { camelize, capitalize } from '@vue/shared';
 import { computed } from 'alien-signals';
-import * as path from 'path-browserify';
 import { generateScript } from '../codegen/script';
 import { generateStyle } from '../codegen/style';
 import { generateTemplate } from '../codegen/template';
-import { CompilerOptionsResolver } from '../compilerOptions';
-import { parseScriptRanges } from '../parsers/scriptRanges';
-import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { BindingFlag } from '../parsers/utils';
-import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
+import { getScriptAnalysis, getScriptLang } from '../scriptAnalysis';
 import type { IR, TypeScript, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { getBaseNameWithoutExtension } from '../utils/shared';
 import { computedSet } from '../utils/signals';
 
 export const serviceScriptRE = /^script_(?:js|jsx|ts|tsx)$/;
 export const tsCodegen = new WeakMap<IR, ReturnType<typeof useCodegen>>();
-
-const validLangs = new Set(['js', 'jsx', 'ts', 'tsx']);
 
 const plugin: VueLanguagePlugin = ({
 	modules: { typescript: ts },
@@ -43,23 +37,6 @@ const plugin: VueLanguagePlugin = ({
 	};
 };
 
-/** The language of a Vue file's script blocks together: `js`, `jsx`, `ts` or `tsx`. */
-export function getScriptLang(ir: IR) {
-	let lang = ir.scriptSetup?.lang ?? ir.script?.lang;
-	if (ir.script && ir.scriptSetup) {
-		if (ir.scriptSetup.lang !== 'js') {
-			lang = ir.scriptSetup.lang;
-		}
-		else {
-			lang = ir.script.lang;
-		}
-	}
-	if (lang && validLangs.has(lang)) {
-		return lang;
-	}
-	return 'ts';
-}
-
 export default plugin;
 
 function useCodegen(
@@ -68,46 +45,18 @@ function useCodegen(
 	fileName: string,
 	ir: IR,
 ) {
-	const getResolvedOptions = computed(() => {
-		const options = parseVueCompilerOptions(ir.comments);
-		if (options) {
-			const resolver = new CompilerOptionsResolver(() => undefined /* does not support resolving target="auto" */);
-			resolver.addConfig(options, path.dirname(fileName));
-			return resolver.build(vueCompilerOptions);
-		}
-		return vueCompilerOptions;
-	});
+	const {
+		getResolvedOptions,
+		getScriptRanges,
+		getScriptSetupRanges,
+		getBindingFlags,
+		getSetupBindings,
+		getLocalComponents,
+	} = getScriptAnalysis(ts, vueCompilerOptions, fileName, ir);
 
 	const getIsVapor = computed(() =>
 		getResolvedOptions().vapor || !!(ir.scriptSetup?.attrs.vapor || ir.template?.attrs.vapor)
 	);
-
-	const getScriptRanges = computed(() =>
-		ir.script && validLangs.has(ir.script.lang)
-			? parseScriptRanges(ts, ir.script.ast)
-			: undefined
-	);
-
-	const getScriptSetupRanges = computed(() =>
-		ir.scriptSetup && validLangs.has(ir.scriptSetup.lang)
-			? parseScriptSetupRanges(ts, ir.scriptSetup.ast, getResolvedOptions())
-			: undefined
-	);
-
-	const getBindingFlags = computed(() => {
-		const flags = new Map<string, BindingFlag>(getScriptSetupRanges()?.bindings);
-		const scriptRanges = getScriptRanges();
-		if (ir.scriptSetup && scriptRanges) {
-			for (const [name, flag] of scriptRanges.bindings) {
-				if (!flags.has(name)) {
-					flags.set(name, flag);
-				}
-			}
-		}
-		return flags;
-	});
-
-	const getSetupBindings = computedSet(() => new Set(getBindingFlags().keys()));
 
 	const getScriptSetupBindings = computedSet(() => new Set(getScriptSetupRanges()?.bindings.keys()));
 
@@ -211,18 +160,6 @@ function useCodegen(
 			dotValueBindings,
 		});
 	};
-
-	const getLocalComponents = computedSet(() => {
-		const bindings = getSetupBindings();
-		if (!bindings.size) {
-			return bindings;
-		}
-		return new Set(
-			ir.template?.ast?.components
-				.flatMap(name => [camelize(name), capitalize(camelize(name))])
-				.filter(name => bindings.has(name)),
-		);
-	});
 
 	const getLocalDirectives = computedSet(() => {
 		const bindings = getSetupBindings();
