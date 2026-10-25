@@ -92,19 +92,19 @@ export function collectTemplateScopeNames(
 
 					// dynamic directive arg
 					if (
-						prop.arg &&
-						prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION &&
-						!prop.arg.isStatic
+						prop.arg
+						&& prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+						&& !prop.arg.isStatic
 					) {
 						collectNamesFromExpression(prop.arg.content, localScopes);
 					}
 
 					// directive expression (skip v-slot and v-for values)
 					if (
-						prop.exp &&
-						prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION &&
-						prop.name !== 'slot' &&
-						prop.name !== 'for'
+						prop.exp
+						&& prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+						&& prop.name !== 'slot'
+						&& prop.name !== 'for'
 					) {
 						collectNamesFromExpression(prop.exp.content, localScopes);
 					}
@@ -134,13 +134,13 @@ export function collectTemplateScopeNames(
 				const name = node.text;
 				// Skip known globals and internals
 				if (
-					name !== 'undefined' &&
-					name !== 'null' &&
-					name !== 'true' &&
-					name !== 'false' &&
-					name !== 'this' &&
-					name !== 'arguments' &&
-					!name.startsWith('__VLS_')
+					name !== 'undefined'
+					&& name !== 'null'
+					&& name !== 'true'
+					&& name !== 'false'
+					&& name !== 'this'
+					&& name !== 'arguments'
+					&& !name.startsWith('__VLS_')
 				) {
 					identifiers.add(name);
 				}
@@ -164,7 +164,8 @@ export function collectTemplateScopeNames(
 			if (isLocal) {
 				// Local variable used in expression - add to allScopeNames
 				allScopeNames.add(name);
-			} else if (setupBindings.has(name) || setupConsts.has(name)) {
+			}
+			else if (setupBindings.has(name) || setupConsts.has(name)) {
 				// Setup binding or const used in expression
 				scopeBindings.add(name);
 				allScopeNames.add(name);

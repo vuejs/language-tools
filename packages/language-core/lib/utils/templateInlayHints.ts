@@ -29,9 +29,9 @@ export function collectInlayHints(
 
 	// Collect script options wrapper hints
 	if (
-		ir.script &&
-		scriptRanges?.exportDefault?.isObjectLiteral &&
-		vueCompilerOptions.optionsWrapper.length
+		ir.script
+		&& scriptRanges?.exportDefault?.isObjectLiteral
+		&& vueCompilerOptions.optionsWrapper.length
 	) {
 		const { expression } = scriptRanges.exportDefault;
 		const [wrapLeft, wrapRight] = vueCompilerOptions.optionsWrapper;
@@ -90,12 +90,12 @@ function collectTemplateHints(
 
 				// v-bind shorthand: <div :foo /> -> <div :foo="foo" />
 				if (
-					prop.name === 'bind' &&
-					exp &&
-					exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION &&
-					arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION &&
-					arg.isStatic &&
-					arg.loc.end.offset === exp.loc.end.offset
+					prop.name === 'bind'
+					&& exp
+					&& exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+					&& arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+					&& arg.isStatic
+					&& arg.loc.end.offset === exp.loc.end.offset
 				) {
 					const variableName = exp.content;
 					hints.push({
@@ -113,14 +113,14 @@ function collectTemplateHints(
 
 				// Slot outlet shorthand: <slot #name /> or <component #name />
 				if (
-					node.tag === 'slot' &&
-					prop.name === 'bind' &&
-					exp &&
-					exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION &&
-					arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION &&
-					arg.isStatic &&
-					arg.content === 'name' &&
-					arg.loc.start.offset === exp.loc.start.offset
+					node.tag === 'slot'
+					&& prop.name === 'bind'
+					&& exp
+					&& exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+					&& arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+					&& arg.isStatic
+					&& arg.content === 'name'
+					&& arg.loc.start.offset === exp.loc.start.offset
 				) {
 					hints.push({
 						blockName: 'template',
@@ -137,9 +137,9 @@ function collectTemplateHints(
 
 				// Inline handler: @click="count++" -> @click="$event => count++"
 				if (
-					prop.name === 'on' &&
-					exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION &&
-					isInlineExpression(exp.content)
+					prop.name === 'on'
+					&& exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+					&& isInlineExpression(exp.content)
 				) {
 					hints.push({
 						blockName: 'template',
