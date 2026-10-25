@@ -20,6 +20,8 @@ export * from './lib/utils/parseSfc';
 export * from './lib/utils/shared';
 export * from './lib/utils/styleScopedClasses';
 export * from './lib/utils/templateExpressions';
+export * from './lib/utils/templateInlayHints';
+export * from './lib/utils/templateScopeNames';
 export * from './lib/virtualCode';
 
 export { getScriptAnalysis, getScriptLang } from './lib/scriptAnalysis';
