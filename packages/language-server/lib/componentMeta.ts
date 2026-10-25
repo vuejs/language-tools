@@ -4,7 +4,6 @@ import {
 	getSelfComponentName,
 	type IRTemplate,
 	names,
-	tsCodegen,
 	type VueVirtualCode,
 } from '@vue/language-core';
 import type { AutoImportExport, ComponentPropInfo, ExtractPropsInfo } from '@vue/language-service/lib/requests';
@@ -128,7 +127,7 @@ export async function getComponentNames(
 		.filter(name => !name.includes('$') && !name.startsWith('_'));
 	componentNames.push(getSelfComponentName(virtualCode.fileName));
 
-	for (const binding of tsCodegen.get(virtualCode.ir)?.getSetupBindings() ?? []) {
+	for (const binding of virtualCode.scriptAnalysis.getSetupBindings()) {
 		const symbol = await checker.resolveName(binding, ts.SymbolFlags.Value, components);
 		if (symbol && await isComponentType(await getTypeOfSymbol(ts, checker, symbol, components))) {
 			componentNames.push(binding);
@@ -410,9 +409,11 @@ export async function getComponentSlots(
 ) {
 	// A file-wide list with no source position, read by its generated name until the TypeScript protocol can carry
 	// private data.
-	const codegen = tsCodegen.get(virtualCode.ir);
-	const slots = codegen
-		&& findVariable(ts, sourceFile, codegen.getScriptSetupRanges()?.defineSlots?.name ?? names.slots);
+	const slots = findVariable(
+		ts,
+		sourceFile,
+		virtualCode.scriptAnalysis.getScriptSetupRanges()?.defineSlots?.name ?? names.slots,
+	);
 	return slots && (await (await checker.getTypeAtLocation(slots)).getProperties()).map(symbol => symbol.name);
 }
 
