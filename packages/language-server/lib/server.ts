@@ -438,17 +438,20 @@ export function startServer(ts: typeof import('typescript')) {
 			watchExtensions(getComponentModuleExtensions(contentMappers));
 			const vuePlugins = (contentMappers ?? [])
 				.filter(entry => entry.package === '@vue/content-mapper')
-				.map(entry =>
-					routeByExtensions(
+				.map(entry => {
+					const { vueOptions } = resolveMapperOptions(ts.sys.readFile, configFileName, entry.options);
+					// Internal createPlugins option: language server passes no script codegen plugins when requested
+					const scriptPlugins = entry.options?.skipScriptCodegen ? [] : [vueTsxPlugin];
+					return routeByExtensions(
 						createVueLanguagePlugin(
 							asCoreTypeScript(ts),
-							resolveMapperOptions(ts.sys.readFile, configFileName, entry.options).vueOptions,
+							vueOptions,
 							asFileName,
-							[vueTsxPlugin],
+							scriptPlugins,
 						),
 						entry.extensions,
-					),
-				);
+					);
+				});
 			const language = createLanguage<URI>(
 				[
 					{
