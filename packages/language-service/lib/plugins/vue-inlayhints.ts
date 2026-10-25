@@ -1,5 +1,5 @@
 import type { InlayHint, InlayHintKind, LanguageServicePlugin } from '@volar/language-service';
-import { collectBindingIdentifiers, collectInlayHints } from '@vue/language-core';
+import { collectBindingIdentifiers } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { asClassicNode, asCoreNode, asCoreTypeScript, resolveEmbeddedCode } from '../utils';
 
@@ -25,8 +25,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					const result: InlayHint[] = [];
 					const { ir } = info.root;
 
-					const scriptRanges = info.root.scriptAnalysis.getScriptRanges();
-					const inlayHints = collectInlayHints(ir, info.root.vueCompilerOptions, scriptRanges);
+					const inlayHints = [...info.root.scriptAnalysis.getInlayHints()];
 					const scriptSetupRanges = info.root.scriptAnalysis.getScriptSetupRanges();
 
 					if (scriptSetupRanges?.defineProps?.destructured && ir.scriptSetup?.ast) {

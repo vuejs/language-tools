@@ -6,7 +6,7 @@ import {
 } from '@volar/language-service';
 import { getSourceRange } from '@volar/language-service/lib/utils/featureWorkers';
 import type * as CompilerDOM from '@vue/compiler-dom';
-import { collectBindingNames, collectTemplateScopeNames, parseVForNode } from '@vue/language-core';
+import { collectBindingNames, parseVForNode } from '@vue/language-core';
 import { URI } from 'vscode-uri';
 import type { AutoImportExport } from '../requests';
 import { asCoreTypeScript, resolveEmbeddedCode } from '../utils';
@@ -81,26 +81,11 @@ export function create(
 						kind: 14 satisfies typeof CompletionItemKind.Keyword,
 						textEdit: { range, newText: keyword },
 					}));
-					const bindings = info.root.scriptAnalysis.getSetupBindings();
-					const scriptSetupRanges = info.root.scriptAnalysis.getScriptSetupRanges();
-					const setupConsts = new Set<string>();
-					if (scriptSetupRanges?.defineProps?.destructured) {
-						for (const name of scriptSetupRanges.defineProps.destructured.keys()) {
-							setupConsts.add(name);
-						}
-						if (scriptSetupRanges.defineProps.destructuredRest) {
-							setupConsts.add(scriptSetupRanges.defineProps.destructuredRest);
-						}
-					}
-					const { scopeBindings, allScopeNames } = collectTemplateScopeNames(
-						asCoreTypeScript(ts),
-						info.root.ir,
-						bindings,
-						setupConsts,
-					);
+					const { getSetupBindings, getScopeBindings, getTemplateScope } = info.root.scriptAnalysis;
+					const bindings = getSetupBindings();
 					const listed = new Set([
-						...scopeBindings,
-						...allScopeNames,
+						...getScopeBindings(),
+						...getTemplateScope().templateNames,
 						...keywords,
 						...Object.values(info.root.vueCompilerOptions.macros).flat(),
 					]);

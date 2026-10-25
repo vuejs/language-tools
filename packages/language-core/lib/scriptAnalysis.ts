@@ -8,6 +8,7 @@ import { BindingFlag } from './parsers/utils';
 import { parseVueCompilerOptions } from './parsers/vueCompilerOptions';
 import type { IR, TypeScript, VueCompilerOptions } from './types';
 import { computedSet } from './utils/signals';
+import { collectTemplateScope, type InlayHintInfo } from './utils/templateScope';
 
 const validLangs = new Set(['js', 'jsx', 'ts', 'tsx']);
 const scriptAnalyses = new WeakMap<IR, ReturnType<typeof useScriptAnalysis>>();
@@ -116,6 +117,56 @@ function useScriptAnalysis(
 		);
 	});
 
+	const getTemplateScope = computed(() => {
+		const scriptSetupRanges = getScriptSetupRanges();
+		return collectTemplateScope(ts, ir, {
+			vueCompilerOptions: getResolvedOptions(),
+			setupBindings: getSetupBindings(),
+			setupConsts: getSetupConsts(),
+			setupRefs: getSetupRefs(),
+			hasDefineSlots: !!scriptSetupRanges?.defineSlots,
+			propsAssignName: scriptSetupRanges?.defineProps?.name,
+			slotsAssignName: scriptSetupRanges?.defineSlots?.name,
+		});
+	});
+
+	/** The setup bindings and consts that the template scope lists, as the template and the styles reference them. */
+	const getScopeBindings = computedSet(() => {
+		const bindings = getSetupBindings();
+		const consts = getSetupConsts();
+		const { templateNames, styleNames } = getTemplateScope();
+		return new Set([...templateNames, ...styleNames].filter(name => bindings.has(name) || consts.has(name)));
+	});
+
+	const getInlayHints = computed(() => {
+		const hints: InlayHintInfo[] = [...getTemplateScope().inlayHints];
+		const { script } = ir;
+		const exportDefault = getScriptRanges()?.exportDefault;
+		const { optionsWrapper } = getResolvedOptions();
+		if (script && typeof script.src !== 'object' && exportDefault) {
+			const { expression, isObjectLiteral } = exportDefault.options ?? exportDefault;
+			if (isObjectLiteral && optionsWrapper.length) {
+				const [wrapLeft, wrapRight] = optionsWrapper;
+				hints.push({
+					blockName: script.name,
+					offset: expression.start,
+					setting: 'vue.inlayHints.optionsWrapper',
+					label: wrapLeft || '[Missing optionsWrapper[0]]',
+					tooltip: [
+						'This is virtual code that is automatically wrapped for type support, it does not affect your runtime behavior, you can customize it via `vueCompilerOptions.optionsWrapper` option in tsconfig / jsconfig.',
+						'To hide it, you can set `"vue.inlayHints.optionsWrapper": false` in IDE settings.',
+					].join('\n\n'),
+				}, {
+					blockName: script.name,
+					offset: expression.end,
+					setting: 'vue.inlayHints.optionsWrapper',
+					label: wrapRight || '[Missing optionsWrapper[1]]',
+				});
+			}
+		}
+		return hints;
+	});
+
 	const getLocalComponents = computedSet(() => {
 		const bindings = getSetupBindings();
 		if (!bindings.size) {
@@ -137,5 +188,8 @@ function useScriptAnalysis(
 		getSetupConsts,
 		getSetupRefs,
 		getLocalComponents,
+		getTemplateScope,
+		getScopeBindings,
+		getInlayHints,
 	};
 }
