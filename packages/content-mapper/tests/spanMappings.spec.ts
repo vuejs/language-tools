@@ -4,7 +4,6 @@ import {
 	type Mapping,
 	navigationFeatures,
 	semanticFeatures,
-	VueCodeFeature,
 } from '@vue/language-core';
 import { expect, test } from 'vitest';
 import { SpanMapFeature, SpanMapKind } from '../protocol';
@@ -12,11 +11,12 @@ import { toSpanMappings } from '../spanMappings';
 
 const Verbatim = SpanMapKind.Verbatim;
 const Atom = SpanMapKind.Atom;
+const outsideProtocol = 1 << 21;
 
 test('passes language feature bits through and strips the bits outside the protocol', () => {
 	const mappings: Mapping[] = [
 		[0, 1, 0, 1, Verbatim, 0],
-		[1, 2, 1, 2, Verbatim, allFeatures | VueCodeFeature.PropsCompletion],
+		[1, 2, 1, 2, Verbatim, allFeatures | outsideProtocol],
 	];
 
 	expect(toSpanMappings(mappings, 'abc', 'abc')).toEqual([
@@ -81,7 +81,7 @@ test('keeps zero-length navigation anchors and drops other zero-length markers',
 			[0, 3, 0, 3, Verbatim, semanticFeatures],
 			[3, 0, 0, 0, Verbatim, navigationFeatures | semanticFeatures],
 			[3, 0, 1, 0, Verbatim, 0],
-			[3, 0, 2, 0, Verbatim, VueCodeFeature.PropsCompletion],
+			[3, 0, 2, 0, Verbatim, outsideProtocol],
 		],
 		'abc',
 		'abc',

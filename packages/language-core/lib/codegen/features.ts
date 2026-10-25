@@ -1,10 +1,5 @@
 import { SpanMapFeature } from '@volar/language-core';
 
-/** Feature bits that only Volar's own services read; the content mapper strips them. */
-export enum VueCodeFeature {
-	PropsCompletion = 1 << 21,
-}
-
 export const completionFeatures = SpanMapFeature.Completion
 	| SpanMapFeature.AutoInsert;
 

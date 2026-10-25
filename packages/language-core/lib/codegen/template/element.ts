@@ -3,7 +3,7 @@ import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
 import type { Code } from '../../types';
 import { getComponentIsBinding, getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures, VueCodeFeature } from '../features';
+import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
@@ -236,7 +236,6 @@ export function* generateComponent(
 	else {
 		yield `{`;
 	}
-	yield [``, 'template', node.loc.start.offset, { features: VueCodeFeature.PropsCompletion }];
 	yield newLine;
 	yield* propCodes;
 	yield `}`;

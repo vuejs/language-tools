@@ -3,7 +3,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, isHTMLTag, isMathMLTag, isSVGTag } from '@vue/shared';
 import type { Code, VueCodeMarker, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
-import { navigationFeatures, scriptFeatures, semanticFeatures, VueCodeFeature } from '../features';
+import { navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, identifierRE, newLine } from '../utils';
@@ -339,7 +339,7 @@ function getShouldCamelize(
 }
 
 function getPropsCodeFeatures(): VueCodeMarker {
-	return { features: semanticFeatures | navigationFeatures | VueCodeFeature.PropsCompletion };
+	return { features: semanticFeatures | navigationFeatures };
 }
 
 /**
