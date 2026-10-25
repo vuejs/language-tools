@@ -1,7 +1,7 @@
 import { isGloballyAllowed, makeMap } from '@vue/shared';
 import type * as ts from 'typescript';
 import { collectBindingNames } from '../../utils/collectBindings';
-import { getNodeText } from '../../utils/shared';
+import { getNodeText, getStartEnd } from '../../utils/shared';
 import { forEachNode } from '../utils';
 import type { TemplateCodegenContext } from './context';
 
@@ -517,6 +517,18 @@ function* forEachDeclarationsInFunction(
 		yield* forEachDeclarationsInTypeNode(ts, node.type, ast, ctx, scope);
 	}
 	if (node.body) {
+		let { start, end } = getStartEnd(ts, node.body, ast);
+		if (ts.isBlock(node.body)) {
+			start++;
+			// Keep directive prologues ahead of generated assertions.
+			for (const statement of node.body.statements) {
+				if (!ts.isExpressionStatement(statement) || !ts.isStringLiteral(statement.expression)) {
+					break;
+				}
+				start = statement.end;
+			}
+		}
+		scope.functionBody = { start, end, isBlock: ts.isBlock(node.body) };
 		yield* forEachDeclarations(ts, node.body, ast, ctx, scope, false);
 	}
 	scope.end();
