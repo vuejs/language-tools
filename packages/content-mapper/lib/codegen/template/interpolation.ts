@@ -9,11 +9,11 @@ import {
 	type VueCodeMarker,
 	type VueCompilerOptions,
 } from '@vue/language-core';
+import { forEachDeclarations, shouldIdentifierSkipped } from '@vue/language-core/lib/utils/bindingReferences';
 import { Boundary } from '@vue/language-core/lib/utils/boundary';
 import { getTypeScriptAST } from '@vue/language-core/lib/utils/typescriptAST';
 import { names } from '../names';
 import { getRefBrandArgument, identifierRE } from '../utils';
-import { forEachDeclarations, shouldIdentifierSkipped } from '@vue/language-core/lib/utils/bindingReferences';
 import type { TemplateCodegenContext } from './context';
 
 export function* generateInterpolation(

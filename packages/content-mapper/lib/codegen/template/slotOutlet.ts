@@ -8,7 +8,6 @@ import {
 	semanticFeatures,
 } from '@vue/language-core';
 import { Boundary } from '@vue/language-core/lib/utils/boundary';
-import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
@@ -142,9 +141,6 @@ export function* generateSlotOutlet(
 			&& nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
 			const isShortHand = nameProp.arg?.loc.start.offset === nameProp.exp.loc.start.offset;
-			if (isShortHand) {
-				ctx.inlayHints.push(createVBindShorthandInlayHintInfo(nameProp.exp.loc, 'name'));
-			}
 			const expVar = ctx.getInternalVariable();
 			yield `var ${expVar} = ${names.tryAsConstant}(`;
 			yield* generateInterpolation(

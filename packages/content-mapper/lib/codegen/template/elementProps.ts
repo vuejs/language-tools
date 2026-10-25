@@ -12,7 +12,6 @@ import {
 } from '@vue/language-core';
 import { Boundary } from '@vue/language-core/lib/utils/boundary';
 import { camelize } from '@vue/shared';
-import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, identifierRE, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
@@ -308,8 +307,6 @@ export function* generatePropExp(
 				exp.loc.start.offset,
 				exp.loc.end.offset,
 			);
-
-			ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
 		}
 	}
 }

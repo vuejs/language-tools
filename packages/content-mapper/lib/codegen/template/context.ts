@@ -4,17 +4,15 @@ import {
 	completionFeatures,
 	type DiagnosticDirectiveMapping,
 	DiagnosticDirectivePolicy,
+	directiveCommentRE,
 	type VueCodeMarker,
 } from '@vue/language-core';
+import { isLiteralWhitelisted } from '@vue/language-core/lib/utils/bindingReferences';
 import { Boundary, isSynthesizedIgnore, OpenRanges } from '@vue/language-core/lib/utils/boundary';
-import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
-import { isLiteralWhitelisted } from '@vue/language-core/lib/utils/bindingReferences';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
-
-const directiveCommentRE = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)-->$/;
 
 export function createTemplateCodegenContext(scriptLang: string) {
 	// directive comments ---------------------------------------------------------
@@ -265,8 +263,6 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		return scope;
 	}
 
-	const scopeMemberNames = new Set<string>();
-
 	/**
 	 * Returns false when the name is a local of the expression itself, which
 	 * keeps its own completion.
@@ -286,7 +282,6 @@ export function createTemplateCodegenContext(scriptLang: string) {
 			if (scope instanceof BlockScope) {
 				if (!scope.members.some(member => member[1] === source && member[2] === offset)) {
 					scope.members.push([name, source, offset, features, sourceName]);
-					scopeMemberNames.add(name);
 				}
 				return true;
 			}
@@ -415,7 +410,6 @@ export function createTemplateCodegenContext(scriptLang: string) {
 
 	const components: (() => string)[] = [];
 	const dollarVars = new Set<string>();
-	const inlayHints: InlayHintInfo[] = [];
 	const generatedTypes = new Set<string>();
 	const inheritedAttrVars = new Set<string>();
 	const singleRootElTypes = new Set<string>();
@@ -440,7 +434,6 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		scopes,
 		scope,
 		blockScope,
-		scopeMemberNames,
 		recordScopeMember,
 		contextAccesses,
 		dotValueAccesses,
@@ -455,7 +448,6 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		addTemplateRef,
 		components,
 		dollarVars,
-		inlayHints,
 		generatedTypes,
 		inheritedAttrVars,
 		singleRootElTypes,

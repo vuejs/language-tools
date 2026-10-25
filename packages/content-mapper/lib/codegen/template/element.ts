@@ -13,7 +13,6 @@ import {
 import { Boundary, synthesizedIgnore } from '@vue/language-core/lib/utils/boundary';
 import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
-import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
 import { endOfLine, generateTypedVar, identifierRE, newLine } from '../utils';
@@ -48,9 +47,6 @@ export function* generateComponent(
 		if (isBinding) {
 			const { prop, arg, exp } = isBinding;
 			isIsShorthand = arg.loc.end.offset === exp.loc.end.offset;
-			if (isIsShorthand) {
-				ctx.inlayHints.push(createVBindShorthandInlayHintInfo(exp.loc, 'is'));
-			}
 			isExpression = true;
 			tag = exp.content;
 			startTagOffset = exp.loc.start.offset;

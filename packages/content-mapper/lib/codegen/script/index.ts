@@ -105,7 +105,6 @@ function* generateWorker(
 		const { exportDefault } = scriptRanges;
 		if (exportDefault) {
 			yield* generateScriptWithExportDefault(
-				ctx,
 				script,
 				scriptRanges,
 				exportDefault,
@@ -190,7 +189,6 @@ function* generateWorker(
 		const { exportDefault } = scriptRanges;
 		if (exportDefault) {
 			yield* generateScriptWithExportDefault(
-				ctx,
 				script,
 				scriptRanges,
 				exportDefault,
@@ -215,7 +213,6 @@ function* generateWorker(
 }
 
 function* generateScriptWithExportDefault(
-	ctx: ScriptCodegenContext,
 	script: IRScript,
 	scriptRanges: ScriptRanges,
 	exportDefault: NonNullable<ScriptRanges['exportDefault']>,
@@ -234,21 +231,6 @@ function* generateScriptWithExportDefault(
 		&& vueCompilerOptions.optionsWrapper.length
 	) {
 		[wrapLeft, wrapRight] = vueCompilerOptions.optionsWrapper;
-		ctx.inlayHints.push({
-			blockName: script.name,
-			offset: expression.start,
-			setting: 'vue.inlayHints.optionsWrapper',
-			label: wrapLeft || '[Missing optionsWrapper[0]]',
-			tooltip: [
-				'This is virtual code that is automatically wrapped for type support, it does not affect your runtime behavior, you can customize it via `vueCompilerOptions.optionsWrapper` option in tsconfig / jsconfig.',
-				'To hide it, you can set `"vue.inlayHints.optionsWrapper": false` in IDE settings.',
-			].join('\n\n'),
-		}, {
-			blockName: script.name,
-			offset: expression.end,
-			setting: 'vue.inlayHints.optionsWrapper',
-			label: wrapRight || '[Missing optionsWrapper[1]]',
-		});
 	}
 
 	yield* generateSfcBlockSection(script, 0, expression.start, { features: scriptFeatures });

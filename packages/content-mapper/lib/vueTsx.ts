@@ -74,6 +74,7 @@ function useCodegen(
 		getSetupConsts,
 		getSetupRefs,
 		getLocalComponents,
+		getScopeBindings,
 	} = getScriptAnalysis(ts, vueCompilerOptions, fileName, ir);
 
 	const getIsVapor = computed(() =>
@@ -196,15 +197,6 @@ function useCodegen(
 		].filter(name => bindings.has(name)));
 	});
 
-	const getScopeBindings = computedSet(() => {
-		const bindings = getSetupBindings();
-		const consts = getSetupConsts();
-		return new Set([
-			...getGeneratedTemplate()?.scopeMemberNames ?? [],
-			...getGeneratedStyle()?.scopeMemberNames ?? [],
-		].filter(name => bindings.has(name) || consts.has(name)));
-	});
-
 	const getUsedSetupBindings = computedSet(() => {
 		return new Set([
 			...getReferencedBindings(),
@@ -244,7 +236,6 @@ function useCodegen(
 		getGeneratedScript,
 		getGeneratedTemplate,
 		getSetupBindings,
-		getScopeBindings,
 		getLocalComponents,
 		getUsedSetupBindings,
 	};
