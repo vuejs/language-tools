@@ -1,4 +1,11 @@
-import { type Code, getScriptLang, type IR, type ScriptAnalysis, type TypeScript } from '@vue/language-core';
+import {
+	type Code,
+	getScriptLang,
+	type IR,
+	type ScriptAnalysis,
+	type TypeScript,
+	type VueSource,
+} from '@vue/language-core';
 import { BindingFlag } from '@vue/language-core/lib/parsers/utils';
 import { computed } from 'alien-signals';
 import { generateScript } from './script';
@@ -17,14 +24,18 @@ export function generateServiceScript(
 	ir: IR,
 	analysis: ScriptAnalysis,
 ): ServiceScript {
-	return useServiceScript(ts, fileName, ir, analysis)();
+	return useCodegen(ts, fileName, ir, analysis)();
 }
 
 /**
  * The code generation of a Vue file as a graph of computed sections over its IR and script analysis, so that a
- * change regenerates only the sections that read it.
+ * change of the source regenerates only the sections that read it.
  */
-export function useServiceScript(
+export function useServiceScript(ts: TypeScript, source: VueSource): () => ServiceScript {
+	return useCodegen(ts, source.fileName, source.ir, source.analysis);
+}
+
+function useCodegen(
 	ts: TypeScript,
 	fileName: string,
 	ir: IR,

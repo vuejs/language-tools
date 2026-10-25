@@ -1,16 +1,11 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import {
-	type TemplateBlockScope,
-	type TemplateExpression,
-	type TemplateScope,
-	type VueVirtualCode,
-} from '@vue/language-core';
+import type { TemplateBlockScope, TemplateExpression, TemplateScope, VueSource } from '@vue/language-core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as ts5 from 'typescript-5';
 import { expect, test } from 'vitest';
 import { resolveMapperOptions } from '../vueOptions';
-import { createVueRoot, generateFromRoot, repositoryRoot } from './utils';
+import { createSource, generateFromSource, repositoryRoot } from './utils';
 
 const workspace = path.join(repositoryRoot, 'test-workspace');
 
@@ -57,8 +52,8 @@ function findVueFiles(dir: string): string[] {
 }
 
 /** The generated code of `root`, and the entries of its template scope that the code generation read. */
-function generateWithReads(root: VueVirtualCode) {
-	const templateScope = root.scriptAnalysis.getTemplateScope();
+function generateWithReads(root: VueSource) {
+	const templateScope = root.analysis.getTemplateScope();
 	const reads = new Set<TemplateExpression | TemplateBlockScope>();
 	const track = <K, V extends TemplateExpression | TemplateBlockScope>(map: ReadonlyMap<K, V>) => {
 		const get = map.get.bind(map);
@@ -78,8 +73,8 @@ function generateWithReads(root: VueVirtualCode) {
 	return { templateScope, reads, text };
 }
 
-function getText(root: VueVirtualCode) {
-	return generateFromRoot(root).text;
+function getText(root: VueSource) {
+	return generateFromSource(root).text;
 }
 
 function getEntries(templateScope: TemplateScope) {
@@ -104,7 +99,7 @@ test('the code generation reads the scope of every expression and block scope th
 		const [configFile, entry] = findMapperEntry(fileName);
 		const { vueOptions } = resolveMapperOptions(ts5.sys.readFile, configFile, entry?.options);
 		const content = fs.readFileSync(fileName, 'utf8');
-		const { templateScope, reads } = generateWithReads(createVueRoot(fileName, content, vueOptions));
+		const { templateScope, reads } = generateWithReads(createSource(fileName, content, vueOptions));
 		for (const [name, value] of getEntries(templateScope)) {
 			expressions++;
 			if (!reads.has(value)) {
@@ -131,7 +126,7 @@ let value = 1;
 
 /** A root with its own IR, which the tests may change: the IR of a file is shared by the roots of its content. */
 function createSourceRoot(name: string) {
-	return createVueRoot(
+	return createSource(
 		`/${name}.vue`,
 		`${source}<!-- ${name} -->\n`,
 		resolveMapperOptions(ts5.sys.readFile, undefined, undefined).vueOptions,
@@ -141,7 +136,7 @@ function createSourceRoot(name: string) {
 test('the code generation fails for an expression that the template scope does not walk', () => {
 	const root = createSourceRoot('missing');
 	const start = source.indexOf('value + item') - root.ir.template!.startTagEnd;
-	const expressions = root.scriptAnalysis.getTemplateScope().expressions.get(root.ir.template!) as Map<
+	const expressions = root.analysis.getTemplateScope().expressions.get(root.ir.template!) as Map<
 		number,
 		TemplateExpression
 	>;
@@ -158,7 +153,7 @@ test('the code generation reads the locals and the members of a template express
 
 	const root = createSourceRoot('changedReferences');
 	const start = source.indexOf('value + item') - root.ir.template!.startTagEnd;
-	const { references } = root.scriptAnalysis.getTemplateScope().expressions.get(root.ir.template!)!.get(start)!;
+	const { references } = root.analysis.getTemplateScope().expressions.get(root.ir.template!)!.get(start)!;
 	const [value, item] = references;
 	expect([value!.name, value!.local, item!.name, item!.local]).toEqual(['value', false, 'item', true]);
 	value!.local = true;
@@ -174,7 +169,7 @@ test('the code generation reads the block scopes of the template from the templa
 	expect(original).toContain(`__VLS_Scope & { item: typeof item }`);
 
 	const root = createSourceRoot('changedBlockScopes');
-	const [, forNode] = [...root.scriptAnalysis.getTemplateScope().blockScopes].find(([owner]) =>
+	const [, forNode] = [...root.analysis.getTemplateScope().blockScopes].find(([owner]) =>
 		'type' in owner && owner.type === CompilerDOM.NodeTypes.FOR
 	)!;
 	forNode.locals.push('extra');

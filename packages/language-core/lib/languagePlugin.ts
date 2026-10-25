@@ -5,11 +5,8 @@ import { createPlugins } from './plugins';
 import type { TypeScript, VueCompilerOptions, VueLanguagePlugin } from './types';
 import { getRootLanguageId, VueVirtualCode } from './virtualCode';
 
-export function createVueLanguagePlugin<T>(
-	ts: TypeScript,
-	vueCompilerOptions: VueCompilerOptions,
-	asFileName: (scriptId: T) => string,
-): LanguagePlugin<T, VueVirtualCode> {
+/** The built-in plugins and the ones of `vueCompilerOptions.plugins`, as instances in their order. */
+export function createVuePlugins(ts: TypeScript, vueCompilerOptions: VueCompilerOptions) {
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
 			'@vue/compiler-dom': CompilerDOM,
@@ -19,7 +16,15 @@ export function createVueLanguagePlugin<T>(
 		vueCompilerOptions,
 		config: {},
 	};
-	const plugins = createPlugins(pluginContext);
+	return createPlugins(pluginContext);
+}
+
+export function createVueLanguagePlugin<T>(
+	ts: TypeScript,
+	vueCompilerOptions: VueCompilerOptions,
+	asFileName: (scriptId: T) => string,
+): LanguagePlugin<T, VueVirtualCode> {
+	const plugins = createVuePlugins(ts, vueCompilerOptions);
 
 	return {
 		// Every file passed in is parsed by `vueCompilerOptions.format`; the host routes to this plugin only the

@@ -20,7 +20,7 @@ import { resolveMapperOptions } from './vueOptions';
 
 interface ProjectConfiguration {
 	ts: vue.TypeScript;
-	plugin: ReturnType<typeof vue.createVueLanguagePlugin<string>>;
+	plugins: vue.VueLanguagePluginReturn[];
 	languageFeatures: boolean;
 	vueOptions: vue.VueCompilerOptions;
 	pluginFiles: string[];
@@ -28,7 +28,7 @@ interface ProjectConfiguration {
 }
 
 interface FileState {
-	root: vue.VueVirtualCode;
+	source: vue.VueSource;
 	getServiceScript: () => ServiceScript;
 }
 
@@ -96,42 +96,27 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			getLength: () => params.content.length,
 			getChangeRange: () => undefined,
 		};
-		const ctx = { getAssociatedScript: () => undefined };
 		let file = configuration.files.get(params.fileName);
 		if (file) {
-			configuration.plugin.updateVirtualCode?.(params.fileName, file.root, snapshot, ctx);
+			file.source.update(snapshot);
 		}
 		else {
-			const root = configuration.plugin.createVirtualCode?.(
+			const source = vue.createVueSource(
+				configuration.ts,
+				configuration.vueOptions,
+				configuration.plugins,
 				params.fileName,
-				configuration.plugin.getLanguageId(params.fileName)!,
 				snapshot,
-				ctx,
 			);
-			if (root) {
-				file = {
-					root,
-					getServiceScript: useServiceScript(
-						configuration.ts,
-						params.fileName,
-						root.ir,
-						root.scriptAnalysis,
-					),
-				};
-				configuration.files.set(params.fileName, file);
-			}
-		}
-
-		if (!file) {
-			return {
-				text: 'export {};\n',
-				extension: '.ts',
-				mappings: [],
+			file = {
+				source,
+				getServiceScript: useServiceScript(configuration.ts, source),
 			};
+			configuration.files.set(params.fileName, file);
 		}
 
 		const serviceScript = file.getServiceScript();
-		const codes = vue.resolveCodeOffsets(file.root.ir, serviceScript.codes);
+		const codes = vue.resolveCodeOffsets(file.source.ir, serviceScript.codes);
 		const text = toString(codes);
 		const mappings = toSpanMappings(
 			vue.buildMappings(codes),
@@ -188,7 +173,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		const ts = loadTypeScript();
 		const configuration: ProjectConfiguration = {
 			ts,
-			plugin: vue.createVueLanguagePlugin<string>(ts, vueOptions, fileName => fileName),
+			plugins: vue.createVuePlugins(ts, vueOptions),
 			languageFeatures,
 			vueOptions,
 			pluginFiles: resolvePluginFiles(plugins, rootDir),

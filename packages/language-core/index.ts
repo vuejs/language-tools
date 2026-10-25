@@ -23,7 +23,8 @@ export * from './lib/utils/styleScopedClasses';
 export * from './lib/utils/templateExpressions';
 export * from './lib/utils/templateScope';
 export * from './lib/virtualCode';
+export * from './lib/vueSource';
 
-export { getScriptAnalysis, getScriptLang, type ScriptAnalysis } from './lib/scriptAnalysis';
+export { createScriptAnalysis, getScriptLang, type ScriptAnalysis } from './lib/scriptAnalysis';
 
 export * from '@volar/language-core';

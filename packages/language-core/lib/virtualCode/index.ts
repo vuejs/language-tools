@@ -1,24 +1,11 @@
 import { type IScriptSnapshot, type Mapping, SpanMapKind, type VirtualCode } from '@volar/language-core';
-import type { SFCParseResult } from '@vue/compiler-sfc';
-import { computed, signal } from 'alien-signals';
+import { computed } from 'alien-signals';
 import { allFeatures } from '../features';
-import { getScriptAnalysis } from '../scriptAnalysis';
-import type { IR, TypeScript, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
+import type { TypeScript, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
+import { createVueSource, type VueSource } from '../vueSource';
 import { useEmbeddedCodes } from './embeddedCodes';
 
 export type { VueGeneratedCode } from './embeddedCodes';
-import { useIR } from './ir';
-import { petiteVueParser } from './parsers/petiteVue';
-import { sfcParser } from './parsers/sfc';
-import { vitePressParser } from './parsers/vitepress';
-
-type SfcParser = Pick<VueLanguagePluginReturn, 'parseSFC' | 'updateSFC'>;
-
-const builtInParsers: Record<VueCompilerOptions['format'], SfcParser> = {
-	sfc: sfcParser,
-	vitepress: vitePressParser,
-	'petite-vue': petiteVueParser,
-};
 
 const rootLanguageIds: Record<VueCompilerOptions['format'], string> = {
 	sfc: 'vue',
@@ -30,15 +17,11 @@ export function getRootLanguageId(vueCompilerOptions: VueCompilerOptions) {
 	return rootLanguageIds[vueCompilerOptions.format] ?? 'vue';
 }
 
+/** The virtual code of a Vue file for the language service: its `VueSource` and the embedded documents of it. */
 export class VueVirtualCode implements VirtualCode {
 	readonly id = 'main';
+	readonly source: VueSource;
 
-	private _snapshot: {
-		(): IScriptSnapshot;
-		(newSnapshot: IScriptSnapshot): void;
-	};
-	private _parsedSfcResult: () => ReturnType<typeof this.parseSfc>;
-	private _ir: IR;
 	private _embeddedCodes: () => VirtualCode[];
 	private _mappings: () => Mapping[];
 
@@ -46,17 +29,17 @@ export class VueVirtualCode implements VirtualCode {
 		return getRootLanguageId(this.vueCompilerOptions);
 	}
 	get snapshot() {
-		return this._snapshot();
+		return this.source.snapshot;
 	}
 	get vueSfc() {
-		return this._parsedSfcResult()?.result;
+		return this.source.vueSfc;
 	}
 	get ir() {
-		return this._ir;
+		return this.source.ir;
 	}
 	/** @deprecated use `ir` instead */
 	get sfc() {
-		return this._ir;
+		return this.source.ir;
 	}
 	get embeddedCodes() {
 		return this._embeddedCodes();
@@ -65,7 +48,7 @@ export class VueVirtualCode implements VirtualCode {
 		return this._mappings();
 	}
 	get scriptAnalysis() {
-		return getScriptAnalysis(this.ts, this.vueCompilerOptions, this.fileName, this._ir);
+		return this.source.analysis;
 	}
 
 	constructor(
@@ -73,68 +56,17 @@ export class VueVirtualCode implements VirtualCode {
 		public initSnapshot: IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
 		plugins: VueLanguagePluginReturn[],
-		private ts: TypeScript,
+		ts: TypeScript,
 	) {
-		this._snapshot = signal(initSnapshot);
-		this._parsedSfcResult = computed(lastResult => this.parseSfc(plugins, lastResult));
-		this._ir = useIR(
-			ts,
-			plugins,
-			fileName,
-			this._snapshot,
-			() => this._parsedSfcResult()?.result,
-		);
-		this._embeddedCodes = useEmbeddedCodes(plugins, fileName, this._ir);
+		this.source = createVueSource(ts, vueCompilerOptions, plugins, fileName, initSnapshot);
+		this._embeddedCodes = useEmbeddedCodes(plugins, fileName, this.source.ir);
 		this._mappings = computed(() => {
-			const length = this._snapshot().getLength();
+			const length = this.source.snapshot.getLength();
 			return [[0, length, 0, length, SpanMapKind.Verbatim, allFeatures]];
 		});
 	}
 
 	update(newSnapshot: IScriptSnapshot) {
-		this._snapshot(newSnapshot);
-	}
-
-	private parseSfc(
-		plugins: VueLanguagePluginReturn[],
-		lastResult?: {
-			snapshot: IScriptSnapshot;
-			result: SFCParseResult;
-			plugin: SfcParser;
-		},
-	) {
-		const snapshot = this.snapshot;
-
-		if (lastResult?.plugin.updateSFC && !lastResult.result.errors.length) {
-			const change = snapshot.getChangeRange(lastResult.snapshot);
-			if (change) {
-				const newSfc = lastResult.plugin.updateSFC(lastResult.result, {
-					start: change.span.start,
-					end: change.span.start + change.span.length,
-					newText: snapshot.getText(change.span.start, change.span.start + change.newLength),
-				});
-				if (newSfc) {
-					// force dirty
-					newSfc.descriptor = JSON.parse(JSON.stringify(newSfc.descriptor));
-					return {
-						snapshot,
-						plugin: lastResult.plugin,
-						result: newSfc,
-					};
-				}
-			}
-		}
-
-		const content = snapshot.getText(0, snapshot.getLength());
-		for (const plugin of [...plugins, builtInParsers[this.vueCompilerOptions.format] ?? sfcParser]) {
-			const sfc = plugin.parseSFC?.(this.fileName, content);
-			if (sfc) {
-				return {
-					snapshot,
-					plugin,
-					result: sfc,
-				};
-			}
-		}
+		this.source.update(newSnapshot);
 	}
 }

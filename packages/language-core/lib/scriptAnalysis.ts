@@ -12,9 +12,8 @@ import { computedSet } from './utils/signals';
 import { collectTemplateScope, type InlayHintInfo } from './utils/templateScope';
 
 const validLangs = new Set(['js', 'jsx', 'ts', 'tsx']);
-const scriptAnalyses = new WeakMap<IR, ScriptAnalysis>();
 
-export type ScriptAnalysis = ReturnType<typeof useScriptAnalysis>;
+export type ScriptAnalysis = ReturnType<typeof createScriptAnalysis>;
 
 /** The language of a Vue file's script blocks together: `js`, `jsx`, `ts` or `tsx`. */
 export function getScriptLang(ir: IR) {
@@ -35,22 +34,9 @@ export function getScriptLang(ir: IR) {
 
 /**
  * What the script blocks of a Vue file declare, read from their syntax trees at the offsets of the blocks, without
- * generating code. Computed once per IR and shared by the code generation and the language service.
+ * generating code. Owned by the `VueSource` of the IR, and shared by the code generation and the language service.
  */
-export function getScriptAnalysis(
-	ts: TypeScript,
-	vueCompilerOptions: VueCompilerOptions,
-	fileName: string,
-	ir: IR,
-) {
-	let analysis = scriptAnalyses.get(ir);
-	if (!analysis) {
-		scriptAnalyses.set(ir, analysis = useScriptAnalysis(ts, vueCompilerOptions, fileName, ir));
-	}
-	return analysis;
-}
-
-function useScriptAnalysis(
+export function createScriptAnalysis(
 	ts: TypeScript,
 	vueCompilerOptions: VueCompilerOptions,
 	fileName: string,

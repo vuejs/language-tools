@@ -2,17 +2,17 @@ import {
 	getDefineModelPropName,
 	getNodeText,
 	type TypeScript as CoreTypeScript,
-	type VueVirtualCode,
+	type VueSource,
 } from '@vue/language-core';
 import type { Expression, Node, ObjectLiteralExpression } from 'typescript/ast' with {
 	'resolution-mode': 'import',
 };
 
 /** The defaults that the `<script setup>` of a Vue file gives its props, by prop name. */
-export function getDefaultsFromScriptSetup(ts: CoreTypeScript, { ir, scriptAnalysis }: VueVirtualCode) {
+export function getDefaultsFromScriptSetup(ts: CoreTypeScript, { ir, analysis }: VueSource) {
 	const result = new Map<string, string>();
 	const { scriptSetup } = ir;
-	const ranges = scriptAnalysis.getScriptSetupRanges();
+	const ranges = analysis.getScriptSetupRanges();
 	if (!scriptSetup || !ranges) {
 		return result;
 	}

@@ -283,7 +283,7 @@ export async function getComponentMetaOfType(
 		if (vueFile) {
 			return vueFile.ir.scriptSetup
 				? undefined
-				: vueFile.scriptAnalysis.getScriptRanges()?.exportDefault?.options?.name?.node.text;
+				: vueFile.analysis.getScriptRanges()?.exportDefault?.options?.name?.node.text;
 		}
 		return getNameOption(declaration, declaration.getSourceFile());
 	}

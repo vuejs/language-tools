@@ -34,6 +34,21 @@ const plugin: LanguagePlugin<string> = createVueLanguagePlugin(
 
 The plugin parses every file it is given by `vueCompilerOptions.format`; the host creates one plugin per `contentMappers` entry (with that entry's `format`) and routes to it only the files of that entry's `extensions`. Nothing in the generated code depends on other entries: like `@vue/compiler-sfc`, a template tag refers to the `<script setup>` binding of its name whatever it is imported from, and a file's own component name is its file name without the last extension.
 
+### `createVueSource`
+
+Reads a Vue file into its IR and script analysis, without any embedded or generated code. It updates in place when given a new snapshot.
+
+```typescript
+import { createVuePlugins, createVueSource } from '@vue/language-core';
+
+const source = createVueSource(ts, vueCompilerOptions, createVuePlugins(ts, vueCompilerOptions), fileName, snapshot);
+source.ir; // the blocks of the file
+source.analysis; // what its script blocks declare
+source.update(newSnapshot);
+```
+
+The virtual code that `createVueLanguagePlugin` creates is built on a `VueSource` (`code.source`) and adds the embedded documents of the language service.
+
 ### `parse`
 
 Parses Vue SFC source code and returns an `SFCParseResult`.

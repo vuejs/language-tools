@@ -1,9 +1,9 @@
 import {
-	createVueLanguagePlugin,
+	createVuePlugins,
+	createVueSource,
 	type RawVueCompilerOptions,
 	resolveVueCompilerOptions,
 	type TypeScript as CoreTypeScript,
-	type VueVirtualCode,
 } from '@vue/language-core';
 import { posix as path } from 'path-browserify';
 import type { SourceFile } from 'typescript/ast' with { 'resolution-mode': 'import' };
@@ -26,15 +26,15 @@ export function getVueFile(parser: CoreTypeScript, project: Project, sourceFile:
 	const entries = (project.parsedCommandLine.raw as { contentMappers?: ContentMapperEntry[] } | undefined)
 		?.contentMappers;
 	const entry = entries?.find(entry => entry.extensions?.some(extension => fileName.endsWith(extension)));
-	const plugin = createVueLanguagePlugin<string>(
-		parser,
-		resolveVueCompilerOptions(() => undefined, path.dirname(project.configFileName ?? fileName), entry?.options),
-		id => id,
+	const vueCompilerOptions = resolveVueCompilerOptions(
+		() => undefined,
+		path.dirname(project.configFileName ?? fileName),
+		entry?.options,
 	);
 	const snapshot = {
 		getText: (start: number, end: number) => originalText.slice(start, end),
 		getLength: () => originalText.length,
 		getChangeRange: () => undefined,
 	};
-	return plugin.createVirtualCode!(fileName, plugin.getLanguageId(fileName)!, snapshot, {} as never) as VueVirtualCode;
+	return createVueSource(parser, vueCompilerOptions, createVuePlugins(parser, vueCompilerOptions), fileName, snapshot);
 }

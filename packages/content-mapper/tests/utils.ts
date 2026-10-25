@@ -1,10 +1,11 @@
 import {
 	buildMappings,
-	createVueLanguagePlugin,
+	createVuePlugins,
+	createVueSource,
 	getDefaultCompilerOptions,
 	resolveCodeOffsets,
 	type VueCompilerOptions,
-	type VueVirtualCode,
+	type VueSource,
 } from '@vue/language-core';
 import { loadTypeScript } from '@vue/language-core/lib/typescript';
 import { toString } from 'muggle-string';
@@ -50,19 +51,25 @@ export function createSnapshot(text: string) {
 	};
 }
 
-export function createVueRoot(
+export function createSource(
 	fileName: string,
 	content: string,
 	vueCompilerOptions: VueCompilerOptions = getDefaultCompilerOptions(),
 ) {
-	const plugin = createVueLanguagePlugin<string>(loadTypeScript(), vueCompilerOptions, id => id);
-	return plugin.createVirtualCode!(fileName, 'vue', createSnapshot(content), {} as any)!;
+	const ts = loadTypeScript();
+	return createVueSource(
+		ts,
+		vueCompilerOptions,
+		createVuePlugins(ts, vueCompilerOptions),
+		fileName,
+		createSnapshot(content),
+	);
 }
 
-/** The service script of `root`, with its segments at file offsets. */
-export function generateFromRoot(root: VueVirtualCode) {
-	const { lang, codes } = generateServiceScript(loadTypeScript(), root.fileName, root.ir, root.scriptAnalysis);
-	const resolved = resolveCodeOffsets(root.ir, codes);
+/** The service script of `source`, with its segments at file offsets. */
+export function generateFromSource(source: VueSource) {
+	const { lang, codes } = generateServiceScript(loadTypeScript(), source.fileName, source.ir, source.analysis);
+	const resolved = resolveCodeOffsets(source.ir, codes);
 	return {
 		lang,
 		text: toString(resolved),
@@ -71,5 +78,5 @@ export function generateFromRoot(root: VueVirtualCode) {
 }
 
 export function generate(fileName: string, content: string, vueCompilerOptions?: VueCompilerOptions) {
-	return generateFromRoot(createVueRoot(fileName, content, vueCompilerOptions));
+	return generateFromSource(createSource(fileName, content, vueCompilerOptions));
 }
