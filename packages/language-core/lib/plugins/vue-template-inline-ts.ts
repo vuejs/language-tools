@@ -3,8 +3,8 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { isCompoundExpression } from '../codegen/template/elementEvents';
 import { parseInterpolationNode } from '../codegen/template/templateChild';
 import { parseVForNode } from '../codegen/template/vFor';
-import { getTypeScriptAST } from '../codegen/utils';
 import type { Code, IR, VueLanguagePlugin } from '../types';
+import { getTypeScriptAST } from '../utils/typescriptAST';
 
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],

@@ -3,7 +3,7 @@ import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { TypeScript } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getNodeText, isFunctionLikeDeclaration, isTypeAssertionExpression } from '../../utils/shared';
-import { forEachNode } from '../utils';
+import { forEachNode } from '../../utils/typescriptAST';
 import type { TemplateCodegenContext } from './context';
 
 // https://github.com/vuejs/core/blob/fb0c3ca519f1fccf52049cd6b8db3a67a669afe9/packages/compiler-core/src/transforms/transformExpression.ts#L47
