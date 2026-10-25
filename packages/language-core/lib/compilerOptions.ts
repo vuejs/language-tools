@@ -110,6 +110,24 @@ export class CompilerOptionsResolver {
 	}
 }
 
+/**
+ * The Vue compiler options of one TS 7.1 `contentMappers` entry, read from its `options` relative to `rootDir`.
+ * Keys that are not Vue compiler options, such as a Content Mapper's own settings, have no effect.
+ */
+export function resolveVueCompilerOptions(
+	readFile: (fileName: string) => string | undefined,
+	rootDir: string,
+	options: RawVueCompilerOptions = {},
+) {
+	const resolver = new CompilerOptionsResolver(readFile);
+	resolver.addConfig(options, rootDir);
+	const vueOptions = resolver.build();
+	if (vueOptions.format === 'petite-vue') {
+		vueOptions.globalTemplateContext = true;
+	}
+	return vueOptions;
+}
+
 function resolvePlugins(list: RawPlugin[], rootDir: string): VueLanguagePlugin[] {
 	const plugins: VueLanguagePlugin[] = [];
 	for (let raw of list) {

@@ -36,11 +36,18 @@ type Project = import('typescript-7/async', { with: { 'resolution-mode': 'import
 const defaultImportRE = /\bimport\s+[\w$]+(?=\s*(?:,|from\b))/;
 const scriptExtensions = ['.ts', '.tsx', '.js', '.jsx', '.mts', '.cts', '.mjs', '.cjs'];
 
+/** An entry of the TS 7.1 tsconfig option `contentMappers`, whose API leaves the raw config untyped. */
+export interface ContentMapperEntry {
+	package: string;
+	extensions: string[];
+	options?: Record<string, unknown>;
+}
+
 /** The extensions of the files that can export components: script modules and the files of `contentMappers`. */
-export function getComponentModuleExtensions(contentMappers: unknown[] | undefined) {
+export function getComponentModuleExtensions(contentMappers: ContentMapperEntry[] | undefined) {
 	return [
 		...scriptExtensions,
-		...(contentMappers as { extensions?: string[] }[] | undefined)?.flatMap(entry => entry.extensions ?? []) ?? [],
+		...contentMappers?.flatMap(entry => entry.extensions ?? []) ?? [],
 	];
 }
 
@@ -48,7 +55,7 @@ export interface TypeScriptProject {
 	/** Undefined for the TypeScript language server's inferred project. */
 	configFileName: string | undefined;
 	/** The config's resolved (possibly inherited) `contentMappers`. */
-	contentMappers: unknown[] | undefined;
+	contentMappers: ContentMapperEntry[] | undefined;
 }
 
 export interface TypeScriptProjectResolver {
@@ -140,7 +147,7 @@ export interface TypeScriptProjectResolver {
 export async function connectTypeScriptProjectResolver(
 	pipe: string,
 	packageJsonPath: string,
-	inferredContentMappers?: unknown[],
+	inferredContentMappers?: ContentMapperEntry[],
 	parser?: CoreTypeScript,
 ): Promise<TypeScriptProjectResolver> {
 	const manifestPath = fs.realpathSync(packageJsonPath);
@@ -191,7 +198,7 @@ export async function connectTypeScriptProjectResolver(
 				fileName,
 				extensions: getComponentModuleExtensions(
 					project.configFileName
-						? (project.parsedCommandLine.raw as { contentMappers?: unknown[] } | undefined)?.contentMappers
+						? (project.parsedCommandLine.raw as { contentMappers?: ContentMapperEntry[] } | undefined)?.contentMappers
 						: inferredContentMappers,
 				),
 				components: exports.then(entries => entries.filter(entry => entry.isComponent)),
@@ -226,7 +233,7 @@ export async function connectTypeScriptProjectResolver(
 							configFileName: project.configFileName,
 							// The config file's own JSON, not merged with `extends`, except that `contentMappers` is replaced by
 							// the resolved (possibly inherited) array. Undefined for inferred projects.
-							contentMappers: (project.parsedCommandLine.raw as { contentMappers?: unknown[] } | undefined)
+							contentMappers: (project.parsedCommandLine.raw as { contentMappers?: ContentMapperEntry[] } | undefined)
 								?.contentMappers,
 						};
 					}

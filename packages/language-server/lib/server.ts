@@ -2,13 +2,13 @@ import type { LanguageServer, MessageActionItem } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createConnection, createServer } from '@volar/language-server/node';
 import vueTsxPlugin from '@vue/content-mapper/lib/vueTsx';
-import type { MapperOptions } from '@vue/content-mapper/protocol';
-import { resolveMapperOptions } from '@vue/content-mapper/vueOptions';
 import {
 	createLanguage,
 	createVueLanguagePlugin,
 	getComponentIsBinding,
 	type LanguagePlugin,
+	type RawVueCompilerOptions,
+	resolveVueCompilerOptions,
 	type VueLanguagePlugin,
 	VueVirtualCode,
 } from '@vue/language-core';
@@ -27,19 +27,13 @@ import { getElementAt, getTagNameOffset } from './componentMeta';
 import { createReactivityAnalyzer, getInterpolationRanges, type ReactivityAnalysisParams } from './reactivity';
 import {
 	connectTypeScriptProjectResolver,
+	type ContentMapperEntry,
 	getComponentModuleExtensions,
 	type TypeScriptProject,
 	type TypeScriptProjectResolver,
 } from './typescriptProject';
 
 const moduleSpecifierRE = /\bfrom\s*(['"])(.+?)\1/;
-
-/** A `contentMappers[]` entry, as written in a tsconfig or contributed for inferred projects. */
-interface ContentMapperEntry {
-	package: string;
-	extensions: string[];
-	options?: MapperOptions;
-}
 
 /**
  * Result of the `vue/typescriptApiConnection` request the server sends to the client. The client forwards
@@ -455,24 +449,22 @@ export function startServer(
 		function createProjectLanguageService(server: LanguageServer, project: TypeScriptProject | undefined) {
 			const configFileName = project?.configFileName;
 			const asFileName = (uri: URI) => uri.fsPath.replace(/\\/g, '/');
-			const contentMappers = configFileName
-				? project!.contentMappers as ContentMapperEntry[] | undefined
-				: inferredContentMappers;
+			const contentMappers = configFileName ? project!.contentMappers : inferredContentMappers;
+			const rootDir = (configFileName ? path.dirname(configFileName) : process.cwd()).replace(/\\/g, '/');
 			watchExtensions(getComponentModuleExtensions(contentMappers));
 			const vuePlugins = (contentMappers ?? [])
 				.filter(entry => entry.package === '@vue/content-mapper')
-				.map(entry => {
-					const { vueOptions } = resolveMapperOptions(ts.sys.readFile, configFileName, entry.options);
-					return routeByExtensions(
+				.map(entry =>
+					routeByExtensions(
 						createVueLanguagePlugin(
 							asCoreTypeScript(ts),
-							vueOptions,
+							resolveVueCompilerOptions(ts.sys.readFile, rootDir, entry.options as RawVueCompilerOptions),
 							asFileName,
 							createPlugins(),
 						),
 						entry.extensions,
-					);
-				});
+					)
+				);
 			const language = createLanguage<URI>(
 				[
 					{

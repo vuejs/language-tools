@@ -1,7 +1,7 @@
 import {
-	CompilerOptionsResolver,
 	createVueLanguagePlugin,
 	type RawVueCompilerOptions,
+	resolveVueCompilerOptions,
 	type TypeScript as CoreTypeScript,
 	type VueVirtualCode,
 } from '@vue/language-core';
@@ -26,9 +26,11 @@ export function getVueFile(parser: CoreTypeScript, project: Project, sourceFile:
 	const entries = (project.parsedCommandLine.raw as { contentMappers?: ContentMapperEntry[] } | undefined)
 		?.contentMappers;
 	const entry = entries?.find(entry => entry.extensions?.some(extension => fileName.endsWith(extension)));
-	const resolver = new CompilerOptionsResolver(() => undefined);
-	resolver.addConfig(entry?.options ?? {}, path.dirname(project.configFileName ?? fileName));
-	const plugin = createVueLanguagePlugin<string>(parser, resolver.build(), id => id);
+	const plugin = createVueLanguagePlugin<string>(
+		parser,
+		resolveVueCompilerOptions(() => undefined, path.dirname(project.configFileName ?? fileName), entry?.options),
+		id => id,
+	);
 	const snapshot = {
 		getText: (start: number, end: number) => originalText.slice(start, end),
 		getLength: () => originalText.length,
