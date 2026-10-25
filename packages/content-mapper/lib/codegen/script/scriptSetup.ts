@@ -1,6 +1,7 @@
 import {
 	type Code,
 	completionFeatures,
+	getDefineModelPropName,
 	type IRScriptSetup,
 	navigationFeatures,
 	scriptFeatures,
@@ -8,7 +9,6 @@ import {
 	type TextRange,
 } from '@vue/language-core';
 import { Boundary, synthesizedIgnore } from '@vue/language-core/lib/utils/boundary';
-import { camelize } from '@vue/shared';
 import { names } from '../names';
 import {
 	asType,
@@ -553,9 +553,7 @@ function* generateModels(
 	const emitCodes: Generator<Code>[] = [];
 
 	for (const defineModel of scriptSetupRanges.defineModel) {
-		const propName = defineModel.name
-			? camelize(getRangeText(scriptSetup, defineModel.name).slice(1, -1))
-			: 'modelValue';
+		const propName = getDefineModelPropName(scriptSetup, defineModel);
 
 		let modelType: string;
 		if (defineModel.type) {

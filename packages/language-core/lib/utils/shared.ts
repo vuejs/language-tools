@@ -2,7 +2,8 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, hyphenate, isHTMLTag, isMathMLTag, isSVGTag } from '@vue/shared';
 import * as path from 'path-browserify';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
-import type { IRTemplate, TextRange, TypeScript, VueCompilerOptions } from '../types';
+import type { DefineModel } from '../parsers/scriptSetupRanges';
+import type { IRScriptSetup, IRTemplate, TextRange, TypeScript, VueCompilerOptions } from '../types';
 
 export { hyphenate as hyphenateTag } from '@vue/shared';
 
@@ -150,6 +151,13 @@ export function getModelPropName(
 		return getNativeModelPropName(node);
 	}
 	return 'modelValue';
+}
+
+/** The prop that `defineModel` declares in `scriptSetup`. */
+export function getDefineModelPropName(scriptSetup: IRScriptSetup, defineModel: DefineModel) {
+	return defineModel.name
+		? camelize(scriptSetup.content.slice(defineModel.name.start + 1, defineModel.name.end - 1))
+		: 'modelValue';
 }
 
 // Follows the runtime directive that `transformModel` of `@vue/compiler-dom` picks:
