@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as ts5 from 'typescript-5';
 import { expect, test } from 'vitest';
-import { loadTypeScript } from '../typescript';
+import { loadTypeScript } from '@vue/language-core/lib/typescript';
 import { resolveMapperOptions } from '../vueOptions';
 import { createSnapshot, repositoryRoot } from './utils';
 

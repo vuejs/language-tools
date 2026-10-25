@@ -6,7 +6,7 @@ import {
 } from '@vue/language-core';
 import { expect, test } from 'vitest';
 import vueTsxPlugin from '../lib/vueTsx';
-import { loadTypeScript } from '../typescript';
+import { loadTypeScript } from '@vue/language-core/lib/typescript';
 import { createSnapshot } from './utils';
 
 test('mappings within a hyphenated directive name cover the whole name', () => {

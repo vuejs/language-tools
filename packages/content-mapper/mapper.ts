@@ -1,5 +1,6 @@
 import type { IScriptSnapshot } from '@volar/language-core';
 import * as vue from '@vue/language-core';
+import { loadTypeScript } from '@vue/language-core/lib/typescript';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -14,7 +15,6 @@ import type {
 	TransformResult,
 } from './protocol';
 import { toSpanMappings } from './spanMappings';
-import { loadTypeScript } from './typescript';
 import { resolveMapperOptions } from './vueOptions';
 
 interface ProjectConfiguration {

@@ -7,7 +7,7 @@ import {
 import { expect, it } from 'vitest';
 import { names } from '../lib/codegen/names';
 import vueTsxPlugin from '../lib/vueTsx';
-import { loadTypeScript } from '../typescript';
+import { loadTypeScript } from '@vue/language-core/lib/typescript';
 import { createSnapshot } from './utils';
 
 function generateScript(fileName: string, format: VueCompilerOptions['format'], content: string) {
