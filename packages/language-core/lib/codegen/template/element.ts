@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
 import type { Code } from '../../types';
-import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
+import { getComponentIsBinding, getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures, VueCodeFeature } from '../features';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
@@ -35,25 +35,19 @@ export function* generateComponent(
 	if (tag.includes('.')) {
 		isExpression = true;
 	}
-	else if (tag === 'component') {
-		for (const prop of node.props) {
-			if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'bind'
-				&& prop.arg?.loc.source === 'is'
-				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-			) {
-				isIsShorthand = prop.arg.loc.end.offset === prop.exp.loc.end.offset;
-				if (isIsShorthand) {
-					ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.exp.loc, 'is'));
-				}
-				isExpression = true;
-				tag = prop.exp.content;
-				startTagOffset = prop.exp.loc.start.offset;
-				endTagOffset = undefined;
-				props = props.filter(p => p !== prop);
-				break;
+	else {
+		const isBinding = getComponentIsBinding(node);
+		if (isBinding) {
+			const { prop, arg, exp } = isBinding;
+			isIsShorthand = arg.loc.end.offset === exp.loc.end.offset;
+			if (isIsShorthand) {
+				ctx.inlayHints.push(createVBindShorthandInlayHintInfo(exp.loc, 'is'));
 			}
+			isExpression = true;
+			tag = exp.content;
+			startTagOffset = exp.loc.start.offset;
+			endTagOffset = undefined;
+			props = props.filter(p => p !== prop);
 		}
 	}
 

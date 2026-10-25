@@ -1,4 +1,4 @@
-import type * as CompilerDOM from '@vue/compiler-dom';
+import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'path-browserify';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
@@ -40,6 +40,23 @@ export function getElementTagOffsets(
 		}
 	}
 	return tagOffsets as [number] | [number, number];
+}
+
+/** The `:is` binding of a `<component>` element, which renders the component its expression evaluates to. */
+export function getComponentIsBinding(node: CompilerDOM.ElementNode) {
+	if (node.tag !== 'component') {
+		return;
+	}
+	for (const prop of node.props) {
+		if (
+			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& prop.name === 'bind'
+			&& prop.arg?.loc.source === 'is'
+			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+		) {
+			return { prop, arg: prop.arg, exp: prop.exp };
+		}
+	}
 }
 
 export function getStartEnd<T extends ts.Node>(
