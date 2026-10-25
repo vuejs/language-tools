@@ -46,15 +46,17 @@ function toMapping({ generatedStart, length, sourceStart, info }: Entry): Mappin
 
 /**
  * The diagnostic directives of the code, with the virtual ranges their bounding segments enclose; the source
- * offset of the segments is the original start, as it is relative to the file here. The generated code
- * whose diagnostics are ignored outside of them is covered by ignore directives without an original range.
+ * offset of the segments is the original start, as it is relative to the file here. The generated code whose
+ * diagnostics are ignored, the ranges of synthesized ignores and the `unmapped` ranges, is covered outside of the
+ * explicit directives by ignore directives without an original range.
  */
-export function buildDiagnosticDirectives(chunks: TsCode[]) {
+export function buildDiagnosticDirectives(chunks: TsCode[], unmapped: readonly [start: number, end: number][] = []) {
 	const directives = collectDiagnosticDirectives(chunks);
 	const explicit = checkExplicitDiagnosticDirectives(directives.filter(directive => !isSynthesizedIgnore(directive)));
-	const ignored = mergeRanges(
-		directives.filter(isSynthesizedIgnore).map<[number, number]>(directive => [directive[2], directive[3]]),
-	);
+	const ignored = mergeRanges([
+		...directives.filter(isSynthesizedIgnore).map<[number, number]>(directive => [directive[2], directive[3]]),
+		...unmapped,
+	]);
 	const ignores = createIgnoreDirectives(ignored, explicit);
 	return [...explicit, ...ignores].sort((left, right) => left[2] - right[2] || left[3] - right[3]);
 }
@@ -63,7 +65,7 @@ export function buildDiagnosticDirectives(chunks: TsCode[]) {
  * Ignore directives without an original range over the parts of the virtual ranges, sorted and disjoint, that the
  * directives, disjoint too, leave uncovered.
  */
-export function createIgnoreDirectives(
+function createIgnoreDirectives(
 	ranges: [start: number, end: number][],
 	directives: readonly DiagnosticDirectiveMapping[],
 ) {
@@ -198,7 +200,7 @@ function isGroup(item: Entry | Entry[]): item is Entry[] {
 	return Array.isArray(item);
 }
 
-function mergeRanges(ranges: [number, number][]) {
+function mergeRanges(ranges: readonly [number, number][]) {
 	const sorted = [...ranges].sort((left, right) => left[0] - right[0]);
 	const result: [number, number][] = [];
 	for (const range of sorted) {

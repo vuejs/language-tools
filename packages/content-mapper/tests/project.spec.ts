@@ -399,6 +399,18 @@ test('generates the service script without the embedded code hooks of plugins', 
 	}
 });
 
+test('reuses the transform result of a file whose content did not change', () => {
+	const fileName = path.resolve(__dirname, 'Unchanged.vue');
+	const content = `<script setup lang="ts">const msg = '';</script>\n<template>{{ msg }}</template>\n`;
+	openProject({ configFileName: '', projectHandle: 'unchanged-project', compilerOptions: {} });
+	const first = transformVue({ projectHandle: 'unchanged-project', fileName, content });
+	const second = transformVue({ projectHandle: 'unchanged-project', fileName, content });
+	const changed = transformVue({ projectHandle: 'unchanged-project', fileName, content: content + '\n' });
+	closeProject('unchanged-project');
+	expect(second).toBe(first);
+	expect(changed).not.toBe(first);
+});
+
 test('transforms a changed file of an open project as a newly opened project does', () => {
 	const fileName = path.resolve(__dirname, 'Changed.vue');
 	const before = `<script setup lang="ts">const before = 1;</script>\n<template>{{ before }}</template>\n`;

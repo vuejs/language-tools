@@ -1,14 +1,12 @@
 import type { IScriptSnapshot } from '@volar/language-core';
 import * as vue from '@vue/language-core';
 import { loadTypeScript } from '@vue/language-core/lib/typescript';
-import { toString } from 'muggle-string';
+import { computed } from 'alien-signals';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { withSynthesizedDiagnosticIgnores } from './diagnosticDirectives';
-import { buildDiagnosticDirectives, buildMappings } from './lib/buildMappings';
-import { type ServiceScript, useServiceScript } from './lib/codegen';
-import { getUnusedExpectErrorMessage } from './localization';
+import { useServiceScript } from './lib/codegen';
+import { toTransformResult } from './lib/transform';
 import type {
 	OpenProjectParams,
 	OpenProjectResult,
@@ -16,7 +14,6 @@ import type {
 	TransformParams,
 	TransformResult,
 } from './protocol';
-import { toSpanMappings } from './spanMappings';
 import { resolveMapperOptions } from './vueOptions';
 
 interface ProjectConfiguration {
@@ -30,7 +27,7 @@ interface ProjectConfiguration {
 
 interface FileState {
 	source: vue.VueSource;
-	getServiceScript: () => ServiceScript;
+	getResult: () => TransformResult;
 }
 
 interface ProjectState {
@@ -109,38 +106,21 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 				params.fileName,
 				snapshot,
 			);
+			const getServiceScript = useServiceScript(configuration.ts, source);
 			file = {
 				source,
-				getServiceScript: useServiceScript(configuration.ts, source),
+				getResult: computed(() =>
+					toTransformResult(
+						getServiceScript(),
+						source.ir,
+						source.ir.content,
+						configuration.languageFeatures,
+					)
+				),
 			};
 			configuration.files.set(params.fileName, file);
 		}
-
-		const serviceScript = file.getServiceScript();
-		const codes = vue.resolveCodeOffsets(file.source.ir, serviceScript.codes);
-		const text = toString(codes);
-		const mappings = toSpanMappings(
-			buildMappings(codes),
-			text,
-			params.content,
-			configuration.languageFeatures,
-		);
-		return {
-			text,
-			extension: `.${serviceScript.lang}`,
-			diagnosticDirectives: {
-				unusedExpectDirectiveDiagnostics: [{
-					code: 2578,
-					messageText: getUnusedExpectErrorMessage(),
-				}],
-				directives: withSynthesizedDiagnosticIgnores(
-					text.length,
-					mappings,
-					buildDiagnosticDirectives(codes),
-				),
-			},
-			mappings,
-		};
+		return file.getResult();
 	}
 
 	function getConfiguration(state: ProjectState) {

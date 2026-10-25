@@ -1,6 +1,8 @@
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { withSynthesizedDiagnosticIgnores } from '../diagnosticDirectives';
+import { synthesizedIgnore, type TsCode } from '../lib/boundary';
+import { buildDiagnosticDirectives } from '../lib/buildMappings';
+import { getUnmappedRanges } from '../lib/transform';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, SpanMapKind, type SpanMapping } from '../protocol';
 import { normalizeCompilerOutput, repositoryRoot, runTsc } from './utils';
 
@@ -39,8 +41,15 @@ test('ignores synthesized virtual regions without overlapping explicit directive
 		[6, 2, 2, 2, SpanMapKind.Verbatim, 0],
 	];
 	const expectation: DiagnosticDirectiveMapping = [0, 1, 5, 7, DiagnosticDirectivePolicy.Expect];
+	const chunks: TsCode[] = [
+		'01234',
+		['', 'main', 0, { start: [0, 1, 0, 0, DiagnosticDirectivePolicy.Expect] }],
+		'56',
+		['', 'main', 0, { end: true }],
+		'789',
+	];
 
-	expect(withSynthesizedDiagnosticIgnores(10, mappings, [expectation])).toEqual([
+	expect(buildDiagnosticDirectives(chunks, getUnmappedRanges(10, mappings))).toEqual([
 		[0, 0, 0, 2, DiagnosticDirectivePolicy.Ignore],
 		[0, 0, 4, 5, DiagnosticDirectivePolicy.Ignore],
 		expectation,
@@ -53,8 +62,14 @@ test('merges synthesized ignores with the ignores of mapped regions', () => {
 		[0, 2, 0, 2, SpanMapKind.Verbatim, 0],
 		[4, 2, 0, 2, SpanMapKind.Verbatim, 0],
 	];
+	const chunks: TsCode[] = [
+		'0123',
+		['', 'main', 0, { start: synthesizedIgnore }],
+		'45',
+		['', 'main', 0, { end: true }],
+	];
 
-	expect(withSynthesizedDiagnosticIgnores(6, mappings, [[0, 0, 4, 6, DiagnosticDirectivePolicy.Ignore]])).toEqual([
+	expect(buildDiagnosticDirectives(chunks, getUnmappedRanges(6, mappings))).toEqual([
 		[0, 0, 2, 6, DiagnosticDirectivePolicy.Ignore],
 	]);
 });
