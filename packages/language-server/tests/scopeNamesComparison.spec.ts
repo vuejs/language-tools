@@ -1,16 +1,16 @@
-import { asCoreTypeScript } from '@vue/language-service/lib/utils';
+import { tsCodegen } from '@vue/content-mapper/lib/vueTsx';
+import vueTsxPlugin from '@vue/content-mapper/lib/vueTsx';
 import {
 	collectInlayHints,
 	collectTemplateScopeNames,
 	getDefaultCompilerOptions,
 	VueVirtualCode,
 } from '@vue/language-core';
-import { tsCodegen } from '@vue/content-mapper/lib/vueTsx';
-import vueTsxPlugin from '@vue/content-mapper/lib/vueTsx';
+import { asCoreTypeScript } from '@vue/language-service/lib/utils';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { test } from 'vitest';
 import type * as ts from 'typescript';
+import { test } from 'vitest';
 import { testWorkspacePath } from './server';
 
 /**
@@ -88,9 +88,9 @@ test('IR-derived scope names and inlay hints match codegen', () => {
 
 			if (JSON.stringify(newScopeBindingsArray) !== JSON.stringify(oldScopeBindingsArray)) {
 				differences.push(
-					`${relativePath}: scopeBindings mismatch\n` +
-					`  New: ${JSON.stringify(newScopeBindingsArray)}\n` +
-					`  Old: ${JSON.stringify(oldScopeBindingsArray)}`,
+					`${relativePath}: scopeBindings mismatch\n`
+						+ `  New: ${JSON.stringify(newScopeBindingsArray)}\n`
+						+ `  Old: ${JSON.stringify(oldScopeBindingsArray)}`,
 				);
 			}
 
@@ -103,25 +103,27 @@ test('IR-derived scope names and inlay hints match codegen', () => {
 			];
 
 			// Sort hints for comparison
-			const sortHints = (hints: any[]) => hints
-				.map(h => ({ blockName: h.blockName, offset: h.offset, setting: h.setting, label: h.label }))
-				.sort((a, b) =>
-					a.blockName.localeCompare(b.blockName) ||
-					a.offset - b.offset ||
-					a.setting.localeCompare(b.setting),
-				);
+			const sortHints = (hints: any[]) =>
+				hints
+					.map(h => ({ blockName: h.blockName, offset: h.offset, setting: h.setting, label: h.label }))
+					.sort((a, b) =>
+						a.blockName.localeCompare(b.blockName)
+						|| a.offset - b.offset
+						|| a.setting.localeCompare(b.setting)
+					);
 
 			const newHintsSorted = sortHints(newHints);
 			const oldHintsSorted = sortHints(oldHints);
 
 			if (JSON.stringify(newHintsSorted) !== JSON.stringify(oldHintsSorted)) {
 				differences.push(
-					`${relativePath}: inlayHints mismatch\n` +
-					`  New: ${JSON.stringify(newHintsSorted, null, 2)}\n` +
-					`  Old: ${JSON.stringify(oldHintsSorted, null, 2)}`,
+					`${relativePath}: inlayHints mismatch\n`
+						+ `  New: ${JSON.stringify(newHintsSorted, null, 2)}\n`
+						+ `  Old: ${JSON.stringify(oldHintsSorted, null, 2)}`,
 				);
 			}
-		} catch (error) {
+		}
+		catch (error) {
 			// Skip files that can't be parsed
 			continue;
 		}
@@ -146,7 +148,8 @@ function findVueFiles(dir: string): string[] {
 				continue;
 			}
 			files.push(...findVueFiles(fullPath));
-		} else if (entry.isFile() && entry.name.endsWith('.vue')) {
+		}
+		else if (entry.isFile() && entry.name.endsWith('.vue')) {
 			files.push(fullPath);
 		}
 	}
