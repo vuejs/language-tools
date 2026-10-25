@@ -195,7 +195,7 @@ export async function connectTypeScriptProjectResolver(
 
 	function withSourceFile<T>(
 		fileName: string,
-		fn: (project: Project, sourceFile: SourceFile) => Promise<T | undefined>,
+		fn: (project: Project, sourceFile: SourceFile) => T | undefined | Promise<T | undefined>,
 	) {
 		return withProject(fileName, async project => {
 			const sourceFile = await project.program.getSourceFile(fileName);
@@ -365,7 +365,7 @@ export async function connectTypeScriptProjectResolver(
 		isRenamedAtOffset(fileName, offset) {
 			return withSourceFile(
 				fileName,
-				async (_project, sourceFile) =>
+				(_project, sourceFile) =>
 					!!sourceFile.spanMap?.originalToVirtualPositions(offset, ts.SpanMapFeature.Rename).length,
 			);
 		},
