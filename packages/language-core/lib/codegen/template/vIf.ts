@@ -31,6 +31,7 @@ export function* generateVIf(
 		let addedBlockCondition = false;
 
 		if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+			// Extra parentheses keep TS from discarding assertion narrowing for literal true/false branches.
 			const accessMark = ctx.accessLog.length;
 			const codes = [...generateInterpolation(
 				options,
@@ -39,8 +40,8 @@ export function* generateVIf(
 				codeFeatures.all,
 				branch.condition.content,
 				branch.condition.loc.start.offset,
-				`(`,
-				`)`,
+				`((`,
+				`))`,
 				true,
 			)];
 			yield* codes;
