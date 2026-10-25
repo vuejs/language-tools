@@ -100,7 +100,7 @@ function* generateIdentifier(
 		yield ignore.end();
 	}
 	else {
-		ctx.accessVariable('template', camelize(rawName), prop.loc.start.offset, false, rawName);
+		ctx.accessVariable('template', camelize(rawName), prop.loc.start.offset, rawName);
 	}
 	yield boundary.end();
 }

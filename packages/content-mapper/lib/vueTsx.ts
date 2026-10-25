@@ -76,6 +76,7 @@ function useCodegen(
 		getLocalComponents,
 		getLocalDirectives,
 		getScopeBindings,
+		getDotValueBindings,
 	} = getScriptAnalysis(ts, vueCompilerOptions, fileName, ir);
 
 	const getIsVapor = computed(() =>
@@ -117,10 +118,11 @@ function useCodegen(
 		return capitalize(camelize(name));
 	});
 
-	const generateTemplatePass = (dotValueBindings: Set<string>) => {
+	const getGeneratedTemplate = computed(() => {
 		if (getResolvedOptions().skipTemplateCodegen || !ir.template) {
 			return;
 		}
+		const dotValueBindings = getDotValueBindings();
 		return generateTemplate({
 			typescript: ts,
 			vueCompilerOptions: getResolvedOptions(),
@@ -140,9 +142,9 @@ function useCodegen(
 			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getInheritAttrs(),
 		});
-	};
+	});
 
-	const generateStylePass = (dotValueBindings: Set<string>) => {
+	const getGeneratedStyle = computed(() => {
 		if (!ir.styles.length) {
 			return;
 		}
@@ -154,26 +156,9 @@ function useCodegen(
 			setupRefs: getSetupRefs(),
 			setupConsts: getSetupConsts(),
 			setupBindings: getSetupBindings(),
-			dotValueBindings,
+			dotValueBindings: getDotValueBindings(),
 		});
-	};
-
-	// First pass: collect bindings used in narrowing positions (output discarded);
-	// the second pass (the computeds below) finalizes every access of these with `.value`.
-	const getDotValueBindings = computedSet(() => {
-		const bindings = getSetupBindings();
-		if (!bindings.size) {
-			return bindings;
-		}
-		const names: string[] = [];
-		for (const generated of [generateTemplatePass(new Set()), generateStylePass(new Set())]) {
-			names.push(...generated?.dotValueAccesses ?? []);
-		}
-		return new Set(names);
 	});
-
-	const getGeneratedTemplate = computed(() => generateTemplatePass(getDotValueBindings()));
-	const getGeneratedStyle = computed(() => generateStylePass(getDotValueBindings()));
 
 	const getGeneratedScript = computed(() => {
 		return generateScript({

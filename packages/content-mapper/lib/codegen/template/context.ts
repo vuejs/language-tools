@@ -329,19 +329,14 @@ export function createTemplateCodegenContext(scriptLang: string) {
 
 	// context accesses -----------------------------------------------------------
 
-	const dotValueAccesses = new Set<string>();
-
 	// Ordered log of accessed names; event-handler closures slice from a mark
 	// to find the names accessed within their body.
 	const accessLog: string[] = [];
 
-	function accessVariable(source: string, name: string, offset?: number, dotValue = false, sourceName = name) {
+	function accessVariable(source: string, name: string, offset?: number, sourceName = name) {
 		accessLog.push(name);
 		if (offset !== undefined) {
 			recordScopeMember(name, source, offset, { features: 0 }, sourceName);
-		}
-		if (dotValue) {
-			dotValueAccesses.add(name);
 		}
 	}
 
@@ -433,7 +428,6 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		scope,
 		blockScope,
 		recordScopeMember,
-		dotValueAccesses,
 		accessLog,
 		accessVariable,
 		conditions,

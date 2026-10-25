@@ -27,7 +27,6 @@ export function* generateInterpolation(
 	start: number,
 	prefix: string = '',
 	suffix: string = '',
-	inNarrowing: boolean = false,
 ): Generator<Code> {
 	if (prefix) {
 		yield prefix;
@@ -41,14 +40,13 @@ export function* generateInterpolation(
 
 	let prevEnd = 0;
 	for (
-		const [name, offset, isShorthand, isNarrowing, inTypeQuery, isNewOperand, skipped] of forEachIdentifiers(
+		const [name, offset, isShorthand, inTypeQuery, isNewOperand, skipped] of forEachIdentifiers(
 			options.typescript,
 			ctx,
 			block,
 			code,
 			prefix,
 			suffix,
-			inNarrowing,
 		)
 	) {
 		const isMember = ctx.recordScopeMember(name, block.name, start + offset, memberFeatures);
@@ -87,7 +85,6 @@ export function* generateInterpolation(
 			block.name,
 			start + offset,
 			start + offset + name.length,
-			isNarrowing,
 			inTypeQuery,
 			isNewOperand,
 		);
@@ -167,7 +164,6 @@ export function* generateIdentifier(
 	source: string,
 	start: number,
 	end: number,
-	isNarrowing = false,
 	inTypeQuery = false,
 	isNewOperand = false,
 ): Generator<Code> {
@@ -187,8 +183,7 @@ export function* generateIdentifier(
 		yield boundary.end();
 	}
 	else if (options.setupBindings.has(name)) {
-		// First pass records narrowing accesses here; the second pass emits from dotValueBindings.
-		ctx.accessVariable(source, name, start, inTypeQuery || isNarrowing);
+		ctx.accessVariable(source, name, start);
 		if (inTypeQuery || options.dotValueBindings.has(name)) {
 			yield* codes;
 			yield `.`;
@@ -243,23 +238,22 @@ function* forEachIdentifiers(
 	code: string,
 	prefix: string,
 	suffix: string,
-	inNarrowing: boolean,
 ): Generator<IdentifierAccess> {
 	if (identifierRE.test(code)) {
-		yield [code, 0, false, inNarrowing, false, false, shouldIdentifierSkipped(ctx, code)];
+		yield [code, 0, false, false, false, shouldIdentifierSkipped(ctx, code)];
 		return;
 	}
 
 	const scope = ctx.scope();
 	const ast = getTypeScriptAST(ts, block, prefix + code + suffix);
 	for (
-		const { id, isShorthand, isNarrowing, skipped, inTypeQuery, isNewOperand } of forEachDeclarations(
+		const { id, isShorthand, skipped, inTypeQuery, isNewOperand } of forEachDeclarations(
 			ts,
 			ast,
 			ast,
 			ctx,
 			scope,
-			inNarrowing,
+			false,
 		)
 	) {
 		const text = getNodeText(id, ast);
@@ -267,7 +261,6 @@ function* forEachIdentifiers(
 			text,
 			getStartEnd(id, ast).start - prefix.length,
 			isShorthand,
-			isNarrowing,
 			inTypeQuery,
 			isNewOperand,
 			skipped,
@@ -280,7 +273,6 @@ type IdentifierAccess = [
 	name: string,
 	offset: number,
 	isShorthand: boolean,
-	isNarrowing: boolean,
 	inTypeQuery: boolean,
 	isNewOperand: boolean,
 	skipped: boolean,

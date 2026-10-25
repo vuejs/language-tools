@@ -138,6 +138,12 @@ function useScriptAnalysis(
 		return new Set([...templateNames, ...styleNames].filter(name => bindings.has(name) || consts.has(name)));
 	});
 
+	/**
+	 * The setup bindings that the template or the styles narrow or query the type of at least once: the code
+	 * generation reads their `.value` at every reference, so that the narrowing applies to the same reference chain.
+	 */
+	const getDotValueBindings = computedSet(() => getTemplateScope().dotValueBindings);
+
 	const getInlayHints = computed(() => {
 		const hints: InlayHintInfo[] = [...getTemplateScope().inlayHints];
 		const { script } = ir;
@@ -203,6 +209,7 @@ function useScriptAnalysis(
 		getLocalDirectives,
 		getTemplateScope,
 		getScopeBindings,
+		getDotValueBindings,
 		getInlayHints,
 	};
 }

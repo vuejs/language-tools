@@ -77,8 +77,9 @@ class Scope extends Set<string> implements ExpressionScope {
 /**
  * The names that the template and the style `v-bind()`s reference as members of the template scope, in the
  * order the TypeScript code generation of `@vue/content-mapper` first lists them, the template's references to
- * the template context, and the inlay hints of the template. The traversal follows that code generation, which
- * lists a name once a template block scope (the template, a `v-for`, a slot, an inline handler) reads it.
+ * the template context, the inlay hints of the template, and the setup bindings that a narrowing position reads.
+ * The traversal follows that code generation, which lists a name once a template block scope (the template, a
+ * `v-for`, a slot, an inline handler) reads it.
  */
 export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateScopeOptions) {
 	const { vueCompilerOptions, setupBindings, setupConsts, setupRefs, hasDefineSlots } = options;
@@ -86,6 +87,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 	const styleNames = new Set<string>();
 	const contextAccesses: ContextAccess[] = [];
 	const inlayHints: InlayHintInfo[] = [];
+	const dotValueBindings = new Set<string>();
 
 	let names = templateNames;
 	const scopes: Scope[] = [];
@@ -149,7 +151,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		scope.end();
 	}
 
-	return { templateNames, styleNames, contextAccesses, inlayHints };
+	return { templateNames, styleNames, contextAccesses, inlayHints, dotValueBindings };
 
 	function openScope(isBlock: boolean) {
 		const scope = new Scope();
@@ -176,7 +178,10 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		}
 	}
 
-	/** `isWriteBack`: the code generation assigns to the expression, like the update of a `v-model`. */
+	/**
+	 * `isWriteBack`: the code generation assigns to the expression, like the update of a `v-model`.
+	 * `inNarrowing`: the expression is a condition, like the one of a `v-if`.
+	 */
 	function visitInterpolation(
 		block: IRBlock,
 		code: string,
@@ -184,26 +189,36 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		prefix = '',
 		suffix = '',
 		isWriteBack = false,
+		inNarrowing = false,
 	) {
 		if (identifierRE.test(code)) {
 			record(code);
 			if (!shouldIdentifierSkipped(ctx, code)) {
 				visitContextAccess(block, code, start, isWriteBack);
+				visitNarrowing(code, inNarrowing);
 			}
 			return;
 		}
 		const scope = ctx.scope();
 		const ast = getTypeScriptAST(ts, block, prefix + code + suffix);
 		let operands: Set<ts.Node> | undefined;
-		for (const { id, skipped } of forEachDeclarations(ts, ast, ast, ctx, scope, false)) {
+		for (const { id, skipped, isNarrowing, inTypeQuery } of forEachDeclarations(ts, ast, ast, ctx, scope, inNarrowing)) {
 			const name = getNodeText(id, ast);
 			record(name);
 			if (!skipped) {
 				operands ??= collectOperands(ts, ast);
 				visitContextAccess(block, name, start + id.getStart(ast) - prefix.length, operands.has(id));
+				visitNarrowing(name, isNarrowing || inTypeQuery);
 			}
 		}
 		scope.end();
+	}
+
+	/** A setup binding that a narrowing position or a type query reads: the code generation reads its `.value`. */
+	function visitNarrowing(name: string, isNarrowing: boolean) {
+		if (isNarrowing && setupBindings.has(name) && !setupConsts.has(name) && !setupRefs.has(name)) {
+			dotValueBindings.add(name);
+		}
 	}
 
 	/** An identifier the code generation references outside of an expression, like a component tag. */
@@ -311,6 +326,8 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 						branch.condition.loc.start.offset,
 						`(`,
 						`)`,
+						false,
+						true,
 					);
 				}
 				for (const child of branch.children) {
@@ -702,7 +719,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 
 	function visitModelEventExpression(template: IRTemplate, prop: CompilerDOM.DirectiveNode) {
 		if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-			visitInterpolation(template, prop.exp.content, prop.exp.loc.start.offset, '', '', true);
+			visitInterpolation(template, prop.exp.content, prop.exp.loc.start.offset, '', '', true, true);
 		}
 	}
 

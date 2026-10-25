@@ -289,9 +289,6 @@ export function* generateModelEventExpression(
 			{ features: 0 },
 			prop.exp.content,
 			prop.exp.loc.start.offset,
-			undefined,
-			undefined,
-			true,
 		)];
 		yield* generateEventParameter(options, argsType);
 		yield* generateReasserts(options, ctx, accessMark);
