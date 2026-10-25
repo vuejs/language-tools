@@ -209,10 +209,12 @@ export function startServer(
 			createVueLanguageServicePlugins(ts, {
 				async collectExtractProps(fileName, [start, end]) {
 					try {
-						const template = (await getVueScript(fileName))?.virtualCode.ir.template;
+						const virtualCode = (await getVueScript(fileName))?.virtualCode;
+						const template = virtualCode?.ir.template;
 						if (template) {
 							return await (await connectTypeScriptApi()).collectExtractProps(
 								fileName,
+								virtualCode,
 								template.startTagEnd + start,
 								template.startTagEnd + end,
 							);

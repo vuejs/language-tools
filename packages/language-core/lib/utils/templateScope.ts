@@ -11,6 +11,7 @@ import {
 import { collectBindingNames } from './collectBindings';
 import {
 	getComponentIsBinding,
+	getElementTagOffsets,
 	getModelPropName,
 	getNodeText,
 	getStartEnd,
@@ -33,6 +34,15 @@ export interface InlayHintInfo {
 	tooltip?: string;
 	paddingRight?: boolean;
 	paddingLeft?: boolean;
+}
+
+/** A reference of the template to a name that the template context, not a setup binding, provides. */
+export interface ContextAccess {
+	name: string;
+	/** The offset of the name in the template's content. */
+	offset: number;
+	/** Whether the reference is an operand of an assignment, update or other binary expression. */
+	model: boolean;
 }
 
 export interface TemplateScopeOptions {
@@ -66,14 +76,15 @@ class Scope extends Set<string> implements ExpressionScope {
 
 /**
  * The names that the template and the style `v-bind()`s reference as members of the template scope, in the
- * order the TypeScript code generation of `@vue/content-mapper` first lists them, and the inlay hints of the
- * template. The traversal follows that code generation, which lists a name once a template block scope
- * (the template, a `v-for`, a slot, an inline handler) reads it.
+ * order the TypeScript code generation of `@vue/content-mapper` first lists them, the template's references to
+ * the template context, and the inlay hints of the template. The traversal follows that code generation, which
+ * lists a name once a template block scope (the template, a `v-for`, a slot, an inline handler) reads it.
  */
 export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateScopeOptions) {
 	const { vueCompilerOptions, setupBindings, setupConsts, setupRefs, hasDefineSlots } = options;
 	const templateNames = new Set<string>();
 	const styleNames = new Set<string>();
+	const contextAccesses: ContextAccess[] = [];
 	const inlayHints: InlayHintInfo[] = [];
 
 	let names = templateNames;
@@ -81,8 +92,8 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 	const ctx = { scopes, scope: () => openScope(false) };
 	const dollarVars = new Set<string>();
 	const commentBuffer: CompilerDOM.CommentNode[] = [];
-	const slotNames: string[] = [];
-	const templateRefNames: string[] = [];
+	const slotNames: (readonly [name: string, offset: number])[] = [];
+	const templateRefNames: (readonly [name: string, offset: number])[] = [];
 	let components = 0;
 
 	if (!vueCompilerOptions.skipTemplateCodegen && ir.template) {
@@ -111,8 +122,8 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 			visitTemplateChild(template, isVapor, template.ast);
 		}
 		if (!hasDefineSlots) {
-			for (const name of slotNames) {
-				visitObjectProperty(template, name);
+			for (const [name, offset] of slotNames) {
+				visitObjectProperty(template, name, offset);
 			}
 		}
 		if (
@@ -120,8 +131,8 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 			|| vueCompilerOptions.inferComponentDollarRefs
 			|| setupRefs.size
 		) {
-			for (const name of templateRefNames) {
-				visitObjectProperty(template, name);
+			for (const [name, offset] of templateRefNames) {
+				visitObjectProperty(template, name, offset);
 			}
 		}
 		scope.end();
@@ -132,13 +143,13 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		const scope = openScope(true);
 		for (const style of ir.styles) {
 			for (const binding of style.bindings) {
-				visitInterpolation(style, binding.text, `(`, `)`);
+				visitInterpolation(style, binding.text, binding.offset, `(`, `)`);
 			}
 		}
 		scope.end();
 	}
 
-	return { templateNames, styleNames, inlayHints };
+	return { templateNames, styleNames, contextAccesses, inlayHints };
 
 	function openScope(isBlock: boolean) {
 		const scope = new Scope();
@@ -165,43 +176,73 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		}
 	}
 
-	function visitInterpolation(block: IRBlock, code: string, prefix = '', suffix = '') {
+	/** `isWriteBack`: the code generation assigns to the expression, like the update of a `v-model`. */
+	function visitInterpolation(
+		block: IRBlock,
+		code: string,
+		start: number,
+		prefix = '',
+		suffix = '',
+		isWriteBack = false,
+	) {
 		if (identifierRE.test(code)) {
 			record(code);
+			if (!shouldIdentifierSkipped(ctx, code)) {
+				visitContextAccess(block, code, start, isWriteBack);
+			}
 			return;
 		}
 		const scope = ctx.scope();
 		const ast = getTypeScriptAST(ts, block, prefix + code + suffix);
-		for (const { id } of forEachDeclarations(ts, ast, ast, ctx, scope, false)) {
-			record(getNodeText(id, ast));
+		let operands: Set<ts.Node> | undefined;
+		for (const { id, skipped } of forEachDeclarations(ts, ast, ast, ctx, scope, false)) {
+			const name = getNodeText(id, ast);
+			record(name);
+			if (!skipped) {
+				operands ??= collectOperands(ts, ast);
+				visitContextAccess(block, name, start + id.getStart(ast) - prefix.length, operands.has(id));
+			}
 		}
 		scope.end();
 	}
 
 	/** An identifier the code generation references outside of an expression, like a component tag. */
-	function visitIdentifier(name: string) {
+	function visitIdentifier(block: IRBlock, name: string, start: number) {
 		if (setupConsts.has(name) || shouldIdentifierSkipped(ctx, name) || setupRefs.has(name)) {
 			return;
 		}
 		if (setupBindings.has(name) || !dollarVars.has(name)) {
 			record(name);
 		}
+		visitContextAccess(block, name, start, false);
 	}
 
-	function visitObjectProperty(template: IRTemplate, code: string, shouldBeConstant = false) {
+	function visitContextAccess(block: IRBlock, name: string, offset: number, model: boolean) {
+		if (
+			block === ir.template
+			&& !setupConsts.has(name)
+			&& !setupRefs.has(name)
+			&& !setupBindings.has(name)
+			&& !dollarVars.has(name)
+		) {
+			contextAccesses.push({ name, offset, model });
+		}
+	}
+
+	function visitObjectProperty(template: IRTemplate, code: string, start: number, shouldBeConstant = false) {
 		if (code.startsWith('[') && code.endsWith(']')) {
 			if (shouldBeConstant) {
-				visitInterpolation(template, code.slice(1, -1), `[__VLS_tryAsConstant(`, `)]`);
+				visitInterpolation(template, code.slice(1, -1), start + 1, `[__VLS_tryAsConstant(`, `)]`);
 			}
 			else {
-				visitInterpolation(template, code);
+				visitInterpolation(template, code, start);
 			}
 		}
 	}
 
-	function visitPropertyAccess(template: IRTemplate, code: string) {
+	function visitPropertyAccess(template: IRTemplate, code: string, start: number) {
 		if (code.startsWith('[') && code.endsWith(']')) {
-			visitInterpolation(template, code);
+			visitInterpolation(template, code, start);
 		}
 	}
 
@@ -257,14 +298,20 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 			}
 		}
 		else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
-			const [content] = parseInterpolationNode(node, template.content);
-			visitInterpolation(template, content, `(`, `);\n`);
+			const [content, start] = parseInterpolationNode(node, template.content);
+			visitInterpolation(template, content, start, `(`, `);\n`);
 		}
 		else if (node.type === CompilerDOM.NodeTypes.IF) {
 			for (let i = 0; i < node.branches.length; i++) {
 				const branch = node.branches[i]!;
 				if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					visitInterpolation(template, branch.condition.content, `(`, `)`);
+					visitInterpolation(
+						template,
+						branch.condition.content,
+						branch.condition.loc.start.offset,
+						`(`,
+						`)`,
+					);
 				}
 				for (const child of branch.children) {
 					visitTemplateChild(template, isVapor, child, i !== 0, true);
@@ -281,6 +328,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 
 	function visitComponent(template: IRTemplate, isVapor: boolean, node: CompilerDOM.ElementNode) {
 		let { tag, props } = node;
+		let [tagOffset] = getElementTagOffsets(node, template);
 		let isExpression = false;
 		if (tag.includes('.')) {
 			isExpression = true;
@@ -294,17 +342,18 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 				}
 				isExpression = true;
 				tag = exp.content;
+				tagOffset = exp.loc.start.offset;
 				props = props.filter(p => p !== prop);
 			}
 		}
 		if (isExpression) {
-			visitInterpolation(template, tag, `(`, `)`);
+			visitInterpolation(template, tag, tagOffset, `(`, `)`);
 		}
 		else {
 			const originalNames = new Set([capitalize(camelize(tag)), camelize(tag), tag]);
 			const matchedBinding = [...originalNames].find(name => setupBindings.has(name));
 			if (matchedBinding) {
-				visitIdentifier(matchedBinding);
+				visitIdentifier(template, matchedBinding, tagOffset);
 			}
 		}
 
@@ -314,7 +363,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		visitElementDirectives(template, isVapor, node);
 		const templateRef = getTemplateRef(node);
 		if (templateRef) {
-			templateRefNames.push(templateRef[0]);
+			templateRefNames.push(templateRef);
 		}
 		const slotDir = node.props.find(CompilerDOM.isVSlot);
 		if (slotDir || node.children.length) {
@@ -324,12 +373,12 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 	}
 
 	function visitElement(template: IRTemplate, isVapor: boolean, node: CompilerDOM.ElementNode) {
-		visitPropertyAccess(template, node.tag);
+		visitPropertyAccess(template, node.tag, getElementTagOffsets(node, template)[0]);
 		visitElementProps(template, node, node.props, true);
 		visitElementDirectives(template, isVapor, node);
 		const templateRef = getTemplateRef(node);
 		if (templateRef) {
-			templateRefNames.push(templateRef[0]);
+			templateRefNames.push(templateRef);
 		}
 		for (const child of node.children) {
 			visitTemplateChild(template, isVapor, child);
@@ -357,7 +406,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		const props = node.props.filter(prop => prop !== nameProp);
 		if (hasDefineSlots) {
 			if (nameProp?.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
-				visitPropertyAccess(template, normalizeAttributeValue(nameProp.value)[0]);
+				visitPropertyAccess(template, ...normalizeAttributeValue(nameProp.value));
 			}
 			else if (
 				nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -370,7 +419,10 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		else {
 			visitElementProps(template, node, props, false);
 			if (nameProp?.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
-				slotNames.push(nameProp.value.content);
+				slotNames.push([
+					nameProp.value.content,
+					nameProp.loc.start.offset + nameProp.loc.source.indexOf(nameProp.value.content, nameProp.name.length),
+				]);
 			}
 			else if (
 				nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -379,7 +431,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 				if (nameProp.arg?.loc.start.offset === nameProp.exp.loc.start.offset) {
 					inlayHints.push(createVBindShorthandInlayHintInfo(nameProp.exp.loc, 'name'));
 				}
-				visitInterpolation(template, nameProp.exp.content);
+				visitInterpolation(template, nameProp.exp.content, nameProp.exp.loc.start.offset);
 			}
 		}
 		for (const child of node.children) {
@@ -394,14 +446,14 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		slotDir: CompilerDOM.DirectiveNode | undefined,
 	) {
 		if (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
-			visitObjectProperty(template, slotDir.arg.loc.source, true);
+			visitObjectProperty(template, slotDir.arg.loc.source, slotDir.arg.loc.start.offset, true);
 		}
 		const scope = openScope(true);
 		if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 			const slotAst = getTypeScriptAST(ts, template, `(${slotDir.exp.content}) => {}`);
 			const statement = slotAst.statements[0];
 			if (statement && ts.isExpressionStatement(statement) && ts.isArrowFunction(statement.expression)) {
-				visitInterpolation(template, slotAst.text);
+				visitInterpolation(template, slotAst.text, slotDir.exp.loc.start.offset - 1);
 			}
 			scope.declare(...collectBindingNames(ts, slotAst, slotAst));
 		}
@@ -430,12 +482,12 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 			defaultInitializerRanges.sort((a, b) => a[0] - b[0]);
 		}
 		if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-			visitInterpolation(template, source.content, `(`, `)`);
+			visitInterpolation(template, source.content, source.loc.start.offset, `(`, `)`);
 		}
 		const scope = openScope(true);
 		scope.declare(...bindingNames);
 		for (const [start, end] of defaultInitializerRanges) {
-			visitInterpolation(template, leftExpressionText!.slice(start, end));
+			visitInterpolation(template, leftExpressionText!.slice(start, end), leftExpressionRange!.start + start);
 		}
 		for (const child of node.children) {
 			visitTemplateChild(template, isVapor, child, false, true);
@@ -505,12 +557,12 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 					propName = propName.slice(1);
 				}
 				if (prop.arg) {
-					visitObjectProperty(template, propName);
+					visitObjectProperty(template, propName, prop.arg.loc.start.offset);
 				}
 				visitPropExp(template, prop, prop.exp);
 				if (isComponent && prop.name === 'model') {
 					for (const modifier of prop.modifiers) {
-						visitObjectProperty(template, modifier.content);
+						visitObjectProperty(template, modifier.content, modifier.loc.start.offset);
 					}
 				}
 			}
@@ -520,7 +572,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 				}
 				const prefix = template.content.slice(prop.loc.start.offset, prop.loc.start.offset + 1);
 				if (prefix !== '.' && prefix !== '#') {
-					visitObjectProperty(template, prop.name);
+					visitObjectProperty(template, prop.name, prop.loc.start.offset);
 				}
 			}
 			else if (
@@ -539,7 +591,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 
 		if (withFailedExpressions) {
 			for (const [exp, prefix, suffix] of failedExpressions) {
-				visitInterpolation(template, exp.loc.source, prefix, suffix);
+				visitInterpolation(template, exp.loc.source, exp.loc.start.offset, prefix, suffix);
 			}
 		}
 	}
@@ -553,12 +605,12 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 			return;
 		}
 		if (prop.arg?.loc.start.offset !== prop.exp?.loc.start.offset) {
-			visitInterpolation(template, exp.loc.source, `(`, `)`);
+			visitInterpolation(template, exp.loc.source, exp.loc.start.offset, `(`, `)`);
 		}
 		else {
 			const propVariableName = camelize(exp.loc.source);
 			if (identifierRE.test(propVariableName)) {
-				visitIdentifier(propVariableName);
+				visitIdentifier(template, propVariableName, exp.loc.start.offset);
 				inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
 			}
 		}
@@ -628,7 +680,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		if (isCompoundExpression(ts, ast)) {
 			const scope = openScope(true);
 			scope.declare('$event');
-			visitInterpolation(template, prop.exp.content);
+			visitInterpolation(template, prop.exp.content, prop.exp.loc.start.offset);
 			scope.end();
 			inlayHints.push({
 				blockName: 'template',
@@ -644,13 +696,13 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 			});
 		}
 		else {
-			visitInterpolation(template, prop.exp.content, `(`, `)`);
+			visitInterpolation(template, prop.exp.content, prop.exp.loc.start.offset, `(`, `)`);
 		}
 	}
 
 	function visitModelEventExpression(template: IRTemplate, prop: CompilerDOM.DirectiveNode) {
 		if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-			visitInterpolation(template, prop.exp.content);
+			visitInterpolation(template, prop.exp.content, prop.exp.loc.start.offset, '', '', true);
 		}
 	}
 
@@ -677,16 +729,37 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 				visitValue();
 			}
 			if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && !prop.arg.isStatic) {
-				visitInterpolation(template, prop.arg.content, `(`, `)`);
+				visitInterpolation(
+					template,
+					prop.arg.content,
+					prop.arg.loc.start.offset + prop.arg.loc.source.indexOf(prop.arg.content),
+					`(`,
+					`)`,
+				);
 			}
 			for (const modifier of prop.modifiers) {
-				visitObjectProperty(template, modifier.content);
+				visitObjectProperty(template, modifier.content, modifier.loc.start.offset);
 			}
 			if (!(isVapor && !isBuiltInDirective(prop.name))) {
 				visitValue();
 			}
 		}
 	}
+}
+
+/** The nodes that are operands of a binary or postfix unary expression. */
+function collectOperands(ts: TypeScript, ast: ts.SourceFile) {
+	const operands = new Set<ts.Node>();
+	ast.forEachChild(function visit(node) {
+		if (ts.isBinaryExpression(node)) {
+			operands.add(node.left).add(node.right);
+		}
+		else if (ts.isPostfixUnaryExpression(node)) {
+			operands.add(node.operand);
+		}
+		node.forEachChild(visit);
+	});
+	return operands;
 }
 
 export function createVBindShorthandInlayHintInfo(

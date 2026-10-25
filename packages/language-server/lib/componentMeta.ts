@@ -1,4 +1,3 @@
-import { names } from '@vue/content-mapper/lib/codegen/names';
 import {
 	forEachElementNode,
 	getElementTagOffsets,
@@ -381,21 +380,34 @@ export function getTagNameOffset(template: IRTemplate, element: ElementNode) {
 }
 
 /**
- * The template context properties (`__VLS_ctx.foo`) whose name starts at a position `isExtracted` accepts, with their
- * types and whether they are written to.
+ * The template context properties that the template references from offset `start` to `end` of a Vue file's
+ * source text, with their types and whether they are written to.
  */
 export async function collectExtractProps(
 	ts: TypeScript,
 	checker: Checker,
 	sourceFile: SourceFile,
-	isExtracted: (position: number) => boolean,
+	{ ir, scriptAnalysis }: VueVirtualCode,
+	start: number,
+	end: number,
 ) {
-	const accesses: { name: string; node: Node; model: boolean }[] = [];
-	visit(sourceFile);
 	const result = new Map<string, ExtractPropsInfo>();
-	for (const { name, node, model } of accesses) {
+	if (!ir.template) {
+		return [];
+	}
+	for (const { name, offset, model } of scriptAnalysis.getTemplateScope().contextAccesses) {
+		const sourceOffset = ir.template.startTagEnd + offset;
+		if (sourceOffset < start || sourceOffset >= end) {
+			continue;
+		}
 		let info = result.get(name);
 		if (!info) {
+			const node = toCheckedPositions(sourceFile, sourceOffset, ts.SpanMapFeature.SemanticTokens)
+				.map(position => getNodeAt(sourceFile, position, false))
+				.find(node => ts.isIdentifier(node) && node.text === name);
+			if (!node) {
+				continue;
+			}
 			const typeString = await checker.typeToString(
 				await checker.getTypeAtLocation(node),
 				node,
@@ -407,24 +419,6 @@ export async function collectExtractProps(
 		info.model ||= model;
 	}
 	return [...result.values()];
-
-	function visit(node: Node) {
-		// Only the generated name tells a template context property from a template local, which the span map does not.
-		if (
-			ts.isPropertyAccessExpression(node)
-			&& ts.isIdentifier(node.expression)
-			&& node.expression.text === names.ctx
-			&& ts.isIdentifier(node.name)
-			&& isExtracted(node.name.getStart(sourceFile))
-		) {
-			accesses.push({
-				name: node.name.text,
-				node,
-				model: ts.isPostfixUnaryExpression(node.parent) || ts.isBinaryExpression(node.parent),
-			});
-		}
-		node.forEachChild(visit);
-	}
 }
 
 /** Whether the identifier at `offset`, a position of the text TypeScript checks, is a `Ref`. */
@@ -670,10 +664,6 @@ async function getSymbolOfTypeNode(ts: TypeScript, checker: Checker, node: TypeN
 		const objectType = await checker.getTypeFromTypeNode(node.objectType);
 		return await objectType.getProperty(node.indexType.literal.text);
 	}
-}
-
-export function findVariable(ts: TypeScript, sourceFile: SourceFile, name: string) {
-	return findNode(sourceFile, node => ts.isVariableDeclaration(node) && node.name.getText() === name);
 }
 
 function findIdentifier(ts: TypeScript, sourceFile: SourceFile, offset: number) {

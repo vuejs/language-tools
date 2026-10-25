@@ -112,7 +112,12 @@ export interface TypeScriptProjectResolver {
 	/** The directive names (`vFoo`) available in the template of the Vue file `fileName`. */
 	getComponentDirectives(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
 	/** The template context properties that the code between `start` and `end` in the source text of the Vue file `fileName` reads. */
-	collectExtractProps(fileName: string, start: number, end: number): Promise<ExtractPropsInfo[] | undefined>;
+	collectExtractProps(
+		fileName: string,
+		virtualCode: VueVirtualCode,
+		start: number,
+		end: number,
+	): Promise<ExtractPropsInfo[] | undefined>;
 	/** Whether the identifier at `offset` in the source text of the Vue file `fileName` is a `Ref`. */
 	isRefAtOffset(fileName: string, offset: number): Promise<boolean | undefined>;
 	/** Whether TypeScript renames the code at `offset` in the source text of the Vue file `fileName`. */
@@ -338,20 +343,10 @@ export async function connectTypeScriptProjectResolver(
 				(project, sourceFile) => getComponentDirectives(ts, project.program, project.checker, sourceFile, virtualCode),
 			);
 		},
-		collectExtractProps(fileName, start, end) {
+		collectExtractProps(fileName, virtualCode, start, end) {
 			return withSourceFile(
 				fileName,
-				(project, sourceFile) =>
-					collectExtractProps(ts, project.checker, sourceFile, position => {
-						const mapped = sourceFile.spanMap?.virtualToOriginalPositionForFeature(
-							position,
-							ts.SpanMapFeature.SemanticTokens,
-						);
-						return !!mapped
-							&& mapped.fidelity !== ts.SpanMapFidelity.None
-							&& mapped.position >= start
-							&& mapped.position < end;
-					}),
+				(project, sourceFile) => collectExtractProps(ts, project.checker, sourceFile, virtualCode, start, end),
 			);
 		},
 		isRefAtOffset(fileName, offset) {
