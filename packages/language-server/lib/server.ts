@@ -492,7 +492,11 @@ export function startServer(
 
 			/** Like the TypeScript host, hands the Vue plugin only the files matching `extensions`. */
 			function routeByExtensions(plugin: LanguagePlugin<URI>, extensions: string[]): LanguagePlugin<URI> {
-				const isContentMapperFile = (uri: URI) => extensions.some(extension => asFileName(uri).endsWith(extension));
+				const isContentMapperFile = (uri: URI) => {
+					// Volar formats a document through a copy of it at `<uri>.tmp`, with the plugin of the document.
+					const fileName = asFileName(uri).replace(/\.tmp$/, '');
+					return extensions.some(extension => fileName.endsWith(extension));
+				};
 				return {
 					...plugin,
 					getLanguageId: uri => isContentMapperFile(uri) ? plugin.getLanguageId(uri) : undefined,

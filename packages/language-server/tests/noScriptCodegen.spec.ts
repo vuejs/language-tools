@@ -1,3 +1,4 @@
+import { TextDocument } from '@volar/language-server';
 import { AutoInsertRequest, type GetVirtualFileRequest } from '@volar/language-server/protocol';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -134,6 +135,26 @@ function add(a: number) {}
 	}
 });
 
+test('formats the script block', async () => {
+	const content = `<script setup lang="ts">
+function add(a: number) {
+const sum   =  a+1;
+return sum;
+}
+</script>
+`;
+	const formatted = `<script setup lang="ts">
+function add(a: number) {
+	const sum = a + 1;
+	return sum;
+}
+</script>
+`;
+	expect(await format(serverModule, content)).toBe(formatted);
+	// formats once on the default server, too
+	expect(await format(undefined, content)).toBe(formatted);
+});
+
 test('provides the inlay hints of the template', async () => {
 	const { document, content } = await openFixture('templateScope', 'fixture.vue');
 	const server = await getLanguageServer(serverModule);
@@ -197,6 +218,19 @@ async function requestAutoInsert(content: string) {
 			selection: document.positionAt(offset),
 			change: { rangeOffset: offset - 1, rangeLength: 0, text: content[offset - 1]! },
 		});
+	}
+	finally {
+		await server.close(uri);
+	}
+}
+
+async function format(entry: string | undefined, content: string) {
+	const server = await getLanguageServer(entry);
+	const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'format.vue')).toString();
+	const document = await server.open(uri, 'vue', content);
+	try {
+		const edits = await server.vueserver.sendDocumentFormattingRequest(uri, { tabSize: 4, insertSpaces: false });
+		return TextDocument.applyEdits(document, edits ?? []);
 	}
 	finally {
 		await server.close(uri);
