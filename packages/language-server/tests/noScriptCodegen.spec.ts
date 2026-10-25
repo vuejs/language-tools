@@ -53,6 +53,40 @@ test('completes the setup bindings that the template scope does not list', async
 	}
 });
 
+test('offers no Emmet abbreviation in template expressions', async () => {
+	const content = `<script setup lang="ts">
+const ul = 1;
+</script>
+
+<template>
+	<p :title="ul" @click="ul">{{ ul }}</p>
+	<p v-if="ul">{{ ul ? ul : 1 }}</p>
+	<p>ul</p>
+</template>
+`;
+	const server = await getLanguageServer(serverModule);
+	const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'emmet.vue')).toString();
+	const document = await server.open(uri, 'vue', content);
+	try {
+		const getEmmetLabels = async (textBefore: string) => {
+			const completion = await server.vueserver.sendCompletionRequest(
+				uri,
+				document.positionAt(content.indexOf(textBefore) + textBefore.length),
+			);
+			return completion?.items.filter(item => item.detail === 'Emmet Abbreviation').map(item => item.label);
+		};
+		expect(await getEmmetLabels('<p>ul')).toEqual(['ul']);
+		expect(await getEmmetLabels('{{ ul')).toEqual([]);
+		expect(await getEmmetLabels('{{ ul ? ul')).toEqual([]);
+		expect(await getEmmetLabels(':title="ul')).toEqual([]);
+		expect(await getEmmetLabels('@click="ul')).toEqual([]);
+		expect(await getEmmetLabels('v-if="ul')).toEqual([]);
+	}
+	finally {
+		await server.close(uri);
+	}
+});
+
 test('provides the inlay hints of the template', async () => {
 	const { document, content } = await openFixture('templateScope', 'fixture.vue');
 	const server = await getLanguageServer(serverModule);

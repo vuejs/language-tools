@@ -193,7 +193,7 @@ function isIdentifierStart(ts: typeof import('typescript'), textBefore: string) 
 }
 
 /** Also pushes to `locals` the names that the `v-for` and `v-slot` around the expression declare. */
-function getExpressionStartAt(
+export function getExpressionStartAt(
 	ts: typeof import('typescript'),
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode,
 	offset: number,

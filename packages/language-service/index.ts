@@ -2,7 +2,6 @@ export * from '@volar/language-service';
 // for @vue/language-server usage
 export * from '@volar/language-service/lib/utils/featureWorkers';
 
-import { create as createEmmetPlugin } from 'volar-service-emmet';
 import { create as createJsonPlugin } from 'volar-service-json';
 import { create as createPugFormatPlugin } from 'volar-service-pug-beautify';
 import { create as createTypeScriptDocCommentTemplatePlugin } from 'volar-service-typescript/lib/plugins/docCommentTemplate';
@@ -14,6 +13,7 @@ import { create as createVueCompilerDomErrorsPlugin } from './lib/plugins/vue-co
 import { create as createVueComponentDefinitionPlugin } from './lib/plugins/vue-component-definition';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
+import { create as createVueEmmetPlugin } from './lib/plugins/vue-emmet';
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
 import { create as createVueFormatPerBlockPlugin } from './lib/plugins/vue-format-per-block';
 import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
@@ -47,12 +47,7 @@ export function createVueLanguageServicePlugins(
 		createVueScopedClassLinksPlugin(ts),
 		createVueSfcPlugin(),
 		createVueTemplateRefLinksPlugin(),
-		createEmmetPlugin({
-			mappedLanguages: {
-				'vue-root-tags': 'html',
-				'postcss': 'scss',
-			},
-		}),
+		createVueEmmetPlugin(ts),
 
 		// TS related plugins
 		createVueSuggestDefineAssignmentPlugin(ts),
