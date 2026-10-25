@@ -17,7 +17,7 @@ import { testWorkspacePath } from './server';
  * Compares the new IR-derived scope names and inlay hints with the codegen ones for every .vue file
  * under test-workspace. Fails on any difference to ensure behavior is unchanged.
  */
-test('IR-derived scope names and inlay hints match codegen', async () => {
+test('IR-derived scope names and inlay hints match codegen', () => {
 	const vueFiles = findVueFiles(testWorkspacePath).slice(0, 50); // Limit for performance
 	const differences: string[] = [];
 	const tsModule = require('typescript') as typeof ts;
