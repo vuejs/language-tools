@@ -2,19 +2,15 @@ import {
 	forEachElementNode,
 	getElementTagOffsets,
 	getSelfComponentName,
-	getServiceScript,
 	type IRTemplate,
-	type Language,
 	names,
-	type SourceScript,
 	tsCodegen,
-	VueCodeFeature,
 	type VueVirtualCode,
 } from '@vue/language-core';
 import type { AutoImportExport, ComponentPropInfo, ExtractPropsInfo } from '@vue/language-service/lib/requests';
 import * as path from 'node:path';
-import type { URI } from 'vscode-uri';
 import type { TypeScript } from 'vue-component-meta';
+import { inferComponentProps } from 'vue-component-meta/lib/helpers';
 
 type ElementNode = Parameters<typeof getElementTagOffsets>[0];
 type Node = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).Node;
@@ -70,6 +66,25 @@ export async function getTagType(
 			return { node: await defaultExport.valueDeclaration?.resolve(), type };
 		}
 	}
+}
+
+/** The type of the expression that `length` characters from `offset` of a Vue file's source text map to. */
+async function getExpressionType(
+	ts: TypeScript,
+	checker: Checker,
+	sourceFile: SourceFile,
+	offset: number,
+	length: number,
+) {
+	const [position] = toCheckedPositions(sourceFile, offset, ts.SpanMapFeature.Definition);
+	if (position === undefined) {
+		return;
+	}
+	let node = getNodeAt(sourceFile, position, false);
+	while (node.end < position + length && node.parent) {
+		node = node.parent;
+	}
+	return await checker.getTypeAtLocation(node);
 }
 
 /** The name of the default import in `sourceFile` that `symbol` is. */
@@ -250,31 +265,6 @@ async function isComponentType(type: Type) {
 	return false;
 }
 
-/**
- * The offset in the generated service script of the props object literal of the component element that the
- * template offset `position` lies in (or after the start of).
- */
-export function getComponentPropsOffset(
-	language: Language<URI>,
-	sourceScript: SourceScript<URI>,
-	virtualCode: VueVirtualCode,
-	position: number,
-) {
-	const { template } = virtualCode.ir;
-	const node = getElementAt(template, position);
-	// ElementTypes.COMPONENT
-	if (!template || node?.tagType !== 1) {
-		return;
-	}
-	return toServiceScriptOffset(
-		language,
-		sourceScript,
-		virtualCode,
-		template.startTagEnd + node.loc.start.offset,
-		features => !!(features & VueCodeFeature.PropsCompletion),
-	);
-}
-
 /** The element that the offset `position` of `template` lies in (or after the start of). */
 export function getElementAt(template: IRTemplate | undefined, position: number) {
 	return template?.ast
@@ -284,27 +274,6 @@ export function getElementAt(template: IRTemplate | undefined, position: number)
 /** The offset in a Vue file's source text of the tag name of `element`, or its last segment for `<Foo.Bar>`. */
 export function getTagNameOffset(template: IRTemplate, element: ElementNode) {
 	return template.startTagEnd + getElementTagOffsets(element, template)[0] + element.tag.lastIndexOf('.') + 1;
-}
-
-/** Maps an offset of a Vue file's source text to its generated service script, through a mapping `filter` accepts. */
-function toServiceScriptOffset(
-	language: Language<URI>,
-	sourceScript: SourceScript<URI>,
-	virtualCode: VueVirtualCode,
-	sourceOffset: number,
-	filter: (features: number) => boolean,
-): number | undefined {
-	const serviceScript = getServiceScript(virtualCode);
-	if (!serviceScript) {
-		return;
-	}
-	for (
-		const [offset, mapping] of language.maps.get(serviceScript.code, sourceScript).toGeneratedLocation(sourceOffset)
-	) {
-		if (filter(mapping[5])) {
-			return offset;
-		}
-	}
 }
 
 /**
@@ -377,19 +346,20 @@ export async function isRefAtOffset(ts: TypeScript, checker: Checker, sourceFile
 }
 
 /**
- * The props of the component whose generated props object literal contains `offset`, an offset in the generated
- * service script.
+ * The props of the component whose tag name starts at `offset` of a Vue file's source text or, given
+ * `expressionLength`, of the component that the expression of that length at `offset` evaluates to.
  */
 export async function getComponentProps(
 	ts: TypeScript,
 	checker: Checker,
 	sourceFile: SourceFile,
 	offset: number,
+	expressionLength?: number,
 ): Promise<ComponentPropInfo[] | undefined> {
-	let objectLiteral: Node | undefined;
-	visit(sourceFile);
-	const type = objectLiteral && ts.isObjectLiteralExpression(objectLiteral)
-		&& await checker.getContextualType(objectLiteral);
+	const componentType = expressionLength === undefined
+		? (await getTagType(ts, checker, sourceFile, offset))?.type
+		: await getExpressionType(ts, checker, sourceFile, offset, expressionLength);
+	const type = componentType && await inferComponentProps(checker, componentType);
 	if (!type) {
 		return;
 	}
@@ -416,15 +386,6 @@ export async function getComponentProps(
 		props.push(info);
 	}
 	return props;
-
-	function visit(node: Node) {
-		if (node.pos <= offset && offset <= node.end) {
-			if (ts.isObjectLiteralExpression(node)) {
-				objectLiteral = node;
-			}
-			node.forEachChild(visit);
-		}
-	}
 }
 
 /** The names of the slots a Vue file declares. */

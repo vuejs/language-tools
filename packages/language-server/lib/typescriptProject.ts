@@ -83,8 +83,15 @@ export interface TypeScriptProjectResolver {
 	getComponentMeta(fileName: string, offset: number): Promise<ComponentMeta | undefined>;
 	/** The intrinsic element names available in the template of the Vue file `fileName`. */
 	getElementNames(fileName: string): Promise<string[] | undefined>;
-	/** The props of the component whose props object literal contains `offset` in the service script of the Vue file `fileName`. */
-	getComponentProps(fileName: string, offset: number): Promise<ComponentPropInfo[] | undefined>;
+	/**
+	 * The props of the component whose tag name starts at `offset` in the source text of the Vue file `fileName` or,
+	 * given `expressionLength`, of the component that the expression of that length at `offset` evaluates to.
+	 */
+	getComponentProps(
+		fileName: string,
+		offset: number,
+		expressionLength?: number,
+	): Promise<ComponentPropInfo[] | undefined>;
 	/** The names of the slots the Vue file `fileName` declares. */
 	getComponentSlots(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
 	/**
@@ -285,10 +292,10 @@ export async function connectTypeScriptProjectResolver(
 				return type && (await type.getProperties()).map(symbol => symbol.name);
 			});
 		},
-		getComponentProps(fileName, offset) {
+		getComponentProps(fileName, offset, expressionLength) {
 			return withSourceFile(
 				fileName,
-				(project, sourceFile) => getComponentProps(ts, project.checker, sourceFile, offset),
+				(project, sourceFile) => getComponentProps(ts, project.checker, sourceFile, offset, expressionLength),
 			);
 		},
 		getComponentSlots(fileName, virtualCode) {

@@ -418,6 +418,62 @@ test('Component props', async () => {
 	`);
 });
 
+test('Component props come from the component type, without inferring its type parameters', async () => {
+	const items = (await requestCompletionListToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<template>
+			<Gen :value="true" f| />
+		</template>
+
+		<script setup lang="ts">
+		declare const Gen: new <T>(props: { value: T; flag?: T }) => { $props: { value: T; flag?: T } };
+		</script>
+		`,
+	)).items;
+	// not a boolean prop, as `T` stays unresolved
+	expect(items.find(item => item.label === 'flag')?.textEdit?.newText).toBe('flag="$1"');
+});
+
+test('Component props of an overloaded component come from its first construct signature', async () => {
+	const items = (await requestCompletionListToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<template>
+			<Over :b="1" | />
+		</template>
+
+		<script setup lang="ts">
+		declare const Over: {
+			new(props: { a: string }): { $props: { a: string } };
+			new(props: { b: number }): { $props: { b: number } };
+		};
+		</script>
+		`,
+	)).items;
+	expect(items.some(item => item.label === ':a')).toBe(true);
+	expect(items.some(item => item.label === ':b')).toBe(false);
+});
+
+test('Component props of a dynamic component', async () => {
+	const items = (await requestCompletionListToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<template>
+			<component :is="Comp" | />
+		</template>
+
+		<script setup lang="ts">
+		declare const Comp: new () => { $props: { foo?: string } };
+		</script>
+		`,
+	)).items;
+	expect(items.some(item => item.label === ':foo')).toBe(true);
+});
+
 test('Element attributes', async () => {
 	const content = `
 		<template>

@@ -6,6 +6,7 @@ import { resolveMapperOptions } from '@vue/content-mapper/vueOptions';
 import {
 	createLanguage,
 	createVueLanguagePlugin,
+	getComponentIsBinding,
 	type LanguagePlugin,
 	tsCodegen,
 	VueVirtualCode,
@@ -21,7 +22,7 @@ import { asCoreTypeScript, placeScriptImportEdits } from '@vue/language-service/
 import { camelize, capitalize } from '@vue/shared';
 import * as path from 'node:path';
 import { URI } from 'vscode-uri';
-import { getComponentPropsOffset, getElementAt, getTagNameOffset } from './componentMeta';
+import { getElementAt, getTagNameOffset } from './componentMeta';
 import { createReactivityAnalyzer, getInterpolationRanges, type ReactivityAnalysisParams } from './reactivity';
 import {
 	connectTypeScriptProjectResolver,
@@ -233,12 +234,21 @@ export function startServer(ts: typeof import('typescript')) {
 				},
 				async getComponentProps(fileName, position) {
 					try {
-						const script = await getVueScript(fileName);
-						const offset = script
-							&& getComponentPropsOffset(script.language, script.sourceScript, script.virtualCode, position);
-						if (offset !== undefined) {
-							return await (await connectTypeScriptApi()).getComponentProps(fileName, offset);
+						const template = (await getVueScript(fileName))?.virtualCode.ir.template;
+						const element = getElementAt(template, position);
+						// ElementTypes.COMPONENT
+						if (!template || element?.tagType !== 1) {
+							return;
 						}
+						const is = getComponentIsBinding(element);
+						const api = await connectTypeScriptApi();
+						return is
+							? await api.getComponentProps(
+								fileName,
+								template.startTagEnd + is.exp.loc.start.offset,
+								is.exp.loc.end.offset - is.exp.loc.start.offset,
+							)
+							: await api.getComponentProps(fileName, getTagNameOffset(template, element));
 					}
 					catch {}
 				},
