@@ -1,4 +1,4 @@
-import type { VueVirtualCode } from '@vue/language-core';
+import type { TypeScript as CoreTypeScript, VueVirtualCode } from '@vue/language-core';
 import type {
 	AutoImportComponent,
 	AutoImportExport,
@@ -136,10 +136,12 @@ export interface TypeScriptProjectResolver {
  * `packageJsonPath` is the manifest of the TS 7 installation that server runs, so the client matches it.
  * `inferredContentMappers` are the content mappers the client registers for files outside any config.
  */
+/** `parser` parses the script blocks of the Vue files whose component metadata is asked for. */
 export async function connectTypeScriptProjectResolver(
 	pipe: string,
 	packageJsonPath: string,
 	inferredContentMappers?: unknown[],
+	parser?: CoreTypeScript,
 ): Promise<TypeScriptProjectResolver> {
 	const manifestPath = fs.realpathSync(packageJsonPath);
 	const { name } = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
@@ -303,7 +305,7 @@ export async function connectTypeScriptProjectResolver(
 		getComponentMeta(fileName, offset) {
 			return withSourceFile(fileName, async (project, sourceFile) => {
 				const component = await getTagType(ts, project.checker, sourceFile, offset);
-				return component && await getComponentMetaOfType(ts, project, component.type, component.node);
+				return component && await getComponentMetaOfType(ts, project, component.type, component.node, parser);
 			});
 		},
 		getElementNames(fileName, virtualCode) {

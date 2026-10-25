@@ -1,10 +1,12 @@
-import { names } from '@vue/content-mapper/lib/codegen/names';
+import type { TypeScript as CoreTypeScript } from '@vue/language-core';
+import { loadTypeScript } from '@vue/language-core/lib/typescript';
 import type { Node, SourceFile } from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Project, Symbol, Type } from 'typescript/async' with { 'resolution-mode': 'import' };
 import { inferComponentEmit, inferComponentExposed, inferComponentProps, inferComponentSlots } from './helpers';
 import { getDefaultsFromScriptSetup, resolveDefaultOptionExpression } from './scriptSetup';
 import type { ComponentMeta, EventMeta, ExposeMeta, PropMeta, SlotMeta, TypeScript } from './types';
 import { createTypeTable, toDeclarations } from './typeTable';
+import { getVueFile } from './vueFile';
 
 const vnodeEventRE = /^onVnode[A-Z]/;
 const publicPropsInterfaces = new Set([
@@ -19,12 +21,16 @@ export async function getExportNames(project: Project, fileName: string): Promis
 	return (await getExports(project, fileName)).map(e => e.name);
 }
 
-/** The metadata of a component exported from a file. Throws if the file or the export is not found in `project`. */
+/**
+ * The metadata of a component exported from a file. Throws if the file or the export is not found in `project`.
+ * `parser` parses the script blocks of Vue files.
+ */
 export async function getComponentMeta(
 	ts: TypeScript,
 	project: Project,
 	fileName: string,
 	exportName = 'default',
+	parser: CoreTypeScript = loadTypeScript(),
 ): Promise<ComponentMeta> {
 	const symbol = (await getExports(project, fileName)).find(e => e.name === exportName);
 	const declaration = await symbol?.valueDeclaration?.resolve();
@@ -33,7 +39,7 @@ export async function getComponentMeta(
 		throw new Error(`Export '${exportName}' not found in '${fileName}'.`);
 	}
 	const componentType = await project.checker.getTypeAtLocation(componentNode);
-	return await getComponentMetaOfType(ts, project, componentType, componentNode);
+	return await getComponentMetaOfType(ts, project, componentType, componentNode, parser);
 }
 
 async function getExports(project: Project, fileName: string) {
@@ -56,17 +62,23 @@ function getComponentExpression(ts: TypeScript, node: Node) {
 
 /**
  * The metadata of a component of type `componentType`. `componentNode` is the component's declaration, or a node
- * referring to it, from which the name, description and script setup defaults are read.
+ * referring to it, from which the name, description and script setup defaults are read. `parser` parses the
+ * script blocks of Vue files.
  */
 export async function getComponentMetaOfType(
 	ts: TypeScript,
 	project: Project,
 	componentType: Type,
 	componentNode: Node | undefined,
+	parser: CoreTypeScript = loadTypeScript(),
 ): Promise<ComponentMeta> {
 	const { checker } = project;
 	const table = createTypeTable(ts, project);
 	const declaration = componentNode && await resolveDeclaration(componentNode);
+	// the component a Vue file exports, not other components declared in it
+	const vueFile = declaration && isVueFileExport(declaration)
+		? getVueFile(parser, project, declaration.getSourceFile())
+		: undefined;
 
 	const [events, slots, exposed, description] = await Promise.all([
 		getEvents(),
@@ -102,10 +114,7 @@ export async function getComponentMetaOfType(
 		);
 		const properties = (await propsType.getProperties()).filter(prop => !eventProps.has(prop.name));
 		const types = properties.length ? await checker.getTypeOfSymbol(properties) : [];
-		// script setup defaults belong to the component a Vue file exports, not to other components declared in it
-		const defaults = declaration && isVueFileExport(declaration)
-			? getDefaultsFromScriptSetup(ts, declaration.getSourceFile())
-			: new Map<string, string>();
+		const defaults = vueFile ? getDefaultsFromScriptSetup(parser, vueFile) : new Map<string, string>();
 
 		return await Promise.all(properties.map(async (prop, i): Promise<PropMeta> => {
 			let name = prop.escapedName as string;
@@ -256,31 +265,27 @@ export async function getComponentMetaOfType(
 		return getComponentExpression(ts, node);
 	}
 
+	/** Whether `node` is what the default export of a file that a content mapper maps evaluates to. */
 	function isVueFileExport(node: Node) {
-		return node.getSourceFile().text.slice(node.pos, node.end).includes(names.export);
+		const sourceFile = node.getSourceFile();
+		return !!sourceFile.contentMapper && sourceFile.statements.some(statement =>
+			ts.isExportAssignment(statement)
+			&& !statement.isExportEquals
+			&& statement.expression.pos === node.pos
+			&& statement.expression.end === node.end
+		);
 	}
 
 	function getName() {
 		if (!declaration) {
 			return;
 		}
-		const componentFile = declaration.getSourceFile();
-		let decl = declaration;
-
-		// const __VLS_export = ...
-		if (isVueFileExport(decl)) {
-			for (const statement of componentFile.statements) {
-				if (ts.isVariableStatement(statement)) {
-					for (const { name, initializer } of statement.declarationList.declarations) {
-						if (name.getText() === names.export && initializer) {
-							decl = initializer;
-						}
-					}
-				}
-			}
+		if (vueFile) {
+			return vueFile.ir.scriptSetup
+				? undefined
+				: vueFile.scriptAnalysis.getScriptRanges()?.exportDefault?.options?.name?.node.text;
 		}
-
-		return getNameOption(decl, componentFile);
+		return getNameOption(declaration, declaration.getSourceFile());
 	}
 
 	async function getDescription() {

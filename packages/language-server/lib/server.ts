@@ -90,7 +90,8 @@ export function startServer(
 	function connectTypeScriptApi() {
 		if (!typescriptApi) {
 			const connecting = connection.sendRequest<TypeScriptApiConnection>('vue/typescriptApiConnection').then(
-				({ pipe, packageJsonPath }) => connectTypeScriptProjectResolver(pipe, packageJsonPath, inferredContentMappers),
+				({ pipe, packageJsonPath }) =>
+					connectTypeScriptProjectResolver(pipe, packageJsonPath, inferredContentMappers, asCoreTypeScript(ts)),
 			);
 			typescriptApi = connecting;
 			connecting.catch(error => {

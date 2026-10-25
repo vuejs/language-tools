@@ -1,64 +1,78 @@
-import { names } from '@vue/content-mapper/lib/codegen/names';
-import type { Expression, Node, ObjectLiteralExpression, SourceFile } from 'typescript/ast' with {
+import {
+	getDefineModelPropName,
+	getNodeText,
+	type TypeScript as CoreTypeScript,
+	type VueVirtualCode,
+} from '@vue/language-core';
+import type { Expression, Node, ObjectLiteralExpression } from 'typescript/ast' with {
 	'resolution-mode': 'import',
 };
-import type { TypeScript } from './types';
 
-export function getDefaultsFromScriptSetup(ts: TypeScript, sourceFile: SourceFile) {
+/** The defaults that the `<script setup>` of a Vue file gives its props, by prop name. */
+export function getDefaultsFromScriptSetup(ts: CoreTypeScript, { ir, scriptAnalysis }: VueVirtualCode) {
 	const result = new Map<string, string>();
-	if (!sourceFile.contentMapper) {
+	const { scriptSetup } = ir;
+	const ranges = scriptAnalysis.getScriptSetupRanges();
+	if (!scriptSetup || !ranges) {
 		return result;
 	}
-	visit(sourceFile);
-	return result;
+	const { ast } = scriptSetup;
+	const { defineProps, withDefaults, defineModel } = ranges;
+	const add = (name: string, expression: Node) => result.set(name, getNodeText(expression, ast));
 
-	function visit(node: Node) {
-		if (ts.isVariableDeclaration(node) && node.initializer) {
-			const name = node.name.getText();
-			if (name === names.defaults) {
-				const obj = findObjectLiteralExpression(ts, node.initializer);
-				for (const prop of obj?.properties ?? []) {
-					if (ts.isPropertyAssignment(prop)) {
-						add(prop.name.getText(), resolveDefaultOptionExpression(ts, prop.initializer));
-					}
-				}
-			}
-			else if (name === names.defaultModels && ts.isObjectLiteralExpression(node.initializer)) {
-				for (const prop of node.initializer.properties) {
-					if (ts.isPropertyAssignment(prop) && ts.isStringLiteral(prop.name)) {
-						add(prop.name.text, resolveDefaultOptionExpression(ts, prop.initializer));
-					}
-				}
-			}
-			else if (
-				ts.isObjectBindingPattern(node.name)
-				&& ts.isIdentifier(node.initializer)
-				&& node.initializer.text === names.props
+	// `const { foo = 1 } = defineProps()`
+	const propsCall = defineProps && (withDefaults?.callExp ?? defineProps.callExp);
+	if (propsCall) {
+		ast.forEachChild(function visit(node) {
+			if (
+				ts.isVariableDeclaration(node)
+				&& ts.isObjectBindingPattern(node.name)
+				&& node.initializer
+				&& node.initializer.getStart(ast) === propsCall.start
+				&& node.initializer.end === propsCall.end
 			) {
 				for (const { propertyName, name, initializer } of node.name.elements) {
 					const key = propertyName ?? name;
 					if (key && initializer) {
-						add(key.getText(), initializer);
+						add(getNodeText(key, ast), initializer);
 					}
 				}
 			}
-		}
-		node.forEachChild(visit);
+			node.forEachChild(visit);
+		});
 	}
 
-	function add(name: string, expression: Node) {
-		result.set(name, expression.getText(sourceFile));
+	for (const model of defineModel) {
+		if (model.defaultValue) {
+			add(
+				getDefineModelPropName(scriptSetup, model),
+				resolveDefaultOptionExpression(ts, model.defaultValue.node as Expression),
+			);
+		}
 	}
+
+	if (defineProps?.typeArg && withDefaults?.arg) {
+		for (const prop of findObjectLiteralExpression(ts, withDefaults.arg.node)?.properties ?? []) {
+			if (ts.isPropertyAssignment(prop)) {
+				add(getNodeText(prop.name, ast), resolveDefaultOptionExpression(ts, prop.initializer));
+			}
+		}
+	}
+
+	return result;
 }
 
-function findObjectLiteralExpression(ts: TypeScript, node: Node): ObjectLiteralExpression | undefined {
+function findObjectLiteralExpression(ts: CoreTypeScript, node: Node): ObjectLiteralExpression | undefined {
 	if (ts.isObjectLiteralExpression(node)) {
 		return node;
 	}
 	return node.forEachChild(child => findObjectLiteralExpression(ts, child));
 }
 
-export function resolveDefaultOptionExpression(ts: TypeScript, _default: Expression): Node {
+export function resolveDefaultOptionExpression(
+	ts: Pick<CoreTypeScript, 'isArrowFunction' | 'isBlock' | 'isParenthesizedExpression'>,
+	_default: Expression,
+): Node {
 	if (ts.isArrowFunction(_default)) {
 		if (ts.isBlock(_default.body)) {
 			return _default; // TODO

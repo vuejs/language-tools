@@ -87,9 +87,6 @@ importers:
 
   packages/component-meta:
     dependencies:
-      '@vue/content-mapper':
-        specifier: workspace:*
-        version: link:../content-mapper
       '@vue/language-core':
         specifier: workspace:*
         version: link:../language-core

@@ -7,7 +7,6 @@
 		]
 	},
 	"references": [
-		{ "path": "../content-mapper/tsconfig.json" },
 		{ "path": "../language-core/tsconfig.json" }
 	],
 	"include": ["*", "lib/**/*"],
