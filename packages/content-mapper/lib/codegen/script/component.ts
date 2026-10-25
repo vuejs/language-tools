@@ -1,6 +1,6 @@
 import { type Code, type IRScriptSetup, navigationFeatures, type ScriptSetupRanges } from '@vue/language-core';
 import { names } from '../names';
-import { asType, generateSfcBlockSection, newLine } from '../utils';
+import { asType, generateSfcBlockSection, newLine, typeAliasRef } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
@@ -26,14 +26,14 @@ export function* generateComponent(
 		&& options.vueCompilerOptions.inferComponentDollarRefs
 		&& options.templateAndStyleTypes.has(names.TemplateRefs)
 	) {
-		yield `__typeRefs: ${asType(names.TemplateRefs, options.scriptLang)},${newLine}`;
+		yield `__typeRefs: ${asType(typeAliasRef(names.TemplateRefs, options.scriptLang), options.scriptLang)},${newLine}`;
 	}
 	if (
 		options.vueCompilerOptions.target >= 3.5
 		&& options.vueCompilerOptions.inferComponentDollarEl
 		&& options.templateAndStyleTypes.has(names.RootEl)
 	) {
-		yield `__typeEl: ${asType(names.RootEl, options.scriptLang)},${newLine}`;
+		yield `__typeEl: ${asType(typeAliasRef(names.RootEl, options.scriptLang), options.scriptLang)},${newLine}`;
 	}
 	yield `})`;
 }
@@ -43,7 +43,7 @@ function* generateEmitsOption(
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	const typeCodes = options.vueCompilerOptions.target >= 3.5 && !scriptSetupRanges.defineEmits?.hasUnionTypeArg
-		? [...generateTypeEmitsOption(scriptSetupRanges)]
+		? [...generateTypeEmitsOption(options, scriptSetupRanges)]
 		: [];
 
 	const runtimeCodes = !typeCodes.length
@@ -60,9 +60,12 @@ function* generateEmitsOption(
 	}
 }
 
-function* generateTypeEmitsOption(scriptSetupRanges: ScriptSetupRanges): Generator<string> {
+function* generateTypeEmitsOption(
+	options: ScriptCodegenOptions,
+	scriptSetupRanges: ScriptSetupRanges,
+): Generator<string> {
 	if (scriptSetupRanges.defineModel.length) {
-		yield names.ModelEmit;
+		yield typeAliasRef(names.ModelEmit, options.scriptLang);
 	}
 	if (scriptSetupRanges.defineEmits?.typeArg) {
 		yield names.Emit;
@@ -120,13 +123,11 @@ function* generateTypePropsOption(
 	hasEmitsOption: boolean,
 ): Generator<string> {
 	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
-		const attrsType = hasEmitsOption
-			? `Omit<${names.InheritedAttrs}, keyof ${names.EmitProps}>`
-			: names.InheritedAttrs;
+		const attrsType = getInheritedAttrsType(options, hasEmitsOption);
 		yield asType(attrsType, options.scriptLang);
 	}
 	if (ctx.generatedTypes.has(names.PublicProps)) {
-		yield asType(names.PublicProps, options.scriptLang);
+		yield asType(typeAliasRef(names.PublicProps, options.scriptLang), options.scriptLang);
 	}
 }
 
@@ -138,17 +139,16 @@ function* generateRuntimePropsOption(
 	hasEmitsOption: boolean,
 ): Generator<string | Code[]> {
 	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
-		const attrsType = hasEmitsOption
-			? `Omit<${names.InheritedAttrs}, keyof ${names.EmitProps}>`
-			: names.InheritedAttrs;
-		const propsType =
-			`${ctx.localTypes.TypePropsToOption}<${names.PickNotAny}<${ctx.localTypes.OmitIndexSignature}<${attrsType}>, {}>>`;
+		const attrsType = getInheritedAttrsType(options, hasEmitsOption);
+		const propsType = ctx.localTypes.TypePropsToOption(
+			`${names.PickNotAny}<${ctx.localTypes.OmitIndexSignature(attrsType)}, {}>`,
+		);
 		yield asType(propsType, options.scriptLang);
 	}
 	if (ctx.generatedTypes.has(names.PublicProps) && options.vueCompilerOptions.target < 3.6) {
-		let propsType = `${ctx.localTypes.TypePropsToOption}<${names.PublicProps}>`;
+		let propsType = ctx.localTypes.TypePropsToOption(typeAliasRef(names.PublicProps, options.scriptLang));
 		if (scriptSetupRanges.withDefaults?.arg) {
-			propsType = `${ctx.localTypes.WithDefaults}<${propsType}, typeof ${names.defaults}>`;
+			propsType = ctx.localTypes.WithDefaults(propsType, `typeof ${names.defaults}`);
 		}
 		yield asType(propsType, options.scriptLang);
 	}
@@ -162,4 +162,11 @@ function* generateRuntimePropsOption(
 			true,
 		)];
 	}
+}
+
+function getInheritedAttrsType(options: ScriptCodegenOptions, hasEmitsOption: boolean) {
+	const inheritedAttrs = typeAliasRef(names.InheritedAttrs, options.scriptLang);
+	return hasEmitsOption
+		? `Omit<${inheritedAttrs}, keyof ${typeAliasRef(names.EmitProps, options.scriptLang)}>`
+		: inheritedAttrs;
 }

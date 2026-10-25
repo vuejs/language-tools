@@ -15,7 +15,7 @@ import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
-import { endOfLine, generateTypedVar, identifierRE, newLine } from '../utils';
+import { endOfLine, generateTypedVar, identifierRE, newLine, typeAliasRef } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
@@ -127,7 +127,9 @@ export function* generateComponent(
 		}
 		else {
 			yield* generateTypedVar('let', componentVar, options.scriptLang, function*() {
-				yield `${names.WithComponent}<'${tag}', ${names.LocalComponents}, ${names.GlobalComponents}`;
+				yield `${names.WithComponent}<'${tag}', ${typeAliasRef(names.LocalComponents, options.scriptLang)}, ${
+					typeAliasRef(names.GlobalComponents, options.scriptLang)
+				}`;
 				yield originalNames.has(options.componentName)
 					? `, typeof ${names.export}`
 					: `, void`;

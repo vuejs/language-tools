@@ -52,6 +52,10 @@ export function* generateTypeAlias(
 	}
 }
 
+export function typeAliasRef(name: string, _lang: string): string {
+	return name;
+}
+
 // The phantom argument that carries the component library's `Ref` brand into
 // `__VLS_unwrap` / `__VLS_withDotValue`; the helper declarations cannot
 // resolve the library import themselves.

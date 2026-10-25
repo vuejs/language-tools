@@ -19,6 +19,7 @@ import {
 	identifierRE,
 	isTsLang,
 	newLine,
+	typeAliasRef,
 } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { type CodeTransform, generateCodeWithTransforms, insert, replace } from '../utils/transform';
@@ -67,7 +68,9 @@ export function* generateGeneric(
 	}
 	yield `(${newLine}`
 		+ `	${names.props}: NonNullable<Awaited<typeof ${names.setup}>>['props'],${newLine}`
-		+ `	${names.ctx}?: ${ctx.localTypes.PrettifyLocal}<Pick<NonNullable<Awaited<typeof ${names.setup}>>, 'attrs' | 'emit' | 'slots'>>,${newLine}`
+		+ `	${names.ctx}?: ${
+			ctx.localTypes.PrettifyLocal(`Pick<NonNullable<Awaited<typeof ${names.setup}>>, 'attrs' | 'emit' | 'slots'>`)
+		},${newLine}`
 		+ `	${names.exposed}?: NonNullable<Awaited<typeof ${names.setup}>>['expose'],${newLine}`
 		+ `	${names.setup} = (async () => {${newLine}`;
 
@@ -75,10 +78,10 @@ export function* generateGeneric(
 
 	const propTypes: string[] = [];
 	const emitTypes: string[] = [];
-	const { vueCompilerOptions } = options;
+	const { vueCompilerOptions, scriptLang } = options;
 
 	if (ctx.generatedTypes.has(names.PublicProps)) {
-		propTypes.push(names.PublicProps);
+		propTypes.push(typeAliasRef(names.PublicProps, scriptLang));
 	}
 	if (scriptSetupRanges.defineProps?.arg) {
 		yield `const ${names.propsOption} = `;
@@ -95,10 +98,10 @@ export function* generateGeneric(
 		);
 	}
 	if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
-		propTypes.push(names.EmitProps);
+		propTypes.push(typeAliasRef(names.EmitProps, scriptLang));
 	}
 	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
-		propTypes.push(names.InheritedAttrs);
+		propTypes.push(typeAliasRef(names.InheritedAttrs, scriptLang));
 	}
 	if (scriptSetupRanges.defineEmits) {
 		emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}`);
@@ -115,7 +118,7 @@ export function* generateGeneric(
 			+ ` & import('${vueCompilerOptions.lib}').AllowedComponentProps`
 			+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`;
 	if (propTypes.length) {
-		yield ` & ${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}>`;
+		yield ` & ${ctx.localTypes.PrettifyLocal(propTypes.join(` & `))}`;
 	}
 	yield endOfLine;
 	yield `	expose: (exposed: `;
@@ -126,17 +129,17 @@ export function* generateGeneric(
 		options.vueCompilerOptions.inferComponentDollarRefs
 		&& options.templateAndStyleTypes.has(names.TemplateRefs)
 	) {
-		yield ` & { $refs: ${names.TemplateRefs}; }`;
+		yield ` & { $refs: ${typeAliasRef(names.TemplateRefs, scriptLang)}; }`;
 	}
 	if (
 		options.vueCompilerOptions.inferComponentDollarEl
 		&& options.templateAndStyleTypes.has(names.RootEl)
 	) {
-		yield ` & { $el: ${names.RootEl}; }`;
+		yield ` & { $el: ${typeAliasRef(names.RootEl, scriptLang)}; }`;
 	}
 	yield `) => void${endOfLine}`;
 	yield `	attrs: any${endOfLine}`;
-	yield `	slots: ${hasSlotsType(options) ? names.Slots : `{}`}${endOfLine}`;
+	yield `	slots: ${hasSlotsType(options) ? typeAliasRef(names.Slots, scriptLang) : `{}`}${endOfLine}`;
 	yield `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`}${endOfLine}`;
 	yield `}${endOfLine}`;
 	yield `})(),${newLine}`; // __VLS_setup = (async () => {
@@ -244,7 +247,7 @@ export function* generateSetupFunction(
 	}
 	for (const { callExp, exp, arg } of scriptSetupRanges.useCssModule) {
 		const type = options.templateAndStyleTypes.has(names.StyleModules)
-			? names.StyleModules
+			? typeAliasRef(names.StyleModules, options.scriptLang)
 			: `{}`;
 		if (arg) {
 			transforms.push(
@@ -319,7 +322,7 @@ export function* generateSetupFunction(
 				}
 				yield `/** @type {Readonly<import('${options.vueCompilerOptions.lib}').ShallowRef<`;
 				if (arg) {
-					yield names.TemplateRefs;
+					yield typeAliasRef(names.TemplateRefs, options.scriptLang);
 					yield `[`;
 					yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, {
 						features: navigationFeatures | completionFeatures,
@@ -335,7 +338,7 @@ export function* generateSetupFunction(
 				if (isTsLang(options.scriptLang)) {
 					yield ` as Readonly<import('${options.vueCompilerOptions.lib}').ShallowRef<`;
 					if (arg) {
-						yield names.TemplateRefs;
+						yield typeAliasRef(names.TemplateRefs, options.scriptLang);
 						yield `[`;
 						yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, {
 							features: navigationFeatures | completionFeatures,
@@ -377,7 +380,10 @@ export function* generateSetupFunction(
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 			yield* output;
-			yield asType(`${ctx.localTypes.WithSlots}<typeof ${names.base}, ${names.Slots}>`, options.scriptLang);
+			yield asType(
+				ctx.localTypes.WithSlots(`typeof ${names.base}`, typeAliasRef(names.Slots, options.scriptLang)),
+				options.scriptLang,
+			);
 			yield endOfLine;
 		}
 		else {
@@ -512,13 +518,13 @@ function* generatePublicProps(
 
 	const propTypes: string[] = [];
 	if (options.vueCompilerOptions.jsxSlots && hasSlotsType(options)) {
-		propTypes.push(`${ctx.localTypes.PropsChildren}<${names.Slots}>`);
+		propTypes.push(ctx.localTypes.PropsChildren(typeAliasRef(names.Slots, options.scriptLang)));
 	}
 	if (scriptSetupRanges.defineProps?.typeArg) {
 		propTypes.push(names.Props);
 	}
 	if (scriptSetupRanges.defineModel.length) {
-		propTypes.push(names.ModelProps);
+		propTypes.push(typeAliasRef(names.ModelProps, options.scriptLang));
 	}
 	const target = options.vueCompilerOptions.target;
 	const used = !!scriptSetup.generic
@@ -607,7 +613,7 @@ function* generateModels(
 
 	// avoid `defineModel<...>()` to prevent JS AST issues
 	yield* generateTypedVar('let', names.modelEmit, options.scriptLang, function*() {
-		yield `${names.ShortEmits}<${names.ModelEmit}>`;
+		yield `${names.ShortEmits}<${typeAliasRef(names.ModelEmit, options.scriptLang)}>`;
 	});
 }
 

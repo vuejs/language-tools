@@ -9,36 +9,37 @@ import {
 } from '@vue/language-core';
 import { Boundary, synthesizedIgnore } from '@vue/language-core/lib/utils/boundary';
 import { names } from '../names';
-import { endOfLine } from '../utils';
+import { endOfLine, typeAliasRef } from '../utils';
 import { generateEscaped } from '../utils/escaped';
 import type { TemplateCodegenOptions } from './index';
 
 const classNameEscapeRE = /([\\'])/;
 
 export function* generateStyleScopedClassReferences(
-	{ template, typescript: ts }: TemplateCodegenOptions,
+	{ template, typescript: ts, scriptLang }: TemplateCodegenOptions,
 	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
 	for (const [className, offset, fullStart, kind] of forEachStyleScopedClassReference(ts, template, node)) {
-		yield* generateStyleScopedClassReference(template, className, offset, fullStart, kind);
+		yield* generateStyleScopedClassReference(template, scriptLang, className, offset, fullStart, kind);
 	}
 }
 
 export function* generateStyleScopedClassReference(
 	block: IRBlock,
+	scriptLang: string,
 	className: string,
 	offset: number,
 	fullStart = offset,
 	kind?: SpanMapKind,
 ): Generator<Code> {
 	if (!className) {
-		yield `/** @type {${names.StyleScopedClasses}['`;
+		yield `/** @type {${typeAliasRef(names.StyleScopedClasses, scriptLang)}['`;
 		yield ['', 'template', offset, { features: completionFeatures }];
 		yield `']} */${endOfLine}`;
 		return;
 	}
 
-	yield `/** @type {${names.StyleScopedClasses}[`;
+	yield `/** @type {${typeAliasRef(names.StyleScopedClasses, scriptLang)}[`;
 	const ignore = yield* Boundary.start(block.name, 0, 0, synthesizedIgnore);
 	const boundary = yield* Boundary.start(
 		block.name,

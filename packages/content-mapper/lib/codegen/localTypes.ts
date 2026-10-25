@@ -19,7 +19,9 @@ type __VLS_WithDefaults<P, D> = {
 				: jsTypedef(
 					`P, D`,
 					`__VLS_WithDefaults`,
-					`{ [K in keyof Pick<P, keyof P>]: K extends keyof D ? ${PrettifyLocal.name}<P[K] & { default: D[K] }> : P[K] }`,
+					`{ [K in keyof Pick<P, keyof P>]: K extends keyof D ? ${
+						reference(PrettifyLocal.name, `P[K] & { default: D[K] }`)
+					} : P[K] }`,
 				),
 	);
 	const PrettifyLocal = defineHelper(
@@ -107,25 +109,27 @@ type __VLS_TypePropsToOption<T> = {
 	};
 	used.clear();
 
+	// Each getter marks its helper used before the type arguments are evaluated,
+	// which keeps the order of the generated helpers.
 	return {
 		generate,
-		get PrettifyLocal() {
-			return PrettifyLocal.name;
+		get PrettifyLocal(): (type: string) => string {
+			return instantiate(PrettifyLocal.name);
 		},
-		get WithDefaults() {
-			return WithDefaults.name;
+		get WithDefaults(): (props: string, defaults: string) => string {
+			return instantiate(WithDefaults.name);
 		},
-		get WithSlots() {
-			return WithSlots.name;
+		get WithSlots(): (component: string, slots: string) => string {
+			return instantiate(WithSlots.name);
 		},
-		get PropsChildren() {
-			return PropsChildren.name;
+		get PropsChildren(): (slots: string) => string {
+			return instantiate(PropsChildren.name);
 		},
-		get TypePropsToOption() {
-			return TypePropsToOption.name;
+		get TypePropsToOption(): (props: string) => string {
+			return instantiate(TypePropsToOption.name);
 		},
-		get OmitIndexSignature() {
-			return OmitIndexSignature.name;
+		get OmitIndexSignature(): (type: string) => string {
+			return instantiate(OmitIndexSignature.name);
 		},
 	};
 
@@ -134,6 +138,14 @@ type __VLS_TypePropsToOption<T> = {
 			yield helpers[name]!.generate();
 		}
 		used.clear();
+	}
+
+	function instantiate(name: string) {
+		return (...typeArgs: string[]) => reference(name, ...typeArgs);
+	}
+
+	function reference(name: string, ...typeArgs: string[]) {
+		return `${name}<${typeArgs.join(', ')}>`;
 	}
 
 	function jsTypedef(params: string, name: string, body: string) {

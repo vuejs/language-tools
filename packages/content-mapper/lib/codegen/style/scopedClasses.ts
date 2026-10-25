@@ -32,7 +32,7 @@ export function* generateStyleScopedClasses(
 				}
 				else {
 					deferredGenerates.push(
-						generateStyleScopedClassReference(style, className.text.slice(1), className.offset + 1),
+						generateStyleScopedClassReference(style, scriptLang, className.text.slice(1), className.offset + 1),
 					);
 				}
 			}

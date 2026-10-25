@@ -13,7 +13,7 @@ import {
 } from '@vue/language-core';
 import { Boundary, isSynthesizedIgnore, OpenRanges } from '@vue/language-core/lib/utils/boundary';
 import { names } from '../names';
-import { asType, endOfLine, isTsLang, newLine } from '../utils';
+import { asType, endOfLine, isTsLang, newLine, typeAliasRef } from '../utils';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
@@ -274,7 +274,7 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 		generatedTypes.add(names.Scope);
 		// Only referenced locals are listed: a type query reads the variable,
 		// which would hide its unused diagnostic.
-		let type = names.Scope;
+		let type = typeAliasRef(names.Scope, scriptLang);
 		if (scope.locals.length) {
 			type += ` & { ${scope.locals.map(name => `${name}: typeof ${name}`).join(`; `)} }`;
 		}

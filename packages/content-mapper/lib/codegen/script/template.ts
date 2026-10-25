@@ -9,6 +9,7 @@ import {
 	generateTypedVar,
 	getRefBrandArgument,
 	isTsLang,
+	typeAliasRef,
 } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenOptions } from './index';
@@ -64,7 +65,7 @@ function* generateTemplateCtx(
 		exps.push(asType(`import('${vueCompilerOptions.lib}').ComponentPublicInstance`, scriptLang));
 	}
 	if (templateAndStyleTypes.has(names.StyleModules)) {
-		exps.push(asType(names.StyleModules, scriptLang));
+		exps.push(asType(typeAliasRef(names.StyleModules, scriptLang), scriptLang));
 	}
 
 	if (scriptSetupRanges?.defineEmits) {
@@ -84,10 +85,10 @@ function* generateTemplateCtx(
 		propTypes.push(`typeof ${scriptSetupRanges.defineProps.name ?? names.props}`);
 	}
 	if (scriptSetupRanges?.defineModel.length) {
-		propTypes.push(names.ModelProps);
+		propTypes.push(typeAliasRef(names.ModelProps, scriptLang));
 	}
 	if (emitTypes.length) {
-		propTypes.push(names.EmitProps);
+		propTypes.push(typeAliasRef(names.EmitProps, scriptLang));
 	}
 	if (propTypes.length) {
 		exps.push(asType(`{ $props: ${propTypes.join(` & `)} }`, scriptLang));
@@ -130,7 +131,7 @@ function* generateTemplateComponents(
 			: `import('${vueCompilerOptions.lib}').GlobalComponents & Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>`;
 	});
 	yield* generateTypedVar('let', names.components, scriptLang, function*() {
-		yield `${names.LocalComponents} & ${names.GlobalComponents}`;
+		yield `${typeAliasRef(names.LocalComponents, scriptLang)} & ${typeAliasRef(names.GlobalComponents, scriptLang)}`;
 	});
 	yield* generateTypedVar('let', names.intrinsics, scriptLang, function*() {
 		yield `import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements`;
@@ -163,7 +164,9 @@ function* generateTemplateDirectives(
 		yield types.length ? types.join(` & `) : `{}`;
 	});
 	yield* generateTypedVar('let', names.directives, scriptLang, function*() {
-		yield `${names.LocalDirectives} & ${names.BuiltInDirectives} & import('${vueCompilerOptions.lib}').GlobalDirectives`;
+		yield `${
+			typeAliasRef(names.LocalDirectives, scriptLang)
+		} & ${names.BuiltInDirectives} & import('${vueCompilerOptions.lib}').GlobalDirectives`;
 	});
 }
 
