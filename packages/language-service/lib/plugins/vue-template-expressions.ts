@@ -83,14 +83,14 @@ export function create(
 						textEdit: { range, newText: keyword },
 					}));
 					const codegen = tsCodegen.get(info.root.ir);
-					const bindings = codegen?.getSetupBindings();
+					const bindings = info.root.scriptAnalysis.getSetupBindings();
 					const listed = new Set([
 						...codegen?.getScopeBindings() ?? [],
 						...codegen?.getGeneratedTemplate()?.scopeMemberNames ?? [],
 						...keywords,
 						...Object.values(info.root.vueCompilerOptions.macros).flat(),
 					]);
-					for (const name of new Set([...locals, ...bindings ?? []])) {
+					for (const name of new Set([...locals, ...bindings])) {
 						if (!listed.has(name) && !name.startsWith('__VLS_')) {
 							items.push({
 								label: name,
@@ -103,7 +103,7 @@ export function create(
 					if (word) {
 						const { fileName } = info.root;
 						for (const entry of await getAutoImportValues(fileName) ?? []) {
-							if (bindings?.has(entry.name)) {
+							if (bindings.has(entry.name)) {
 								continue;
 							}
 							items.push({

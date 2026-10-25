@@ -62,7 +62,7 @@ export function create(
 					}));
 
 					if (ir.script) {
-						const edit = createAddComponentToOptionEdit(ts, ir, asClassicNode(ir.script.ast), name);
+						const edit = createAddComponentToOptionEdit(ts, info.root, asClassicNode(ir.script.ast), name);
 						if (edit) {
 							sfcEdits.push({
 								range: {

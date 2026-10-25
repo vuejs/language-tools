@@ -13,7 +13,6 @@ import {
 	forEachInterpolationNode,
 	hyphenateAttr,
 	hyphenateTag,
-	tsCodegen,
 	type VueVirtualCode,
 } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
@@ -130,9 +129,8 @@ export function create(
 				htmlService.format = (document, range, options) => {
 					let voidElements: string[] | undefined;
 					const info = resolveEmbeddedCode(context, document.uri);
-					const codegen = info && tsCodegen.get(info.root.ir);
-					if (codegen) {
-						const componentNames = codegen.getLocalComponents();
+					if (info) {
+						const componentNames = info.root.scriptAnalysis.getLocalComponents();
 						voidElements = defaultDataProvider.provideTags()
 							.filter(tag => tag.void)
 							.map(tag => tag.name)

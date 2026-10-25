@@ -1,6 +1,6 @@
 import type { CreateFile, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
-import { type IR, type IRTemplate, tsCodegen } from '@vue/language-core';
+import type { IRTemplate, VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 import { asClassicNode, resolveEmbeddedCode } from '../utils';
@@ -145,7 +145,7 @@ export function create(
 					];
 
 					if (ir.script) {
-						const edit = createAddComponentToOptionEdit(ts, ir, asClassicNode(ir.script.ast), newName);
+						const edit = createAddComponentToOptionEdit(ts, info.root, asClassicNode(ir.script.ast), newName);
 						if (edit) {
 							sfcEdits.push({
 								range: {
@@ -295,11 +295,11 @@ export function getLastImportNode(ts: typeof import('typescript'), sourceFile: t
 
 export function createAddComponentToOptionEdit(
 	ts: typeof import('typescript'),
-	ir: IR,
+	root: VueVirtualCode,
 	ast: ts.SourceFile,
 	componentName: string,
 ) {
-	const componentOptions = tsCodegen.get(ir)?.getScriptRanges()?.exportDefault?.options;
+	const componentOptions = root.scriptAnalysis.getScriptRanges()?.exportDefault?.options;
 	if (!componentOptions) {
 		return;
 	}

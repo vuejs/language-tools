@@ -30,7 +30,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 						...codegen?.getGeneratedTemplate()?.inlayHints ?? [],
 						...codegen?.getGeneratedScript().inlayHints ?? [],
 					];
-					const scriptSetupRanges = codegen?.getScriptSetupRanges();
+					const scriptSetupRanges = info.root.scriptAnalysis.getScriptSetupRanges();
 
 					if (scriptSetupRanges?.defineProps?.destructured && ir.scriptSetup?.ast) {
 						const setting = 'vue.inlayHints.destructuredProps';

@@ -1,5 +1,5 @@
 import type { CompletionItem, CompletionItemKind, LanguageServicePlugin } from '@volar/language-service';
-import { type TextRange, tsCodegen } from '@vue/language-core';
+import type { TextRange } from '@vue/language-core';
 import { resolveEmbeddedCode } from '../utils';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
@@ -22,9 +22,8 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 						return;
 					}
 					const { ir } = info.root;
-					const codegen = tsCodegen.get(ir);
 					const scriptSetup = ir.scriptSetup;
-					const scriptSetupRanges = codegen?.getScriptSetupRanges();
+					const scriptSetupRanges = info.root.scriptAnalysis.getScriptSetupRanges();
 					if (!scriptSetup || !scriptSetupRanges) {
 						return;
 					}

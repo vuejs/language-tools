@@ -35,7 +35,7 @@ export function create(): LanguageServicePlugin {
 					);
 
 					const templateRefs = codegen?.getGeneratedTemplate()?.templateRefs;
-					const useTemplateRefs = codegen?.getScriptSetupRanges()?.useTemplateRef ?? [];
+					const useTemplateRefs = info.root.scriptAnalysis.getScriptSetupRanges()?.useTemplateRef ?? [];
 
 					return useTemplateRefs.flatMap(({ arg }) => {
 						if (!arg) {
