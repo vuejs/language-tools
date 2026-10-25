@@ -1,10 +1,9 @@
-import type { LanguageServicePlugin, TextDocument, VirtualCode } from '@volar/language-service';
-import { isRenameEnabled } from '@vue/language-core';
+import type { LanguageServicePlugin, TextDocument } from '@volar/language-service';
 import { create as baseCreate, type Provide } from 'volar-service-css';
 import type * as css from 'vscode-css-languageservice';
 import { resolveEmbeddedCode } from '../utils';
 
-export function create(): LanguageServicePlugin {
+export function create({ isRenamedByTypeScript }: import('../requests').Requests): LanguageServicePlugin {
 	const baseService = baseCreate({
 		scssDocumentSelector: ['scss', 'postcss'],
 	});
@@ -30,20 +29,17 @@ export function create(): LanguageServicePlugin {
 					}
 					return diagnostics;
 				},
-				/**
-				 * If the position is within the virtual code and navigation is enabled,
-				 * skip the CSS navigation feature.
-				 */
-				provideReferences(document, position) {
-					if (isWithinNavigationVirtualCode(document, position)) {
+				/** TypeScript navigates the class names and `v-bind()` expressions it checks. */
+				async provideReferences(document, position) {
+					if (await isRenamedByTypeScriptAt(document, position)) {
 						return;
 					}
 					return worker(document, (stylesheet, cssLs) => {
 						return cssLs.findReferences(document, position, stylesheet);
 					});
 				},
-				provideRenameRange(document, position) {
-					if (isWithinNavigationVirtualCode(document, position)) {
+				async provideRenameRange(document, position) {
+					if (await isRenamedByTypeScriptAt(document, position)) {
 						return;
 					}
 					return worker(document, (stylesheet, cssLs) => {
@@ -52,7 +48,7 @@ export function create(): LanguageServicePlugin {
 				},
 			};
 
-			function isWithinNavigationVirtualCode(
+			async function isRenamedByTypeScriptAt(
 				document: TextDocument,
 				position: css.Position,
 			) {
@@ -65,24 +61,7 @@ export function create(): LanguageServicePlugin {
 					return false;
 				}
 
-				let script: VirtualCode | undefined;
-				for (const [key, value] of info.script.generated.embeddedCodes) {
-					if (key.startsWith('script_')) {
-						script = value;
-						break;
-					}
-				}
-				if (!script) {
-					return false;
-				}
-
-				const offset = document.offsetAt(position) + block.startTagEnd;
-				for (const [, , start, length, , features] of script.mappings) {
-					if (isRenameEnabled(features) && offset >= start && offset <= start + length) {
-						return true;
-					}
-				}
-				return false;
+				return !!await isRenamedByTypeScript(info.root.fileName, block.startTagEnd + document.offsetAt(position));
 			}
 
 			function worker<T>(

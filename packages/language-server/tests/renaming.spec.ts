@@ -160,6 +160,34 @@ test('Scoped class names in a static class attribute', async () => {
 	).toEqual(['tsconfigProject/fixture.vue:2:16-2:19 -> NEW', 'tsconfigProject/fixture.vue:6:4-6:7 -> NEW']);
 });
 
+test('The CSS service leaves the names TypeScript renames to it', async () => {
+	const content = `
+<script setup lang="ts">
+const foo = 1;
+</script>
+<template><div :class="$style.mod"></div></template>
+<style module>
+.mod { color: v-bind(foo); }
+</style>
+<style>
+.plain { }
+</style>
+`;
+	const document = await prepareDocument('tsconfigProject/fixture.vue', 'vue', content);
+	const server = await getLanguageServer();
+	const prepareRename = (text: string) =>
+		server.vueserver.connection.sendRequest('textDocument/prepareRename', {
+			textDocument: { uri: document.uri },
+			position: document.positionAt(content.indexOf(text) + 1),
+		});
+	expect(await prepareRename('mod {')).toBeNull();
+	expect(await prepareRename('foo);')).toBeNull();
+	expect(await prepareRename('plain')).toMatchObject({
+		start: { line: 9, character: 0 },
+		end: { line: 9, character: 6 },
+	});
+});
+
 test('Component props', async () => {
 	await prepareDocument(
 		'tsconfigProject/foo.vue',

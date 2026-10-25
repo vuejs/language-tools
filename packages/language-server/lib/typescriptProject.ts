@@ -110,6 +110,8 @@ export interface TypeScriptProjectResolver {
 	collectExtractProps(fileName: string, start: number, end: number): Promise<ExtractPropsInfo[] | undefined>;
 	/** Whether the identifier at `offset` in the source text of the Vue file `fileName` is a `Ref`. */
 	isRefAtOffset(fileName: string, offset: number): Promise<boolean | undefined>;
+	/** Whether TypeScript renames the code at `offset` in the source text of the Vue file `fileName`. */
+	isRenamedAtOffset(fileName: string, offset: number): Promise<boolean | undefined>;
 	/** Releases the file opened by `getProject`. */
 	closeFile(fileName: string): void;
 	/** Forgets the cached auto-import exports that a change to `fileName`, if it can export components, may affect. */
@@ -359,6 +361,13 @@ export async function connectTypeScriptProjectResolver(
 				const [position] = toCheckedPositions(sourceFile, offset, ts.SpanMapFeature.Completion);
 				return position !== undefined && await isRefAtOffset(ts, project.checker, sourceFile, position);
 			});
+		},
+		isRenamedAtOffset(fileName, offset) {
+			return withSourceFile(
+				fileName,
+				async (_project, sourceFile) =>
+					!!sourceFile.spanMap?.originalToVirtualPositions(offset, ts.SpanMapFeature.Rename).length,
+			);
 		},
 		closeFile(fileName) {
 			if (projects.delete(fileName)) {

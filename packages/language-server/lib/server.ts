@@ -372,6 +372,12 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 					catch {}
 				},
+				async isRenamedByTypeScript(fileName, position) {
+					try {
+						return await (await connectTypeScriptApi()).isRenamedAtOffset(fileName, position);
+					}
+					catch {}
+				},
 			}),
 		);
 

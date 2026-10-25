@@ -63,6 +63,11 @@ export interface Requests {
 		fileName: string,
 		position: number,
 	): Response<boolean>;
+	/** Whether TypeScript renames the code at `position` of `fileName`'s source text. */
+	isRenamedByTypeScript(
+		fileName: string,
+		position: number,
+	): Response<boolean>;
 	getComponentDirectives(
 		fileName: string,
 	): Response<string[]>;
