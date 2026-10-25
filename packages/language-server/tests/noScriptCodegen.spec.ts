@@ -91,14 +91,17 @@ const ul = 1;
 
 test('closes the HTML tag of the template', async () => {
 	expect(
-		await requestAutoInsert(serverModule, `<script setup lang="ts">
+		await requestAutoInsert(
+			serverModule,
+			`<script setup lang="ts">
 const title = 'hello';
 </script>
 
 <template>
 	<div>|
 </template>
-`),
+`,
+		),
 	).toBe('$0</div>');
 });
 
