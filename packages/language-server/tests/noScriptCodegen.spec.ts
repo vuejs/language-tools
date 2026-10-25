@@ -91,7 +91,7 @@ const ul = 1;
 
 test('closes the HTML tag of the template', async () => {
 	expect(
-		await requestAutoInsert(`<script setup lang="ts">
+		await requestAutoInsert(serverModule, `<script setup lang="ts">
 const title = 'hello';
 </script>
 
@@ -102,37 +102,40 @@ const title = 'hello';
 	).toBe('$0</div>');
 });
 
-// The TypeScript syntactic plugins run on the script embedded code, which only a script code generation plugin creates.
-test.fails('closes the JSX tag of the script', async () => {
-	expect(
-		await requestAutoInsert(`<script setup lang="tsx">
+test('closes the JSX tag of the script', async () => {
+	const content = `<script setup lang="tsx">
 const vnode = <div>|;
 </script>
-`),
-	).toBe('$0</div>');
+`;
+	expect(await requestAutoInsert(serverModule, content)).toBe('$0</div>');
+	expect(await requestAutoInsert(undefined, content)).toBe('$0</div>');
 });
 
-test.fails('completes the JSDoc comment template of the script', async () => {
+test('completes the JSDoc comment template of the script', async () => {
 	const content = `<script setup lang="ts">
 /** */
 function add(a: number) {}
 </script>
 `;
-	const server = await getLanguageServer(serverModule);
-	const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'jsdoc.vue')).toString();
-	const document = await server.open(uri, 'vue', content);
-	try {
-		const completion = await server.vueserver.sendCompletionRequest(
-			uri,
-			document.positionAt(content.indexOf('/**') + '/**'.length),
-		);
-		expect(completion?.items.map(item => [item.label, item.textEdit?.newText])).toEqual([
-			['/** */', '/**\n * $0\n * @param a ${1}\n */'],
-		]);
-	}
-	finally {
-		await server.close(uri);
-	}
+	const completeJsDoc = async (entry: string | undefined) => {
+		const server = await getLanguageServer(entry);
+		const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'jsdoc.vue')).toString();
+		const document = await server.open(uri, 'vue', content);
+		try {
+			const completion = await server.vueserver.sendCompletionRequest(
+				uri,
+				document.positionAt(content.indexOf('/**') + '/**'.length),
+			);
+			return completion?.items.map(item => [item.label, item.textEdit?.newText]);
+		}
+		finally {
+			await server.close(uri);
+		}
+	};
+	const items = [['/** */', '/**\n * $0\n * @param a ${1}\n */']];
+	expect(await completeJsDoc(serverModule)).toEqual(items);
+	// one item on the default server, too
+	expect(await completeJsDoc(undefined)).toEqual(items);
 });
 
 test('formats the script block', async () => {
@@ -206,10 +209,10 @@ async function getEmbeddedCodeIds(entry: string | undefined, uri: string) {
 }
 
 /** Opens `content` with its `|` removed, as if the character before `|` was just typed. */
-async function requestAutoInsert(content: string) {
+async function requestAutoInsert(entry: string | undefined, content: string) {
 	const offset = content.indexOf('|');
 	content = content.slice(0, offset) + content.slice(offset + 1);
-	const server = await getLanguageServer(serverModule);
+	const server = await getLanguageServer(entry);
 	const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'autoInsert.vue')).toString();
 	const document = await server.open(uri, 'vue', content);
 	try {

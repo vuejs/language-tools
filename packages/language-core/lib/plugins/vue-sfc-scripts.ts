@@ -1,7 +1,11 @@
 import { SpanMapFeature } from '@volar/language-core';
-import { structureFeatures } from '../features';
+import { completionFeatures, structureFeatures } from '../features';
 import type { VueLanguagePlugin } from '../types';
 
+/**
+ * Each script block verbatim, for the TypeScript syntactic features of the block (structure, formatting, JSDoc
+ * comment templates, JSX closing tags), whichever content mapper serves the file to TypeScript.
+ */
 const plugin: VueLanguagePlugin = () => {
 	return {
 		version: 4,
@@ -31,7 +35,7 @@ const plugin: VueLanguagePlugin = () => {
 					script.content,
 					script.name,
 					0,
-					{ features: structureFeatures | SpanMapFeature.Formatting },
+					{ features: structureFeatures | SpanMapFeature.Formatting | completionFeatures },
 				]);
 			}
 		},
