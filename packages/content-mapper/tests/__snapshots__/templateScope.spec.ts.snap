@@ -1963,12 +1963,6 @@ exports[`the template scope and inlay hints of the Vue files of test-workspace 1
     "styleNames": "",
     "templateNames": "msg",
   },
-  "tsconfigNoScriptCodegen/fixture.vue": {
-    "inlayHints": [],
-    "scopeBindings": "foo bar color",
-    "styleNames": "color",
-    "templateNames": "foo bar",
-  },
   "tsconfigSolution/src/App.vue": {
     "inlayHints": [],
     "scopeBindings": "msg",

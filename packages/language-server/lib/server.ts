@@ -9,6 +9,7 @@ import {
 	createVueLanguagePlugin,
 	getComponentIsBinding,
 	type LanguagePlugin,
+	type VueLanguagePlugin,
 	VueVirtualCode,
 } from '@vue/language-core';
 import {
@@ -50,7 +51,18 @@ interface TypeScriptApiConnection {
 	packageJsonPath: string;
 }
 
-export function startServer(ts: typeof import('typescript')) {
+export interface ServerOptions {
+	/**
+	 * The script code generation plugins of each Vue language plugin the server creates. The language server
+	 * features read only the Vue source and its IR, so they do not need any.
+	 */
+	createPlugins?: () => VueLanguagePlugin[];
+}
+
+export function startServer(
+	ts: typeof import('typescript'),
+	{ createPlugins = () => [vueTsxPlugin] }: ServerOptions = {},
+) {
 	const connection = createConnection();
 	const server = createServer(connection);
 
@@ -440,14 +452,12 @@ export function startServer(ts: typeof import('typescript')) {
 				.filter(entry => entry.package === '@vue/content-mapper')
 				.map(entry => {
 					const { vueOptions } = resolveMapperOptions(ts.sys.readFile, configFileName, entry.options);
-					// Internal createPlugins option: language server passes no script codegen plugins when requested
-					const scriptPlugins = entry.options?.skipScriptCodegen ? [] : [vueTsxPlugin];
 					return routeByExtensions(
 						createVueLanguagePlugin(
 							asCoreTypeScript(ts),
 							vueOptions,
 							asFileName,
-							scriptPlugins,
+							createPlugins(),
 						),
 						entry.extensions,
 					);

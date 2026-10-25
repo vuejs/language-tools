@@ -1,171 +1,113 @@
+import type { GetVirtualFileRequest } from '@volar/language-server/protocol';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server';
 
-/**
- * Tests the createPlugins option (language-server-internal): when contentMappers[].options.skipScriptCodegen
- * is true, the language server passes no script codegen plugins (no vue-tsx), so no script_ts embedded code
- * is generated. Language service features (hover, completion, inlay hints) still work because they depend
- * only on IR and scriptAnalysis.
- */
+// The language server features read the Vue source and its IR, not the code that a script code generation
+// plugin generates for TypeScript 7.1, so they work when the server creates no such plugin.
+const serverModule = require.resolve('./noScriptCodegenServer.js');
 
-test('no script_ts embedded code when skipScriptCodegen is true', async () => {
-	const content = `<script setup lang="ts">
-const foo = 1;
-const bar = 2;
-</script>
-
-<template>
-	<div>{{ foo }}</div>
-</template>`;
-
-	const server = await getLanguageServer();
-	const document = await server.open(
-		URI.file(`${testWorkspacePath}/tsconfigNoScriptCodegen/fixture.vue`).toString(),
-		'vue',
-		content,
-	);
-
-	// Verify by checking that semantic tokens work (which proves vue-tsx is not loaded)
-	// If vue-tsx were loaded, we would get semantic tokens from the generated script_ts
-	// But without it, we only get tokens from the template
-	const semanticTokens = await server.typescript('textDocument/semanticTokens/full', {
-		textDocument: { uri: document.uri },
-	});
-
-	// Should get semantic tokens (from template), but not from script_ts
-	expect(semanticTokens).toBeDefined();
-
-	await server.close(document.uri);
-});
-
-test('template hover works without script codegen', async () => {
-	const content = `<script setup lang="ts">
-const foo = 1;
-</script>
-
-<template>
-	<div>{{ foo }}</div>
-</template>`;
-	const offset = content.lastIndexOf('foo');
-
-	const server = await getLanguageServer();
-	const document = await server.open(
-		URI.file(`${testWorkspacePath}/tsconfigNoScriptCodegen/fixture.vue`).toString(),
-		'vue',
-		content,
-	);
-
-	const hover = await server.typescript('textDocument/hover', {
-		textDocument: { uri: document.uri },
-		position: document.positionAt(offset),
-	});
-
-	await server.close(document.uri);
-
-	// Should get hover showing the type
-	expect(hover?.contents).toBeDefined();
-	const contents = typeof hover?.contents === 'string' ? hover.contents : (hover?.contents as any)?.value;
-	expect(contents).toContain('foo');
-});
-
-test('template completions work without script codegen', async () => {
-	const content = `<script setup lang="ts">
-const foo = 1;
-const bar = 2;
-</script>
-
-<template>
-	<div>{{ f }}</div>
-</template>`;
-	const offset = content.indexOf('{{ f') + 3;
-
-	const server = await getLanguageServer();
-	const document = await server.open(
-		URI.file(`${testWorkspacePath}/tsconfigNoScriptCodegen/fixture.vue`).toString(),
-		'vue',
-		content,
-	);
-
-	const completions = await server.typescript('textDocument/completion', {
-		textDocument: { uri: document.uri },
-		position: document.positionAt(offset),
-	});
-
-	await server.close(document.uri);
-
-	const labels = completions?.items.map((item: any) => item.label) ?? [];
-	// Should have foo and bar in completion (from IR-derived scope names)
-	expect(labels).toContain('foo');
-	expect(labels).toContain('bar');
-});
-
-test('template inlay hints work without script codegen', async () => {
-	const content = `<script setup lang="ts">
-const foo = 1;
-</script>
-
-<template>
-	<div :foo></div>
-</template>`;
-
-	const server = await getLanguageServer();
-	const document = await server.open(
-		URI.file(`${testWorkspacePath}/tsconfigNoScriptCodegen/fixture.vue`).toString(),
-		'vue',
-		content,
-	);
-
-	const hints = await server.typescript('textDocument/inlayHint', {
-		textDocument: { uri: document.uri },
-		range: {
-			start: { line: 0, character: 0 },
-			end: { line: 7, character: 0 },
-		},
-	});
-
-	await server.close(document.uri);
-
-	// Should show v-bind shorthand hint (from IR-derived inlay hints)
-	expect(hints).toBeDefined();
-	if (hints) {
-		expect(hints.length).toBeGreaterThan(0);
-		expect(hints.some((hint: any) => hint.label.includes('="foo"'))).toBe(true);
+test('creates no script embedded code', async () => {
+	const { document } = await openFixture('templateScope', 'fixture.vue');
+	const server = await getLanguageServer(serverModule);
+	try {
+		const ids = await getEmbeddedCodeIds(serverModule, document.uri);
+		expect(ids).toContain('template');
+		expect(ids.filter(id => id.startsWith('script_'))).toEqual([]);
+	}
+	finally {
+		await server.close(document.uri);
+	}
+	// what the server creates by default
+	const defaultServer = await getLanguageServer();
+	await defaultServer.open(document.uri, 'vue', document.getText());
+	try {
+		expect(await getEmbeddedCodeIds(undefined, document.uri)).toContain('script_ts');
+	}
+	finally {
+		await defaultServer.close(document.uri);
 	}
 });
 
-test('style v-bind() works without script codegen', async () => {
-	const content = `<script setup lang="ts">
-const color = 'red';
-</script>
-
-<template>
-	<div>test</div>
-</template>
-
-<style scoped>
-.item {
-	color: v-bind(color);
-}
-</style>`;
-	const offset = content.lastIndexOf('color');
-
-	const server = await getLanguageServer();
-	const document = await server.open(
-		URI.file(`${testWorkspacePath}/tsconfigNoScriptCodegen/fixture.vue`).toString(),
-		'vue',
-		content,
-	);
-
-	const hover = await server.typescript('textDocument/hover', {
-		textDocument: { uri: document.uri },
-		position: document.positionAt(offset),
-	});
-
-	await server.close(document.uri);
-
-	// Should get hover for the v-bind() variable
-	expect(hover?.contents).toBeDefined();
-	const contents = typeof hover?.contents === 'string' ? hover.contents : (hover?.contents as any)?.value;
-	expect(contents).toContain('color');
+test('completes the setup bindings that the template scope does not list', async () => {
+	const { document, content } = await openFixture('templateScope', 'fixture.vue');
+	const server = await getLanguageServer(serverModule);
+	try {
+		const completion = await server.vueserver.sendCompletionRequest(
+			document.uri,
+			document.positionAt(content.indexOf('{{ title + ') + '{{ title + '.length),
+		);
+		const labels = completion?.items.map(item => item.label) ?? [];
+		// `count` and `title` are read by the template and `color` by the style `v-bind()`, so the template scope
+		// of TypeScript lists them.
+		expect(labels).toContain('unused');
+		expect(labels).toContain('typeof');
+		expect(labels).not.toContain('count');
+		expect(labels).not.toContain('title');
+		expect(labels).not.toContain('color');
+	}
+	finally {
+		await server.close(document.uri);
+	}
 });
+
+test('provides the inlay hints of the template', async () => {
+	const { document, content } = await openFixture('templateScope', 'fixture.vue');
+	const server = await getLanguageServer(serverModule);
+	try {
+		const hints = await server.vueserver.sendInlayHintRequest(document.uri, {
+			start: document.positionAt(0),
+			end: document.positionAt(content.length),
+		});
+		expect(hints?.map(hint => [document.offsetAt(hint.position), hint.label])).toEqual([
+			[content.indexOf('count++'), '$event =>'],
+			[content.indexOf(':title') + ':title'.length, '="title"'],
+		]);
+	}
+	finally {
+		await server.close(document.uri);
+	}
+});
+
+test('provides the rich hover of a component tag', async () => {
+	const { document, content } = await openFixture('hoverComponentMeta', 'Parent.vue');
+	const server = await getLanguageServer(serverModule);
+	try {
+		const hover = await server.vueserver.sendHoverRequest(
+			document.uri,
+			document.positionAt(content.indexOf('<Child') + 2),
+		);
+		const contents = hover?.contents as { kind: string; value: string } | undefined;
+		expect(contents?.kind).toBe('markdown');
+		expect(contents?.value).toContain('The label');
+	}
+	finally {
+		await server.close(document.uri);
+	}
+});
+
+async function getEmbeddedCodeIds(entry: string | undefined, uri: string) {
+	const server = await getLanguageServer(entry);
+	const tree = await server.vueserver.connection.sendRequest<GetVirtualFileRequest.ResponseType>(
+		'volar/client/virtualFiles',
+		{ uri },
+	);
+	const ids: string[] = [];
+	const collect = (code: NonNullable<GetVirtualFileRequest.ResponseType>) => {
+		ids.push(code.virtualCodeId);
+		code.embeddedCodes.forEach(collect);
+	};
+	collect(tree!);
+	return ids;
+}
+
+async function openFixture(dir: string, file: string) {
+	const fileName = path.join(testWorkspacePath, dir, file);
+	// The TypeScript language server reads the file from disk, so the document must match it.
+	const content = fs.readFileSync(fileName, 'utf8');
+	const server = await getLanguageServer(serverModule);
+	const document = await server.open(URI.file(fileName).toString(), 'vue', content);
+	return { document, content };
+}

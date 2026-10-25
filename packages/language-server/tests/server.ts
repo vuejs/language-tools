@@ -12,10 +12,9 @@ import * as path from 'node:path';
 import { URI } from 'vscode-uri';
 import { type LspServer, startLspServer } from '../../content-mapper/tests/lsp';
 
-let serverHandle: LanguageServerHandle | undefined;
+const vueServers = new Map<string, Promise<{ handle: LanguageServerHandle; initializeResult: InitializeResult }>>();
 let typescriptServer: Promise<LspServer> | undefined;
 const typescriptServerVersions = new Map<string, number>();
-let initializeResult: InitializeResult;
 
 export const testWorkspacePath = path.resolve(__dirname, '../../../test-workspace');
 export const typescriptPackageJsonPath = path.resolve(__dirname, '../../../node_modules/typescript-7/package.json');
@@ -33,7 +32,8 @@ export function formatLocations(locations: LocationLike | readonly LocationLike[
 	}).sort();
 }
 
-export async function getLanguageServer(): Promise<{
+/** @param serverModule The entry module of the Vue language server; the TypeScript language server is shared. */
+export async function getLanguageServer(serverModule = require.resolve('../index.js')): Promise<{
 	vueserver: LanguageServerHandle;
 	initializeResult: InitializeResult;
 	/** Sends a request to the TypeScript 7 language server that serves the opened documents. */
@@ -43,38 +43,11 @@ export async function getLanguageServer(): Promise<{
 	/** What an editor's file watcher reports to its TypeScript language server after files change on disk. */
 	changeWatchedFiles: (changes: FileEvent[]) => Promise<void>;
 }> {
-	if (!serverHandle) {
-		serverHandle = startLanguageServer(require.resolve('../index.js'), testWorkspacePath);
-		serverHandle.connection.onNotification(PublishDiagnosticsNotification.type, () => {});
-		serverHandle.connection.onRequest(ConfigurationRequest.type, ({ items }) => {
-			return items.map(({ section }) => {
-				if (
-					section?.startsWith('vue.inlayHints.')
-					|| section === 'vue.hover.rich'
-					|| section === 'vue.autoInsert.dotValue'
-				) {
-					return true;
-				}
-				return null;
-			});
-		});
-		// What an editor does for the Vue language server: forward the request to its TypeScript language server.
-		serverHandle.connection.onRequest('vue/typescriptApiConnection', async () => {
-			const server = await (typescriptServer ??= startLspServer(testWorkspacePath));
-			const { pipe } = await server.request<{ pipe: string }>('custom/initializeAPISession', {});
-			return { pipe, packageJsonPath: typescriptPackageJsonPath };
-		});
-		initializeResult = await serverHandle.initialize(
-			URI.file(testWorkspacePath).toString(),
-			// What the VS Code client registers for files outside any tsconfig
-			{ contentMappers: [{ package: '@vue/content-mapper', extensions: ['.vue'] }] },
-			{
-				workspace: {
-					configuration: true,
-				},
-			},
-		);
+	let vueServer = vueServers.get(serverModule);
+	if (!vueServer) {
+		vueServers.set(serverModule, vueServer = startVueServer(serverModule));
 	}
+	const { handle: serverHandle, initializeResult } = await vueServer;
 	return {
 		vueserver: serverHandle,
 		initializeResult,
@@ -98,7 +71,7 @@ export async function getLanguageServer(): Promise<{
 				// a round trip on the same connection guarantees the notification was read before the API is asked
 				await server.request('vue/sync', {}).catch(() => {});
 			}
-			return await serverHandle!.openInMemoryDocument(uri, languageId, content);
+			return await serverHandle.openInMemoryDocument(uri, languageId, content);
 		},
 		close: async uri => {
 			if (uri.startsWith('file://')) {
@@ -106,7 +79,7 @@ export async function getLanguageServer(): Promise<{
 					(await typescriptServer!).notify('textDocument/didClose', { textDocument: { uri } });
 				}
 			}
-			await serverHandle!.closeTextDocument(uri);
+			await serverHandle.closeTextDocument(uri);
 		},
 		changeWatchedFiles: async changes => {
 			const server = await (typescriptServer ??= startLspServer(testWorkspacePath));
@@ -115,4 +88,38 @@ export async function getLanguageServer(): Promise<{
 			await server.request('vue/sync', {}).catch(() => {});
 		},
 	};
+}
+
+async function startVueServer(serverModule: string) {
+	const serverHandle = startLanguageServer(serverModule, testWorkspacePath);
+	serverHandle.connection.onNotification(PublishDiagnosticsNotification.type, () => {});
+	serverHandle.connection.onRequest(ConfigurationRequest.type, ({ items }) => {
+		return items.map(({ section }) => {
+			if (
+				section?.startsWith('vue.inlayHints.')
+				|| section === 'vue.hover.rich'
+				|| section === 'vue.autoInsert.dotValue'
+			) {
+				return true;
+			}
+			return null;
+		});
+	});
+	// What an editor does for the Vue language server: forward the request to its TypeScript language server.
+	serverHandle.connection.onRequest('vue/typescriptApiConnection', async () => {
+		const server = await (typescriptServer ??= startLspServer(testWorkspacePath));
+		const { pipe } = await server.request<{ pipe: string }>('custom/initializeAPISession', {});
+		return { pipe, packageJsonPath: typescriptPackageJsonPath };
+	});
+	const initializeResult = await serverHandle.initialize(
+		URI.file(testWorkspacePath).toString(),
+		// What the VS Code client registers for files outside any tsconfig
+		{ contentMappers: [{ package: '@vue/content-mapper', extensions: ['.vue'] }] },
+		{
+			workspace: {
+				configuration: true,
+			},
+		},
+	);
+	return { handle: serverHandle, initializeResult };
 }
