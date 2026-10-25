@@ -236,9 +236,7 @@ export function* generateEventExpression(
 		);
 
 		if (isCompound) {
-			const scope = ctx.blockScope();
-			scope.declare('$event');
-			scope.read.add('$event');
+			ctx.enterBlockScope(prop);
 
 			const accessMark = ctx.accessLog.length;
 			const codes: Code[] = [];
@@ -262,7 +260,7 @@ export function* generateEventExpression(
 				yield* codes;
 			}
 			yield endOfLine;
-			yield* scope.end();
+			yield* ctx.exitBlockScope();
 			yield `}`;
 		}
 		else {
@@ -311,7 +309,7 @@ function* generateReasserts(
 ): Generator<Code> {
 	const reasserts = new Set<string>();
 	const collect = (name: string) => {
-		if (options.reassertBindings.has(name) && !ctx.scopes.some(scope => scope.has(name))) {
+		if (options.reassertBindings.has(name) && !ctx.isDeclared(name)) {
 			reasserts.add(name);
 		}
 	};

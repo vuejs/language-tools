@@ -75,6 +75,7 @@ function useCodegen(
 		getSetupRefs,
 		getLocalComponents,
 		getLocalDirectives,
+		getTemplateScope,
 		getScopeBindings,
 		getDotValueBindings,
 	} = getScriptAnalysis(ts, vueCompilerOptions, fileName, ir);
@@ -141,6 +142,7 @@ function useCodegen(
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getInheritAttrs(),
+			templateScope: getTemplateScope(),
 		});
 	});
 
@@ -157,6 +159,7 @@ function useCodegen(
 			setupConsts: getSetupConsts(),
 			setupBindings: getSetupBindings(),
 			dotValueBindings: getDotValueBindings(),
+			templateScope: getTemplateScope(),
 		});
 	});
 

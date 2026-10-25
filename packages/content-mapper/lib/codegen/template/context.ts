@@ -5,16 +5,19 @@ import {
 	type DiagnosticDirectiveMapping,
 	DiagnosticDirectivePolicy,
 	directiveCommentRE,
+	type IRBlock,
+	type TemplateBlockScope,
+	type TemplateBlockScopeOwner,
+	type TemplateScope,
 	type VueCodeMarker,
 } from '@vue/language-core';
-import { isLiteralWhitelisted } from '@vue/language-core/lib/utils/bindingReferences';
 import { Boundary, isSynthesizedIgnore, OpenRanges } from '@vue/language-core/lib/utils/boundary';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
-export function createTemplateCodegenContext(scriptLang: string) {
+export function createTemplateCodegenContext(scriptLang: string, templateScope: TemplateScope) {
 	// directive comments ---------------------------------------------------------
 
 	const stack: {
@@ -219,22 +222,40 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		return `__VLS_${variableId++}`;
 	}
 
-	// scopes ---------------------------------------------------------------------
+	// template scope -------------------------------------------------------------
 
-	class Scope extends Set<string> {
-		/** Locals the generated code always reads, so listing them hides no unused diagnostic. */
-		read = new Set<string>();
-		/** The source name may be the hyphenated form of `name`. */
-		members: [name: string, source: string, offset: number, features: VueCodeMarker, sourceName: string][] = [];
-
-		declare(...variables: string[]) {
-			for (const name of variables) {
-				this.add(name);
-			}
+	/** The scope analysis of an expression; the code generation of every expression reads it from language-core. */
+	function getExpression(block: IRBlock, start: number, code: string) {
+		const expression = templateScope.expressions.get(block)?.get(start);
+		if (expression?.code !== code) {
+			throw new Error(`The template scope has no expression \`${code}\` at offset ${start} of ${block.name}.`);
 		}
+		return expression;
+	}
 
-		end() {
-			scopes.pop();
+	const blockScopes: TemplateBlockScope[] = [];
+	const memberFeatures = new Map<string, Map<number, VueCodeMarker>>();
+
+	function enterBlockScope(owner: TemplateBlockScopeOwner) {
+		const scope = templateScope.blockScopes.get(owner);
+		if (!scope) {
+			throw new Error(`The template scope has no block scope of the node.`);
+		}
+		blockScopes.push(scope);
+	}
+
+	function isDeclared(name: string) {
+		return blockScopes.some(scope => scope.declared.has(name));
+	}
+
+	/** The features of the code of a reference, which its member in the block scope maps with for completion. */
+	function setMemberFeatures(block: IRBlock, offset: number, features: VueCodeMarker) {
+		let blockFeatures = memberFeatures.get(block.name);
+		if (!blockFeatures) {
+			memberFeatures.set(block.name, blockFeatures = new Map());
+		}
+		if (!blockFeatures.has(offset)) {
+			blockFeatures.set(offset, features);
 		}
 	}
 
@@ -242,85 +263,32 @@ export function createTemplateCodegenContext(scriptLang: string) {
 	 * A block scope gathers the template identifiers within it as members of
 	 * `__VLS_scope`; completion is mapped only on those members.
 	 */
-	class BlockScope extends Scope {
-		override end() {
-			super.end();
-			return generateScopeMembers(this);
-		}
-	}
-
-	const scopes: Scope[] = [];
-
-	function scope() {
-		const scope = new Scope();
-		scopes.push(scope);
-		return scope;
-	}
-
-	function blockScope() {
-		const scope = new BlockScope();
-		scopes.push(scope);
-		return scope;
-	}
-
-	/**
-	 * Returns false when the name is a local of the expression itself, which
-	 * keeps its own completion.
-	 */
-	function recordScopeMember(
-		name: string,
-		source: string,
-		offset: number,
-		features: VueCodeMarker,
-		sourceName = name,
-	) {
-		if (isLiteralWhitelisted(name) || name === 'require' || name.startsWith('__VLS_')) {
-			return false;
-		}
-		for (let i = scopes.length - 1; i >= 0; i--) {
-			const scope = scopes[i]!;
-			if (scope instanceof BlockScope) {
-				if (!scope.members.some(member => member[1] === source && member[2] === offset)) {
-					scope.members.push([name, source, offset, features, sourceName]);
-				}
-				return true;
-			}
-			if (scope.has(name)) {
-				return false;
-			}
-		}
-		return false;
-	}
-
-	function* generateScopeMembers(scope: Scope): Generator<Code> {
-		const completionMembers = scope.members.filter(([, , , features]) => features.features & completionFeatures);
+	function* exitBlockScope(): Generator<Code> {
+		const scope = blockScopes.pop()!;
+		const completionMembers = scope.members
+			.map(member => [member, memberFeatures.get(member.block)?.get(member.offset)] as const)
+			.filter(([, features]) => features && features.features & completionFeatures);
 		if (!completionMembers.length) {
 			return;
 		}
 		generatedTypes.add(names.Scope);
 		// Only referenced locals are listed: a type query reads the variable,
 		// which would hide its unused diagnostic.
-		const locals = new Set([
-			...scope.read,
-			...[scope, ...scopes]
-				.flatMap(scope => scope.members.map(([name]) => name))
-				.filter(name => scope.has(name) || scopes.some(scope => scope instanceof BlockScope && scope.has(name))),
-		]);
 		let type = names.Scope;
-		if (locals.size) {
-			type += ` & { ${[...locals].map(name => `${name}: typeof ${name}`).join(`; `)} }`;
+		if (scope.locals.length) {
+			type += ` & { ${scope.locals.map(name => `${name}: typeof ${name}`).join(`; `)} }`;
 		}
 		yield `{${newLine}`;
 		yield `const ${names.scope} = ${asType(type, scriptLang)}${endOfLine}`;
 		yield `[`;
-		for (const [, source, offset, features, sourceName] of completionMembers) {
+		for (const [{ block, offset, sourceName }, features] of completionMembers) {
 			// The completion of a member lists the members of the scope whatever its name, so the edges of each
 			// identifier map around `constructor`, which resolves on any object without being listed, instead of a
 			// name the scope may not have.
 			yield `${names.scope}.`;
-			yield [``, source, offset, features];
+			yield [``, block, offset, features!];
 			yield `constructor`;
-			yield [``, source, offset + sourceName.length, features];
+			yield [``, block, offset + sourceName.length, features!];
 			yield `,`;
 		}
 		yield `]${endOfLine}`;
@@ -329,16 +297,9 @@ export function createTemplateCodegenContext(scriptLang: string) {
 
 	// context accesses -----------------------------------------------------------
 
-	// Ordered log of accessed names; event-handler closures slice from a mark
-	// to find the names accessed within their body.
+	// Ordered log of the names the generated code reads from the setup bindings or the template context;
+	// event-handler closures slice from a mark to find the names accessed within their body.
 	const accessLog: string[] = [];
-
-	function accessVariable(source: string, name: string, offset?: number, sourceName = name) {
-		accessLog.push(name);
-		if (offset !== undefined) {
-			recordScopeMember(name, source, offset, { features: 0 }, sourceName);
-		}
-	}
 
 	// conditions -----------------------------------------------------------------
 
@@ -348,7 +309,7 @@ export function createTemplateCodegenContext(scriptLang: string) {
 
 	function* generateConditionGuards() {
 		for (const condition of conditions) {
-			if (condition.accesses.length && condition.accesses.every(name => scopes.some(scope => scope.has(name)))) {
+			if (condition.accesses.length && condition.accesses.every(isDeclared)) {
 				continue;
 			}
 			yield `if (!${condition.text}) throw 0${endOfLine}`;
@@ -424,12 +385,12 @@ export function createTemplateCodegenContext(scriptLang: string) {
 		generateWithDiagnosticDirectiveRanges,
 		generateDiagnosticDirectiveRangesEnd,
 		getInternalVariable,
-		scopes,
-		scope,
-		blockScope,
-		recordScopeMember,
+		getExpression,
+		enterBlockScope,
+		exitBlockScope,
+		isDeclared,
+		setMemberFeatures,
 		accessLog,
-		accessVariable,
 		conditions,
 		generateConditionGuards,
 		hoistVars,

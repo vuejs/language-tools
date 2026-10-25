@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, isBuiltInDirective } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
-import type { IR, IRBlock, IRTemplate, TypeScript, VueCompilerOptions } from '../types';
+import type { IR, IRBlock, IRStyle, IRTemplate, TypeScript, VueCompilerOptions } from '../types';
 import {
 	type ExpressionScope,
 	forEachDeclarations,
@@ -18,12 +18,7 @@ import {
 	getTemplateRef,
 	normalizeAttributeValue,
 } from './shared';
-import {
-	collectDefaultInitializers,
-	isCompoundExpression,
-	parseInterpolationNode,
-	parseVForNode,
-} from './templateExpressions';
+import { isCompoundExpression, parseInterpolationNode, parseVForAliases } from './templateExpressions';
 import { getTypeScriptAST } from './typescriptAST';
 
 export interface InlayHintInfo {
@@ -45,6 +40,62 @@ export interface ContextAccess {
 	model: boolean;
 }
 
+/** An identifier that a template expression references, at its offset in the code of the expression. */
+export interface TemplateReference {
+	name: string;
+	offset: number;
+	/** The name of a shorthand property assignment, like `{ name }`. */
+	isShorthand: boolean;
+	inTypeQuery: boolean;
+	/** The callee of a `new` expression. */
+	isNewOperand: boolean;
+	/** A local of the expression or of a block scope around it, or a global: the code reads the name as is. */
+	local: boolean;
+	/** A member of the nearest block scope. */
+	member: boolean;
+}
+
+/** The identifiers that the code of a template expression, or an identifier like a component tag, references. */
+export interface TemplateExpression {
+	code: string;
+	references: TemplateReference[];
+}
+
+export interface TemplateScopeMember {
+	name: string;
+	/** The name of the block that references the member. */
+	block: string;
+	offset: number;
+	/** The name in the source, like the hyphenated `v-my-dir` of `vMyDir`. */
+	sourceName: string;
+}
+
+/** The template, a `v-for`, a slot, an inline handler, or the styles. */
+export interface TemplateBlockScope {
+	/** The names that the block scope declares, like the aliases of a `v-for`. */
+	declared: ReadonlySet<string>;
+	/** The references that the block scope lists, in the order of their first reference. */
+	members: TemplateScopeMember[];
+	/**
+	 * The declared names of the block scope and the block scopes around it that their members reference when the
+	 * block scope ends, and the names that the code of the block scope always reads, like `$event`.
+	 */
+	locals: string[];
+}
+
+/**
+ * The node a block scope belongs to: the template, the styles, a `v-for`, the element of a slot, or the directive
+ * of an inline handler.
+ */
+export type TemplateBlockScopeOwner =
+	| IRTemplate
+	| readonly IRStyle[]
+	| CompilerDOM.ForNode
+	| CompilerDOM.ElementNode
+	| CompilerDOM.DirectiveNode;
+
+export type TemplateScope = ReturnType<typeof collectTemplateScope>;
+
 export interface TemplateScopeOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	setupBindings: Set<string>;
@@ -60,7 +111,6 @@ export const directiveCommentRE = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\
 const identifierRE = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
 class Scope extends Set<string> implements ExpressionScope {
-	isBlock = false;
 	scopes: Scope[] = [];
 
 	declare(...names: string[]) {
@@ -74,12 +124,18 @@ class Scope extends Set<string> implements ExpressionScope {
 	}
 }
 
+class BlockScope extends Scope {
+	read = new Set<string>();
+	members: TemplateScopeMember[] = [];
+}
+
 /**
- * The names that the template and the style `v-bind()`s reference as members of the template scope, in the
- * order the TypeScript code generation of `@vue/content-mapper` first lists them, the template's references to
- * the template context, the inlay hints of the template, and the setup bindings that a narrowing position reads.
- * The traversal follows that code generation, which lists a name once a template block scope (the template, a
- * `v-for`, a slot, an inline handler) reads it.
+ * The scope analysis of the template and the style `v-bind()`s, which the TypeScript code generation of
+ * `@vue/content-mapper` reads instead of walking the scopes itself: the identifiers that each expression references
+ * and whether they are locals or members of a block scope, the block scopes, the names that the block scopes list,
+ * the setup bindings that a narrowing position reads, the template's references to the template context, and the
+ * inlay hints of the template. The traversal visits the expressions in the order of the code generation, which
+ * reads `expressions` and `blockScopes` by the offset of each expression and by the node of each block scope.
  */
 export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateScopeOptions) {
 	const { vueCompilerOptions, setupBindings, setupConsts, setupRefs, hasDefineSlots } = options;
@@ -88,20 +144,22 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 	const contextAccesses: ContextAccess[] = [];
 	const inlayHints: InlayHintInfo[] = [];
 	const dotValueBindings = new Set<string>();
+	const expressions = new Map<IRBlock, Map<number, TemplateExpression>>();
+	const blockScopes = new Map<TemplateBlockScopeOwner, TemplateBlockScope>();
 
 	let names = templateNames;
 	const scopes: Scope[] = [];
-	const ctx = { scopes, scope: () => openScope(false) };
+	const ctx = { scopes, scope: () => openScope(new Scope()) };
 	const dollarVars = new Set<string>();
 	const commentBuffer: CompilerDOM.CommentNode[] = [];
 	const slotNames: (readonly [name: string, offset: number])[] = [];
-	const templateRefNames: (readonly [name: string, offset: number])[] = [];
+	const templateRefs = new Map<string, number[]>();
 	let components = 0;
 
 	if (!vueCompilerOptions.skipTemplateCodegen && ir.template) {
 		const template = ir.template;
 		const isVapor = vueCompilerOptions.vapor || !!(ir.scriptSetup?.attrs.vapor || template.attrs.vapor);
-		const scope = openScope(true);
+		const scope = openScope(new BlockScope());
 		if (options.slotsAssignName) {
 			scope.declare(options.slotsAssignName);
 		}
@@ -133,54 +191,89 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 			|| vueCompilerOptions.inferComponentDollarRefs
 			|| setupRefs.size
 		) {
-			for (const [name, offset] of templateRefNames) {
-				visitObjectProperty(template, name, offset);
+			for (const [name, offsets] of templateRefs) {
+				for (const offset of offsets) {
+					visitObjectProperty(template, name, offset);
+				}
 			}
 		}
-		scope.end();
+		closeBlockScope(scope, template);
 	}
 
 	if (ir.styles.length) {
 		names = styleNames;
-		const scope = openScope(true);
+		const scope = openScope(new BlockScope());
 		for (const style of ir.styles) {
 			for (const binding of style.bindings) {
 				visitInterpolation(style, binding.text, binding.offset, `(`, `)`);
 			}
 		}
-		scope.end();
+		closeBlockScope(scope, ir.styles);
 	}
 
-	return { templateNames, styleNames, contextAccesses, inlayHints, dotValueBindings };
+	return {
+		templateNames,
+		styleNames,
+		contextAccesses,
+		inlayHints,
+		dotValueBindings,
+		expressions: expressions as ReadonlyMap<IRBlock, ReadonlyMap<number, TemplateExpression>>,
+		blockScopes: blockScopes as ReadonlyMap<TemplateBlockScopeOwner, TemplateBlockScope>,
+	};
 
-	function openScope(isBlock: boolean) {
-		const scope = new Scope();
-		scope.isBlock = isBlock;
+	function openScope<T extends Scope>(scope: T) {
 		scope.scopes = scopes;
 		scopes.push(scope);
 		return scope;
 	}
 
-	/** A block scope lists the name, unless a local of the expression around it declares the name. */
-	function record(name: string) {
+	function closeBlockScope(scope: BlockScope, owner: TemplateBlockScopeOwner) {
+		scope.end();
+		const isDeclared = (name: string) =>
+			scope.has(name) || scopes.some(scope => scope instanceof BlockScope && scope.has(name));
+		const memberNames = [scope, ...scopes].flatMap(scope =>
+			scope instanceof BlockScope ? scope.members.map(({ name }) => name) : []
+		);
+		blockScopes.set(owner, {
+			declared: new Set(scope),
+			members: scope.members,
+			locals: [...new Set([...scope.read, ...memberNames.filter(isDeclared)])],
+		});
+	}
+
+	function addExpression(block: IRBlock, start: number, expression: TemplateExpression) {
+		let blockExpressions = expressions.get(block);
+		if (!blockExpressions) {
+			expressions.set(block, blockExpressions = new Map());
+		}
+		blockExpressions.set(start, expression);
+	}
+
+	/** The nearest block scope lists the name, unless a local of the expression around it declares the name. */
+	function record(block: IRBlock, name: string, offset: number, sourceName = name) {
 		if (isLiteralWhitelisted(name) || name === 'require' || name.startsWith('__VLS_')) {
-			return;
+			return false;
 		}
 		for (let i = scopes.length - 1; i >= 0; i--) {
 			const scope = scopes[i]!;
-			if (scope.isBlock) {
+			if (scope instanceof BlockScope) {
+				if (!scope.members.some(member => member.block === block.name && member.offset === offset)) {
+					scope.members.push({ name, block: block.name, offset, sourceName });
+				}
 				names.add(name);
-				return;
+				return true;
 			}
 			if (scope.has(name)) {
-				return;
+				return false;
 			}
 		}
+		return false;
 	}
 
 	/**
 	 * `isWriteBack`: the code generation assigns to the expression, like the update of a `v-model`.
-	 * `inNarrowing`: the expression is a condition, like the one of a `v-if`.
+	 * `inNarrowing`: the expression is a narrowing position, like the condition of a `v-if`.
+	 * `isEndTag`: the expression repeats the start tag at the end tag, and the start tag reports the context accesses.
 	 */
 	function visitInterpolation(
 		block: IRBlock,
@@ -188,13 +281,25 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		start: number,
 		prefix = '',
 		suffix = '',
-		isWriteBack = false,
-		inNarrowing = false,
+		{ isWriteBack = false, inNarrowing = false, isEndTag = false } = {},
 	) {
+		const references: TemplateReference[] = [];
+		addExpression(block, start, { code, references });
 		if (identifierRE.test(code)) {
-			record(code);
-			if (!shouldIdentifierSkipped(ctx, code)) {
-				visitContextAccess(block, code, start, isWriteBack);
+			const local = shouldIdentifierSkipped(ctx, code);
+			references.push({
+				name: code,
+				offset: 0,
+				isShorthand: false,
+				inTypeQuery: false,
+				isNewOperand: false,
+				local,
+				member: record(block, code, start),
+			});
+			if (!local) {
+				if (!isEndTag) {
+					visitContextAccess(block, code, start, isWriteBack);
+				}
 				visitNarrowing(code, inNarrowing);
 			}
 			return;
@@ -202,12 +307,32 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		const scope = ctx.scope();
 		const ast = getTypeScriptAST(ts, block, prefix + code + suffix);
 		let operands: Set<ts.Node> | undefined;
-		for (const { id, skipped, isNarrowing, inTypeQuery } of forEachDeclarations(ts, ast, ast, ctx, scope, inNarrowing)) {
+		for (
+			const { id, isShorthand, isNarrowing, skipped, inTypeQuery, isNewOperand } of forEachDeclarations(
+				ts,
+				ast,
+				ast,
+				ctx,
+				scope,
+				inNarrowing,
+			)
+		) {
 			const name = getNodeText(id, ast);
-			record(name);
+			const offset = getStartEnd(id, ast).start - prefix.length;
+			references.push({
+				name,
+				offset,
+				isShorthand,
+				inTypeQuery,
+				isNewOperand,
+				local: skipped,
+				member: record(block, name, start + offset),
+			});
 			if (!skipped) {
-				operands ??= collectOperands(ts, ast);
-				visitContextAccess(block, name, start + id.getStart(ast) - prefix.length, operands.has(id));
+				if (!isEndTag) {
+					operands ??= collectOperands(ts, ast);
+					visitContextAccess(block, name, start + offset, operands.has(id));
+				}
 				visitNarrowing(name, isNarrowing || inTypeQuery);
 			}
 		}
@@ -222,14 +347,26 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 	}
 
 	/** An identifier the code generation references outside of an expression, like a component tag. */
-	function visitIdentifier(block: IRBlock, name: string, start: number) {
-		if (setupConsts.has(name) || shouldIdentifierSkipped(ctx, name) || setupRefs.has(name)) {
+	function visitIdentifier(block: IRBlock, name: string, start: number, isEndTag = false) {
+		const reference: TemplateReference = {
+			name,
+			offset: 0,
+			isShorthand: false,
+			inTypeQuery: false,
+			isNewOperand: false,
+			local: shouldIdentifierSkipped(ctx, name),
+			member: false,
+		};
+		addExpression(block, start, { code: name, references: [reference] });
+		if (setupConsts.has(name) || reference.local || setupRefs.has(name)) {
 			return;
 		}
 		if (setupBindings.has(name) || !dollarVars.has(name)) {
-			record(name);
+			reference.member = record(block, name, start);
 		}
-		visitContextAccess(block, name, start, false);
+		if (!isEndTag) {
+			visitContextAccess(block, name, start, false);
+		}
 	}
 
 	function visitContextAccess(block: IRBlock, name: string, offset: number, model: boolean) {
@@ -255,9 +392,9 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		}
 	}
 
-	function visitPropertyAccess(template: IRTemplate, code: string, start: number) {
+	function visitPropertyAccess(template: IRTemplate, code: string, start: number, isEndTag = false) {
 		if (code.startsWith('[') && code.endsWith(']')) {
-			visitInterpolation(template, code, start);
+			visitInterpolation(template, code, start, '', '', { isEndTag });
 		}
 	}
 
@@ -326,8 +463,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 						branch.condition.loc.start.offset,
 						`(`,
 						`)`,
-						false,
-						true,
+						{ inNarrowing: true },
 					);
 				}
 				for (const child of branch.children) {
@@ -345,7 +481,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 
 	function visitComponent(template: IRTemplate, isVapor: boolean, node: CompilerDOM.ElementNode) {
 		let { tag, props } = node;
-		let [tagOffset] = getElementTagOffsets(node, template);
+		let [tagOffset, endTagOffset] = getElementTagOffsets(node, template);
 		let isExpression = false;
 		if (tag.includes('.')) {
 			isExpression = true;
@@ -360,17 +496,24 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 				isExpression = true;
 				tag = exp.content;
 				tagOffset = exp.loc.start.offset;
+				endTagOffset = undefined;
 				props = props.filter(p => p !== prop);
 			}
 		}
 		if (isExpression) {
 			visitInterpolation(template, tag, tagOffset, `(`, `)`);
+			if (endTagOffset !== undefined) {
+				visitInterpolation(template, tag, endTagOffset, `(`, `)`, { isEndTag: true });
+			}
 		}
 		else {
 			const originalNames = new Set([capitalize(camelize(tag)), camelize(tag), tag]);
 			const matchedBinding = [...originalNames].find(name => setupBindings.has(name));
 			if (matchedBinding) {
 				visitIdentifier(template, matchedBinding, tagOffset);
+				if (endTagOffset !== undefined) {
+					visitIdentifier(template, matchedBinding, endTagOffset, true);
+				}
 			}
 		}
 
@@ -378,10 +521,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		visitElementProps(template, node, props, true);
 		visitElementEvents(template, node);
 		visitElementDirectives(template, isVapor, node);
-		const templateRef = getTemplateRef(node);
-		if (templateRef) {
-			templateRefNames.push(templateRef);
-		}
+		visitTemplateRef(node);
 		const slotDir = node.props.find(CompilerDOM.isVSlot);
 		if (slotDir || node.children.length) {
 			visitVSlot(template, isVapor, node, slotDir);
@@ -389,14 +529,27 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		components--;
 	}
 
-	function visitElement(template: IRTemplate, isVapor: boolean, node: CompilerDOM.ElementNode) {
-		visitPropertyAccess(template, node.tag, getElementTagOffsets(node, template)[0]);
-		visitElementProps(template, node, node.props, true);
-		visitElementDirectives(template, isVapor, node);
+	function visitTemplateRef(node: CompilerDOM.ElementNode) {
 		const templateRef = getTemplateRef(node);
 		if (templateRef) {
-			templateRefNames.push(templateRef);
+			const [name, offset] = templateRef;
+			let offsets = templateRefs.get(name);
+			if (!offsets) {
+				templateRefs.set(name, offsets = []);
+			}
+			offsets.push(offset);
 		}
+	}
+
+	function visitElement(template: IRTemplate, isVapor: boolean, node: CompilerDOM.ElementNode) {
+		const [startTagOffset, endTagOffset] = getElementTagOffsets(node, template);
+		visitPropertyAccess(template, node.tag, startTagOffset);
+		if (endTagOffset !== undefined) {
+			visitPropertyAccess(template, node.tag, endTagOffset, true);
+		}
+		visitElementProps(template, node, node.props, true);
+		visitElementDirectives(template, isVapor, node);
+		visitTemplateRef(node);
 		for (const child of node.children) {
 			visitTemplateChild(template, isVapor, child);
 		}
@@ -465,7 +618,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		if (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
 			visitObjectProperty(template, slotDir.arg.loc.source, slotDir.arg.loc.start.offset, true);
 		}
-		const scope = openScope(true);
+		const scope = openScope(new BlockScope());
 		if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 			const slotAst = getTypeScriptAST(ts, template, `(${slotDir.exp.content}) => {}`);
 			const statement = slotAst.statements[0];
@@ -477,31 +630,20 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		for (const child of node.children) {
 			visitTemplateChild(template, isVapor, child);
 		}
-		scope.end();
+		closeBlockScope(scope, node);
 	}
 
 	function visitVFor(template: IRTemplate, isVapor: boolean, node: CompilerDOM.ForNode) {
 		const { source } = node.parseResult;
-		const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
-		let bindingNames: string[] = [];
-		const defaultInitializerRanges: [number, number][] = [];
-		if (leftExpressionRange && leftExpressionText) {
-			const wrap = `const [`;
-			const collectAst = getTypeScriptAST(ts, template, `${wrap}${leftExpressionText}]`);
-			bindingNames = collectBindingNames(ts, collectAst, collectAst);
-			const declaration = (collectAst.statements[0] as ts.VariableStatement).declarationList.declarations[0]!;
-			const initializers: ts.Expression[] = [];
-			collectDefaultInitializers(ts, declaration.name, initializers);
-			for (const initializer of initializers) {
-				const { start, end } = getStartEnd(initializer, collectAst);
-				defaultInitializerRanges.push([start - wrap.length, end - wrap.length]);
-			}
-			defaultInitializerRanges.sort((a, b) => a[0] - b[0]);
-		}
+		const { leftExpressionRange, leftExpressionText, bindingNames, defaultInitializerRanges } = parseVForAliases(
+			ts,
+			template,
+			node,
+		);
 		if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 			visitInterpolation(template, source.content, source.loc.start.offset, `(`, `)`);
 		}
-		const scope = openScope(true);
+		const scope = openScope(new BlockScope());
 		scope.declare(...bindingNames);
 		for (const [start, end] of defaultInitializerRanges) {
 			visitInterpolation(template, leftExpressionText!.slice(start, end), leftExpressionRange!.start + start);
@@ -509,7 +651,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		for (const child of node.children) {
 			visitTemplateChild(template, isVapor, child, false, true);
 		}
-		scope.end();
+		closeBlockScope(scope, node);
 	}
 
 	function visitElementProps(
@@ -695,10 +837,11 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		}
 		const ast = getTypeScriptAST(ts, template, prop.exp.content);
 		if (isCompoundExpression(ts, ast)) {
-			const scope = openScope(true);
+			const scope = openScope(new BlockScope());
 			scope.declare('$event');
+			scope.read.add('$event');
 			visitInterpolation(template, prop.exp.content, prop.exp.loc.start.offset);
-			scope.end();
+			closeBlockScope(scope, prop);
 			inlayHints.push({
 				blockName: 'template',
 				offset: prop.exp.loc.start.offset,
@@ -719,7 +862,10 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 
 	function visitModelEventExpression(template: IRTemplate, prop: CompilerDOM.DirectiveNode) {
 		if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-			visitInterpolation(template, prop.exp.content, prop.exp.loc.start.offset, '', '', true, true);
+			visitInterpolation(template, prop.exp.content, prop.exp.loc.start.offset, '', '', {
+				isWriteBack: true,
+				inNarrowing: true,
+			});
 		}
 	}
 
@@ -735,7 +881,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 				continue;
 			}
 			if (!isBuiltInDirective(prop.name)) {
-				record(camelize('v-' + prop.name));
+				record(template, camelize('v-' + prop.name), prop.loc.start.offset, 'v-' + prop.name);
 			}
 			const visitValue = () => {
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {

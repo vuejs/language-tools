@@ -1,7 +1,10 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { getUnwrappedExpression } from '../parsers/utils';
-import type { TypeScript } from '../types';
+import type { IRTemplate, TypeScript } from '../types';
+import { collectBindingNames } from './collectBindings';
+import { getStartEnd } from './shared';
+import { getTypeScriptAST } from './typescriptAST';
 
 export function parseVForNode(node: CompilerDOM.ForNode) {
 	const { value, key, index } = node.parseResult;
@@ -62,8 +65,32 @@ export function isCompoundExpression(ts: TypeScript, ast: ts.SourceFile) {
 	return true;
 }
 
+/**
+ * The aliases of a `v-for`: the names they declare, and the ranges in `leftExpressionText` of the default values
+ * of their destructuring patterns, in source order.
+ */
+export function parseVForAliases(ts: TypeScript, template: IRTemplate, node: CompilerDOM.ForNode) {
+	const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
+	let bindingNames: string[] = [];
+	const defaultInitializerRanges: [start: number, end: number][] = [];
+	if (leftExpressionRange && leftExpressionText) {
+		const wrap = `const [`;
+		const ast = getTypeScriptAST(ts, template, `${wrap}${leftExpressionText}]`);
+		bindingNames = collectBindingNames(ts, ast, ast);
+		const declaration = (ast.statements[0] as ts.VariableStatement).declarationList.declarations[0]!;
+		const initializers: ts.Expression[] = [];
+		collectDefaultInitializers(ts, declaration.name, initializers);
+		for (const initializer of initializers) {
+			const { start, end } = getStartEnd(initializer, ast);
+			defaultInitializerRanges.push([start - wrap.length, end - wrap.length]);
+		}
+		defaultInitializerRanges.sort((a, b) => a[0] - b[0]);
+	}
+	return { leftExpressionRange, leftExpressionText, bindingNames, defaultInitializerRanges };
+}
+
 /** The default values in the destructuring pattern of a `v-for` alias. */
-export function collectDefaultInitializers(
+function collectDefaultInitializers(
 	ts: TypeScript,
 	pattern: ts.BindingName,
 	out: ts.Expression[],

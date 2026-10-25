@@ -1,7 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import {
 	type Code,
-	collectBindingNames,
 	completionFeatures,
 	navigationFeatures,
 	scriptFeatures,
@@ -71,17 +70,16 @@ export function* generateVSlot(
 	}
 	yield `: ${slotVar} } = ${names.nonNull}(${ctxVar}.slots)${endOfLine}`;
 
-	const scope = ctx.blockScope();
+	ctx.enterBlockScope(node);
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = getTypeScriptAST(options.typescript, options.template, `(${slotDir.exp.content}) => {}`);
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
-		scope.declare(...collectBindingNames(options.typescript, slotAst, slotAst));
 	}
 	yield* ctx.generateDiagnosticDirectiveEnd();
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}
-	yield* scope.end();
+	yield* ctx.exitBlockScope();
 
 	if (slotDir) {
 		let isStatic = true;

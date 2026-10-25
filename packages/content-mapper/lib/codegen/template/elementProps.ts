@@ -302,7 +302,7 @@ export function* generatePropExp(
 				options,
 				ctx,
 				codes,
-				propVariableName,
+				ctx.getExpression(options.template, exp.loc.start.offset, propVariableName).references[0]!,
 				'template',
 				exp.loc.start.offset,
 				exp.loc.end.offset,

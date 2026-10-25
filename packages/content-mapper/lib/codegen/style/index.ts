@@ -1,4 +1,11 @@
-import { type Code, type IRStyle, scriptFeatures, type TypeScript, type VueCompilerOptions } from '@vue/language-core';
+import {
+	type Code,
+	type IRStyle,
+	scriptFeatures,
+	type TemplateScope,
+	type TypeScript,
+	type VueCompilerOptions,
+} from '@vue/language-core';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import { endOfLine } from '../utils';
@@ -14,12 +21,13 @@ export interface StyleCodegenOptions {
 	setupConsts: Set<string>;
 	setupBindings: Set<string>;
 	dotValueBindings: Set<string>;
+	templateScope: TemplateScope;
 }
 
 export { generate as generateStyle };
 
 function generate(options: StyleCodegenOptions) {
-	const ctx = createTemplateCodegenContext(options.scriptLang);
+	const ctx = createTemplateCodegenContext(options.scriptLang, options.templateScope);
 	const codes: Code[] = [...generateWorker(options, ctx)];
 	return { ...ctx, codes };
 }
@@ -28,11 +36,11 @@ function* generateWorker(
 	options: StyleCodegenOptions,
 	ctx: TemplateCodegenContext,
 ) {
-	const scope = ctx.blockScope();
+	ctx.enterBlockScope(options.styles);
 	yield* generateStyleScopedClasses(options, ctx);
 	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);
-	yield* scope.end();
+	yield* ctx.exitBlockScope();
 }
 
 function* generateCssVars(

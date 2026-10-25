@@ -104,7 +104,7 @@ export function* generateComponent(
 				generateCamelized(camelizedTag, 'template', startTagOffset, {
 					features: semanticFeatures | navigationFeatures,
 				}),
-				matchedBinding,
+				ctx.getExpression(options.template, startTagOffset, matchedBinding).references[0]!,
 				'template',
 				startTagOffset,
 				startTagOffset + tag.length,
@@ -117,7 +117,7 @@ export function* generateComponent(
 					generateCamelized(camelizedTag, 'template', endTagOffset, {
 						features: semanticFeatures | navigationFeatures,
 					}),
-					matchedBinding,
+					ctx.getExpression(options.template, endTagOffset, matchedBinding).references[0]!,
 					'template',
 					endTagOffset,
 					endTagOffset + tag.length,

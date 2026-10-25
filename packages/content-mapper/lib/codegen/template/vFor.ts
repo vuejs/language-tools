@@ -1,14 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import {
-	type Code,
-	collectBindingNames,
-	collectDefaultInitializers,
-	getStartEnd,
-	parseVForNode,
-	scriptFeatures,
-} from '@vue/language-core';
-import { getTypeScriptAST } from '@vue/language-core/lib/utils/typescriptAST';
-import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import { type Code, parseVForAliases, scriptFeatures } from '@vue/language-core';
 import { names } from '../names';
 import { asType, endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
@@ -22,23 +13,11 @@ export function* generateVFor(
 	node: CompilerDOM.ForNode,
 ): Generator<Code> {
 	const { source } = node.parseResult;
-	const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
-	let bindingNames: string[] = [];
-	const defaultInitializerRanges: [number, number][] = [];
-
-	if (leftExpressionRange && leftExpressionText) {
-		const wrap = `const [`;
-		const collectAst = getTypeScriptAST(options.typescript, options.template, `${wrap}${leftExpressionText}]`);
-		bindingNames = collectBindingNames(options.typescript, collectAst, collectAst);
-		const declaration = (collectAst.statements[0] as ts.VariableStatement).declarationList.declarations[0]!;
-		const initializers: ts.Expression[] = [];
-		collectDefaultInitializers(options.typescript, declaration.name, initializers);
-		for (const initializer of initializers) {
-			const { start, end } = getStartEnd(initializer, collectAst);
-			defaultInitializerRanges.push([start - wrap.length, end - wrap.length]);
-		}
-		defaultInitializerRanges.sort((a, b) => a[0] - b[0]);
-	}
+	const { leftExpressionRange, leftExpressionText, defaultInitializerRanges } = parseVForAliases(
+		options.typescript,
+		options.template,
+		node,
+	);
 
 	// Evaluate the source before the loop bindings enter scope (`v-for="x in x"` reads the outer `x`);
 	// destructuring defaults (`{ a, b = a }`) are interpolated after the declaration to see the sibling aliases.
@@ -61,8 +40,7 @@ export function* generateVFor(
 		yield endOfLine;
 	}
 
-	const scope = ctx.blockScope();
-	scope.declare(...bindingNames);
+	ctx.enterBlockScope(node);
 
 	yield `for (const [`;
 	if (leftExpressionRange && leftExpressionText) {
@@ -113,6 +91,6 @@ export function* generateVFor(
 	}
 	ctx.inVFor = inVFor;
 
-	yield* scope.end();
+	yield* ctx.exitBlockScope();
 	yield `}${newLine}`;
 }

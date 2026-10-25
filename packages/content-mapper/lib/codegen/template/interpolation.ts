@@ -2,24 +2,18 @@ import { SpanMapKind } from '@volar/language-core';
 import {
 	type Code,
 	completionFeatures,
-	getNodeText,
-	getStartEnd,
 	type IRBlock,
-	type TypeScript,
+	type TemplateReference,
 	type VueCodeMarker,
 	type VueCompilerOptions,
 } from '@vue/language-core';
-import { forEachDeclarations, shouldIdentifierSkipped } from '@vue/language-core/lib/utils/bindingReferences';
 import { Boundary } from '@vue/language-core/lib/utils/boundary';
-import { getTypeScriptAST } from '@vue/language-core/lib/utils/typescriptAST';
 import { names } from '../names';
-import { getRefBrandArgument, identifierRE } from '../utils';
+import { getRefBrandArgument } from '../utils';
 import type { TemplateCodegenContext } from './context';
 
 export function* generateInterpolation(
-	options: IdentifierOptions & {
-		typescript: TypeScript;
-	},
+	options: IdentifierOptions,
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
 	features: VueCodeMarker,
@@ -39,18 +33,12 @@ export function* generateInterpolation(
 	};
 
 	let prevEnd = 0;
-	for (
-		const [name, offset, isShorthand, inTypeQuery, isNewOperand, skipped] of forEachIdentifiers(
-			options.typescript,
-			ctx,
-			block,
-			code,
-			prefix,
-			suffix,
-		)
-	) {
-		const isMember = ctx.recordScopeMember(name, block.name, start + offset, memberFeatures);
-		if (skipped && !isMember) {
+	for (const reference of ctx.getExpression(block, start, code).references) {
+		const { name, offset, isShorthand, local, member } = reference;
+		if (member) {
+			ctx.setMemberFeatures(block, start + offset, memberFeatures);
+		}
+		if (local && !member) {
 			continue;
 		}
 		if (prevEnd < offset) {
@@ -64,8 +52,8 @@ export function* generateInterpolation(
 		}
 		prevEnd = offset + name.length;
 
-		const identifierFeatures = isMember ? featuresWithoutCompletion : features;
-		if (skipped) {
+		const identifierFeatures = member ? featuresWithoutCompletion : features;
+		if (local) {
 			yield [name, block.name, start + offset, identifierFeatures];
 			continue;
 		}
@@ -81,12 +69,10 @@ export function* generateInterpolation(
 			options,
 			ctx,
 			codes,
-			name,
+			reference,
 			block.name,
 			start + offset,
 			start + offset + name.length,
-			inTypeQuery,
-			isNewOperand,
 		);
 	}
 
@@ -149,8 +135,8 @@ interface IdentifierOptions {
 
 // Access strategy, in precedence order:
 // - setup consts → direct reference
-// - local-scope / global names → direct reference (the interpolation path
-//   filters these earlier; the v-bind shorthand path relies on this branch)
+// - locals and globals of the template scope → direct reference (the interpolation
+//   path filters these earlier; the v-bind shorthand path relies on this branch)
 // - template refs → direct `.value`
 // - dotValue bindings (narrowed at least once anywhere) → `.value` at
 //   every position; narrowing then works on the `.value` reference chain
@@ -160,14 +146,12 @@ export function* generateIdentifier(
 	options: IdentifierOptions,
 	ctx: TemplateCodegenContext,
 	codes: Iterable<Code>,
-	name: string,
+	{ name, local, inTypeQuery, isNewOperand }: TemplateReference,
 	source: string,
 	start: number,
 	end: number,
-	inTypeQuery = false,
-	isNewOperand = false,
 ): Generator<Code> {
-	if (options.setupConsts.has(name) || shouldIdentifierSkipped(ctx, name)) {
+	if (options.setupConsts.has(name) || local) {
 		yield* codes;
 	}
 	else if (options.setupRefs.has(name)) {
@@ -183,7 +167,7 @@ export function* generateIdentifier(
 		yield boundary.end();
 	}
 	else if (options.setupBindings.has(name)) {
-		ctx.accessVariable(source, name, start);
+		ctx.accessLog.push(name);
 		if (inTypeQuery || options.dotValueBindings.has(name)) {
 			yield* codes;
 			yield `.`;
@@ -222,7 +206,7 @@ export function* generateIdentifier(
 			yield names.dollars;
 		}
 		else {
-			ctx.accessVariable(source, name, start);
+			ctx.accessLog.push(name);
 			yield names.ctx;
 		}
 		yield `.`;
@@ -230,50 +214,3 @@ export function* generateIdentifier(
 		yield boundary.end();
 	}
 }
-
-function* forEachIdentifiers(
-	ts: TypeScript,
-	ctx: TemplateCodegenContext,
-	block: IRBlock,
-	code: string,
-	prefix: string,
-	suffix: string,
-): Generator<IdentifierAccess> {
-	if (identifierRE.test(code)) {
-		yield [code, 0, false, false, false, shouldIdentifierSkipped(ctx, code)];
-		return;
-	}
-
-	const scope = ctx.scope();
-	const ast = getTypeScriptAST(ts, block, prefix + code + suffix);
-	for (
-		const { id, isShorthand, skipped, inTypeQuery, isNewOperand } of forEachDeclarations(
-			ts,
-			ast,
-			ast,
-			ctx,
-			scope,
-			false,
-		)
-	) {
-		const text = getNodeText(id, ast);
-		yield [
-			text,
-			getStartEnd(id, ast).start - prefix.length,
-			isShorthand,
-			inTypeQuery,
-			isNewOperand,
-			skipped,
-		];
-	}
-	scope.end();
-}
-
-type IdentifierAccess = [
-	name: string,
-	offset: number,
-	isShorthand: boolean,
-	inTypeQuery: boolean,
-	isNewOperand: boolean,
-	skipped: boolean,
-];

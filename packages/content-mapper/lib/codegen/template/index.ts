@@ -2,6 +2,7 @@ import {
 	type Code,
 	type IRTemplate,
 	navigationFeatures,
+	type TemplateScope,
 	type TypeScript,
 	type VueCompilerOptions,
 } from '@vue/language-core';
@@ -31,12 +32,13 @@ export interface TemplateCodegenOptions {
 	slotsAssignName?: string;
 	inheritAttrs: boolean;
 	componentName: string;
+	templateScope: TemplateScope;
 }
 
 export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
-	const ctx = createTemplateCodegenContext(options.scriptLang);
+	const ctx = createTemplateCodegenContext(options.scriptLang, options.templateScope);
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
 	for (const code of codeGenerator) {
@@ -50,20 +52,9 @@ function* generateWorker(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
-	const scope = ctx.blockScope();
-	const {
-		slotsAssignName,
-		propsAssignName,
-		vueCompilerOptions,
-		template,
-	} = options;
+	const { vueCompilerOptions, template } = options;
 
-	if (slotsAssignName) {
-		scope.declare(slotsAssignName);
-	}
-	if (propsAssignName) {
-		scope.declare(propsAssignName);
-	}
+	ctx.enterBlockScope(template);
 	if (vueCompilerOptions.inferTemplateDollarSlots) {
 		ctx.dollarVars.add('$slots');
 	}
@@ -111,7 +102,7 @@ function* generateWorker(
 		});
 	}
 
-	yield* scope.end();
+	yield* ctx.exitBlockScope();
 }
 
 function* generateSlotsType(
