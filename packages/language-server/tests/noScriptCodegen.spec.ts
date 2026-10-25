@@ -1,4 +1,4 @@
-import { TextDocument } from '@volar/language-server';
+import { type DocumentSymbol, TextDocument } from '@volar/language-server';
 import { AutoInsertRequest, type GetVirtualFileRequest } from '@volar/language-server/protocol';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -159,6 +159,48 @@ function add(a: number) {
 	expect(await format(serverModule, content)).toBe(formatted);
 	// formats once on the default server, too
 	expect(await format(undefined, content)).toBe(formatted);
+});
+
+test('provides the folding ranges and outline of the script blocks', async () => {
+	const content = `<script lang="ts">
+export default {
+	name: 'App',
+};
+</script>
+
+<script setup lang="ts">
+function add(a: number) {
+	if (a) {
+		return a;
+	}
+}
+</script>
+`;
+	const getStructure = async (entry: string | undefined) => {
+		const server = await getLanguageServer(entry);
+		const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'structure.vue')).toString();
+		await server.open(uri, 'vue', content);
+		try {
+			const foldingRanges = await server.vueserver.sendFoldingRangesRequest(uri);
+			const symbols = await server.vueserver.sendDocumentSymbolRequest(uri) as DocumentSymbol[] | null;
+			const toOutline = (symbol: DocumentSymbol): unknown[] => [symbol.name, ...symbol.children?.map(toOutline) ?? []];
+			return {
+				foldingRanges: foldingRanges?.map(range => `${range.startLine}-${range.endLine}`).sort(),
+				outline: symbols?.map(toOutline),
+			};
+		}
+		finally {
+			await server.close(uri);
+		}
+	};
+	const structure = {
+		// the script blocks and, in them, the object literal, the function and the if block
+		foldingRanges: ['0-3', '1-2', '6-11', '7-10', '8-9'],
+		outline: [['script', ['default', ['name']]], ['script setup', ['add']]],
+	};
+	expect(await getStructure(serverModule)).toEqual(structure);
+	// no duplicate on the default server
+	expect(await getStructure(undefined)).toEqual(structure);
 });
 
 test('provides the inlay hints of the template', async () => {
