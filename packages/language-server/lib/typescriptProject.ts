@@ -28,6 +28,7 @@ import {
 } from './componentMeta';
 
 type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
+type SpanMapFeature = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SpanMapFeature;
 type Project = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Project;
 
 const directiveRE = /^v[A-Z]/;
@@ -40,6 +41,16 @@ export function getComponentModuleExtensions(contentMappers: unknown[] | undefin
 		...scriptExtensions,
 		...(contentMappers as { extensions?: string[] }[] | undefined)?.flatMap(entry => entry.extensions ?? []) ?? [],
 	];
+}
+
+/**
+ * The positions of the text TypeScript checks for `sourceFile` that `offset`, an offset of the file's source text, maps
+ * to through the segments taking part in `feature`; the text of a file without a content mapper is its source text.
+ */
+function toCheckedPositions(sourceFile: SourceFile, offset: number, feature: SpanMapFeature) {
+	return sourceFile.spanMap
+		? sourceFile.spanMap.originalToVirtualPositions(offset, feature).map(({ position }) => position)
+		: [offset];
 }
 
 export interface TypeScriptProject {
@@ -66,7 +77,7 @@ export interface TypeScriptProjectResolver {
 	getAutoImportValues(fileName: string): Promise<AutoImportExport[] | undefined>;
 	/** The TypeScript language server's edits that import `component` into `fileName` under `component.name`. */
 	getComponentImportEdits(fileName: string, component: AutoImportComponent): Promise<readonly TextEdit[] | undefined>;
-	/** The name of the identifier at `offset` in the service script of the Vue file `fileName`, when it resolves to nothing. */
+	/** The name of the identifier at `offset` in the source text of the Vue file `fileName`, when it resolves to nothing. */
 	getUnresolvedName(fileName: string, offset: number): Promise<string | undefined>;
 	/** The TypeScript language server's edits that import each named value export called `name` into `fileName`. */
 	getNamedImportFixes(
@@ -93,15 +104,9 @@ export interface TypeScriptProjectResolver {
 	getComponentNames(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
 	/** The directive names (`vFoo`) available in the template of the Vue file `fileName`. */
 	getComponentDirectives(fileName: string): Promise<string[] | undefined>;
-	/**
-	 * The template context properties of the Vue file `fileName` whose end offset in its service script `isExtracted`
-	 * accepts.
-	 */
-	collectExtractProps(
-		fileName: string,
-		isExtracted: (offset: number) => boolean,
-	): Promise<ExtractPropsInfo[] | undefined>;
-	/** Whether the identifier at `offset` in the service script of the Vue file `fileName` is a `Ref`. */
+	/** The template context properties that the code between `start` and `end` in the source text of the Vue file `fileName` reads. */
+	collectExtractProps(fileName: string, start: number, end: number): Promise<ExtractPropsInfo[] | undefined>;
+	/** Whether the identifier at `offset` in the source text of the Vue file `fileName` is a `Ref`. */
 	isRefAtOffset(fileName: string, offset: number): Promise<boolean | undefined>;
 	/** Releases the file opened by `getProject`. */
 	closeFile(fileName: string): void;
@@ -248,10 +253,14 @@ export async function connectTypeScriptProjectResolver(
 			});
 		},
 		getUnresolvedName(fileName, offset) {
-			return withSourceFile(
-				fileName,
-				(project, sourceFile) => getUnresolvedName(ts, project.checker, sourceFile, offset),
-			);
+			return withSourceFile(fileName, async (project, sourceFile) => {
+				for (const position of toCheckedPositions(sourceFile, offset, ts.SpanMapFeature.Definition)) {
+					const name = await getUnresolvedName(ts, project.checker, sourceFile, position);
+					if (name) {
+						return name;
+					}
+				}
+			});
 		},
 		getNamedImportFixes(fileName, name) {
 			return withProject(fileName, async project => {
@@ -317,17 +326,27 @@ export async function connectTypeScriptProjectResolver(
 					.filter(name => directiveRE.test(name));
 			});
 		},
-		collectExtractProps(fileName, isExtracted) {
+		collectExtractProps(fileName, start, end) {
 			return withSourceFile(
 				fileName,
-				(project, sourceFile) => collectExtractProps(ts, project.checker, sourceFile, isExtracted),
+				(project, sourceFile) =>
+					collectExtractProps(ts, project.checker, sourceFile, position => {
+						const mapped = sourceFile.spanMap?.virtualToOriginalPositionForFeature(
+							position,
+							ts.SpanMapFeature.SemanticTokens,
+						);
+						return !!mapped
+							&& mapped.fidelity !== ts.SpanMapFidelity.None
+							&& mapped.position >= start
+							&& mapped.position < end;
+					}),
 			);
 		},
 		isRefAtOffset(fileName, offset) {
-			return withSourceFile(
-				fileName,
-				(project, sourceFile) => isRefAtOffset(ts, project.checker, sourceFile, offset),
-			);
+			return withSourceFile(fileName, async (project, sourceFile) => {
+				const [position] = toCheckedPositions(sourceFile, offset, ts.SpanMapFeature.Completion);
+				return position !== undefined && await isRefAtOffset(ts, project.checker, sourceFile, position);
+			});
 		},
 		closeFile(fileName) {
 			if (projects.delete(fileName)) {

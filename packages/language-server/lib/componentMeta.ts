@@ -196,9 +196,7 @@ async function getProjectModules(program: Program, checker: Checker) {
 	});
 }
 
-/**
- * The name of the identifier at `offset`, an offset in the generated service script, when it resolves to no symbol.
- */
+/** The name of the identifier at `offset`, a position of the text TypeScript checks, when it resolves to no symbol. */
 export async function getUnresolvedName(ts: TypeScript, checker: Checker, sourceFile: SourceFile, offset: number) {
 	const identifier = findIdentifier(ts, sourceFile, offset);
 	if (identifier && ts.isIdentifier(identifier) && !await checker.getSymbolAtLocation(identifier)) {
@@ -289,72 +287,35 @@ export function getComponentPropsOffset(
 }
 
 /** Maps an offset of a Vue file's source text to its generated service script, through a mapping `filter` accepts. */
-export function toServiceScriptOffset(
+function toServiceScriptOffset(
 	language: Language<URI>,
 	sourceScript: SourceScript<URI>,
 	virtualCode: VueVirtualCode,
 	sourceOffset: number,
 	filter: (features: number) => boolean,
 ): number | undefined {
-	return toServiceScriptOffsets(language, sourceScript, virtualCode, sourceOffset, filter)[0];
-}
-
-/**
- * The offsets an offset of a Vue file's source text maps to in its generated service script, through the mappings
- * `filter` accepts, including those ending at the offset.
- */
-export function toServiceScriptOffsets(
-	language: Language<URI>,
-	sourceScript: SourceScript<URI>,
-	virtualCode: VueVirtualCode,
-	sourceOffset: number,
-	filter: (features: number) => boolean,
-) {
-	const serviceScript = getServiceScript(virtualCode);
-	if (!serviceScript) {
-		return [];
-	}
-	const offsets: number[] = [];
-	for (
-		const [offset, mapping] of language.maps.get(serviceScript.code, sourceScript).toGeneratedLocation(sourceOffset)
-	) {
-		if (filter(mapping[5])) {
-			offsets.push(offset);
-		}
-	}
-	return offsets;
-}
-
-/**
- * Maps an offset of a Vue file's generated service script to its source text, through a mapping `filter` accepts.
- */
-export function toSourceOffset(
-	language: Language<URI>,
-	sourceScript: SourceScript<URI>,
-	virtualCode: VueVirtualCode,
-	offset: number,
-	filter: (features: number) => boolean,
-) {
 	const serviceScript = getServiceScript(virtualCode);
 	if (!serviceScript) {
 		return;
 	}
-	for (const [sourceOffset, mapping] of language.maps.get(serviceScript.code, sourceScript).toSourceLocation(offset)) {
+	for (
+		const [offset, mapping] of language.maps.get(serviceScript.code, sourceScript).toGeneratedLocation(sourceOffset)
+	) {
 		if (filter(mapping[5])) {
-			return sourceOffset;
+			return offset;
 		}
 	}
 }
 
 /**
- * The template context properties (`__VLS_ctx.foo`) whose generated end offset `isExtracted` accepts, with their
+ * The template context properties (`__VLS_ctx.foo`) whose name starts at a position `isExtracted` accepts, with their
  * types and whether they are written to.
  */
 export async function collectExtractProps(
 	ts: TypeScript,
 	checker: Checker,
 	sourceFile: SourceFile,
-	isExtracted: (offset: number) => boolean,
+	isExtracted: (position: number) => boolean,
 ) {
 	const accesses: { name: string; node: Node; model: boolean }[] = [];
 	visit(sourceFile);
@@ -380,7 +341,7 @@ export async function collectExtractProps(
 			&& ts.isIdentifier(node.expression)
 			&& node.expression.text === names.ctx
 			&& ts.isIdentifier(node.name)
-			&& isExtracted(node.name.end)
+			&& isExtracted(node.name.getStart(sourceFile))
 		) {
 			accesses.push({
 				name: node.name.text,
@@ -392,7 +353,7 @@ export async function collectExtractProps(
 	}
 }
 
-/** Whether the identifier at `offset`, an offset in the generated service script, is a `Ref`. */
+/** Whether the identifier at `offset`, a position of the text TypeScript checks, is a `Ref`. */
 export async function isRefAtOffset(ts: TypeScript, checker: Checker, sourceFile: SourceFile, offset: number) {
 	const identifier = findIdentifier(ts, sourceFile, offset);
 	if (!identifier) {

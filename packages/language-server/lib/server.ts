@@ -6,9 +6,6 @@ import { resolveMapperOptions } from '@vue/content-mapper/vueOptions';
 import {
 	createLanguage,
 	createVueLanguagePlugin,
-	isCompletionEnabled,
-	isDefinitionEnabled,
-	isSemanticTokensEnabled,
 	type LanguagePlugin,
 	tsCodegen,
 	VueVirtualCode,
@@ -24,12 +21,7 @@ import { asCoreTypeScript, placeScriptImportEdits } from '@vue/language-service/
 import { camelize, capitalize } from '@vue/shared';
 import * as path from 'node:path';
 import { URI } from 'vscode-uri';
-import {
-	getComponentPropsOffset,
-	toServiceScriptOffset,
-	toServiceScriptOffsets,
-	toSourceOffset,
-} from './componentMeta';
+import { getComponentPropsOffset } from './componentMeta';
 import { createReactivityAnalyzer, getInterpolationRanges, type ReactivityAnalysisParams } from './reactivity';
 import {
 	connectTypeScriptProjectResolver,
@@ -204,21 +196,13 @@ export function startServer(ts: typeof import('typescript')) {
 			createVueLanguageServicePlugins(ts, {
 				async collectExtractProps(fileName, [start, end]) {
 					try {
-						const script = await getVueScript(fileName);
-						const template = script?.virtualCode.ir.template;
-						if (script && template) {
-							return await (await connectTypeScriptApi()).collectExtractProps(fileName, offset => {
-								const sourceOffset = toSourceOffset(
-									script.language,
-									script.sourceScript,
-									script.virtualCode,
-									offset,
-									isSemanticTokensEnabled,
-								);
-								return sourceOffset !== undefined
-									&& sourceOffset >= template.startTagEnd + start
-									&& sourceOffset <= template.startTagEnd + end;
-							});
+						const template = (await getVueScript(fileName))?.virtualCode.ir.template;
+						if (template) {
+							return await (await connectTypeScriptApi()).collectExtractProps(
+								fileName,
+								template.startTagEnd + start,
+								template.startTagEnd + end,
+							);
 						}
 					}
 					catch {}
@@ -330,16 +314,7 @@ export function startServer(ts: typeof import('typescript')) {
 							name = camelize(tag);
 						}
 						else {
-							const offsets = toServiceScriptOffsets(
-								script.language,
-								script.sourceScript,
-								script.virtualCode,
-								position,
-								isDefinitionEnabled,
-							);
-							for (const offset of offsets) {
-								name ??= await api.getUnresolvedName(fileName, offset);
-							}
+							name = await api.getUnresolvedName(fileName, position);
 						}
 						if (!name) {
 							return;
@@ -379,17 +354,7 @@ export function startServer(ts: typeof import('typescript')) {
 				},
 				async isRefAtPosition(fileName, position) {
 					try {
-						const script = await getVueScript(fileName);
-						const offset = script && toServiceScriptOffset(
-							script.language,
-							script.sourceScript,
-							script.virtualCode,
-							position,
-							isCompletionEnabled,
-						);
-						if (offset !== undefined) {
-							return await (await connectTypeScriptApi()).isRefAtOffset(fileName, offset);
-						}
+						return await (await connectTypeScriptApi()).isRefAtOffset(fileName, position);
 					}
 					catch {}
 				},
