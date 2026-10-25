@@ -689,7 +689,10 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 	}
 }
 
-export function createVBindShorthandInlayHintInfo(loc: CompilerDOM.SourceLocation, variableName: string): InlayHintInfo {
+export function createVBindShorthandInlayHintInfo(
+	loc: CompilerDOM.SourceLocation,
+	variableName: string,
+): InlayHintInfo {
 	return {
 		blockName: 'template',
 		offset: loc.end.offset,
