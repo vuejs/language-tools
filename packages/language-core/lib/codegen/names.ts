@@ -1,6 +1,7 @@
 const raw = {
 	base: '',
 	export: '',
+	component: '',
 	components: '',
 	componentsOption: '',
 	ctx: '',
@@ -20,6 +21,7 @@ const raw = {
 	slots: '',
 	src: '',
 
+	Component: '',
 	Emit: '',
 	EmitProps: '',
 	GlobalComponents: '',
@@ -31,6 +33,7 @@ const raw = {
 	Props: '',
 	PublicProps: '',
 	RootEl: '',
+	SetupResult: '',
 	Slots: '',
 	StyleModules: '',
 	StyleScopedClasses: '',
