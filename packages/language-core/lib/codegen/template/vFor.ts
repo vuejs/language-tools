@@ -3,6 +3,7 @@ import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Code, TypeScript } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getStartEnd } from '../../utils/shared';
+import { parseVForNode } from '../../utils/templateExpressions';
 import { getTypeScriptAST } from '../../utils/typescriptAST';
 import { scriptFeatures } from '../features';
 import { names } from '../names';
@@ -111,26 +112,6 @@ export function* generateVFor(
 
 	yield* scope.end();
 	yield `}${newLine}`;
-}
-
-export function parseVForNode(node: CompilerDOM.ForNode) {
-	const { value, key, index } = node.parseResult;
-	const leftExpressionRange = (value || key || index)
-		? {
-			start: (value ?? key ?? index)!.loc.start.offset,
-			end: (index ?? key ?? value)!.loc.end.offset,
-		}
-		: undefined;
-	const leftExpressionText = leftExpressionRange
-		? node.loc.source.slice(
-			leftExpressionRange.start - node.loc.start.offset,
-			leftExpressionRange.end - node.loc.start.offset,
-		)
-		: undefined;
-	return {
-		leftExpressionRange,
-		leftExpressionText,
-	};
 }
 
 function collectDefaultInitializers(

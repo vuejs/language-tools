@@ -1,0 +1,63 @@
+import type * as CompilerDOM from '@vue/compiler-dom';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import { getUnwrappedExpression } from '../parsers/utils';
+import type { TypeScript } from '../types';
+
+export function parseVForNode(node: CompilerDOM.ForNode) {
+	const { value, key, index } = node.parseResult;
+	const leftExpressionRange = (value || key || index)
+		? {
+			start: (value ?? key ?? index)!.loc.start.offset,
+			end: (index ?? key ?? value)!.loc.end.offset,
+		}
+		: undefined;
+	const leftExpressionText = leftExpressionRange
+		? node.loc.source.slice(
+			leftExpressionRange.start - node.loc.start.offset,
+			leftExpressionRange.end - node.loc.start.offset,
+		)
+		: undefined;
+	return {
+		leftExpressionRange,
+		leftExpressionText,
+	};
+}
+
+export function parseInterpolationNode(node: CompilerDOM.InterpolationNode, template: string) {
+	let start = node.content.loc.start.offset;
+	let end = node.content.loc.end.offset;
+
+	// fix https://github.com/vuejs/language-tools/issues/1787
+	while (template[start - 1]?.trim() === '') {
+		start--;
+	}
+	while (template[end]?.trim() === '') {
+		end++;
+	}
+
+	return [template.slice(start, end), start] as const;
+}
+
+export function isCompoundExpression(ts: TypeScript, ast: ts.SourceFile) {
+	if (ast.statements.length === 0) {
+		return false;
+	}
+	if (ast.statements.length === 1 && ast.text[ast.endOfFileToken.pos - 1] !== ';') {
+		const statement = ast.statements[0]!;
+		if (ts.isExpressionStatement(statement)) {
+			const node = getUnwrappedExpression(ts, statement.expression);
+			if (
+				ts.isArrowFunction(node)
+				|| ts.isIdentifier(node)
+				|| ts.isElementAccessExpression(node)
+				|| ts.isPropertyAccessExpression(node)
+			) {
+				return false;
+			}
+		}
+		else if (ts.isFunctionDeclaration(statement)) {
+			return false;
+		}
+	}
+	return true;
+}

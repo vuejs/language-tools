@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
+import { parseInterpolationNode } from '../../utils/templateExpressions';
 import { scriptFeatures } from '../features';
 import { endOfLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
@@ -129,19 +130,4 @@ function* collectSingleRootNodes(
 	if (options.vueCompilerOptions.fallthroughComponentNames.includes(tag)) {
 		yield* collectSingleRootNodes(options, child.children);
 	}
-}
-
-export function parseInterpolationNode(node: CompilerDOM.InterpolationNode, template: string) {
-	let start = node.content.loc.start.offset;
-	let end = node.content.loc.end.offset;
-
-	// fix https://github.com/vuejs/language-tools/issues/1787
-	while (template[start - 1]?.trim() === '') {
-		start--;
-	}
-	while (template[end]?.trim() === '') {
-		end++;
-	}
-
-	return [template.slice(start, end), start] as const;
 }

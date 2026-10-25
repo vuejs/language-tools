@@ -1,8 +1,8 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
-import { getUnwrappedExpression } from '../../parsers/utils';
 import type { Code, TypeScript, VueCodeMarker } from '../../types';
+import { isCompoundExpression } from '../../utils/templateExpressions';
 import { getTypeScriptAST } from '../../utils/typescriptAST';
 import { navigationFeatures, scriptFeatures, semanticFeatures } from '../features';
 import { names } from '../names';
@@ -338,30 +338,6 @@ function* generateReasserts(
 			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
 		})${endOfLine}`;
 	}
-}
-
-export function isCompoundExpression(ts: TypeScript, ast: ts.SourceFile) {
-	if (ast.statements.length === 0) {
-		return false;
-	}
-	if (ast.statements.length === 1 && ast.text[ast.endOfFileToken.pos - 1] !== ';') {
-		const statement = ast.statements[0]!;
-		if (ts.isExpressionStatement(statement)) {
-			const node = getUnwrappedExpression(ts, statement.expression);
-			if (
-				ts.isArrowFunction(node)
-				|| ts.isIdentifier(node)
-				|| ts.isElementAccessExpression(node)
-				|| ts.isPropertyAccessExpression(node)
-			) {
-				return false;
-			}
-		}
-		else if (ts.isFunctionDeclaration(statement)) {
-			return false;
-		}
-	}
-	return true;
 }
 
 function isSingleExpression(ts: TypeScript, ast: ts.SourceFile) {

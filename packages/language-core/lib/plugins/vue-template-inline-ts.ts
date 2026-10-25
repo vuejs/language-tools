@@ -1,9 +1,7 @@
 import { SpanMapFeature } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
-import { isCompoundExpression } from '../codegen/template/elementEvents';
-import { parseInterpolationNode } from '../codegen/template/templateChild';
-import { parseVForNode } from '../codegen/template/vFor';
 import type { Code, IR, VueLanguagePlugin } from '../types';
+import { isCompoundExpression, parseInterpolationNode, parseVForNode } from '../utils/templateExpressions';
 import { getTypeScriptAST } from '../utils/typescriptAST';
 
 const formatBrackets = {
