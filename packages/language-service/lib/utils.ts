@@ -74,7 +74,7 @@ export function resolveEmbeddedCode(
 	};
 }
 
-/** The component tag name, in its start or end tag, that `offset` in the template content touches. */
+/** The component element whose tag name, in its start or end tag, `offset` in the template content touches, and the range of that name. */
 export function getComponentTagAt(template: IRTemplate, offset: number) {
 	if (!template.ast) {
 		return;
@@ -90,7 +90,7 @@ export function getComponentTagAt(template: IRTemplate, offset: number) {
 		}
 		for (const start of starts) {
 			if (offset >= start && offset <= start + node.tag.length) {
-				return { tag: node.tag, start, end: start + node.tag.length };
+				return { element: node, start, end: start + node.tag.length };
 			}
 		}
 	}

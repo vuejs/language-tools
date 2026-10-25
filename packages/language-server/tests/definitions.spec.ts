@@ -80,6 +80,12 @@ test('global component tags lead to the file declaring the component', async () 
 
 test('component tags declared in the file itself have no definition from the Vue language server', async () => {
 	expect(await requestVueDefinitions('ParentLocal.vue', '<Local', 1)).toEqual([]);
+	// not the global component of the same name
+	expect(await requestVueDefinitions('ParentShadow.vue', '<GlobalChild', 1)).toEqual([]);
+});
+
+test('component tags lead to the component of the binding the template checks against', async () => {
+	expect(await requestVueDefinitions('ParentCasing.vue', '<loading', 1)).toEqual(['Child.vue 0:0-0:0']);
 });
 
 /** The Vue language server's definitions at `search` + `delta` of a file in `hoverComponentMeta`, as it is on disk. */

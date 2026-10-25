@@ -19,16 +19,16 @@ import {
 	getComponentNames,
 	getComponentProps,
 	getComponentSlots,
-	getComponentType,
 	getElementAttrs,
 	getNamedValueExports,
 	getProjectValueExports,
+	getTagType,
 	getUnresolvedName,
 	isRefAtOffset,
+	toCheckedPositions,
 } from './componentMeta';
 
 type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
-type SpanMapFeature = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SpanMapFeature;
 type Project = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Project;
 
 const directiveRE = /^v[A-Z]/;
@@ -41,16 +41,6 @@ export function getComponentModuleExtensions(contentMappers: unknown[] | undefin
 		...scriptExtensions,
 		...(contentMappers as { extensions?: string[] }[] | undefined)?.flatMap(entry => entry.extensions ?? []) ?? [],
 	];
-}
-
-/**
- * The positions of the text TypeScript checks for `sourceFile` that `offset`, an offset of the file's source text, maps
- * to through the segments taking part in `feature`; the text of a file without a content mapper is its source text.
- */
-function toCheckedPositions(sourceFile: SourceFile, offset: number, feature: SpanMapFeature) {
-	return sourceFile.spanMap
-		? sourceFile.spanMap.originalToVirtualPositions(offset, feature).map(({ position }) => position)
-		: [offset];
 }
 
 export interface TypeScriptProject {
@@ -84,22 +74,24 @@ export interface TypeScriptProjectResolver {
 		fileName: string,
 		name: string,
 	): Promise<{ fileName: string; edits: readonly TextEdit[] }[] | undefined>;
-	/** The declaration of the component that `tag` refers to in the template of the Vue file `fileName`, in another file. */
-	getComponentDefinition(
-		fileName: string,
-		virtualCode: VueVirtualCode,
-		tag: string,
-	): Promise<DefinitionLocation | undefined>;
-	/** The metadata of the component that `tag` refers to in the template of the Vue file `fileName`. */
-	getComponentMeta(fileName: string, virtualCode: VueVirtualCode, tag: string): Promise<ComponentMeta | undefined>;
+	/**
+	 * The declaration, in another file, of the component whose tag name starts at `offset` in the source text of the
+	 * Vue file `fileName`.
+	 */
+	getComponentDefinition(fileName: string, offset: number): Promise<DefinitionLocation | undefined>;
+	/** The metadata of the component whose tag name starts at `offset` in the source text of the Vue file `fileName`. */
+	getComponentMeta(fileName: string, offset: number): Promise<ComponentMeta | undefined>;
 	/** The intrinsic element names available in the template of the Vue file `fileName`. */
 	getElementNames(fileName: string): Promise<string[] | undefined>;
 	/** The props of the component whose props object literal contains `offset` in the service script of the Vue file `fileName`. */
 	getComponentProps(fileName: string, offset: number): Promise<ComponentPropInfo[] | undefined>;
 	/** The names of the slots the Vue file `fileName` declares. */
 	getComponentSlots(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
-	/** The attributes of the intrinsic element `tag` in the template of the Vue file `fileName`. */
-	getElementAttrs(fileName: string, tag: string): Promise<ComponentPropInfo[] | undefined>;
+	/**
+	 * The attributes of the intrinsic element whose tag name starts at `offset` in the source text of the Vue file
+	 * `fileName`, or else of the intrinsic element `tag`.
+	 */
+	getElementAttrs(fileName: string, offset: number | undefined, tag: string): Promise<ComponentPropInfo[] | undefined>;
 	/** The component names available in the template of the Vue file `fileName`. */
 	getComponentNames(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
 	/** The directive names (`vFoo`) available in the template of the Vue file `fileName`. */
@@ -274,15 +266,15 @@ export async function connectTypeScriptProjectResolver(
 				})));
 			});
 		},
-		getComponentDefinition(fileName, virtualCode, tag) {
+		getComponentDefinition(fileName, offset) {
 			return withSourceFile(
 				fileName,
-				(project, sourceFile) => getComponentDefinition(ts, project.checker, sourceFile, virtualCode, tag),
+				(project, sourceFile) => getComponentDefinition(ts, project.checker, sourceFile, offset),
 			);
 		},
-		getComponentMeta(fileName, virtualCode, tag) {
+		getComponentMeta(fileName, offset) {
 			return withSourceFile(fileName, async (project, sourceFile) => {
-				const component = await getComponentType(ts, project.checker, sourceFile, virtualCode, tag);
+				const component = await getTagType(ts, project.checker, sourceFile, offset);
 				return component && await getComponentMetaOfType(ts, project, component.type, component.node);
 			});
 		},
@@ -305,10 +297,10 @@ export async function connectTypeScriptProjectResolver(
 				(project, sourceFile) => getComponentSlots(ts, project.checker, sourceFile, virtualCode),
 			);
 		},
-		getElementAttrs(fileName, tag) {
+		getElementAttrs(fileName, offset, tag) {
 			return withSourceFile(
 				fileName,
-				(project, sourceFile) => getElementAttrs(ts, project.checker, sourceFile, tag),
+				(project, sourceFile) => getElementAttrs(ts, project.checker, sourceFile, offset, tag),
 			);
 		},
 		getComponentNames(fileName, virtualCode) {

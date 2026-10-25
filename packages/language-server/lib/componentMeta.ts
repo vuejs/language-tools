@@ -1,7 +1,9 @@
 import {
 	forEachElementNode,
+	getElementTagOffsets,
 	getSelfComponentName,
 	getServiceScript,
+	type IRTemplate,
 	type Language,
 	names,
 	type SourceScript,
@@ -10,82 +12,73 @@ import {
 	type VueVirtualCode,
 } from '@vue/language-core';
 import type { AutoImportExport, ComponentPropInfo, ExtractPropsInfo } from '@vue/language-service/lib/requests';
-import { camelize, capitalize } from '@vue/shared';
 import * as path from 'node:path';
 import type { URI } from 'vscode-uri';
 import type { TypeScript } from 'vue-component-meta';
 
+type ElementNode = Parameters<typeof getElementTagOffsets>[0];
 type Node = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).Node;
 type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
+type SpanMapFeature = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SpanMapFeature;
 type TypeNode = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).TypeNode;
 type Checker = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Checker;
 type Program = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Program;
 type Symbol = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Symbol;
 type Type = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Type;
 
-/** The type of the component that `tag` refers to in a Vue file's template, and its declaration when known. */
-export async function getComponentType(
+/**
+ * The positions of the text TypeScript checks for `sourceFile` that `offset`, an offset of the file's source text, maps
+ * to through the segments taking part in `feature`; the text of a file without a content mapper is its source text.
+ */
+export function toCheckedPositions(sourceFile: SourceFile, offset: number, feature: SpanMapFeature) {
+	return sourceFile.spanMap
+		? sourceFile.spanMap.originalToVirtualPositions(offset, feature).map(({ position }) => position)
+		: [offset];
+}
+
+/**
+ * The type of the component or intrinsic element whose tag name, or its last segment for `<Foo.Bar>`, starts at
+ * `offset` of a Vue file's source text, and its declaration when known.
+ */
+export async function getTagType(
 	ts: TypeScript,
 	checker: Checker,
 	sourceFile: SourceFile,
-	virtualCode: VueVirtualCode,
-	tag: string,
+	offset: number,
 ): Promise<{ node: Node | undefined; type: Type } | undefined> {
-	const testNames = new Set([
-		tag,
-		camelize(tag),
-		capitalize(camelize(tag)),
-	]);
-	const codegen = tsCodegen.get(virtualCode.ir);
-
-	for (const binding of codegen?.getSetupBindings() ?? []) {
-		if (testNames.has(binding)) {
-			const node = searchDefaultImportIdentifier(ts, sourceFile, binding);
-			if (node) {
-				return {
-					node,
-					type: await checker.getTypeAtLocation(node),
-				};
-			}
-		}
-	}
-
-	const selfName = getSelfComponentName(virtualCode.fileName);
-	const components = findVariable(ts, sourceFile, names.components);
-	if (components) {
-		const [firstName, ...restNames] = tag.split('.') as [string, ...string[]];
-		const componentsType = await checker.getTypeAtLocation(components);
-		let symbol = await componentsType.getProperty(firstName)
-			?? await componentsType.getProperty(camelize(firstName))
-			?? await componentsType.getProperty(capitalize(camelize(firstName)));
-		if (!symbol && restNames.length) {
-			// namespaced tags (e.g. `<Foo.Bar>`) refer to bindings of the script setup scope
-			symbol = await checker.resolveName(firstName, ts.SymbolFlags.Value, components);
-		}
-		for (const name of restNames) {
-			symbol = symbol && await (await getTypeOfSymbol(ts, checker, symbol, components)).getProperty(name);
-		}
+	const positions = toCheckedPositions(sourceFile, offset, ts.SpanMapFeature.Definition);
+	for (const position of positions) {
+		const node = getNodeAt(sourceFile, position, true);
+		const symbol = await checker.getSymbolAtLocation(node);
 		if (symbol) {
 			return {
-				node: await getComponentDeclaration(ts, checker, symbol),
-				type: await getTypeOfSymbol(ts, checker, symbol, components),
+				node: await getDefaultImportName(ts, sourceFile, symbol) ?? await getComponentDeclaration(ts, checker, symbol),
+				type: await getTypeOfSymbol(ts, checker, symbol, node),
 			};
 		}
-		else if (selfName === capitalize(camelize(tag))) {
-			return getSelf();
+	}
+
+	// A Vue file refers to itself by its name, which declares no symbol.
+	const moduleSymbol = positions.length ? await checker.getSymbolOfSourceFile(sourceFile.fileName) : undefined;
+	const defaultExport = moduleSymbol && await checker.getMemberInModuleExports(moduleSymbol, 'default');
+	if (!defaultExport) {
+		return;
+	}
+	const type = await checker.getTypeOfSymbol(defaultExport);
+	for (const position of positions) {
+		if ((await checker.getTypeAtLocation(getNodeAt(sourceFile, position, false))).id === type.id) {
+			return { node: await defaultExport.valueDeclaration?.resolve(), type };
 		}
 	}
+}
 
-	if (testNames.has(selfName)) {
-		return getSelf();
-	}
-
-	async function getSelf() {
-		const node = findVariable(ts, sourceFile, names.export);
-		return node && {
-			node,
-			type: await checker.getTypeAtLocation(node),
-		};
+/** The name of the default import in `sourceFile` that `symbol` is. */
+async function getDefaultImportName(ts: TypeScript, sourceFile: SourceFile, symbol: Symbol) {
+	if (symbol.flags & ts.SymbolFlags.Alias) {
+		const declaration = await symbol.declarations[0]?.resolve();
+		if (declaration && ts.isImportClause(declaration) && declaration.getSourceFile().fileName === sourceFile.fileName) {
+			return declaration.name;
+		}
 	}
 }
 
@@ -205,17 +198,16 @@ export async function getUnresolvedName(ts: TypeScript, checker: Checker, source
 }
 
 /**
- * The location of the declaration of the component `tag` refers to in a Vue file's template, in the source text of
- * the file declaring it, when that is another file.
+ * The location of the declaration of the component whose tag name starts at `offset` of a Vue file's source text, in
+ * the source text of the file declaring it, when that is another file.
  */
 export async function getComponentDefinition(
 	ts: TypeScript,
 	checker: Checker,
 	sourceFile: SourceFile,
-	virtualCode: VueVirtualCode,
-	tag: string,
+	offset: number,
 ) {
-	const node = (await getComponentType(ts, checker, sourceFile, virtualCode, tag))?.node;
+	const node = (await getTagType(ts, checker, sourceFile, offset))?.node;
 	const declarationFile = node?.getSourceFile();
 	if (!node || !declarationFile || declarationFile.fileName === sourceFile.fileName) {
 		return;
@@ -269,12 +261,9 @@ export function getComponentPropsOffset(
 	position: number,
 ) {
 	const { template } = virtualCode.ir;
-	if (!template?.ast) {
-		return;
-	}
-	const node = [...forEachElementNode(template.ast)].filter(child => position >= child.loc.start.offset).pop();
+	const node = getElementAt(template, position);
 	// ElementTypes.COMPONENT
-	if (node?.tagType !== 1) {
+	if (!template || node?.tagType !== 1) {
 		return;
 	}
 	return toServiceScriptOffset(
@@ -284,6 +273,17 @@ export function getComponentPropsOffset(
 		template.startTagEnd + node.loc.start.offset,
 		features => !!(features & VueCodeFeature.PropsCompletion),
 	);
+}
+
+/** The element that the offset `position` of `template` lies in (or after the start of). */
+export function getElementAt(template: IRTemplate | undefined, position: number) {
+	return template?.ast
+		&& [...forEachElementNode(template.ast)].filter(child => position >= child.loc.start.offset).pop();
+}
+
+/** The offset in a Vue file's source text of the tag name of `element`, or its last segment for `<Foo.Bar>`. */
+export function getTagNameOffset(template: IRTemplate, element: ElementNode) {
+	return template.startTagEnd + getElementTagOffsets(element, template)[0] + element.tag.lastIndexOf('.') + 1;
 }
 
 /** Maps an offset of a Vue file's source text to its generated service script, through a mapping `filter` accepts. */
@@ -440,20 +440,28 @@ export async function getComponentSlots(
 	return slots && (await (await checker.getTypeAtLocation(slots)).getProperties()).map(symbol => symbol.name);
 }
 
-/** The attributes of the intrinsic element `tag` in a Vue file's template. */
+/**
+ * The attributes of the intrinsic element whose tag name starts at `offset` of a Vue file's source text, or else of
+ * the intrinsic element `tag`.
+ */
 export async function getElementAttrs(
 	ts: TypeScript,
 	checker: Checker,
 	sourceFile: SourceFile,
+	offset: number | undefined,
 	tag: string,
 ): Promise<ComponentPropInfo[] | undefined> {
-	const intrinsics = findVariable(ts, sourceFile, names.intrinsics);
-	const element = intrinsics && await (await checker.getTypeAtLocation(intrinsics)).getProperty(tag);
-	if (!element) {
+	let type = offset === undefined ? undefined : (await getTagType(ts, checker, sourceFile, offset))?.type;
+	if (!type) {
+		const intrinsics = findVariable(ts, sourceFile, names.intrinsics);
+		const element = intrinsics && await (await checker.getTypeAtLocation(intrinsics)).getProperty(tag);
+		type = element && await checker.getTypeOfSymbol(element);
+	}
+	if (!type) {
 		return;
 	}
 	const attrs: ComponentPropInfo[] = [];
-	for (const prop of await (await checker.getTypeOfSymbol(element)).getProperties()) {
+	for (const prop of await type.getProperties()) {
 		const info: ComponentPropInfo = { name: prop.name };
 		if (!booleanExceptionProps.has(prop.name) && await hasBooleanType(ts, await checker.getTypeOfSymbol(prop))) {
 			info.boolean = true;
@@ -538,9 +546,11 @@ function findIdentifier(ts: TypeScript, sourceFile: SourceFile, offset: number) 
 	);
 }
 
-function searchDefaultImportIdentifier(ts: TypeScript, sourceFile: SourceFile, name: string) {
-	const node = findNode(sourceFile, node => ts.isImportDeclaration(node) && node.importClause?.name?.text === name);
-	return node && ts.isImportDeclaration(node) ? node.importClause?.name : undefined;
+/** The innermost node whose range holds `position`, descending into JSDoc comments when `jsDoc` is set. */
+function getNodeAt(node: Node, position: number, jsDoc: boolean): Node {
+	const holds = (child: Node) => child.pos <= position && position < child.end ? child : undefined;
+	const child = (jsDoc ? (node as { jsDoc?: Node[] }).jsDoc?.find(holds) : undefined) ?? node.forEachChild(holds);
+	return child ? getNodeAt(child, position, jsDoc) : node;
 }
 
 /** The first node in pre-order that matches `predicate`, descending only into the nodes `descend` accepts. */

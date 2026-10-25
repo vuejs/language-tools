@@ -370,7 +370,7 @@ export function create(
 						const offset = document.offsetAt(position);
 
 						if (offset >= tagStart && offset <= tagEnd) {
-							const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
+							const meta = await tsserver.getComponentMeta(info.root.fileName, element.loc.start.offset);
 							const props = meta?.props.filter(p => !p.global);
 							const modelProps = new Set<PropMeta>();
 							let tableContents: string[] = [];
@@ -597,9 +597,9 @@ export function create(
 				});
 
 				const provideAttributes = createProvider({
-					async fetch(tag: string) {
+					async fetch(_tag: string) {
 						const res = await Promise.all([
-							tsserver.getElementAttrs(root.fileName, tag),
+							tsserver.getElementAttrs(root.fileName, position),
 							tsserver.getComponentProps(root.fileName, position),
 							tsserver.getComponentDirectives(root.fileName),
 						]);

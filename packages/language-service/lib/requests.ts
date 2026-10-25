@@ -66,9 +66,10 @@ export interface Requests {
 	getComponentDirectives(
 		fileName: string,
 	): Response<string[]>;
+	/** The metadata of the component element that `position` of the template lies in (or after the start of). */
 	getComponentMeta(
 		fileName: string,
-		tag: string,
+		position: number,
 	): Response<import('vue-component-meta').ComponentMeta>;
 	getComponentNames(
 		fileName: string,
@@ -80,9 +81,10 @@ export interface Requests {
 	getComponentSlots(
 		fileName: string,
 	): Response<string[]>;
+	/** The attributes of the intrinsic element that `position` of the template lies in (or after the start of). */
 	getElementAttrs(
 		fileName: string,
-		tag: string,
+		position: number,
 	): Response<ComponentPropInfo[]>;
 	getElementNames(
 		fileName: string,
@@ -109,9 +111,12 @@ export interface Requests {
 		position: number,
 		tag: string | undefined,
 	): Response<ImportFix[]>;
-	/** The declaration of the component `tag` refers to, when another file declares it. */
+	/**
+	 * The declaration of the component of the element that `position` of the template lies in (or after the start of),
+	 * when another file declares it.
+	 */
 	getComponentDefinition(
 		fileName: string,
-		tag: string,
+		position: number,
 	): Response<DefinitionLocation>;
 }

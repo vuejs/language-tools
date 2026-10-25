@@ -23,7 +23,7 @@ export function create(
 						return;
 					}
 					const tag = getComponentTagAt(template, document.offsetAt(position));
-					const definition = tag && await getComponentDefinition(info.root.fileName, tag.tag);
+					const definition = tag && await getComponentDefinition(info.root.fileName, tag.element.loc.start.offset);
 					if (!tag || !definition) {
 						return;
 					}

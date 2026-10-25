@@ -21,7 +21,7 @@ import { asCoreTypeScript, placeScriptImportEdits } from '@vue/language-service/
 import { camelize, capitalize } from '@vue/shared';
 import * as path from 'node:path';
 import { URI } from 'vscode-uri';
-import { getComponentPropsOffset } from './componentMeta';
+import { getComponentPropsOffset, getElementAt, getTagNameOffset } from './componentMeta';
 import { createReactivityAnalyzer, getInterpolationRanges, type ReactivityAnalysisParams } from './reactivity';
 import {
 	connectTypeScriptProjectResolver,
@@ -213,11 +213,11 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 					catch {}
 				},
-				async getComponentMeta(fileName, tag) {
+				async getComponentMeta(fileName, position) {
 					try {
-						const script = await getVueScript(fileName);
-						if (script) {
-							return await (await connectTypeScriptApi()).getComponentMeta(fileName, script.virtualCode, tag);
+						const offset = await getComponentTagNameOffset(fileName, position);
+						if (offset !== undefined) {
+							return await (await connectTypeScriptApi()).getComponentMeta(fileName, offset);
 						}
 					}
 					catch {}
@@ -251,9 +251,18 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 					catch {}
 				},
-				async getElementAttrs(fileName, tag) {
+				async getElementAttrs(fileName, position) {
 					try {
-						return await (await connectTypeScriptApi()).getElementAttrs(fileName, tag);
+						const template = (await getVueScript(fileName))?.virtualCode.ir.template;
+						const element = getElementAt(template, position);
+						if (template && element) {
+							return await (await connectTypeScriptApi()).getElementAttrs(
+								fileName,
+								// ElementTypes.ELEMENT
+								element.tagType === 0 ? getTagNameOffset(template, element) : undefined,
+								element.tag,
+							);
+						}
 					}
 					catch {}
 				},
@@ -343,11 +352,11 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 					catch {}
 				},
-				async getComponentDefinition(fileName, tag) {
+				async getComponentDefinition(fileName, position) {
 					try {
-						const script = await getVueScript(fileName);
-						if (script) {
-							return await (await connectTypeScriptApi()).getComponentDefinition(fileName, script.virtualCode, tag);
+						const offset = await getComponentTagNameOffset(fileName, position);
+						if (offset !== undefined) {
+							return await (await connectTypeScriptApi()).getComponentDefinition(fileName, offset);
 						}
 					}
 					catch {}
@@ -395,6 +404,16 @@ export function startServer(ts: typeof import('typescript')) {
 			const virtualCode = sourceScript?.generated?.root;
 			if (sourceScript && virtualCode instanceof VueVirtualCode) {
 				return { language, sourceScript, virtualCode };
+			}
+		}
+
+		/** The source offset of the tag name of the component element that the template offset `position` lies in (or after the start of). */
+		async function getComponentTagNameOffset(fileName: string, position: number) {
+			const template = (await getVueScript(fileName))?.virtualCode.ir.template;
+			const element = getElementAt(template, position);
+			// ElementTypes.COMPONENT
+			if (template && element?.tagType === 1) {
+				return getTagNameOffset(template, element);
 			}
 		}
 

@@ -24,7 +24,7 @@ export function create(
 					}
 					const offset = document.offsetAt(range.start);
 					const tag = getComponentTagAt(template, offset);
-					const fixes = await getImportFixes(info.root.fileName, template.startTagEnd + offset, tag?.tag);
+					const fixes = await getImportFixes(info.root.fileName, template.startTagEnd + offset, tag?.element.tag);
 					if (!fixes?.length) {
 						return;
 					}
