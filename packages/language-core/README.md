@@ -123,7 +123,6 @@ Plugins must declare `version: 4`. Version 4 removed the `getLanguageId`, `isVal
 
 | Plugin | Function |
 | :--- | :--- |
-| `vue-tsx` | Generates TypeScript virtual code from an SFC. |
 | `vue-template-html` | Compiles HTML templates. |
 | `vue-template-inline-ts` | Handles TypeScript expressions in templates. |
 | `vue-template-inline-css` | Handles inline styles in templates. |
