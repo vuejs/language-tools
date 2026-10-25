@@ -12,10 +12,9 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 			return {
 				isAdditionalCompletion: true,
 				async provideCompletionItems(document, position) {
+					// Volar offers additional completion only in the first document that maps the position, whichever it is.
 					const info = resolveEmbeddedCode(context, document.uri);
-					// Volar offers additional completion only in the first document that maps the position: the generated
-					// script while vue-tsx runs in this language service, the Vue file itself once it does not.
-					if (!info?.code.id.startsWith('script_') && info?.code.id !== 'main') {
+					if (!info) {
 						return;
 					}
 
@@ -39,8 +38,8 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					}
 					if (
 						sourceOffset === undefined
-						|| (info.code.id === 'main'
-							&& (sourceOffset < scriptSetup.startTagEnd || sourceOffset > scriptSetup.endTagStart))
+						|| sourceOffset < scriptSetup.startTagEnd
+						|| sourceOffset > scriptSetup.endTagStart
 					) {
 						return;
 					}

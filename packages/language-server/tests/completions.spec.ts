@@ -1057,6 +1057,31 @@ test('Auto insert defines', async () => {
 	`);
 });
 
+test('Auto insert defines only in script setup', async () => {
+	const content = `
+<script lang="ts" setup>
+defineProps<{ foo: string }>();
+</script>
+
+<script lang="ts">
+props
+</script>
+
+<template>
+	<div>{{ props }}</div>
+</template>
+`;
+	for (const textBefore of ['\nprops', '{{ props']) {
+		const offset = content.indexOf(textBefore) + textBefore.length;
+		const completions = await requestCompletionListToVueServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			content.slice(0, offset) + '|' + content.slice(offset),
+		);
+		expect(completions.items.filter(item => item.label === 'props' && item.additionalTextEdits)).toEqual([]);
+	}
+});
+
 // `testFn` is saved in `tsconfigProject/functions.ts`: TypeScript 7 can leave an export only an open document has
 // out of its auto-import data, so whether it imported one would depend on the timing of the previous test's close.
 test('#5847', async () => {
