@@ -2,24 +2,8 @@ import type { LanguagePlugin } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as LanguageCore from '../index';
 import { createPlugins } from './plugins';
-import type { TypeScript, VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
+import type { TypeScript, VueCompilerOptions, VueLanguagePlugin } from './types';
 import { getRootLanguageId, VueVirtualCode } from './virtualCode';
-
-const fileRegistries: Record<string, Map<string, VueVirtualCode>> = {};
-
-function getVueFileRegistry(vueCompilerOptions: VueCompilerOptions, plugins: VueLanguagePluginReturn[]) {
-	const key = JSON.stringify([
-		...plugins.map(plugin => plugin.name)
-			.filter(name => typeof name === 'string')
-			.sort(),
-		...Object.keys(vueCompilerOptions)
-			.filter(key => key !== 'plugins')
-			.sort()
-			.map(key => [key, vueCompilerOptions[key as keyof VueCompilerOptions]]),
-	]);
-
-	return fileRegistries[key] ??= new Map();
-}
 
 export function createVueLanguagePlugin<T>(
 	ts: TypeScript,
@@ -41,7 +25,6 @@ export function createVueLanguagePlugin<T>(
 		config: {},
 	};
 	const plugins = createPlugins(pluginContext, scriptPlugins);
-	const fileRegistry = getVueFileRegistry(vueCompilerOptions, plugins);
 
 	return {
 		// Every file passed in is parsed by `vueCompilerOptions.format`; the host routes to this plugin only the
@@ -50,22 +33,11 @@ export function createVueLanguagePlugin<T>(
 			return getRootLanguageId(vueCompilerOptions);
 		},
 		createVirtualCode(scriptId, _languageId, snapshot) {
-			let code = fileRegistry.get(String(scriptId));
-			if (code) {
-				code.update(snapshot);
-			}
-			else {
-				code = new VueVirtualCode(asFileName(scriptId), snapshot, vueCompilerOptions, plugins, ts);
-				fileRegistry.set(String(scriptId), code);
-			}
-			return code;
+			return new VueVirtualCode(asFileName(scriptId), snapshot, vueCompilerOptions, plugins, ts);
 		},
 		updateVirtualCode(_scriptId, code, snapshot) {
 			code.update(snapshot);
 			return code;
-		},
-		disposeVirtualCode(scriptId) {
-			fileRegistry.delete(String(scriptId));
 		},
 	};
 }

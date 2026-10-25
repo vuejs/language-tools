@@ -362,3 +362,21 @@ test('watches plugins declared in the mapper entry options', () => {
 		fs.rmSync(workspace, { recursive: true, force: true });
 	}
 });
+
+test('transforms a changed file of an open project as a newly opened project does', () => {
+	const fileName = path.resolve(__dirname, 'Changed.vue');
+	const before = `<script setup lang="ts">const before = 1;</script>\n<template>{{ before }}</template>\n`;
+	const after = `<script setup lang="ts">const after = '';</script>\n<template><div :title="after" /></template>\n`;
+
+	openProject({ configFileName: '', projectHandle: 'changed-project', compilerOptions: {} });
+	transformVue({ projectHandle: 'changed-project', fileName, content: before });
+	const changed = transformVue({ projectHandle: 'changed-project', fileName, content: after });
+	closeProject('changed-project');
+
+	openProject({ configFileName: '', projectHandle: 'fresh-project', compilerOptions: {} });
+	const fresh = transformVue({ projectHandle: 'fresh-project', fileName, content: after });
+	closeProject('fresh-project');
+
+	expect(changed.text).not.toContain('before');
+	expect(changed).toEqual(fresh);
+});

@@ -74,14 +74,6 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 	}
 
 	function closeProject(projectHandle: string) {
-		const state = projects.get(projectHandle);
-		if (state) {
-			for (const configuration of state.configurations.values()) {
-				for (const [fileName, virtualCode] of configuration.virtualCodes) {
-					configuration.plugin.disposeVirtualCode?.(fileName, virtualCode);
-				}
-			}
-		}
 		projects.delete(projectHandle);
 	}
 
@@ -97,12 +89,16 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			getLength: () => params.content.length,
 			getChangeRange: () => undefined,
 		};
-		const root = configuration.plugin.createVirtualCode?.(
-			params.fileName,
-			configuration.plugin.getLanguageId(params.fileName)!,
-			snapshot,
-			{ getAssociatedScript: () => undefined },
-		);
+		const ctx = { getAssociatedScript: () => undefined };
+		const previous = configuration.virtualCodes.get(params.fileName);
+		const root = previous
+			? configuration.plugin.updateVirtualCode?.(params.fileName, previous, snapshot, ctx)
+			: configuration.plugin.createVirtualCode?.(
+				params.fileName,
+				configuration.plugin.getLanguageId(params.fileName)!,
+				snapshot,
+				ctx,
+			);
 		if (root) {
 			configuration.virtualCodes.set(params.fileName, root);
 		}
