@@ -369,7 +369,7 @@ async function isComponentType(type: Type) {
 }
 
 /** The element that the offset `position` of `template` lies in (or after the start of). */
-export function getElementAt(template: IRTemplate | undefined, position: number) {
+export function getElementAt(template: IRTemplate | undefined, position: number): ElementNode | undefined {
 	return template?.ast
 		&& [...forEachElementNode(template.ast)].filter(child => position >= child.loc.start.offset).pop();
 }
