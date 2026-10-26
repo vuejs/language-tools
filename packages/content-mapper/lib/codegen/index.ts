@@ -137,6 +137,7 @@ function useCodegen(
 				...getGeneratedTemplate()?.codes ?? [],
 			],
 			scriptEdits: getCodegenContributions().scriptEdits,
+			templateContext: getCodegenContributions().templateContext,
 		});
 	});
 

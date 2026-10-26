@@ -133,6 +133,8 @@ export function loadCodegenPlugins(
 /** The contributions of the codegen plugins to one file, combined in `plugins` order and turned into code. */
 export interface CodegenContributions {
 	scriptEdits: ScriptEdit[];
+	/** Object types spread into the template context. */
+	templateContext: TsCode[][];
 }
 
 export interface ScriptEdit {
@@ -155,6 +157,7 @@ export function getContributions(plugins: readonly CodegenPlugin[], file: VueCod
 	);
 	const contributions: CodegenContributions = {
 		scriptEdits: [],
+		templateContext: [],
 	};
 	for (const { name, plugin } of plugins) {
 		const contribution = plugin.contribute(file);
@@ -169,6 +172,9 @@ export function getContributions(plugins: readonly CodegenPlugin[], file: VueCod
 			if ((block === ir.script || block === ir.scriptSetup) && block && isRange(block, start, end)) {
 				contributions.scriptEdits.push({ plugin: name, block, start, end, code: toTsCode(blocks, edit.code) });
 			}
+		}
+		for (const type of toArray(contribution.templateContext)) {
+			contributions.templateContext.push(toTsCode(blocks, type));
 		}
 	}
 	return contributions;

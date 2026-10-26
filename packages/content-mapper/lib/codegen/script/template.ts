@@ -4,6 +4,7 @@ import type { TsCode } from '../../boundary';
 import { names } from '../names';
 import {
 	asType,
+	asTypeCode,
 	endOfLine,
 	generateSfcBlockSection,
 	generateTypeAlias,
@@ -49,10 +50,10 @@ export function* generateTemplate(
 }
 
 function* generateTemplateCtx(
-	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, scriptLang }: ScriptCodegenOptions,
+	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, scriptLang, templateContext }: ScriptCodegenOptions,
 	selfType: string | undefined,
 ): Generator<TsCode> {
-	const exps: string[] = [];
+	const exps: (string | TsCode[])[] = [];
 	const emitTypes: string[] = [];
 	const propTypes: string[] = [];
 
@@ -94,6 +95,9 @@ function* generateTemplateCtx(
 	if (propTypes.length) {
 		exps.push(asType(`{ $props: ${propTypes.join(` & `)} }`, scriptLang));
 		exps.push(asType(propTypes.join(` & `), scriptLang));
+	}
+	for (const type of templateContext) {
+		exps.push(asTypeCode(type, scriptLang));
 	}
 
 	yield `const ${names.ctx} = `;

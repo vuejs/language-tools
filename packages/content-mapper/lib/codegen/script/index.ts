@@ -40,6 +40,8 @@ export interface ScriptCodegenOptions {
 	scopeBindings: Set<string>;
 	/** The script edits of the codegen plugins. */
 	scriptEdits: readonly ScriptEdit[];
+	/** The object types that the codegen plugins spread into the template context. */
+	templateContext: readonly TsCode[][];
 }
 
 export { generate as generateScript };

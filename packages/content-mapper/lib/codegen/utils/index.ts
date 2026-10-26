@@ -15,6 +15,11 @@ export function asType(type: string, lang: string): string {
 	return isTsLang(lang) ? `{} as ${type}` : `/** @type {${type}} */ ({})`;
 }
 
+/** `asType` of the type that `type` generates. */
+export function asTypeCode(type: readonly TsCode[], lang: string): TsCode[] {
+	return isTsLang(lang) ? [`{} as `, ...type] : [`/** @type {`, ...type, `} */ ({})`];
+}
+
 // `let name!: T;` in TS; `var name = /** @type {T} */ ({});` in JS.
 export function* generateTypedVar(
 	kind: 'let' | 'var',

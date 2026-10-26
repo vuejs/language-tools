@@ -137,7 +137,9 @@ test('fails the transform when a script edit of a plugin spans sections that Vue
 				return { scriptEdits: [{ block, ...rangeOf(block, `'a';\nconst`), code: [`'b'; let`] }] };
 			}, 'spanning-plugin'),
 		)
-	).toThrow(`Plugin 'spanning-plugin': the script edit at 19..29 spans sections of the block that Vue copies to different places.`);
+	).toThrow(
+		`Plugin 'spanning-plugin': the script edit at 19..29 spans sections of the block that Vue copies to different places.`,
+	);
 });
 
 test('propagates an exception of contribute', () => {
@@ -149,4 +151,15 @@ test('propagates an exception of contribute', () => {
 			}),
 		)
 	).toThrow('contribute failed');
+});
+
+test('spreads the template context types of plugins into the template context', () => {
+	const contextPlugin = plugin(() => ({ templateContext: [['{ $foo: number }']] }));
+	expect(
+		generateWith(`<script setup lang="ts">\nconst a = 1;\n</script>\n<template>{{ a }}</template>\n`, contextPlugin)
+			.text,
+	)
+		.toMatch(/const __VLS_ctx = \{\n(\.\.\..*,\n)*\.\.\.\{\} as \{ \$foo: number \},\n\};/);
+	expect(generateWith(`<script setup>\nconst a = 1;\n</script>\n<template>{{ a }}</template>\n`, contextPlugin).text)
+		.toMatch(/const __VLS_ctx = \{\n(\.\.\..*,\n)*\.\.\.\/\*\* @type \{\{ \$foo: number \}\} \*\/ \(\{\}\),\n\};/);
 });

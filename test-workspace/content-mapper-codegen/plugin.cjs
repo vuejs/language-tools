@@ -1,6 +1,9 @@
 // The codegen plugin of the content-mapper-codegen fixture.
+const path = require('node:path');
+
 exports.codegen = () => ({
-	contribute({ ts, ir }) {
+	contribute({ ts, fileName, ir }) {
+		const name = path.basename(fileName, '.vue');
 		const scriptEdits = [];
 		for (const block of [ir.script, ir.scriptSetup]) {
 			if (block) {
@@ -16,6 +19,9 @@ exports.codegen = () => ({
 				});
 			}
 		}
-		return { scriptEdits };
+		return {
+			scriptEdits,
+			templateContext: name.startsWith('TemplateContext') ? [['{ $foo: number }']] : [],
+		};
 	},
 });
