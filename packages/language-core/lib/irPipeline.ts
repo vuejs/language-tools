@@ -3,7 +3,6 @@ import { compileScript } from './plugins/vue-script-js';
 import { compileStyle } from './plugins/vue-style-css';
 import { htmlTemplateCompiler } from './plugins/vue-template-html';
 import { compileTemplate } from './template/compile';
-import { getPugTemplatePrefix } from './template/pug';
 import type {
 	IRPipeline,
 	TemplateCompiler,
@@ -28,7 +27,7 @@ const builtInTemplateCompilers: Record<string, TemplateCompiler> = {
 	md: htmlTemplateCompiler,
 };
 
-const templateCompilerHost: VueTemplateCompilerHost = { compileTemplate, getPugTemplatePrefix };
+const templateCompilerHost: VueTemplateCompilerHost = { compileTemplate };
 
 /**
  * How the IR of the Vue files of `vueCompilerOptions` is built: the format of `vueCompilerOptions.format`, the

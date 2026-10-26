@@ -11,7 +11,6 @@ export * from './lib/irPipeline';
 export * from './lib/parsers/scriptRanges';
 export * from './lib/parsers/scriptSetupRanges';
 export * from './lib/template/compile';
-export * from './lib/template/pug';
 export * from './lib/types';
 export * from './lib/utils/buildMappings';
 export * from './lib/utils/collectBindings';
