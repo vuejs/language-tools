@@ -156,6 +156,32 @@ Alternatively, you can run one of the scripts defined in the [package.json](http
 
 Additional info for contributing to open source projects can be found here: https://docs.github.com/en/get-started/quickstart/contributing-to-projects
 
+### Repository layout
+
+A Vue file is read into the IR by `@vue/language-core`; `@vue/content-mapper` generates TypeScript from the IR for TS 7.1, `@vue/language-service` builds the embedded documents of the editor features, and `vue-component-meta` reads component types through the TS 7.1 API.
+
+```
+packages/
+  language-core/lib/      Vue file -> IR
+    formats/              file formats: .vue SFC, VitePress markdown, petite-vue HTML -> SFC blocks
+    template/             template blocks: compiling, element queries, expression scopes
+    script/               script blocks: script and script setup ranges, bindings
+    style/                style blocks: CSS bindings and classes, scoped class references
+    typescript/           loading the TypeScript API, cached parsing, node helpers
+    options/              Vue compiler options, comment options, IR plugins
+    ir/                   the IR pipeline and the reactive IR and analysis of a file
+    mappings/             mapping features and source mappings
+  content-mapper/         TS 7.1 Content Mapper: protocol, worker pool, mapper (package root)
+    lib/codegen/          IR -> TypeScript code, by script, template and style
+  language-service/lib/   Volar language service plugins (plugins/) and embedded documents (virtualCode/)
+  language-server/        the LSP server
+  component-meta/         component props, events, slots and exposed types
+  language-plugin-pug/    pug templates
+  component-type-helpers/ component type helpers
+extensions/vscode/        the VS Code extension
+test-workspace/           fixtures shared by the tests
+```
+
 ### Volar.js
 
 [Volar.js](https://github.com/volarjs/volar.js) is checked out at `volar.js/` as a git submodule tracking its `v3` branch, and its packages are part of the pnpm workspace, so every `@volar/*` dependency resolves to the submodule instead of npm. `npm run build` compiles them first (`npm run build:volar`, with the TypeScript version Volar.js itself uses); `npm run watch:volar` watches them.
