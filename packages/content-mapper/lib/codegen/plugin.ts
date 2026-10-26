@@ -9,6 +9,7 @@ import type {
 	VuePluginContext,
 	VuePluginError,
 } from '@vue/language-core';
+import { Boundary, type TsCode } from '../boundary';
 
 /** The `codegen` export of a `plugins` entry's module. */
 export type VueCodegenExport = VueCodegenPlugin | ((ctx: VuePluginContext) => VueCodegenPlugin);
@@ -127,4 +128,101 @@ export function loadCodegenPlugins(
 		plugins.push({ name, plugin: plugin as VueCodegenPlugin });
 	}
 	return { plugins, errors };
+}
+
+/** The contributions of the codegen plugins to one file, combined in `plugins` order and turned into code. */
+export interface CodegenContributions {
+	scriptEdits: ScriptEdit[];
+}
+
+export interface ScriptEdit {
+	/** The `name` of the plugin entry. */
+	plugin: string;
+	block: IRScript | IRScriptSetup;
+	start: number;
+	end: number;
+	code: TsCode[];
+}
+
+/**
+ * Collects what each plugin contributes to `file`, in order. An exception of `contribute` propagates. Entries that
+ * are not valid for the IR of the file are dropped.
+ */
+export function getContributions(plugins: readonly CodegenPlugin[], file: VueCodegenFile): CodegenContributions {
+	const { ir } = file;
+	const blocks = new Set<IRBlock>(
+		[ir.template, ir.script, ir.scriptSetup, ...ir.styles, ...ir.customBlocks].filter(block => !!block),
+	);
+	const contributions: CodegenContributions = {
+		scriptEdits: [],
+	};
+	for (const { name, plugin } of plugins) {
+		const contribution = plugin.contribute(file);
+		if (typeof contribution !== 'object' || contribution === null) {
+			continue;
+		}
+		for (const edit of toArray(contribution.scriptEdits)) {
+			if (typeof edit !== 'object' || edit === null) {
+				continue;
+			}
+			const { block, start, end } = edit;
+			if ((block === ir.script || block === ir.scriptSetup) && block && isRange(block, start, end)) {
+				contributions.scriptEdits.push({ plugin: name, block, start, end, code: toTsCode(blocks, edit.code) });
+			}
+		}
+	}
+	return contributions;
+}
+
+/**
+ * The code of `code`. A `SourceText` whose text is not the text of the source at its offset, and a `SourceSpan` out of
+ * the range of its source, keep their text but do not map.
+ */
+function toTsCode(blocks: Set<IRBlock>, code: VueCodegenCode | undefined): TsCode[] {
+	return [...generateCode(blocks, code)];
+}
+
+function* generateCode(blocks: Set<IRBlock>, code: VueCodegenCode | undefined): Generator<TsCode> {
+	for (const segment of toArray(code)) {
+		if (typeof segment === 'string') {
+			yield segment;
+		}
+		else if (typeof segment !== 'object' || segment === null) {
+			continue;
+		}
+		else if ('code' in segment) {
+			const { block, start, end, features } = segment;
+			if (blocks.has(block) && isRange(block, start, end) && typeof features === 'number') {
+				const boundary = yield* Boundary.start(block.name, start, end, { features });
+				yield* generateCode(blocks, segment.code);
+				yield boundary.end();
+			}
+			else {
+				yield* generateCode(blocks, segment.code);
+			}
+		}
+		else if (typeof segment.text === 'string') {
+			const { text, block, offset, features } = segment;
+			if (
+				blocks.has(block)
+				&& isRange(block, offset, offset + text.length)
+				&& typeof features === 'number'
+				&& block.content.slice(offset, offset + text.length) === text
+			) {
+				yield [text, block.name, offset, { features }];
+			}
+			else {
+				yield text;
+			}
+		}
+	}
+}
+
+function isRange(block: IRBlock, start: unknown, end: unknown): boolean {
+	return Number.isInteger(start) && Number.isInteger(end)
+		&& 0 <= (start as number) && (start as number) <= (end as number) && (end as number) <= block.content.length;
+}
+
+function toArray<T>(value: readonly T[] | undefined): readonly T[] {
+	return Array.isArray(value) ? value : [];
 }

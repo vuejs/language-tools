@@ -2,6 +2,7 @@ import { getScriptLang, type IR, type ScriptAnalysis, type TypeScript, type VueS
 import { BindingFlag } from '@vue/language-core/lib/parsers/utils';
 import { computed } from 'alien-signals';
 import type { TsCode } from '../boundary';
+import { type CodegenPlugin, getContributions } from './plugin';
 import { generateScript } from './script';
 import { generateStyle } from './style';
 import { generateTemplate } from './template';
@@ -17,16 +18,21 @@ export function generateServiceScript(
 	fileName: string,
 	ir: IR,
 	analysis: ScriptAnalysis,
+	plugins: readonly CodegenPlugin[] = [],
 ): ServiceScript {
-	return useCodegen(ts, fileName, ir, analysis)();
+	return useCodegen(ts, fileName, ir, analysis, plugins)();
 }
 
 /**
  * The code generation of a Vue file as a graph of computed sections over its IR and script analysis, so that a
  * change of the source regenerates only the sections that read it.
  */
-export function useServiceScript(ts: TypeScript, source: VueSource): () => ServiceScript {
-	return useCodegen(ts, source.fileName, source.ir, source.analysis);
+export function useServiceScript(
+	ts: TypeScript,
+	source: VueSource,
+	plugins: readonly CodegenPlugin[],
+): () => ServiceScript {
+	return useCodegen(ts, source.fileName, source.ir, source.analysis, plugins);
 }
 
 function useCodegen(
@@ -34,6 +40,7 @@ function useCodegen(
 	fileName: string,
 	ir: IR,
 	analysis: ScriptAnalysis,
+	plugins: readonly CodegenPlugin[],
 ): () => ServiceScript {
 	const {
 		getResolvedOptions,
@@ -53,6 +60,8 @@ function useCodegen(
 		getInheritAttrs,
 		getComponentName,
 	} = analysis;
+
+	const getCodegenContributions = computed(() => getContributions(plugins, { ts, fileName, ir, analysis }));
 
 	const hasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
@@ -127,6 +136,7 @@ function useCodegen(
 				...getGeneratedStyle()?.codes ?? [],
 				...getGeneratedTemplate()?.codes ?? [],
 			],
+			scriptEdits: getCodegenContributions().scriptEdits,
 		});
 	});
 

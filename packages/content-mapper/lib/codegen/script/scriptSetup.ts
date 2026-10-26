@@ -21,21 +21,46 @@ import {
 	typeAliasRef,
 } from '../utils';
 import { generateCamelized } from '../utils/camelized';
-import { type CodeTransform, generateCodeWithTransforms, insert, replace } from '../utils/transform';
+import {
+	type CodeTransform,
+	generateCodeWithTransforms,
+	getScriptEditTransforms,
+	insert,
+	replace,
+} from '../utils/transform';
 import { generateComponent } from './component';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 
 export function* generateScriptSetupImports(
+	options: ScriptCodegenOptions,
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<TsCode> {
 	yield* generateCodeWithTransforms(
 		0,
-		Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset),
-		[],
+		getImportSectionEnd(scriptSetupRanges),
+		getScriptSetupEditTransforms(options, scriptSetup, scriptSetupRanges).imports,
 		(start, end) => [[scriptSetup.content.slice(start, end), scriptSetup.name, start, { features: scriptFeatures }]],
 	);
+}
+
+function getImportSectionEnd(scriptSetupRanges: ScriptSetupRanges) {
+	return Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset);
+}
+
+// A zero-width edit between the import section and the body goes to the body.
+function getScriptSetupEditTransforms(
+	options: ScriptCodegenOptions,
+	scriptSetup: IRScriptSetup,
+	scriptSetupRanges: ScriptSetupRanges,
+) {
+	const importSectionEnd = getImportSectionEnd(scriptSetupRanges);
+	const [body, imports] = getScriptEditTransforms(options.scriptEdits, scriptSetup, [
+		[importSectionEnd, scriptSetup.content.length],
+		[0, importSectionEnd],
+	]);
+	return { imports: imports!, body: body! };
 }
 
 export function* generateGeneric(
@@ -361,9 +386,9 @@ export function* generateSetupFunction(
 	}
 
 	yield* generateCodeWithTransforms(
-		Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset),
+		getImportSectionEnd(scriptSetupRanges),
 		scriptSetup.content.length,
-		transforms,
+		[...transforms, ...getScriptSetupEditTransforms(options, scriptSetup, scriptSetupRanges).body],
 		(start, end) => generateSfcBlockSection(scriptSetup, start, end, { features: scriptFeatures }),
 	);
 	yield* generateModels(options, scriptSetup, scriptSetupRanges);

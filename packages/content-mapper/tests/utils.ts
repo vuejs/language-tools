@@ -12,6 +12,7 @@ import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
 import { buildMappings } from '../lib/buildMappings';
 import { generateServiceScript } from '../lib/codegen';
+import type { CodegenPlugin } from '../lib/codegen/plugin';
 
 export const repositoryRoot = path.resolve(__dirname, '../../..');
 
@@ -67,8 +68,14 @@ export function createSource(
 }
 
 /** The service script of `source`, with its segments at file offsets. */
-export function generateFromSource(source: VueSource) {
-	const { lang, codes } = generateServiceScript(loadTypeScript(), source.fileName, source.ir, source.analysis);
+export function generateFromSource(source: VueSource, plugins?: readonly CodegenPlugin[]) {
+	const { lang, codes } = generateServiceScript(
+		loadTypeScript(),
+		source.fileName,
+		source.ir,
+		source.analysis,
+		plugins,
+	);
 	const resolved = resolveCodeOffsets(source.ir, codes);
 	return {
 		lang,
@@ -77,6 +84,11 @@ export function generateFromSource(source: VueSource) {
 	};
 }
 
-export function generate(fileName: string, content: string, vueCompilerOptions?: VueCompilerOptions) {
-	return generateFromSource(createSource(fileName, content, vueCompilerOptions));
+export function generate(
+	fileName: string,
+	content: string,
+	vueCompilerOptions?: VueCompilerOptions,
+	plugins?: readonly CodegenPlugin[],
+) {
+	return generateFromSource(createSource(fileName, content, vueCompilerOptions), plugins);
 }

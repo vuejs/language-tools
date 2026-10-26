@@ -115,7 +115,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 				params.fileName,
 				snapshot,
 			);
-			const getServiceScript = useServiceScript(configuration.ts, source);
+			const getServiceScript = useServiceScript(configuration.ts, source, configuration.codegenPlugins);
 			file = {
 				source,
 				getResult: computed(() =>
