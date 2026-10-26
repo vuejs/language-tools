@@ -5,6 +5,7 @@ import {
 	type LanguagePlugin,
 	type LanguageServicePlugin,
 } from '@volar/language-service';
+import { stringToSnapshot } from '@volar/language-service/lib/utils/common';
 import { getDefaultCompilerOptions } from '@vue/language-core';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
@@ -42,7 +43,7 @@ export function createAutoInserter(
 		}
 		const content = textWithCursor.slice(0, cursorIndex) + insertedText
 			+ textWithCursor.slice(cursorIndex + cursor.length);
-		const snapshot = ts.ScriptSnapshot.fromString(content);
+		const snapshot = stringToSnapshot(content);
 		language.scripts.set(fakeUri, snapshot, languageId);
 		const document = languageService.context.documents.get(fakeUri, languageId, snapshot);
 		return await languageService.getAutoInsertSnippet(

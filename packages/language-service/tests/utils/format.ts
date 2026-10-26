@@ -6,6 +6,7 @@ import {
 	type LanguagePlugin,
 	type LanguageServicePlugin,
 } from '@volar/language-service';
+import { stringToSnapshot } from '@volar/language-service/lib/utils/common';
 import { getDefaultCompilerOptions } from '@vue/language-core';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
@@ -36,7 +37,7 @@ function createFormatter(
 	};
 
 	async function format(content: string, languageId: string, options: FormattingOptions): Promise<string> {
-		const snapshot = ts.ScriptSnapshot.fromString(content);
+		const snapshot = stringToSnapshot(content);
 		language.scripts.set(fakeUri, snapshot, languageId);
 		const document = languageService.context.documents.get(fakeUri, languageId, snapshot);
 		const edits = await languageService.getDocumentFormattingEdits(fakeUri, options, undefined, undefined);

@@ -1,4 +1,5 @@
 import { createLanguage, createLanguageService, createUriMap } from '@volar/language-service';
+import { stringToSnapshot } from '@volar/language-service/lib/utils/common';
 import { getDefaultCompilerOptions } from '@vue/language-core';
 import * as ts from 'typescript';
 import { expect, test } from 'vitest';
@@ -41,7 +42,7 @@ async function getSyntacticFeatures() {
 	);
 	const open = (name: string, content: string) => {
 		const uri = URI.file('/' + name);
-		const snapshot = ts.ScriptSnapshot.fromString(content);
+		const snapshot = stringToSnapshot(content);
 		language.scripts.set(uri, snapshot, 'vue');
 		const document = languageService.context.documents.get(uri, 'vue', snapshot);
 		return { uri, document, positionAfter: (text: string) => document.positionAt(content.indexOf(text) + text.length) };

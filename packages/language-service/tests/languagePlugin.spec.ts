@@ -1,10 +1,9 @@
+import { stringToSnapshot } from '@volar/language-service/lib/utils/common';
 import { getDefaultCompilerOptions } from '@vue/language-core';
 import * as ts from 'typescript';
 import { expect, test } from 'vitest';
 import { asCoreTypeScript } from '../lib/coreTypeScript';
 import { createVueLanguagePlugin } from '../lib/languagePlugin';
-
-const createSnapshot = ts.ScriptSnapshot.fromString;
 
 const fileName = '/project/src/Comp.vue';
 const before = '<template><div>{{ before }}</div></template>\n';
@@ -22,11 +21,11 @@ test.each([
 		{ length: pluginCount },
 		() => createVueLanguagePlugin<string>(asCoreTypeScript(ts), getDefaultCompilerOptions(), id => id),
 	);
-	const a = first!.createVirtualCode!(fileName, 'vue', createSnapshot(before), {} as never)!;
-	const b = second!.createVirtualCode!(fileName, 'vue', createSnapshot(before), {} as never)!;
+	const a = first!.createVirtualCode!(fileName, 'vue', stringToSnapshot(before), {} as never)!;
+	const b = second!.createVirtualCode!(fileName, 'vue', stringToSnapshot(before), {} as never)!;
 	expect(a).not.toBe(b);
 
-	expect(first!.updateVirtualCode!(fileName, a, createSnapshot(after), {} as never)).toBe(a);
+	expect(first!.updateVirtualCode!(fileName, a, stringToSnapshot(after), {} as never)).toBe(a);
 	expect(text(a)).toBe(after);
 	expect(a.ir.template?.content).toContain('<span>');
 	expect(text(b)).toBe(before);
@@ -45,7 +44,7 @@ test('the embedded codes of the language service come from the built-in plugins 
 		...getDefaultCompilerOptions(),
 		plugins: [{ name: 'user-plugin', file: '/project/user-plugin.js', config: {}, module: userPlugin }],
 	}, id => id);
-	const code = plugin.createVirtualCode!(fileName, 'vue', createSnapshot(before), {} as never)!;
+	const code = plugin.createVirtualCode!(fileName, 'vue', stringToSnapshot(before), {} as never)!;
 
 	const [rootTags, ...others] = code.embeddedCodes;
 	expect(others).toEqual([]);
@@ -59,11 +58,11 @@ test('the virtual code of the language service reads its source', () => {
 	const setupBefore = '<script setup lang="ts">const before = 1;</script>\n';
 	const setupAfter = '<script setup lang="ts">const after = 1;</script>\n';
 	const plugin = createVueLanguagePlugin<string>(asCoreTypeScript(ts), getDefaultCompilerOptions(), id => id);
-	const code = plugin.createVirtualCode!(fileName, 'vue', createSnapshot(setupBefore), {} as never)!;
+	const code = plugin.createVirtualCode!(fileName, 'vue', stringToSnapshot(setupBefore), {} as never)!;
 	expect(code.ir).toBe(code.source.ir);
 	expect(code.scriptAnalysis).toBe(code.source.analysis);
 
-	plugin.updateVirtualCode!(fileName, code, createSnapshot(setupAfter), {} as never);
+	plugin.updateVirtualCode!(fileName, code, stringToSnapshot(setupAfter), {} as never);
 	expect(text(code.source)).toBe(setupAfter);
 	expect([...code.scriptAnalysis.getSetupBindings()]).toEqual(['after']);
 });
