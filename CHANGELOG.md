@@ -40,6 +40,10 @@ Plugins that changed the generated TypeScript move to `codegen`. Each one drops 
 
 Unsupported: wrapping the template (layout slots of dxup), changing the shape of the component (`define-generic` of vue-macros; use `generic="…"`), template expressions in custom blocks, and intersecting a type into the default export.
 
+### Language core
+
+- **breaking:** `@vue/language-core` no longer exports `isFunctionLikeDeclaration` and `isTypeAssertionExpression`; use `ts.isFunctionLikeDeclaration` and `ts.isTypeAssertion` of TS 7.1.
+
 ### Content Mapper
 
 - **breaking:** the Content Mapper parses with the TS 7.1 `typescript` package that resolves from the project directory (the directory of the tsconfig, or the working directory for an inferred project), and fails to open a project from which none resolves. The VS Code extension no longer bundles TS 7.1, whose bundled copy could not find its executable.
