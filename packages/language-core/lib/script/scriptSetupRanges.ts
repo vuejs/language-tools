@@ -1,9 +1,9 @@
 import { camelize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { IRScriptSetup, TextRange, TypeScript, VueCompilerOptions } from '../types';
-import { collectBindingIdentifiers } from '../utils/collectBindings';
-import { getNodeText, getStartEnd, isFunctionLikeDeclaration, isStringLiteralLike } from '../utils/nodes';
-import { getClosestMultiLineCommentRange, parseBindings } from './utils';
+import { getNodeText, getStartEnd, isFunctionLikeDeclaration, isStringLiteralLike } from '../typescript/nodes';
+import { getClosestMultiLineCommentRange, parseBindings } from './bindings';
+import { collectBindingIdentifiers } from './collectBindings';
 
 const tsCheckRE = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
 

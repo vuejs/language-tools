@@ -1,8 +1,8 @@
 import { loadIRPlugins } from './plugins';
-import { compileScript } from './plugins/vue-script-js';
-import { compileStyle } from './plugins/vue-style-css';
-import { htmlTemplateCompiler } from './plugins/vue-template-html';
+import { compileScript } from './script/compileScript';
+import { compileStyle } from './style/compileStyle';
 import { compileTemplate } from './template/compile';
+import { htmlTemplateCompiler } from './template/htmlTemplateCompiler';
 import type {
 	IRPipeline,
 	TemplateCompiler,

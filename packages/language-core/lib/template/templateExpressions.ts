@@ -1,10 +1,10 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
-import { getUnwrappedExpression } from '../parsers/utils';
+import { getUnwrappedExpression } from '../script/bindings';
+import { collectBindingNames } from '../script/collectBindings';
 import type { IRTemplate, TypeScript } from '../types';
-import { collectBindingNames } from './collectBindings';
-import { getStartEnd } from './nodes';
-import { getTypeScriptAST } from './typescriptAST';
+import { getStartEnd } from '../typescript/nodes';
+import { getTypeScriptAST } from '../typescript/typescriptAST';
 
 export function parseVForNode(node: CompilerDOM.ForNode) {
 	const { value, key, index } = node.parseResult;

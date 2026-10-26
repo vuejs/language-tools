@@ -8,21 +8,21 @@ export {
 	structureFeatures,
 } from './lib/features';
 export * from './lib/irPipeline';
-export * from './lib/parsers/scriptRanges';
-export * from './lib/parsers/scriptSetupRanges';
+export * from './lib/script/collectBindings';
+export * from './lib/script/scriptRanges';
+export * from './lib/script/scriptSetupRanges';
+export * from './lib/style/styleScopedClasses';
 export * from './lib/template/compile';
+export * from './lib/template/elements';
+export * from './lib/template/forEachTemplateNode';
+export * from './lib/template/templateExpressions';
+export * from './lib/template/templateScope';
 export * from './lib/types';
+export * from './lib/typescript/nodes';
 export * from './lib/utils/buildMappings';
-export * from './lib/utils/collectBindings';
-export * from './lib/utils/elements';
-export * from './lib/utils/forEachTemplateNode';
 export * from './lib/utils/names';
-export * from './lib/utils/nodes';
 export * from './lib/utils/parseSfc';
 export * from './lib/utils/resolveCodeOffsets';
-export * from './lib/utils/styleScopedClasses';
-export * from './lib/utils/templateExpressions';
-export * from './lib/utils/templateScope';
 export * from './lib/vueSource';
 
 export { createScriptAnalysis, getScriptLang, type ScriptAnalysis } from './lib/scriptAnalysis';

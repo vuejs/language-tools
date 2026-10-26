@@ -1,5 +1,5 @@
 import { navigationFeatures } from '@vue/language-core';
-import { BindingFlag } from '@vue/language-core/lib/parsers/utils';
+import { BindingFlag } from '@vue/language-core/lib/script/bindings';
 import type { TsCode } from '../../boundary';
 import { names } from '../names';
 import {

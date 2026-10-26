@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '@vue/language-core';
-import { getTypeScriptAST } from '@vue/language-core/lib/utils/typescriptAST';
+import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAST';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';

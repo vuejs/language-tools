@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { compileTemplate } from '../template/compile';
 import type { TemplateCompiler } from '../types';
+import { compileTemplate } from './compile';
 
 interface Loc {
 	start: { offset: number };

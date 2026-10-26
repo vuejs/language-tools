@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { API } from 'typescript/sync' with { 'resolution-mode': 'import' };
-import type { TypeScript } from './types';
+import type { TypeScript } from '../types';
 
 let loaded: TypeScript | undefined;
 

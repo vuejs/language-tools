@@ -1,14 +1,16 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, isBuiltInDirective } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import { collectBindingNames } from '../script/collectBindings';
 import type { IR, IRBlock, IRStyle, IRTemplate, TypeScript, VueCompilerOptions } from '../types';
+import { getNodeText, getStartEnd } from '../typescript/nodes';
+import { getTypeScriptAST } from '../typescript/typescriptAST';
 import {
 	type ExpressionScope,
 	forEachDeclarations,
 	isLiteralWhitelisted,
 	shouldIdentifierSkipped,
 } from './bindingReferences';
-import { collectBindingNames } from './collectBindings';
 import {
 	getComponentIsBinding,
 	getElementTagOffsets,
@@ -16,9 +18,7 @@ import {
 	getTemplateRef,
 	normalizeAttributeValue,
 } from './elements';
-import { getNodeText, getStartEnd } from './nodes';
 import { isCompoundExpression, parseInterpolationNode, parseVForAliases } from './templateExpressions';
-import { getTypeScriptAST } from './typescriptAST';
 
 export interface InlayHintInfo {
 	blockName: string;

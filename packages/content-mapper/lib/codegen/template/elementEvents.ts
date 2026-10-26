@@ -8,7 +8,7 @@ import {
 	type TypeScript,
 	type VueCodeMarker,
 } from '@vue/language-core';
-import { getTypeScriptAST } from '@vue/language-core/lib/utils/typescriptAST';
+import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAST';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';

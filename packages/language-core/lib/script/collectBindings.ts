@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { TypeScript } from '../types';
-import { getNodeText, getStartEnd } from './nodes';
+import { getNodeText, getStartEnd } from '../typescript/nodes';
 
 export function collectBindingNames(
 	ts: TypeScript,

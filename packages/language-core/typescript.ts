@@ -1,1 +1,1 @@
-export { loadTypeScript } from './lib/typescript';
+export { loadTypeScript } from './lib/typescript/loadTypeScript';

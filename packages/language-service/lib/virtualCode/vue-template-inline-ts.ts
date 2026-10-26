@@ -8,7 +8,7 @@ import {
 	SpanMapFeature,
 	type TypeScript,
 } from '@vue/language-core';
-import { getTypeScriptAST } from '@vue/language-core/lib/utils/typescriptAST';
+import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAST';
 import { embeddedCodeIds, type EmbeddedDocument } from './embeddedDocument';
 
 const formatBrackets = {
