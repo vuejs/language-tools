@@ -33,13 +33,13 @@ test('a pug template has a template document without any plugin', () => {
 	expect(text(template)).toBe('\ndiv\n  span\n');
 });
 
-test('an indented pug template is nested in a template tag', () => {
+test('an indented pug template document is the template as written', () => {
 	const startTag = '<template lang="pug">';
 	const content = '\n  div\n    span\n';
 	const template = findCode(getEmbeddedCodes(`${startTag}${content}</template>\n`), 'template');
 	expect(template?.languageId).toBe('jade');
-	expect(text(template)).toBe('template\n' + content);
+	expect(text(template)).toBe(content);
 	expect(template?.mappings.map(mapping => mapping.slice(0, 4))).toEqual([
-		['template\n'.length, content.length, startTag.length, content.length],
+		[0, content.length, startTag.length, content.length],
 	]);
 });
