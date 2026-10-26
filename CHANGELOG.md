@@ -14,7 +14,7 @@ v4 replaces the `VueLanguagePlugin` API with plugin modules that export one key 
 - **feat:** the language server creates a project's IR again when one of its plugin files changes.
 - **feat:** `@vue/language-plugin-pug` exports `ir.templateCompilers.pug`; `@vue/language-core` is only a type dependency of it.
 
-- **feat:** `@vue/content-mapper` reads a `codegen` export of plugin modules, which contributes to the code it generates: edits of the user's script code, template context types, props, emits and exposed types of script setup components, native element types, module declarations, named exports and the doc comment of the component. The language server and vue-component-meta never load it. See [Codegen plugins](packages/content-mapper/README.md#codegen-plugins).
+- **feat:** `@vue/content-mapper` reads a `codegen` export of plugin modules, which contributes to the code it generates: edits of the user's script code, template context types, props, emits and exposed types of script setup components, native element types, module declarations, named exports and the doc comment of the component. A script edit inserts code before or after a char (`insertBefore` / `insertAfter`) or replaces a range (`replace`); edits never conflict with each other or with the mapper's own transforms, and inserts move with the code that the mapper moves. The language server and vue-component-meta never load it. See [Codegen plugins](packages/content-mapper/README.md#codegen-plugins).
 
 Plugins that changed the generated TypeScript move to `codegen`. Each one drops `version`, `name`, `order` and `ctx.modules`, exports `codegen = ctx => ({ contribute(file) { … } })`, takes its options from its `plugins` entry (`ctx.config`), and walks `file.ir.scriptSetup.ast` with `node.forEachChild` instead of matching generated code:
 
@@ -25,6 +25,7 @@ Plugins that changed the generated TypeScript move to `codegen`. Each one drops 
 | vue-macros `export-props` | `scriptEdits` (remove the `export` modifier) and `props` (`{ x?: typeof x }`). |
 | vue-macros `export-expose` | `scriptEdits` (rewrite the export statements, mapping the names) and `expose` (`{ b: typeof a }`). |
 | vue-macros `export-render` | `scriptEdits`: replace `export default ` with `defineRender(` and insert `)`. |
+| vue-macros `define-slots` | `scriptEdits`: `insertBefore` / `insertAfter` around the type argument of `defineSlots` wrap the shorthand where the mapper moves it. |
 | vue-macros `setup-jsdoc` | `exports.docComment`: the range of the JSDoc. |
 | ts-macro (`jsx-directive`, `jsx-ref`) | Its Vue adapter returns the `replaceRange` calls as `scriptEdits` of `<script>` and `<script setup>`. |
 | vue-macros `define-props` / `define-props-refs` | No plugin: `macros.defineProps: ['defineProps', '$defineProps', 'definePropsRefs']`. |
@@ -36,7 +37,7 @@ Plugins that changed the generated TypeScript move to `codegen`. Each one drops 
 | fusion-php | `templateContext`, with the variable names as `SourceText`s over the `<php>` block. |
 | server-block-nuxt | `declarations`: the content of the block as one `SourceText`. |
 
-Unsupported: wrapping the template (layout slots of dxup), wrapping core's type aliases (the `define-slots` shorthand of vue-macros), changing the shape of the component (`define-generic` of vue-macros; use `generic="…"`), template expressions in custom blocks, and intersecting a type into the default export.
+Unsupported: wrapping the template (layout slots of dxup), changing the shape of the component (`define-generic` of vue-macros; use `generic="…"`), template expressions in custom blocks, and intersecting a type into the default export.
 
 ## 3.3.13 (2026-10-10)
 

@@ -9,10 +9,11 @@ import {
 } from '@vue/language-core';
 import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
+import type { CoreRewriteWriter, RewriteSlice } from '../rewrite';
+import { createBlockRewrite, type TsCodeData } from '../rewrite/tsCode';
 import {
 	asType,
 	endOfLine,
-	generateEmptyBlock,
 	generateSfcBlockSection,
 	generateTypeAlias,
 	generateTypedVar,
@@ -23,48 +24,54 @@ import {
 	typeAliasRef,
 } from '../utils';
 import { generateCamelized } from '../utils/camelized';
-import {
-	type CodeTransform,
-	generateCodeWithTransforms,
-	getScriptEditTransforms,
-	insert,
-	replace,
-} from '../utils/transform';
 import { generateComponent } from './component';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 import { getEmitTypes } from './template';
 
-export function* generateScriptSetupImports(
+/** The copies of the user's code of `<script setup>`: its imports at module scope, and its body in the setup function. */
+export interface ScriptSetupCopies {
+	generateImports(): Generator<TsCode>;
+	generateBody(): Generator<TsCode>;
+}
+
+/**
+ * The copies of `<script setup>`, with the transforms of Vue and the script edits of the codegen plugins. The imports
+ * and the body are top-level cuts of one rewrite; an empty block has a zero-width body, which renders its inserts.
+ */
+export function createScriptSetupCopies(
 	options: ScriptCodegenOptions,
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
-): Generator<TsCode> {
-	yield* generateEmptyBlock(scriptSetup);
-	yield* generateCodeWithTransforms(
-		0,
-		getImportSectionEnd(scriptSetupRanges),
-		getScriptSetupEditTransforms(options, scriptSetup, scriptSetupRanges).imports,
-		(start, end) => [[scriptSetup.content.slice(start, end), scriptSetup.name, start, { features: scriptFeatures }]],
-	);
+): ScriptSetupCopies {
+	const blockRewrite = createBlockRewrite(scriptSetup, options.scriptEdits);
+	const { core } = blockRewrite.rewrite;
+	const importSectionEnd = getImportSectionEnd(scriptSetupRanges);
+	const { length } = scriptSetup.content;
+	const imports = importSectionEnd > 0
+		? core.cut(0, importSectionEnd, { data: { features: scriptFeatures } })
+		: undefined;
+	const body = importSectionEnd < length || !length
+		? core.cut(importSectionEnd, length, { data: { features: scriptFeatures } })
+		: undefined;
+	addTransforms(options, scriptSetup, core, scriptSetupRanges);
+	return {
+		*generateImports() {
+			yield* blockRewrite.generateEmptyCopy();
+			if (imports) {
+				yield* blockRewrite.render(imports, false);
+			}
+		},
+		*generateBody() {
+			if (body) {
+				yield* blockRewrite.render(body);
+			}
+		},
+	};
 }
 
 function getImportSectionEnd(scriptSetupRanges: ScriptSetupRanges) {
 	return Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset);
-}
-
-// A zero-width edit between the import section and the body goes to the body.
-function getScriptSetupEditTransforms(
-	options: ScriptCodegenOptions,
-	scriptSetup: IRScriptSetup,
-	scriptSetupRanges: ScriptSetupRanges,
-) {
-	const importSectionEnd = getImportSectionEnd(scriptSetupRanges);
-	const [body, imports] = getScriptEditTransforms(options.scriptEdits, scriptSetup, [
-		[importSectionEnd, scriptSetup.content.length],
-		[0, importSectionEnd],
-	]);
-	return { imports: imports!, body: body! };
 }
 
 export function* generateGeneric(
@@ -178,225 +185,11 @@ export function* generateSetupFunction(
 	ctx: ScriptCodegenContext,
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
+	copies: ScriptSetupCopies,
 	body: Iterable<TsCode>,
 	output?: Iterable<TsCode>,
 ): Generator<TsCode> {
-	const transforms: CodeTransform[] = [];
-
-	for (const { defaultPropsArg } of scriptSetupRanges.defineModel) {
-		if (defaultPropsArg) {
-			transforms.push({
-				range: [defaultPropsArg.end, defaultPropsArg.end],
-				*generate() {
-					yield `: `;
-					if (scriptSetupRanges.defineProps?.typeArg) {
-						yield names.Props;
-					}
-					else {
-						// FIXME: (props: typeof props) => ... would cause TS2502
-						yield `typeof `;
-						yield scriptSetupRanges.defineProps?.name ?? names.props;
-					}
-				},
-			});
-		}
-	}
-	if (scriptSetupRanges.defineProps) {
-		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
-		const _callExp = scriptSetupRanges.withDefaults?.callExp ?? callExp;
-		transforms.push(
-			...generateDefineWithTypeTransforms(scriptSetup, statement, _callExp, typeArg, name, names.props, names.Props),
-		);
-	}
-	if (scriptSetupRanges.defineEmits) {
-		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineEmits;
-		transforms.push(
-			...generateDefineWithTypeTransforms(scriptSetup, statement, callExp, typeArg, name, names.emit, names.Emit),
-		);
-	}
-	if (scriptSetupRanges.defineSlots) {
-		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineSlots;
-		transforms.push(
-			...generateDefineWithTypeTransforms(scriptSetup, statement, callExp, typeArg, name, names.slots, names.Slots),
-		);
-		if (!name) {
-			transforms.push(insert(statement.end, function*() {
-				yield `${newLine}void ${names.slots}${endOfLine}`;
-			}));
-		}
-	}
-	if (scriptSetupRanges.defineExpose) {
-		const { callExp, arg, typeArg } = scriptSetupRanges.defineExpose;
-		if (typeArg) {
-			transforms.push(
-				insert(callExp.start, function*() {
-					yield `let ${names.exposed}!: `;
-					yield* generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, { features: scriptFeatures });
-					yield endOfLine;
-				}),
-				replace(typeArg.start, typeArg.end, function*() {
-					yield `typeof ${names.exposed}`;
-				}),
-			);
-		}
-		else if (arg) {
-			transforms.push(
-				insert(callExp.start, function*() {
-					yield `const ${names.exposed} = `;
-					yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, { features: scriptFeatures });
-					yield endOfLine;
-				}),
-				replace(arg.start, arg.end, function*() {
-					yield names.exposed;
-				}),
-			);
-		}
-		else {
-			transforms.push(
-				insert(callExp.start, function*() {
-					yield `const ${names.exposed} = {}${endOfLine}`;
-				}),
-			);
-		}
-	}
-	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
-		for (const { callExp } of scriptSetupRanges.useAttrs) {
-			const type = `typeof ${names.dollars}.$attrs`;
-			transforms.push(
-				insert(callExp.start, function*() {
-					yield isTsLang(options.scriptLang) ? `(` : `/** @type {${type}} */ (`;
-				}),
-				insert(callExp.end, function*() {
-					yield isTsLang(options.scriptLang) ? ` as ${type})` : `)`;
-				}),
-			);
-		}
-	}
-	for (const { callExp, exp, arg } of scriptSetupRanges.useCssModule) {
-		const type = options.templateAndStyleTypes.has(names.StyleModules)
-			? typeAliasRef(names.StyleModules, options.scriptLang)
-			: `{}`;
-		if (arg) {
-			transforms.push(
-				insert(callExp.start, function*() {
-					if (isTsLang(options.scriptLang)) {
-						yield `(`;
-					}
-					else {
-						yield `/** @type {Omit<${type}, '$style'>[`;
-						yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, {
-							features: navigationFeatures | completionFeatures,
-						});
-						yield `]} */ (`;
-					}
-				}),
-				insert(callExp.end, function*() {
-					if (isTsLang(options.scriptLang)) {
-						yield ` as Omit<${type}, '$style'>[`;
-						yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, {
-							features: navigationFeatures | completionFeatures,
-						});
-						yield `])`;
-					}
-					else {
-						yield `)`;
-					}
-				}),
-				replace(arg.start, arg.end, function*() {
-					yield asType('any', options.scriptLang);
-				}),
-			);
-		}
-		else {
-			transforms.push(
-				insert(callExp.start, function*() {
-					yield isTsLang(options.scriptLang) ? `(` : `/** @type {${type}['$style']} */ (`;
-				}),
-				insert(callExp.end, function*() {
-					if (isTsLang(options.scriptLang)) {
-						yield ` as ${type}[`;
-						const boundary = yield* Boundary.start(scriptSetup.name, exp.start, exp.end, { features: 0 });
-						yield `'$style'`;
-						yield boundary.end();
-						yield `])`;
-					}
-					else {
-						yield `)`;
-					}
-				}),
-			);
-		}
-	}
-	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
-		for (const { callExp } of scriptSetupRanges.useSlots) {
-			const type = `typeof ${names.dollars}.$slots`;
-			transforms.push(
-				insert(callExp.start, function*() {
-					yield isTsLang(options.scriptLang) ? `(` : `/** @type {${type}} */ (`;
-				}),
-				insert(callExp.end, function*() {
-					yield isTsLang(options.scriptLang) ? ` as ${type})` : `)`;
-				}),
-			);
-		}
-	}
-	for (const { callExp, arg } of scriptSetupRanges.useTemplateRef) {
-		transforms.push(
-			insert(callExp.start, function*() {
-				if (isTsLang(options.scriptLang)) {
-					yield `(`;
-					return;
-				}
-				yield `/** @type {Readonly<import('${options.vueCompilerOptions.lib}').ShallowRef<`;
-				if (arg) {
-					yield typeAliasRef(names.TemplateRefs, options.scriptLang);
-					yield `[`;
-					yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, {
-						features: navigationFeatures | completionFeatures,
-					});
-					yield `]`;
-				}
-				else {
-					yield `unknown`;
-				}
-				yield ` | null>>} */ (`;
-			}),
-			insert(callExp.end, function*() {
-				if (isTsLang(options.scriptLang)) {
-					yield ` as Readonly<import('${options.vueCompilerOptions.lib}').ShallowRef<`;
-					if (arg) {
-						yield typeAliasRef(names.TemplateRefs, options.scriptLang);
-						yield `[`;
-						yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, {
-							features: navigationFeatures | completionFeatures,
-						});
-						yield `]`;
-					}
-					else {
-						yield `unknown`;
-					}
-					yield ` | null>>)`;
-				}
-				else {
-					yield `)`;
-				}
-			}),
-		);
-		if (arg) {
-			transforms.push(
-				replace(arg.start, arg.end, function*() {
-					yield asType('any', options.scriptLang);
-				}),
-			);
-		}
-	}
-
-	yield* generateCodeWithTransforms(
-		getImportSectionEnd(scriptSetupRanges),
-		scriptSetup.content.length,
-		[...transforms, ...getScriptSetupEditTransforms(options, scriptSetup, scriptSetupRanges).body],
-		(start, end) => generateSfcBlockSection(scriptSetup, start, end, { features: scriptFeatures }),
-	);
+	yield* copies.generateBody();
 	yield* generateModels(options, scriptSetup, scriptSetupRanges);
 	yield* generatePublicProps(options, ctx, scriptSetup, scriptSetupRanges);
 	yield* body;
@@ -465,63 +258,170 @@ export function* generateMacros(options: ScriptCodegenOptions): Generator<TsCode
 	}
 }
 
-function* generateDefineWithTypeTransforms(
+function addTransforms(
+	options: ScriptCodegenOptions,
 	scriptSetup: IRScriptSetup,
+	core: CoreRewriteWriter<TsCodeData>,
+	scriptSetupRanges: ScriptSetupRanges,
+) {
+	for (const { defaultPropsArg } of scriptSetupRanges.defineModel) {
+		if (defaultPropsArg) {
+			core.insertAfter(defaultPropsArg.end, function*() {
+				yield `: `;
+				if (scriptSetupRanges.defineProps?.typeArg) {
+					yield names.Props;
+				}
+				else {
+					// FIXME: (props: typeof props) => ... would cause TS2502
+					yield `typeof `;
+					yield scriptSetupRanges.defineProps?.name ?? names.props;
+				}
+			});
+		}
+	}
+	if (scriptSetupRanges.defineProps) {
+		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
+		const _callExp = scriptSetupRanges.withDefaults?.callExp ?? callExp;
+		addDefineWithTypeTransforms(core, statement, _callExp, typeArg, name, names.props, names.Props);
+	}
+	if (scriptSetupRanges.defineEmits) {
+		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineEmits;
+		addDefineWithTypeTransforms(core, statement, callExp, typeArg, name, names.emit, names.Emit);
+	}
+	if (scriptSetupRanges.defineSlots) {
+		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineSlots;
+		addDefineWithTypeTransforms(core, statement, callExp, typeArg, name, names.slots, names.Slots);
+		if (!name) {
+			core.insertAfter(statement.end, `${newLine}void ${names.slots}${endOfLine}`);
+		}
+	}
+	if (scriptSetupRanges.defineExpose) {
+		const { callExp, arg, typeArg } = scriptSetupRanges.defineExpose;
+		if (typeArg) {
+			const type = cutScriptCode(core, typeArg, `typeof ${names.exposed}`);
+			core.insertBefore(callExp.start, () => [`let ${names.exposed}!: `, type, endOfLine]);
+		}
+		else if (arg) {
+			const value = cutScriptCode(core, arg, names.exposed);
+			core.insertBefore(callExp.start, () => [`const ${names.exposed} = `, value, endOfLine]);
+		}
+		else {
+			core.insertBefore(callExp.start, `const ${names.exposed} = {}${endOfLine}`);
+		}
+	}
+	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
+		for (const { callExp } of scriptSetupRanges.useAttrs) {
+			const type = `typeof ${names.dollars}.$attrs`;
+			core.insertBefore(callExp.start, isTsLang(options.scriptLang) ? `(` : `/** @type {${type}} */ (`);
+			core.insertAfter(callExp.end, isTsLang(options.scriptLang) ? ` as ${type})` : `)`);
+		}
+	}
+	for (const { callExp, exp, arg } of scriptSetupRanges.useCssModule) {
+		const type = options.templateAndStyleTypes.has(names.StyleModules)
+			? typeAliasRef(names.StyleModules, options.scriptLang)
+			: `{}`;
+		if (arg) {
+			// the argument is copied as a reference into the cast, and is `any` at the call
+			const name = cutReference(core, arg, asType('any', options.scriptLang));
+			if (isTsLang(options.scriptLang)) {
+				core.insertBefore(callExp.start, `(`);
+				core.insertAfter(callExp.end, () => [` as Omit<${type}, '$style'>[`, name, `])`]);
+			}
+			else {
+				core.insertBefore(callExp.start, () => [`/** @type {Omit<${type}, '$style'>[`, name, `]} */ (`]);
+				core.insertAfter(callExp.end, `)`);
+			}
+		}
+		else {
+			core.insertBefore(callExp.start, isTsLang(options.scriptLang) ? `(` : `/** @type {${type}['$style']} */ (`);
+			core.insertAfter(callExp.end, function*() {
+				if (isTsLang(options.scriptLang)) {
+					yield ` as ${type}[`;
+					const boundary = yield* Boundary.start(scriptSetup.name, exp.start, exp.end, { features: 0 });
+					yield `'$style'`;
+					yield boundary.end();
+					yield `])`;
+				}
+				else {
+					yield `)`;
+				}
+			});
+		}
+	}
+	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
+		for (const { callExp } of scriptSetupRanges.useSlots) {
+			const type = `typeof ${names.dollars}.$slots`;
+			core.insertBefore(callExp.start, isTsLang(options.scriptLang) ? `(` : `/** @type {${type}} */ (`);
+			core.insertAfter(callExp.end, isTsLang(options.scriptLang) ? ` as ${type})` : `)`);
+		}
+	}
+	for (const { callExp, arg } of scriptSetupRanges.useTemplateRef) {
+		// the argument is copied as a reference into the cast, and is `any` at the call
+		const name = arg && cutReference(core, arg, asType('any', options.scriptLang));
+		const refType = name
+			? [typeAliasRef(names.TemplateRefs, options.scriptLang), `[`, name, `]`]
+			: [`unknown`];
+		const shallowRef = `Readonly<import('${options.vueCompilerOptions.lib}').ShallowRef<`;
+		if (isTsLang(options.scriptLang)) {
+			core.insertBefore(callExp.start, `(`);
+			core.insertAfter(callExp.end, () => [` as ${shallowRef}`, ...refType, ` | null>>)`]);
+		}
+		else {
+			core.insertBefore(callExp.start, () => [`/** @type {${shallowRef}`, ...refType, ` | null>>} */ (`]);
+			core.insertAfter(callExp.end, `)`);
+		}
+	}
+}
+
+/** The user's code at `range`, which `placeholder` takes the place of; it maps as script code where it is placed. */
+function cutScriptCode(core: CoreRewriteWriter<TsCodeData>, range: TextRange, placeholder: string) {
+	return core.cut(range.start, range.end, { data: { features: scriptFeatures }, placeholder });
+}
+
+/** The user's code at `range`, which `placeholder` takes the place of; it maps as a reference where it is placed. */
+function cutReference(core: CoreRewriteWriter<TsCodeData>, range: TextRange, placeholder: string) {
+	return core.cut(range.start, range.end, { data: { features: navigationFeatures | completionFeatures }, placeholder });
+}
+
+/**
+ * Hoists the type argument of a macro into the alias `typeName`, and an unnamed or destructured call into the variable
+ * `defaultName`, which the statement then reads: the statement up to the call is cut and placed after the call (or
+ * after the statement, for a name that is not an identifier), and the alias goes with what takes its place.
+ */
+function addDefineWithTypeTransforms(
+	core: CoreRewriteWriter<TsCodeData>,
 	statement: TextRange,
 	callExp: TextRange,
 	typeArg: TextRange | undefined,
 	name: string | undefined,
 	defaultName: string,
 	typeName: string,
-): Generator<CodeTransform> {
-	if (typeArg) {
-		yield insert(statement.start, function*() {
-			yield `type ${typeName} = `;
-			yield* generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, { features: scriptFeatures });
-			yield endOfLine;
-		});
-		yield replace(typeArg.start, typeArg.end, function*() {
-			yield typeName;
+) {
+	const alias: (string | RewriteSlice<TsCodeData>)[] = typeArg
+		? [`type ${typeName} = `, cutScriptCode(core, typeArg, typeName), endOfLine]
+		: [];
+	if (name && identifierRE.test(name)) {
+		if (alias.length) {
+			core.insertBefore(statement.start, () => alias);
+		}
+		return;
+	}
+	const declaration = [...alias, `const ${defaultName} = `];
+	if (!name && statement.start === callExp.start && statement.end === callExp.end) {
+		core.insertBefore(statement.start, () => declaration);
+		return;
+	}
+	let prefix: RewriteSlice<TsCodeData> | undefined;
+	if (statement.start < callExp.start) {
+		prefix = core.cut(statement.start, callExp.start, {
+			data: { features: scriptFeatures },
+			placeholder: () => declaration,
 		});
 	}
-	if (!name) {
-		if (statement.start === callExp.start && statement.end === callExp.end) {
-			yield insert(callExp.start, function*() {
-				yield `const ${defaultName} = `;
-			});
-		}
-		else if (typeArg) {
-			yield replace(statement.start, typeArg.start, function*() {
-				yield `const ${defaultName} = `;
-				yield* generateSfcBlockSection(scriptSetup, callExp.start, typeArg.start, { features: scriptFeatures });
-			});
-			yield replace(typeArg.end, callExp.end, function*() {
-				yield* generateSfcBlockSection(scriptSetup, typeArg.end, callExp.end, { features: scriptFeatures });
-				yield endOfLine;
-				yield* generateSfcBlockSection(scriptSetup, statement.start, callExp.start, { features: scriptFeatures });
-				yield defaultName;
-			});
-		}
-		else {
-			yield replace(statement.start, callExp.end, function*() {
-				yield `const ${defaultName} = `;
-				yield* generateSfcBlockSection(scriptSetup, callExp.start, callExp.end, { features: scriptFeatures });
-				yield endOfLine;
-				yield* generateSfcBlockSection(scriptSetup, statement.start, callExp.start, { features: scriptFeatures });
-				yield defaultName;
-			});
-		}
+	else {
+		core.insertBefore(statement.start, () => declaration);
 	}
-	else if (!identifierRE.test(name)) {
-		yield replace(statement.start, callExp.start, function*() {
-			yield `const ${defaultName} = `;
-		});
-		yield insert(statement.end, function*() {
-			yield endOfLine;
-			yield* generateSfcBlockSection(scriptSetup, statement.start, callExp.start, { features: scriptFeatures });
-			yield defaultName;
-		});
-	}
+	core.insertAfter(name ? statement.end : callExp.end, () => [endOfLine, ...prefix ? [prefix] : [], defaultName]);
 }
 
 function* generatePublicProps(

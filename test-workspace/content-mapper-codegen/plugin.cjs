@@ -13,7 +13,7 @@ exports.codegen = () => ({
 						ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'useFoo'
 						&& !node.typeArguments
 					) {
-						scriptEdits.push({ block, start: node.expression.end, end: node.expression.end, code: ['<number>'] });
+						scriptEdits.push({ block, insertAfter: node.expression.end, code: ['<number>'] });
 					}
 					node.forEachChild(visit);
 				});

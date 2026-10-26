@@ -137,7 +137,7 @@ generated names or offsets.
 
 | Key | Where the mapper places it | What its code can reference |
 |---|---|---|
-| `scriptEdits` | Edits (`{ block, start, end, code }`, an insert if `start === end`) of the user's code of `<script>` and `<script setup>`, wherever the mapper copies it | the scope of the block |
+| `scriptEdits` | Edits of the user's code of `<script>` and `<script setup>`, wherever the mapper copies it: `{ block, insertBefore: offset, code }`, `{ block, insertAfter: offset, code }` or `{ block, replace: { start, end }, code }` | the scope of the block |
 | `templateContext` | Object types spread last into the template context | the setup scope of a script setup component, else the module scope |
 | `props`, `emits`, `expose` | `<script setup>` only: object types intersected into the public props (`defineProps<…>` form), the emits (`defineEmits<…>` form) and what the component exposes | the setup scope |
 | `elements` | The tag → element type map of native elements, which replaces the DOM one in the file | the module scope |
@@ -149,18 +149,24 @@ de-duplicated. For `elements`, `exports.default` and `exports.docComment`, the f
 one wins. Invalid entries, such as a block that is not the file's or a range out of its block, are
 dropped.
 
-Script edits apply in source order. At one position, the mapper's own transforms come first, then
-plugins in order, and an insert comes before a replace that starts there. A script edit that
-overlaps a transform of the mapper fails the transform of the file. One that overlaps an edit of an
-earlier plugin is dropped. An edit must lie within one part of the block that the mapper copies to
-one place (the imports and the body of `<script setup>`, or the default export expression of
-`<script>` and the code around it), else it fails the transform. A zero-width edit between two parts
-goes to the body of `<script setup>`, and to the exported expression of `<script>`.
+Script edits never conflict. `insertBefore: offset` attaches code to the char at `offset` (at the
+end of the block, to the end of the block), `insertAfter: offset` to the char before `offset` (at
+the start of the block, to the start of the block), and the code goes wherever the mapper copies
+that char. `replace` removes the chars of `start..end` (at least one) and puts its code in the place
+of the char at `start`. Removals of several edits are united, and the inserted code of every edit
+stays. When the mapper moves a range of the user's code (e.g. the type argument of `defineProps`
+into a type alias), the inserts attached to its chars move with it, and the code of a replace that
+spans parts copied to different places stays at `start`. At one char, the code nests: a later plugin
+sits outside an earlier one, and the mapper outside all. So inserts before the char come outermost
+first, then the code of replaces and the inserts after the char come innermost first. The edits of
+one plugin at one place keep their order. An
+edit out of the range of its block, a replace that removes no char, and an entry that is not
+exactly one of the three shapes are dropped. A block whose chars are all removed still maps one
+empty position, so that an edit of the generated code there (e.g. an auto import) maps back.
 
 Unsupported, since they would need generated structure that a contribution cannot reach without
 depending on generated names: wrapping the template (e.g. checking its root as the default slot of
-a layout component), wrapping the mapper's own type aliases (e.g. a `defineSlots` shorthand),
-changing the shape of the component (e.g. a `defineGeneric` macro; use `generic="…"`), template
+a layout component), changing the shape of the component (e.g. a `defineGeneric` macro; use `generic="…"`), template
 expressions in custom blocks, and intersecting a type into the default export.
 
 Each transform selects its virtual extension through the Content Mapper

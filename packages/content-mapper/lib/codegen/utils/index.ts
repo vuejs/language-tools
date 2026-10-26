@@ -1,10 +1,4 @@
-import {
-	type IRScript,
-	type IRScriptSetup,
-	scriptFeatures,
-	type VueCodeMarker,
-	type VueCompilerOptions,
-} from '@vue/language-core';
+import { type IRScript, type IRScriptSetup, type VueCodeMarker, type VueCompilerOptions } from '@vue/language-core';
 import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 
 export const newLine = `\n`;
@@ -80,16 +74,6 @@ export function typeAliasRef(name: string, lang: string): string {
 // resolve the library import themselves.
 export function getRefBrandArgument(vueCompilerOptions: VueCompilerOptions, lang: string): string {
 	return asType(`import('${vueCompilerOptions.lib}').Ref<unknown>`, lang);
-}
-
-/**
- * The copy of a wholly empty `block`: one empty segment, so that an edit of the generated code at it (e.g. an auto
- * import into the empty `<script setup>` of an SFC without script) maps back into the block.
- */
-export function* generateEmptyBlock(block: IRScript | IRScriptSetup): Generator<TsCode> {
-	if (!block.content.length) {
-		yield ['', block.name, 0, { features: scriptFeatures }];
-	}
 }
 
 export function* generateSfcBlockSection(

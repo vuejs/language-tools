@@ -5,6 +5,9 @@ export type {
 	VueCodegenFile,
 	VueCodegenPlugin,
 	VueCodegenScriptEdit,
+	VueCodegenScriptInsertAfter,
+	VueCodegenScriptInsertBefore,
+	VueCodegenScriptReplace,
 	VueCodegenSourceSpan,
 	VueCodegenSourceText,
 } from './lib/codegen/plugin';

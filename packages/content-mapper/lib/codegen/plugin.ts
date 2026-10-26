@@ -52,13 +52,29 @@ export interface VueCodegenSourceSpan {
 	features: number;
 }
 
-/** Replaces `start`..`end` of the content of `block` with `code`, or inserts it if `start === end`. */
-export interface VueCodegenScriptEdit {
+/** `code` right before the text of `block` that starts at `insertBefore`; it goes wherever that text goes. */
+export interface VueCodegenScriptInsertBefore {
 	block: IRScript | IRScriptSetup;
-	start: number;
-	end: number;
+	insertBefore: number;
 	code: VueCodegenCode;
 }
+
+/** `code` right after the text of `block` that ends at `insertAfter`; it goes wherever that text goes. */
+export interface VueCodegenScriptInsertAfter {
+	block: IRScript | IRScriptSetup;
+	insertAfter: number;
+	code: VueCodegenCode;
+}
+
+/** The text of `block` at `replace.start`..`replace.end` (not empty) is not copied; `code` takes its place. */
+export interface VueCodegenScriptReplace {
+	block: IRScript | IRScriptSetup;
+	replace: { start: number; end: number };
+	code: VueCodegenCode;
+}
+
+/** An edit of the content of `block`, at offsets of the content. */
+export type VueCodegenScriptEdit = VueCodegenScriptInsertBefore | VueCodegenScriptInsertAfter | VueCodegenScriptReplace;
 
 export interface VueCodegenContribution {
 	/** Edits of the user's code of `<script>` and `<script setup>`. */
@@ -156,14 +172,17 @@ export interface CodegenContributions {
 	};
 }
 
-export interface ScriptEdit {
-	/** The `name` of the plugin entry. */
-	plugin: string;
-	block: IRScript | IRScriptSetup;
-	start: number;
-	end: number;
-	code: TsCode[];
-}
+export type ScriptEdit =
+	& {
+		/** The index of the plugin in `plugins`: the edits of a later plugin sit outside those of an earlier one. */
+		pluginIndex: number;
+		block: IRScript | IRScriptSetup;
+		code: TsCode[];
+	}
+	& (
+		| { kind: 'insertBefore' | 'insertAfter'; offset: number }
+		| { kind: 'replace'; start: number; end: number }
+	);
 
 /**
  * Collects what each plugin contributes to `file`, in order. An exception of `contribute` propagates. Entries that
@@ -185,18 +204,16 @@ export function getContributions(plugins: readonly CodegenPlugin[], file: VueCod
 		exports: { names: [], default: true, docComment: undefined },
 	};
 	let isDefaultSet = false;
-	for (const { name, plugin } of plugins) {
+	for (const [pluginIndex, { plugin }] of plugins.entries()) {
 		const contribution = plugin.contribute(file);
 		if (typeof contribution !== 'object' || contribution === null) {
 			continue;
 		}
 		for (const edit of toArray(contribution.scriptEdits)) {
-			if (typeof edit !== 'object' || edit === null) {
-				continue;
-			}
-			const { block, start, end } = edit;
-			if ((block === ir.script || block === ir.scriptSetup) && block && isRange(block, start, end)) {
-				contributions.scriptEdits.push({ plugin: name, block, start, end, code: toTsCode(blocks, edit.code) });
+			const scriptEdit = toScriptEdit(ir, edit, pluginIndex);
+			if (scriptEdit) {
+				scriptEdit.code = toTsCode(blocks, edit.code);
+				contributions.scriptEdits.push(scriptEdit);
 			}
 		}
 		if (!contributions.elements && toArray(contribution.elements).length) {
@@ -237,6 +254,39 @@ export function getContributions(plugins: readonly CodegenPlugin[], file: VueCod
 		}
 	}
 	return contributions;
+}
+
+/** The script edit of `edit`, if it has exactly one of its keys, with offsets in the content of a script block of `ir`. */
+function toScriptEdit(ir: IR, edit: VueCodegenScriptEdit, pluginIndex: number): ScriptEdit | undefined {
+	if (typeof edit !== 'object' || edit === null) {
+		return;
+	}
+	const { block, insertBefore, insertAfter, replace } = edit as Partial<
+		VueCodegenScriptInsertBefore & VueCodegenScriptInsertAfter & VueCodegenScriptReplace
+	>;
+	if ((block !== ir.script && block !== ir.scriptSetup) || !block) {
+		return;
+	}
+	if ([insertBefore, insertAfter, replace].filter(key => key !== undefined).length !== 1) {
+		return;
+	}
+	if (replace === undefined) {
+		const offset = insertBefore ?? insertAfter!;
+		if (isRange(block, offset, offset)) {
+			return {
+				pluginIndex,
+				block,
+				code: [],
+				kind: insertBefore !== undefined ? 'insertBefore' : 'insertAfter',
+				offset,
+			};
+		}
+		return;
+	}
+	const { start, end } = typeof replace === 'object' && replace !== null ? replace : { start: 0, end: 0 };
+	if (isRange(block, start, end) && start < end) {
+		return { pluginIndex, block, code: [], kind: 'replace', start, end };
+	}
 }
 
 /**

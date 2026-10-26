@@ -14,11 +14,11 @@ import * as path from 'path-browserify';
 import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import type { CodegenContributions, ScriptEdit } from '../plugin';
+import { createBlockRewrite } from '../rewrite/tsCode';
 import { generateStyleModuleImports } from '../style/modules';
-import { asType, endOfLine, generateEmptyBlock, generateSfcBlockSection, isTsLang, newLine } from '../utils';
-import { type CodeTransform, generateCodeWithTransforms, getScriptEditTransforms } from '../utils/transform';
+import { asType, endOfLine, isTsLang, newLine } from '../utils';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
-import { generateGeneric, generateMacros, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
+import { createScriptSetupCopies, generateGeneric, generateMacros, generateSetupFunction } from './scriptSetup';
 import { generateTemplate } from './template';
 
 export interface ScriptCodegenOptions {
@@ -138,7 +138,8 @@ function* generateWorker(
 	}
 	// <script> + <script setup>
 	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
-		yield* generateScriptSetupImports(options, scriptSetup, scriptSetupRanges);
+		const copies = createScriptSetupCopies(options, scriptSetup, scriptSetupRanges);
+		yield* copies.generateImports();
 		yield* generateMacros(options);
 
 		// <script>
@@ -174,6 +175,7 @@ function* generateWorker(
 					ctx,
 					scriptSetup,
 					scriptSetupRanges,
+					copies,
 					generateTemplate(options, selfType),
 				),
 			);
@@ -185,6 +187,7 @@ function* generateWorker(
 				ctx,
 				scriptSetup,
 				scriptSetupRanges,
+				copies,
 				generateTemplate(options, selfType),
 				[`return `],
 			);
@@ -193,7 +196,8 @@ function* generateWorker(
 	}
 	// only <script setup>
 	else if (scriptSetup && scriptSetupRanges) {
-		yield* generateScriptSetupImports(options, scriptSetup, scriptSetupRanges);
+		const copies = createScriptSetupCopies(options, scriptSetup, scriptSetupRanges);
+		yield* copies.generateImports();
 		yield* generateMacros(options);
 
 		if (scriptSetup.generic) {
@@ -209,6 +213,7 @@ function* generateWorker(
 					ctx,
 					scriptSetup,
 					scriptSetupRanges,
+					copies,
 					generateTemplate(options),
 				),
 			);
@@ -220,6 +225,7 @@ function* generateWorker(
 				ctx,
 				scriptSetup,
 				scriptSetupRanges,
+				copies,
 				generateTemplate(options),
 				generateComponentDeclareEqual(scriptSetup, names.export),
 			);
@@ -299,17 +305,20 @@ function* generateScriptWithExportDefault(
 		[wrapLeft, wrapRight] = vueCompilerOptions.optionsWrapper;
 	}
 
-	// A zero-width edit at an end of the exported expression goes to its copy.
-	const [expressionEdits, beforeEdits, exportEdits, afterEdits] = getScriptEditTransforms(scriptEdits, script, [
-		[expression.start, expression.end],
-		[0, expression.start],
-		[expression.end, exportDefault.end],
-		[exportDefault.end, script.content.length],
-	]);
+	// the head is the code up to the end of the default export, with the exported expression cut out of it
+	const blockRewrite = createBlockRewrite(script, scriptEdits);
+	const { core } = blockRewrite.rewrite;
+	const head = core.cut(0, exportDefault.end, { data: { features: scriptFeatures } });
+	const exported = core.cut(expression.start, expression.end, {
+		data: { features: scriptFeatures },
+		placeholder: exportExpression,
+	});
+	const tail = exportDefault.end < script.content.length
+		? core.cut(exportDefault.end, script.content.length, { data: { features: scriptFeatures } })
+		: undefined;
 
-	yield* generateScriptSection(script, 0, expression.start, beforeEdits!);
-	yield exportExpression;
-	yield* generateScriptSection(script, expression.end, exportDefault.end, exportEdits!);
+	yield* blockRewrite.generateEmptyCopy();
+	yield* blockRewrite.render(head);
 	yield endOfLine;
 	if (templateGenerator) {
 		yield* templateGenerator;
@@ -317,35 +326,23 @@ function* generateScriptWithExportDefault(
 	yield* generateComponentDeclareEqual(script, varName);
 	if (wrapLeft && wrapRight) {
 		yield wrapLeft;
-		yield* generateScriptSection(script, expression.start, expression.end, expressionEdits!);
+		yield* blockRewrite.render(exported);
 		yield wrapRight;
 	}
 	else {
-		yield* generateScriptSection(script, expression.start, expression.end, expressionEdits!);
+		yield* blockRewrite.render(exported);
 	}
 	yield endOfLine;
-	yield* generateScriptSection(script, exportDefault.end, script.content.length, afterEdits!);
+	if (tail) {
+		yield* blockRewrite.render(tail);
+	}
 }
 
 function* generateWholeScript(script: IRScript, scriptEdits: readonly ScriptEdit[]): Generator<TsCode> {
-	const [edits] = getScriptEditTransforms(scriptEdits, script, [[0, script.content.length]]);
-	yield* generateEmptyBlock(script);
-	yield* generateScriptSection(script, 0, script.content.length, edits!);
-}
-
-/** A copy of the user's code of `<script>`, at `start`..`end` of its content. */
-function* generateScriptSection(
-	script: IRScript,
-	start: number,
-	end: number,
-	transforms: CodeTransform[],
-): Generator<TsCode> {
-	yield* generateCodeWithTransforms(
-		start,
-		end,
-		transforms,
-		(start, end) => generateSfcBlockSection(script, start, end, { features: scriptFeatures }),
-	);
+	const blockRewrite = createBlockRewrite(script, scriptEdits);
+	const whole = blockRewrite.rewrite.core.cut(0, script.content.length, { data: { features: scriptFeatures } });
+	yield* blockRewrite.generateEmptyCopy();
+	yield* blockRewrite.render(whole);
 }
 
 function* generateGlobalTypesReference(

@@ -313,6 +313,18 @@ test('Auto import into a Vue file without script', async () => {
 	);
 });
 
+test('Auto import into a script setup whose code a codegen plugin removes', async () => {
+	expect(
+		await applyCompletionItem(
+			'languageServerCodegen/fixture.vue',
+			`<script setup lang="ts">\nconst a = 1;\n</script>\n\n<template><| /></template>`,
+			'Comp',
+		),
+	).toBe(
+		`<script setup lang="ts">\nimport { Comp } from './comp';\n\n\nconst a = 1;\n</script>\n\n<template><Comp /></template>`,
+	);
+});
+
 test('Boolean props', async () => {
 	expect(
 		await requestCompletionItemToVueServer(

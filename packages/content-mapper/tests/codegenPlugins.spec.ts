@@ -39,18 +39,18 @@ test('applies the script edits of plugins, mapping the source text that they cop
 				scriptEdits: [
 					{
 						block,
-						...call,
+						replace: call,
 						code: ['wrap(', { text: 'useFoo()', block, offset: call.start, features: scriptFeatures }, ')'],
 					},
 					// not the source text at its offset, so it does not map
-					{
-						block,
-						start: call.end,
-						end: call.end,
-						code: [{ text: ' as X', block, offset: 0, features: scriptFeatures }],
-					},
+					{ block, insertAfter: call.end, code: [{ text: ' as X', block, offset: 0, features: scriptFeatures }] },
 					// out of the content of the block
-					{ block, start: 0, end: block.content.length + 1, code: ['dropped'] },
+					{ block, replace: { start: 0, end: block.content.length + 1 }, code: ['dropped'] },
+					// removes no char
+					{ block, replace: { start: call.start, end: call.start }, code: ['dropped'] },
+					// not exactly one edit
+					{ block, insertBefore: call.start, insertAfter: call.start, code: ['dropped'] } as never,
+					{ block, code: ['dropped'] } as never,
 				],
 			};
 		}),
@@ -71,56 +71,85 @@ test('applies the script edits of plugins, mapping the source text that they cop
 	).toBe(false);
 });
 
-test('applies an insert of a plugin before a transform of Vue at the same position', () => {
+const defineProps = `<script setup lang="ts">\nconst props = defineProps<{ a: string }>();\n</script>\n`;
+
+test('keeps an insert of a plugin after the start of a type argument that Vue moves at the call', () => {
 	const { text } = generateWith(
-		`<script setup lang="ts">\nconst props = defineProps<{ a: string }>();\n</script>\n`,
+		defineProps,
 		plugin(({ ir }) => {
 			const block = ir.scriptSetup!;
 			const { start } = rangeOf(block, '{ a: string }');
 			return {
-				scriptEdits: [{ block, start, end: start, code: ['/* a */'] }, { block, start, end: start, code: ['/* b */'] }],
+				scriptEdits: [{ block, insertAfter: start, code: ['/* a */'] }, {
+					block,
+					insertAfter: start,
+					code: ['/* b */'],
+				}],
 			};
 		}),
 	);
-	expect(text).toContain('defineProps</* a *//* b */__VLS_Props>();');
+	expect(text).toContain('type __VLS_Props = { a: string };\nconst props = defineProps</* a *//* b */__VLS_Props>();');
 });
 
-test('fails the transform when a script edit of a plugin overlaps a transform of Vue', () => {
-	expect(() =>
-		generateWith(
-			`<script setup lang="ts">\nconst props = defineProps<{ a: string }>();\n</script>\n`,
-			plugin(({ ir }) => {
-				const block = ir.scriptSetup!;
-				return { scriptEdits: [{ block, ...rangeOf(block, 'string'), code: ['number'] }] };
-			}, 'overlapping-plugin'),
-		)
-	).toThrow(`Plugin 'overlapping-plugin': the script edit at 32..38 overlaps a code transform of Vue at 27..40.`);
-});
-
-test('drops a script edit of a plugin that overlaps an edit of an earlier plugin', () => {
+test('moves an insert of a plugin before the start of a type argument with it', () => {
 	const { text } = generateWith(
-		`<script setup lang="ts">\nconst a = useFoo();\n</script>\n`,
+		defineProps,
 		plugin(({ ir }) => {
 			const block = ir.scriptSetup!;
-			return { scriptEdits: [{ block, ...rangeOf(block, 'useFoo()'), code: ['first()'] }] };
-		}, 'first'),
-		plugin(({ ir }) => {
-			const block = ir.scriptSetup!;
-			return { scriptEdits: [{ block, ...rangeOf(block, 'Foo'), code: ['Second'] }] };
-		}, 'second'),
+			const { start, end } = rangeOf(block, '{ a: string }');
+			return {
+				scriptEdits: [{ block, insertBefore: start, code: ['Wrap<'] }, { block, insertAfter: end, code: ['>'] }],
+			};
+		}),
 	);
-	expect(text).toContain('const a = first();');
-	expect(text).not.toContain('Second');
+	expect(text).toContain('type __VLS_Props = Wrap<{ a: string }>;\nconst props = defineProps<__VLS_Props>();');
 });
 
-test('applies a script edit at an end of the default export of `<script>` to the copy of the exported expression', () => {
+test('applies a script edit of a plugin inside a range that Vue moves to the moved code', () => {
+	const { text } = generateWith(
+		defineProps,
+		plugin(({ ir }) => {
+			const block = ir.scriptSetup!;
+			return { scriptEdits: [{ block, replace: rangeOf(block, 'string'), code: ['number'] }] };
+		}),
+	);
+	expect(text).toContain('type __VLS_Props = { a: number };\nconst props = defineProps<__VLS_Props>();');
+});
+
+test('applies nested replaces of two plugins, each code at the start of its range, in either plugin order', () => {
+	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
+	const first = plugin(({ ir }) => {
+		const block = ir.scriptSetup!;
+		return { scriptEdits: [{ block, replace: rangeOf(block, 'useFoo()'), code: ['first()'] }] };
+	}, 'first');
+	const second = plugin(({ ir }) => {
+		const block = ir.scriptSetup!;
+		return { scriptEdits: [{ block, replace: rangeOf(block, 'Foo'), code: ['Second'] }] };
+	}, 'second');
+	expect(generateWith(content, first, second).text).toContain('const a = first()Second;');
+	expect(generateWith(content, second, first).text).toContain('const a = first()Second;');
+});
+
+test('splits a replace of a plugin across the imports and the body of `<script setup>`', () => {
+	const { text } = generateWith(
+		`<script lang="ts">\nexport const s = 1;\n</script>\n<script setup lang="ts">\nimport { a } from 'a';\nconst b = a;\n</script>\n`,
+		plugin(({ ir }) => {
+			const block = ir.scriptSetup!;
+			return { scriptEdits: [{ block, replace: rangeOf(block, `'a';\nconst`), code: [`'b'; let`] }] };
+		}),
+	);
+	expect(text).toContain(`import { a } from 'b'; let\n`);
+	expect(text.indexOf(` b = a;\n`)).toBeGreaterThan(text.indexOf('await (async () => {'));
+});
+
+test('wraps the copy of the exported expression of `<script>` by inserts on its inner sides', () => {
 	const { text } = generateWith(
 		`<script lang="ts">\nexport default {};\n</script>\n`,
 		plugin(({ ir }) => {
 			const block = ir.script!;
 			const { start, end } = rangeOf(block, '{}');
 			return {
-				scriptEdits: [{ block, start, end: start, code: ['wrap('] }, { block, start: end, end, code: [')'] }],
+				scriptEdits: [{ block, insertBefore: start, code: ['wrap('] }, { block, insertAfter: end, code: [')'] }],
 			};
 		}),
 	);
@@ -128,18 +157,59 @@ test('applies a script edit at an end of the default export of `<script>` to the
 	expect(text).toContain(`const __VLS_export = (await import('vue')).defineComponent(wrap({}));`);
 });
 
-test('fails the transform when a script edit of a plugin spans sections that Vue copies to different places', () => {
-	expect(() =>
-		generateWith(
-			`<script setup lang="ts">\nimport { a } from 'a';\nconst b = a;\n</script>\n`,
-			plugin(({ ir }) => {
-				const block = ir.scriptSetup!;
-				return { scriptEdits: [{ block, ...rangeOf(block, `'a';\nconst`), code: [`'b'; let`] }] };
-			}, 'spanning-plugin'),
-		)
-	).toThrow(
-		`Plugin 'spanning-plugin': the script edit at 19..29 spans sections of the block that Vue copies to different places.`,
+test('keeps an insert of a plugin at the end of `<script>` out of the copy of a default export that ends there', () => {
+	const { text } = generateWith(
+		`<script lang="ts">\nexport default {}</script>\n`,
+		plugin(({ ir }) => {
+			const block = ir.script!;
+			return { scriptEdits: [{ block, insertBefore: block.content.length, code: ['/* end */'] }] };
+		}),
 	);
+	expect(text).toContain(`export default {} as typeof __VLS_export/* end */;`);
+	expect(text).toContain(`const __VLS_export = (await import('vue')).defineComponent({});`);
+});
+
+test('wraps the type argument of `defineSlots` in its alias', () => {
+	const { text } = generateWith(
+		`<script setup lang="ts">\ndefineSlots<{ default(): any }>();\n</script>\n`,
+		plugin(({ ir }) => {
+			const block = ir.scriptSetup!;
+			const { start, end } = rangeOf(block, '{ default(): any }');
+			return {
+				scriptEdits: [{ block, insertBefore: start, code: ['DefineSlots<'] }, { block, insertAfter: end, code: ['>'] }],
+			};
+		}),
+	);
+	expect(text).toContain('type __VLS_Slots = DefineSlots<{ default(): any }>;');
+	expect(text).toContain('const __VLS_slots = defineSlots<__VLS_Slots>()\nvoid __VLS_slots;\n');
+});
+
+test('renders an insert of a plugin into an empty `<script setup>` in its body', () => {
+	const { text } = generateWith(
+		`<script lang="ts">\nexport const s = 1;\n</script>\n<script setup lang="ts"></script>\n`,
+		plugin(({ ir }) => {
+			const block = ir.scriptSetup!;
+			return { scriptEdits: [{ block, insertBefore: 0, code: ['const inserted = 1;'] }] };
+		}),
+	);
+	expect(text.indexOf('const inserted = 1;')).toBeGreaterThan(text.indexOf('await (async () => {'));
+});
+
+test('maps a `<script setup>` whose code a plugin removes by one empty copy', () => {
+	const content = `<script setup lang="ts">\nconst a = 1;\n</script>\n`;
+	const { text, mappings } = generateWith(
+		content,
+		plugin(({ ir }) => {
+			const block = ir.scriptSetup!;
+			return { scriptEdits: [{ block, replace: { start: 0, end: block.content.length }, code: [] }] };
+		}),
+	);
+	expect(text).not.toContain('const a = 1;');
+	expect(
+		mappings.filter(([, generatedLength, sourceStart, sourceLength, , features]) =>
+			!generatedLength && !sourceLength && sourceStart === content.indexOf('\n') && features === scriptFeatures
+		),
+	).toHaveLength(1);
 });
 
 test('propagates an exception of contribute', () => {
