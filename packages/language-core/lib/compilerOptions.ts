@@ -177,7 +177,6 @@ export function getDefaultCompilerOptions(
 		inferTemplateDollarEl: false,
 		inferTemplateDollarRefs: false,
 		inferTemplateDollarSlots: false,
-		skipTemplateCodegen: false,
 		vapor: false,
 		fallthroughAttributes: false,
 		checkRequiredFallthroughAttributes: false,

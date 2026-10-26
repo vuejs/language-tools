@@ -51,7 +51,7 @@ test('uses stable mapper options for inferred projects', () => {
 		projectHandle,
 		compilerOptions: { strict: true },
 		options: {
-			skipTemplateCodegen: true,
+			lib: 'custom-vue',
 			target: 99,
 		},
 	});
@@ -64,7 +64,26 @@ test('uses stable mapper options for inferred projects', () => {
 	});
 	closeProject(projectHandle);
 
-	expect(result.text).not.toContain('templateValue');
+	expect(result.text).toContain(`'custom-vue'`);
+});
+
+test('generates the template code although the removed skipTemplateCodegen option is set', () => {
+	const projectHandle = 'skip-template-codegen-project';
+	const opened = openProject({
+		configFileName: '',
+		projectHandle,
+		compilerOptions: {},
+		options: { skipTemplateCodegen: true },
+	});
+	const result = transformVue({
+		projectHandle,
+		fileName: path.resolve(__dirname, 'SkipTemplateCodegen.vue'),
+		content: `<script setup lang="ts">const value = 1;</script>\n<template>{{ templateValue }}</template>\n`,
+	});
+	closeProject(projectHandle);
+
+	expect(result.text).toContain('templateValue');
+	expect(opened.optionDiagnostics).toMatchObject([{ path: ['skipTemplateCodegen'] }]);
 });
 
 test('applies mapper options on top of the tsconfig options', () => {
@@ -80,12 +99,13 @@ test('applies mapper options on top of the tsconfig options', () => {
 		configFileName,
 		projectHandle: 'configured-project',
 		compilerOptions: {},
-		options: { skipTemplateCodegen: true },
+		options: { lib: 'custom-vue' },
 	});
 	const result = transformVue({ projectHandle: 'configured-project', fileName, content }).text;
 	closeProject('configured-project');
 
-	expect(result.length).toBeLessThan(baseline.length);
+	expect(baseline).not.toContain(`'custom-vue'`);
+	expect(result).toContain(`'custom-vue'`);
 	expect(opened.optionDiagnostics).toEqual([]);
 });
 

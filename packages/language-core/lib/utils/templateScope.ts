@@ -157,7 +157,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 	const templateRefs = new Map<string, number[]>();
 	let components = 0;
 
-	if (!vueCompilerOptions.skipTemplateCodegen && ir.template) {
+	if (ir.template) {
 		const template = ir.template;
 		const scope = openScope(new BlockScope());
 		if (options.slotsAssignName) {

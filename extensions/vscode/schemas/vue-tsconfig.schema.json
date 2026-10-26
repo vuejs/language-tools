@@ -63,11 +63,6 @@
 					"default": false,
 					"markdownDescription": "Infer `$slots` type in the template and the return type of `useSlots`."
 				},
-				"skipTemplateCodegen": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "https://github.com/vuejs/language-tools/issues/577"
-				},
 				"vapor": {
 					"type": "boolean",
 					"default": false,

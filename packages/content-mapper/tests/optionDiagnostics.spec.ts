@@ -34,6 +34,10 @@ test('reports options removed in v4 with a migration hint', () => {
 		path: ['resolveStyleImports'],
 		code: OptionDiagnosticCode.RemovedOption,
 	}]);
+	expect(toOptionDiagnostics({ skipTemplateCodegen: true })).toMatchObject([{
+		path: ['skipTemplateCodegen'],
+		code: OptionDiagnosticCode.RemovedOption,
+	}]);
 });
 
 const droppedEmptyKeys =

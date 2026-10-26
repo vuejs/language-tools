@@ -61,7 +61,7 @@ function useCodegen(
 	const getSetupSlotsAssignName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
 
 	const getGeneratedTemplate = computed(() => {
-		if (getResolvedOptions().skipTemplateCodegen || !ir.template) {
+		if (!ir.template) {
 			return;
 		}
 		const dotValueBindings = getDotValueBindings();

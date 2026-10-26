@@ -77,7 +77,6 @@ export interface VueCompilerOptions {
 	inferTemplateDollarEl: boolean;
 	inferTemplateDollarRefs: boolean;
 	inferTemplateDollarSlots: boolean;
-	skipTemplateCodegen: boolean;
 	vapor: boolean;
 	fallthroughAttributes: boolean;
 	checkRequiredFallthroughAttributes: boolean;

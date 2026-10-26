@@ -109,7 +109,6 @@ const msg = 'Hello'
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `lib` | `string` | `'vue'` | Vue package name, used for generating import statements. |
-| `skipTemplateCodegen` | `boolean` | `false` | Skip virtual code generation for templates. |
 | `vapor` | `boolean` | `false` | Enable Vapor mode for all Vue SFCs. |
 | `fallthroughAttributes` | `boolean` | `false` | Enable type inference for fallthrough attributes. |
 | `checkRequiredFallthroughAttributes` | `boolean` | `false` | Check required fallthrough attributes. |
