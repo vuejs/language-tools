@@ -49,6 +49,10 @@ Unsupported: wrapping the template (layout slots of dxup), changing the shape of
 - **breaking:** the Content Mapper parses with the TS 7.1 `typescript` package that resolves from the project directory (the directory of the tsconfig, or the working directory for an inferred project), and fails to open a project from which none resolves. The VS Code extension no longer bundles TS 7.1, whose bundled copy could not find its executable.
 - **breaking:** in VS Code, the Content Mapper of Vue files outside any tsconfig runs in the first local workspace folder, so TS 7.1 resolves from it; with more folders, the first one is used for all of them. A window without a local workspace folder gets no Content Mapper for those files and logs an error.
 
+### Language server
+
+- **refactor:** Reactivity Visualization analyzes scripts on the TS 7.1 AST, resolving their declarations by scope, instead of with a classic TypeScript language service, and `@vue/language-server` no longer depends on `laplacenoma`. Reads through the object type of a composable declared in the same file (`counter.n.value` for `const { n } = useCounter()`) and of namespace exports by qualified name are no longer followed; a call of a variable that holds a named function expression now counts as reading it.
+
 ### Language service
 
 - **fix:** dropping a component into the template, or extracting one, adds it to the Options API `components` by inserting the new property after the last one, instead of reprinting the object. The formatting, comments and trailing comma of the object are kept.
