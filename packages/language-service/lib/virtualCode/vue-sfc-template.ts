@@ -1,4 +1,4 @@
-import { allFeatures, type Code, type IR } from '@vue/language-core';
+import { allFeatures, type Code, getPugTemplatePrefix, type IR } from '@vue/language-core';
 import { embeddedCodeIds, type EmbeddedDocument } from './embeddedDocument';
 
 /** The template block of an HTML or pug template. */
@@ -7,9 +7,11 @@ export function getTemplateDocument(ir: IR): EmbeddedDocument | undefined {
 		return;
 	}
 	const content: Code[] = [];
-	// Pug reads an indented first line as an error, so an indented template is parsed as the children of a tag
-	if (ir.template.lang === 'pug' && calculateMinIndent(ir.template.content) !== 0) {
-		content.push(`template\n`);
+	if (ir.template.lang === 'pug') {
+		const prefix = getPugTemplatePrefix(ir.template.content);
+		if (prefix) {
+			content.push(prefix);
+		}
 	}
 	content.push([
 		ir.template.content,
@@ -18,16 +20,4 @@ export function getTemplateDocument(ir: IR): EmbeddedDocument | undefined {
 		{ features: allFeatures },
 	]);
 	return { id: embeddedCodeIds.template, lang: ir.template.lang, content };
-}
-
-function calculateMinIndent(s: string) {
-	const lines = s.split('\n');
-	const minIndent = lines.reduce(function(minIndent, line) {
-		if (line.trim() === '') {
-			return minIndent;
-		}
-		const indent = line.match(/^\s*/)?.[0]?.length || 0;
-		return Math.min(indent, minIndent);
-	}, Infinity);
-	return minIndent;
 }

@@ -1,6 +1,6 @@
 import { SourceMap } from '@volar/source-map';
 import type * as CompilerDOM from '@vue/compiler-dom';
-import type { VueIRPlugin } from '@vue/language-core';
+import { getPugTemplatePrefix, type VueIRPlugin } from '@vue/language-core';
 import { baseParse } from './lib/baseParse';
 
 const classRE = /^class\s*=/;
@@ -8,16 +8,10 @@ const classRE = /^class\s*=/;
 export const ir: VueIRPlugin = {
 	templateCompilers: {
 		pug(template, options, { compileTemplate }) {
-			let parsed: ReturnType<typeof baseParse>;
-			let baseOffset = 0;
-
-			const minIndent = calculateMinIndent(template);
-			if (minIndent === 0) {
-				parsed = baseParse(template);
-			}
-			else {
-				parsed = baseParse(`template\n${template}`);
-				baseOffset = 'template\n'.length;
+			const prefix = getPugTemplatePrefix(template);
+			const parsed = baseParse(prefix + template);
+			const baseOffset = prefix.length;
+			if (prefix) {
 				parsed.htmlCode = ' '.repeat('<template>'.length)
 					+ parsed.htmlCode.slice('<template>'.length, -'</template>'.length)
 					+ ' '.repeat('</template>'.length);
@@ -85,15 +79,3 @@ export const ir: VueIRPlugin = {
 		},
 	},
 };
-
-function calculateMinIndent(s: string) {
-	const lines = s.split('\n');
-	const minIndent = lines.reduce(function(minIndent, line) {
-		if (line.trim() === '') {
-			return minIndent;
-		}
-		const indent = line.match(/^\s*/)?.[0]?.length || 0;
-		return Math.min(indent, minIndent);
-	}, Infinity);
-	return minIndent;
-}
