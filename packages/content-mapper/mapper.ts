@@ -146,7 +146,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 				return content;
 			}
 			: readFileIfExists;
-		const { rootDir, languageFeatures, plugins, vueOptions } = resolveMapperOptions(
+		const { languageFeatures, vueOptions, pluginFiles } = resolveMapperOptions(
 			readFile,
 			configFileName || undefined,
 			state.params.options,
@@ -157,7 +157,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			plugins: vue.createVuePlugins(ts, vueOptions),
 			languageFeatures,
 			vueOptions,
-			pluginFiles: resolvePluginFiles(plugins, rootDir),
+			pluginFiles,
 			files: new Map(),
 		};
 		if (watchedFiles) {
@@ -200,22 +200,4 @@ function readFileIfExists(fileName: string) {
 		return fs.readFileSync(fileName, 'utf8').replace(/^\uFEFF/, '');
 	}
 	catch {}
-}
-
-function resolvePluginFiles(plugins: unknown, rootDir: string) {
-	const fileNames: string[] = [];
-	if (!Array.isArray(plugins)) {
-		return fileNames;
-	}
-	for (const plugin of plugins) {
-		const name = typeof plugin === 'string' ? plugin : plugin?.name;
-		if (typeof name !== 'string') {
-			continue;
-		}
-		try {
-			fileNames.push(require.resolve(name, { paths: [rootDir] }));
-		}
-		catch {}
-	}
-	return fileNames;
 }

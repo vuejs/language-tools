@@ -79,3 +79,17 @@ test('a plugin file that differs gives another identity', () => {
 	expect(opened.configIdentity).not.toBe(identity);
 	expect(opened.watchedFiles).toEqual([path.join(path.dirname(b), 'plugin.cjs')]);
 });
+
+test('a plugin file that fails to load is still watched and fingerprinted', () => {
+	const options = { target: 3.5, plugins: ['./plugin.cjs'] };
+	const configFileName = createProject('plugin-broken', {
+		'tsconfig.json': '{}',
+		'plugin.cjs': `throw new Error('broken plugin');\n`,
+	});
+	const pluginFile = path.join(path.dirname(configFileName), 'plugin.cjs');
+	const broken = open(configFileName, options);
+	expect(broken.watchedFiles).toEqual([pluginFile]);
+
+	fs.writeFileSync(pluginFile, `throw new Error('still broken');\n`);
+	expect(open(configFileName, options).configIdentity).not.toBe(broken.configIdentity);
+});

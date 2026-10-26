@@ -9,6 +9,8 @@ export class CompilerOptionsResolver {
 	target: number | undefined;
 	typesRoot: string | undefined;
 	plugins: VueLanguagePlugin[] = [];
+	/** The files that the names of `plugins` resolve to, including the ones that fail to load. */
+	pluginFiles: string[] = [];
 
 	constructor(
 		public readFile: (fileName: string) => string | undefined,
@@ -38,7 +40,8 @@ export class CompilerOptionsResolver {
 				case 'plugins':
 					// A config that declares `plugins` replaces the inherited list; `[]` clears it
 					if (options.plugins) {
-						this.plugins = resolvePlugins(options.plugins, rootDir);
+						this.pluginFiles = [];
+						this.plugins = resolvePlugins(options.plugins, rootDir, this.pluginFiles);
 					}
 					break;
 				default:
@@ -113,14 +116,17 @@ export class CompilerOptionsResolver {
 /**
  * The Vue compiler options of one TS 7.1 `contentMappers` entry, read from its `options` relative to `rootDir`.
  * Keys that are not Vue compiler options, such as a Content Mapper's own settings, have no effect.
+ * The files that the `plugins` resolve to, including the ones that fail to load, are added to `pluginFiles`.
  */
 export function resolveVueCompilerOptions(
 	readFile: (fileName: string) => string | undefined,
 	rootDir: string,
 	options: RawVueCompilerOptions = {},
+	pluginFiles?: string[],
 ) {
 	const resolver = new CompilerOptionsResolver(readFile);
 	resolver.addConfig(options, rootDir);
+	pluginFiles?.push(...resolver.pluginFiles);
 	const vueOptions = resolver.build();
 	if (vueOptions.format === 'petite-vue') {
 		vueOptions.globalTemplateContext = true;
@@ -128,7 +134,7 @@ export function resolveVueCompilerOptions(
 	return vueOptions;
 }
 
-function resolvePlugins(list: RawPlugin[], rootDir: string): VueLanguagePlugin[] {
+function resolvePlugins(list: RawPlugin[], rootDir: string, resolvedFiles: string[]): VueLanguagePlugin[] {
 	const plugins: VueLanguagePlugin[] = [];
 	for (let raw of list) {
 		raw = typeof raw === 'string' ? { name: raw } : raw;
@@ -136,6 +142,7 @@ function resolvePlugins(list: RawPlugin[], rootDir: string): VueLanguagePlugin[]
 			const resolve = (require as NodeJS.Require | undefined)?.resolve;
 			const resolvedPath = resolve?.(raw.name, { paths: [rootDir] });
 			if (resolvedPath) {
+				resolvedFiles.push(resolvedPath);
 				const moduleExports = require(resolvedPath);
 				for (const plugin of Array.isArray(moduleExports) ? moduleExports : [moduleExports]) {
 					plugin.__moduleConfig = raw;

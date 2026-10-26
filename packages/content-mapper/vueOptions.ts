@@ -10,15 +10,16 @@ export function resolveMapperOptions(
 ) {
 	const rootDir = configFileName ? path.dirname(configFileName) : process.cwd();
 	const { languageFeatures, ...rawVueOptions } = options ?? {};
+	const pluginFiles: string[] = [];
 	return {
-		rootDir,
 		languageFeatures: languageFeatures !== false,
-		plugins: rawVueOptions.plugins,
 		vueOptions: vue.resolveVueCompilerOptions(
 			readFile,
 			normalizePath(rootDir),
 			rawVueOptions as vue.RawVueCompilerOptions,
+			pluginFiles,
 		),
+		pluginFiles,
 	};
 }
 
