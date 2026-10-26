@@ -1,12 +1,9 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
 import { forEachElementNode, forEachStyleScopedClassReference } from '@vue/language-core';
-import { asCoreTypeScript } from '../coreTypeScript';
 import { embeddedCodeIds } from '../virtualCode';
 import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
-export function create(ts: typeof import('typescript')): LanguageServicePlugin {
-	const coreTs = asCoreTypeScript(ts);
-
+export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-scoped-class-links',
 		capabilities: {
@@ -34,7 +31,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 						if (node.tagType !== 0 && node.tagType !== 1) {
 							continue;
 						}
-						for (const [className, offset] of forEachStyleScopedClassReference(coreTs, template, node)) {
+						for (const [className, offset] of forEachStyleScopedClassReference(info.root.ts, template, node)) {
 							if (className) {
 								scopedClasses.push([className, offset]);
 							}
