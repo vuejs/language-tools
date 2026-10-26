@@ -3,7 +3,9 @@ import { computed } from 'alien-signals';
 import { allFeatures } from '../features';
 import type { TypeScript, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
 import { createVueSource, type VueSource } from '../vueSource';
-import { type EmbeddedCodePluginReturn, useEmbeddedCodes } from './embeddedCodes';
+import { useEmbeddedCodes } from './embeddedCodes';
+
+export * from './embeddedDocument';
 
 const rootLanguageIds: Record<VueCompilerOptions['format'], string> = {
 	sfc: 'vue',
@@ -54,11 +56,10 @@ export class VueVirtualCode implements VirtualCode {
 		public initSnapshot: IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
 		plugins: VueLanguagePluginReturn[],
-		embeddedCodePlugins: EmbeddedCodePluginReturn[],
 		ts: TypeScript,
 	) {
 		this.source = createVueSource(ts, vueCompilerOptions, plugins, fileName, initSnapshot);
-		this._embeddedCodes = useEmbeddedCodes(embeddedCodePlugins, fileName, this.source.ir);
+		this._embeddedCodes = useEmbeddedCodes(ts, this.source.ir);
 		this._mappings = computed(() => {
 			const length = this.source.snapshot.getLength();
 			return [[0, length, 0, length, SpanMapKind.Verbatim, allFeatures]];

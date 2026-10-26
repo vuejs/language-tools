@@ -1,32 +1,17 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { scriptFeatures } from '../features';
-import type { Code } from '../types';
+import type { Code, IR } from '../types';
 import { forEachElementNode } from '../utils/forEachTemplateNode';
 import { normalizeAttributeValue } from '../utils/shared';
-import type { EmbeddedCodePlugin } from '../virtualCode/embeddedCodes';
+import { embeddedCodeIds, type EmbeddedDocument } from '../virtualCode/embeddedDocument';
 
-const plugin: EmbeddedCodePlugin = () => {
-	return {
-		version: 4,
-
-		getEmbeddedCodes(_fileName, ir) {
-			if (!ir.template?.ast) {
-				return [];
-			}
-			return [{ id: 'template_inline_css', lang: 'css' }];
-		},
-
-		resolveEmbeddedCode(_fileName, ir, embeddedFile) {
-			if (embeddedFile.id !== 'template_inline_css' || !ir.template?.ast) {
-				return;
-			}
-			embeddedFile.parentCodeId = ir.template.lang === 'md' ? 'root_tags' : 'template';
-			embeddedFile.content.push(...generate(ir.template.ast));
-		},
-	};
-};
-
-export default plugin;
+/** The `style` attributes of the template elements, as CSS rules. */
+export function getTemplateInlineCssDocument(ir: IR): EmbeddedDocument | undefined {
+	if (!ir.template?.ast) {
+		return;
+	}
+	return { id: embeddedCodeIds.templateInlineCss, lang: 'css', content: [...generate(ir.template.ast)] };
+}
 
 function* generate(templateAst: NonNullable<CompilerDOM.RootNode>): Generator<Code> {
 	for (const node of forEachElementNode(templateAst)) {

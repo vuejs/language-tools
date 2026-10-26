@@ -1,7 +1,7 @@
 import type { LanguagePlugin } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as LanguageCore from '../index';
-import { createEmbeddedCodePlugins, createPlugins } from './plugins';
+import { createPlugins } from './plugins';
 import type { TypeScript, VueCompilerOptions, VueLanguagePlugin } from './types';
 import { getRootLanguageId, VueVirtualCode } from './virtualCode';
 
@@ -22,18 +22,12 @@ export function createVuePlugins(ts: TypeScript, vueCompilerOptions: VueCompiler
 	return createPlugins(createPluginContext(ts, vueCompilerOptions));
 }
 
-/** The built-in embedded-code plugins, as instances in their order; only the language service reads them. */
-export function createVueEmbeddedCodePlugins(ts: TypeScript, vueCompilerOptions: VueCompilerOptions) {
-	return createEmbeddedCodePlugins(createPluginContext(ts, vueCompilerOptions));
-}
-
 export function createVueLanguagePlugin<T>(
 	ts: TypeScript,
 	vueCompilerOptions: VueCompilerOptions,
 	asFileName: (scriptId: T) => string,
 ): LanguagePlugin<T, VueVirtualCode> {
 	const plugins = createVuePlugins(ts, vueCompilerOptions);
-	const embeddedCodePlugins = createVueEmbeddedCodePlugins(ts, vueCompilerOptions);
 
 	return {
 		// Every file passed in is parsed by `vueCompilerOptions.format`; the host routes to this plugin only the
@@ -42,7 +36,7 @@ export function createVueLanguagePlugin<T>(
 			return getRootLanguageId(vueCompilerOptions);
 		},
 		createVirtualCode(scriptId, _languageId, snapshot) {
-			return new VueVirtualCode(asFileName(scriptId), snapshot, vueCompilerOptions, plugins, embeddedCodePlugins, ts);
+			return new VueVirtualCode(asFileName(scriptId), snapshot, vueCompilerOptions, plugins, ts);
 		},
 		updateVirtualCode(_scriptId, code, snapshot) {
 			code.update(snapshot);

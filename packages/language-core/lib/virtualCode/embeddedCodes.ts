@@ -1,163 +1,133 @@
 import type { IScriptSnapshot, Mapping, TextChangeRange, VirtualCode } from '@volar/language-core';
 import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
-import type { Code, IR, VueLanguagePlugin, VueLanguagePluginReturn } from '../types';
+import { getRootTagsDocument } from '../plugins/vue-root-tags';
+import { getCustomBlockDocuments } from '../plugins/vue-sfc-customblocks';
+import { getScriptDocuments } from '../plugins/vue-sfc-scripts';
+import { getStyleDocuments } from '../plugins/vue-sfc-styles';
+import { getTemplateDocument } from '../plugins/vue-sfc-template';
+import { getTemplateInlineCssDocument } from '../plugins/vue-template-inline-css';
+import { getTemplateInlineTsDocuments } from '../plugins/vue-template-inline-ts';
+import type { IR, TypeScript } from '../types';
 import { buildMappings } from '../utils/buildMappings';
 import { resolveCodeOffsets } from '../utils/resolveCodeOffsets';
+import type { EmbeddedDocument } from './embeddedDocument';
 
-export class VueEmbeddedCode {
-	public parentCodeId?: string;
-	public embeddedCodes: VueEmbeddedCode[] = [];
-
-	constructor(
-		public id: string,
-		public lang: string,
-		public content: Code[],
-	) {}
+interface ResolvedDocument {
+	id: string;
+	languageId: string;
+	snapshot: IScriptSnapshot;
+	mappings: Mapping[];
+	children: ResolvedDocument[];
 }
 
-/** A built-in plugin that contributes embedded documents of the language service. */
-export type EmbeddedCodePlugin = (ctx: Parameters<VueLanguagePlugin>[0]) => EmbeddedCodePluginReturn;
-
-export interface EmbeddedCodePluginReturn extends VueLanguagePluginReturn {
-	/**
-	 * Lists the embedded documents of a file for the language service, like the template or a style block. They
-	 * never reach TypeScript: the TypeScript code of a file is generated from its IR alone.
-	 */
-	getEmbeddedCodes?(fileName: string, ir: IR): { id: string; lang: string }[];
-	/** Fills in the content of an embedded document that a plugin listed in `getEmbeddedCodes`. */
-	resolveEmbeddedCode?(fileName: string, ir: IR, embeddedFile: VueEmbeddedCode): void;
-}
-
-export function useEmbeddedCodes(
-	plugins: EmbeddedCodePluginReturn[],
-	fileName: string,
-	ir: IR,
-) {
-	const pluginsResult = plugins.map(useEmbeddedCodesForPlugin);
+/**
+ * The embedded documents of a file for the language service, like the template or a style block. They never reach
+ * TypeScript: the TypeScript code of a file is generated from its IR alone.
+ *
+ * `root_tags` holds the document of each block. The template document holds the inline CSS and TypeScript of the
+ * template, which `root_tags` holds instead for a markdown template, and which are top-level for a template
+ * language that has no template document.
+ */
+export function useEmbeddedCodes(ts: TypeScript, ir: IR) {
+	const getRootTags = useDocuments(ir, () => [getRootTagsDocument(ir)]);
+	const getTemplateInlineCss = useDocuments(ir, () => optional(getTemplateInlineCssDocument(ir)));
+	const getTemplateInlineTs = useDocuments(ir, () => getTemplateInlineTsDocuments(ts, ir));
+	const getStyles = useDocuments(ir, () => getStyleDocuments(ir));
+	const getCustomBlocks = useDocuments(ir, () => getCustomBlockDocuments(ir));
+	const getScripts = useDocuments(ir, () => getScriptDocuments(ir));
+	const getTemplate = useDocuments(ir, () => optional(getTemplateDocument(ir)));
+	const isMarkdownTemplate = computed(() => ir.template?.lang === 'md');
 
 	return computed(() => {
-		const result: VirtualCode[] = [];
-		const idToCodeMap = new Map<string, VirtualCode>();
-		const virtualCodes = pluginsResult
-			.map(getPluginResult => getPluginResult())
-			.flat()
-			.map(
-				({ code, snapshot, mappings }) => {
-					const virtualCode: VirtualCode = {
-						id: code.id,
-						languageId: resolveCommonLanguageId(code.lang),
-						snapshot,
-						mappings,
-						embeddedCodes: [],
-					};
-					idToCodeMap.set(code.id, virtualCode);
-					return [code.parentCodeId, virtualCode] as const;
-				},
-			);
+		const [rootTags] = getRootTags();
+		const [template] = getTemplate();
+		const templateInlineCodes = [...getTemplateInlineCss(), ...getTemplateInlineTs()].map(toVirtualCode);
+		const blockCodes = [...getStyles(), ...getCustomBlocks(), ...getScripts()].map(toVirtualCode);
+		const result: VirtualCode[] = [toVirtualCode(rootTags!)];
 
-		for (const [parentCodeId, virtualCode] of virtualCodes) {
-			if (!parentCodeId) {
-				result.push(virtualCode);
-				continue;
-			}
-			const parent = idToCodeMap.get(parentCodeId);
-			if (parent) {
-				parent.embeddedCodes ??= [];
-				parent.embeddedCodes.push(virtualCode);
-			}
-			else {
-				result.push(virtualCode);
-			}
+		if (isMarkdownTemplate()) {
+			result[0]!.embeddedCodes!.push(...templateInlineCodes);
 		}
+		if (template) {
+			const templateCode = toVirtualCode(template);
+			if (!isMarkdownTemplate()) {
+				templateCode.embeddedCodes!.push(...templateInlineCodes);
+			}
+			blockCodes.push(templateCode);
+		}
+		else if (!isMarkdownTemplate()) {
+			result.push(...templateInlineCodes);
+		}
+		result[0]!.embeddedCodes!.push(...blockCodes);
 
 		return result;
 	});
+}
 
-	function useEmbeddedCodesForPlugin(plugin: EmbeddedCodePluginReturn) {
-		const getMap = computed<
-			Map<string, () => { code: VueEmbeddedCode; snapshot: IScriptSnapshot }>
-		>(
-			prevMap => {
-				if (!plugin.getEmbeddedCodes) {
-					return new Map();
-				}
+function optional<T>(value: T | undefined) {
+	return value ? [value] : [];
+}
 
-				const newCodeList = plugin.getEmbeddedCodes(fileName, ir);
-				const map = new Map<string, () => { code: VueEmbeddedCode; snapshot: IScriptSnapshot }>();
+function toVirtualCode({ id, languageId, snapshot, mappings, children }: ResolvedDocument): VirtualCode {
+	return {
+		id,
+		languageId,
+		snapshot,
+		mappings,
+		embeddedCodes: children.map(toVirtualCode),
+	};
+}
 
-				for (const { id, lang } of newCodeList) {
-					const key = id + '__' + lang;
-					if (prevMap?.has(key)) {
-						map.set(key, prevMap.get(key)!);
-					}
-					else {
-						map.set(key, useEmbeddedCode(id, lang));
-					}
-				}
+/** The documents of `getDocuments`, keeping the snapshot of a document whose text is unchanged. */
+function useDocuments(ir: IR, getDocuments: () => EmbeddedDocument[]) {
+	return computed<ResolvedDocument[]>(previous => {
+		let documents: EmbeddedDocument[];
+		try {
+			documents = getDocuments();
+		}
+		catch (e) {
+			console.error(e);
+			documents = [];
+		}
+		return resolveDocuments(documents, previous);
+	});
 
-				return map;
-			},
-		);
-
-		return computed(() => {
-			const result: {
-				code: VueEmbeddedCode;
-				snapshot: IScriptSnapshot;
-				mappings: Mapping[];
-			}[] = [];
-
-			for (const generate of getMap().values()) {
-				const { code, snapshot } = generate();
-				result.push({
-					code,
-					snapshot,
-					mappings: buildMappings(resolveCodeOffsets(ir, code.content)),
-				});
-			}
-
-			return result;
-		});
-	}
-
-	function useEmbeddedCode(id: string, lang: string) {
-		return computed(() => {
-			const content: Code[] = [];
-			const code = new VueEmbeddedCode(id, lang, content);
-			for (const plugin of plugins) {
-				if (!plugin.resolveEmbeddedCode) {
-					continue;
-				}
-				try {
-					plugin.resolveEmbeddedCode(fileName, ir, code);
-				}
-				catch (e) {
-					console.error(e);
-				}
-			}
-			const newText = toString(code.content);
-			const changeRanges = new Map<IScriptSnapshot, TextChangeRange | undefined>();
-			const snapshot: IScriptSnapshot = {
-				getText: (start, end) => newText.slice(start, end),
-				getLength: () => newText.length,
-				getChangeRange(oldSnapshot) {
-					if (!changeRanges.has(oldSnapshot)) {
-						changeRanges.set(oldSnapshot, undefined);
-						const oldText = oldSnapshot.getText(0, oldSnapshot.getLength());
-						const changeRange = fullDiffTextChangeRange(oldText, newText);
-						if (changeRange) {
-							changeRanges.set(oldSnapshot, changeRange);
-						}
-					}
-					return changeRanges.get(oldSnapshot);
-				},
-			};
+	function resolveDocuments(documents: EmbeddedDocument[], previous: ResolvedDocument[] | undefined) {
+		return documents.map(({ id, lang, content, children = [] }): ResolvedDocument => {
+			const text = toString(content);
+			const languageId = resolveCommonLanguageId(lang);
+			const old = previous?.find(document => document.id === id && document.languageId === languageId);
 			return {
-				code,
-				snapshot,
+				id,
+				languageId,
+				snapshot: old && old.snapshot.getText(0, old.snapshot.getLength()) === text
+					? old.snapshot
+					: createSnapshot(text),
+				mappings: buildMappings(resolveCodeOffsets(ir, content)),
+				children: resolveDocuments(children, old?.children),
 			};
 		});
 	}
+}
+
+function createSnapshot(newText: string): IScriptSnapshot {
+	const changeRanges = new Map<IScriptSnapshot, TextChangeRange | undefined>();
+	return {
+		getText: (start, end) => newText.slice(start, end),
+		getLength: () => newText.length,
+		getChangeRange(oldSnapshot) {
+			if (!changeRanges.has(oldSnapshot)) {
+				changeRanges.set(oldSnapshot, undefined);
+				const oldText = oldSnapshot.getText(0, oldSnapshot.getLength());
+				const changeRange = fullDiffTextChangeRange(oldText, newText);
+				if (changeRange) {
+					changeRanges.set(oldSnapshot, changeRange);
+				}
+			}
+			return changeRanges.get(oldSnapshot);
+		},
+	};
 }
 
 function fullDiffTextChangeRange(oldText: string, newText: string): TextChangeRange | undefined {

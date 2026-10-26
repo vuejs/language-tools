@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { getDefaultCompilerOptions } from '../lib/compilerOptions';
-import { createVueEmbeddedCodePlugins, createVueLanguagePlugin, createVuePlugins } from '../lib/languagePlugin';
+import { createVueLanguagePlugin, createVuePlugins } from '../lib/languagePlugin';
 import { createVueSource } from '../lib/vueSource';
 import { createSnapshot, ts } from './typescript';
 
@@ -50,22 +50,13 @@ test('the virtual code of the language service reads its source', () => {
 	expect([...code.scriptAnalysis.getSetupBindings()]).toEqual(['after']);
 });
 
-test('the IR plugins and the embedded-code plugins are separate', () => {
+test('the built-in IR plugins compile each kind of block once', () => {
 	const vueCompilerOptions = getDefaultCompilerOptions();
 	const irPlugins = createVuePlugins(ts, vueCompilerOptions);
-	const embeddedCodePlugins = createVueEmbeddedCodePlugins(ts, vueCompilerOptions);
 
-	expect(irPlugins.some(plugin => 'getEmbeddedCodes' in plugin || 'resolveEmbeddedCode' in plugin)).toBe(false);
 	expect(irPlugins.filter(plugin => plugin.compileSFCScript)).toHaveLength(1);
 	expect(irPlugins.filter(plugin => plugin.compileSFCTemplate)).toHaveLength(1);
 	expect(irPlugins.filter(plugin => plugin.compileSFCStyle)).toHaveLength(1);
-	expect(embeddedCodePlugins.every(plugin => plugin.getEmbeddedCodes && plugin.resolveEmbeddedCode)).toBe(true);
-	expect(
-		embeddedCodePlugins.some(plugin =>
-			plugin.parseSFC || plugin.updateSFC || plugin.resolveTemplateCompilerOptions || plugin.compileSFCScript
-			|| plugin.compileSFCTemplate || plugin.compileSFCStyle || plugin.updateSFCTemplate
-		),
-	).toBe(false);
 
 	const source = createVueSource(ts, vueCompilerOptions, irPlugins, fileName, createSnapshot(before));
 	expect(source.ir.template?.ast).toBeDefined();

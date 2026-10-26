@@ -1,63 +1,38 @@
 import { allFeatures } from '../features';
-import type { EmbeddedCodePlugin } from '../virtualCode/embeddedCodes';
+import type { Code, IR } from '../types';
+import { embeddedCodeIds, type EmbeddedDocument } from '../virtualCode/embeddedDocument';
 
-const plugin: EmbeddedCodePlugin = () => {
-	return {
-		version: 4,
-
-		getEmbeddedCodes(_fileName, ir) {
-			const result: {
-				id: string;
-				lang: string;
-			}[] = [];
-			for (let i = 0; i < ir.styles.length; i++) {
-				const style = ir.styles[i];
-				if (style) {
-					result.push({
-						id: 'style_' + i,
-						lang: style.lang,
-					});
-					if (style.bindings.length) {
-						result.push({
-							id: 'style_' + i + '_inline_ts',
-							lang: 'ts',
-						});
-					}
-				}
-			}
-			return result;
-		},
-
-		resolveEmbeddedCode(_fileName, ir, embeddedFile) {
-			if (embeddedFile.id.startsWith('style_')) {
-				const index = parseInt(embeddedFile.id.split('_')[1]!);
-				const style = ir.styles[index]!;
-				if (embeddedFile.id.endsWith('_inline_ts')) {
-					embeddedFile.parentCodeId = 'style_' + index;
-					for (const binding of style.bindings) {
-						embeddedFile.content.push(
-							'(',
-							[
-								binding.text,
-								style.name,
-								binding.offset,
-								{ features: allFeatures },
-							],
-							');\n',
-						);
-					}
-				}
-				else {
-					embeddedFile.content.push([
-						style.content,
+/** Each style block, holding the TypeScript of its `v-bind()` bindings if it has any. */
+export function getStyleDocuments(ir: IR): EmbeddedDocument[] {
+	return ir.styles.map((style, i) => {
+		const id = embeddedCodeIds.stylePrefix + i;
+		const children: EmbeddedDocument[] = [];
+		if (style.bindings.length) {
+			const content: Code[] = [];
+			for (const binding of style.bindings) {
+				content.push(
+					'(',
+					[
+						binding.text,
 						style.name,
-						0,
+						binding.offset,
 						{ features: allFeatures },
-					]);
-				}
+					],
+					');\n',
+				);
 			}
-		},
-	};
-};
-
-export default plugin;
+			children.push({ id: id + embeddedCodeIds.styleInlineTsSuffix, lang: 'ts', content });
+		}
+		return {
+			id,
+			lang: style.lang,
+			content: [[
+				style.content,
+				style.name,
+				0,
+				{ features: allFeatures },
+			]],
+			children,
+		};
+	});
+}
