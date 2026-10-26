@@ -16,6 +16,7 @@ import {
 	generateTypeAlias,
 	generateTypedVar,
 	identifierRE,
+	intersectTypes,
 	isTsLang,
 	newLine,
 	typeAliasRef,
@@ -31,6 +32,7 @@ import {
 import { generateComponent } from './component';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
+import { getEmitTypes } from './template';
 
 export function* generateScriptSetupImports(
 	options: ScriptCodegenOptions,
@@ -98,7 +100,7 @@ export function* generateGeneric(
 	yield* body;
 
 	const propTypes: string[] = [];
-	const emitTypes: string[] = [];
+	const emitTypes = getEmitTypes(options);
 	const { vueCompilerOptions, scriptLang } = options;
 
 	if (ctx.generatedTypes.has(names.PublicProps)) {
@@ -118,17 +120,11 @@ export function* generateGeneric(
 			`import('${vueCompilerOptions.lib}').ExtractPublicPropTypes<typeof ${names.propsOption}>`,
 		);
 	}
-	if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
+	if (emitTypes.length) {
 		propTypes.push(typeAliasRef(names.EmitProps, scriptLang));
 	}
 	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
 		propTypes.push(typeAliasRef(names.InheritedAttrs, scriptLang));
-	}
-	if (scriptSetupRanges.defineEmits) {
-		emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}`);
-	}
-	if (scriptSetupRanges.defineModel.length) {
-		emitTypes.push(`typeof ${names.modelEmit}`);
 	}
 
 	yield `return {} as {${newLine}`;
@@ -143,9 +139,15 @@ export function* generateGeneric(
 	}
 	yield endOfLine;
 	yield `	expose: (exposed: `;
-	yield scriptSetupRanges.defineExpose
-		? `import('${vueCompilerOptions.lib}').ShallowUnwrapRef<typeof ${names.exposed}>`
-		: `{}`;
+	const exposeTypes = getExposeTypes(options, scriptSetupRanges);
+	if (exposeTypes.length) {
+		yield `import('${vueCompilerOptions.lib}').ShallowUnwrapRef<`;
+		yield* intersectTypes(exposeTypes);
+		yield `>`;
+	}
+	else {
+		yield `{}`;
+	}
 	if (
 		options.vueCompilerOptions.inferComponentDollarRefs
 		&& options.templateAndStyleTypes.has(names.TemplateRefs)
@@ -161,7 +163,9 @@ export function* generateGeneric(
 	yield `) => void${endOfLine}`;
 	yield `	attrs: any${endOfLine}`;
 	yield `	slots: ${hasSlotsType(options) ? typeAliasRef(names.Slots, scriptLang) : `{}`}${endOfLine}`;
-	yield `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`}${endOfLine}`;
+	yield `	emit: `;
+	yield* emitTypes.length ? intersectTypes(emitTypes) : [`{}`];
+	yield endOfLine;
 	yield `}${endOfLine}`;
 	yield `})(),${newLine}`; // __VLS_setup = (async () => {
 	yield `) => ({} as import('${vueCompilerOptions.lib}').VNode & { __ctx?: NonNullable<Awaited<typeof ${names.setup}>> }))${endOfLine}`;
@@ -537,7 +541,7 @@ function* generatePublicProps(
 		yield `void ${names.defaults}${endOfLine}`;
 	}
 
-	const propTypes: string[] = [];
+	const propTypes: (string | TsCode[])[] = [];
 	if (options.vueCompilerOptions.jsxSlots && hasSlotsType(options)) {
 		propTypes.push(ctx.localTypes.PropsChildren(typeAliasRef(names.Slots, options.scriptLang)));
 	}
@@ -547,16 +551,29 @@ function* generatePublicProps(
 	if (scriptSetupRanges.defineModel.length) {
 		propTypes.push(typeAliasRef(names.ModelProps, options.scriptLang));
 	}
+	propTypes.push(...options.props);
 	const target = options.vueCompilerOptions.target;
 	const used = !!scriptSetup.generic
 		|| target < 3.6
-		|| (target >= 3.5 && !scriptSetupRanges.defineProps?.arg);
+		|| (target >= 3.5 && !scriptSetupRanges.defineProps?.arg)
+		|| !!options.props.length;
 	if (propTypes.length && used) {
 		yield* generateTypeAlias(names.PublicProps, options.scriptLang, function*() {
-			yield propTypes.join(` & `);
+			yield* intersectTypes(propTypes);
 		});
 		ctx.generatedTypes.add(names.PublicProps);
 	}
+}
+
+/** The types of what a script setup component exposes, which the codegen plugins add to. */
+export function getExposeTypes(
+	options: ScriptCodegenOptions,
+	scriptSetupRanges: ScriptSetupRanges,
+): (string | TsCode[])[] {
+	return [
+		...scriptSetupRanges.defineExpose ? [`typeof ${names.exposed}`] : [],
+		...options.expose,
+	];
 }
 
 function hasSlotsType(options: ScriptCodegenOptions): boolean {

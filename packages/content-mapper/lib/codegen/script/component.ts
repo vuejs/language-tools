@@ -1,10 +1,11 @@
 import { type IRScriptSetup, navigationFeatures, type ScriptSetupRanges } from '@vue/language-core';
 import type { TsCode } from '../../boundary';
 import { names } from '../names';
-import { asType, generateSfcBlockSection, newLine, typeAliasRef } from '../utils';
+import { asType, asTypeCode, generateSfcBlockSection, intersectTypes, newLine, typeAliasRef } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
+import { getExposeTypes } from './scriptSetup';
 
 export function* generateComponent(
 	options: ScriptCodegenOptions,
@@ -14,7 +15,12 @@ export function* generateComponent(
 ): Generator<TsCode> {
 	yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 
-	if (scriptSetupRanges.defineExpose) {
+	if (options.expose.length) {
+		yield `setup: () => (`;
+		yield* asTypeCode(intersectTypes(getExposeTypes(options, scriptSetupRanges)), options.scriptLang);
+		yield `),${newLine}`;
+	}
+	else if (scriptSetupRanges.defineExpose) {
 		yield `setup: () => ${names.exposed},${newLine}`;
 	}
 
@@ -52,7 +58,9 @@ function* generateEmitsOption(
 		: [];
 
 	if (typeCodes.length) {
-		yield `__typeEmits: ${asType(typeCodes.join(` & `), options.scriptLang)},${newLine}`;
+		yield `__typeEmits: `;
+		yield* asTypeCode(intersectTypes(typeCodes), options.scriptLang);
+		yield `,${newLine}`;
 	}
 	else if (runtimeCodes.length) {
 		yield `emits: `;
@@ -64,19 +72,20 @@ function* generateEmitsOption(
 function* generateTypeEmitsOption(
 	options: ScriptCodegenOptions,
 	scriptSetupRanges: ScriptSetupRanges,
-): Generator<string> {
+): Generator<string | TsCode[]> {
 	if (scriptSetupRanges.defineModel.length) {
 		yield typeAliasRef(names.ModelEmit, options.scriptLang);
 	}
 	if (scriptSetupRanges.defineEmits?.typeArg) {
 		yield names.Emit;
 	}
+	yield* options.emits;
 }
 
 function* generateRuntimeEmitsOption(
 	options: ScriptCodegenOptions,
 	scriptSetupRanges: ScriptSetupRanges,
-): Generator<string> {
+): Generator<string | TsCode[]> {
 	if (scriptSetupRanges.defineModel.length) {
 		yield asType(`${names.NormalizeEmits}<typeof ${names.modelEmit}>`, options.scriptLang);
 	}
@@ -85,6 +94,9 @@ function* generateRuntimeEmitsOption(
 			`${names.NormalizeEmits}<typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}>`,
 			options.scriptLang,
 		);
+	}
+	for (const type of options.emits) {
+		yield asTypeCode([`${names.NormalizeEmits}<${names.ShortEmits}<`, ...type, `>>`], options.scriptLang);
 	}
 }
 
@@ -146,7 +158,11 @@ function* generateRuntimePropsOption(
 		);
 		yield asType(propsType, options.scriptLang);
 	}
-	if (ctx.generatedTypes.has(names.PublicProps) && options.vueCompilerOptions.target < 3.6) {
+	// a runtime `defineProps` argument alone types the props of a 3.6 component, but not the props of plugins
+	if (
+		ctx.generatedTypes.has(names.PublicProps)
+		&& (options.vueCompilerOptions.target < 3.6 || (options.props.length && scriptSetupRanges.defineProps?.arg))
+	) {
 		let propsType = ctx.localTypes.TypePropsToOption(typeAliasRef(names.PublicProps, options.scriptLang));
 		if (scriptSetupRanges.withDefaults?.arg) {
 			propsType = ctx.localTypes.WithDefaults(propsType, `typeof ${names.defaults}`);

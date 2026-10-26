@@ -42,6 +42,12 @@ export interface ScriptCodegenOptions {
 	scriptEdits: readonly ScriptEdit[];
 	/** The object types that the codegen plugins spread into the template context. */
 	templateContext: readonly TsCode[][];
+	/** The object types that the codegen plugins intersect into the public props of a script setup component. */
+	props: readonly TsCode[][];
+	/** The object types of events that the codegen plugins intersect into the emits of a script setup component. */
+	emits: readonly TsCode[][];
+	/** The object types that the codegen plugins intersect into what a script setup component exposes. */
+	expose: readonly TsCode[][];
 }
 
 export { generate as generateScript };

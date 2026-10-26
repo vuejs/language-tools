@@ -135,6 +135,12 @@ export interface CodegenContributions {
 	scriptEdits: ScriptEdit[];
 	/** Object types spread into the template context. */
 	templateContext: TsCode[][];
+	/** Object types intersected into the public props of a script setup component. */
+	props: TsCode[][];
+	/** Object types of events intersected into the emits of a script setup component. */
+	emits: TsCode[][];
+	/** Object types intersected into what a script setup component exposes. */
+	expose: TsCode[][];
 }
 
 export interface ScriptEdit {
@@ -158,6 +164,9 @@ export function getContributions(plugins: readonly CodegenPlugin[], file: VueCod
 	const contributions: CodegenContributions = {
 		scriptEdits: [],
 		templateContext: [],
+		props: [],
+		emits: [],
+		expose: [],
 	};
 	for (const { name, plugin } of plugins) {
 		const contribution = plugin.contribute(file);
@@ -173,8 +182,10 @@ export function getContributions(plugins: readonly CodegenPlugin[], file: VueCod
 				contributions.scriptEdits.push({ plugin: name, block, start, end, code: toTsCode(blocks, edit.code) });
 			}
 		}
-		for (const type of toArray(contribution.templateContext)) {
-			contributions.templateContext.push(toTsCode(blocks, type));
+		for (const key of ['templateContext', 'props', 'emits', 'expose'] as const) {
+			for (const type of toArray(contribution[key])) {
+				contributions[key].push(toTsCode(blocks, type));
+			}
 		}
 	}
 	return contributions;

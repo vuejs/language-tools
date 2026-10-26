@@ -19,9 +19,14 @@ exports.codegen = () => ({
 				});
 			}
 		}
+		const isChild = name.startsWith('Props') && name !== 'PropsParent';
 		return {
 			scriptEdits,
 			templateContext: name.startsWith('TemplateContext') ? [['{ $foo: number }']] : [],
+			props: isChild ? [['{ contributed?: number }']] : [],
+			emits: isChild ? [['{ contributed: [value: number] }']] : [],
+			// `exposedValue` is a binding of `<script setup>`
+			expose: isChild ? [['{ contributedExposed: typeof exposedValue }']] : [],
 		};
 	},
 });

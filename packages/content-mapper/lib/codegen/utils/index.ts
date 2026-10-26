@@ -15,6 +15,14 @@ export function asType(type: string, lang: string): string {
 	return isTsLang(lang) ? `{} as ${type}` : `/** @type {${type}} */ ({})`;
 }
 
+/** The intersection of `types`, the codes of each parenthesized. */
+export function intersectTypes(types: readonly (string | readonly TsCode[])[]): TsCode[] {
+	return types.flatMap((type, index) => [
+		...index ? [` & `] : [],
+		...typeof type === 'string' ? [type] : [`(`, ...type, `)`],
+	]);
+}
+
 /** `asType` of the type that `type` generates. */
 export function asTypeCode(type: readonly TsCode[], lang: string): TsCode[] {
 	return isTsLang(lang) ? [`{} as `, ...type] : [`/** @type {`, ...type, `} */ ({})`];

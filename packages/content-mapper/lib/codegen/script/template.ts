@@ -10,6 +10,7 @@ import {
 	generateTypeAlias,
 	generateTypedVar,
 	getRefBrandArgument,
+	intersectTypes,
 	isTsLang,
 	typeAliasRef,
 } from '../utils';
@@ -50,11 +51,12 @@ export function* generateTemplate(
 }
 
 function* generateTemplateCtx(
-	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, scriptLang, templateContext }: ScriptCodegenOptions,
+	options: ScriptCodegenOptions,
 	selfType: string | undefined,
 ): Generator<TsCode> {
+	const { vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, scriptLang, templateContext } = options;
 	const exps: (string | TsCode[])[] = [];
-	const emitTypes: string[] = [];
+	const emitTypes = getEmitTypes(options);
 	const propTypes: string[] = [];
 
 	if (vueCompilerOptions.globalTemplateContext) {
@@ -70,17 +72,13 @@ function* generateTemplateCtx(
 		exps.push(asType(typeAliasRef(names.StyleModules, scriptLang), scriptLang));
 	}
 
-	if (scriptSetupRanges?.defineEmits) {
-		emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}`);
-	}
-	if (scriptSetupRanges?.defineModel.length) {
-		emitTypes.push(`typeof ${names.modelEmit}`);
-	}
 	if (emitTypes.length) {
 		yield* generateTypeAlias(names.EmitProps, scriptLang, function*() {
-			yield `${names.EmitsToProps}<${names.NormalizeEmits}<${emitTypes.join(` & `)}>>`;
+			yield `${names.EmitsToProps}<${names.NormalizeEmits}<`;
+			yield* intersectTypes(emitTypes);
+			yield `>>`;
 		});
-		exps.push(asType(`{ $emit: ${emitTypes.join(` & `)} }`, scriptLang));
+		exps.push(asTypeCode([`{ $emit: `, ...intersectTypes(emitTypes), ` }`], scriptLang));
 	}
 
 	if (scriptSetupRanges?.defineProps) {
@@ -103,6 +101,26 @@ function* generateTemplateCtx(
 	yield `const ${names.ctx} = `;
 	yield* generateSpreadMerge(...exps);
 	yield endOfLine;
+}
+
+/** The types of the emit functions of a script setup component, which the codegen plugins add events to. */
+export function getEmitTypes(
+	{ scriptSetupRanges, emits }: ScriptCodegenOptions,
+): (string | TsCode[])[] {
+	const emitTypes: (string | TsCode[])[] = [];
+	if (!scriptSetupRanges) {
+		return emitTypes;
+	}
+	if (scriptSetupRanges.defineEmits) {
+		emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}`);
+	}
+	if (scriptSetupRanges.defineModel.length) {
+		emitTypes.push(`typeof ${names.modelEmit}`);
+	}
+	for (const type of emits) {
+		emitTypes.push([`${names.ShortEmits}<`, ...type, `>`]);
+	}
+	return emitTypes;
 }
 
 function* generateTemplateComponents(

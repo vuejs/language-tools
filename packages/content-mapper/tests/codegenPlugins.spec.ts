@@ -163,3 +163,12 @@ test('spreads the template context types of plugins into the template context', 
 	expect(generateWith(`<script setup>\nconst a = 1;\n</script>\n<template>{{ a }}</template>\n`, contextPlugin).text)
 		.toMatch(/const __VLS_ctx = \{\n(\.\.\..*,\n)*\.\.\.\/\*\* @type \{\{ \$foo: number \}\} \*\/ \(\{\}\),\n\};/);
 });
+
+test('adds the props of plugins to the props option of a component whose props are declared at runtime', () => {
+	const { text } = generateWith(
+		`<script setup lang="ts">\ndefineProps({ a: String });\n</script>\n`,
+		plugin(() => ({ props: [['{ b?: number }']] })),
+	);
+	expect(text).toContain(`type __VLS_PublicProps = ({ b?: number });`);
+	expect(text).toContain(`props: {\n...{} as __VLS_TypePropsToOption<__VLS_PublicProps>,\n...{ a: String },\n},`);
+});

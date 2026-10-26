@@ -138,6 +138,9 @@ function useCodegen(
 			],
 			scriptEdits: getCodegenContributions().scriptEdits,
 			templateContext: getCodegenContributions().templateContext,
+			props: getCodegenContributions().props,
+			emits: getCodegenContributions().emits,
+			expose: getCodegenContributions().expose,
 		});
 	});
 
