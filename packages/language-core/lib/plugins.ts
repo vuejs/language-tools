@@ -9,6 +9,7 @@ import vueTemplateHtmlPlugin from './plugins/vue-template-html';
 import vueTemplateInlineCssPlugin from './plugins/vue-template-inline-css';
 import vueTemplateInlineTsPlugin from './plugins/vue-template-inline-ts';
 import { validVersions, type VueLanguagePlugin, type VueLanguagePluginReturn } from './types';
+import type { EmbeddedCodePlugin, EmbeddedCodePluginReturn } from './virtualCode/embeddedCodes';
 
 /** The built-in plugins that build the IR. */
 const irPlugins: VueLanguagePlugin[] = [
@@ -18,7 +19,7 @@ const irPlugins: VueLanguagePlugin[] = [
 ];
 
 /** The built-in plugins that contribute the embedded codes of the language service. */
-const embeddedCodePlugins: VueLanguagePlugin[] = [
+const embeddedCodePlugins: EmbeddedCodePlugin[] = [
 	vueRootTagsPlugin,
 	vueTemplateInlineCssPlugin,
 	vueTemplateInlineTsPlugin,
@@ -40,10 +41,10 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 
 /** Instances of the built-in embedded-code plugins, in their order. */
 export function createEmbeddedCodePlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
-	return instantiatePlugins(embeddedCodePlugins.map(asBuiltIn), pluginContext);
+	return instantiatePlugins(embeddedCodePlugins.map(asBuiltIn), pluginContext) as EmbeddedCodePluginReturn[];
 }
 
-function asBuiltIn(plugin: VueLanguagePlugin) {
+function asBuiltIn(plugin: VueLanguagePlugin | EmbeddedCodePlugin) {
 	return { plugin, config: {} as Record<string, any> };
 }
 

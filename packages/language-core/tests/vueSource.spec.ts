@@ -55,7 +55,7 @@ test('the IR plugins and the embedded-code plugins are separate', () => {
 	const irPlugins = createVuePlugins(ts, vueCompilerOptions);
 	const embeddedCodePlugins = createVueEmbeddedCodePlugins(ts, vueCompilerOptions);
 
-	expect(irPlugins.some(plugin => plugin.getEmbeddedCodes || plugin.resolveEmbeddedCode)).toBe(false);
+	expect(irPlugins.some(plugin => 'getEmbeddedCodes' in plugin || 'resolveEmbeddedCode' in plugin)).toBe(false);
 	expect(irPlugins.filter(plugin => plugin.compileSFCScript)).toHaveLength(1);
 	expect(irPlugins.filter(plugin => plugin.compileSFCTemplate)).toHaveLength(1);
 	expect(irPlugins.filter(plugin => plugin.compileSFCStyle)).toHaveLength(1);

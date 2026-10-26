@@ -1,7 +1,7 @@
 import type { IScriptSnapshot, Mapping, TextChangeRange, VirtualCode } from '@volar/language-core';
 import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
-import type { Code, IR, VueLanguagePluginReturn } from '../types';
+import type { Code, IR, VueLanguagePlugin, VueLanguagePluginReturn } from '../types';
 import { buildMappings } from '../utils/buildMappings';
 import { resolveCodeOffsets } from '../utils/resolveCodeOffsets';
 
@@ -16,8 +16,21 @@ export class VueEmbeddedCode {
 	) {}
 }
 
+/** A built-in plugin that contributes embedded documents of the language service. */
+export type EmbeddedCodePlugin = (ctx: Parameters<VueLanguagePlugin>[0]) => EmbeddedCodePluginReturn;
+
+export interface EmbeddedCodePluginReturn extends VueLanguagePluginReturn {
+	/**
+	 * Lists the embedded documents of a file for the language service, like the template or a style block. They
+	 * never reach TypeScript: the TypeScript code of a file is generated from its IR alone.
+	 */
+	getEmbeddedCodes?(fileName: string, ir: IR): { id: string; lang: string }[];
+	/** Fills in the content of an embedded document that a plugin listed in `getEmbeddedCodes`. */
+	resolveEmbeddedCode?(fileName: string, ir: IR, embeddedFile: VueEmbeddedCode): void;
+}
+
 export function useEmbeddedCodes(
-	plugins: VueLanguagePluginReturn[],
+	plugins: EmbeddedCodePluginReturn[],
 	fileName: string,
 	ir: IR,
 ) {
@@ -61,7 +74,7 @@ export function useEmbeddedCodes(
 		return result;
 	});
 
-	function useEmbeddedCodesForPlugin(plugin: VueLanguagePluginReturn) {
+	function useEmbeddedCodesForPlugin(plugin: EmbeddedCodePluginReturn) {
 		const getMap = computed<
 			Map<string, () => { code: VueEmbeddedCode; snapshot: IScriptSnapshot }>
 		>(

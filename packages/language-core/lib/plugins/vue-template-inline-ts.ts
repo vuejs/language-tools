@@ -1,8 +1,9 @@
 import { SpanMapFeature } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
-import type { Code, IR, VueLanguagePlugin } from '../types';
+import type { Code, IR } from '../types';
 import { isCompoundExpression, parseInterpolationNode, parseVForNode } from '../utils/templateExpressions';
 import { getTypeScriptAST } from '../utils/typescriptAST';
+import type { EmbeddedCodePlugin } from '../virtualCode/embeddedCodes';
 
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
@@ -19,7 +20,7 @@ const formatBrackets = {
 
 const genericCommentRE = /^<!--\s*@vue-generic\s*\{(?<content>[\s\S]*)\}\s*-->$/;
 
-const plugin: VueLanguagePlugin = ({ modules: { typescript: ts } }) => {
+const plugin: EmbeddedCodePlugin = ({ modules: { typescript: ts } }) => {
 	const parseds = new WeakMap<IR, ReturnType<typeof parse>>();
 
 	return {

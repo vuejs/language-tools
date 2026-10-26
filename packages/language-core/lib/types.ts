@@ -2,11 +2,8 @@ import type { SpanMapKind } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
-import type { VueEmbeddedCode } from './virtualCode/embeddedCodes';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
-
-export { VueEmbeddedCode };
 
 /**
  * The TypeScript 7 AST API with a synchronous parser. Hosts on the classic TypeScript API pass it instead,
@@ -152,13 +149,6 @@ export interface VueLanguagePluginReturn {
 		oldResult: CompilerDOM.CodegenResult,
 		textChange: { start: number; end: number; newText: string },
 	): CompilerDOM.CodegenResult | undefined;
-	/**
-	 * Lists the embedded documents of a file for the language service, like the template or a style block. They
-	 * never reach TypeScript: the TypeScript code of a file is generated from its IR alone.
-	 */
-	getEmbeddedCodes?(fileName: string, ir: IR): { id: string; lang: string }[];
-	/** Fills in the content of an embedded document that a plugin listed in `getEmbeddedCodes`. */
-	resolveEmbeddedCode?(fileName: string, ir: IR, embeddedFile: VueEmbeddedCode): void;
 }
 
 export type VueLanguagePlugin<T extends Record<string, any> = {}> = (

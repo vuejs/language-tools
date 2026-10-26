@@ -1,7 +1,7 @@
 import { allFeatures } from '../features';
-import type { VueLanguagePlugin } from '../types';
+import type { EmbeddedCodePlugin } from '../virtualCode/embeddedCodes';
 
-const plugin: VueLanguagePlugin = () => {
+const plugin: EmbeddedCodePlugin = () => {
 	return {
 		version: 4,
 

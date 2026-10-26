@@ -29,3 +29,25 @@ test.each([
 	expect(text(b)).toBe(before);
 	expect(b.ir.template?.content).toContain('<div>');
 });
+
+test('the embedded codes of the language service come from the built-in plugins alone', () => {
+	const userPlugin = () => ({
+		version: 4,
+		getEmbeddedCodes: () => [{ id: 'user_code', lang: 'ts' }],
+		resolveEmbeddedCode(_fileName: string, _ir: unknown, code: { id: string; content: unknown[] }) {
+			code.content.push(`/* ${code.id} */`);
+		},
+	});
+	const plugin = createVueLanguagePlugin<string>(ts, {
+		...getDefaultCompilerOptions(),
+		plugins: [{ name: 'user-plugin', file: '/project/user-plugin.js', config: {}, module: userPlugin }],
+	}, id => id);
+	const code = plugin.createVirtualCode!(fileName, 'vue', createSnapshot(before), {} as never)!;
+
+	const [rootTags, ...others] = code.embeddedCodes;
+	expect(others).toEqual([]);
+	expect(rootTags!.embeddedCodes!.map(embeddedCode => [embeddedCode.id, text(embeddedCode)])).toEqual([
+		['scriptsetup_raw', ''],
+		['template', '<div>{{ before }}</div>'],
+	]);
+});

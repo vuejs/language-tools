@@ -3,7 +3,7 @@ import { computed } from 'alien-signals';
 import { allFeatures } from '../features';
 import type { TypeScript, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
 import { createVueSource, type VueSource } from '../vueSource';
-import { useEmbeddedCodes } from './embeddedCodes';
+import { type EmbeddedCodePluginReturn, useEmbeddedCodes } from './embeddedCodes';
 
 const rootLanguageIds: Record<VueCompilerOptions['format'], string> = {
 	sfc: 'vue',
@@ -54,7 +54,7 @@ export class VueVirtualCode implements VirtualCode {
 		public initSnapshot: IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
 		plugins: VueLanguagePluginReturn[],
-		embeddedCodePlugins: VueLanguagePluginReturn[],
+		embeddedCodePlugins: EmbeddedCodePluginReturn[],
 		ts: TypeScript,
 	) {
 		this.source = createVueSource(ts, vueCompilerOptions, plugins, fileName, initSnapshot);

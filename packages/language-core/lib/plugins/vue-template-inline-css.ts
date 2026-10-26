@@ -1,10 +1,11 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { scriptFeatures } from '../features';
-import type { Code, VueLanguagePlugin } from '../types';
+import type { Code } from '../types';
 import { forEachElementNode } from '../utils/forEachTemplateNode';
 import { normalizeAttributeValue } from '../utils/shared';
+import type { EmbeddedCodePlugin } from '../virtualCode/embeddedCodes';
 
-const plugin: VueLanguagePlugin = () => {
+const plugin: EmbeddedCodePlugin = () => {
 	return {
 		version: 4,
 

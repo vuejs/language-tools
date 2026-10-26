@@ -1,12 +1,12 @@
 import { SpanMapFeature } from '@volar/language-core';
 import { completionFeatures, structureFeatures } from '../features';
-import type { VueLanguagePlugin } from '../types';
+import type { EmbeddedCodePlugin } from '../virtualCode/embeddedCodes';
 
 /**
  * Each script block verbatim, for the TypeScript syntactic features of the block (structure, formatting, JSDoc
  * comment templates, JSX closing tags), whichever content mapper serves the file to TypeScript.
  */
-const plugin: VueLanguagePlugin = () => {
+const plugin: EmbeddedCodePlugin = () => {
 	return {
 		version: 4,
 
