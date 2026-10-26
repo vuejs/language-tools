@@ -9,7 +9,7 @@ import { getExpressionStartAt } from './templateExpressions';
  * first embedded document at the position, which is not the template when a script code generation plugin maps the
  * expression to its script.
  */
-export function create(ts: typeof import('typescript')): LanguageServicePlugin {
+export function create(): LanguageServicePlugin {
 	const plugin = createEmmetPlugin({
 		mappedLanguages: {
 			[rootTagsLanguageId]: 'html',
@@ -27,7 +27,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					const ast = info?.root.ir.template?.ast;
 					if (
 						info?.code.id === embeddedCodeIds.template && ast
-						&& getExpressionStartAt(ts, ast, document.offsetAt(position), []) !== undefined
+						&& getExpressionStartAt(info.root.ts, ast, document.offsetAt(position), []) !== undefined
 					) {
 						return;
 					}

@@ -6,9 +6,8 @@ import {
 } from '@volar/language-service';
 import { getSourceRange } from '@volar/language-service/lib/utils/featureWorkers';
 import type * as CompilerDOM from '@vue/compiler-dom';
-import { collectBindingNames, parseVForNode } from '@vue/language-core';
+import { collectBindingNames, parseVForNode, type TypeScript } from '@vue/language-core';
 import { URI } from 'vscode-uri';
-import { asCoreTypeScript } from '../coreTypeScript';
 import type { AutoImportExport } from '../requests';
 import { embeddedCodeIds } from '../virtualCode';
 import { resolveEmbeddedCode } from '../virtualCodeQueries';
@@ -68,7 +67,7 @@ export function create(
 					}
 					const offset = document.offsetAt(position);
 					const locals: string[] = [];
-					const start = getExpressionStartAt(ts, ast, offset, locals);
+					const start = getExpressionStartAt(info.root.ts, ast, offset, locals);
 					if (start === undefined) {
 						return;
 					}
@@ -196,7 +195,7 @@ function isIdentifierStart(ts: typeof import('typescript'), textBefore: string) 
 
 /** Also pushes to `locals` the names that the `v-for` and `v-slot` around the expression declare. */
 export function getExpressionStartAt(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode,
 	offset: number,
 	locals: string[],
@@ -287,8 +286,7 @@ export function getExpressionStartAt(
 	}
 }
 
-function getBindingNames(ts: typeof import('typescript'), text: string) {
-	const coreTs = asCoreTypeScript(ts);
-	const ast = coreTs.createSourceFile('/a.ts', text, coreTs.ScriptTarget.Latest);
-	return collectBindingNames(coreTs, ast, ast);
+function getBindingNames(ts: TypeScript, text: string) {
+	const ast = ts.createSourceFile('/a.ts', text, ts.ScriptTarget.Latest);
+	return collectBindingNames(ts, ast, ast);
 }

@@ -49,7 +49,7 @@ export function createVueLanguageServicePlugins(
 		createVueScopedClassLinksPlugin(),
 		createVueSfcPlugin(),
 		createVueTemplateRefLinksPlugin(),
-		createVueEmmetPlugin(ts),
+		createVueEmmetPlugin(),
 
 		// TS related plugins
 		createVueSuggestDefineAssignmentPlugin(ts),
