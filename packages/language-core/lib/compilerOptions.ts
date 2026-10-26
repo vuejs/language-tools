@@ -172,6 +172,9 @@ export function resolveVuePlugins(
 			files.push(packageJson.file);
 		}
 		try {
+			// Loaded again on every resolve, so a host that resolves again after the file changes gets its new exports;
+			// the modules that it requires are still cached
+			delete (require as NodeJS.Require | undefined)?.cache[file];
 			plugins.push({ name, file, packageJson, config, module: require(file) });
 		}
 		catch (error) {

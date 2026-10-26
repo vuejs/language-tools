@@ -118,6 +118,7 @@ async function startVueServer(serverModule: string) {
 		{
 			workspace: {
 				configuration: true,
+				didChangeWatchedFiles: {},
 			},
 		},
 	);

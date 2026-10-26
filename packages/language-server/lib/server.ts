@@ -51,6 +51,9 @@ export function startServer(ts: typeof import('typescript')) {
 	// The content mappers the client registers for files outside any tsconfig.
 	let inferredContentMappers: ContentMapperEntry[] | undefined;
 	const watchedExtensions = new Set<string>();
+	const watchedPluginFiles = new Set<string>();
+	/** The files of the `plugins` of each project's language service, which it is created again for when they change. */
+	const projectPluginFiles = new WeakMap<LanguageService, Set<string>>();
 	let initialized = false;
 
 	connection.listen();
@@ -64,6 +67,17 @@ export function startServer(ts: typeof import('typescript')) {
 		// before initialization, `onInitialized` watches the whole set
 		if (initialized && added.length) {
 			void server.fileWatcher.watchFiles(added.map(extension => `**/*${extension}`));
+		}
+	}
+
+	/** Plugin files may lie outside the workspace, so each one is watched by its own path. */
+	function watchPluginFiles(fileNames: Iterable<string>) {
+		const added = [...fileNames].filter(fileName => !watchedPluginFiles.has(fileName));
+		for (const fileName of added) {
+			watchedPluginFiles.add(fileName);
+		}
+		if (initialized && added.length) {
+			void server.fileWatcher.watchFiles(added);
 		}
 	}
 
@@ -122,6 +136,19 @@ export function startServer(ts: typeof import('typescript')) {
 				tsconfigProjects.clear();
 				void typescriptApi?.then(resolver => resolver.invalidate(), () => {});
 				return;
+			}
+			const changedFileNames = changes.map(change => URI.parse(change.uri).fsPath.replace(/\\/g, '/'));
+			const usesChangedPlugin = (languageService: LanguageService) =>
+				changedFileNames.some(fileName => projectPluginFiles.get(languageService)?.has(fileName));
+			for (const [uri, languageService] of tsconfigProjects) {
+				if (usesChangedPlugin(languageService)) {
+					languageService.dispose();
+					tsconfigProjects.delete(uri);
+				}
+			}
+			if (simpleLanguageService && usesChangedPlugin(simpleLanguageService)) {
+				simpleLanguageService.dispose();
+				simpleLanguageService = undefined;
 			}
 			for (const change of changes) {
 				withResolver(change.uri, (resolver, fileName) => resolver.fileChanged(fileName));
@@ -439,18 +466,26 @@ export function startServer(ts: typeof import('typescript')) {
 			const contentMappers = configFileName ? project!.contentMappers : inferredContentMappers;
 			const rootDir = (configFileName ? path.dirname(configFileName) : process.cwd()).replace(/\\/g, '/');
 			watchExtensions(getComponentModuleExtensions(contentMappers));
+			const pluginFiles: string[] = [];
 			// Whichever Content Mapper an entry names, its files that the client syncs to this server, which it
 			// selects by Vue language ids, are Vue files.
 			const vuePlugins = (contentMappers ?? []).map(entry =>
 				routeByExtensions(
 					createVueLanguagePlugin(
 						asCoreTypeScript(ts),
-						resolveVueCompilerOptions(ts.sys.readFile, rootDir, entry.options as RawVueCompilerOptions),
+						resolveVueCompilerOptions(
+							ts.sys.readFile,
+							rootDir,
+							entry.options as RawVueCompilerOptions,
+							pluginFiles,
+						),
 						asFileName,
 					),
 					entry.extensions,
 				)
 			);
+			const normalizedPluginFiles = new Set(pluginFiles.map(fileName => fileName.replace(/\\/g, '/')));
+			watchPluginFiles(normalizedPluginFiles);
 			const language = createLanguage<URI>(
 				[
 					{
@@ -469,12 +504,14 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 				},
 			);
-			return createLanguageService(
+			const languageService = createLanguageService(
 				language,
 				server.languageServicePlugins,
 				createLanguageServiceEnvironment(server, [...server.workspaceFolders.all]),
 				{},
 			);
+			projectPluginFiles.set(languageService, normalizedPluginFiles);
+			return languageService;
 
 			/** Like the TypeScript host, hands the Vue plugin only the files matching `extensions`. */
 			function routeByExtensions(plugin: LanguagePlugin<URI>, extensions: string[]): LanguagePlugin<URI> {
@@ -496,7 +533,11 @@ export function startServer(ts: typeof import('typescript')) {
 	connection.onInitialized(() => {
 		server.initialized();
 		initialized = true;
-		void server.fileWatcher.watchFiles(['**/*.json', ...[...watchedExtensions].map(extension => `**/*${extension}`)]);
+		void server.fileWatcher.watchFiles([
+			'**/*.json',
+			...[...watchedExtensions].map(extension => `**/*${extension}`),
+			...watchedPluginFiles,
+		]);
 	});
 
 	connection.onShutdown(server.shutdown);
