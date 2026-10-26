@@ -1,4 +1,9 @@
-import { forEachEmbeddedCode, getScriptLang, type VueVirtualCode } from '@vue/language-core';
+import {
+	forEachInterpolationNode,
+	getScriptLang,
+	parseInterpolationNode,
+	type VueVirtualCode,
+} from '@vue/language-core';
 import { createAnalyzer } from 'laplacenoma';
 import rulesVue from 'laplacenoma/rules/vue';
 
@@ -77,20 +82,19 @@ export function createReactivityAnalyzer(ts: typeof import('typescript')) {
 
 /** The source ranges of the template interpolations and style `v-bind()` expressions of a Vue file. */
 export function getInterpolationRanges(virtualCode: VueVirtualCode) {
+	const { ir } = virtualCode;
 	const ranges: [number, number][] = [];
-	for (const code of forEachEmbeddedCode(virtualCode)) {
-		const codeText = code.snapshot.getText(0, code.snapshot.getLength());
-		if (
-			(
-				code.id.startsWith('template_inline_ts_')
-				&& codeText.startsWith('0 +')
-				&& codeText.endsWith('+ 0;')
-			)
-			|| (code.id.startsWith('style_') && code.id.endsWith('_inline_ts'))
-		) {
-			for (const [, , start, length] of code.mappings) {
-				ranges.push([start, start + length]);
-			}
+	if (ir.template?.ast) {
+		for (const node of forEachInterpolationNode(ir.template.ast)) {
+			const [content, start] = parseInterpolationNode(node, ir.template.content);
+			const offset = ir.template.startTagEnd + start;
+			ranges.push([offset, offset + content.length]);
+		}
+	}
+	for (const style of ir.styles) {
+		for (const binding of style.bindings) {
+			const offset = style.startTagEnd + binding.offset;
+			ranges.push([offset, offset + binding.text.length]);
 		}
 	}
 	return ranges;

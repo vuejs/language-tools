@@ -57,6 +57,33 @@ test('interpolation ranges cover the template interpolations', async () => {
 	expect(ranges.map(([start, end]) => content.slice(start, end))).toEqual([' foo ', ' bar + 1 ']);
 });
 
+test('interpolation ranges cover every template interpolation and style v-bind() expression', async () => {
+	const content = `<template>
+	<div>{{ () => foo }}</div>
+	{{
+		bar
+	}}
+	{{ baz
+	}}
+</template>
+
+<style>
+.foo { color: v-bind(color); }
+</style>
+`;
+	const document = await open('tsconfigProject/fixture.vue', 'vue', content);
+	const server = await getLanguageServer();
+	const ranges: [number, number][] = await server.vueserver.connection.sendRequest('vue/interpolationRanges', {
+		textDocument: { uri: document.uri },
+	});
+	expect(ranges.map(([start, end]) => content.slice(start, end))).toEqual([
+		' () => foo ',
+		'\n\t\tbar\n\t',
+		' baz\n\t',
+		'color',
+	]);
+});
+
 const openedDocuments: TextDocument[] = [];
 
 afterEach(async () => {
