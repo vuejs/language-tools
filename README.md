@@ -146,7 +146,7 @@ pnpm install
 npm run build
 ```
 
-In an existing clone, run `git submodule update --init` to fetch the submodule.
+In an existing clone, run `git submodule update --init` to fetch the submodules.
 
 The recommended way to develop the volar extension is to use the [Debug Tools](https://code.visualstudio.com/Docs/editor/debugging) provided by VSCode.
 
@@ -204,6 +204,12 @@ git commit -m "chore: bump volar.js"
 ```
 
 To pick up commits that others pushed to `v3`, run `git submodule update --remote volar.js` and commit the pointer. Releases do not publish `@volar/*`: they are published from Volar.js, and the release workflow stops unless the submodule's versions are already on npm.
+
+### Volar services
+
+[volarjs/services](https://github.com/volarjs/services) is checked out at `services/` as a git submodule tracking its `master` branch. Only the `volar-service-*` packages that `@vue/language-service` uses are part of the pnpm workspace, and they resolve to the submodule instead of npm. `npm run build` compiles them first (`npm run build:services`, emitting with the TypeScript 5.9 that Volar.js uses) and type-checks them with the repository's TypeScript through `tsconfig.services/`; `npm run watch:services` watches them.
+
+Changing them works as for Volar.js, with `services` and `master` in place of `volar.js` and `v3`. Releases do not publish `volar-service-*` either, and the release workflow stops unless the submodule's versions are already on npm.
 
 ## ❤️ Sponsors
 
