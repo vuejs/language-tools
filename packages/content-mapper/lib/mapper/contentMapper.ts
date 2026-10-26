@@ -1,9 +1,9 @@
 import type { IScriptSnapshot } from '@volar/language-core';
 import * as vue from '@vue/language-core';
+import { readFileIfExists } from '@vue/language-core/lib/options/readFileIfExists';
 import { loadTypeScript } from '@vue/language-core/typescript';
 import { computed } from 'alien-signals';
 import { createHash } from 'node:crypto';
-import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { useServiceScript } from '../codegen';
 import { type CodegenPlugin, loadCodegenPlugins } from '../codegen/plugin';
@@ -233,11 +233,4 @@ function toPluginDiagnostic(options: OpenProjectParams['options'], error: vue.Vu
 		messageText: `Plugin '${error.plugin}': ${error.message}`,
 		code: OptionDiagnosticCode.InvalidPlugin,
 	};
-}
-
-function readFileIfExists(fileName: string) {
-	try {
-		return fs.readFileSync(fileName, 'utf8').replace(/^\uFEFF/, '');
-	}
-	catch {}
 }

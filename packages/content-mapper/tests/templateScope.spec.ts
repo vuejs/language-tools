@@ -1,13 +1,17 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { TemplateBlockScope, TemplateExpression, TemplateScope, VueSource } from '@vue/language-core';
+import { readFileIfExists } from '@vue/language-core/lib/options/readFileIfExists';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as ts5 from 'typescript-5';
-import { expect, test } from 'vitest';
+import type { API } from 'typescript/sync' with { 'resolution-mode': 'import' };
+import { afterAll, expect, test } from 'vitest';
 import { resolveMapperOptions } from '../lib/mapper/mapperOptions';
 import { createSource, generateFromSource, repositoryRoot } from './utils';
 
 const workspace = path.join(repositoryRoot, 'test-workspace');
+const { API: TypeScriptAPI }: { API: typeof API } = require('typescript/sync');
+const api = new TypeScriptAPI();
+afterAll(() => api.close());
 
 interface MapperEntry {
 	package: string;
@@ -16,7 +20,9 @@ interface MapperEntry {
 }
 
 function readContentMappers(configFile: string): MapperEntry[] | undefined {
-	const { config } = ts5.readConfigFile(configFile, ts5.sys.readFile);
+	const config = api.readConfigFile(configFile).config as
+		| { contentMappers?: MapperEntry[]; extends?: unknown }
+		| undefined;
 	if (config?.contentMappers) {
 		return config.contentMappers;
 	}
@@ -97,7 +103,7 @@ test('the code generation reads the scope of every expression and block scope th
 
 	for (const fileName of files) {
 		const [configFile, entry] = findMapperEntry(fileName);
-		const { vueOptions } = resolveMapperOptions(ts5.sys.readFile, configFile, entry?.options);
+		const { vueOptions } = resolveMapperOptions(readFileIfExists, configFile, entry?.options);
 		const content = fs.readFileSync(fileName, 'utf8');
 		const { templateScope, reads } = generateWithReads(createSource(fileName, content, vueOptions));
 		for (const [name, value] of getEntries(templateScope)) {
@@ -129,7 +135,7 @@ function createSourceRoot(name: string) {
 	return createSource(
 		`/${name}.vue`,
 		`${source}<!-- ${name} -->\n`,
-		resolveMapperOptions(ts5.sys.readFile, undefined, undefined).vueOptions,
+		resolveMapperOptions(readFileIfExists, undefined, undefined).vueOptions,
 	);
 }
 

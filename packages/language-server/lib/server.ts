@@ -8,6 +8,7 @@ import {
 	type RawVueCompilerOptions,
 	resolveVueCompilerOptions,
 } from '@vue/language-core';
+import { readFileIfExists } from '@vue/language-core/lib/options/readFileIfExists';
 import {
 	createLanguageService,
 	createUriMap,
@@ -475,7 +476,7 @@ export function startServer(ts: typeof import('typescript')) {
 					createVueLanguagePlugin(
 						asCoreTypeScript(ts),
 						resolveVueCompilerOptions(
-							ts.sys.readFile,
+							readFileIfExists,
 							rootDir,
 							entry.options as RawVueCompilerOptions,
 							pluginFiles,
