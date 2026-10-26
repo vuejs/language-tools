@@ -30,15 +30,12 @@ export function* generateScriptSetupImports(
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<TsCode> {
-	yield [
-		scriptSetup.content.slice(
-			0,
-			Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset),
-		),
-		'scriptSetup',
+	yield* generateCodeWithTransforms(
 		0,
-		{ features: scriptFeatures },
-	];
+		Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset),
+		[],
+		(start, end) => [[scriptSetup.content.slice(start, end), scriptSetup.name, start, { features: scriptFeatures }]],
+	);
 }
 
 export function* generateGeneric(

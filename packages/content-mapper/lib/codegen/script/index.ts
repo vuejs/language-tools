@@ -15,6 +15,7 @@ import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { generateStyleModuleImports } from '../style/modules';
 import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { generateCodeWithTransforms } from '../utils/transform';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateGeneric, generateMacros, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
 import { generateTemplate } from './template';
@@ -113,7 +114,7 @@ function* generateWorker(
 			);
 		}
 		else {
-			yield* generateSfcBlockSection(script, 0, script.content.length, { features: scriptFeatures });
+			yield* generateScriptSection(script, 0, script.content.length);
 			yield* generateSyntheticDefaultExport(exportExpression);
 		}
 
@@ -198,7 +199,7 @@ function* generateWorker(
 			);
 		}
 		else {
-			yield* generateSfcBlockSection(script, 0, script.content.length, { features: scriptFeatures });
+			yield* generateScriptSection(script, 0, script.content.length);
 			yield* generateComponentDeclareEqual(script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 			yield* generateTemplate(options, names.export);
@@ -232,9 +233,9 @@ function* generateScriptWithExportDefault(
 		[wrapLeft, wrapRight] = vueCompilerOptions.optionsWrapper;
 	}
 
-	yield* generateSfcBlockSection(script, 0, expression.start, { features: scriptFeatures });
+	yield* generateScriptSection(script, 0, expression.start);
 	yield exportExpression;
-	yield* generateSfcBlockSection(script, expression.end, exportDefault.end, { features: scriptFeatures });
+	yield* generateScriptSection(script, expression.end, exportDefault.end);
 	yield endOfLine;
 	if (templateGenerator) {
 		yield* templateGenerator;
@@ -242,14 +243,24 @@ function* generateScriptWithExportDefault(
 	yield* generateComponentDeclareEqual(script, varName);
 	if (wrapLeft && wrapRight) {
 		yield wrapLeft;
-		yield* generateSfcBlockSection(script, expression.start, expression.end, { features: scriptFeatures });
+		yield* generateScriptSection(script, expression.start, expression.end);
 		yield wrapRight;
 	}
 	else {
-		yield* generateSfcBlockSection(script, expression.start, expression.end, { features: scriptFeatures });
+		yield* generateScriptSection(script, expression.start, expression.end);
 	}
 	yield endOfLine;
-	yield* generateSfcBlockSection(script, exportDefault.end, script.content.length, { features: scriptFeatures });
+	yield* generateScriptSection(script, exportDefault.end, script.content.length);
+}
+
+/** A copy of the user's code of `<script>`, at `start`..`end` of its content. */
+function* generateScriptSection(script: IRScript, start: number, end: number): Generator<TsCode> {
+	yield* generateCodeWithTransforms(
+		start,
+		end,
+		[],
+		(start, end) => generateSfcBlockSection(script, start, end, { features: scriptFeatures }),
+	);
 }
 
 function* generateGlobalTypesReference(
