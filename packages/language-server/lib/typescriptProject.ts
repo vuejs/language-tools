@@ -1,5 +1,5 @@
 import type { TypeScript as CoreTypeScript } from '@vue/language-core';
-import { resolveTypeScriptModule } from '@vue/language-core/typescript';
+import { loadTypeScript, resolveTypeScriptModule } from '@vue/language-core/typescript';
 import type { VueVirtualCode } from '@vue/language-service';
 import type {
 	AutoImportComponent,
@@ -59,6 +59,8 @@ export interface TypeScriptProject {
 }
 
 export interface TypeScriptProjectResolver {
+	/** The TS 7.1 AST API and parser of the installation that the TypeScript language server runs. */
+	parser: CoreTypeScript;
 	/** The file's default project in the running TypeScript language server, or undefined when it has none for it. */
 	getProject(fileName: string): Promise<TypeScriptProject | undefined>;
 	/**
@@ -143,13 +145,12 @@ export interface TypeScriptProjectResolver {
  * `packageJsonPath` is the manifest of the TS 7 installation that server runs, so the client matches it.
  * `inferredContentMappers` are the content mappers the client registers for files outside any config.
  */
-/** `parser` parses the script blocks of the Vue files whose component metadata is asked for. */
 export async function connectTypeScriptProjectResolver(
 	pipe: string,
 	packageJsonPath: string,
 	inferredContentMappers?: ContentMapperEntry[],
-	parser?: CoreTypeScript,
 ): Promise<TypeScriptProjectResolver> {
+	const parser = loadTypeScript(packageJsonPath);
 	const ts: TypeScript = {
 		...await import(pathToFileURL(resolveTypeScriptModule(packageJsonPath, 'ast')).href),
 		...await import(pathToFileURL(resolveTypeScriptModule(packageJsonPath, 'async')).href),
@@ -220,6 +221,7 @@ export async function connectTypeScriptProjectResolver(
 	}
 
 	return {
+		parser,
 		getProject(fileName) {
 			let result = projects.get(fileName);
 			if (!result) {

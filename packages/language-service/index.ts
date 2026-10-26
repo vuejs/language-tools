@@ -68,6 +68,6 @@ export function createVueLanguageServicePlugins(
 		createVueTemplatePlugin('html', client),
 		createVueTemplatePlugin('jade', client),
 		// after the template plugins, whose completion takes precedence
-		createVueTemplateExpressionsPlugin(ts, client),
+		createVueTemplateExpressionsPlugin(client),
 	];
 }

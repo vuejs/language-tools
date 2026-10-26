@@ -1,16 +1,15 @@
 import { createUriMap, type LanguageServiceContext } from '@volar/language-service';
 import { stringToSnapshot } from '@volar/language-service/lib/utils/common';
 import { createLanguage, getDefaultCompilerOptions } from '@vue/language-core';
-import * as ts from 'typescript';
+import { loadTypeScript } from '@vue/language-core/typescript';
 import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { createVueLanguagePlugin } from '..';
-import { asCoreTypeScript } from '../lib/coreTypeScript';
 import { getAttrNameCasing, getTagNameCasing } from '../lib/nameCasing';
 import type { AttrNameCasing, TagNameCasing } from '../lib/nameCasing';
 
 const vueLanguagePlugin = createVueLanguagePlugin<URI>(
-	asCoreTypeScript(ts),
+	loadTypeScript(),
 	getDefaultCompilerOptions(),
 	uri => uri.path,
 );

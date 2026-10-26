@@ -7,6 +7,7 @@ import {
 	type LanguagePlugin,
 	type RawVueCompilerOptions,
 	resolveVueCompilerOptions,
+	type TypeScript as CoreTypeScript,
 } from '@vue/language-core';
 import { readFileIfExists } from '@vue/language-core/lib/options/readFileIfExists';
 import {
@@ -17,7 +18,6 @@ import {
 	type LanguageService,
 	VueVirtualCode,
 } from '@vue/language-service';
-import { asCoreTypeScript } from '@vue/language-service/lib/coreTypeScript';
 import type { TextEdit } from '@vue/language-service/lib/requests';
 import { placeScriptImportEdits } from '@vue/language-service/lib/virtualCodeQueries';
 import { camelize, capitalize } from '@vue/shared';
@@ -87,8 +87,7 @@ export function startServer(ts: typeof import('typescript')) {
 	function connectTypeScriptApi() {
 		if (!typescriptApi) {
 			const connecting = connection.sendRequest<TypeScriptApiConnection>('vue/typescriptApiConnection').then(
-				({ pipe, packageJsonPath }) =>
-					connectTypeScriptProjectResolver(pipe, packageJsonPath, inferredContentMappers, asCoreTypeScript(ts)),
+				({ pipe, packageJsonPath }) => connectTypeScriptProjectResolver(pipe, packageJsonPath, inferredContentMappers),
 			);
 			typescriptApi = connecting;
 			connecting.catch(error => {
@@ -189,15 +188,16 @@ export function startServer(ts: typeof import('typescript')) {
 					const project = uri.scheme === 'file'
 						? await getTypeScriptProject(uri.fsPath.replace(/\\/g, '/'))
 						: undefined;
+					const { parser } = await connectTypeScriptApi();
 					if (project?.configFileName) {
 						let languageService = tsconfigProjects.get(URI.file(project.configFileName));
 						if (!languageService) {
-							languageService = createProjectLanguageService(server, project);
+							languageService = createProjectLanguageService(server, parser, project);
 							tsconfigProjects.set(URI.file(project.configFileName), languageService);
 						}
 						return languageService;
 					}
-					return simpleLanguageService ??= createProjectLanguageService(server, undefined);
+					return simpleLanguageService ??= createProjectLanguageService(server, parser, undefined);
 				},
 				getExistingLanguageServices() {
 					const projects = [...tsconfigProjects.values()];
@@ -462,7 +462,11 @@ export function startServer(ts: typeof import('typescript')) {
 			}
 		}
 
-		function createProjectLanguageService(server: LanguageServer, project: TypeScriptProject | undefined) {
+		function createProjectLanguageService(
+			server: LanguageServer,
+			parser: CoreTypeScript,
+			project: TypeScriptProject | undefined,
+		) {
 			const configFileName = project?.configFileName;
 			const asFileName = (uri: URI) => uri.fsPath.replace(/\\/g, '/');
 			const contentMappers = configFileName ? project!.contentMappers : inferredContentMappers;
@@ -474,7 +478,7 @@ export function startServer(ts: typeof import('typescript')) {
 			const vuePlugins = (contentMappers ?? []).map(entry =>
 				routeByExtensions(
 					createVueLanguagePlugin(
-						asCoreTypeScript(ts),
+						parser,
 						resolveVueCompilerOptions(
 							readFileIfExists,
 							rootDir,

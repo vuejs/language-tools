@@ -6,7 +6,7 @@ import {
 } from '@volar/language-service';
 import { getSourceRange } from '@volar/language-service/lib/utils/featureWorkers';
 import type * as CompilerDOM from '@vue/compiler-dom';
-import { collectBindingNames, parseVForNode, type TypeScript } from '@vue/language-core';
+import { collectBindingNames, parseVForNode, type ts, type TypeScript } from '@vue/language-core';
 import { URI } from 'vscode-uri';
 import type { AutoImportExport } from '../requests';
 import { embeddedCodeIds } from '../virtualCode';
@@ -42,7 +42,6 @@ interface AutoImportData {
  * template expressions lists only the template scope, which names a binding or local once the template uses it.
  */
 export function create(
-	ts: typeof import('typescript'),
 	{ getAutoImportValues, getComponentImportEdits }: import('../requests').Requests,
 ): LanguageServicePlugin {
 	return {
@@ -73,7 +72,7 @@ export function create(
 					}
 					const text = document.getText().slice(start, offset);
 					const word = /[\w$]*$/.exec(text)![0];
-					if (!isIdentifierStart(ts, text.slice(0, text.length - word.length))) {
+					if (!isIdentifierStart(info.root.ts, text.slice(0, text.length - word.length))) {
 						return;
 					}
 					const range = { start: document.positionAt(offset - word.length), end: position };
@@ -165,12 +164,12 @@ export function create(
 	};
 }
 
-function isIdentifierStart(ts: typeof import('typescript'), textBefore: string) {
-	const scanner = ts.createScanner(ts.ScriptTarget.Latest, false, ts.LanguageVariant.Standard, textBefore);
+function isIdentifierStart(ts: TypeScript, textBefore: string) {
+	const scanner = ts.createScanner(false, ts.LanguageVariant.Standard, textBefore);
 	let kind = scanner.scan();
-	let last: import('typescript').SyntaxKind | undefined;
+	let last: ts.SyntaxKind | undefined;
 	let lastEnd = 0;
-	while (kind !== ts.SyntaxKind.EndOfFileToken) {
+	while (kind !== ts.SyntaxKind.EndOfFile) {
 		last = kind;
 		lastEnd = scanner.getTokenEnd();
 		kind = scanner.scan();

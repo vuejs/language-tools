@@ -1,11 +1,11 @@
 import { createLanguage, createLanguageService, createUriMap } from '@volar/language-service';
 import { stringToSnapshot } from '@volar/language-service/lib/utils/common';
 import { getDefaultCompilerOptions } from '@vue/language-core';
+import { loadTypeScript } from '@vue/language-core/typescript';
 import * as ts from 'typescript';
 import { expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { createVueLanguagePlugin, createVueLanguageServicePlugins } from '..';
-import { asCoreTypeScript } from '../lib/coreTypeScript';
 import { createTestEnvironment } from './utils/environment';
 
 // The TypeScript syntactic features of script blocks come from the verbatim code of each block.
@@ -29,7 +29,7 @@ function add(a: number) {
 
 async function getSyntacticFeatures() {
 	const vuePlugin = createVueLanguagePlugin<URI>(
-		asCoreTypeScript(ts),
+		loadTypeScript(),
 		getDefaultCompilerOptions(),
 		uri => uri.path,
 	);

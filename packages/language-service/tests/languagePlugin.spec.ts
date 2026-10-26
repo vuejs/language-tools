@@ -1,8 +1,7 @@
 import { stringToSnapshot } from '@volar/language-service/lib/utils/common';
 import { getDefaultCompilerOptions } from '@vue/language-core';
-import * as ts from 'typescript';
+import { loadTypeScript } from '@vue/language-core/typescript';
 import { expect, test } from 'vitest';
-import { asCoreTypeScript } from '../lib/coreTypeScript';
 import { createVueLanguagePlugin } from '../lib/languagePlugin';
 
 const fileName = '/project/src/Comp.vue';
@@ -19,7 +18,7 @@ test.each([
 ])('virtual codes of the same id from %s are independent', (_, pluginCount) => {
 	const [first, second = first] = Array.from(
 		{ length: pluginCount },
-		() => createVueLanguagePlugin<string>(asCoreTypeScript(ts), getDefaultCompilerOptions(), id => id),
+		() => createVueLanguagePlugin<string>(loadTypeScript(), getDefaultCompilerOptions(), id => id),
 	);
 	const a = first!.createVirtualCode!(fileName, 'vue', stringToSnapshot(before), {} as never)!;
 	const b = second!.createVirtualCode!(fileName, 'vue', stringToSnapshot(before), {} as never)!;
@@ -40,7 +39,7 @@ test('the embedded codes of the language service come from the built-in plugins 
 			code.content.push(`/* ${code.id} */`);
 		},
 	};
-	const plugin = createVueLanguagePlugin<string>(asCoreTypeScript(ts), {
+	const plugin = createVueLanguagePlugin<string>(loadTypeScript(), {
 		...getDefaultCompilerOptions(),
 		plugins: [{ name: 'user-plugin', file: '/project/user-plugin.js', config: {}, module: userPlugin }],
 	}, id => id);
@@ -57,7 +56,7 @@ test('the embedded codes of the language service come from the built-in plugins 
 test('the virtual code of the language service reads its source', () => {
 	const setupBefore = '<script setup lang="ts">const before = 1;</script>\n';
 	const setupAfter = '<script setup lang="ts">const after = 1;</script>\n';
-	const plugin = createVueLanguagePlugin<string>(asCoreTypeScript(ts), getDefaultCompilerOptions(), id => id);
+	const plugin = createVueLanguagePlugin<string>(loadTypeScript(), getDefaultCompilerOptions(), id => id);
 	const code = plugin.createVirtualCode!(fileName, 'vue', stringToSnapshot(setupBefore), {} as never)!;
 	expect(code.ir).toBe(code.source.ir);
 	expect(code.scriptAnalysis).toBe(code.source.analysis);
@@ -70,7 +69,7 @@ test('the virtual code of the language service reads its source', () => {
 test('parses every file by the format option, whatever its extension', () => {
 	const vueCompilerOptions = getDefaultCompilerOptions();
 	vueCompilerOptions.format = 'petite-vue';
-	const plugin = createVueLanguagePlugin<string>(asCoreTypeScript(ts), vueCompilerOptions, id => id);
+	const plugin = createVueLanguagePlugin<string>(loadTypeScript(), vueCompilerOptions, id => id);
 	expect(plugin.getLanguageId('/project/src/page.vue.md')).toBe('html');
 	expect(plugin.getLanguageId('/project/src/comp.vue')).toBe('html');
 });

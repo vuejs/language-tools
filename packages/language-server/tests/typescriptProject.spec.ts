@@ -1,11 +1,9 @@
 import { getDefaultCompilerOptions } from '@vue/language-core';
 import { createVueLanguagePlugin, type VueVirtualCode } from '@vue/language-service';
-import { asCoreTypeScript } from '@vue/language-service/lib/coreTypeScript';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import * as ts from 'typescript';
 import { afterAll, beforeAll, expect, test } from 'vitest';
 import { type LspServer, startLspServer } from '../../content-mapper/tests/lsp';
 import { connectTypeScriptProjectResolver, type TypeScriptProjectResolver } from '../lib/typescriptProject';
@@ -199,7 +197,7 @@ test('a .vue file no content mapper covers has no directive names', async () => 
 function vueFile(file: string): [string, VueVirtualCode] {
 	const name = fileName(file);
 	const text = fs.existsSync(name) ? fs.readFileSync(name, 'utf8') : '';
-	const plugin = createVueLanguagePlugin<string>(asCoreTypeScript(ts), getDefaultCompilerOptions(), id => id);
+	const plugin = createVueLanguagePlugin<string>(resolver.parser, getDefaultCompilerOptions(), id => id);
 	const snapshot = {
 		getText: (start: number, end: number) => text.slice(start, end),
 		getLength: () => text.length,

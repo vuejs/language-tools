@@ -1,14 +1,13 @@
 import { stringToSnapshot } from '@volar/language-service/lib/utils/common';
 import { getDefaultCompilerOptions, type VirtualCode } from '@vue/language-core';
-import * as ts from 'typescript';
+import { loadTypeScript } from '@vue/language-core/typescript';
 import { expect, test } from 'vitest';
-import { asCoreTypeScript } from '../lib/coreTypeScript';
 import { createVueLanguagePlugin } from '../lib/languagePlugin';
 
 const fileName = '/project/src/Comp.vue';
 
 function getEmbeddedCodes(content: string) {
-	const plugin = createVueLanguagePlugin<string>(asCoreTypeScript(ts), getDefaultCompilerOptions(), id => id);
+	const plugin = createVueLanguagePlugin<string>(loadTypeScript(), getDefaultCompilerOptions(), id => id);
 	return plugin.createVirtualCode!(fileName, 'vue', stringToSnapshot(content), {} as never)!.embeddedCodes;
 }
 

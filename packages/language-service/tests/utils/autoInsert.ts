@@ -7,11 +7,11 @@ import {
 } from '@volar/language-service';
 import { stringToSnapshot } from '@volar/language-service/lib/utils/common';
 import { getDefaultCompilerOptions } from '@vue/language-core';
+import { loadTypeScript } from '@vue/language-core/typescript';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { createVueLanguagePlugin, createVueLanguageServicePlugins } from '../..';
-import { asCoreTypeScript } from '../../lib/coreTypeScript';
 import { createTestEnvironment } from './environment';
 
 export function createAutoInserter(
@@ -62,7 +62,7 @@ export function createAutoInserter(
 
 const vueCompilerOptions = getDefaultCompilerOptions();
 const vuePlugin = createVueLanguagePlugin<URI>(
-	asCoreTypeScript(ts),
+	loadTypeScript(),
 	vueCompilerOptions,
 	() => '',
 );
