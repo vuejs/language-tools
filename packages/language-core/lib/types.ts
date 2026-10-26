@@ -4,6 +4,8 @@ import type { SFCParseResult } from '@vue/compiler-sfc';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
+/** The node types of the TypeScript 7 AST API, for packages that do not resolve `typescript` to it. */
+export type { ts };
 
 /**
  * The TypeScript 7 AST API with a synchronous parser. Hosts on the classic TypeScript API pass it instead,
