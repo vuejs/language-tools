@@ -1,7 +1,7 @@
 import { SpanMapKind } from '@volar/language-core';
 import { expect, test } from 'vitest';
-import { navigationFeatures } from '../lib/features';
-import { buildMappings } from '../lib/utils/buildMappings';
+import { buildMappings } from '../lib/mappings/buildMappings';
+import { navigationFeatures } from '../lib/mappings/features';
 
 test('maps each segment with a marker by itself', () => {
 	expect(buildMappings([

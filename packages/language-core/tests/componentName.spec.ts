@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { getBaseNameWithoutExtension } from '../lib/utils/names';
+import { getBaseNameWithoutExtension } from '../lib/names';
 
 it('strips only the last extension from the file name, like @vue/compiler-core', () => {
 	expect(getBaseNameWithoutExtension('/project/src/my-comp.vue')).toBe('my-comp');

@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
-import { getDefaultCompilerOptions } from '../lib/compilerOptions';
-import { createIRPipeline } from '../lib/irPipeline';
-import { createVueSource } from '../lib/vueSource';
+import { createIRPipeline } from '../lib/ir/irPipeline';
+import { createVueSource } from '../lib/ir/vueSource';
+import { getDefaultCompilerOptions } from '../lib/options/compilerOptions';
 import { createSnapshot, ts } from './typescript';
 
 const fileName = '/project/src/Comp.vue';

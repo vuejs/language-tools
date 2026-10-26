@@ -1,9 +1,9 @@
 import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import picomatch from 'picomatch';
-import type { RawPlugin, RawVueCompilerOptions, ResolvedVuePlugin, VueCompilerOptions, VuePluginError } from './types';
-import { getDefaultTypesRoot } from './typesRoot';
-import { hyphenateTag } from './utils/names';
+import { hyphenateTag } from '../names';
+import type { RawPlugin, RawVueCompilerOptions, ResolvedVuePlugin, VueCompilerOptions, VuePluginError } from '../types';
+import { getDefaultTypesRoot } from '../typesRoot';
 
 export class CompilerOptionsResolver {
 	options: Omit<RawVueCompilerOptions, 'target' | 'typesRoot' | 'plugins'> = {};

@@ -1,5 +1,5 @@
 import type { SFCParseResult } from '@vue/compiler-sfc';
-import type { VueFormat } from '../../types';
+import type { VueFormat } from '../types';
 
 const sfcBlockRE = /<(script|style)\b([\s\S]*?)>([\s\S]*?)<\/\1>/g;
 const langRE = /\blang\s*=\s*(['"]?)(\S*)\b\1/;

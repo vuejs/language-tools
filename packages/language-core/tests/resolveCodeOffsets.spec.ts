@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
+import { resolveCodeOffsets } from '../lib/mappings/resolveCodeOffsets';
 import type { CodeSegment, IR, IRBlock, VueCodeMarker } from '../lib/types';
-import { resolveCodeOffsets } from '../lib/utils/resolveCodeOffsets';
 
 function block(name: string, startTagEnd: number) {
 	return { name, startTagEnd } as IRBlock;

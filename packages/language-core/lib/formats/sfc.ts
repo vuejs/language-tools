@@ -1,5 +1,5 @@
-import type { VueFormat } from '../../types';
-import { parse } from '../../utils/parseSfc';
+import type { VueFormat } from '../types';
+import { parse } from './parseSfc';
 
 export const sfcParser: VueFormat = {
 	parse(_fileName, content) {

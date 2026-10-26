@@ -1,8 +1,8 @@
 import { SourceMap } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
-import { type Code, codeToString, type VueFormat } from '../../types';
-import { buildMappings } from '../../utils/buildMappings';
-import { parse } from '../../utils/parseSfc';
+import { buildMappings } from '../mappings/buildMappings';
+import { type Code, codeToString, type VueFormat } from '../types';
+import { parse } from './parseSfc';
 
 const frontmatterRE = /^---[\s\S]*?\n---(?:\r?\n|$)/;
 const codeblockRE = /(`{3}|\${2})[\s\S]+?\1/g;

@@ -1,15 +1,15 @@
 import { camelize, capitalize } from '@vue/shared';
 import { computed } from 'alien-signals';
 import * as path from 'path-browserify';
-import { CompilerOptionsResolver } from './compilerOptions';
-import { parseVueCompilerOptions } from './parsers/vueCompilerOptions';
-import { BindingFlag } from './script/bindings';
-import { parseScriptRanges } from './script/scriptRanges';
-import { parseScriptSetupRanges } from './script/scriptSetupRanges';
-import { collectTemplateScope, type InlayHintInfo } from './template/templateScope';
-import type { IR, TypeScript, VueCompilerOptions } from './types';
-import { getBaseNameWithoutExtension } from './utils/names';
-import { computedSet } from './utils/signals';
+import { getBaseNameWithoutExtension } from '../names';
+import { parseVueCompilerOptions } from '../options/commentOptions';
+import { CompilerOptionsResolver } from '../options/compilerOptions';
+import { BindingFlag } from '../script/bindings';
+import { parseScriptRanges } from '../script/scriptRanges';
+import { parseScriptSetupRanges } from '../script/scriptSetupRanges';
+import { collectTemplateScope, type InlayHintInfo } from '../template/templateScope';
+import type { IR, TypeScript, VueCompilerOptions } from '../types';
+import { computedSet } from './signals';
 
 const validLangs = new Set(['js', 'jsx', 'ts', 'tsx']);
 

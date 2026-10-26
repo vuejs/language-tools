@@ -2,7 +2,7 @@ import type { LanguageServiceContext } from '@volar/language-service';
 import type { NodeTypes } from '@vue/compiler-dom';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import { forEachElementNode, hyphenateTag } from '@vue/language-core';
-import { computedSet } from '@vue/language-core/lib/utils/signals';
+import { computedSet } from '@vue/language-core/lib/ir/signals';
 import type { URI } from 'vscode-uri';
 import { VueVirtualCode } from './virtualCode';
 

@@ -6,7 +6,7 @@ import type {
 	VuePluginContext,
 	VuePluginError,
 	VuePluginModule,
-} from './types';
+} from '../types';
 
 export const legacyPluginMessage =
 	'VueLanguagePlugin functions are no longer supported; export `{ ir: … }` (see language-core README)';

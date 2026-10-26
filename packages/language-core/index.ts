@@ -1,4 +1,7 @@
-export * from './lib/compilerOptions';
+export * from './lib/formats/parseSfc';
+export * from './lib/ir/irPipeline';
+export * from './lib/ir/vueSource';
+export * from './lib/mappings/buildMappings';
 export {
 	allFeatures,
 	completionFeatures,
@@ -6,8 +9,10 @@ export {
 	scriptFeatures,
 	semanticFeatures,
 	structureFeatures,
-} from './lib/features';
-export * from './lib/irPipeline';
+} from './lib/mappings/features';
+export * from './lib/mappings/resolveCodeOffsets';
+export * from './lib/names';
+export * from './lib/options/compilerOptions';
 export * from './lib/script/collectBindings';
 export * from './lib/script/scriptRanges';
 export * from './lib/script/scriptSetupRanges';
@@ -19,12 +24,7 @@ export * from './lib/template/templateExpressions';
 export * from './lib/template/templateScope';
 export * from './lib/types';
 export * from './lib/typescript/nodes';
-export * from './lib/utils/buildMappings';
-export * from './lib/utils/names';
-export * from './lib/utils/parseSfc';
-export * from './lib/utils/resolveCodeOffsets';
-export * from './lib/vueSource';
 
-export { createScriptAnalysis, getScriptLang, type ScriptAnalysis } from './lib/scriptAnalysis';
+export { createScriptAnalysis, getScriptLang, type ScriptAnalysis } from './lib/ir/scriptAnalysis';
 
 export * from '@volar/language-core';

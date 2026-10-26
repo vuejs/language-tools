@@ -1,8 +1,11 @@
-import { loadIRPlugins } from './plugins';
-import { compileScript } from './script/compileScript';
-import { compileStyle } from './style/compileStyle';
-import { compileTemplate } from './template/compile';
-import { htmlTemplateCompiler } from './template/htmlTemplateCompiler';
+import { petiteVueParser } from '../formats/petiteVue';
+import { sfcParser } from '../formats/sfc';
+import { vitePressParser } from '../formats/vitepress';
+import { loadIRPlugins } from '../options/plugins';
+import { compileScript } from '../script/compileScript';
+import { compileStyle } from '../style/compileStyle';
+import { compileTemplate } from '../template/compile';
+import { htmlTemplateCompiler } from '../template/htmlTemplateCompiler';
 import type {
 	IRPipeline,
 	TemplateCompiler,
@@ -11,10 +14,7 @@ import type {
 	VueFormat,
 	VuePluginError,
 	VueTemplateCompilerHost,
-} from './types';
-import { petiteVueParser } from './virtualCode/parsers/petiteVue';
-import { sfcParser } from './virtualCode/parsers/sfc';
-import { vitePressParser } from './virtualCode/parsers/vitepress';
+} from '../types';
 
 const builtInFormats: Record<string, VueFormat> = {
 	sfc: sfcParser,

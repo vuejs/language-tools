@@ -16,7 +16,7 @@ import type {
 	TemplateCompiler,
 	TypeScript,
 } from '../types';
-import { computedArray, reactiveArray } from '../utils/signals';
+import { computedArray, reactiveArray } from './signals';
 
 export function useIR(
 	ts: TypeScript,

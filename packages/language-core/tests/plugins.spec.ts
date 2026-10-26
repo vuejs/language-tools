@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { getDefaultCompilerOptions } from '../lib/compilerOptions';
-import { createIRPipeline } from '../lib/irPipeline';
+import { createIRPipeline } from '../lib/ir/irPipeline';
+import { getDefaultCompilerOptions } from '../lib/options/compilerOptions';
 import type { SFCParseResult, VueCompilerOptions } from '../lib/types';
 import { ts } from './typescript';
 

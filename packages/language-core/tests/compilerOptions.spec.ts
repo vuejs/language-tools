@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { CompilerOptionsResolver } from '../lib/compilerOptions';
-import { createIRPipeline } from '../lib/irPipeline';
-import { loadIRPlugins } from '../lib/plugins';
+import { createIRPipeline } from '../lib/ir/irPipeline';
+import { CompilerOptionsResolver } from '../lib/options/compilerOptions';
+import { loadIRPlugins } from '../lib/options/plugins';
 import type { VueCompilerOptions } from '../lib/types';
 import { ts } from './typescript';
 

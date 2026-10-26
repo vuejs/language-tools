@@ -1,9 +1,9 @@
 import type { IScriptSnapshot } from '@volar/language-core';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import { computed, signal } from 'alien-signals';
+import type { IR, IRPipeline, TypeScript, VueCompilerOptions, VueFormat } from '../types';
+import { useIR } from './ir';
 import { createScriptAnalysis, type ScriptAnalysis } from './scriptAnalysis';
-import type { IR, IRPipeline, TypeScript, VueCompilerOptions, VueFormat } from './types';
-import { useIR } from './virtualCode/ir';
 
 /**
  * A Vue file read into its IR and script analysis, which update in place when its snapshot changes. It knows
