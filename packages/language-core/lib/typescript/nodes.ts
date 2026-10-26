@@ -57,6 +57,10 @@ export function isFunctionLike(ts: TypeScript, node: ts.Node): node is ts.Signat
 	return isFunctionLikeDeclaration(ts, node);
 }
 
+export function isParameter(ts: TypeScript, node: ts.Node): node is ts.ParameterDeclaration {
+	return node.kind === ts.SyntaxKind.Parameter;
+}
+
 export function isTypeAssertionExpression(ts: TypeScript, node: ts.Node): node is ts.TypeAssertion {
 	return node.kind === ts.SyntaxKind.TypeAssertionExpression;
 }
