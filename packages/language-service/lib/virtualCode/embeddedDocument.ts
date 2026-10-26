@@ -1,4 +1,4 @@
-import { type Code } from '@vue/language-core';
+import type { Code } from '@vue/language-core';
 
 /** An embedded document of the language service, and the documents nested in it. */
 export interface EmbeddedDocument {

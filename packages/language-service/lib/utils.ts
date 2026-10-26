@@ -8,7 +8,7 @@ import {
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 import type { TextEdit } from './requests';
-import { type VueVirtualCode } from './virtualCode';
+import type { VueVirtualCode } from './virtualCode';
 
 /*
  * language-core is typed against the TypeScript 7 AST API, which has no language service, so the language
