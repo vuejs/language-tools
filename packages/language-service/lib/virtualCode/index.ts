@@ -64,7 +64,8 @@ export class VueVirtualCode implements VirtualCode {
 		public initSnapshot: IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
 		pipeline: IRPipeline,
-		ts: TypeScript,
+		/** The TypeScript AST API that parsed this file, which the plugins read its script ASTs with. */
+		public readonly ts: TypeScript,
 	) {
 		this.source = createVueSource(ts, vueCompilerOptions, pipeline, fileName, initSnapshot);
 		this._embeddedCodes = useEmbeddedCodes(ts, this.source.ir);
