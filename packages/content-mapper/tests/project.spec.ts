@@ -399,6 +399,29 @@ test('generates the service script without the embedded code hooks of plugins', 
 	}
 });
 
+test('propagates an exception thrown by the codegen instead of returning an empty service script', () => {
+	const projectHandle = 'codegen-exception-project';
+	openProject({
+		configFileName: '',
+		projectHandle,
+		compilerOptions: {},
+		// not an array, so the codegen of an object literal default export throws on reading it
+		options: { optionsWrapper: null },
+	});
+	try {
+		expect(() =>
+			transformVue({
+				projectHandle,
+				fileName: path.resolve(__dirname, 'CodegenException.vue'),
+				content: `<script lang="ts">export default {};</script>\n`,
+			})
+		).toThrow(TypeError);
+	}
+	finally {
+		closeProject(projectHandle);
+	}
+});
+
 test('reuses the transform result of a file whose content did not change', () => {
 	const fileName = path.resolve(__dirname, 'Unchanged.vue');
 	const content = `<script setup lang="ts">const msg = '';</script>\n<template>{{ msg }}</template>\n`;
