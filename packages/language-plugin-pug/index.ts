@@ -6,37 +6,12 @@ import { baseParse } from './lib/baseParse';
 const classRE = /^class\s*=/;
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
-	const { allFeatures, compileTemplate } = modules['@vue/language-core'];
+	const { compileTemplate } = modules['@vue/language-core'];
 
 	return {
 		name: require('./package.json').name,
 
 		version: 4,
-
-		getEmbeddedCodes(_fileName, ir) {
-			if (ir.template?.lang === 'pug') {
-				return [{
-					id: 'template',
-					lang: ir.template.lang,
-				}];
-			}
-			return [];
-		},
-
-		resolveEmbeddedCode(_fileName, ir, embeddedFile) {
-			if (embeddedFile.id === 'template' && ir.template?.lang === 'pug') {
-				const minIndent = calculateMinIndent(ir.template.content);
-				if (minIndent !== 0) {
-					embeddedFile.content.push(`template\n`);
-				}
-				embeddedFile.content.push([
-					ir.template.content,
-					ir.template.name,
-					0,
-					{ features: allFeatures },
-				]);
-			}
-		},
 
 		compileSFCTemplate(lang, template, options) {
 			if (lang === 'pug') {

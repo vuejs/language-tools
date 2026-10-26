@@ -49,6 +49,18 @@ span
 	).toEqual(['div']);
 });
 
+test('pug tag names highlight without the pug plugin', async () => {
+	expect(
+		await highlight(`
+<template lang="pug">
+d|iv
+	div
+span
+</template>
+`),
+	).toEqual(['div']);
+});
+
 test('embedded TypeScript is left to the TypeScript server', async () => {
 	const content = `
 <script setup lang="ts">

@@ -52,8 +52,6 @@ const handleClick = () => console.log('clicked')
 
 This plugin implements the `VueLanguagePlugin` interface, providing:
 
-- **`getEmbeddedCodes`** - Identifies `<template lang="pug">` blocks
-- **`resolveEmbeddedCode`** - Extracts Pug content as embedded code
 - **`compileSFCTemplate`** - Compiles Pug to HTML, then parses it into an AST using `@vue/compiler-dom`
 
 ## How it Works

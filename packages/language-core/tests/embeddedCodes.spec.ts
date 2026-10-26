@@ -1,0 +1,45 @@
+import type { VirtualCode } from '@volar/language-core';
+import { expect, test } from 'vitest';
+import { getDefaultCompilerOptions } from '../lib/compilerOptions';
+import { createVueLanguagePlugin } from '../lib/languagePlugin';
+import { createSnapshot, ts } from './typescript';
+
+const fileName = '/project/src/Comp.vue';
+
+function getEmbeddedCodes(content: string) {
+	const plugin = createVueLanguagePlugin<string>(ts, getDefaultCompilerOptions(), id => id);
+	return plugin.createVirtualCode!(fileName, 'vue', createSnapshot(content), {} as never)!.embeddedCodes;
+}
+
+function findCode(codes: VirtualCode[] | undefined, id: string): VirtualCode | undefined {
+	for (const code of codes ?? []) {
+		if (code.id === id) {
+			return code;
+		}
+		const found = findCode(code.embeddedCodes, id);
+		if (found) {
+			return found;
+		}
+	}
+}
+
+function text(code: VirtualCode | undefined) {
+	return code?.snapshot.getText(0, code.snapshot.getLength());
+}
+
+test('a pug template has a template document without any plugin', () => {
+	const template = findCode(getEmbeddedCodes('<template lang="pug">\ndiv\n  span\n</template>\n'), 'template');
+	expect(template?.languageId).toBe('jade');
+	expect(text(template)).toBe('\ndiv\n  span\n');
+});
+
+test('an indented pug template is nested in a template tag', () => {
+	const startTag = '<template lang="pug">';
+	const content = '\n  div\n    span\n';
+	const template = findCode(getEmbeddedCodes(`${startTag}${content}</template>\n`), 'template');
+	expect(template?.languageId).toBe('jade');
+	expect(text(template)).toBe('template\n' + content);
+	expect(template?.mappings.map(mapping => mapping.slice(0, 4))).toEqual([
+		['template\n'.length, content.length, startTag.length, content.length],
+	]);
+});
