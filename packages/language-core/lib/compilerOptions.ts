@@ -85,8 +85,8 @@ export class CompilerOptionsResolver {
 					...defaults.vModelPropName,
 					...this.options.vModelPropName,
 				}).flatMap(([tag, prop]): [string, string | false][] =>
-					// other values, such as the prop-keyed shape of `experimentalModelPropName`, are reported by the
-					// content mapper's option diagnostics
+					// other values, such as the prop-keyed shape of `experimentalModelPropName`, are left to the
+					// option diagnostics of the host
 					prop === false || typeof prop === 'string' ? [[hyphenateTag(tag), prop && camelize(prop)]] : []
 				),
 			),

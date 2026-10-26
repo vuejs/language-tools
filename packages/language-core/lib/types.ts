@@ -64,7 +64,7 @@ export interface VueCompilerOptions {
 	typesRoot: string;
 	/**
 	 * Selects the built-in parser of every file the plugin receives: a Vue SFC, VitePress markdown or a
-	 * petite-vue HTML page. Each `@vue/content-mapper` entry sets it through its `format` option.
+	 * petite-vue HTML page. A host sets it per `contentMappers` entry, through the entry's `format` option.
 	 */
 	format: 'sfc' | 'vitepress' | 'petite-vue';
 	/** Exposes `globalThis` in the template context, as petite-vue templates read globals directly. */

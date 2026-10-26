@@ -131,8 +131,8 @@ class BlockScope extends Scope {
 }
 
 /**
- * The scope analysis of the template and the style `v-bind()`s, which the TypeScript code generation of
- * `@vue/content-mapper` reads instead of walking the scopes itself: the identifiers that each expression references
+ * The scope analysis of the template and the style `v-bind()`s, which a TypeScript code generation reads
+ * instead of walking the scopes itself: the identifiers that each expression references
  * and whether they are locals or members of a block scope, the block scopes, the names that the block scopes list,
  * the setup bindings that a narrowing position reads, the template's references to the template context, and the
  * inlay hints of the template. The traversal visits the expressions in the order of the code generation, which

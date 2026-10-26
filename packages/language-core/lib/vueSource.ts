@@ -18,7 +18,7 @@ const builtInParsers: Record<VueCompilerOptions['format'], SfcParser> = {
 
 /**
  * A Vue file read into its IR and script analysis, which update in place when its snapshot changes. It knows
- * nothing of generated code: the language service and the content mapper each build theirs on top of it.
+ * nothing of generated code: each consumer, such as the language service or a Content Mapper, builds its own on top.
  */
 export function createVueSource(
 	ts: TypeScript,
