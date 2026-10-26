@@ -1,6 +1,6 @@
 import type { CreateFile, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
-import type { IRTemplate } from '@vue/language-core';
+import type { IRTemplate, ts as CoreTs } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 import { asClassicNode } from '../coreTypeScript';
@@ -12,8 +12,6 @@ interface ActionData {
 	range: [number, number];
 	newName: string;
 }
-
-const unicodeRE = /\\u/g;
 
 export function create(
 	ts: typeof import('typescript'),
@@ -147,7 +145,7 @@ export function create(
 					];
 
 					if (ir.script) {
-						const edit = createAddComponentToOptionEdit(ts, info.root, asClassicNode(ir.script.ast), newName);
+						const edit = createAddComponentToOptionEdit(info.root, ir.script.ast, newName);
 						if (edit) {
 							sfcEdits.push({
 								range: {
@@ -295,45 +293,31 @@ export function getLastImportNode(ts: typeof import('typescript'), sourceFile: t
 	return lastImportNode;
 }
 
-export function createAddComponentToOptionEdit(
-	ts: typeof import('typescript'),
-	root: VueVirtualCode,
-	ast: ts.SourceFile,
-	componentName: string,
-) {
+export function createAddComponentToOptionEdit(root: VueVirtualCode, ast: CoreTs.SourceFile, componentName: string) {
 	const componentOptions = root.scriptAnalysis.getScriptRanges()?.exportDefault?.options;
 	if (!componentOptions) {
 		return;
 	}
-
-	// https://github.com/microsoft/TypeScript/issues/36174
-	const printer = ts.createPrinter();
 	if (componentOptions.components) {
-		const newNode: ts.ObjectLiteralExpression = {
-			...asClassicNode<ts.ObjectLiteralExpression>(componentOptions.components.node),
-			properties: [
-				...componentOptions.components.node.properties,
-				ts.factory.createShorthandPropertyAssignment(componentName),
-			] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
-		};
-		const printText = printer.printNode(ts.EmitHint.Expression, newNode, ast);
-		return {
-			range: componentOptions.components,
-			newText: unescape(printText.replace(unicodeRE, '%u')),
-		};
+		return addObjectProperty(ast, componentOptions.components.node, componentName);
 	}
-	else {
-		const newNode: ts.ObjectLiteralExpression = {
-			...asClassicNode<ts.ObjectLiteralExpression>(componentOptions.args.node),
-			properties: [
-				...componentOptions.args.node.properties,
-				ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
-			] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
-		};
-		const printText = printer.printNode(ts.EmitHint.Expression, newNode, ast);
-		return {
-			range: componentOptions.args,
-			newText: unescape(printText.replace(unicodeRE, '%u')),
-		};
+	return addObjectProperty(ast, componentOptions.args.node, `components: { ${componentName} }`);
+}
+
+/** Inserts a property after the last one of an object literal, on its own line if that property is. */
+function addObjectProperty(ast: CoreTs.SourceFile, node: CoreTs.ObjectLiteralExpression, property: string) {
+	const last = node.properties.at(-1);
+	if (!last) {
+		const pos = node.end - 1;
+		return { range: { start: pos, end: pos }, newText: ` ${property} ` };
 	}
+	const start = last.getStart(ast);
+	const lineBreak = ast.text.lastIndexOf('\n', start - 1);
+	const indent = ast.text.slice(lineBreak + 1, start);
+	return {
+		range: { start: last.end, end: last.end },
+		newText: lineBreak > node.getStart(ast) && !indent.trim()
+			? `,\n${indent}${property}`
+			: `, ${property}`,
+	};
 }

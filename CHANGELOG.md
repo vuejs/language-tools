@@ -40,6 +40,10 @@ Plugins that changed the generated TypeScript move to `codegen`. Each one drops 
 
 Unsupported: wrapping the template (layout slots of dxup), changing the shape of the component (`define-generic` of vue-macros; use `generic="…"`), template expressions in custom blocks, and intersecting a type into the default export.
 
+### Language service
+
+- **fix:** dropping a component into the template, or extracting one, adds it to the Options API `components` by inserting the new property after the last one, instead of reprinting the object. The formatting, comments and trailing comma of the object are kept.
+
 ## 3.3.13 (2026-10-10)
 
 ### language-core

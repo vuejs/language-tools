@@ -1,7 +1,6 @@
 import type { InsertTextFormat, LanguageServicePlugin, TextEdit } from '@volar/language-service';
 import { hyphenate } from '@vue/shared';
 import { URI } from 'vscode-uri';
-import { asClassicNode } from '../coreTypeScript';
 import { getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { embeddedCodeIds } from '../virtualCode';
 import { placeScriptImportEdits, resolveEmbeddedCode } from '../virtualCodeQueries';
@@ -64,7 +63,7 @@ export function create(
 					}));
 
 					if (ir.script) {
-						const edit = createAddComponentToOptionEdit(ts, info.root, asClassicNode(ir.script.ast), name);
+						const edit = createAddComponentToOptionEdit(info.root, ir.script.ast, name);
 						if (edit) {
 							sfcEdits.push({
 								range: {
