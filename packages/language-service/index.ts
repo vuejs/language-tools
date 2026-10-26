@@ -52,7 +52,7 @@ export function createVueLanguageServicePlugins(
 		createVueEmmetPlugin(),
 
 		// TS related plugins
-		createVueSuggestDefineAssignmentPlugin(ts),
+		createVueSuggestDefineAssignmentPlugin(),
 		createTypeScriptDocCommentTemplatePlugin(ts),
 		createTypeScriptSyntacticPlugin(ts),
 		createVueInlayHintsPlugin(ts),

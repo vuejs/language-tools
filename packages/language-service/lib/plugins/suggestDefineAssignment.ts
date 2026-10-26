@@ -1,8 +1,8 @@
 import type { CompletionItem, CompletionItemKind, LanguageServicePlugin } from '@volar/language-service';
-import type { TextRange } from '@vue/language-core';
+import { isStringLiteralLike, type TextRange } from '@vue/language-core';
 import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
-export function create(ts: typeof import('typescript')): LanguageServicePlugin {
+export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-suggest-define-assignment',
 		capabilities: {
@@ -44,11 +44,9 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 						return;
 					}
 
-					const node = (ts as any).getTouchingPropertyName(
-						scriptSetup.ast,
-						sourceOffset - scriptSetup.startTagEnd,
-					);
-					if (ts.isStringLiteralLike(node)) {
+					const { ts } = info.root;
+					const node = ts.getTouchingPropertyName(scriptSetup.ast, sourceOffset - scriptSetup.startTagEnd);
+					if (isStringLiteralLike(ts, node)) {
 						return;
 					}
 
