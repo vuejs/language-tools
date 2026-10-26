@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { getDefaultCompilerOptions } from '../lib/compilerOptions';
-import { createVueLanguagePlugin, createVuePlugins } from '../lib/languagePlugin';
+import { createVueEmbeddedCodePlugins, createVueLanguagePlugin, createVuePlugins } from '../lib/languagePlugin';
 import { createVueSource } from '../lib/vueSource';
 import { createSnapshot, ts } from './typescript';
 
@@ -50,18 +50,24 @@ test('the virtual code of the language service reads its source', () => {
 	expect([...code.scriptAnalysis.getSetupBindings()]).toEqual(['after']);
 });
 
-test('the plugins of an IR-only consumer leave out the built-in embedded-code plugins', () => {
+test('the IR plugins and the embedded-code plugins are separate', () => {
 	const vueCompilerOptions = getDefaultCompilerOptions();
-	const all = createVuePlugins(ts, vueCompilerOptions);
-	const irOnly = createVuePlugins(ts, vueCompilerOptions, { embeddedCodes: false });
+	const irPlugins = createVuePlugins(ts, vueCompilerOptions);
+	const embeddedCodePlugins = createVueEmbeddedCodePlugins(ts, vueCompilerOptions);
 
-	expect(all.some(plugin => plugin.getEmbeddedCodes || plugin.resolveEmbeddedCode)).toBe(true);
-	expect(irOnly.some(plugin => plugin.getEmbeddedCodes || plugin.resolveEmbeddedCode)).toBe(false);
-	expect(irOnly.filter(plugin => plugin.compileSFCScript)).toHaveLength(1);
-	expect(irOnly.filter(plugin => plugin.compileSFCTemplate)).toHaveLength(1);
-	expect(irOnly.filter(plugin => plugin.compileSFCStyle)).toHaveLength(1);
+	expect(irPlugins.some(plugin => plugin.getEmbeddedCodes || plugin.resolveEmbeddedCode)).toBe(false);
+	expect(irPlugins.filter(plugin => plugin.compileSFCScript)).toHaveLength(1);
+	expect(irPlugins.filter(plugin => plugin.compileSFCTemplate)).toHaveLength(1);
+	expect(irPlugins.filter(plugin => plugin.compileSFCStyle)).toHaveLength(1);
+	expect(embeddedCodePlugins.every(plugin => plugin.getEmbeddedCodes && plugin.resolveEmbeddedCode)).toBe(true);
+	expect(
+		embeddedCodePlugins.some(plugin =>
+			plugin.parseSFC || plugin.updateSFC || plugin.resolveTemplateCompilerOptions || plugin.compileSFCScript
+			|| plugin.compileSFCTemplate || plugin.compileSFCStyle || plugin.updateSFCTemplate
+		),
+	).toBe(false);
 
-	const source = createVueSource(ts, vueCompilerOptions, irOnly, fileName, createSnapshot(before));
+	const source = createVueSource(ts, vueCompilerOptions, irPlugins, fileName, createSnapshot(before));
 	expect(source.ir.template?.ast).toBeDefined();
 	expect([...source.analysis.getSetupBindings()]).toEqual(['before']);
 });

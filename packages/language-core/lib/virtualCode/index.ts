@@ -54,10 +54,11 @@ export class VueVirtualCode implements VirtualCode {
 		public initSnapshot: IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
 		plugins: VueLanguagePluginReturn[],
+		embeddedCodePlugins: VueLanguagePluginReturn[],
 		ts: TypeScript,
 	) {
 		this.source = createVueSource(ts, vueCompilerOptions, plugins, fileName, initSnapshot);
-		this._embeddedCodes = useEmbeddedCodes(plugins, fileName, this.source.ir);
+		this._embeddedCodes = useEmbeddedCodes(embeddedCodePlugins, fileName, this.source.ir);
 		this._mappings = computed(() => {
 			const length = this.source.snapshot.getLength();
 			return [[0, length, 0, length, SpanMapKind.Verbatim, allFeatures]];

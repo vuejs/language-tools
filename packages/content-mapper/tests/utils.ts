@@ -60,7 +60,7 @@ export function createSource(
 	return createVueSource(
 		ts,
 		vueCompilerOptions,
-		createVuePlugins(ts, vueCompilerOptions, { embeddedCodes: false }),
+		createVuePlugins(ts, vueCompilerOptions),
 		fileName,
 		createSnapshot(content),
 	);

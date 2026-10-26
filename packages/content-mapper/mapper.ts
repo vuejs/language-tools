@@ -154,7 +154,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		const ts = loadTypeScript();
 		const configuration: ProjectConfiguration = {
 			ts,
-			plugins: vue.createVuePlugins(ts, vueOptions, { embeddedCodes: false }),
+			plugins: vue.createVuePlugins(ts, vueOptions),
 			languageFeatures,
 			vueOptions,
 			pluginFiles,

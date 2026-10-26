@@ -8,9 +8,16 @@ import vueStyleCss from './plugins/vue-style-css';
 import vueTemplateHtmlPlugin from './plugins/vue-template-html';
 import vueTemplateInlineCssPlugin from './plugins/vue-template-inline-css';
 import vueTemplateInlineTsPlugin from './plugins/vue-template-inline-ts';
-import { validVersions, type VueLanguagePlugin } from './types';
+import { validVersions, type VueLanguagePlugin, type VueLanguagePluginReturn } from './types';
 
-/** The built-in plugins that only contribute embedded codes, which only the language service reads. */
+/** The built-in plugins that build the IR. */
+const irPlugins: VueLanguagePlugin[] = [
+	vueScriptJsPlugin,
+	vueStyleCss,
+	vueTemplateHtmlPlugin,
+];
+
+/** The built-in plugins that contribute the embedded codes of the language service. */
 const embeddedCodePlugins: VueLanguagePlugin[] = [
 	vueRootTagsPlugin,
 	vueTemplateInlineCssPlugin,
@@ -21,49 +28,48 @@ const embeddedCodePlugins: VueLanguagePlugin[] = [
 	vueSfcTemplate,
 ];
 
-export function createPlugins(
-	pluginContext: Parameters<VueLanguagePlugin>[0],
-	{ embeddedCodes = true }: { embeddedCodes?: boolean } = {},
-) {
-	const plugins: VueLanguagePlugin[] = [
-		vueRootTagsPlugin,
-		vueScriptJsPlugin,
-		vueStyleCss,
-		vueTemplateHtmlPlugin,
-		vueTemplateInlineCssPlugin,
-		vueTemplateInlineTsPlugin,
-		vueSfcStyles,
-		vueSfcCustomBlocks,
-		vueSfcScriptsFormat,
-		vueSfcTemplate,
-	].filter(plugin => embeddedCodes || !embeddedCodePlugins.includes(plugin));
-	plugins.push(...pluginContext.vueCompilerOptions.plugins);
+/** Instances of the built-in IR plugins and of `vueCompilerOptions.plugins`, in their order. */
+export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
+	return instantiatePlugins([...irPlugins, ...pluginContext.vueCompilerOptions.plugins], pluginContext);
+}
 
-	const pluginInstances = plugins
-		.flatMap(plugin => {
-			try {
-				const moduleConfig = (plugin as any).__moduleConfig ?? {};
-				const instance = plugin({ ...pluginContext, config: moduleConfig });
-				if (Array.isArray(instance)) {
-					for (let i = 0; i < instance.length; i++) {
-						instance[i]!.name ??= `${moduleConfig.name} (${i})`;
+/** Instances of the built-in embedded-code plugins, in their order. */
+export function createEmbeddedCodePlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
+	return instantiatePlugins(embeddedCodePlugins, pluginContext);
+}
+
+/** `plugins` ordered by their `order`, keeping the given order among equal ones. */
+export function sortPlugins(plugins: VueLanguagePluginReturn[]) {
+	return plugins.sort((a, b) => {
+		const aOrder = a.order ?? 0;
+		const bOrder = b.order ?? 0;
+		return aOrder - bOrder;
+	});
+}
+
+function instantiatePlugins(plugins: VueLanguagePlugin[], pluginContext: Parameters<VueLanguagePlugin>[0]) {
+	const pluginInstances = sortPlugins(
+		plugins
+			.flatMap(plugin => {
+				try {
+					const moduleConfig = (plugin as any).__moduleConfig ?? {};
+					const instance = plugin({ ...pluginContext, config: moduleConfig });
+					if (Array.isArray(instance)) {
+						for (let i = 0; i < instance.length; i++) {
+							instance[i]!.name ??= `${moduleConfig.name} (${i})`;
+						}
 					}
+					else {
+						instance.name ??= moduleConfig.name;
+					}
+					return instance;
 				}
-				else {
-					instance.name ??= moduleConfig.name;
+				catch (err) {
+					console.warn('[Vue] Failed to create plugin', err);
 				}
-				return instance;
-			}
-			catch (err) {
-				console.warn('[Vue] Failed to create plugin', err);
-			}
-		})
-		.filter(plugin => !!plugin)
-		.sort((a, b) => {
-			const aOrder = a.order ?? 0;
-			const bOrder = b.order ?? 0;
-			return aOrder - bOrder;
-		});
+			})
+			.filter(plugin => !!plugin),
+	);
 
 	return pluginInstances.filter(plugin => {
 		if (!validVersions.includes(plugin.version)) {
