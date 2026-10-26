@@ -61,7 +61,7 @@ export function createVueLanguageServicePlugins(
 		createCssPlugin(client),
 		createVueAutoDotValuePlugin(client),
 		createVueDocumentDropPlugin(client),
-		createVueExtractFilePlugin(ts, client),
+		createVueExtractFilePlugin(client),
 		createVueMissingPropsHintsPlugin(client),
 		createVueComponentDefinitionPlugin(client),
 		createVueTemplateImportFixPlugin(client),

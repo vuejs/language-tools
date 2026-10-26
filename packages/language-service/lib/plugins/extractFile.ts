@@ -1,9 +1,7 @@
 import type { CreateFile, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
-import type { IRTemplate, ts as CoreTs } from '@vue/language-core';
-import type * as ts from 'typescript';
+import type { IRTemplate, ts, TypeScript } from '@vue/language-core';
 import { URI } from 'vscode-uri';
-import { asClassicNode } from '../coreTypeScript';
 import { embeddedCodeIds, type VueVirtualCode } from '../virtualCode';
 import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
@@ -14,7 +12,6 @@ interface ActionData {
 }
 
 export function create(
-	ts: typeof import('typescript'),
 	{ collectExtractProps }: import('../requests').Requests,
 ): LanguageServicePlugin {
 	return {
@@ -97,7 +94,7 @@ export function create(
 					const document = context.documents.get(URI.parse(uri), info.code.languageId, info.code.snapshot);
 					const sfcDocument = context.documents.get(info.script.id, info.script.languageId, info.script.snapshot);
 					const newUri = sfcDocument.uri.slice(0, sfcDocument.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
-					const lastImportNode = getLastImportNode(ts, asClassicNode(script.ast));
+					const lastImportNode = getLastImportNode(info.root.ts, script.ast);
 
 					let newFileTags = [];
 
@@ -278,7 +275,7 @@ function constructTag(name: string, attributes: string[], initialIndent: boolean
 	return `<${name}${attributesString}>\n${content}\n</${name}>\n`;
 }
 
-export function getLastImportNode(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
+export function getLastImportNode(ts: TypeScript, sourceFile: ts.SourceFile) {
 	let lastImportNode: ts.Node | undefined;
 
 	for (const statement of sourceFile.statements) {
@@ -293,7 +290,7 @@ export function getLastImportNode(ts: typeof import('typescript'), sourceFile: t
 	return lastImportNode;
 }
 
-export function createAddComponentToOptionEdit(root: VueVirtualCode, ast: CoreTs.SourceFile, componentName: string) {
+export function createAddComponentToOptionEdit(root: VueVirtualCode, ast: ts.SourceFile, componentName: string) {
 	const componentOptions = root.scriptAnalysis.getScriptRanges()?.exportDefault?.options;
 	if (!componentOptions) {
 		return;
@@ -305,7 +302,7 @@ export function createAddComponentToOptionEdit(root: VueVirtualCode, ast: CoreTs
 }
 
 /** Inserts a property after the last one of an object literal, on its own line if that property is. */
-function addObjectProperty(ast: CoreTs.SourceFile, node: CoreTs.ObjectLiteralExpression, property: string) {
+function addObjectProperty(ast: ts.SourceFile, node: ts.ObjectLiteralExpression, property: string) {
 	const last = node.properties.at(-1);
 	if (!last) {
 		const pos = node.end - 1;
