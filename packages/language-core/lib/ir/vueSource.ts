@@ -2,7 +2,7 @@ import type { IScriptSnapshot } from '@volar/language-core';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import { computed, signal } from 'alien-signals';
 import type { IR, IRPipeline, TypeScript, VueCompilerOptions, VueFormat } from '../types';
-import { useIR } from './ir';
+import { useIR } from './reactiveIR';
 import { createScriptAnalysis, type ScriptAnalysis } from './scriptAnalysis';
 
 /**

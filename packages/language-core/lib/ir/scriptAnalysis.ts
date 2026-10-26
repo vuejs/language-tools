@@ -4,7 +4,7 @@ import * as path from 'path-browserify';
 import { getBaseNameWithoutExtension } from '../names';
 import { parseVueCompilerOptions } from '../options/commentOptions';
 import { CompilerOptionsResolver } from '../options/compilerOptions';
-import { BindingFlag } from '../script/bindings';
+import { BindingFlag } from '../script/scriptBindings';
 import { parseScriptRanges } from '../script/scriptRanges';
 import { parseScriptSetupRanges } from '../script/scriptSetupRanges';
 import { collectTemplateScope, type InlayHintInfo } from '../template/templateScope';

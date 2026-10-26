@@ -1,7 +1,7 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
-import { getUnwrappedExpression } from '../script/bindings';
-import { collectBindingNames } from '../script/collectBindings';
+import { collectBindingNames } from '../script/bindingPatterns';
+import { getUnwrappedExpression } from '../script/scriptBindings';
 import type { IRTemplate, TypeScript } from '../types';
 import { getStartEnd } from '../typescript/nodes';
 import { getTypeScriptAST } from '../typescript/typescriptAST';

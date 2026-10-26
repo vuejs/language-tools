@@ -1,7 +1,7 @@
 export * from './lib/formats/parseSfc';
 export * from './lib/ir/irPipeline';
 export * from './lib/ir/vueSource';
-export * from './lib/mappings/buildMappings';
+export * from './lib/mappings/codeMappings';
 export {
 	allFeatures,
 	completionFeatures,
@@ -13,11 +13,11 @@ export {
 export * from './lib/mappings/resolveCodeOffsets';
 export * from './lib/names';
 export * from './lib/options/compilerOptions';
-export * from './lib/script/collectBindings';
+export * from './lib/script/bindingPatterns';
 export * from './lib/script/scriptRanges';
 export * from './lib/script/scriptSetupRanges';
-export * from './lib/style/styleScopedClasses';
-export * from './lib/template/compile';
+export * from './lib/style/scopedClassReferences';
+export * from './lib/template/compileTemplate';
 export * from './lib/template/elements';
 export * from './lib/template/forEachTemplateNode';
 export * from './lib/template/templateExpressions';

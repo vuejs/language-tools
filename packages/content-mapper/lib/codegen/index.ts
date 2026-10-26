@@ -1,5 +1,5 @@
 import { getScriptLang, type IR, type ScriptAnalysis, type TypeScript, type VueSource } from '@vue/language-core';
-import { BindingFlag } from '@vue/language-core/lib/script/bindings';
+import { BindingFlag } from '@vue/language-core/lib/script/scriptBindings';
 import { computed } from 'alien-signals';
 import { type CodegenPlugin, getContributions } from './plugin';
 import { generateScript } from './script';

@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { getDefaultCompilerOptions } from '../lib/options/compilerOptions';
-import type { BindingFlag } from '../lib/script/bindings';
+import type { BindingFlag } from '../lib/script/scriptBindings';
 import { parseScriptRanges } from '../lib/script/scriptRanges';
 import { parseScriptSetupRanges } from '../lib/script/scriptSetupRanges';
 import { ts } from './typescript';

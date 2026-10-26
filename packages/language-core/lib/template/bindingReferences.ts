@@ -1,6 +1,6 @@
 import { isGloballyAllowed, makeMap } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
-import { collectBindingNames } from '../script/collectBindings';
+import { collectBindingNames } from '../script/bindingPatterns';
 import type { TypeScript } from '../types';
 import { getNodeText, isFunctionLikeDeclaration, isTypeAssertionExpression } from '../typescript/nodes';
 import { forEachNode } from '../typescript/typescriptAST';

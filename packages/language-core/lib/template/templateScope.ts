@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, isBuiltInDirective } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
-import { collectBindingNames } from '../script/collectBindings';
+import { collectBindingNames } from '../script/bindingPatterns';
 import type { IR, IRBlock, IRStyle, IRTemplate, TypeScript, VueCompilerOptions } from '../types';
 import { getNodeText, getStartEnd } from '../typescript/nodes';
 import { getTypeScriptAST } from '../typescript/typescriptAST';

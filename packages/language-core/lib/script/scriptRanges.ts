@@ -1,7 +1,7 @@
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { TextRange, TypeScript } from '../types';
 import { getNodeText, getStartEnd } from '../typescript/nodes';
-import { getClosestMultiLineCommentRange, getUnwrappedExpression, parseBindings } from './bindings';
+import { getClosestMultiLineCommentRange, getUnwrappedExpression, parseBindings } from './scriptBindings';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> {}
 

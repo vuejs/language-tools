@@ -1,7 +1,7 @@
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { TextRange, TypeScript } from '../types';
 import { getNodeText } from '../typescript/nodes';
-import { collectBindingRanges } from './collectBindings';
+import { collectBindingRanges } from './bindingPatterns';
 
 export const enum BindingFlag {
 	None,

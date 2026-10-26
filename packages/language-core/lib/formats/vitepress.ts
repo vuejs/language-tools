@@ -1,6 +1,6 @@
 import { SourceMap } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
-import { buildMappings } from '../mappings/buildMappings';
+import { buildMappings } from '../mappings/codeMappings';
 import { type Code, codeToString, type VueFormat } from '../types';
 import { parse } from './parseSfc';
 

@@ -4,7 +4,7 @@ import { vitePressParser } from '../formats/vitepress';
 import { loadIRPlugins } from '../options/plugins';
 import { compileScript } from '../script/compileScript';
 import { compileStyle } from '../style/compileStyle';
-import { compileTemplate } from '../template/compile';
+import { compileTemplate } from '../template/compileTemplate';
 import { htmlTemplateCompiler } from '../template/htmlTemplateCompiler';
 import type {
 	IRPipeline,
