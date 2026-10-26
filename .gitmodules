@@ -2,3 +2,7 @@
 	path = volar.js
 	url = https://github.com/volarjs/volar.js.git
 	branch = v3
+[submodule "services"]
+	path = services
+	url = https://github.com/volarjs/services.git
+	branch = master
