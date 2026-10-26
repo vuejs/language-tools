@@ -49,7 +49,8 @@ An entry's `format` option decides how its files are parsed, whatever their exte
 (the default) for single-file components, or `"vitepress"` for VitePress markdown — frontmatter,
 fenced code blocks and `<<<` snippet imports blanked, `<script>` / `<style>` blocks lifted out, the
 remaining markdown as the template — or `"petite-vue"` for petite-vue HTML pages, where the page
-outside `<script>` / `<style>` is the template and its expressions can also read globals. Register the same package once per format:
+outside `<script>` / `<style>` is the template and its expressions can also read globals. A plugin
+can provide more formats, which `format` selects by name. Register the same package once per format:
 
 ```jsonc
 {
@@ -84,7 +85,14 @@ replaces the inherited entries, options included. The Vue VS Code extension cont
 conditional JSON schema for these options when the mapper package is `@vue/content-mapper`.
 
 The mapper uses dynamic project configuration so Vue compiler options, the installed Vue
-version, and Vue language plugins participate in cache invalidation.
+version, and the plugins participate in cache invalidation: the content of each plugin's entry file
+and the `name@version` of its package, whose `package.json` is watched too.
+
+`plugins` take part in building the IR through their `ir` export (see
+[Plugins](../language-core#plugins)). A plugin that fails to load — a missing module, a module that
+throws, a v3 `VueLanguagePlugin` export, or a format or template language that is built in or
+already provided — is reported as an option diagnostic at its `plugins` entry, and a `format` that
+neither the mapper nor a plugin provides is reported at `format`.
 
 Each transform selects its virtual extension through the Content Mapper
 protocol, following the `lang` of the file's script blocks: `.ts` for `lang="ts"`,

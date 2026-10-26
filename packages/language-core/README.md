@@ -15,39 +15,25 @@ npm install @vue/language-core
 
 ## Core API
 
-### `createVueLanguagePlugin`
-
-Creates a Vue language plugin for integration with Volar language services.
-
-```typescript
-import { createVueLanguagePlugin } from '@vue/language-core';
-import type { LanguagePlugin } from '@volar/language-core';
-
-const plugin: LanguagePlugin<string> = createVueLanguagePlugin(
-  ts, // TypeScript
-  vueCompilerOptions, // VueCompilerOptions
-  (scriptId) => scriptId  // asFileName: Converts scriptId to a file name
-);
-```
-
-`ts` is the TypeScript 7 `typescript/ast` module plus a synchronous `createSourceFile`, which TypeScript 7 only offers through its API process (`loadTypeScript` from `@vue/language-core/typescript` builds it from `typescript/sync`). The classic `typescript` module provides the same names, so `@vue/language-server` passes that instead.
-
-The plugin parses every file it is given by `vueCompilerOptions.format`; the host creates one plugin per `contentMappers` entry (with that entry's `format`) and routes to it only the files of that entry's `extensions`. Nothing in the generated code depends on other entries: like `@vue/compiler-sfc`, a template tag refers to the `<script setup>` binding of its name whatever it is imported from, and a file's own component name is its file name without the last extension.
-
 ### `createVueSource`
 
 Reads a Vue file into its IR and script analysis, without any embedded or generated code. It updates in place when given a new snapshot.
 
 ```typescript
-import { createVuePlugins, createVueSource } from '@vue/language-core';
+import { createIRPipeline, createVueSource } from '@vue/language-core';
 
-const source = createVueSource(ts, vueCompilerOptions, createVuePlugins(ts, vueCompilerOptions), fileName, snapshot);
+const pipeline = createIRPipeline(ts, vueCompilerOptions);
+const source = createVueSource(ts, vueCompilerOptions, pipeline, fileName, snapshot);
 source.ir; // the blocks of the file
 source.analysis; // what its script blocks declare
 source.update(newSnapshot);
 ```
 
-The virtual code that `createVueLanguagePlugin` creates is built on a `VueSource` (`code.source`) and adds the embedded documents of the language service.
+`ts` is the TypeScript 7 `typescript/ast` module plus a synchronous `createSourceFile`, which TypeScript 7 only offers through its API process (`loadTypeScript` from `@vue/language-core/typescript` builds it from `typescript/sync`). The classic `typescript` module provides the same names, so `@vue/language-server` passes that instead.
+
+`createIRPipeline` builds the IR of every file by `vueCompilerOptions.format`, with the built-in compilers and the `ir` exports of `vueCompilerOptions.plugins` ([Plugins](#plugins)). Its `errors` list the plugins, or the parts of them, that have no effect. A host creates one pipeline per `contentMappers` entry and gives it only the files of that entry's `extensions`. Nothing in the IR depends on other entries: like `@vue/compiler-sfc`, a template tag refers to the `<script setup>` binding of its name whatever it is imported from, and a file's own component name is its file name without the last extension.
+
+The Volar language plugin that adds the embedded documents of the language service, `createVueLanguagePlugin`, is in [`@vue/language-service`](../language-service).
 
 ### `parse`
 
@@ -95,8 +81,16 @@ const msg = 'Hello'
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `target` | `number \| 'auto'` | `'auto'` | Vue version. `'auto'` reads from `node_modules/vue/package.json`. |
-| `format` | `'sfc' \| 'vitepress' \| 'petite-vue'` | `'sfc'` | Built-in parser: a Vue SFC, VitePress markdown or a petite-vue HTML page. |
-| `plugins` | `string[]` | `[]` | Custom language plugins, e.g., [`@vue/language-plugin-pug`](../language-plugin-pug). |
+| `format` | `string` | `'sfc'` | How files are read: a built-in format (below) or one of the `formats` of a plugin. |
+| `plugins` | `(string \| { name: string, ... })[]` | `[]` | [Plugins](#plugins) that change how the IR is built, e.g. [`@vue/language-plugin-pug`](../language-plugin-pug). A config that declares `plugins` replaces the inherited list. |
+
+The built-in formats:
+
+| `format` | Parses |
+| :--- | :--- |
+| `sfc` | A Vue SFC. |
+| `vitepress` | VitePress markdown: `<script>` / `<style>` blocks are lifted out and the rest becomes the template. |
+| `petite-vue` | A petite-vue HTML page: `<script>` / `<style>` blocks are lifted out and the rest becomes the template. |
 
 ### Type Checking Options
 
@@ -117,40 +111,45 @@ const msg = 'Hello'
 | `htmlAttributes` | `string[]` | `['aria-*']` | Allowed HTML attribute patterns. |
 | `resolveStyleClassNames` | `boolean \| 'scoped'` | `'scoped'` | Resolve class names in styles. |
 
-## Built-in Plugins
+## Plugins
 
-This package includes the following built-in plugins to handle different file types and blocks.
+A `plugins` entry names a module, resolved from the directory of the config that declares it; an object entry passes the rest of its keys to the module as its `config`. A module takes part in a mode by exporting its key, so nothing switches modes:
 
-### File Parsing
+```ts
+import type { VuePluginModule } from '@vue/language-core';
 
-A plugin's `parseSFC(fileName, content)` hook can parse a file into SFC blocks; the first plugin returning a result wins. Otherwise the built-in parser of the file's format is used:
+// Changes the IR, so every IR builder reads it: Content Mappers built on language-core,
+// the language server and vue-component-meta.
+export const ir: VuePluginModule['ir'] = ({ config, vueCompilerOptions }) => ({
+  // Formats that `format` selects by name.
+  formats: {
+    'my-format': {
+      parse(fileName, content) { /* return an SFCParseResult */ },
+      update(oldResult, { start, end, newText }) { /* optional: update oldResult in place, or return undefined */ },
+    },
+  },
+  // Template languages, by the `lang` of `<template>`.
+  templateCompilers: {
+    'my-lang'(source, options, { compileTemplate }) {
+      // Turn `source` into HTML, compile it with `compileTemplate(html, options)`,
+      // and map the offsets of the AST back to `source`.
+    },
+  },
+  // Applied in `plugins` order to the options of every template compiler.
+  resolveTemplateCompilerOptions(options) {
+    return options;
+  },
+});
+```
 
-| `format` | Parses |
-| :--- | :--- |
-| `sfc` | A Vue SFC. |
-| `vitepress` | VitePress markdown: `<script>` / `<style>` blocks are lifted out and the rest becomes the template. |
-| `petite-vue` | A petite-vue HTML page: `<script>` / `<style>` blocks are lifted out and the rest becomes the template. |
+`ir` is a `VueIRPlugin` or a function of the entry's `config` and the resolved `vueCompilerOptions` that returns one. The `codegen` export is reserved for contributions to the TS code that `@vue/content-mapper` generates; nothing reads it yet.
 
-Plugins must declare `version: 4`. Version 4 removed the `getLanguageId`, `isValidFile` and `parseSFC2` hooks: a plugin that only parses some files checks the file name in `parseSFC` and returns `undefined` for the others.
+- A format or template language belongs to the one plugin that provides its key. Providing a built-in key (`sfc`, `vitepress`, `petite-vue`, `html`, `md`) or a key of an earlier plugin is a load error, and that key of the plugin is not used.
+- Script and style blocks are always read by the built-in compilers: the script AST is a TypeScript `SourceFile`, and the style scanner does not depend on the style language.
+- The embedded documents of the language service are built in, including the document of a `pug` template, so a plugin has no part in them.
+- A module that exports a function, an array, or an object with `version` is a `VueLanguagePlugin` of v3 and fails to load with: "VueLanguagePlugin functions are no longer supported; export `{ ir: … }` (see language-core README)".
 
-### Virtual Code Generation Plugins
-
-| Plugin | Function |
-| :--- | :--- |
-| `vue-template-html` | Compiles HTML templates. |
-| `vue-template-inline-ts` | Handles TypeScript expressions in templates. |
-| `vue-template-inline-css` | Handles inline styles in templates. |
-| `vue-style-css` | Compiles CSS styles. |
-| `vue-script-js` | Handles JavaScript script blocks. |
-
-### Embedded Code Extraction Plugins
-
-| Plugin | Function |
-| :--- | :--- |
-| `vue-sfc-template` | Extracts the `<template>` block. |
-| `vue-sfc-styles` | Extracts `<style>` blocks. |
-| `vue-sfc-scripts` | Extracts `<script>` blocks (for formatting). |
-| `vue-sfc-customblocks` | Extracts custom blocks. |
+`@vue/content-mapper` reports the plugins that fail to load, and a `format` that nothing provides, as option diagnostics of its `contentMappers` entry. It watches each plugin's entry file and the `package.json` of its package, and the language server creates a project's IR again when one of them changes.
 
 ## Related Packages
 

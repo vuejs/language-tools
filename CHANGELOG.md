@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased (4.0)
+
+### Vue language plugins
+
+v4 replaces the `VueLanguagePlugin` API with plugin modules that export one key per mode. This is a clean break, with no adapter for v3 plugins: `version: 4` already rejected every third-party plugin, and their main use, rewriting the generated TypeScript of `script_*` embedded codes, has had no effect since v4 stopped producing that code.
+
+- **breaking:** a plugin module exports `ir` (`formats`, `templateCompilers`, `resolveTemplateCompilerOptions`) instead of a `VueLanguagePlugin` function. A function, an array or an object with `version` fails to load with a message naming the migration. `version`, `name`, `order`, `ctx.modules`, `parseSFC`/`updateSFC`, `compileSFCScript`, `compileSFCStyle`, `compileSFCTemplate` and `updateSFCTemplate` are removed. See [Plugins](packages/language-core/README.md#plugins).
+- **breaking:** plugins no longer add or change embedded documents of the language service (`getEmbeddedCodes`, `resolveEmbeddedCode`). The documents, including the one of a `pug` template, are built in. Custom blocks get the language of their own `lang` only.
+- **breaking:** a format or template language belongs to the one plugin that provides its key; providing a built-in key or one that another plugin provides is a load error. Formats of plugins are selected by name through the `format` option instead of the first `parseSFC` that returns a result.
+- **breaking:** `createVueLanguagePlugin` and `VueVirtualCode` moved to `@vue/language-service`; `createVuePlugins` is replaced by `createIRPipeline`.
+- **feat:** `@vue/content-mapper` reports plugins that fail to load, and a `format` that nothing provides, as option diagnostics, and includes the `name@version` of each plugin package in its config identity.
+- **feat:** the language server creates a project's IR again when one of its plugin files changes.
+- **feat:** `@vue/language-plugin-pug` exports `ir.templateCompilers.pug`; `@vue/language-core` is only a type dependency of it.
+
+Plugins that change the generated TypeScript (for example of vue-macros or vue-router's typed routes) have no replacement yet. A `codegen` export, read by `@vue/content-mapper` alone, is reserved for them.
+
 ## 3.3.13 (2026-10-10)
 
 ### language-core

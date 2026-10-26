@@ -50,18 +50,17 @@ const handleClick = () => console.log('clicked')
 
 ## Features
 
-This plugin implements the `VueLanguagePlugin` interface, providing:
+This plugin exports `ir.templateCompilers.pug` (see [Plugins](../language-core#plugins)), which compiles Pug to HTML and then into the template AST with the host's `compileTemplate`. It is needed wherever the IR of a Pug template is built: by `@vue/content-mapper` for type checking, and by the language server for the features that read the template AST.
 
-- **`compileSFCTemplate`** - Compiles Pug to HTML, then parses it into an AST using `@vue/compiler-dom`
+The language server's syntax features of Pug templates are built in and work without this plugin.
 
 ## How it Works
 
 1. Uses `pug-lexer` to convert Pug syntax into tokens
 2. Uses `pug-parser` to parse tokens into an AST
 3. Traverses the AST to generate HTML while building a source map
-4. Uses `@vue/compiler-dom.parse` to parse the HTML
-5. Uses `@vue/compiler-dom.transform` to transform the AST
-6. Maps error and warning positions back to the original Pug code via the source map
+4. Compiles the HTML with the `compileTemplate` that the host passes
+5. Maps the offsets of the AST, errors and warnings back to the original Pug code via the source map
 
 ## Related Packages
 
