@@ -6,7 +6,7 @@ import {
 	type VueCompilerOptions,
 	type VueSource,
 } from '@vue/language-core';
-import { loadTypeScript } from '@vue/language-core/lib/typescript';
+import { loadTypeScript } from '@vue/language-core/typescript';
 import { toString } from 'muggle-string';
 import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';

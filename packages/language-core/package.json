@@ -5,6 +5,8 @@
 	"files": [
 		"index.d.ts",
 		"index.js",
+		"typescript.d.ts",
+		"typescript.js",
 		"lib/**/*.d.ts",
 		"lib/**/*.js",
 		"types"

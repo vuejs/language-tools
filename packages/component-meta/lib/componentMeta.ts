@@ -1,5 +1,5 @@
 import type { TypeScript as CoreTypeScript } from '@vue/language-core';
-import { loadTypeScript } from '@vue/language-core/lib/typescript';
+import { loadTypeScript } from '@vue/language-core/typescript';
 import type { Node, SourceFile } from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Project, Symbol, Type } from 'typescript/async' with { 'resolution-mode': 'import' };
 import { inferComponentEmit, inferComponentExposed, inferComponentProps, inferComponentSlots } from './helpers';

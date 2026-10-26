@@ -1,6 +1,6 @@
 import type { IScriptSnapshot } from '@volar/language-core';
 import * as vue from '@vue/language-core';
-import { loadTypeScript } from '@vue/language-core/lib/typescript';
+import { loadTypeScript } from '@vue/language-core/typescript';
 import { computed } from 'alien-signals';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
