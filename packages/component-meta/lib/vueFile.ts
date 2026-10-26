@@ -36,5 +36,11 @@ export function getVueFile(parser: CoreTypeScript, project: Project, sourceFile:
 		getLength: () => originalText.length,
 		getChangeRange: () => undefined,
 	};
-	return createVueSource(parser, vueCompilerOptions, createVuePlugins(parser, vueCompilerOptions), fileName, snapshot);
+	return createVueSource(
+		parser,
+		vueCompilerOptions,
+		createVuePlugins(parser, vueCompilerOptions, { embeddedCodes: false }),
+		fileName,
+		snapshot,
+	);
 }

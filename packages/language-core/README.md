@@ -41,7 +41,7 @@ Reads a Vue file into its IR and script analysis, without any embedded or genera
 ```typescript
 import { createVuePlugins, createVueSource } from '@vue/language-core';
 
-const source = createVueSource(ts, vueCompilerOptions, createVuePlugins(ts, vueCompilerOptions), fileName, snapshot);
+const source = createVueSource(ts, vueCompilerOptions, createVuePlugins(ts, vueCompilerOptions, { embeddedCodes: false }), fileName, snapshot);
 source.ir; // the blocks of the file
 source.analysis; // what its script blocks declare
 source.update(newSnapshot);

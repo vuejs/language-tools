@@ -49,3 +49,19 @@ test('the virtual code of the language service reads its source', () => {
 	expect(code.source.snapshot.getText(0, code.source.snapshot.getLength())).toBe(after);
 	expect([...code.scriptAnalysis.getSetupBindings()]).toEqual(['after']);
 });
+
+test('the plugins of an IR-only consumer leave out the built-in embedded-code plugins', () => {
+	const vueCompilerOptions = getDefaultCompilerOptions();
+	const all = createVuePlugins(ts, vueCompilerOptions);
+	const irOnly = createVuePlugins(ts, vueCompilerOptions, { embeddedCodes: false });
+
+	expect(all.some(plugin => plugin.getEmbeddedCodes || plugin.resolveEmbeddedCode)).toBe(true);
+	expect(irOnly.some(plugin => plugin.getEmbeddedCodes || plugin.resolveEmbeddedCode)).toBe(false);
+	expect(irOnly.filter(plugin => plugin.compileSFCScript)).toHaveLength(1);
+	expect(irOnly.filter(plugin => plugin.compileSFCTemplate)).toHaveLength(1);
+	expect(irOnly.filter(plugin => plugin.compileSFCStyle)).toHaveLength(1);
+
+	const source = createVueSource(ts, vueCompilerOptions, irOnly, fileName, createSnapshot(before));
+	expect(source.ir.template?.ast).toBeDefined();
+	expect([...source.analysis.getSetupBindings()]).toEqual(['before']);
+});

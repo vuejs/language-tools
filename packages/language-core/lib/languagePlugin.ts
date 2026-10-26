@@ -5,8 +5,16 @@ import { createPlugins } from './plugins';
 import type { TypeScript, VueCompilerOptions, VueLanguagePlugin } from './types';
 import { getRootLanguageId, VueVirtualCode } from './virtualCode';
 
-/** The built-in plugins and the ones of `vueCompilerOptions.plugins`, as instances in their order. */
-export function createVuePlugins(ts: TypeScript, vueCompilerOptions: VueCompilerOptions) {
+/**
+ * The built-in plugins and the ones of `vueCompilerOptions.plugins`, as instances in their order.
+ * With `embeddedCodes: false`, the built-in plugins that only contribute embedded codes are left out,
+ * for consumers that only read the IR.
+ */
+export function createVuePlugins(
+	ts: TypeScript,
+	vueCompilerOptions: VueCompilerOptions,
+	options?: { embeddedCodes?: boolean },
+) {
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
 			'@vue/compiler-dom': CompilerDOM,
@@ -16,7 +24,7 @@ export function createVuePlugins(ts: TypeScript, vueCompilerOptions: VueCompiler
 		vueCompilerOptions,
 		config: {},
 	};
-	return createPlugins(pluginContext);
+	return createPlugins(pluginContext, options);
 }
 
 export function createVueLanguagePlugin<T>(

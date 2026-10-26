@@ -10,7 +10,21 @@ import vueTemplateInlineCssPlugin from './plugins/vue-template-inline-css';
 import vueTemplateInlineTsPlugin from './plugins/vue-template-inline-ts';
 import { validVersions, type VueLanguagePlugin } from './types';
 
-export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
+/** The built-in plugins that only contribute embedded codes, which only the language service reads. */
+const embeddedCodePlugins: VueLanguagePlugin[] = [
+	vueRootTagsPlugin,
+	vueTemplateInlineCssPlugin,
+	vueTemplateInlineTsPlugin,
+	vueSfcStyles,
+	vueSfcCustomBlocks,
+	vueSfcScriptsFormat,
+	vueSfcTemplate,
+];
+
+export function createPlugins(
+	pluginContext: Parameters<VueLanguagePlugin>[0],
+	{ embeddedCodes = true }: { embeddedCodes?: boolean } = {},
+) {
 	const plugins: VueLanguagePlugin[] = [
 		vueRootTagsPlugin,
 		vueScriptJsPlugin,
@@ -22,8 +36,8 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 		vueSfcCustomBlocks,
 		vueSfcScriptsFormat,
 		vueSfcTemplate,
-		...pluginContext.vueCompilerOptions.plugins,
-	];
+	].filter(plugin => embeddedCodes || !embeddedCodePlugins.includes(plugin));
+	plugins.push(...pluginContext.vueCompilerOptions.plugins);
 
 	const pluginInstances = plugins
 		.flatMap(plugin => {
