@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { useServiceScript } from './lib/codegen';
+import { type CodegenPlugin, loadCodegenPlugins } from './lib/codegen/plugin';
 import { toTransformResult } from './lib/transform';
 import { OptionDiagnosticCode } from './optionDiagnostics';
 import type {
@@ -23,6 +24,8 @@ interface ProjectConfiguration {
 	languageFeatures: boolean;
 	vueOptions: vue.VueCompilerOptions;
 	pluginFiles: string[];
+	/** The `codegen` exports of the entries of `plugins`, in order. */
+	codegenPlugins: CodegenPlugin[];
 	/** Why entries of `plugins`, or the `format`, have no effect. */
 	pluginErrors: vue.VuePluginError[];
 	files: Map<string, FileState>;
@@ -159,13 +162,15 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		);
 		const ts = loadTypeScript();
 		const pipeline = vue.createIRPipeline(ts, vueOptions);
+		const codegen = loadCodegenPlugins(vueOptions);
 		const configuration: ProjectConfiguration = {
 			ts,
 			pipeline,
 			languageFeatures,
 			vueOptions,
 			pluginFiles,
-			pluginErrors: [...pluginErrors, ...pipeline.errors],
+			codegenPlugins: codegen.plugins,
+			pluginErrors: [...pluginErrors, ...pipeline.errors, ...codegen.errors],
 			files: new Map(),
 		};
 		if (watchedFiles) {

@@ -152,3 +152,34 @@ test('plugins that fail to load are reported as option diagnostics', () => {
 		},
 	]);
 });
+
+test('codegen exports that are not codegen plugins are reported as option diagnostics', () => {
+	const configFileName = createProject('codegen-diagnostics', {
+		'tsconfig.json': '{}',
+		'throws.cjs': `exports.codegen = () => { throw new Error('no codegen'); };\n`,
+		'number.cjs': `exports.codegen = 1;\n`,
+		'no-contribute.cjs': `exports.codegen = { contribute: 1 };\n`,
+		'ok.cjs': `exports.codegen = ({ config }) => ({ contribute: () => config.contribution });\n`,
+	});
+	const opened = open(configFileName, {
+		target: 3.5,
+		plugins: ['./throws.cjs', './number.cjs', './no-contribute.cjs', { name: './ok.cjs', contribution: {} }],
+	});
+	expect(opened.optionDiagnostics).toEqual([
+		{
+			path: ['plugins', 0],
+			messageText: `Plugin './throws.cjs': Failed to create the \`codegen\` export: Error: no codegen`,
+			code: OptionDiagnosticCode.InvalidPlugin,
+		},
+		{
+			path: ['plugins', 1],
+			messageText: `Plugin './number.cjs': The \`codegen\` export must be an object or a function.`,
+			code: OptionDiagnosticCode.InvalidPlugin,
+		},
+		{
+			path: ['plugins', 2],
+			messageText: `Plugin './no-contribute.cjs': The \`contribute\` of the \`codegen\` export must be a function.`,
+			code: OptionDiagnosticCode.InvalidPlugin,
+		},
+	]);
+});

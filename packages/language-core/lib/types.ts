@@ -164,7 +164,7 @@ export interface IRPipeline {
 export interface VuePluginModule {
 	/** Changes how the IR is built, so every IR builder reads it: Content Mappers built on language-core, the language server and vue-component-meta. */
 	ir?: VueIRPlugin | ((ctx: VuePluginContext) => VueIRPlugin);
-	/** Reserved for TS code generation, read by `@vue/content-mapper` alone. */
+	/** Contributions to the TS code that `@vue/content-mapper` generates, which defines and reads it alone (`VueCodegenExport`). */
 	codegen?: unknown;
 }
 

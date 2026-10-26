@@ -1,3 +1,13 @@
+export type {
+	VueCodegenCode,
+	VueCodegenContribution,
+	VueCodegenExport,
+	VueCodegenFile,
+	VueCodegenPlugin,
+	VueCodegenScriptEdit,
+	VueCodegenSourceSpan,
+	VueCodegenSourceText,
+} from './lib/codegen/plugin';
 export * from './mapper';
 export * from './optionDiagnostics';
 export * from './protocol';
