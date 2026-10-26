@@ -1,7 +1,7 @@
 import type { IScriptSnapshot } from '@volar/language-core';
 import * as vue from '@vue/language-core';
 import { readFileIfExists } from '@vue/language-core/lib/options/readFileIfExists';
-import { loadTypeScript } from '@vue/language-core/typescript';
+import { loadTypeScript, resolveTypeScriptPackageJson } from '@vue/language-core/typescript';
 import { computed } from 'alien-signals';
 import { createHash } from 'node:crypto';
 import * as path from 'node:path';
@@ -15,7 +15,7 @@ import type {
 	TransformResult,
 } from '../protocol';
 import { toTransformResult } from '../result/transformResult';
-import { resolveMapperOptions } from './mapperOptions';
+import { getProjectDirectory, resolveMapperOptions } from './mapperOptions';
 import { OptionDiagnosticCode } from './optionDiagnostics';
 
 interface ProjectConfiguration {
@@ -160,7 +160,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			configFileName || undefined,
 			state.params.options,
 		);
-		const ts = loadTypeScript();
+		const ts = loadTypeScript(resolveTypeScriptPackageJson(getProjectDirectory(configFileName || undefined)));
 		const pipeline = vue.createIRPipeline(ts, vueOptions);
 		const codegen = loadCodegenPlugins(vueOptions);
 		const configuration: ProjectConfiguration = {

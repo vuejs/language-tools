@@ -5,8 +5,10 @@ import { afterAll, expect, test } from 'vitest';
 import { OptionDiagnosticCode } from '../lib/mapper/optionDiagnostics';
 import { closeProject, openProject } from '../lib/mapper/vueContentMapper';
 import type { MapperOptions } from '../lib/protocol';
+import { linkTypeScript } from './utils';
 
 const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'vue-config-identity-')));
+linkTypeScript(root);
 let nextHandle = 0;
 
 afterAll(() => fs.rmSync(root, { recursive: true, force: true }));

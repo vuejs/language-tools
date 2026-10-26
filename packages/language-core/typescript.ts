@@ -1,1 +1,1 @@
-export { loadTypeScript, resolveTypeScriptModule } from './lib/typescript/loadTypeScript';
+export { loadTypeScript, resolveTypeScriptModule, resolveTypeScriptPackageJson } from './lib/typescript/loadTypeScript';

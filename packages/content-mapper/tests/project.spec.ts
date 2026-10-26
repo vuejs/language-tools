@@ -1,10 +1,16 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { expect, test } from 'vitest';
+import { afterAll, beforeAll, expect, test } from 'vitest';
 import { closeProject, openProject, transformVue } from '../lib/mapper/vueContentMapper';
 import { DiagnosticDirectivePolicy, SpanMapFeature } from '../lib/protocol';
 import { getUnusedExpectErrorMessage } from '../lib/result/unusedExpectErrorMessages';
+import { linkTypeScript, repositoryRoot } from './utils';
+
+// Inferred projects resolve TS 7.1 from the working directory.
+const vitestCwd = process.cwd();
+beforeAll(() => process.chdir(path.join(repositoryRoot, 'test-workspace')));
+afterAll(() => process.chdir(vitestCwd));
 
 test('generates a Vue service script with source mappings', () => {
 	const projectHandle = 'test-project';
@@ -297,6 +303,7 @@ function createWorkspace() {
 		JSON.stringify({ name: 'vue-test-plugin', version: '1.0.0', main: 'index.js' }),
 	);
 	fs.writeFileSync(pluginEntry(workspace), `exports.ir = {};\n`);
+	linkTypeScript(workspace);
 	return workspace;
 }
 
@@ -335,6 +342,23 @@ test('tracks dynamic configuration for inferred projects', () => {
 	}
 	finally {
 		process.chdir(previousCwd);
+		fs.rmSync(workspace, { recursive: true, force: true });
+	}
+});
+
+test('fails to open a project from which TS 7.1 does not resolve', () => {
+	const workspace = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'vue-content-mapper-')));
+	try {
+		expect(() =>
+			openProject({
+				configFileName: path.join(workspace, 'tsconfig.json'),
+				projectHandle: 'no-typescript-project',
+				compilerOptions: {},
+			})
+		).toThrow(`Cannot find TS 7.1 from ${workspace}`);
+	}
+	finally {
+		closeProject('no-typescript-project');
 		fs.rmSync(workspace, { recursive: true, force: true });
 	}
 });

@@ -72,10 +72,10 @@ export default defineConfig({
 			name: 'typescript',
 			resolveId: {
 				filter: {
-					id: /^typescript$/,
+					id: /^typescript(\/|$)/,
 				},
-				handler() {
-					return { id: 'typescript', external: true };
+				handler(source) {
+					return { id: source, external: true };
 				},
 			},
 		},

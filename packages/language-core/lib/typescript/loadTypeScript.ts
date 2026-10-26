@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
+import * as path from 'node:path';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { API } from 'typescript/sync' with { 'resolution-mode': 'import' };
 import type { TypeScript } from '../types';
@@ -14,6 +15,20 @@ export function resolveTypeScriptModule(packageJsonPath: string, subpath: 'ast' 
 	const manifestPath = fs.realpathSync(packageJsonPath);
 	const { name } = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 	return createRequire(manifestPath).resolve(`${name}/${subpath}`);
+}
+
+/** The `package.json` of the `typescript` package that resolves from `directory`, which must be TS 7.1. */
+export function resolveTypeScriptPackageJson(directory: string) {
+	const { resolve } = createRequire(path.join(directory, 'package.json'));
+	try {
+		resolve('typescript/ast');
+		return resolve('typescript/package.json');
+	}
+	catch {
+		throw new Error(
+			`Cannot find TS 7.1 from ${directory}: no \`typescript\` package with \`typescript/ast\` resolves from it.`,
+		);
+	}
 }
 
 /**

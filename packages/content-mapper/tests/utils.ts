@@ -9,6 +9,7 @@ import {
 } from '@vue/language-core';
 import { loadTypeScript } from '@vue/language-core/typescript';
 import { spawnSync } from 'node:child_process';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { generateServiceScript } from '../lib/codegen';
 import type { CodegenPlugin } from '../lib/codegen/plugin';
@@ -23,6 +24,16 @@ export const typescriptPackageJsonPath = require.resolve('typescript/package.jso
 export const tscPath = path.join(path.dirname(typescriptPackageJsonPath), require(typescriptPackageJsonPath).bin.tsc);
 
 const compilerArgs = [tscPath];
+
+/** Installs the TS 7.1 of the test workspace in `directory`, which projects under it resolve. */
+export function linkTypeScript(directory: string) {
+	fs.mkdirSync(path.join(directory, 'node_modules'), { recursive: true });
+	fs.symlinkSync(
+		path.dirname(typescriptPackageJsonPath),
+		path.join(directory, 'node_modules/typescript'),
+		'junction',
+	);
+}
 
 function spawnCompiler(args: string[]) {
 	return spawnSync(process.execPath, [...compilerArgs, ...args], {
