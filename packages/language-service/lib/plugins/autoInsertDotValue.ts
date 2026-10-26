@@ -1,11 +1,8 @@
 import type { LanguageServicePlugin, TextDocument } from '@volar/language-service';
-import { hyphenateAttr } from '@vue/language-core';
-import type * as ts from 'typescript';
-import { asClassicNode } from '../coreTypeScript';
+import { hyphenateAttr, isParameter, type ts, type TypeScript } from '@vue/language-core';
 import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
 export function create(
-	ts: typeof import('typescript'),
 	{ isRefAtPosition }: import('../requests').Requests,
 ): LanguageServicePlugin {
 	return {
@@ -42,7 +39,7 @@ export function create(
 						return;
 					}
 
-					if (shouldSkip(ts, asClassicNode<ts.SourceFile>(block.ast), offset - block.startTagEnd, false)) {
+					if (shouldSkip(info.root.ts, block.ast, offset - block.startTagEnd, false)) {
 						return;
 					}
 
@@ -72,7 +69,7 @@ function isCharacterTyping(document: TextDocument, change: { text: string; range
 	return charRE.test(lastCharacter) && !charRE.test(nextCharacter);
 }
 
-function shouldSkip(ts: typeof import('typescript'), node: ts.Node, pos: number, allowAccessDotValue: boolean) {
+function shouldSkip(ts: TypeScript, node: ts.Node, pos: number, allowAccessDotValue: boolean) {
 	if (ts.isVariableDeclaration(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 		return true;
 	}
@@ -81,7 +78,7 @@ function shouldSkip(ts: typeof import('typescript'), node: ts.Node, pos: number,
 	) {
 		return true;
 	}
-	else if (ts.isParameter(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
+	else if (isParameter(ts, node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 		return true;
 	}
 	else if (ts.isPropertyAssignment(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
@@ -137,7 +134,7 @@ function isWatchOrUseFunction(fnName: string) {
 		|| hyphenateAttr(fnName).startsWith('use-');
 }
 
-function isTopLevelArgOrArrayTopLevelItemItem(ts: typeof import('typescript'), node: ts.CallExpression, pos: number) {
+function isTopLevelArgOrArrayTopLevelItemItem(ts: TypeScript, node: ts.CallExpression, pos: number) {
 	for (const arg of node.arguments) {
 		if (pos >= arg.getFullStart() && pos <= arg.getEnd()) {
 			if (ts.isIdentifier(arg)) {
