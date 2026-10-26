@@ -5,6 +5,41 @@ exports[`content mapper fixtures > test-workspace/content-mapper/tsconfig.json 1
 test-workspace/content-mapper/App.vue(7,23): error TS2339: Property 'templateValue' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'."
 `;
 
+exports[`content mapper fixtures > test-workspace/content-mapper-codegen/tsconfig.json 1`] = `
+"test-workspace/content-mapper-codegen/Declarations.vue(2,19): error TS2304: Cannot find name '$l'.
+test-workspace/content-mapper-codegen/Declarations.vue(3,11): error TS2304: Cannot find name '$l'.
+test-workspace/content-mapper-codegen/Elements.vue(5,49): error TS2339: Property 'contributed' does not exist on type 'HTMLDivElement'.
+test-workspace/content-mapper-codegen/ElementsJs.vue(6,31): error TS2339: Property 'contributed' does not exist on type 'HTMLDivElement'.
+test-workspace/content-mapper-codegen/ExportsUser.vue(2,25): error TS2614: Module '"./ExportsScript.vue"' has no exported member 'ExportsScript'. Did you mean to use 'import ExportsScript from "./ExportsScript.vue"' instead?
+test-workspace/content-mapper-codegen/ExportsUser.vue(3,24): error TS2614: Module '"./NamedExport.vue"' has no exported member 'NamedExport'. Did you mean to use 'import NamedExport from "./NamedExport.vue"' instead?
+test-workspace/content-mapper-codegen/ExportsUser.vue(4,28): error TS2614: Module '"./NoDefault.vue"' has no exported member 'NoDefault'. Did you mean to use 'import NoDefault from "./NoDefault.vue"' instead?
+test-workspace/content-mapper-codegen/PropsParent.vue(11,64): error TS2339: Property 'contributedExposed' does not exist on type '{}'.
+test-workspace/content-mapper-codegen/PropsParent.vue(18,35): error TS2353: Object literal may only specify known properties, and 'contributed' does not exist in type '{ readonly own?: string | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps'.
+test-workspace/content-mapper-codegen/PropsParent.vue(18,52): error TS2353: Object literal may only specify known properties, and 'onContributed' does not exist in type 'Partial<NonNullable<{ readonly own?: string | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps>>'.
+test-workspace/content-mapper-codegen/PropsParent.vue(19,15): error TS2353: Object literal may only specify known properties, and 'contributed' does not exist in type '{ readonly own?: string | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps'.
+test-workspace/content-mapper-codegen/PropsParent.vue(19,38): error TS2353: Object literal may only specify known properties, and 'onContributed' does not exist in type 'Partial<NonNullable<{ readonly own?: string | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps>>'.
+test-workspace/content-mapper-codegen/PropsParent.vue(20,50): error TS2353: Object literal may only specify known properties, and 'contributed' does not exist in type 'VNodeProps & AllowedComponentProps & ComponentCustomProps & { item: string; }'.
+test-workspace/content-mapper-codegen/PropsParent.vue(20,67): error TS2353: Object literal may only specify known properties, and 'onContributed' does not exist in type 'Partial<NonNullable<VNodeProps & AllowedComponentProps & ComponentCustomProps & { item: string; }>>'.
+test-workspace/content-mapper-codegen/PropsParent.vue(21,31): error TS2353: Object literal may only specify known properties, and 'contributed' does not exist in type 'VNodeProps & AllowedComponentProps & ComponentCustomProps & { item: string; }'.
+test-workspace/content-mapper-codegen/PropsParent.vue(21,54): error TS2353: Object literal may only specify known properties, and 'onContributed' does not exist in type 'Partial<NonNullable<VNodeProps & AllowedComponentProps & ComponentCustomProps & { item: string; }>>'.
+test-workspace/content-mapper-codegen/PropsParent.vue(22,25): error TS2353: Object literal may only specify known properties, and 'contributed' does not exist in type '{ readonly own?: string | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps'.
+test-workspace/content-mapper-codegen/PropsParent.vue(22,42): error TS2353: Object literal may only specify known properties, and 'onContributed' does not exist in type 'Partial<NonNullable<{ readonly own?: string | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps>>'.
+test-workspace/content-mapper-codegen/PropsParent.vue(23,17): error TS2353: Object literal may only specify known properties, and 'contributed' does not exist in type '{ readonly own?: string | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps'.
+test-workspace/content-mapper-codegen/PropsParent.vue(23,40): error TS2353: Object literal may only specify known properties, and 'onContributed' does not exist in type 'Partial<NonNullable<{ readonly own?: string | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps>>'.
+test-workspace/content-mapper-codegen/PropsParent.vue(24,25): error TS2353: Object literal may only specify known properties, and 'contributed' does not exist in type 'Partial<{}> & Omit<{ readonly own?: string | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps, never>'.
+test-workspace/content-mapper-codegen/PropsParent.vue(9,50): error TS2339: Property 'contributedExposed' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<__VLS_Props, {}>, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, ... 18 more ..., ...>'.
+test-workspace/content-mapper-codegen/ScriptEdit.vue(3,7): error TS2322: Type 'unknown' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/ScriptEditBoth.vue(3,14): error TS2322: Type 'unknown' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/ScriptEditBoth.vue(7,7): error TS2322: Type 'unknown' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/ScriptEditOptions.vue(10,7): error TS2322: Type 'unknown' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/ScriptEditOptions.vue(3,7): error TS2322: Type 'unknown' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/ScriptEditOptions.vue(6,9): error TS2322: Type 'unknown' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/TemplateContext.vue(7,5): error TS2339: Property '$foo' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.
+test-workspace/content-mapper-codegen/TemplateContext.vue(8,5): error TS2339: Property '$foo' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.
+test-workspace/content-mapper-codegen/TemplateContextOptions.vue(10,5): error TS2339: Property '$foo' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<{}, {}>, {}, { local: number; }, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, ... 18 more ..., ...>'.
+test-workspace/content-mapper-codegen/TemplateContextOptions.vue(9,5): error TS2339: Property '$foo' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<{}, {}>, {}, { local: number; }, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, ... 18 more ..., ...>'."
+`;
+
 exports[`content mapper fixtures > test-workspace/content-mapper-directives/tsconfig.json 1`] = `
 "test-workspace/content-mapper-directives/App.vue(13,2): error vue2578: Unused '@vue-expect-error' directive.
 test-workspace/content-mapper-directives/App.vue(16,2): error vue2578: Unused '@vue-expect-error' directive.
