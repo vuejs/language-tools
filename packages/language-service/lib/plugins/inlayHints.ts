@@ -1,10 +1,8 @@
 import type { InlayHint, InlayHintKind, LanguageServicePlugin } from '@volar/language-service';
-import { collectBindingIdentifiers } from '@vue/language-core';
-import type * as ts from 'typescript';
-import { asClassicNode, asCoreNode, asCoreTypeScript } from '../coreTypeScript';
+import { collectBindingIdentifiers, isFunctionLike, type ts, type TypeScript } from '@vue/language-core';
 import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
-export function create(ts: typeof import('typescript')): LanguageServicePlugin {
+export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-inlayhints',
 		capabilities: {
@@ -36,8 +34,8 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 						if (enabled) {
 							for (
 								const [prop, isShorthand] of findDestructuredProps(
-									ts,
-									asClassicNode(ir.scriptSetup.ast),
+									info.root.ts,
+									ir.scriptSetup.ast,
 									scriptSetupRanges.defineProps.destructured.keys(),
 								)
 							) {
@@ -111,7 +109,7 @@ type Scope = Record<string, boolean>;
  * Refactored from https://github.com/vuejs/core/blob/main/packages/compiler-sfc/src/script/definePropsDestructure.ts
  */
 export function findDestructuredProps(
-	ts: typeof import('typescript'),
+	ts: TypeScript,
 	ast: ts.SourceFile,
 	props: MapIterator<string>,
 ) {
@@ -157,7 +155,7 @@ export function findDestructuredProps(
 	return references;
 
 	function walkScope(node: ts.Node, isRoot = false) {
-		ts.forEachChild(node, stmt => {
+		node.forEachChild(stmt => {
 			if (ts.isVariableStatement(stmt)) {
 				for (const decl of stmt.declarationList.declarations) {
 					walkVariableDeclaration(decl, isRoot);
@@ -167,7 +165,7 @@ export function findDestructuredProps(
 				ts.isFunctionDeclaration(stmt)
 				|| ts.isClassDeclaration(stmt)
 			) {
-				const declare = ts.getModifiers(stmt)?.find(modifier => modifier.kind === ts.SyntaxKind.DeclareKeyword);
+				const declare = stmt.modifiers?.find(modifier => modifier.kind === ts.SyntaxKind.DeclareKeyword);
 				if (!stmt.name || declare) {
 					return;
 				}
@@ -199,12 +197,12 @@ export function findDestructuredProps(
 			&& ts.isCallExpression(initializer)
 			&& initializer.expression.getText(ast) === 'defineProps';
 
-		for (const { id } of collectBindingIdentifiers(asCoreTypeScript(ts), asCoreNode(name))) {
+		for (const { id } of collectBindingIdentifiers(ts, name)) {
 			if (isDefineProps) {
-				excludedIds.add(asClassicNode(id));
+				excludedIds.add(id);
 			}
 			else {
-				registerLocalBinding(asClassicNode(id), scope);
+				registerLocalBinding(id, scope);
 			}
 		}
 	}
@@ -214,9 +212,9 @@ export function findDestructuredProps(
 		walk(scopeNode);
 
 		function walk(parent: ts.Node) {
-			ts.forEachChild(parent, node => {
+			parent.forEachChild(node => {
 				if (
-					ts.isFunctionLike(node)
+					isFunctionLike(ts, node)
 					|| ts.isClassDeclaration(node)
 					|| ts.isClassExpression(node)
 				) {
@@ -238,20 +236,19 @@ export function findDestructuredProps(
 	}
 
 	function walkFunctionDeclaration(node: ts.SignatureDeclaration) {
-		const { name, parameters } = node;
-		if (name && ts.isIdentifier(name)) {
-			registerLocalBinding(name);
+		if ('name' in node && node.name && ts.isIdentifier(node.name)) {
+			registerLocalBinding(node.name);
 		}
 
-		for (const p of parameters) {
-			for (const { id } of collectBindingIdentifiers(asCoreTypeScript(ts), asCoreNode(p))) {
-				registerLocalBinding(asClassicNode(id));
+		for (const p of node.parameters) {
+			for (const { id } of collectBindingIdentifiers(ts, p)) {
+				registerLocalBinding(id);
 			}
 		}
 	}
 
 	function walk(parent: ts.Node) {
-		ts.forEachChild(parent, node => {
+		parent.forEachChild(node => {
 			if (enter(node) ?? true) {
 				walk(node);
 				leave(node);
@@ -266,7 +263,7 @@ export function findDestructuredProps(
 				return false;
 			}
 
-			if (ts.isFunctionLike(node)) {
+			if (isFunctionLike(ts, node)) {
 				pushScope(true);
 				walkFunctionDeclaration(node);
 				if ('body' in node && node.body) {
@@ -288,7 +285,7 @@ export function findDestructuredProps(
 
 			if (
 				ts.isBlock(node)
-				&& !ts.isFunctionLike(parent)
+				&& !isFunctionLike(ts, parent)
 				&& !ts.isCatchClause(parent)
 			) {
 				pushScope();
@@ -310,14 +307,14 @@ export function findDestructuredProps(
 		}
 
 		function leave(node: ts.Node) {
-			if (ts.isFunctionLike(node)) {
+			if (isFunctionLike(ts, node)) {
 				popScope(true);
 			}
 			else if (
 				ts.isCatchClause(node)
 				|| (
 					ts.isBlock(node)
-					&& !ts.isFunctionLike(parent)
+					&& !isFunctionLike(ts, parent)
 					&& !ts.isCatchClause(parent)
 				)
 			) {
@@ -343,7 +340,7 @@ export function findDestructuredProps(
 			ts.isExpressionWithTypeArguments(parent)
 			|| ts.isInterfaceDeclaration(parent)
 			|| ts.isTypeAliasDeclaration(parent)
-			|| ts.isPropertySignature(parent)
+			|| parent.kind === ts.SyntaxKind.PropertySignature
 		) {
 			return false;
 		}

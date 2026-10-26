@@ -55,7 +55,7 @@ export function createVueLanguageServicePlugins(
 		createVueSuggestDefineAssignmentPlugin(),
 		createTypeScriptDocCommentTemplatePlugin(ts),
 		createTypeScriptSyntacticPlugin(ts),
-		createVueInlayHintsPlugin(ts),
+		createVueInlayHintsPlugin(),
 
 		// type aware plugins
 		createCssPlugin(client),
