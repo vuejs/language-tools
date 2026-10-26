@@ -2,7 +2,7 @@ import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import picomatch from 'picomatch';
 import type { RawPlugin, RawVueCompilerOptions, ResolvedVuePlugin, VueCompilerOptions, VuePluginError } from './types';
-import { hyphenateTag } from './utils/shared';
+import { hyphenateTag } from './utils/names';
 
 export class CompilerOptionsResolver {
 	options: Omit<RawVueCompilerOptions, 'target' | 'typesRoot' | 'plugins'> = {};

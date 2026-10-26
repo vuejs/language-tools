@@ -13,11 +13,10 @@ import {
 	getComponentIsBinding,
 	getElementTagOffsets,
 	getModelPropName,
-	getNodeText,
-	getStartEnd,
 	getTemplateRef,
 	normalizeAttributeValue,
-} from './shared';
+} from './elements';
+import { getNodeText, getStartEnd } from './nodes';
 import { isCompoundExpression, parseInterpolationNode, parseVForAliases } from './templateExpressions';
 import { getTypeScriptAST } from './typescriptAST';
 

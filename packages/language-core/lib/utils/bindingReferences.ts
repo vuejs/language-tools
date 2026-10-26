@@ -2,7 +2,7 @@ import { isGloballyAllowed, makeMap } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { TypeScript } from '../types';
 import { collectBindingNames } from './collectBindings';
-import { getNodeText, isFunctionLikeDeclaration, isTypeAssertionExpression } from './shared';
+import { getNodeText, isFunctionLikeDeclaration, isTypeAssertionExpression } from './nodes';
 import { forEachNode } from './typescriptAST';
 
 /** The scopes of the locals that template expressions declare around the identifiers they reference. */

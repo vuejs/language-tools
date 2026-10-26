@@ -7,7 +7,7 @@ import { parseScriptSetupRanges } from './parsers/scriptSetupRanges';
 import { BindingFlag } from './parsers/utils';
 import { parseVueCompilerOptions } from './parsers/vueCompilerOptions';
 import type { IR, TypeScript, VueCompilerOptions } from './types';
-import { getBaseNameWithoutExtension } from './utils/shared';
+import { getBaseNameWithoutExtension } from './utils/names';
 import { computedSet } from './utils/signals';
 import { collectTemplateScope, type InlayHintInfo } from './utils/templateScope';
 

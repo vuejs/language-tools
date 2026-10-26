@@ -2,7 +2,8 @@ import { SpanMapKind } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { IRBlock, TypeScript } from '../types';
-import { getNodeText, isStringLiteralLike, normalizeAttributeValue } from './shared';
+import { normalizeAttributeValue } from './elements';
+import { getNodeText, isStringLiteralLike } from './nodes';
 import { forEachNode, getTypeScriptAST } from './typescriptAST';
 
 export type StyleScopedClassReference = [

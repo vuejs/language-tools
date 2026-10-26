@@ -1,7 +1,8 @@
+import { camelize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
-import type { TextRange, TypeScript, VueCompilerOptions } from '../types';
+import type { IRScriptSetup, TextRange, TypeScript, VueCompilerOptions } from '../types';
 import { collectBindingIdentifiers } from '../utils/collectBindings';
-import { getNodeText, getStartEnd, isFunctionLikeDeclaration, isStringLiteralLike } from '../utils/shared';
+import { getNodeText, getStartEnd, isFunctionLikeDeclaration, isStringLiteralLike } from '../utils/nodes';
 import { getClosestMultiLineCommentRange, parseBindings } from './utils';
 
 const tsCheckRE = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
@@ -391,4 +392,11 @@ function getStatementRange(
 		statementRange = getStartEnd(node, ast);
 	}
 	return statementRange;
+}
+
+/** The prop that `defineModel` declares in `scriptSetup`. */
+export function getDefineModelPropName(scriptSetup: IRScriptSetup, defineModel: DefineModel) {
+	return defineModel.name
+		? camelize(scriptSetup.content.slice(defineModel.name.start + 1, defineModel.name.end - 1))
+		: 'modelValue';
 }

@@ -9,7 +9,7 @@ import type {
 	SFCStyleBlock,
 	SFCTemplateBlock,
 } from '@vue/compiler-sfc';
-import { normalizeAttributeValue } from './shared';
+import { normalizeAttributeValue } from './elements';
 
 declare module '@vue/compiler-sfc' {
 	interface SFCDescriptor {

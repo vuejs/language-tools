@@ -3,7 +3,7 @@ import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { getUnwrappedExpression } from '../parsers/utils';
 import type { IRTemplate, TypeScript } from '../types';
 import { collectBindingNames } from './collectBindings';
-import { getStartEnd } from './shared';
+import { getStartEnd } from './nodes';
 import { getTypeScriptAST } from './typescriptAST';
 
 export function parseVForNode(node: CompilerDOM.ForNode) {
