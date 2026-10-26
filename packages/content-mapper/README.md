@@ -94,6 +94,75 @@ throws, a v3 `VueLanguagePlugin` export, or a format or template language that i
 already provided — is reported as an option diagnostic at its `plugins` entry, and a `format` that
 neither the mapper nor a plugin provides is reported at `format`.
 
+## Codegen plugins
+
+A plugin module may also export `codegen`, which contributes to the code that this mapper
+generates. It is defined and read by `@vue/content-mapper` alone: the language server and
+vue-component-meta never load it, and other Content Mappers may ignore it.
+
+```js
+// my-plugin.js, listed as `{ "name": "./my-plugin.js", ...config }` in `plugins`
+exports.codegen = ctx => ({
+	contribute({ ts, fileName, ir, analysis }) {
+		return {
+			templateContext: [['{ $foo: number }']],
+		};
+	},
+});
+```
+
+`codegen` is a `VueCodegenExport`: a `VueCodegenPlugin`, or a function of the entry's `config` and
+the resolved `vueCompilerOptions` that returns one. Options of the plugin come from its entry's
+`config`. A `codegen` that is neither an object nor a function, a factory that throws, and a
+`contribute` that is not a function are reported as option diagnostics at the `plugins` entry.
+
+`contribute(file)` runs for each file and returns a `VueCodegenContribution`. `file` holds the
+TS 7.1 AST API that parsed the scripts (`ts`), the IR, and its analysis (resolved options, with SFC
+comment options, and script ranges). Walk ASTs with `node.forEachChild`. An exception of
+`contribute` fails the transform of the file.
+
+`contribute` must be a pure function of `file` and the plugin's context: no file system, no
+environment, no cache shared across projects. The mapper hashes the plugin's entry file, its package's
+`name@version` and the entry config into the project identity, so nothing else is tracked. Data from
+elsewhere reaches TypeScript through type imports (`import('…')`), which TypeScript resolves and
+watches.
+
+Code is written as `VueCodegenCode`: an array of plain strings, which map nowhere and report no
+diagnostics, `VueCodegenSourceText`s (`{ text, block, offset, features }`, text copied from a block,
+mapped there with the given features, e.g. `scriptFeatures`), and `VueCodegenSourceSpan`s
+(`{ code, block, start, end, features }`, code mapped as a whole to a range, e.g. to report a
+diagnostic there). A `SourceText` whose text is not the text of its block at `offset`, and a
+`SourceSpan` out of the range of its block, keep their text but do not map. Plugins never see
+generated names or offsets.
+
+| Key | Where the mapper places it | What its code can reference |
+|---|---|---|
+| `scriptEdits` | Edits (`{ block, start, end, code }`, an insert if `start === end`) of the user's code of `<script>` and `<script setup>`, wherever the mapper copies it | the scope of the block |
+| `templateContext` | Object types spread last into the template context | the setup scope of a script setup component, else the module scope |
+| `props`, `emits`, `expose` | `<script setup>` only: object types intersected into the public props (`defineProps<…>` form), the emits (`defineEmits<…>` form) and what the component exposes | the setup scope |
+| `elements` | The tag → element type map of native elements, which replaces the DOM one in the file | the module scope |
+| `declarations` | Statements at module scope, after the user's code | the module scope |
+| `exports` | `names`: named exports of the component. `default: false`: no synthetic default export (a user `export default` in `<script>` stays). `docComment`: the range of a doc comment (one block comment) of a script block, copied onto the exports of the component | — |
+
+Plugins combine in `plugins` order. Arrays and `exports.names` are concatenated, and names are
+de-duplicated. For `elements`, `exports.default` and `exports.docComment`, the first plugin that sets
+one wins. Invalid entries, such as a block that is not the file's or a range out of its block, are
+dropped.
+
+Script edits apply in source order. At one position, the mapper's own transforms come first, then
+plugins in order, and an insert comes before a replace that starts there. A script edit that
+overlaps a transform of the mapper fails the transform of the file. One that overlaps an edit of an
+earlier plugin is dropped. An edit must lie within one part of the block that the mapper copies to
+one place (the imports and the body of `<script setup>`, or the default export expression of
+`<script>` and the code around it), else it fails the transform. A zero-width edit between two parts
+goes to the body of `<script setup>`, and to the exported expression of `<script>`.
+
+Unsupported, since they would need generated structure that a contribution cannot reach without
+depending on generated names: wrapping the template (e.g. checking its root as the default slot of
+a layout component), wrapping the mapper's own type aliases (e.g. a `defineSlots` shorthand),
+changing the shape of the component (e.g. a `defineGeneric` macro; use `generic="…"`), template
+expressions in custom blocks, and intersecting a type into the default export.
+
 Each transform selects its virtual extension through the Content Mapper
 protocol, following the `lang` of the file's script blocks: `.ts` for `lang="ts"`,
 `.tsx` for `lang="tsx"`, `.js` for plain JavaScript and `.jsx` for `lang="jsx"`.

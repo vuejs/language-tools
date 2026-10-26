@@ -142,7 +142,7 @@ export const ir: VuePluginModule['ir'] = ({ config, vueCompilerOptions }) => ({
 });
 ```
 
-`ir` is a `VueIRPlugin` or a function of the entry's `config` and the resolved `vueCompilerOptions` that returns one. The `codegen` export contributes to the TS code that `@vue/content-mapper` generates. It is defined and read by that package alone (`VueCodegenExport`); the language server and vue-component-meta never load it.
+`ir` is a `VueIRPlugin` or a function of the entry's `config` and the resolved `vueCompilerOptions` that returns one. The `codegen` export contributes to the TS code that `@vue/content-mapper` generates. It is defined and read by that package alone (`VueCodegenExport`, see [Codegen plugins](../content-mapper#codegen-plugins)); the language server and vue-component-meta never load it.
 
 - A format or template language belongs to the one plugin that provides its key. Providing a built-in key (`sfc`, `vitepress`, `petite-vue`, `html`, `md`) or a key of an earlier plugin is a load error, and that key of the plugin is not used.
 - Script and style blocks are always read by the built-in compilers: the script AST is a TypeScript `SourceFile`, and the style scanner does not depend on the style language.

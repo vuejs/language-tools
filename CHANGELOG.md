@@ -14,7 +14,29 @@ v4 replaces the `VueLanguagePlugin` API with plugin modules that export one key 
 - **feat:** the language server creates a project's IR again when one of its plugin files changes.
 - **feat:** `@vue/language-plugin-pug` exports `ir.templateCompilers.pug`; `@vue/language-core` is only a type dependency of it.
 
-Plugins that change the generated TypeScript (for example of vue-macros or vue-router's typed routes) have no replacement yet. A `codegen` export, read by `@vue/content-mapper` alone, is reserved for them.
+- **feat:** `@vue/content-mapper` reads a `codegen` export of plugin modules, which contributes to the code it generates: edits of the user's script code, template context types, props, emits and exposed types of script setup components, native element types, module declarations, named exports and the doc comment of the component. The language server and vue-component-meta never load it. See [Codegen plugins](packages/content-mapper/README.md#codegen-plugins).
+
+Plugins that changed the generated TypeScript move to `codegen`. Each one drops `version`, `name`, `order` and `ctx.modules`, exports `codegen = ctx => ({ contribute(file) { … } })`, takes its options from its `plugins` entry (`ctx.config`), and walks `file.ir.scriptSetup.ast` with `node.forEachChild` instead of matching generated code:
+
+| Plugin | `codegen` contribution |
+|---|---|
+| vue-router typed routes | `scriptEdits`: insert the route name type argument after `useRoute` / `definePage` (a JSDoc cast in JavaScript). `templateContext`: `$route`. |
+| vue-macros `define-models` / `define-prop` / `define-emit` | `props` / `emits` built from `SourceText`s of the member types, so that they stay navigable. Overloads go to `declarations`. |
+| vue-macros `export-props` | `scriptEdits` (remove the `export` modifier) and `props` (`{ x?: typeof x }`). |
+| vue-macros `export-expose` | `scriptEdits` (rewrite the export statements, mapping the names) and `expose` (`{ b: typeof a }`). |
+| vue-macros `export-render` | `scriptEdits`: replace `export default ` with `defineRender(` and insert `)`. |
+| vue-macros `setup-jsdoc` | `exports.docComment`: the range of the JSDoc. |
+| ts-macro (`jsx-directive`, `jsx-ref`) | Its Vue adapter returns the `replaceRange` calls as `scriptEdits` of `<script>` and `<script setup>`. |
+| vue-macros `define-props` / `define-props-refs` | No plugin: `macros.defineProps: ['defineProps', '$defineProps', 'definePropsRefs']`. |
+| vue-macros `define-options` | Not needed: built in. |
+| unplugin-vue-named-export | `exports: { names: [name], default: !removeDefault }`, with the option in the plugin's entry instead of `vueCompilerOptions.namedExport`. |
+| vite-vue-internationalization | `declarations` (`$locale`, `$l`, and locale diagnostics as `SourceSpan`s over the locale block) and `templateContext` (`$locale`, `$l`). The global dictionary becomes a type import of a file that its Vite plugin generates. Template `@ts-expect-error` becomes `@vue-expect-error`. |
+| vue-remote | `elements` for remote files, and `scriptEdits` for the `ref(null)` casts. |
+| weapp-vite | `elements` when the resolved `lib` is `wevu`. The `<json lang="ts">` block becomes `declarations`, with its imports as `SourceText`s. |
+| fusion-php | `templateContext`, with the variable names as `SourceText`s over the `<php>` block. |
+| server-block-nuxt | `declarations`: the content of the block as one `SourceText`. |
+
+Unsupported: wrapping the template (layout slots of dxup), wrapping core's type aliases (the `define-slots` shorthand of vue-macros), changing the shape of the component (`define-generic` of vue-macros; use `generic="…"`), template expressions in custom blocks, and intersecting a type into the default export.
 
 ## 3.3.13 (2026-10-10)
 
