@@ -129,7 +129,9 @@ test('plugins that fail to load are reported as option diagnostics', () => {
 	expect(opened.optionDiagnostics).toEqual([
 		{
 			path: ['plugins', 0],
-			messageText: `Plugin './missing.cjs': Cannot find the plugin from '${path.dirname(configFileName)}'.`,
+			messageText: `Plugin './missing.cjs': Cannot find the plugin from '${
+				path.dirname(configFileName).replace(/\\/g, '/')
+			}'.`,
 			code: OptionDiagnosticCode.InvalidPlugin,
 		},
 		{
