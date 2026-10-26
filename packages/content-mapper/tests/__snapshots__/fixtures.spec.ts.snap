@@ -12,10 +12,7 @@ exports[`content mapper fixtures > test-workspace/content-mapper-codegen/tsconfi
   Types of parameters 'value' and 'value' are incompatible.
   Types of parameters 'value' and 'value' are incompatible.
   Types of parameters 'value' and 'value' are incompatible.
-test-workspace/content-mapper-codegen/Declarations.vue(2,19): error TS2304: Cannot find name '$l'.
-test-workspace/content-mapper-codegen/Declarations.vue(3,11): error TS2304: Cannot find name '$l'.
-test-workspace/content-mapper-codegen/Elements.vue(5,49): error TS2339: Property 'contributed' does not exist on type 'HTMLDivElement'.
-test-workspace/content-mapper-codegen/ElementsJs.vue(6,31): error TS2339: Property 'contributed' does not exist on type 'HTMLDivElement'.
+test-workspace/content-mapper-codegen/Declarations.vue(3,14): error TS2345: Argument of type '"b"' is not assignable to parameter of type '"a"'.
 test-workspace/content-mapper-codegen/ExportsUser.vue(2,25): error TS2614: Module '"./ExportsScript.vue"' has no exported member 'ExportsScript'. Did you mean to use 'import ExportsScript from "./ExportsScript.vue"' instead?
 test-workspace/content-mapper-codegen/ExportsUser.vue(3,24): error TS2614: Module '"./NamedExport.vue"' has no exported member 'NamedExport'. Did you mean to use 'import NamedExport from "./NamedExport.vue"' instead?
 test-workspace/content-mapper-codegen/ExportsUser.vue(4,28): error TS2614: Module '"./NoDefault.vue"' has no exported member 'NoDefault'. Did you mean to use 'import NoDefault from "./NoDefault.vue"' instead?

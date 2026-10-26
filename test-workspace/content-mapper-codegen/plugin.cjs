@@ -27,6 +27,8 @@ exports.codegen = () => ({
 			emits: isChild ? [['{ contributed: [value: number] }']] : [],
 			// `exposedValue` is a binding of `<script setup>`
 			expose: isChild ? [['{ contributedExposed: typeof exposedValue }']] : [],
+			elements: name.startsWith('Elements') ? ['{ div: HTMLDivElement & { readonly contributed: true } }'] : undefined,
+			declarations: name === 'Declarations' ? [["declare const $l: (key: 'a') => string;"]] : [],
 		};
 	},
 });

@@ -172,3 +172,23 @@ test('adds the props of plugins to the props option of a component whose props a
 	expect(text).toContain(`type __VLS_PublicProps = ({ b?: number });`);
 	expect(text).toContain(`props: {\n...{} as __VLS_TypePropsToOption<__VLS_PublicProps>,\n...{ a: String },\n},`);
 });
+
+test('declares the element types of the first plugin that sets them as a module type, in TS and JS', () => {
+	const elements = plugin(() => ({ elements: ['{ div: HTMLDivElement }'] }));
+	const ignored = plugin(() => ({ elements: ['{ span: HTMLSpanElement }'] }), 'second-plugin');
+	const ts = generateWith(`<script setup lang="ts">\n</script>\n<template><div /></template>\n`, elements, ignored)
+		.text;
+	expect(ts).toContain(`type __VLS_Elements = { div: HTMLDivElement };`);
+	expect(ts).not.toContain('HTMLSpanElement');
+	expect(generateWith(`<script setup>\n</script>\n<template><div /></template>\n`, elements).text)
+		.toContain(`/** @typedef {{ div: HTMLDivElement }} __VLS_Elements */`);
+});
+
+test('adds the declarations of plugins at module scope', () => {
+	const { text } = generateWith(
+		`<script setup lang="ts">\nconst a = $l('a');\n</script>\n`,
+		plugin(() => ({ declarations: [[`declare const $l: (key: 'a') => string;`]] })),
+	);
+	expect(text).toMatch(/\ndeclare const \$l: \(key: 'a'\) => string;\n/);
+	expect(text.indexOf('declare const $l')).toBeGreaterThan(text.indexOf(`const a = $l('a');`));
+});

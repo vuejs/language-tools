@@ -15,7 +15,7 @@ import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import type { ScriptEdit } from '../plugin';
 import { generateStyleModuleImports } from '../style/modules';
-import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { asType, endOfLine, generateSfcBlockSection, isTsLang, newLine } from '../utils';
 import { type CodeTransform, generateCodeWithTransforms, getScriptEditTransforms } from '../utils/transform';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateGeneric, generateMacros, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
@@ -48,6 +48,10 @@ export interface ScriptCodegenOptions {
 	emits: readonly TsCode[][];
 	/** The object types that the codegen plugins intersect into what a script setup component exposes. */
 	expose: readonly TsCode[][];
+	/** The tag → element type map of native elements that a codegen plugin replaces the DOM one with. */
+	elements: readonly TsCode[] | undefined;
+	/** The statements that the codegen plugins add at module scope. */
+	declarations: readonly TsCode[][];
 }
 
 export { generate as generateScript };
@@ -221,8 +225,29 @@ function* generateWorker(
 	}
 
 	yield* ctx.localTypes.generate();
+	yield* generatePluginDeclarations(options);
 	// after the user's code, which may start with `/// <reference>` or `// @ts-nocheck`
 	yield* generateStyleModuleImports(options.styles);
+}
+
+function* generatePluginDeclarations({ elements, declarations, scriptLang }: ScriptCodegenOptions): Generator<TsCode> {
+	// the element types that the template reads by `names.Elements`, as a module type that shadows the global one
+	if (elements) {
+		if (isTsLang(scriptLang)) {
+			yield `type ${names.Elements} = `;
+			yield* elements;
+			yield endOfLine;
+		}
+		else {
+			yield `/** @typedef {`;
+			yield* elements;
+			yield `} ${names.Elements} */${newLine}`;
+		}
+	}
+	for (const declaration of declarations) {
+		yield* declaration;
+		yield newLine;
+	}
 }
 
 function* generateScriptWithExportDefault(

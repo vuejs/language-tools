@@ -141,6 +141,8 @@ function useCodegen(
 			props: getCodegenContributions().props,
 			emits: getCodegenContributions().emits,
 			expose: getCodegenContributions().expose,
+			elements: getCodegenContributions().elements,
+			declarations: getCodegenContributions().declarations,
 		});
 	});
 

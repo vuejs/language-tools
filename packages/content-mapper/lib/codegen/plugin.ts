@@ -141,6 +141,10 @@ export interface CodegenContributions {
 	emits: TsCode[][];
 	/** Object types intersected into what a script setup component exposes. */
 	expose: TsCode[][];
+	/** The tag → element type map of native elements, of the first plugin that sets one. */
+	elements: TsCode[] | undefined;
+	/** Statements at module scope. */
+	declarations: TsCode[][];
 }
 
 export interface ScriptEdit {
@@ -167,6 +171,8 @@ export function getContributions(plugins: readonly CodegenPlugin[], file: VueCod
 		props: [],
 		emits: [],
 		expose: [],
+		elements: undefined,
+		declarations: [],
 	};
 	for (const { name, plugin } of plugins) {
 		const contribution = plugin.contribute(file);
@@ -182,7 +188,10 @@ export function getContributions(plugins: readonly CodegenPlugin[], file: VueCod
 				contributions.scriptEdits.push({ plugin: name, block, start, end, code: toTsCode(blocks, edit.code) });
 			}
 		}
-		for (const key of ['templateContext', 'props', 'emits', 'expose'] as const) {
+		if (!contributions.elements && toArray(contribution.elements).length) {
+			contributions.elements = toTsCode(blocks, contribution.elements);
+		}
+		for (const key of ['templateContext', 'props', 'emits', 'expose', 'declarations'] as const) {
 			for (const type of toArray(contribution[key])) {
 				contributions[key].push(toTsCode(blocks, type));
 			}
