@@ -1,9 +1,10 @@
 import type { CreateFile, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
-import type { IRTemplate, VueVirtualCode } from '@vue/language-core';
+import type { IRTemplate } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 import { asClassicNode, resolveEmbeddedCode } from '../utils';
+import type { VueVirtualCode } from '../virtualCode';
 
 interface ActionData {
 	uri: string;

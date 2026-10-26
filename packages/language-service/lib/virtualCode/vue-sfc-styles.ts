@@ -1,6 +1,5 @@
-import { allFeatures } from '../features';
-import type { Code, IR } from '../types';
-import { embeddedCodeIds, type EmbeddedDocument } from '../virtualCode/embeddedDocument';
+import { allFeatures, type Code, type IR } from '@vue/language-core';
+import { embeddedCodeIds, type EmbeddedDocument } from './embeddedDocument';
 
 /** Each style block, holding the TypeScript of its `v-bind()` bindings if it has any. */
 export function getStyleDocuments(ir: IR): EmbeddedDocument[] {

@@ -1,17 +1,23 @@
-import type { IScriptSnapshot, Mapping, TextChangeRange, VirtualCode } from '@volar/language-core';
+import {
+	buildMappings,
+	type IR,
+	type IScriptSnapshot,
+	type Mapping,
+	resolveCodeOffsets,
+	type TextChangeRange,
+	type TypeScript,
+	type VirtualCode,
+} from '@vue/language-core';
 import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
-import { getRootTagsDocument } from '../plugins/vue-root-tags';
-import { getCustomBlockDocuments } from '../plugins/vue-sfc-customblocks';
-import { getScriptDocuments } from '../plugins/vue-sfc-scripts';
-import { getStyleDocuments } from '../plugins/vue-sfc-styles';
-import { getTemplateDocument } from '../plugins/vue-sfc-template';
-import { getTemplateInlineCssDocument } from '../plugins/vue-template-inline-css';
-import { getTemplateInlineTsDocuments } from '../plugins/vue-template-inline-ts';
-import type { IR, TypeScript } from '../types';
-import { buildMappings } from '../utils/buildMappings';
-import { resolveCodeOffsets } from '../utils/resolveCodeOffsets';
 import type { EmbeddedDocument } from './embeddedDocument';
+import { getRootTagsDocument } from './vue-root-tags';
+import { getCustomBlockDocuments } from './vue-sfc-customblocks';
+import { getScriptDocuments } from './vue-sfc-scripts';
+import { getStyleDocuments } from './vue-sfc-styles';
+import { getTemplateDocument } from './vue-sfc-template';
+import { getTemplateInlineCssDocument } from './vue-template-inline-css';
+import { getTemplateInlineTsDocuments } from './vue-template-inline-ts';
 
 interface ResolvedDocument {
 	id: string;

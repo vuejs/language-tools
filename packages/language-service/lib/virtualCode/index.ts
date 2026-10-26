@@ -1,8 +1,16 @@
-import { type IScriptSnapshot, type Mapping, SpanMapKind, type VirtualCode } from '@volar/language-core';
+import {
+	allFeatures,
+	createVueSource,
+	type IScriptSnapshot,
+	type Mapping,
+	SpanMapKind,
+	type TypeScript,
+	type VirtualCode,
+	type VueCompilerOptions,
+	type VueLanguagePluginReturn,
+	type VueSource,
+} from '@vue/language-core';
 import { computed } from 'alien-signals';
-import { allFeatures } from '../features';
-import type { TypeScript, VueCompilerOptions, VueLanguagePluginReturn } from '../types';
-import { createVueSource, type VueSource } from '../vueSource';
 import { useEmbeddedCodes } from './embeddedCodes';
 
 export * from './embeddedDocument';

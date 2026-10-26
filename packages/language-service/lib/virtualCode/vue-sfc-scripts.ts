@@ -1,7 +1,12 @@
-import { SpanMapFeature } from '@volar/language-core';
-import { completionFeatures, structureFeatures } from '../features';
-import type { IR, IRScript, IRScriptSetup } from '../types';
-import { embeddedCodeIds, type EmbeddedDocument } from '../virtualCode/embeddedDocument';
+import {
+	completionFeatures,
+	type IR,
+	type IRScript,
+	type IRScriptSetup,
+	SpanMapFeature,
+	structureFeatures,
+} from '@vue/language-core';
+import { embeddedCodeIds, type EmbeddedDocument } from './embeddedDocument';
 
 /**
  * Each script block verbatim, for the TypeScript syntactic features of the block (structure, formatting, JSDoc

@@ -22,7 +22,6 @@ export * from './lib/utils/shared';
 export * from './lib/utils/styleScopedClasses';
 export * from './lib/utils/templateExpressions';
 export * from './lib/utils/templateScope';
-export * from './lib/virtualCode';
 export * from './lib/vueSource';
 
 export { createScriptAnalysis, getScriptLang, type ScriptAnalysis } from './lib/scriptAnalysis';

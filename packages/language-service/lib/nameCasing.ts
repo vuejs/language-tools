@@ -1,9 +1,10 @@
 import type { LanguageServiceContext } from '@volar/language-service';
 import type { NodeTypes } from '@vue/compiler-dom';
 import type * as CompilerDOM from '@vue/compiler-dom';
-import { forEachElementNode, hyphenateTag, VueVirtualCode } from '@vue/language-core';
+import { forEachElementNode, hyphenateTag } from '@vue/language-core';
 import { computedSet } from '@vue/language-core/lib/utils/signals';
 import type { URI } from 'vscode-uri';
+import { VueVirtualCode } from './virtualCode';
 
 const nameCasingGraphs = new WeakMap<VueVirtualCode, {
 	tag: () => Set<TagNameCasing>;

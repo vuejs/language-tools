@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { getDefaultCompilerOptions } from '../lib/compilerOptions';
-import { createVueLanguagePlugin, createVuePlugins } from '../lib/languagePlugin';
+import { createVuePlugins } from '../lib/languagePlugin';
 import { createVueSource } from '../lib/vueSource';
 import { createSnapshot, ts } from './typescript';
 
@@ -37,17 +37,6 @@ test('each source owns the analysis of its options', () => {
 	expect(vapor.analysis).not.toBe(plain.analysis);
 	expect(plain.analysis.getIsVapor()).toBe(false);
 	expect(vapor.analysis.getIsVapor()).toBe(true);
-});
-
-test('the virtual code of the language service reads its source', () => {
-	const plugin = createVueLanguagePlugin<string>(ts, getDefaultCompilerOptions(), id => id);
-	const code = plugin.createVirtualCode!(fileName, 'vue', createSnapshot(before), {} as never)!;
-	expect(code.ir).toBe(code.source.ir);
-	expect(code.scriptAnalysis).toBe(code.source.analysis);
-
-	plugin.updateVirtualCode!(fileName, code, createSnapshot(after), {} as never);
-	expect(code.source.snapshot.getText(0, code.source.snapshot.getLength())).toBe(after);
-	expect([...code.scriptAnalysis.getSetupBindings()]).toEqual(['after']);
 });
 
 test('the built-in IR plugins compile each kind of block once', () => {

@@ -1,6 +1,5 @@
-import { allFeatures } from '../features';
-import type { Code, IR } from '../types';
-import { embeddedCodeIds, type EmbeddedDocument } from '../virtualCode/embeddedDocument';
+import { allFeatures, type Code, type IR } from '@vue/language-core';
+import { embeddedCodeIds, type EmbeddedDocument } from './embeddedDocument';
 
 /** The template block of an HTML or pug template. */
 export function getTemplateDocument(ir: IR): EmbeddedDocument | undefined {

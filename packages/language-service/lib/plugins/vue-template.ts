@@ -8,13 +8,7 @@ import {
 	transformCompletionItem,
 } from '@volar/language-service';
 import { getSourceRange } from '@volar/language-service/lib/utils/featureWorkers';
-import {
-	forEachElementNode,
-	forEachInterpolationNode,
-	hyphenateAttr,
-	hyphenateTag,
-	type VueVirtualCode,
-} from '@vue/language-core';
+import { forEachElementNode, forEachInterpolationNode, hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
@@ -25,6 +19,7 @@ import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
+import type { VueVirtualCode } from '../virtualCode';
 
 const EVENT_PROP_REGEX = /^on[A-Z]/;
 

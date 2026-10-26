@@ -3,18 +3,18 @@ import { createLanguageServiceEnvironment } from '@volar/language-server/lib/pro
 import { createConnection, createServer } from '@volar/language-server/node';
 import {
 	createLanguage,
-	createVueLanguagePlugin,
 	getComponentIsBinding,
 	type LanguagePlugin,
 	type RawVueCompilerOptions,
 	resolveVueCompilerOptions,
-	VueVirtualCode,
 } from '@vue/language-core';
 import {
 	createLanguageService,
 	createUriMap,
+	createVueLanguagePlugin,
 	createVueLanguageServicePlugins,
 	type LanguageService,
+	VueVirtualCode,
 } from '@vue/language-service';
 import type { TextEdit } from '@vue/language-service/lib/requests';
 import { asCoreTypeScript, placeScriptImportEdits } from '@vue/language-service/lib/utils';

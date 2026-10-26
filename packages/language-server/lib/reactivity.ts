@@ -1,9 +1,5 @@
-import {
-	forEachInterpolationNode,
-	getScriptLang,
-	parseInterpolationNode,
-	type VueVirtualCode,
-} from '@vue/language-core';
+import { forEachInterpolationNode, getScriptLang, parseInterpolationNode } from '@vue/language-core';
+import type { VueVirtualCode } from '@vue/language-service';
 import { createAnalyzer } from 'laplacenoma';
 import rulesVue from 'laplacenoma/rules/vue';
 

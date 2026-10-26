@@ -5,11 +5,11 @@ import {
 	type LanguagePlugin,
 	type LanguageServicePlugin,
 } from '@volar/language-service';
-import { createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
+import { getDefaultCompilerOptions } from '@vue/language-core';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
-import { createVueLanguageServicePlugins } from '../..';
+import { createVueLanguagePlugin, createVueLanguageServicePlugins } from '../..';
 import { asCoreTypeScript } from '../../lib/utils';
 import { createTestEnvironment } from './environment';
 

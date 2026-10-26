@@ -1,4 +1,5 @@
-import type { TypeScript as CoreTypeScript, VueVirtualCode } from '@vue/language-core';
+import type { TypeScript as CoreTypeScript } from '@vue/language-core';
+import type { VueVirtualCode } from '@vue/language-service';
 import type {
 	AutoImportComponent,
 	AutoImportExport,

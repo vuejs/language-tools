@@ -1,6 +1,8 @@
 export * from '@volar/language-service';
 // for @vue/language-server usage
 export * from '@volar/language-service/lib/utils/featureWorkers';
+export * from './lib/languagePlugin';
+export * from './lib/virtualCode';
 
 import { create as createJsonPlugin } from 'volar-service-json';
 import { create as createPugFormatPlugin } from 'volar-service-pug-beautify';

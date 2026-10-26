@@ -1,9 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { scriptFeatures } from '../features';
-import type { Code, IR } from '../types';
-import { forEachElementNode } from '../utils/forEachTemplateNode';
-import { normalizeAttributeValue } from '../utils/shared';
-import { embeddedCodeIds, type EmbeddedDocument } from '../virtualCode/embeddedDocument';
+import { type Code, forEachElementNode, type IR, normalizeAttributeValue, scriptFeatures } from '@vue/language-core';
+import { embeddedCodeIds, type EmbeddedDocument } from './embeddedDocument';
 
 /** The `style` attributes of the template elements, as CSS rules. */
 export function getTemplateInlineCssDocument(ir: IR): EmbeddedDocument | undefined {

@@ -1,4 +1,5 @@
-import { createVueLanguagePlugin, getDefaultCompilerOptions, type VueVirtualCode } from '@vue/language-core';
+import { getDefaultCompilerOptions } from '@vue/language-core';
+import { createVueLanguagePlugin, type VueVirtualCode } from '@vue/language-service';
 import { asCoreTypeScript } from '@vue/language-service/lib/utils';
 import * as fs from 'node:fs';
 import * as os from 'node:os';

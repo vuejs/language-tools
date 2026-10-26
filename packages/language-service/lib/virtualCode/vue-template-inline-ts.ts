@@ -1,9 +1,15 @@
-import { SpanMapFeature } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
-import type { Code, IR, TypeScript } from '../types';
-import { isCompoundExpression, parseInterpolationNode, parseVForNode } from '../utils/templateExpressions';
-import { getTypeScriptAST } from '../utils/typescriptAST';
-import { embeddedCodeIds, type EmbeddedDocument } from '../virtualCode/embeddedDocument';
+import {
+	type Code,
+	type IR,
+	isCompoundExpression,
+	parseInterpolationNode,
+	parseVForNode,
+	SpanMapFeature,
+	type TypeScript,
+} from '@vue/language-core';
+import { getTypeScriptAST } from '@vue/language-core/lib/utils/typescriptAST';
+import { embeddedCodeIds, type EmbeddedDocument } from './embeddedDocument';
 
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],

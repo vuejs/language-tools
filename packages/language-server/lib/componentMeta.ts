@@ -5,8 +5,8 @@ import {
 	getStartEnd,
 	type IRTemplate,
 	type TextRange,
-	type VueVirtualCode,
 } from '@vue/language-core';
+import type { VueVirtualCode } from '@vue/language-service';
 import type { AutoImportExport, ComponentPropInfo, ExtractPropsInfo } from '@vue/language-service/lib/requests';
 import { capitalize } from '@vue/shared';
 import * as path from 'node:path';

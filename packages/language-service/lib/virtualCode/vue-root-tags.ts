@@ -1,7 +1,6 @@
+import { allFeatures, type Code, type IR, structureFeatures } from '@vue/language-core';
 import { replaceSourceRange } from 'muggle-string';
-import { allFeatures, structureFeatures } from '../features';
-import type { Code, IR } from '../types';
-import { embeddedCodeIds, type EmbeddedDocument, rootTagsLanguageId } from '../virtualCode/embeddedDocument';
+import { embeddedCodeIds, type EmbeddedDocument, rootTagsLanguageId } from './embeddedDocument';
 
 /** The whole file, for the SFC block features; it holds the documents of the blocks. */
 export function getRootTagsDocument(ir: IR): EmbeddedDocument {
