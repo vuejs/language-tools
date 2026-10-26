@@ -43,6 +43,20 @@ export function isFunctionLikeDeclaration(ts: TypeScript, node: ts.Node): node i
 	return false;
 }
 
+/** A function declaration or expression, a signature or a function type. */
+export function isFunctionLike(ts: TypeScript, node: ts.Node): node is ts.SignatureDeclaration {
+	switch (node.kind) {
+		case ts.SyntaxKind.MethodSignature:
+		case ts.SyntaxKind.CallSignature:
+		case ts.SyntaxKind.ConstructSignature:
+		case ts.SyntaxKind.IndexSignature:
+		case ts.SyntaxKind.FunctionType:
+		case ts.SyntaxKind.ConstructorType:
+			return true;
+	}
+	return isFunctionLikeDeclaration(ts, node);
+}
+
 export function isTypeAssertionExpression(ts: TypeScript, node: ts.Node): node is ts.TypeAssertion {
 	return node.kind === ts.SyntaxKind.TypeAssertionExpression;
 }
