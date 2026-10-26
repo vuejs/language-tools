@@ -11,7 +11,7 @@ import type { AutoImportExport, ComponentPropInfo, ExtractPropsInfo } from '@vue
 import { capitalize } from '@vue/shared';
 import * as path from 'node:path';
 import type { TypeScript } from 'vue-component-meta';
-import { inferComponentProps } from 'vue-component-meta/lib/helpers';
+import { inferComponentProps } from 'vue-component-meta/lib/inferComponentTypes';
 
 type ElementNode = Parameters<typeof getElementTagOffsets>[0];
 type Node = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).Node;

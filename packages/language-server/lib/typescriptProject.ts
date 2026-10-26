@@ -29,7 +29,7 @@ import {
 	isRefAtOffset,
 	isUnresolvedTag,
 	toCheckedPositions,
-} from './componentMeta';
+} from './checkerQueries';
 
 type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
 type Project = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Project;

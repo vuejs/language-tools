@@ -22,7 +22,7 @@ import { placeScriptImportEdits } from '@vue/language-service/lib/virtualCodeQue
 import { camelize, capitalize } from '@vue/shared';
 import * as path from 'node:path';
 import { URI } from 'vscode-uri';
-import { getElementAt, getTagNameOffset } from './componentMeta';
+import { getElementAt, getTagNameOffset } from './checkerQueries';
 import { createReactivityAnalyzer, getInterpolationRanges, type ReactivityAnalysisParams } from './reactivity';
 import {
 	connectTypeScriptProjectResolver,

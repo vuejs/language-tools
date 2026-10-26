@@ -2,7 +2,12 @@ import type { TypeScript as CoreTypeScript } from '@vue/language-core';
 import { loadTypeScript } from '@vue/language-core/typescript';
 import type { Node, SourceFile } from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Project, Symbol, Type } from 'typescript/async' with { 'resolution-mode': 'import' };
-import { inferComponentEmit, inferComponentExposed, inferComponentProps, inferComponentSlots } from './helpers';
+import {
+	inferComponentEmit,
+	inferComponentExposed,
+	inferComponentProps,
+	inferComponentSlots,
+} from './inferComponentTypes';
 import { getDefaultsFromScriptSetup, resolveDefaultOptionExpression } from './scriptSetup';
 import type { ComponentMeta, EventMeta, ExposeMeta, PropMeta, SlotMeta, TypeScript } from './types';
 import { createTypeTable, toDeclarations } from './typeTable';

@@ -178,7 +178,7 @@ packages/
     lib/codegen/          IR -> TypeScript code, by script, template and style
     lib/result/           generated code -> transform result: mappings, span mappings, diagnostic directives
   language-service/lib/   Volar language service plugins (plugins/) and embedded documents (virtualCode/)
-  language-server/        the LSP server
+  language-server/lib/    the LSP server, the TS 7.1 project bridge and the checker queries behind its requests
   component-meta/         component props, events, slots and exposed types
   language-plugin-pug/    pug templates
   component-type-helpers/ component type helpers

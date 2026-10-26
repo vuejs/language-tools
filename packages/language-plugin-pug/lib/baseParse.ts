@@ -1,7 +1,7 @@
 import type { Mapping } from '@volar/source-map';
 import pugLex from 'pug-lexer';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { buildMappings, type PugCode } from './buildMappings';
+import { buildMappings, type PugCode } from './pugMappings';
 
 const pugParser = require('pug-parser');
 
