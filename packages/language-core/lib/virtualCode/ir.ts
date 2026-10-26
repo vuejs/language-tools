@@ -8,18 +8,19 @@ import type {
 	IRAttr,
 	IRBlock,
 	IRCustomBlock,
+	IRPipeline,
 	IRScript,
 	IRScriptSetup,
 	IRStyle,
 	IRTemplate,
+	TemplateCompiler,
 	TypeScript,
-	VueLanguagePluginReturn,
 } from '../types';
 import { computedArray, reactiveArray } from '../utils/signals';
 
 export function useIR(
 	ts: TypeScript,
-	plugins: VueLanguagePluginReturn[],
+	pipeline: IRPipeline,
 	fileName: string,
 	getSnapshot: () => IScriptSnapshot,
 	getParseSfcResult: () => SFCParseResult | undefined,
@@ -61,15 +62,10 @@ export function useIR(
 		computed(() => getParseSfcResult()?.descriptor.script ?? undefined),
 		(block, base): IRScript => {
 			const getSrc = useAttrValue('__src', base, block);
-			const getAst = computed(() => {
-				for (const plugin of plugins) {
-					const ast = plugin.compileSFCScript?.(base.lang, base.content);
-					if (ast) {
-						return ast;
-					}
-				}
-				return ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest);
-			});
+			const getAst = computed(() =>
+				pipeline.compileScript(base.lang, base.content)
+					?? ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest)
+			);
 			return mergeObject(base, {
 				get src() {
 					return getSrc();
@@ -86,15 +82,10 @@ export function useIR(
 		computed(() => getParseSfcResult()?.descriptor.scriptSetup ?? undefined),
 		(block, base): IRScriptSetup => {
 			const getGeneric = useAttrValue('__generic', base, block);
-			const getAst = computed(() => {
-				for (const plugin of plugins) {
-					const ast = plugin.compileSFCScript?.(base.lang, base.content);
-					if (ast) {
-						return ast;
-					}
-				}
-				return ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest);
-			});
+			const getAst = computed(() =>
+				pipeline.compileScript(base.lang, base.content)
+					?? ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest)
+			);
 			return mergeObject(base, {
 				get generic() {
 					return getGeneric();
@@ -133,14 +124,7 @@ export function useIR(
 			const getSrc = useAttrValue('__src', base, getBlock);
 			const getModule = useAttrValue('__module', base, getBlock);
 			const getScoped = computed(() => !!getBlock().scoped);
-			const getIr = computed(() => {
-				for (const plugin of plugins) {
-					const ast = plugin.compileSFCStyle?.(base.lang, base.content);
-					if (ast) {
-						return ast;
-					}
-				}
-			});
+			const getIr = computed(() => pipeline.compileStyle(base.lang, base.content));
 			const getBindings = computedArray(
 				() => getIr()?.bindings ?? [],
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
@@ -214,7 +198,7 @@ export function useIR(
 			errors: CompilerDOM.CompilerError[];
 			warnings: CompilerDOM.CompilerError[];
 			result?: CompilerDOM.CodegenResult;
-			plugin?: VueLanguagePluginReturn;
+			compiler?: TemplateCompiler;
 		}>(lastResult => {
 			if (lastResult?.template === base.content) {
 				return lastResult;
@@ -222,7 +206,7 @@ export function useIR(
 
 			// incremental update
 			if (
-				lastResult?.result && lastResult.plugin?.updateSFCTemplate
+				lastResult?.result && lastResult.compiler?.update
 				&& !lastResult.errors.length
 				&& !lastResult.warnings.length
 			) {
@@ -233,7 +217,7 @@ export function useIR(
 					setActiveSub(pausedSub);
 
 					const newText = getUntrackedSnapshot().getText(change.span.start, change.span.start + change.newLength);
-					const newResult = lastResult.plugin.updateSFCTemplate(lastResult.result, {
+					const newResult = lastResult.compiler.update(lastResult.result, {
 						start: change.span.start - templateOffset,
 						end: change.span.start - templateOffset + change.span.length,
 						newText,
@@ -243,7 +227,7 @@ export function useIR(
 							snapshot: getUntrackedSnapshot(),
 							template: base.content,
 							result: newResult,
-							plugin: lastResult.plugin,
+							compiler: lastResult.compiler,
 							errors: [],
 							warnings: [],
 						};
@@ -253,41 +237,32 @@ export function useIR(
 
 			const errors: CompilerDOM.CompilerError[] = [];
 			const warnings: CompilerDOM.CompilerError[] = [];
-			let options: CompilerDOM.CompilerOptions = {
+			const options: CompilerDOM.CompilerOptions = {
 				onError: err => errors.push(err),
 				onWarn: err => warnings.push(err),
 				expressionPlugins: ['typescript'],
 			};
 
-			for (const plugin of plugins) {
-				if (plugin.resolveTemplateCompilerOptions) {
-					options = plugin.resolveTemplateCompilerOptions(options);
-				}
-			}
-
-			for (const plugin of plugins) {
-				try {
-					const result = plugin.compileSFCTemplate?.(base.lang, base.content, options);
-					if (result) {
-						return {
-							snapshot: getUntrackedSnapshot(),
-							template: base.content,
-							result,
-							plugin,
-							errors,
-							warnings,
-						};
-					}
-				}
-				catch (e) {
+			try {
+				const compiled = pipeline.compileTemplate(base.lang, base.content, options);
+				if (compiled) {
 					return {
 						snapshot: getUntrackedSnapshot(),
 						template: base.content,
-						plugin,
-						errors: [e as CompilerDOM.CompilerError],
+						result: compiled.result,
+						compiler: compiled.compiler,
+						errors,
 						warnings,
 					};
 				}
+			}
+			catch (e) {
+				return {
+					snapshot: getUntrackedSnapshot(),
+					template: base.content,
+					errors: [e as CompilerDOM.CompilerError],
+					warnings,
+				};
 			}
 
 			return {

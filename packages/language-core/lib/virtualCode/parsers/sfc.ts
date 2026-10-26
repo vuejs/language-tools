@@ -1,8 +1,8 @@
-import type { VueLanguagePluginReturn } from '../../types';
+import type { VueFormat } from '../../types';
 import { parse } from '../../utils/parseSfc';
 
-export const sfcParser: Pick<VueLanguagePluginReturn, 'parseSFC' | 'updateSFC'> = {
-	parseSFC(_fileName, content) {
+export const sfcParser: VueFormat = {
+	parse(_fileName, content) {
 		const sfc = parse(content);
 		for (const error of sfc.errors) {
 			// Handle 'Element is missing end tag.' error, see #4893
@@ -23,7 +23,7 @@ export const sfcParser: Pick<VueLanguagePluginReturn, 'parseSFC' | 'updateSFC'> 
 		return sfc;
 	},
 
-	updateSFC(sfc, change) {
+	update(sfc, change) {
 		const blocks = [
 			sfc.descriptor.template,
 			sfc.descriptor.script,

@@ -1,27 +1,13 @@
-import vueScriptJsPlugin from './plugins/vue-script-js';
-import vueStyleCss from './plugins/vue-style-css';
-import vueTemplateHtmlPlugin from './plugins/vue-template-html';
 import { validVersions, type VueLanguagePlugin, type VueLanguagePluginReturn } from './types';
 
-/** The built-in plugins that build the IR. */
-const irPlugins: VueLanguagePlugin[] = [
-	vueScriptJsPlugin,
-	vueStyleCss,
-	vueTemplateHtmlPlugin,
-];
-
-/** Instances of the built-in IR plugins and of `vueCompilerOptions.plugins`, in their order. */
+/** Instances of the plugins of `vueCompilerOptions.plugins`, in their order. */
 export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
-	return instantiatePlugins([
-		...irPlugins.map(asBuiltIn),
-		...pluginContext.vueCompilerOptions.plugins.flatMap(({ name, config, module }) =>
+	return instantiatePlugins(
+		pluginContext.vueCompilerOptions.plugins.flatMap(({ name, config, module }) =>
 			(Array.isArray(module) ? module : [module]).map(plugin => ({ plugin, config: { name, ...config } }))
 		),
-	], pluginContext);
-}
-
-function asBuiltIn(plugin: VueLanguagePlugin) {
-	return { plugin, config: {} as Record<string, any> };
+		pluginContext,
+	);
 }
 
 /** `plugins` ordered by their `order`, keeping the given order among equal ones. */

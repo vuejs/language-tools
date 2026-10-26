@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { getDefaultCompilerOptions } from '../lib/compilerOptions';
-import { createVuePlugins } from '../lib/languagePlugin';
+import { createIRPipeline } from '../lib/irPipeline';
 import { createVueSource } from '../lib/vueSource';
 import { createSnapshot, ts } from './typescript';
 
@@ -12,7 +12,7 @@ function createSource(content: string, vueCompilerOptions = getDefaultCompilerOp
 	return createVueSource(
 		ts,
 		vueCompilerOptions,
-		createVuePlugins(ts, vueCompilerOptions),
+		createIRPipeline(ts, vueCompilerOptions),
 		fileName,
 		createSnapshot(content),
 	);
@@ -39,15 +39,17 @@ test('each source owns the analysis of its options', () => {
 	expect(vapor.analysis.getIsVapor()).toBe(true);
 });
 
-test('the built-in IR plugins compile each kind of block once', () => {
-	const vueCompilerOptions = getDefaultCompilerOptions();
-	const irPlugins = createVuePlugins(ts, vueCompilerOptions);
+test('the IR pipeline compiles each kind of block with its built-in compiler', () => {
+	const pipeline = createIRPipeline(ts, getDefaultCompilerOptions());
 
-	expect(irPlugins.filter(plugin => plugin.compileSFCScript)).toHaveLength(1);
-	expect(irPlugins.filter(plugin => plugin.compileSFCTemplate)).toHaveLength(1);
-	expect(irPlugins.filter(plugin => plugin.compileSFCStyle)).toHaveLength(1);
-
-	const source = createVueSource(ts, vueCompilerOptions, irPlugins, fileName, createSnapshot(before));
-	expect(source.ir.template?.ast).toBeDefined();
-	expect([...source.analysis.getSetupBindings()]).toEqual(['before']);
+	expect(pipeline.parse(fileName, before)?.result.descriptor.scriptSetup?.content).toBe('const before = 1;');
+	expect(pipeline.compileTemplate('html', '<div></div>', {})?.result.ast.children).toHaveLength(1);
+	expect(pipeline.compileTemplate('pug', 'div', {})).toBeUndefined();
+	expect(pipeline.compileScript('ts', 'let a;')?.statements).toHaveLength(1);
+	expect(pipeline.compileScript('coffee', 'a = 1')).toBeUndefined();
+	const style = '.a { color: v-bind(b); }';
+	expect(pipeline.compileStyle('scss', style)).toEqual({
+		bindings: [{ text: 'b', offset: style.indexOf('b)') }],
+		classNames: [{ text: '.a', offset: 0 }],
+	});
 });

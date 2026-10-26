@@ -1,13 +1,13 @@
 import {
 	allFeatures,
 	createVueSource,
+	type IRPipeline,
 	type IScriptSnapshot,
 	type Mapping,
 	SpanMapKind,
 	type TypeScript,
 	type VirtualCode,
 	type VueCompilerOptions,
-	type VueLanguagePluginReturn,
 	type VueSource,
 } from '@vue/language-core';
 import { computed } from 'alien-signals';
@@ -63,10 +63,10 @@ export class VueVirtualCode implements VirtualCode {
 		public fileName: string,
 		public initSnapshot: IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
-		plugins: VueLanguagePluginReturn[],
+		pipeline: IRPipeline,
 		ts: TypeScript,
 	) {
-		this.source = createVueSource(ts, vueCompilerOptions, plugins, fileName, initSnapshot);
+		this.source = createVueSource(ts, vueCompilerOptions, pipeline, fileName, initSnapshot);
 		this._embeddedCodes = useEmbeddedCodes(ts, this.source.ir);
 		this._mappings = computed(() => {
 			const length = this.source.snapshot.getLength();

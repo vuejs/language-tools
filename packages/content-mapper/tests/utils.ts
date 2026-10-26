@@ -1,5 +1,5 @@
 import {
-	createVuePlugins,
+	createIRPipeline,
 	createVueSource,
 	getDefaultCompilerOptions,
 	resolveCodeOffsets,
@@ -60,7 +60,7 @@ export function createSource(
 	return createVueSource(
 		ts,
 		vueCompilerOptions,
-		createVuePlugins(ts, vueCompilerOptions),
+		createIRPipeline(ts, vueCompilerOptions),
 		fileName,
 		createSnapshot(content),
 	);

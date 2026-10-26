@@ -1,5 +1,5 @@
 import type { SFCParseResult } from '@vue/compiler-sfc';
-import type { VueLanguagePluginReturn } from '../../types';
+import type { VueFormat } from '../../types';
 
 const sfcBlockRE = /<(script|style)\b([\s\S]*?)>([\s\S]*?)<\/\1>/g;
 const langRE = /\blang\s*=\s*(['"]?)(\S*)\b\1/;
@@ -9,8 +9,8 @@ const langRE = /\blang\s*=\s*(['"]?)(\S*)\b\1/;
  * rest of the page becomes the template. A `<script>` with a `type` attribute (e.g.
  * `type="module"`) is treated as `<script setup>`; `<script src="...">` is ignored.
  */
-export const petiteVueParser: Pick<VueLanguagePluginReturn, 'parseSFC'> = {
-	parseSFC(fileName, content) {
+export const petiteVueParser: VueFormat = {
+	parse(fileName, content) {
 		const sfc: SFCParseResult = {
 			descriptor: {
 				filename: fileName,

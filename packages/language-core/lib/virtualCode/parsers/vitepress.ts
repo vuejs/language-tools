@@ -1,7 +1,7 @@
 import { SourceMap } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
 import { toString } from 'muggle-string';
-import type { Code, VueLanguagePluginReturn } from '../../types';
+import type { Code, VueFormat } from '../../types';
 import { buildMappings } from '../../utils/buildMappings';
 import { parse } from '../../utils/parseSfc';
 
@@ -20,8 +20,8 @@ const angleBracketRE = /<[^\s:]*:\S*>/g;
  * markdown becomes the template. The SFC block offsets are mapped back to the markdown source, so
  * everything downstream stays in original file coordinates.
  */
-export const vitePressParser: Pick<VueLanguagePluginReturn, 'parseSFC'> = {
-	parseSFC(_fileName, content) {
+export const vitePressParser: VueFormat = {
+	parse(_fileName, content) {
 		for (const pattern of [frontmatterRE, codeblockRE, codeSnippetImportRE]) {
 			content = content.replace(pattern, match => ' '.repeat(match.length));
 		}

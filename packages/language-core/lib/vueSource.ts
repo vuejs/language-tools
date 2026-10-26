@@ -2,19 +2,8 @@ import type { IScriptSnapshot } from '@volar/language-core';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import { computed, signal } from 'alien-signals';
 import { createScriptAnalysis, type ScriptAnalysis } from './scriptAnalysis';
-import type { IR, TypeScript, VueCompilerOptions, VueLanguagePluginReturn } from './types';
+import type { IR, IRPipeline, TypeScript, VueCompilerOptions, VueFormat } from './types';
 import { useIR } from './virtualCode/ir';
-import { petiteVueParser } from './virtualCode/parsers/petiteVue';
-import { sfcParser } from './virtualCode/parsers/sfc';
-import { vitePressParser } from './virtualCode/parsers/vitepress';
-
-type SfcParser = Pick<VueLanguagePluginReturn, 'parseSFC' | 'updateSFC'>;
-
-const builtInParsers: Record<VueCompilerOptions['format'], SfcParser> = {
-	sfc: sfcParser,
-	vitepress: vitePressParser,
-	'petite-vue': petiteVueParser,
-};
 
 /**
  * A Vue file read into its IR and script analysis, which update in place when its snapshot changes. It knows
@@ -23,11 +12,11 @@ const builtInParsers: Record<VueCompilerOptions['format'], SfcParser> = {
 export function createVueSource(
 	ts: TypeScript,
 	vueCompilerOptions: VueCompilerOptions,
-	plugins: VueLanguagePluginReturn[],
+	pipeline: IRPipeline,
 	fileName: string,
 	snapshot: IScriptSnapshot,
 ) {
-	return new VueSource(ts, vueCompilerOptions, plugins, fileName, snapshot);
+	return new VueSource(ts, vueCompilerOptions, pipeline, fileName, snapshot);
 }
 
 export class VueSource {
@@ -50,15 +39,15 @@ export class VueSource {
 	constructor(
 		ts: TypeScript,
 		readonly vueCompilerOptions: VueCompilerOptions,
-		plugins: VueLanguagePluginReturn[],
+		pipeline: IRPipeline,
 		readonly fileName: string,
 		snapshot: IScriptSnapshot,
 	) {
 		this._snapshot = signal(snapshot);
-		this._parsedSfcResult = computed(lastResult => this.parseSfc(plugins, lastResult));
+		this._parsedSfcResult = computed(lastResult => this.parseSfc(pipeline, lastResult));
 		this.ir = useIR(
 			ts,
-			plugins,
+			pipeline,
 			fileName,
 			this._snapshot,
 			() => this._parsedSfcResult()?.result,
@@ -71,19 +60,19 @@ export class VueSource {
 	}
 
 	private parseSfc(
-		plugins: VueLanguagePluginReturn[],
+		pipeline: IRPipeline,
 		lastResult?: {
 			snapshot: IScriptSnapshot;
 			result: SFCParseResult;
-			plugin: SfcParser;
+			format: VueFormat;
 		},
 	) {
 		const snapshot = this.snapshot;
 
-		if (lastResult?.plugin.updateSFC && !lastResult.result.errors.length) {
+		if (lastResult?.format.update && !lastResult.result.errors.length) {
 			const change = snapshot.getChangeRange(lastResult.snapshot);
 			if (change) {
-				const newSfc = lastResult.plugin.updateSFC(lastResult.result, {
+				const newSfc = lastResult.format.update(lastResult.result, {
 					start: change.span.start,
 					end: change.span.start + change.span.length,
 					newText: snapshot.getText(change.span.start, change.span.start + change.newLength),
@@ -93,7 +82,7 @@ export class VueSource {
 					newSfc.descriptor = JSON.parse(JSON.stringify(newSfc.descriptor));
 					return {
 						snapshot,
-						plugin: lastResult.plugin,
+						format: lastResult.format,
 						result: newSfc,
 					};
 				}
@@ -101,15 +90,9 @@ export class VueSource {
 		}
 
 		const content = snapshot.getText(0, snapshot.getLength());
-		for (const plugin of [...plugins, builtInParsers[this.vueCompilerOptions.format] ?? sfcParser]) {
-			const sfc = plugin.parseSFC?.(this.fileName, content);
-			if (sfc) {
-				return {
-					snapshot,
-					plugin,
-					result: sfc,
-				};
-			}
+		const parsed = pipeline.parse(this.fileName, content);
+		if (parsed) {
+			return { snapshot, ...parsed };
 		}
 	}
 }

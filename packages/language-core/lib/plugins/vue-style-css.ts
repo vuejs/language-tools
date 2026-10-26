@@ -1,19 +1,12 @@
-import type { VueLanguagePlugin } from '../types';
+import type { IRStyle } from '../types';
 
-const plugin: VueLanguagePlugin = () => {
+/** The `v-bind()` bindings and the class names of a style block, whatever its `lang`. */
+export function compileStyle(style: string): Pick<IRStyle, 'bindings' | 'classNames'> {
 	return {
-		version: 4,
-
-		compileSFCStyle(_lang, style) {
-			return {
-				bindings: [...parseCssBindings(style)],
-				classNames: [...parseCssClassNames(style)],
-			};
-		},
+		bindings: [...parseCssBindings(style)],
+		classNames: [...parseCssClassNames(style)],
 	};
-};
-
-export default plugin;
+}
 
 const cssBindingRE = /\bv-bind\s*\(/g;
 const cssClassNameRE = /\.[a-z_][-\w]*(?=[\s.,+~>:#)[{])/gi;

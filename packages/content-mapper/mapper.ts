@@ -18,7 +18,7 @@ import { resolveMapperOptions } from './vueOptions';
 
 interface ProjectConfiguration {
 	ts: vue.TypeScript;
-	plugins: vue.VueLanguagePluginReturn[];
+	pipeline: vue.IRPipeline;
 	languageFeatures: boolean;
 	vueOptions: vue.VueCompilerOptions;
 	pluginFiles: string[];
@@ -102,7 +102,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			const source = vue.createVueSource(
 				configuration.ts,
 				configuration.vueOptions,
-				configuration.plugins,
+				configuration.pipeline,
 				params.fileName,
 				snapshot,
 			);
@@ -154,7 +154,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		const ts = loadTypeScript();
 		const configuration: ProjectConfiguration = {
 			ts,
-			plugins: vue.createVuePlugins(ts, vueOptions),
+			pipeline: vue.createIRPipeline(ts, vueOptions),
 			languageFeatures,
 			vueOptions,
 			pluginFiles,

@@ -119,6 +119,41 @@ export interface VueCompilerOptions {
 	vModelPropName: Record<string, string | false>;
 }
 
+/** An edit of a text: the range `start`..`end` of the old text is replaced by `newText`. */
+export interface TextChange {
+	start: number;
+	end: number;
+	newText: string;
+}
+
+/** Reads a file into SFC blocks. */
+export interface VueFormat {
+	parse(fileName: string, content: string): SFCParseResult | undefined;
+	/** Updates `old` in place for `change`, or returns `undefined` to have the file parsed again. */
+	update?(old: SFCParseResult, change: TextChange): SFCParseResult | undefined;
+}
+
+/** Compiles the content of a template block of one language. */
+export interface TemplateCompiler {
+	compile(template: string, options: CompilerDOM.CompilerOptions): CompilerDOM.CodegenResult | undefined;
+	/** Updates `old` in place for `change`, or returns `undefined` to have the template compiled again. */
+	update?(old: CompilerDOM.CodegenResult, change: TextChange): CompilerDOM.CodegenResult | undefined;
+}
+
+/** How the IR of a Vue file is built: its format, and the compiler of each block language. */
+export interface IRPipeline {
+	/** The SFC blocks of a file, and the format that read them. */
+	parse(fileName: string, content: string): { result: SFCParseResult; format: VueFormat } | undefined;
+	/** The AST of a template block, and the compiler that compiled it. */
+	compileTemplate(
+		lang: string,
+		template: string,
+		options: CompilerDOM.CompilerOptions,
+	): { result: CompilerDOM.CodegenResult; compiler: TemplateCompiler } | undefined;
+	compileScript(lang: string, script: string): ts.SourceFile | undefined;
+	compileStyle(lang: string, style: string): Pick<IRStyle, 'bindings' | 'classNames'>;
+}
+
 export const validVersions = [4] as const;
 
 export interface VueLanguagePluginReturn {
