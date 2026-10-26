@@ -43,6 +43,7 @@ Unsupported: wrapping the template (layout slots of dxup), changing the shape of
 ### Content Mapper
 
 - **breaking:** the Content Mapper parses with the TS 7.1 `typescript` package that resolves from the project directory (the directory of the tsconfig, or the working directory for an inferred project), and fails to open a project from which none resolves. The VS Code extension no longer bundles TS 7.1, whose bundled copy could not find its executable.
+- **breaking:** in VS Code, the Content Mapper of Vue files outside any tsconfig runs in the first local workspace folder, so TS 7.1 resolves from it; with more folders, the first one is used for all of them. A window without a local workspace folder gets no Content Mapper for those files and logs an error.
 
 ### Language service
 

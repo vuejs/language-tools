@@ -296,14 +296,39 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 		if (!api?.registerContentMappers) {
 			return;
 		}
-		const contributions = createInferredContentMapperContributions(
-			context.extensionPath,
-			require('../package.json').version,
-		).map(({ extensions, inferredProjectContribution: { options, manifest } }) => ({
-			extensions,
-			inferredProjectContribution: { options, manifest: { ...manifest, cwd: vscode.Uri.file(manifest.cwd) } },
-		}));
-		context.subscriptions.push(api.registerContentMappers('Vue.volar', contributions));
+		let registration: vscode.Disposable | undefined;
+		let registeredFolder: string | undefined | null = null;
+		const register = () => {
+			const folders = (vscode.workspace.workspaceFolders ?? [])
+				.filter(folder => folder.uri.scheme === 'file')
+				.map(folder => folder.uri.fsPath);
+			if (folders[0] === registeredFolder) {
+				return;
+			}
+			registeredFolder = folders[0];
+			registration?.dispose();
+			registration = undefined;
+			const contributions = createInferredContentMapperContributions(
+				context.extensionPath,
+				require('../package.json').version,
+				folders,
+			).map(({ extensions, inferredProjectContribution: { options, manifest } }) => ({
+				extensions,
+				inferredProjectContribution: { options, manifest: { ...manifest, cwd: vscode.Uri.file(manifest.cwd) } },
+			}));
+			if (!contributions.length) {
+				logger.logger.value?.error(
+					'Vue files outside any tsconfig need a local workspace folder, from which the Content Mapper resolves TS 7.1.',
+				);
+				return;
+			}
+			registration = api.registerContentMappers('Vue.volar', contributions);
+		};
+		register();
+		context.subscriptions.push(
+			vscode.workspace.onDidChangeWorkspaceFolders(register),
+			{ dispose: () => registration?.dispose() },
+		);
 	}, error => logger.logger.value?.error(String(error)));
 }
 

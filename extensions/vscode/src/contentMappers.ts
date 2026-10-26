@@ -17,8 +17,19 @@ export const inferredContentMappers = [
 	},
 ];
 
-/** The inferred project contributions of the Content Mapper bundled in the extension at `extensionPath`. */
-export function createInferredContentMapperContributions(extensionPath: string, version: string) {
+/**
+ * The inferred project contributions of the Content Mapper bundled in the extension at `extensionPath`. It runs
+ * in the first of `workspaceFolders`, the directory TS 7.1 resolves from, and is not contributed without one.
+ */
+export function createInferredContentMapperContributions(
+	extensionPath: string,
+	version: string,
+	workspaceFolders: readonly string[],
+) {
+	const cwd = workspaceFolders[0];
+	if (cwd === undefined) {
+		return [];
+	}
 	return inferredContentMappers.map(({ package: name, extensions, options }) => ({
 		extensions,
 		inferredProjectContribution: {
@@ -31,7 +42,7 @@ export function createInferredContentMapperContributions(extensionPath: string, 
 					path.join(extensionPath, 'dist', 'content-mapper-server.js'),
 					`--worker=${path.join(extensionPath, 'dist', 'content-mapper-worker.js')}`,
 				],
-				cwd: extensionPath,
+				cwd,
 				dynamicConfig: true,
 			},
 		},
