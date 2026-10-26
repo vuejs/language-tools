@@ -72,10 +72,11 @@ export interface VueCompilerOptions {
 	lib: string;
 	typesRoot: string;
 	/**
-	 * Selects the built-in parser of every file the plugin receives: a Vue SFC, VitePress markdown or a
-	 * petite-vue HTML page. A host sets it per `contentMappers` entry, through the entry's `format` option.
+	 * Selects the format of every file the plugin receives: a built-in one ('sfc' for a Vue SFC, 'vitepress' for
+	 * VitePress markdown, 'petite-vue' for a petite-vue HTML page) or one of the `formats` of a plugin. A host sets it
+	 * per `contentMappers` entry, through the entry's `format` option.
 	 */
-	format: 'sfc' | 'vitepress' | 'petite-vue';
+	format: string;
 	/** Exposes `globalThis` in the template context, as petite-vue templates read globals directly. */
 	globalTemplateContext: boolean;
 	jsxSlots: boolean;
@@ -154,49 +155,55 @@ export interface IRPipeline {
 	compileStyle(lang: string, style: string): Pick<IRStyle, 'bindings' | 'classNames'>;
 }
 
-export const validVersions = [4] as const;
-
-export interface VueLanguagePluginReturn {
-	version: typeof validVersions[number];
-	name?: string;
-	order?: number;
-	/**
-	 * Parses a file into SFC blocks. The first plugin returning a result wins; otherwise the built-in
-	 * parser of `vueCompilerOptions.format` is used. Which files reach it is decided by the host
-	 * (the extensions of the `contentMappers` entry).
-	 */
-	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
-	updateSFC?(
-		oldResult: SFCParseResult,
-		textChange: { start: number; end: number; newText: string },
-	): SFCParseResult | undefined;
-	resolveTemplateCompilerOptions?(options: CompilerDOM.CompilerOptions): CompilerDOM.CompilerOptions;
-	compileSFCScript?(lang: string, script: string): ts.SourceFile | undefined;
-	compileSFCTemplate?(
-		lang: string,
-		template: string,
-		options: CompilerDOM.CompilerOptions,
-	): CompilerDOM.CodegenResult | undefined;
-	compileSFCStyle?(lang: string, style: string):
-		| Pick<IRStyle, 'bindings' | 'classNames'>
-		| undefined;
-	updateSFCTemplate?(
-		oldResult: CompilerDOM.CodegenResult,
-		textChange: { start: number; end: number; newText: string },
-	): CompilerDOM.CodegenResult | undefined;
+/**
+ * The exports of a `plugins` entry's module. Each export is read by the consumers of its mode alone, so a
+ * plugin takes part in a mode by exporting its key.
+ */
+export interface VuePluginModule {
+	/** Changes how the IR is built, so every IR builder reads it: Content Mappers built on language-core, the language server and vue-component-meta. */
+	ir?: VueIRPlugin | ((ctx: VuePluginContext) => VueIRPlugin);
+	/** Reserved for TS code generation, read by `@vue/content-mapper` alone. */
+	codegen?: unknown;
 }
 
-export type VueLanguagePlugin<T extends Record<string, any> = {}> = (
-	ctx: {
-		modules: {
-			typescript: TypeScript;
-			'@vue/compiler-dom': typeof CompilerDOM;
-			'@vue/language-core': typeof import('../index');
-		};
-		vueCompilerOptions: VueCompilerOptions;
-		config: T;
-	},
-) => VueLanguagePluginReturn | VueLanguagePluginReturn[];
+export interface VuePluginContext {
+	/** The `plugins` entry without its `name`. */
+	config: Record<string, any>;
+	vueCompilerOptions: Readonly<VueCompilerOptions>;
+}
+
+/** What the host gives a template compiler of a plugin. */
+export interface VueTemplateCompilerHost {
+	/** Compiles HTML into the AST that the IR of a template holds. */
+	compileTemplate: typeof import('./template/compile').compileTemplate;
+}
+
+/**
+ * Contributions to the IR. A format or template language belongs to the one plugin that provides its key; a key of
+ * a built-in, or of an earlier plugin, fails to load.
+ */
+export interface VueIRPlugin {
+	/** Formats that `vueCompilerOptions.format` selects by name, besides the built-in 'sfc', 'vitepress' and 'petite-vue'. */
+	formats?: Record<string, VueFormat>;
+	/** Compilers of template languages, besides the built-in 'html' and 'md'. */
+	templateCompilers?: Record<
+		string,
+		(
+			source: string,
+			options: CompilerDOM.CompilerOptions,
+			host: VueTemplateCompilerHost,
+		) => CompilerDOM.CodegenResult | undefined
+	>;
+	/** Applied in `plugins` order to the options of every template compiler. */
+	resolveTemplateCompilerOptions?(options: CompilerDOM.CompilerOptions): CompilerDOM.CompilerOptions;
+}
+
+/** Why a `plugins` entry, a part of it or the `format`, has no effect. */
+export interface VuePluginError {
+	/** The `name` of the entry, if the error is about one. */
+	plugin?: string;
+	message: string;
+}
 
 export interface IR {
 	content: string;

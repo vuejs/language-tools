@@ -100,9 +100,9 @@ test('reports unknown options and the removed vueCompilerOptions wrapper', () =>
 });
 
 test('reports invalid option values with their path', () => {
-	expect(toOptionDiagnostics({ format: 'md' })).toEqual([{
+	expect(toOptionDiagnostics({ format: 1 })).toEqual([{
 		path: ['format'],
-		messageText: `Option 'format' requires 'sfc', 'vitepress' or 'petite-vue'.`,
+		messageText: `Option 'format' requires 'sfc', 'vitepress', 'petite-vue' or a format of a plugin.`,
 		code: OptionDiagnosticCode.InvalidOptionType,
 	}]);
 	expect(toOptionDiagnostics({

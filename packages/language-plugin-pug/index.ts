@@ -1,99 +1,90 @@
 import { SourceMap } from '@volar/source-map';
 import type * as CompilerDOM from '@vue/compiler-dom';
-import type { VueLanguagePlugin } from '@vue/language-core';
+import type { VueIRPlugin } from '@vue/language-core';
 import { baseParse } from './lib/baseParse';
 
 const classRE = /^class\s*=/;
 
-const plugin: VueLanguagePlugin = ({ modules }) => {
-	const { compileTemplate } = modules['@vue/language-core'];
+export const ir: VueIRPlugin = {
+	templateCompilers: {
+		pug(template, options, { compileTemplate }) {
+			let parsed: ReturnType<typeof baseParse>;
+			let baseOffset = 0;
 
-	return {
-		name: require('./package.json').name,
+			const minIndent = calculateMinIndent(template);
+			if (minIndent === 0) {
+				parsed = baseParse(template);
+			}
+			else {
+				parsed = baseParse(`template\n${template}`);
+				baseOffset = 'template\n'.length;
+				parsed.htmlCode = ' '.repeat('<template>'.length)
+					+ parsed.htmlCode.slice('<template>'.length, -'</template>'.length)
+					+ ' '.repeat('</template>'.length);
+			}
 
-		version: 4,
-
-		compileSFCTemplate(lang, template, options) {
-			if (lang === 'pug') {
-				let parsed: ReturnType<typeof baseParse>;
-				let baseOffset = 0;
-
-				const minIndent = calculateMinIndent(template);
-				if (minIndent === 0) {
-					parsed = baseParse(template);
-				}
-				else {
-					parsed = baseParse(`template\n${template}`);
-					baseOffset = 'template\n'.length;
-					parsed.htmlCode = ' '.repeat('<template>'.length)
-						+ parsed.htmlCode.slice('<template>'.length, -'</template>'.length)
-						+ ' '.repeat('</template>'.length);
-				}
-
-				const map = new SourceMap(parsed.mappings);
-				let ast = compileTemplate(parsed.htmlCode, {
-					...options,
-					onWarn(warning) {
-						if (warning.loc) {
-							warning.loc.start.offset = toPugOffset(warning.loc.start.offset);
-							warning.loc.end.offset = toPugOffset(warning.loc.end.offset);
-						}
-						options.onWarn?.(warning);
-					},
-					onError(error) {
-						// #5099
-						if (
-							error.code === 2 satisfies CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE
-							&& classRE.test(parsed.htmlCode.slice(error.loc?.start.offset))
-						) {
-							return;
-						}
-						if (error.loc) {
-							error.loc.start.offset = toPugOffset(error.loc.start.offset);
-							error.loc.end.offset = toPugOffset(error.loc.end.offset);
-						}
-						options.onError?.(error);
-					},
-				});
-
-				const visited = new Set<object>();
-				visit(ast);
-
-				return {
-					ast,
-					code: '',
-					preamble: '',
-				};
-
-				function visit(obj: object) {
-					for (const key in obj) {
-						const value = (obj as any)[key];
-						if (value && typeof value === 'object') {
-							if (visited.has(value)) {
-								continue;
-							}
-							visited.add(value);
-							if ('offset' in value && typeof value.offset === 'number') {
-								const originalOffset = value.offset;
-								value.offset = toPugOffset(originalOffset);
-							}
-							visit(value);
-						}
+			const map = new SourceMap(parsed.mappings);
+			let ast = compileTemplate(parsed.htmlCode, {
+				...options,
+				onWarn(warning) {
+					if (warning.loc) {
+						warning.loc.start.offset = toPugOffset(warning.loc.start.offset);
+						warning.loc.end.offset = toPugOffset(warning.loc.end.offset);
 					}
-				}
-
-				function toPugOffset(htmlOffset: number) {
-					const nums: number[] = [];
-					for (const mapped of map.toSourceLocation(htmlOffset)) {
-						nums.push(mapped[0] - baseOffset);
+					options.onWarn?.(warning);
+				},
+				onError(error) {
+					// #5099
+					if (
+						error.code === 2 satisfies CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE
+						&& classRE.test(parsed.htmlCode.slice(error.loc?.start.offset))
+					) {
+						return;
 					}
-					return Math.max(-1, ...nums);
+					if (error.loc) {
+						error.loc.start.offset = toPugOffset(error.loc.start.offset);
+						error.loc.end.offset = toPugOffset(error.loc.end.offset);
+					}
+					options.onError?.(error);
+				},
+			});
+
+			const visited = new Set<object>();
+			visit(ast);
+
+			return {
+				ast,
+				code: '',
+				preamble: '',
+			};
+
+			function visit(obj: object) {
+				for (const key in obj) {
+					const value = (obj as any)[key];
+					if (value && typeof value === 'object') {
+						if (visited.has(value)) {
+							continue;
+						}
+						visited.add(value);
+						if ('offset' in value && typeof value.offset === 'number') {
+							const originalOffset = value.offset;
+							value.offset = toPugOffset(originalOffset);
+						}
+						visit(value);
+					}
 				}
 			}
+
+			function toPugOffset(htmlOffset: number) {
+				const nums: number[] = [];
+				for (const mapped of map.toSourceLocation(htmlOffset)) {
+					nums.push(mapped[0] - baseOffset);
+				}
+				return Math.max(-1, ...nums);
+			}
 		},
-	};
+	},
 };
-export = plugin;
 
 function calculateMinIndent(s: string) {
 	const lines = s.split('\n');

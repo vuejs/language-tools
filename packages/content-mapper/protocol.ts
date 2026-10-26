@@ -49,7 +49,8 @@ export interface TransformResult {
 
 export interface MapperOptions {
 	languageFeatures?: boolean;
-	format?: 'sfc' | 'vitepress' | 'petite-vue';
+	/** 'sfc', 'vitepress', 'petite-vue' or a format of a plugin. */
+	format?: string;
 	[option: string]: unknown;
 }
 

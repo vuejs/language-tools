@@ -1,22 +1,22 @@
-import * as CompilerDOM from '@vue/compiler-dom';
-import * as LanguageCore from '../index';
-import { createPlugins } from './plugins';
+import { loadIRPlugins } from './plugins';
 import { compileScript } from './plugins/vue-script-js';
 import { compileStyle } from './plugins/vue-style-css';
 import { htmlTemplateCompiler } from './plugins/vue-template-html';
+import { compileTemplate } from './template/compile';
 import type {
 	IRPipeline,
 	TemplateCompiler,
 	TypeScript,
 	VueCompilerOptions,
 	VueFormat,
-	VueLanguagePluginReturn,
+	VuePluginError,
+	VueTemplateCompilerHost,
 } from './types';
 import { petiteVueParser } from './virtualCode/parsers/petiteVue';
 import { sfcParser } from './virtualCode/parsers/sfc';
 import { vitePressParser } from './virtualCode/parsers/vitepress';
 
-const builtInFormats: Record<VueCompilerOptions['format'], VueFormat> = {
+const builtInFormats: Record<string, VueFormat> = {
 	sfc: sfcParser,
 	vitepress: vitePressParser,
 	'petite-vue': petiteVueParser,
@@ -27,83 +27,63 @@ const builtInTemplateCompilers: Record<string, TemplateCompiler> = {
 	md: htmlTemplateCompiler,
 };
 
+const templateCompilerHost: VueTemplateCompilerHost = { compileTemplate };
+
 /**
  * How the IR of the Vue files of `vueCompilerOptions` is built: the format of `vueCompilerOptions.format`, the
- * built-in compilers of the template, script and style languages, and the plugins of `vueCompilerOptions.plugins`.
+ * compilers of the template, script and style languages, and the `ir` contributions of `vueCompilerOptions.plugins`.
+ * The entries, or the parts of them, that have no effect are in `errors`.
  */
-export function createIRPipeline(ts: TypeScript, vueCompilerOptions: VueCompilerOptions): IRPipeline {
-	const plugins = createPlugins({
-		modules: {
-			'@vue/compiler-dom': CompilerDOM,
-			'@vue/language-core': LanguageCore,
-			typescript: ts,
-		},
-		vueCompilerOptions,
-		config: {},
+export function createIRPipeline(
+	ts: TypeScript,
+	vueCompilerOptions: VueCompilerOptions,
+): IRPipeline & { errors: VuePluginError[] } {
+	const plugins = loadIRPlugins(vueCompilerOptions, {
+		formats: Object.keys(builtInFormats),
+		templateCompilers: Object.keys(builtInTemplateCompilers),
 	});
-	const format = builtInFormats[vueCompilerOptions.format] ?? sfcParser;
+	const errors = [...plugins.errors];
+	const templateCompilers: Record<string, TemplateCompiler> = { ...builtInTemplateCompilers };
+	for (const lang in plugins.templateCompilers) {
+		const compile = plugins.templateCompilers[lang]!;
+		templateCompilers[lang] = {
+			compile: (template, options) => compile(template, options, templateCompilerHost),
+		};
+	}
+	let format = builtInFormats[vueCompilerOptions.format] ?? plugins.formats[vueCompilerOptions.format];
+	if (!format) {
+		errors.push({
+			message: `No format '${vueCompilerOptions.format}' is built in or provided by a plugin; 'sfc' is used instead.`,
+		});
+		format = sfcParser;
+	}
+	for (const { plugin, message } of errors) {
+		console.warn(plugin !== undefined ? `[Vue] Plugin ${plugin}: ${message}` : `[Vue] ${message}`);
+	}
 
 	return {
+		errors,
 		parse(fileName, content) {
-			for (const plugin of plugins) {
-				const result = plugin.parseSFC?.(fileName, content);
-				if (result) {
-					return { result, format: asFormat(plugin) };
-				}
-			}
 			const result = format.parse(fileName, content);
 			if (result) {
 				return { result, format };
 			}
 		},
 		compileTemplate(lang, template, options) {
-			for (const plugin of plugins) {
-				if (plugin.resolveTemplateCompilerOptions) {
-					options = plugin.resolveTemplateCompilerOptions(options);
-				}
+			for (const resolve of plugins.resolveTemplateCompilerOptions) {
+				options = resolve(options);
 			}
-			const builtIn = builtInTemplateCompilers[lang];
-			if (builtIn) {
-				const result = builtIn.compile(template, options);
-				if (result) {
-					return { result, compiler: builtIn };
-				}
-			}
-			for (const plugin of plugins) {
-				const result = plugin.compileSFCTemplate?.(lang, template, options);
-				if (result) {
-					return { result, compiler: asTemplateCompiler(plugin, lang) };
-				}
+			const compiler = templateCompilers[lang];
+			const result = compiler?.compile(template, options);
+			if (result) {
+				return { result, compiler: compiler! };
 			}
 		},
 		compileScript(lang, script) {
-			const builtIn = compileScript(ts, lang, script);
-			if (builtIn) {
-				return builtIn;
-			}
-			for (const plugin of plugins) {
-				const ast = plugin.compileSFCScript?.(lang, script);
-				if (ast) {
-					return ast;
-				}
-			}
+			return compileScript(ts, lang, script);
 		},
 		compileStyle(_lang, style) {
 			return compileStyle(style);
 		},
-	};
-}
-
-function asFormat(plugin: VueLanguagePluginReturn): VueFormat {
-	return {
-		parse: (fileName, content) => plugin.parseSFC?.(fileName, content),
-		update: plugin.updateSFC && ((old, change) => plugin.updateSFC!(old, change)),
-	};
-}
-
-function asTemplateCompiler(plugin: VueLanguagePluginReturn, lang: string): TemplateCompiler {
-	return {
-		compile: (template, options) => plugin.compileSFCTemplate?.(lang, template, options),
-		update: plugin.updateSFCTemplate && ((old, change) => plugin.updateSFCTemplate!(old, change)),
 	};
 }

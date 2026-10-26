@@ -15,7 +15,7 @@ import { useEmbeddedCodes } from './embeddedCodes';
 
 export * from './embeddedDocument';
 
-const rootLanguageIds: Record<VueCompilerOptions['format'], string> = {
+const rootLanguageIds: Record<string, string> = {
 	sfc: 'vue',
 	vitepress: 'markdown',
 	'petite-vue': 'html',

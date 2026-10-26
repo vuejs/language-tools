@@ -34,13 +34,13 @@ test.each([
 });
 
 test('the embedded codes of the language service come from the built-in plugins alone', () => {
-	const userPlugin = () => ({
-		version: 4,
+	const userPlugin = {
+		ir: {},
 		getEmbeddedCodes: () => [{ id: 'user_code', lang: 'ts' }],
 		resolveEmbeddedCode(_fileName: string, _ir: unknown, code: { id: string; content: unknown[] }) {
 			code.content.push(`/* ${code.id} */`);
 		},
-	});
+	};
 	const plugin = createVueLanguagePlugin<string>(asCoreTypeScript(ts), {
 		...getDefaultCompilerOptions(),
 		plugins: [{ name: 'user-plugin', file: '/project/user-plugin.js', config: {}, module: userPlugin }],

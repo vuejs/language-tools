@@ -296,7 +296,7 @@ function createWorkspace() {
 		path.join(pluginDir, 'package.json'),
 		JSON.stringify({ name: 'vue-test-plugin', version: '1.0.0', main: 'index.js' }),
 	);
-	fs.writeFileSync(pluginEntry(workspace), `module.exports = () => ({ name: 'vue-test-plugin', version: 4 });\n`);
+	fs.writeFileSync(pluginEntry(workspace), `exports.ir = {};\n`);
 	return workspace;
 }
 
@@ -327,7 +327,7 @@ test('tracks dynamic configuration for inferred projects', () => {
 
 		fs.writeFileSync(
 			pluginEntry(workspace),
-			`module.exports = () => ({ name: 'vue-test-plugin', version: 4, order: 3 });\n`,
+			`exports.ir = { templateCompilers: {} };\n`,
 		);
 		const withNewerPlugin = openInferredProject('inferred-project');
 		closeProject('inferred-project');
@@ -389,14 +389,13 @@ test('generates the service script without the embedded code hooks of plugins', 
 	fs.writeFileSync(configFileName, JSON.stringify({ compilerOptions: { strict: true } }));
 	fs.writeFileSync(
 		pluginEntry(workspace),
-		`module.exports = () => ({
-	name: 'vue-test-plugin',
-	version: 4,
+		`module.exports = {
+	ir: {},
 	getEmbeddedCodes: () => [{ id: 'script_ts', lang: 'ts' }],
 	resolveEmbeddedCode(_fileName, _ir, embeddedFile) {
 		embeddedFile.content.push('/* from vue-test-plugin */');
 	},
-});\n`,
+};\n`,
 	);
 	try {
 		openProject({

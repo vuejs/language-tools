@@ -29,6 +29,8 @@ const removedOptions: Record<string, string> = {
 		`Vue no longer reads CSS imports; \`<style module src>\` is always typed by importing its \`src\`, and CSS files are typed by CSS content mappers or declarations.`,
 };
 
+const formatMessage = `Option 'format' requires 'sfc', 'vitepress', 'petite-vue' or a format of a plugin.`;
+
 /** Resolved fields computed from other options (e.g. precompiled glob matchers or the template context set by `format: "petite-vue"`); not user-settable. */
 const derivedOptions = new Set(['isDataAttribute', 'isHtmlAttribute', 'globalTemplateContext']);
 
@@ -50,8 +52,8 @@ export function toOptionDiagnostics(options: Record<string, unknown> | undefined
 		const value = options[key];
 		const path = [key];
 		if (key === 'format') {
-			if (value !== 'sfc' && value !== 'vitepress' && value !== 'petite-vue') {
-				diagnostics.push(invalid(path, `Option 'format' requires 'sfc', 'vitepress' or 'petite-vue'.`));
+			if (typeof value !== 'string') {
+				diagnostics.push(invalid(path, formatMessage));
 			}
 			continue;
 		}

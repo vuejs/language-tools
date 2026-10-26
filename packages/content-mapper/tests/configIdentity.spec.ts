@@ -27,7 +27,7 @@ function open(configFileName: string, options?: MapperOptions) {
 }
 
 const vuePackage = (version: string) => JSON.stringify({ name: 'vue', version });
-const plugin = (name: string) => `module.exports = () => ({ version: 4, name: ${JSON.stringify(name)} });\n`;
+const plugin = (name: string) => `exports.ir = {}; // ${name}\n`;
 
 test('projects with different tsconfig files but the same effective options share an identity', () => {
 	const a = createProject('same-a', {
