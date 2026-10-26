@@ -26,7 +26,6 @@
 		"@vue/language-core": "workspace:*",
 		"@vue/language-service": "workspace:*",
 		"@vue/shared": "^3.5.0",
-		"laplacenoma": "^0.0.3",
 		"vscode-uri": "^3.1.0",
 		"vue-component-meta": "workspace:*"
 	},
