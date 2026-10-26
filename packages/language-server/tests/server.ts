@@ -11,13 +11,15 @@ import { startLanguageServer } from '@volar/test-utils';
 import * as path from 'node:path';
 import { URI } from 'vscode-uri';
 import { type LspServer, startLspServer } from '../../content-mapper/tests/lsp';
+import { typescriptPackageJsonPath } from '../../content-mapper/tests/utils';
+
+export { typescriptPackageJsonPath };
 
 const vueServers = new Map<string, Promise<{ handle: LanguageServerHandle; initializeResult: InitializeResult }>>();
 let typescriptServer: Promise<LspServer> | undefined;
 const typescriptServerVersions = new Map<string, number>();
 
 export const testWorkspacePath = path.resolve(__dirname, '../../../test-workspace');
-export const typescriptPackageJsonPath = path.resolve(__dirname, '../../../node_modules/typescript-7/package.json');
 
 type LocationLike = { uri: string; range: Range } | { targetUri: string; targetSelectionRange: Range };
 

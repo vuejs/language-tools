@@ -16,7 +16,13 @@ import { buildMappings } from '../lib/result/tsCodeMappings';
 
 export const repositoryRoot = path.resolve(__dirname, '../../..');
 
-const compilerArgs = [path.join(repositoryRoot, 'node_modules/typescript-7/bin/tsc')];
+/** The TS 7.1 installation of the test workspace, which every test runs. */
+export const typescriptPackageJsonPath = require.resolve('typescript/package.json', {
+	paths: [path.join(repositoryRoot, 'test-workspace')],
+});
+export const tscPath = path.join(path.dirname(typescriptPackageJsonPath), require(typescriptPackageJsonPath).bin.tsc);
+
+const compilerArgs = [tscPath];
 
 function spawnCompiler(args: string[]) {
 	return spawnSync(process.execPath, [...compilerArgs, ...args], {

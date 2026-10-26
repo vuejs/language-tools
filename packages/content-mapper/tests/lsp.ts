@@ -2,7 +2,7 @@ import { type ChildProcess, spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { repositoryRoot } from './utils';
+import { tscPath } from './utils';
 
 interface Position {
 	line: number;
@@ -62,7 +62,7 @@ export interface LspServer {
 export function startLspServer(cwd: string, env: NodeJS.ProcessEnv = {}): Promise<LspServer> {
 	const proc: ChildProcess = spawn(
 		process.execPath,
-		[path.join(repositoryRoot, 'node_modules/typescript-7/bin/tsc'), '--lsp', '--stdio'],
+		[tscPath, '--lsp', '--stdio'],
 		{ cwd, env: { ...process.env, VUE_CONTENT_MAPPER_WORKERS: '1', ...env } },
 	);
 	const pending = new Map<number, (message: any) => void>();
