@@ -11,6 +11,7 @@ export function resolveMapperOptions(
 	const rootDir = configFileName ? path.dirname(configFileName) : process.cwd();
 	const { languageFeatures, ...rawVueOptions } = options ?? {};
 	const pluginFiles: string[] = [];
+	const pluginErrors: vue.VuePluginError[] = [];
 	return {
 		languageFeatures: languageFeatures !== false,
 		vueOptions: vue.resolveVueCompilerOptions(
@@ -18,8 +19,10 @@ export function resolveMapperOptions(
 			normalizePath(rootDir),
 			rawVueOptions as vue.RawVueCompilerOptions,
 			pluginFiles,
+			pluginErrors,
 		),
 		pluginFiles,
+		pluginErrors,
 	};
 }
 

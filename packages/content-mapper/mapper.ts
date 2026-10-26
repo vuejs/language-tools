@@ -7,6 +7,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { useServiceScript } from './lib/codegen';
 import { toTransformResult } from './lib/transform';
+import { OptionDiagnosticCode } from './optionDiagnostics';
 import type {
 	OpenProjectParams,
 	OpenProjectResult,
@@ -22,6 +23,8 @@ interface ProjectConfiguration {
 	languageFeatures: boolean;
 	vueOptions: vue.VueCompilerOptions;
 	pluginFiles: string[];
+	/** Why entries of `plugins`, or the `format`, have no effect. */
+	pluginErrors: vue.VuePluginError[];
 	files: Map<string, FileState>;
 }
 
@@ -74,7 +77,10 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		return {
 			configIdentity: createIdentity(params, configuration),
 			watchedFiles: [...watchedFiles].sort(),
-			optionDiagnostics: frontend.toOptionDiagnostics?.(params.options),
+			optionDiagnostics: [
+				...frontend.toOptionDiagnostics?.(params.options) ?? [],
+				...configuration.pluginErrors.map(error => toPluginDiagnostic(params.options, error)),
+			],
 		};
 	}
 
@@ -146,23 +152,25 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 				return content;
 			}
 			: readFileIfExists;
-		const { languageFeatures, vueOptions, pluginFiles } = resolveMapperOptions(
+		const { languageFeatures, vueOptions, pluginFiles, pluginErrors } = resolveMapperOptions(
 			readFile,
 			configFileName || undefined,
 			state.params.options,
 		);
 		const ts = loadTypeScript();
+		const pipeline = vue.createIRPipeline(ts, vueOptions);
 		const configuration: ProjectConfiguration = {
 			ts,
-			pipeline: vue.createIRPipeline(ts, vueOptions),
+			pipeline,
 			languageFeatures,
 			vueOptions,
 			pluginFiles,
+			pluginErrors: [...pluginErrors, ...pipeline.errors],
 			files: new Map(),
 		};
 		if (watchedFiles) {
 			for (const fileName of configuration.pluginFiles) {
-				watchedFiles.add(fileName);
+				watchedFiles.add(path.normalize(fileName));
 			}
 		}
 		state.configurations.set(configFileName, configuration);
@@ -190,9 +198,36 @@ function createIdentity(params: OpenProjectParams, configuration: ProjectConfigu
 			params.options ?? null,
 			configuration.languageFeatures,
 			vueOptions,
-			configuration.pluginFiles.map(fileName => readFileIfExists(fileName) ?? null),
+			configuration.pluginFiles.map(fileName => {
+				const content = readFileIfExists(fileName) ?? null;
+				// A package is identified by its version, not by the rest of its manifest
+				if (content !== null && path.basename(fileName) === 'package.json') {
+					try {
+						const { name, version } = JSON.parse(content);
+						return `${name}@${version}`;
+					}
+					catch {}
+				}
+				return content;
+			}),
 		]))
 		.digest('hex');
+}
+
+/** The diagnostic of `error` at its entry of the `plugins` option, or at the `format` option. */
+function toPluginDiagnostic(options: OpenProjectParams['options'], error: vue.VuePluginError): OptionDiagnostic {
+	if (error.plugin === undefined) {
+		return { path: ['format'], messageText: error.message, code: OptionDiagnosticCode.InvalidOptionType };
+	}
+	const entries = Array.isArray(options?.plugins) ? options.plugins as unknown[] : [];
+	const index = entries.findIndex(entry =>
+		(typeof entry === 'string' ? entry : (entry as { name?: unknown } | null)?.name) === error.plugin
+	);
+	return {
+		path: index >= 0 ? ['plugins', index] : ['plugins'],
+		messageText: `Plugin '${error.plugin}': ${error.message}`,
+		code: OptionDiagnosticCode.InvalidPlugin,
+	};
 }
 
 function readFileIfExists(fileName: string) {

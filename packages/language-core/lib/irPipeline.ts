@@ -57,9 +57,6 @@ export function createIRPipeline(
 		});
 		format = sfcParser;
 	}
-	for (const { plugin, message } of errors) {
-		console.warn(plugin !== undefined ? `[Vue] Plugin ${plugin}: ${message}` : `[Vue] ${message}`);
-	}
 
 	return {
 		errors,

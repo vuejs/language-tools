@@ -40,6 +40,8 @@ export interface ResolvedVuePlugin {
 	name: string;
 	/** The file that `name` resolves to. */
 	file: string;
+	/** The `package.json` of the package that `name` names, if `name` is a bare specifier. */
+	packageJson?: { file: string; name: string; version: string | undefined };
 	/** The entry without its `name`. */
 	config: Record<string, any>;
 	/** The exports of `file`. */

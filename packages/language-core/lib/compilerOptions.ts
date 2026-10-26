@@ -1,7 +1,7 @@
 import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import picomatch from 'picomatch';
-import type { RawPlugin, RawVueCompilerOptions, ResolvedVuePlugin, VueCompilerOptions } from './types';
+import type { RawPlugin, RawVueCompilerOptions, ResolvedVuePlugin, VueCompilerOptions, VuePluginError } from './types';
 import { hyphenateTag } from './utils/shared';
 
 export class CompilerOptionsResolver {
@@ -9,8 +9,10 @@ export class CompilerOptionsResolver {
 	target: number | undefined;
 	typesRoot: string | undefined;
 	plugins: ResolvedVuePlugin[] = [];
-	/** The files that the names of `plugins` resolve to, including the ones that fail to load. */
+	/** The files of `plugins` and the entries that fail to load, and the `package.json` of each plugin package. */
 	pluginFiles: string[] = [];
+	/** The entries of `plugins` that fail to load. */
+	pluginErrors: VuePluginError[] = [];
 
 	constructor(
 		public readFile: (fileName: string) => string | undefined,
@@ -40,7 +42,11 @@ export class CompilerOptionsResolver {
 				case 'plugins':
 					// A config that declares `plugins` replaces the inherited list; `[]` clears it
 					if (options.plugins) {
-						({ plugins: this.plugins, files: this.pluginFiles } = resolveVuePlugins(options.plugins, rootDir));
+						({ plugins: this.plugins, files: this.pluginFiles, errors: this.pluginErrors } = resolveVuePlugins(
+							options.plugins,
+							rootDir,
+							this.readFile,
+						));
 					}
 					break;
 				default:
@@ -115,17 +121,20 @@ export class CompilerOptionsResolver {
 /**
  * The Vue compiler options of one TS 7.1 `contentMappers` entry, read from its `options` relative to `rootDir`.
  * Keys that are not Vue compiler options, such as a Content Mapper's own settings, have no effect.
- * The files that the `plugins` resolve to, including the ones that fail to load, are added to `pluginFiles`.
+ * The files of the `plugins`, as `resolveVuePlugins` lists them, are added to `pluginFiles`, and the entries that fail
+ * to load to `pluginErrors`.
  */
 export function resolveVueCompilerOptions(
 	readFile: (fileName: string) => string | undefined,
 	rootDir: string,
 	options: RawVueCompilerOptions = {},
 	pluginFiles?: string[],
+	pluginErrors?: VuePluginError[],
 ) {
 	const resolver = new CompilerOptionsResolver(readFile);
 	resolver.addConfig(options, rootDir);
 	pluginFiles?.push(...resolver.pluginFiles);
+	pluginErrors?.push(...resolver.pluginErrors);
 	const vueOptions = resolver.build();
 	if (vueOptions.format === 'petite-vue') {
 		vueOptions.globalTemplateContext = true;
@@ -135,29 +144,70 @@ export function resolveVueCompilerOptions(
 
 /**
  * Resolves the `plugins` entries relative to `rootDir` and loads their modules. `files` lists every file that an
- * entry resolves to, including the ones that fail to load.
+ * entry resolves to, including the ones that fail to load, and the `package.json` of each plugin package; `errors`
+ * lists the entries that fail to load.
  */
-export function resolveVuePlugins(list: RawPlugin[], rootDir: string) {
+export function resolveVuePlugins(
+	list: RawPlugin[],
+	rootDir: string,
+	readFile: (fileName: string) => string | undefined,
+) {
 	const plugins: ResolvedVuePlugin[] = [];
 	const files: string[] = [];
+	const errors: VuePluginError[] = [];
 	for (const raw of list) {
 		const { name, ...config } = typeof raw === 'string' ? { name: raw } : raw;
+		let file: string | undefined;
 		try {
-			const resolve = (require as NodeJS.Require | undefined)?.resolve;
-			const file = resolve?.(name, { paths: [rootDir] });
-			if (file) {
-				files.push(file);
-				plugins.push({ name, file, config, module: require(file) });
-			}
-			else {
-				console.warn('[Vue] Load plugin failed:', name);
-			}
+			file = (require as NodeJS.Require | undefined)?.resolve(name, { paths: [rootDir] });
+		}
+		catch {}
+		if (!file) {
+			errors.push({ plugin: name, message: `Cannot find the plugin from '${rootDir}'.` });
+			continue;
+		}
+		files.push(file);
+		const packageJson = findPackageJson(name, file, readFile);
+		if (packageJson) {
+			files.push(packageJson.file);
+		}
+		try {
+			plugins.push({ name, file, packageJson, config, module: require(file) });
 		}
 		catch (error) {
-			console.warn('[Vue] Resolve plugin path failed:', name, error);
+			errors.push({ plugin: name, message: `Failed to load '${file}': ${error}` });
 		}
 	}
-	return { plugins, files };
+	return { plugins, files, errors };
+}
+
+/** The `package.json` of the package that a bare specifier `name` names, found up from `file`. */
+function findPackageJson(
+	name: string,
+	file: string,
+	readFile: (fileName: string) => string | undefined,
+): ResolvedVuePlugin['packageJson'] {
+	if (name.startsWith('.') || path.isAbsolute(name.replace(/\\/g, '/'))) {
+		return;
+	}
+	const segments = name.split('/');
+	const packageName = segments.slice(0, name.startsWith('@') ? 2 : 1).join('/');
+	for (let dir = path.dirname(file.replace(/\\/g, '/'));; dir = path.dirname(dir)) {
+		const fileName = path.join(dir, 'package.json');
+		const content = readFile(fileName);
+		if (content !== undefined) {
+			try {
+				const { name, version } = JSON.parse(content);
+				if (name === packageName) {
+					return { file: fileName, name, version };
+				}
+			}
+			catch {}
+		}
+		if (path.dirname(dir) === dir) {
+			return;
+		}
+	}
 }
 
 export function getDefaultCompilerOptions(

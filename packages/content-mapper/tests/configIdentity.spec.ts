@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, expect, test } from 'vitest';
+import { OptionDiagnosticCode } from '../optionDiagnostics';
 import { closeProject, openProject } from '../project';
 import type { MapperOptions } from '../protocol';
 
@@ -92,4 +93,60 @@ test('a plugin file that fails to load is still watched and fingerprinted', () =
 
 	fs.writeFileSync(pluginFile, `throw new Error('still broken');\n`);
 	expect(open(configFileName, options).configIdentity).not.toBe(broken.configIdentity);
+});
+
+test('a plugin package that differs in version gives another identity', () => {
+	const options = { target: 3.5, plugins: ['vue-plugin'] };
+	const pluginPackage = (version: string) => JSON.stringify({ name: 'vue-plugin', version, main: 'index.js' });
+	const configFileName = createProject('plugin-version', {
+		'tsconfig.json': '{}',
+		'node_modules/vue-plugin/package.json': pluginPackage('1.0.0'),
+		'node_modules/vue-plugin/index.js': plugin('same'),
+	});
+	const packageJson = path.join(path.dirname(configFileName), 'node_modules/vue-plugin/package.json');
+	const first = open(configFileName, options);
+	expect(first.watchedFiles).toContain(packageJson);
+
+	fs.writeFileSync(packageJson, JSON.stringify({ ...JSON.parse(pluginPackage('1.0.0')), description: 'same' }));
+	expect(open(configFileName, options).configIdentity).toBe(first.configIdentity);
+
+	fs.writeFileSync(packageJson, pluginPackage('1.0.1'));
+	expect(open(configFileName, options).configIdentity).not.toBe(first.configIdentity);
+});
+
+test('plugins that fail to load are reported as option diagnostics', () => {
+	const configFileName = createProject('plugin-diagnostics', {
+		'tsconfig.json': '{}',
+		'legacy.cjs': `module.exports = () => ({ version: 4 });\n`,
+		'pug-a.cjs': `exports.ir = { templateCompilers: { pug: () => undefined } };\n`,
+		'pug-b.cjs': `exports.ir = { templateCompilers: { pug: () => undefined } };\n`,
+	});
+	const opened = open(configFileName, {
+		target: 3.5,
+		format: 'custom',
+		plugins: ['./missing.cjs', { name: './legacy.cjs' }, './pug-a.cjs', './pug-b.cjs'],
+	});
+	expect(opened.optionDiagnostics).toEqual([
+		{
+			path: ['plugins', 0],
+			messageText: `Plugin './missing.cjs': Cannot find the plugin from '${path.dirname(configFileName)}'.`,
+			code: OptionDiagnosticCode.InvalidPlugin,
+		},
+		{
+			path: ['plugins', 1],
+			messageText:
+				`Plugin './legacy.cjs': VueLanguagePlugin functions are no longer supported; export \`{ ir: … }\` (see language-core README)`,
+			code: OptionDiagnosticCode.InvalidPlugin,
+		},
+		{
+			path: ['plugins', 3],
+			messageText: `Plugin './pug-b.cjs': The template compiler 'pug' is already provided by './pug-a.cjs'.`,
+			code: OptionDiagnosticCode.InvalidPlugin,
+		},
+		{
+			path: ['format'],
+			messageText: `No format 'custom' is built in or provided by a plugin; 'sfc' is used instead.`,
+			code: OptionDiagnosticCode.InvalidOptionType,
+		},
+	]);
 });

@@ -10,6 +10,8 @@ export enum OptionDiagnosticCode {
 	UnknownOption = 1,
 	RemovedOption = 2,
 	InvalidOptionType = 3,
+	/** A `plugins` entry, or a part of it, that fails to load. */
+	InvalidPlugin = 4,
 }
 
 /** Options removed in v4, reported with a migration hint instead of a plain unknown-option message. */
