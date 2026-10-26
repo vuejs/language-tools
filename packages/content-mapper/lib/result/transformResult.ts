@@ -1,9 +1,9 @@
 import { codeToString, type IR, resolveCodeOffsets } from '@vue/language-core';
-import { getUnusedExpectErrorMessage } from '../localization';
+import type { ServiceScript } from '../codegen';
 import type { SpanMapping, TransformResult } from '../protocol';
-import { toSpanMappings } from '../spanMappings';
-import { buildDiagnosticDirectives, buildMappings } from './buildMappings';
-import type { ServiceScript } from './codegen';
+import { toSpanMappings } from './spanMappings';
+import { buildDiagnosticDirectives, buildMappings } from './tsCodeMappings';
+import { getUnusedExpectErrorMessage } from './unusedExpectErrorMessages';
 
 /** The transform result of a service script generated from `ir`, whose source text is `content`. */
 export function toTransformResult(

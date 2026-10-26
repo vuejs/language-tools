@@ -1,7 +1,7 @@
-import type { TsCode } from '../../boundary';
 import { names } from '../names';
 import type { TemplateCodegenContext } from '../template/context';
 import { generateStyleScopedClassReference } from '../template/styleScopedClasses';
+import type { TsCode } from '../tsCode';
 import { endOfLine, generateTypeAlias, isTsLang } from '../utils';
 import type { StyleCodegenOptions } from '.';
 import { generateClassProperty } from './common';

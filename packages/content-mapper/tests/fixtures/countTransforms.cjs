@@ -5,7 +5,7 @@ const path = require('node:path');
 
 const main = process.argv[1] ?? '';
 if (path.basename(main) === 'server.js' && path.basename(path.dirname(main)) === 'content-mapper') {
-	const { TransformPool } = require(path.join(path.dirname(main), 'workerPool.js'));
+	const { TransformPool } = require(path.join(path.dirname(main), 'lib/server/workerPool.js'));
 	const transform = TransformPool.prototype.transform;
 	TransformPool.prototype.transform = function(params) {
 		fs.appendFileSync(process.env.VUE_CONTENT_MAPPER_TRANSFORM_LOG, params.fileName + '\n');

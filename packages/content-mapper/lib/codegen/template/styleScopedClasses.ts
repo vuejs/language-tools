@@ -6,8 +6,8 @@ import {
 	type IRBlock,
 	navigationFeatures,
 } from '@vue/language-core';
-import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
+import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { endOfLine, typeAliasRef } from '../utils';
 import { generateEscaped } from '../utils/escaped';
 import type { TemplateCodegenOptions } from './index';

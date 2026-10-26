@@ -1,5 +1,5 @@
 import type { VueCodeMarker } from '@vue/language-core';
-import type { TsCode } from '../../boundary';
+import type { TsCode } from '../tsCode';
 import { identifierRE } from '../utils';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';

@@ -1,9 +1,14 @@
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { synthesizedIgnore, type TsCode } from '../lib/boundary';
-import { buildDiagnosticDirectives } from '../lib/buildMappings';
-import { getUnmappedRanges } from '../lib/transform';
-import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy, SpanMapKind, type SpanMapping } from '../protocol';
+import { synthesizedIgnore, type TsCode } from '../lib/codegen/tsCode';
+import {
+	type DiagnosticDirectiveMapping,
+	DiagnosticDirectivePolicy,
+	SpanMapKind,
+	type SpanMapping,
+} from '../lib/protocol';
+import { getUnmappedRanges } from '../lib/result/transformResult';
+import { buildDiagnosticDirectives } from '../lib/result/tsCodeMappings';
 import { normalizeCompilerOutput, repositoryRoot, runTsc } from './utils';
 
 test('reports an unused @vue-expect-error by the directive name the user wrote', () => {

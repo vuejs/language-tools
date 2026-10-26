@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { getUnusedExpectErrorMessage, unusedExpectErrorMessages } from '../localization';
+import { getUnusedExpectErrorMessage, unusedExpectErrorMessages } from '../lib/result/unusedExpectErrorMessages';
 
 test('localizes unused expect-error diagnostics', () => {
 	expect(getUnusedExpectErrorMessage('ja')).toBe(

@@ -1,15 +1,15 @@
 import { availableParallelism } from 'node:os';
 import * as path from 'node:path';
 import { Worker } from 'node:worker_threads';
-import { fnv1a } from './hash';
-import type { ContentMapper } from './mapper';
+import { fnv1a } from '../hash';
+import type { ContentMapper } from '../mapper/contentMapper';
 import type {
 	CloseProjectParams,
 	OpenProjectParams,
 	OpenProjectResult,
 	TransformParams,
 	TransformResult,
-} from './protocol';
+} from '../protocol';
 
 interface WorkerRequest {
 	id: number;
@@ -55,7 +55,7 @@ export class TransformPool {
 	constructor(
 		mapper: ContentMapper,
 		workerCount = readWorkerCount(),
-		workerPath = path.resolve(__dirname, 'worker.js'),
+		workerPath = path.resolve(__dirname, '../../worker.js'),
 	) {
 		this.workerCount = workerCount;
 		this.#mapper = mapper;

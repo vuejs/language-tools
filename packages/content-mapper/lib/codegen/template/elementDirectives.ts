@@ -1,8 +1,8 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '@vue/language-core';
 import { camelize, isBuiltInDirective } from '@vue/shared';
-import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
+import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, endOfLine, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';

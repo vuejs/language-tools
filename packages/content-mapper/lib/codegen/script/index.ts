@@ -11,11 +11,11 @@ import {
 	type VueCompilerOptions,
 } from '@vue/language-core';
 import * as path from 'path-browserify';
-import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import type { CodegenContributions, ScriptEdit } from '../plugin';
 import { createBlockRewrite } from '../rewrite/tsCode';
 import { generateStyleModuleImports } from '../style/modules';
+import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { createScriptSetupCopies, generateGeneric, generateMacros, generateSetupFunction } from './scriptSetup';

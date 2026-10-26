@@ -2,9 +2,9 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, expect, test } from 'vitest';
-import { OptionDiagnosticCode } from '../optionDiagnostics';
-import { closeProject, openProject } from '../project';
-import type { MapperOptions } from '../protocol';
+import { OptionDiagnosticCode } from '../lib/mapper/optionDiagnostics';
+import { closeProject, openProject } from '../lib/mapper/vueContentMapper';
+import type { MapperOptions } from '../lib/protocol';
 
 const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'vue-config-identity-')));
 let nextHandle = 0;

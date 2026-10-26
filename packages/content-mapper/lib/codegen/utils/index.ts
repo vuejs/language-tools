@@ -1,5 +1,5 @@
 import type { IRScript, IRScriptSetup, VueCodeMarker, VueCompilerOptions } from '@vue/language-core';
-import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
+import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;

@@ -6,8 +6,8 @@ import {
 	scriptFeatures,
 	semanticFeatures,
 } from '@vue/language-core';
-import { Boundary, type TsCode } from '../../boundary';
 import { names } from '../names';
+import { Boundary, type TsCode } from '../tsCode';
 import { endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateElementProps, generatePropExp } from './elementProps';

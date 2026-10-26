@@ -7,10 +7,10 @@ import {
 	type ScriptSetupRanges,
 	type TextRange,
 } from '@vue/language-core';
-import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import type { CoreRewriteWriter, RewriteSlice } from '../rewrite';
 import { createBlockRewrite, type TsCodeData } from '../rewrite/tsCode';
+import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import {
 	asType,
 	endOfLine,

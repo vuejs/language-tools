@@ -8,9 +8,9 @@ import {
 	type TemplateScope,
 	type VueCodeMarker,
 } from '@vue/language-core';
-import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../../../protocol';
-import { Boundary, isSynthesizedIgnore, OpenRanges, type TsCode } from '../../boundary';
+import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../../protocol';
 import { names } from '../names';
+import { Boundary, isSynthesizedIgnore, OpenRanges, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine, typeAliasRef } from '../utils';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;

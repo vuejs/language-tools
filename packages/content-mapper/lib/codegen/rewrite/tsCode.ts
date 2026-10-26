@@ -1,6 +1,6 @@
 import { type IRScript, type IRScriptSetup, scriptFeatures, type VueCodeMarker } from '@vue/language-core';
-import type { TsCode } from '../../boundary';
 import type { ScriptEdit } from '../plugin';
+import type { TsCode } from '../tsCode';
 import { generateSfcBlockSection } from '../utils';
 import { createSourceRewrite, type RewriteSink, type RewriteSlice, type SourceRewrite } from '.';
 

@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { vueContentMapper } from '../project';
-import { TransformPool } from '../workerPool';
+import { vueContentMapper } from '../lib/mapper/vueContentMapper';
+import { TransformPool } from '../lib/server/workerPool';
 
 test('transforms files concurrently with project state in every worker', async () => {
 	const pool = new TransformPool(vueContentMapper, 2);

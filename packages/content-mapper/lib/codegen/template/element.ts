@@ -11,9 +11,9 @@ import {
 	semanticFeatures,
 } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
+import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { endOfLine, generateTypedVar, identifierRE, newLine, typeAliasRef } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';

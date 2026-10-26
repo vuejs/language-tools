@@ -6,8 +6,8 @@ import {
 	semanticFeatures,
 } from '@vue/language-core';
 import { expect, test } from 'vitest';
-import { SpanMapFeature, SpanMapKind } from '../protocol';
-import { toSpanMappings } from '../spanMappings';
+import { SpanMapFeature, SpanMapKind } from '../lib/protocol';
+import { toSpanMappings } from '../lib/result/spanMappings';
 
 const Verbatim = SpanMapKind.Verbatim;
 const Atom = SpanMapKind.Atom;

@@ -11,8 +11,8 @@ import {
 import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAST';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
-import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
+import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { endOfLine, generateTypedVar, getRefBrandArgument, identifierRE, isTsLang, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';

@@ -1,6 +1,6 @@
 import * as vue from '@vue/language-core';
 import * as path from 'node:path';
-import type { MapperOptions } from './protocol';
+import type { MapperOptions } from '../protocol';
 
 /** Resolves one mapper entry from its own `options` alone. */
 export function resolveMapperOptions(

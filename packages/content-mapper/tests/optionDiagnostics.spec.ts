@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { OptionDiagnosticCode, toOptionDiagnostics } from '../optionDiagnostics';
+import { OptionDiagnosticCode, toOptionDiagnostics } from '../lib/mapper/optionDiagnostics';
 
 test('accepts every documented option', () => {
 	expect(toOptionDiagnostics(undefined)).toEqual([]);

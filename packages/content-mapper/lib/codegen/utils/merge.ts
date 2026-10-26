@@ -1,4 +1,4 @@
-import type { TsCode } from '../../boundary';
+import type { TsCode } from '../tsCode';
 import { newLine } from './index';
 
 export function* generateIntersectMerge(...codes: TsCode[]): Generator<TsCode> {

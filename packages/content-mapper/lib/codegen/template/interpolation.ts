@@ -6,8 +6,8 @@ import {
 	type VueCodeMarker,
 	type VueCompilerOptions,
 } from '@vue/language-core';
-import { Boundary, type TsCode } from '../../boundary';
 import { names } from '../names';
+import { Boundary, type TsCode } from '../tsCode';
 import { getRefBrandArgument } from '../utils';
 import type { TemplateCodegenContext } from './context';
 

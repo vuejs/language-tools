@@ -1,7 +1,7 @@
 import type { VueCodeMarker } from '@vue/language-core';
 import { camelize } from '@vue/shared';
-import { Boundary, type TsCode } from '../../boundary';
 import { names } from '../names';
+import { Boundary, type TsCode } from '../tsCode';
 import { identifierRE } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';

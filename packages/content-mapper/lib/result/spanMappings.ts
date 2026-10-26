@@ -1,6 +1,6 @@
 import { allFeatures, completionFeatures, type Mapping, navigationFeatures } from '@vue/language-core';
-import { fnv1a } from './hash';
-import { SpanMapKind, type SpanMapping } from './protocol';
+import { fnv1a } from '../hash';
+import { SpanMapKind, type SpanMapping } from '../protocol';
 
 interface Candidate {
 	generatedStart: number;

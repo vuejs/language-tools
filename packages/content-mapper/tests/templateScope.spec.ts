@@ -4,7 +4,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as ts5 from 'typescript-5';
 import { expect, test } from 'vitest';
-import { resolveMapperOptions } from '../vueOptions';
+import { resolveMapperOptions } from '../lib/mapper/mapperOptions';
 import { createSource, generateFromSource, repositoryRoot } from './utils';
 
 const workspace = path.join(repositoryRoot, 'test-workspace');

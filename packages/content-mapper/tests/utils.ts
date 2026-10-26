@@ -10,9 +10,9 @@ import {
 import { loadTypeScript } from '@vue/language-core/typescript';
 import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
-import { buildMappings } from '../lib/buildMappings';
 import { generateServiceScript } from '../lib/codegen';
 import type { CodegenPlugin } from '../lib/codegen/plugin';
+import { buildMappings } from '../lib/result/tsCodeMappings';
 
 export const repositoryRoot = path.resolve(__dirname, '../../..');
 

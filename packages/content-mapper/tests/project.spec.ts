@@ -2,9 +2,9 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { getUnusedExpectErrorMessage } from '../localization';
-import { closeProject, openProject, transformVue } from '../project';
-import { DiagnosticDirectivePolicy, SpanMapFeature } from '../protocol';
+import { closeProject, openProject, transformVue } from '../lib/mapper/vueContentMapper';
+import { DiagnosticDirectivePolicy, SpanMapFeature } from '../lib/protocol';
+import { getUnusedExpectErrorMessage } from '../lib/result/unusedExpectErrorMessages';
 
 test('generates a Vue service script with source mappings', () => {
 	const projectHandle = 'test-project';

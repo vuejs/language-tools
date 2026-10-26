@@ -1,9 +1,9 @@
 import { SpanMapKind } from '@volar/language-core';
 import { completionFeatures, navigationFeatures, type VueCodeMarker } from '@vue/language-core';
 import { expect, test } from 'vitest';
-import { type CodeBoundary, synthesizedIgnore, type TsCode } from '../lib/boundary';
-import { buildDiagnosticDirectives, buildMappings } from '../lib/buildMappings';
-import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../protocol';
+import { type CodeBoundary, synthesizedIgnore, type TsCode } from '../lib/codegen/tsCode';
+import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../lib/protocol';
+import { buildDiagnosticDirectives, buildMappings } from '../lib/result/tsCodeMappings';
 
 const navigation = { features: navigationFeatures };
 const navigationAndCompletion = { features: navigationFeatures | completionFeatures };

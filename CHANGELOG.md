@@ -40,6 +40,12 @@ Plugins that changed the generated TypeScript move to `codegen`. Each one drops 
 
 Unsupported: wrapping the template (layout slots of dxup), changing the shape of the component (`define-generic` of vue-macros; use `generic="…"`), template expressions in custom blocks, and intersecting a type into the default export.
 
+### Module paths
+
+Modules moved; every package entry exports the same names, and `contentMappers` entries naming `@vue/content-mapper` keep working. Deep imports of the old paths break:
+
+- **breaking:** `@vue/content-mapper`: `protocol` and `hash` -> `lib/protocol`, `lib/hash`; `runtime` -> `lib/server/stdioServer` (`runMapperServer`) and `lib/server/workerThread` (`runMapperWorker`); `workerPool` -> `lib/server/workerPool`; `mapper` -> `lib/mapper/contentMapper`; `project` -> `lib/mapper/vueContentMapper`; `vueOptions` -> `lib/mapper/mapperOptions`; `optionDiagnostics` -> `lib/mapper/optionDiagnostics`; `lib/transform` -> `lib/result/transformResult`; `lib/buildMappings` -> `lib/result/tsCodeMappings`; `spanMappings` -> `lib/result/spanMappings`; `localization` -> `lib/result/unusedExpectErrorMessages`; `lib/boundary` -> `lib/codegen/tsCode`. `server` and `worker` stay.
+
 ## 3.3.13 (2026-10-10)
 
 ### language-core

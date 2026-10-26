@@ -1,7 +1,7 @@
 import { isCompletionEnabled, type Mapping, SpanMapKind } from '@volar/language-core';
 import type { VueCodeMarker } from '@vue/language-core';
+import { isSynthesizedIgnore, OpenRanges, type TsCode } from '../codegen/tsCode';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../protocol';
-import { isSynthesizedIgnore, OpenRanges, type TsCode } from './boundary';
 
 interface Entry {
 	generatedStart: number;

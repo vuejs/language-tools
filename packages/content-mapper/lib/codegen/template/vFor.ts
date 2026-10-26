@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { parseVForAliases, scriptFeatures } from '@vue/language-core';
-import type { TsCode } from '../../boundary';
 import { names } from '../names';
+import type { TsCode } from '../tsCode';
 import { asType, endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';

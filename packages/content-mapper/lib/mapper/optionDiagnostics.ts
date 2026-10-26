@@ -1,5 +1,5 @@
 import { getDefaultCompilerOptions } from '@vue/language-core';
-import type { OptionDiagnostic } from './protocol';
+import type { OptionDiagnostic } from '../protocol';
 
 /**
  * Stable codes for the diagnostics reported through `optionDiagnostics`. The host renders them against

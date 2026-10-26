@@ -9,7 +9,7 @@ import type {
 	VuePluginContext,
 	VuePluginError,
 } from '@vue/language-core';
-import { Boundary, type TsCode } from '../boundary';
+import { Boundary, type TsCode } from './tsCode';
 import { identifierRE } from './utils';
 
 /** The `codegen` export of a `plugins` entry's module. */

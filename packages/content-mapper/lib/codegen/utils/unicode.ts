@@ -1,5 +1,5 @@
 import type { VueCodeMarker } from '@vue/language-core';
-import { Boundary, type TsCode } from '../../boundary';
+import { Boundary, type TsCode } from '../tsCode';
 
 export function* generateUnicode(code: string, offset: number, features: VueCodeMarker): Generator<TsCode> {
 	if (needToUnicode(code)) {

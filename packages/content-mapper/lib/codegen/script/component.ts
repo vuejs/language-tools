@@ -1,6 +1,6 @@
 import { type IRScriptSetup, navigationFeatures, type ScriptSetupRanges } from '@vue/language-core';
-import type { TsCode } from '../../boundary';
 import { names } from '../names';
+import type { TsCode } from '../tsCode';
 import { asType, asTypeCode, generateSfcBlockSection, intersectTypes, newLine, typeAliasRef } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';

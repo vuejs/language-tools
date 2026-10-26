@@ -5,18 +5,18 @@ import { computed } from 'alien-signals';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { useServiceScript } from './lib/codegen';
-import { type CodegenPlugin, loadCodegenPlugins } from './lib/codegen/plugin';
-import { toTransformResult } from './lib/transform';
-import { OptionDiagnosticCode } from './optionDiagnostics';
+import { useServiceScript } from '../codegen';
+import { type CodegenPlugin, loadCodegenPlugins } from '../codegen/plugin';
 import type {
 	OpenProjectParams,
 	OpenProjectResult,
 	OptionDiagnostic,
 	TransformParams,
 	TransformResult,
-} from './protocol';
-import { resolveMapperOptions } from './vueOptions';
+} from '../protocol';
+import { toTransformResult } from '../result/transformResult';
+import { resolveMapperOptions } from './mapperOptions';
+import { OptionDiagnosticCode } from './optionDiagnostics';
 
 interface ProjectConfiguration {
 	ts: vue.TypeScript;

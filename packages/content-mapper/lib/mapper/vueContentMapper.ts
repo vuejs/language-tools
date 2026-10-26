@@ -1,4 +1,4 @@
-import { createContentMapper } from './mapper';
+import { createContentMapper } from './contentMapper';
 import { toOptionDiagnostics } from './optionDiagnostics';
 
 /** The `.vue` content mapper: Vue single-file components, registered for `.vue` by the host. */

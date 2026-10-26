@@ -1,11 +1,11 @@
 import { getScriptLang, type IR, type ScriptAnalysis, type TypeScript, type VueSource } from '@vue/language-core';
 import { BindingFlag } from '@vue/language-core/lib/script/bindings';
 import { computed } from 'alien-signals';
-import type { TsCode } from '../boundary';
 import { type CodegenPlugin, getContributions } from './plugin';
 import { generateScript } from './script';
 import { generateStyle } from './style';
 import { generateTemplate } from './template';
+import type { TsCode } from './tsCode';
 
 /** The generated TypeScript / JavaScript code of a Vue file, and the language TypeScript should see it as. */
 export interface ServiceScript {

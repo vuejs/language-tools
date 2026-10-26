@@ -5,8 +5,8 @@ import {
 	type TypeScript,
 	type VueCompilerOptions,
 } from '@vue/language-core';
-import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
+import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { endOfLine, generateTypeAlias, generateTypedVar, newLine, typeAliasRef } from '../utils';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';

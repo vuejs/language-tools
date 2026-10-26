@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { codeToString, scriptFeatures } from '@vue/language-core';
-import type { TsCode } from '../../boundary';
+import type { TsCode } from '../tsCode';
 import { newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';

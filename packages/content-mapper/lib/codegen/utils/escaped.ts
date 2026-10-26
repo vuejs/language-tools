@@ -1,4 +1,4 @@
-import type { TsCode } from '../../boundary';
+import type { TsCode } from '../tsCode';
 
 /** The parts map only as part of the enclosing boundary. */
 export function* generateEscaped(

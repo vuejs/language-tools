@@ -11,9 +11,10 @@ export type {
 	VueCodegenSourceSpan,
 	VueCodegenSourceText,
 } from './lib/codegen/plugin';
-export * from './mapper';
-export * from './optionDiagnostics';
-export * from './protocol';
-export * from './runtime';
-export * from './vueOptions';
-export * from './workerPool';
+export * from './lib/mapper/contentMapper';
+export * from './lib/mapper/mapperOptions';
+export * from './lib/mapper/optionDiagnostics';
+export * from './lib/protocol';
+export * from './lib/server/stdioServer';
+export * from './lib/server/workerPool';
+export * from './lib/server/workerThread';

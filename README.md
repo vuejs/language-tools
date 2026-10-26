@@ -171,8 +171,12 @@ packages/
     options/              Vue compiler options, comment options, IR plugins
     ir/                   the IR pipeline and the reactive IR and analysis of a file
     mappings/             mapping features and source mappings
-  content-mapper/         TS 7.1 Content Mapper: protocol, worker pool, mapper (package root)
+  content-mapper/         TS 7.1 Content Mapper (server.ts: the process, worker.ts: a worker thread)
+    lib/protocol.ts       the protocol messages
+    lib/server/           JSON-RPC over stdio, the worker threads and their pool
+    lib/mapper/           projects, their Vue options and option diagnostics, the transform of a file
     lib/codegen/          IR -> TypeScript code, by script, template and style
+    lib/result/           generated code -> transform result: mappings, span mappings, diagnostic directives
   language-service/lib/   Volar language service plugins (plugins/) and embedded documents (virtualCode/)
   language-server/        the LSP server
   component-meta/         component props, events, slots and exposed types

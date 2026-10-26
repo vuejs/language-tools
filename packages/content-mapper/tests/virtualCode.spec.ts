@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { createContentMapper } from '../mapper';
+import { createContentMapper } from '../lib/mapper/contentMapper';
 import { normalizeCompilerOutput, repositoryRoot, runTsc } from './utils';
 
 const fixturesRoot = path.join(repositoryRoot, 'test-workspace/content-mapper-virtual-code');

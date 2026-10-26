@@ -5,9 +5,9 @@ import {
 	type TypeScript,
 	type VueCompilerOptions,
 } from '@vue/language-core';
-import type { TsCode } from '../../boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
+import type { TsCode } from '../tsCode';
 import { endOfLine } from '../utils';
 import { generateStyleModules } from './modules';
 import { generateStyleScopedClasses } from './scopedClasses';

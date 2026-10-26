@@ -1,4 +1,4 @@
-import { vueContentMapper } from './project';
-import { runMapperWorker } from './runtime';
+import { vueContentMapper } from './lib/mapper/vueContentMapper';
+import { runMapperWorker } from './lib/server/workerThread';
 
 runMapperWorker(vueContentMapper);
