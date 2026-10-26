@@ -1,5 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import {
+	codeToString,
 	completionFeatures,
 	getComponentIsBinding,
 	getElementTagOffsets,
@@ -10,7 +11,6 @@ import {
 	semanticFeatures,
 } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import { toString } from 'muggle-string';
 import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
@@ -191,7 +191,7 @@ export function* generateComponent(
 		props,
 		failedPropExps,
 	)];
-	const propsStr = toString(propCodes);
+	const propsStr = codeToString(propCodes);
 
 	// The instance type comes from a real construct call with a copy of the props: only a call resolves the
 	// overloads of the component and infers its type parameters from the props, including intersections of

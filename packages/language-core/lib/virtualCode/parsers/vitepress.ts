@@ -1,7 +1,6 @@
 import { SourceMap } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
-import { toString } from 'muggle-string';
-import type { Code, VueFormat } from '../../types';
+import { type Code, codeToString, type VueFormat } from '../../types';
 import { buildMappings } from '../../utils/buildMappings';
 import { parse } from '../../utils/parseSfc';
 
@@ -64,7 +63,7 @@ export const vitePressParser: VueFormat = {
 
 		const mappings = buildMappings(codes);
 		const mapper = new SourceMap(mappings);
-		const sfc = parse(toString(codes));
+		const sfc = parse(codeToString(codes));
 
 		for (
 			const block of [

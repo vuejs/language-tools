@@ -1,4 +1,5 @@
 import {
+	codeToString,
 	createIRPipeline,
 	createVueSource,
 	getDefaultCompilerOptions,
@@ -7,7 +8,6 @@ import {
 	type VueSource,
 } from '@vue/language-core';
 import { loadTypeScript } from '@vue/language-core/typescript';
-import { toString } from 'muggle-string';
 import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
 import { buildMappings } from '../lib/buildMappings';
@@ -81,7 +81,7 @@ export function generateFromSource(source: VueSource, plugins?: readonly Codegen
 	const resolved = resolveCodeOffsets(source.ir, codes);
 	return {
 		lang,
-		text: toString(resolved),
+		text: codeToString(resolved),
 		mappings: buildMappings(resolved),
 	};
 }

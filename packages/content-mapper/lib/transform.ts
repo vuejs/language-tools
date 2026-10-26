@@ -1,5 +1,4 @@
-import { type IR, resolveCodeOffsets } from '@vue/language-core';
-import { toString } from 'muggle-string';
+import { codeToString, type IR, resolveCodeOffsets } from '@vue/language-core';
 import { getUnusedExpectErrorMessage } from '../localization';
 import type { SpanMapping, TransformResult } from '../protocol';
 import { toSpanMappings } from '../spanMappings';
@@ -14,7 +13,7 @@ export function toTransformResult(
 	languageFeatures: boolean,
 ): TransformResult {
 	const codes = resolveCodeOffsets(ir, script.codes);
-	const text = toString(codes);
+	const text = codeToString(codes);
 	const mappings = toSpanMappings(buildMappings(codes), text, content, languageFeatures);
 	return {
 		text,

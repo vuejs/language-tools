@@ -66,6 +66,15 @@ export type CodeSegment<Data> =
 		data: Data,
 	];
 
+/** The text of `codes`. */
+export function codeToString(codes: readonly CodeSegment<unknown>[]): string {
+	let text = '';
+	for (const code of codes) {
+		text += typeof code === 'string' ? code : code[0];
+	}
+	return text;
+}
+
 /** A segment of an embedded document, which maps by its own marker alone. */
 export type Code = CodeSegment<VueCodeMarker>;
 

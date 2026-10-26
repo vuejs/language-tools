@@ -1,6 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { scriptFeatures } from '@vue/language-core';
-import { toString } from 'muggle-string';
+import { codeToString, scriptFeatures } from '@vue/language-core';
 import type { TsCode } from '../../boundary';
 import { newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
@@ -43,7 +42,7 @@ export function* generateVIf(
 				`)`,
 			)];
 			yield* codes;
-			ctx.conditions.push({ text: toString(codes), accesses: ctx.accessLog.slice(accessMark) });
+			ctx.conditions.push({ text: codeToString(codes), accesses: ctx.accessLog.slice(accessMark) });
 			addedBlockCondition = true;
 			yield ` `;
 		}

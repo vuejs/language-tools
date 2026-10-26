@@ -1,5 +1,6 @@
 import {
 	buildMappings,
+	codeToString,
 	type IR,
 	type IScriptSnapshot,
 	type Mapping,
@@ -9,7 +10,6 @@ import {
 	type VirtualCode,
 } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import { toString } from 'muggle-string';
 import type { EmbeddedDocument } from './embeddedDocument';
 import { getRootTagsDocument } from './vue-root-tags';
 import { getCustomBlockDocuments } from './vue-sfc-customblocks';
@@ -101,7 +101,7 @@ function useDocuments(ir: IR, getDocuments: () => EmbeddedDocument[]) {
 
 	function resolveDocuments(documents: EmbeddedDocument[], previous: ResolvedDocument[] | undefined) {
 		return documents.map(({ id, lang, content, children = [] }): ResolvedDocument => {
-			const text = toString(content);
+			const text = codeToString(content);
 			const languageId = resolveCommonLanguageId(lang);
 			const old = previous?.find(document => document.id === id && document.languageId === languageId);
 			return {
