@@ -1,4 +1,4 @@
-import { type IRScript, type IRScriptSetup, type VueCodeMarker, type VueCompilerOptions } from '@vue/language-core';
+import type { IRScript, IRScriptSetup, VueCodeMarker, VueCompilerOptions } from '@vue/language-core';
 import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 
 export const newLine = `\n`;
