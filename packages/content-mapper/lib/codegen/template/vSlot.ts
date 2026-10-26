@@ -1,7 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '@vue/language-core';
 import { getTypeScriptAST } from '@vue/language-core/lib/utils/typescriptAST';
-import { replaceSourceRange } from 'muggle-string';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
@@ -116,23 +115,7 @@ function* generateSlotParameters(
 	const { expression } = statement;
 	const startOffset = exp.loc.start.offset - 1;
 	const types: (TsCode | null)[] = [];
-	const interpolation = [...generateInterpolation(
-		options,
-		ctx,
-		options.template,
-		{ features: scriptFeatures },
-		ast.text,
-		startOffset,
-	)];
-
-	replaceSourceRange(interpolation, 'template', startOffset, startOffset + `(`.length);
-	replaceSourceRange(
-		interpolation,
-		'template',
-		startOffset + ast.text.length - `) => {}`.length,
-		startOffset + ast.text.length,
-	);
-
+	const omit: [number, number][] = [[0, `(`.length]];
 	for (const { name, type } of expression.parameters) {
 		if (type) {
 			types.push([
@@ -141,15 +124,26 @@ function* generateSlotParameters(
 				startOffset + name.end,
 				{ features: scriptFeatures },
 			]);
-			replaceSourceRange(interpolation, 'template', startOffset + name.end, startOffset + type.end);
+			omit.push([name.end, type.end]);
 		}
 		else {
 			types.push(null);
 		}
 	}
+	omit.push([ast.text.length - `) => {}`.length, ast.text.length]);
 
 	yield `const [`;
-	yield* interpolation;
+	yield* generateInterpolation(
+		options,
+		ctx,
+		options.template,
+		{ features: scriptFeatures },
+		ast.text,
+		startOffset,
+		undefined,
+		undefined,
+		omit,
+	);
 	yield `] = ${names.vSlot}(${names.nonNull}(${slotVar})`;
 
 	if (types.some(t => t)) {

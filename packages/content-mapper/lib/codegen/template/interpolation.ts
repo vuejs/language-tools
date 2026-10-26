@@ -11,6 +11,10 @@ import { names } from '../names';
 import { getRefBrandArgument } from '../utils';
 import type { TemplateCodegenContext } from './context';
 
+/**
+ * The code of the expression `code` at `start` of `block`. The ranges of `omit` (offsets in `code`, sorted and
+ * disjoint) generate no code; the references inside them are skipped.
+ */
 export function* generateInterpolation(
 	options: IdentifierOptions,
 	ctx: TemplateCodegenContext,
@@ -20,6 +24,7 @@ export function* generateInterpolation(
 	start: number,
 	prefix: string = '',
 	suffix: string = '',
+	omit: readonly (readonly [start: number, end: number])[] = [],
 ): Generator<TsCode> {
 	if (prefix) {
 		yield prefix;
@@ -34,22 +39,30 @@ export function* generateInterpolation(
 	let prevEnd = 0;
 	for (const reference of ctx.getExpression(block, start, code).references) {
 		const { name, offset, isShorthand, local, member } = reference;
-		if (member) {
+		const omitted = omit.some(([omitStart, omitEnd]) => omitStart <= offset && offset < omitEnd);
+		if (member && !omitted) {
 			ctx.setMemberFeatures(block, start + offset, memberFeatures);
 		}
 		if (local && !member) {
 			continue;
 		}
 		if (prevEnd < offset) {
-			yield* generateNonIdentifierCode(
-				code.slice(prevEnd, offset),
-				block.name,
-				start + prevEnd,
-				features,
-				prevEnd > 0,
+			yield* omitRanges(
+				generateNonIdentifierCode(
+					code.slice(prevEnd, offset),
+					block.name,
+					start + prevEnd,
+					features,
+					prevEnd > 0,
+				),
+				start,
+				omit,
 			);
 		}
 		prevEnd = offset + name.length;
+		if (omitted) {
+			continue;
+		}
 
 		const identifierFeatures = member ? featuresWithoutCompletion : features;
 		if (local) {
@@ -76,17 +89,45 @@ export function* generateInterpolation(
 	}
 
 	if (prevEnd < code.length) {
-		yield* generateNonIdentifierCode(
-			code.slice(prevEnd),
-			block.name,
-			start + prevEnd,
-			features,
-			prevEnd > 0,
+		yield* omitRanges(
+			generateNonIdentifierCode(
+				code.slice(prevEnd),
+				block.name,
+				start + prevEnd,
+				features,
+				prevEnd > 0,
+			),
+			start,
+			omit,
 		);
 	}
 
 	if (suffix) {
 		yield suffix;
+	}
+}
+
+/** The parts of the source `segments` of an expression at `start` out of the ranges of `omit`. */
+function* omitRanges(
+	segments: Generator<[string, string, number, VueCodeMarker]>,
+	start: number,
+	omit: readonly (readonly [start: number, end: number])[],
+): Generator<TsCode> {
+	for (const [text, source, offset, data] of segments) {
+		const end = offset + text.length;
+		let kept = offset;
+		for (const [omitStart, omitEnd] of omit) {
+			if (start + omitEnd <= kept || start + omitStart >= end) {
+				continue;
+			}
+			if (kept < start + omitStart) {
+				yield [text.slice(kept - offset, start + omitStart - offset), source, kept, data];
+			}
+			kept = start + omitEnd;
+		}
+		if (kept < end) {
+			yield [text.slice(kept - offset), source, kept, data];
+		}
 	}
 }
 
@@ -104,7 +145,7 @@ function* generateNonIdentifierCode(
 	offset: number,
 	data: VueCodeMarker,
 	shouldCut = true,
-): Generator<TsCode> {
+): Generator<[string, string, number, VueCodeMarker]> {
 	if (!code.length) {
 		return;
 	}
