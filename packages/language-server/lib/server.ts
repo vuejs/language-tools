@@ -421,13 +421,14 @@ export function startServer(ts: typeof import('typescript')) {
 			version: packageJson.version,
 		};
 
-		const reactivityAnalyzer = createReactivityAnalyzer(ts);
+		const reactivityAnalyzer = createReactivityAnalyzer();
 		connection.onRequest(
 			'vue/reactivityAnalysis',
 			async ({ textDocument, offset, content }: ReactivityAnalysisParams) => {
 				const fileName = URI.parse(textDocument.uri).fsPath.replace(/\\/g, '/');
 				if (content !== undefined) {
-					return reactivityAnalyzer.analyzeScript(fileName, content, offset);
+					const { parser } = await connectTypeScriptApi();
+					return reactivityAnalyzer.analyzeScript(parser, fileName, content, offset);
 				}
 				const script = await getVueScript(fileName);
 				if (script) {
