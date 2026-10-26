@@ -186,7 +186,7 @@ export interface VuePluginContext {
 /** What the host gives a template compiler of a plugin. */
 export interface VueTemplateCompilerHost {
 	/** Compiles HTML into the AST that the IR of a template holds. */
-	compileTemplate: typeof import('./template/compile').compileTemplate;
+	compileTemplate: (source: string, options: CompilerDOM.CompilerOptions) => CompilerDOM.RootNode;
 }
 
 /**
