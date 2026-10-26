@@ -188,9 +188,6 @@ importers:
       '@volar/source-map':
         specifier: workspace:*
         version: link:../../volar.js/packages/source-map
-      '@vue/language-core':
-        specifier: workspace:*
-        version: link:../language-core
       muggle-string:
         specifier: ^0.4.1
         version: 0.4.1
@@ -210,6 +207,9 @@ importers:
       '@vue/compiler-dom':
         specifier: ^3.5.0
         version: 3.5.40
+      '@vue/language-core':
+        specifier: workspace:*
+        version: link:../language-core
 
   packages/language-server:
     dependencies:

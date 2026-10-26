@@ -1,13 +1,13 @@
 import { SourceMap } from '@volar/source-map';
 import type * as CompilerDOM from '@vue/compiler-dom';
-import { getPugTemplatePrefix, type VueIRPlugin } from '@vue/language-core';
+import type { VueIRPlugin } from '@vue/language-core';
 import { baseParse } from './lib/baseParse';
 
 const classRE = /^class\s*=/;
 
 export const ir: VueIRPlugin = {
 	templateCompilers: {
-		pug(template, options, { compileTemplate }) {
+		pug(template, options, { compileTemplate, getPugTemplatePrefix }) {
 			const prefix = getPugTemplatePrefix(template);
 			const parsed = baseParse(prefix + template);
 			const baseOffset = prefix.length;

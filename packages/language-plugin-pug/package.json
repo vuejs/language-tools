@@ -16,7 +16,6 @@
 	},
 	"dependencies": {
 		"@volar/source-map": "workspace:*",
-		"@vue/language-core": "workspace:*",
 		"muggle-string": "^0.4.1",
 		"pug-lexer": "^5.0.1",
 		"pug-parser": "^6.0.0",
@@ -24,6 +23,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "^26.0.1",
-		"@vue/compiler-dom": "^3.5.0"
+		"@vue/compiler-dom": "^3.5.0",
+		"@vue/language-core": "workspace:*"
 	}
 }

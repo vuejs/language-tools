@@ -178,6 +178,11 @@ export interface VuePluginContext {
 export interface VueTemplateCompilerHost {
 	/** Compiles HTML into the AST that the IR of a template holds. */
 	compileTemplate: typeof import('./template/compile').compileTemplate;
+	/**
+	 * The text put before a pug template so that it parses. Pug reads an indented first line as an error,
+	 * so an indented template is parsed as the children of a `template` tag.
+	 */
+	getPugTemplatePrefix: typeof import('./template/pug').getPugTemplatePrefix;
 }
 
 /**
