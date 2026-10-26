@@ -1,10 +1,78 @@
+import type { Mapping } from '@volar/source-map';
 import pugLex from 'pug-lexer';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { buildMappings, type PugCode } from './buildMappings';
 
 const pugParser = require('pug-parser');
 
-export function baseParse(pugCode: string) {
+const indentedPrefix = 'template\n';
+
+/**
+ * Vue dedents a pug template (`dedent` of `@vue/compiler-sfc`), but pug reads an indented first line as an
+ * error, so an indented template is parsed as the children of a `template` tag. The tag is blanked out of
+ * the HTML and left out of the mappings, the AST and the positions, which are all of `pugCode`.
+ */
+export function baseParse(pugCode: string): ReturnType<typeof parse> {
+	if (calculateMinIndent(pugCode) === 0) {
+		return parse(pugCode);
+	}
+	const parsed = parse(indentedPrefix + pugCode);
+	const prefixLength = indentedPrefix.length;
+	return {
+		htmlCode: ' '.repeat('<template>'.length)
+			+ parsed.htmlCode.slice('<template>'.length, -'</template>'.length)
+			+ ' '.repeat('</template>'.length),
+		mappings: parsed.mappings
+			.filter(mapping => mapping[2] >= prefixLength)
+			.map((mapping): Mapping => [
+				mapping[0],
+				mapping[1],
+				mapping[2] - prefixLength,
+				mapping[3],
+				mapping[4],
+				mapping[5],
+			]),
+		pugTextDocument: TextDocument.create('file:///file.pug', 'pug', 0, pugCode),
+		error: parsed.error && { ...parsed.error, line: parsed.error.line - 1 },
+		ast: parsed.ast && toPrevLine(((parsed.ast as BlockNode).nodes[0] as TagNode).block),
+		emptyLineEnds: parsed.emptyLineEnds.map(offset => offset - prefixLength),
+	};
+}
+
+function calculateMinIndent(s: string) {
+	const lines = s.split('\n');
+	const minIndent = lines.reduce(function(minIndent, line) {
+		if (line.trim() === '') {
+			return minIndent;
+		}
+		const indent = line.match(/^\s*/)?.[0]?.length || 0;
+		return Math.min(indent, minIndent);
+	}, Infinity);
+	return minIndent;
+}
+
+function toPrevLine<T extends object>(node: T): T {
+	const visited = new Set<object>();
+	visit(node);
+	return node;
+
+	function visit(obj: object) {
+		if (visited.has(obj)) {
+			return;
+		}
+		visited.add(obj);
+		if ('line' in obj && typeof obj.line === 'number') {
+			obj.line--;
+		}
+		for (const value of Object.values(obj)) {
+			if (value && typeof value === 'object') {
+				visit(value);
+			}
+		}
+	}
+}
+
+function parse(pugCode: string) {
 	const fileName = 'file.pug';
 	const pugTextDocument = TextDocument.create('file:///file.pug', 'pug', 0, pugCode);
 	const codes: PugCode[] = [];

@@ -13,6 +13,7 @@ v4 replaces the `VueLanguagePlugin` API with plugin modules that export one key 
 - **feat:** `@vue/content-mapper` reports plugins that fail to load, and a `format` that nothing provides, as option diagnostics, and includes the `name@version` of each plugin package in its config identity.
 - **feat:** the language server creates a project's IR again when one of its plugin files changes.
 - **feat:** `@vue/language-plugin-pug` exports `ir.templateCompilers.pug`; `@vue/language-core` is only a type dependency of it.
+- **breaking:** `baseParse` of `@vue/language-plugin-pug` (which `volar-service-pug` uses) parses a template whose every line is indented, as Vue does, instead of reporting `unexpected token "indent"`; its mappings, AST lines, error lines and empty line ends are those of the written template.
 
 - **feat:** `@vue/content-mapper` reads a `codegen` export of plugin modules, which contributes to the code it generates: edits of the user's script code, template context types, props, emits and exposed types of script setup components, native element types, module declarations, named exports and the doc comment of the component. A script edit inserts code before or after a char (`insertBefore` / `insertAfter`) or replaces a range (`replace`); edits never conflict with each other or with the mapper's own transforms, and inserts move with the code that the mapper moves. The language server and vue-component-meta never load it. See [Codegen plugins](packages/content-mapper/README.md#codegen-plugins).
 

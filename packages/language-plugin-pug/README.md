@@ -56,7 +56,7 @@ The language server's syntax features of Pug templates are built in and work wit
 
 ## How it Works
 
-1. Uses `pug-lexer` to convert Pug syntax into tokens
+1. Uses `pug-lexer` to convert Pug syntax into tokens. A template whose every line is indented, which Vue dedents but Pug rejects, is read as the children of a `template` tag that is left out of the result
 2. Uses `pug-parser` to parse tokens into an AST
 3. Traverses the AST to generate HTML while building a source map
 4. Compiles the HTML with the `compileTemplate` that the host passes

@@ -7,16 +7,8 @@ const classRE = /^class\s*=/;
 
 export const ir: VueIRPlugin = {
 	templateCompilers: {
-		pug(template, options, { compileTemplate, getPugTemplatePrefix }) {
-			const prefix = getPugTemplatePrefix(template);
-			const parsed = baseParse(prefix + template);
-			const baseOffset = prefix.length;
-			if (prefix) {
-				parsed.htmlCode = ' '.repeat('<template>'.length)
-					+ parsed.htmlCode.slice('<template>'.length, -'</template>'.length)
-					+ ' '.repeat('</template>'.length);
-			}
-
+		pug(template, options, { compileTemplate }) {
+			const parsed = baseParse(template);
 			const map = new SourceMap(parsed.mappings);
 			let ast = compileTemplate(parsed.htmlCode, {
 				...options,
@@ -72,7 +64,7 @@ export const ir: VueIRPlugin = {
 			function toPugOffset(htmlOffset: number) {
 				const nums: number[] = [];
 				for (const mapped of map.toSourceLocation(htmlOffset)) {
-					nums.push(mapped[0] - baseOffset);
+					nums.push(mapped[0]);
 				}
 				return Math.max(-1, ...nums);
 			}

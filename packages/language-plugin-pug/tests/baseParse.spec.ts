@@ -114,4 +114,65 @@ describe('baseParse', () => {
 			expect((classDir?.exp as CompilerDOM.SimpleExpressionNode)?.content).toBe('["foo", "bar"]');
 		});
 	});
+
+	describe('indented template', () => {
+		const indented = '\n  div(:class="x")\n\n    span {{ a }}\n  p\n';
+		const dedented = indented.replace(/^ {2}/gm, '');
+
+		it('parses as the template written without the indent', () => {
+			const result = baseParse(indented);
+
+			expect(result.error).toBeUndefined();
+			expect(result.htmlCode.trim()).toBe(baseParse(dedented).htmlCode);
+		});
+
+		it('keeps the HTML at the offsets of a template tag around it', () => {
+			const result = baseParse(indented);
+
+			expect(result.htmlCode.startsWith(' '.repeat('<template>'.length) + '<div')).toBe(true);
+			expect(result.htmlCode.endsWith('<p />' + ' '.repeat('</template>'.length))).toBe(true);
+		});
+
+		it('maps the HTML to the written template', () => {
+			const result = baseParse(indented);
+
+			expect(result.pugTextDocument.getText()).toBe(indented);
+			expect(result.mappings.length).toBeGreaterThan(0);
+			for (const [generatedStart, generatedLength, sourceStart, sourceLength] of result.mappings) {
+				expect(result.htmlCode.slice(generatedStart, generatedStart + generatedLength))
+					.toBe(indented.slice(sourceStart, sourceStart + sourceLength));
+			}
+		});
+
+		it('reports the lines of the written template', () => {
+			expect(collectLines(baseParse(indented).ast)).toEqual(collectLines(baseParse(dedented).ast));
+		});
+
+		it('reports the empty line ends of the written template', () => {
+			const pugCode = '\n  div\n\n  p\n';
+			const result = baseParse(pugCode);
+
+			expect(result.emptyLineEnds).toEqual([pugCode.indexOf('\n\n') + 1]);
+		});
+
+		it('reports an error at the line of the written template', () => {
+			const broken = '\n  div\n    span(title="x"\n  p\n';
+			const result = baseParse(broken);
+
+			expect(result.error?.code).toBe('PUG:NO_END_BRACKET');
+			expect(result.error?.line).toBe(baseParse(broken.replace(/^ {2}/gm, '')).error?.line);
+		});
+	});
 });
+
+function collectLines(node: unknown, lines: number[] = []) {
+	if (node && typeof node === 'object') {
+		if ('line' in node && typeof node.line === 'number') {
+			lines.push(node.line);
+		}
+		for (const value of Object.values(node)) {
+			collectLines(value, lines);
+		}
+	}
+	return lines;
+}
