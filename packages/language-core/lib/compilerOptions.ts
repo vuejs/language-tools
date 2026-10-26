@@ -1,14 +1,14 @@
 import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import picomatch from 'picomatch';
-import type { RawPlugin, RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from './types';
+import type { RawPlugin, RawVueCompilerOptions, ResolvedVuePlugin, VueCompilerOptions } from './types';
 import { hyphenateTag } from './utils/shared';
 
 export class CompilerOptionsResolver {
 	options: Omit<RawVueCompilerOptions, 'target' | 'typesRoot' | 'plugins'> = {};
 	target: number | undefined;
 	typesRoot: string | undefined;
-	plugins: VueLanguagePlugin[] = [];
+	plugins: ResolvedVuePlugin[] = [];
 	/** The files that the names of `plugins` resolve to, including the ones that fail to load. */
 	pluginFiles: string[] = [];
 
@@ -40,8 +40,7 @@ export class CompilerOptionsResolver {
 				case 'plugins':
 					// A config that declares `plugins` replaces the inherited list; `[]` clears it
 					if (options.plugins) {
-						this.pluginFiles = [];
-						this.plugins = resolvePlugins(options.plugins, rootDir, this.pluginFiles);
+						({ plugins: this.plugins, files: this.pluginFiles } = resolveVuePlugins(options.plugins, rootDir));
 					}
 					break;
 				default:
@@ -134,30 +133,31 @@ export function resolveVueCompilerOptions(
 	return vueOptions;
 }
 
-function resolvePlugins(list: RawPlugin[], rootDir: string, resolvedFiles: string[]): VueLanguagePlugin[] {
-	const plugins: VueLanguagePlugin[] = [];
-	for (let raw of list) {
-		raw = typeof raw === 'string' ? { name: raw } : raw;
+/**
+ * Resolves the `plugins` entries relative to `rootDir` and loads their modules. `files` lists every file that an
+ * entry resolves to, including the ones that fail to load.
+ */
+export function resolveVuePlugins(list: RawPlugin[], rootDir: string) {
+	const plugins: ResolvedVuePlugin[] = [];
+	const files: string[] = [];
+	for (const raw of list) {
+		const { name, ...config } = typeof raw === 'string' ? { name: raw } : raw;
 		try {
 			const resolve = (require as NodeJS.Require | undefined)?.resolve;
-			const resolvedPath = resolve?.(raw.name, { paths: [rootDir] });
-			if (resolvedPath) {
-				resolvedFiles.push(resolvedPath);
-				const moduleExports = require(resolvedPath);
-				for (const plugin of Array.isArray(moduleExports) ? moduleExports : [moduleExports]) {
-					plugin.__moduleConfig = raw;
-					plugins.push(plugin);
-				}
+			const file = resolve?.(name, { paths: [rootDir] });
+			if (file) {
+				files.push(file);
+				plugins.push({ name, file, config, module: require(file) });
 			}
 			else {
-				console.warn('[Vue] Load plugin failed:', raw.name);
+				console.warn('[Vue] Load plugin failed:', name);
 			}
 		}
 		catch (error) {
-			console.warn('[Vue] Resolve plugin path failed:', raw.name, error);
+			console.warn('[Vue] Resolve plugin path failed:', name, error);
 		}
 	}
-	return plugins;
+	return { plugins, files };
 }
 
 export function getDefaultCompilerOptions(

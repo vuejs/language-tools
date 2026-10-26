@@ -37,6 +37,18 @@ export type RawPlugin =
 		name: string;
 	};
 
+/** A `plugins` entry of the Vue compiler options, resolved to the module that its `name` names. */
+export interface ResolvedVuePlugin {
+	/** The `name` of the entry, as written. */
+	name: string;
+	/** The file that `name` resolves to. */
+	file: string;
+	/** The entry without its `name`. */
+	config: Record<string, any>;
+	/** The exports of `file`. */
+	module: unknown;
+}
+
 /** The `kind` and `features` of the protocol `Mapping` a generated segment maps by, which the protocol has no object type for. */
 export interface VueCodeMarker {
 	/** `SpanMapFeature` bits. */
@@ -102,7 +114,7 @@ export interface VueCompilerOptions {
 		useSlots: string[];
 		useTemplateRef: string[];
 	};
-	plugins: VueLanguagePlugin[];
+	plugins: ResolvedVuePlugin[];
 	/**
 	 * Prop that an argument-less `v-model` binds, keyed by tag, or `false` to bind none. Entries override
 	 * the built-in rules of native elements, which follow `@vue/compiler-dom`; other tags bind `modelValue`.

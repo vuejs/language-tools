@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { CompilerOptionsResolver } from '../lib/compilerOptions';
 import { createPlugins } from '../lib/plugins';
+import type { VueCompilerOptions } from '../lib/types';
 import { ts } from './typescript';
 
 const PLUGIN_NAME = '@fixture/vue-language-plugin-pug';
@@ -51,6 +52,23 @@ function writeNamedPluginPackage(rootDir: string, specifier: string, factoryName
 	);
 }
 
+function createInstances(vueCompilerOptions: VueCompilerOptions) {
+	return createPlugins({
+		modules: {
+			'@vue/compiler-dom': {} as any,
+			'@vue/language-core': {} as any,
+			typescript: ts,
+		},
+		vueCompilerOptions,
+		config: {},
+	});
+}
+
+/** The names of the instances of `vueCompilerOptions.plugins`; the built-in plugins have none. */
+function instanceNames(vueCompilerOptions: VueCompilerOptions) {
+	return createInstances(vueCompilerOptions).flatMap(plugin => plugin.name ?? []);
+}
+
 describe('CompilerOptionsResolver', () => {
 	let tmpDir = '';
 
@@ -77,16 +95,11 @@ describe('CompilerOptionsResolver', () => {
 
 		const vueCompilerOptions = resolver.build();
 		expect(vueCompilerOptions.plugins).toHaveLength(1);
+		expect(vueCompilerOptions.plugins[0]!.file).toBe(
+			fs.realpathSync(path.join(clientDir, 'node_modules', PLUGIN_NAME, 'index.js')),
+		);
 
-		const instances = createPlugins({
-			modules: {
-				'@vue/compiler-dom': {} as any,
-				'@vue/language-core': {} as any,
-				typescript: ts,
-			},
-			vueCompilerOptions,
-			config: {},
-		});
+		const instances = createInstances(vueCompilerOptions);
 		const pugPlugin = instances.find(plugin => plugin.name === PLUGIN_NAME);
 
 		expect(pugPlugin?.compileSFCTemplate?.('pug', '', {})).toEqual({
@@ -107,7 +120,9 @@ describe('CompilerOptionsResolver', () => {
 		resolver.addConfig({ plugins: ['@fixture/base'] }, baseDir);
 		resolver.addConfig({ plugins: ['@fixture/app'] }, appDir);
 
-		expect(resolver.build().plugins.map(plugin => plugin.name)).toEqual(['appPlugin']);
+		const vueCompilerOptions = resolver.build();
+		expect(vueCompilerOptions.plugins.map(plugin => plugin.name)).toEqual(['@fixture/app']);
+		expect(instanceNames(vueCompilerOptions)).toEqual(['appPlugin']);
 	});
 
 	it('keeps the inherited plugins when a config does not declare them', () => {
@@ -121,7 +136,8 @@ describe('CompilerOptionsResolver', () => {
 		resolver.addConfig({ jsxSlots: true }, appDir);
 
 		const vueCompilerOptions = resolver.build();
-		expect(vueCompilerOptions.plugins.map(plugin => plugin.name)).toEqual(['basePlugin']);
+		expect(vueCompilerOptions.plugins.map(plugin => plugin.name)).toEqual(['@fixture/base']);
+		expect(instanceNames(vueCompilerOptions)).toEqual(['basePlugin']);
 		expect(vueCompilerOptions.jsxSlots).toBe(true);
 	});
 
@@ -145,7 +161,28 @@ describe('CompilerOptionsResolver', () => {
 		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: ['@fixture/multi'] }, tmpDir);
 
-		expect(resolver.build().plugins.map(plugin => plugin.name)).toEqual(['firstPlugin', 'secondPlugin']);
+		const vueCompilerOptions = resolver.build();
+		expect(vueCompilerOptions.plugins.map(plugin => plugin.name)).toEqual(['@fixture/multi']);
+		expect(instanceNames(vueCompilerOptions)).toEqual(['firstPlugin', 'secondPlugin']);
+	});
+
+	it('passes the entry without its name to the plugin as its config', () => {
+		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-config-'));
+		const packageDir = path.join(tmpDir, 'node_modules', '@fixture/config');
+		fs.mkdirSync(packageDir, { recursive: true });
+		fs.writeFileSync(
+			path.join(packageDir, 'index.js'),
+			`module.exports = ({ config }) => ({ version: 4, name: JSON.stringify(config) });`,
+		);
+
+		const resolver = new CompilerOptionsResolver(() => undefined);
+		resolver.addConfig({ plugins: [{ name: '@fixture/config', foo: 1 }] }, tmpDir);
+
+		const vueCompilerOptions = resolver.build();
+		expect(vueCompilerOptions.plugins.map(({ name, config }) => ({ name, config }))).toEqual([
+			{ name: '@fixture/config', config: { foo: 1 } },
+		]);
+		expect(instanceNames(vueCompilerOptions)).toEqual([JSON.stringify({ name: '@fixture/config', foo: 1 })]);
 	});
 
 	it('has no plugins when no config declares them', () => {
