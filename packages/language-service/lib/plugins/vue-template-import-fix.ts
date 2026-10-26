@@ -1,5 +1,6 @@
 import type { CodeAction, LanguageServicePlugin } from '@volar/language-service';
 import { getComponentTagAt, resolveEmbeddedCode } from '../utils';
+import { embeddedCodeIds } from '../virtualCode';
 
 export function create(
 	{ getImportFixes }: import('../requests').Requests,
@@ -19,7 +20,7 @@ export function create(
 					}
 					const info = resolveEmbeddedCode(context, document.uri);
 					const template = info?.root.ir.template;
-					if (info?.code.id !== 'template' || !template) {
+					if (info?.code.id !== embeddedCodeIds.template || !template) {
 						return;
 					}
 					const offset = document.offsetAt(range.start);

@@ -4,6 +4,7 @@ import { URI } from 'vscode-uri';
 import { getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { createAddComponentToOptionEdit } from '../plugins/vue-extract-file';
 import { asClassicNode, placeScriptImportEdits, resolveEmbeddedCode } from '../utils';
+import { embeddedCodeIds } from '../virtualCode';
 
 export function create(
 	ts: typeof import('typescript'),
@@ -21,7 +22,7 @@ export function create(
 						return;
 					}
 					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'template') {
+					if (info?.code.id !== embeddedCodeIds.template) {
 						return;
 					}
 

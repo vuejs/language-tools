@@ -1,6 +1,7 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
 import { create as createEmmetPlugin } from 'volar-service-emmet';
 import { resolveEmbeddedCode } from '../utils';
+import { embeddedCodeIds, rootTagsLanguageId } from '../virtualCode';
 import { getExpressionStartAt } from './vue-template-expressions';
 
 /**
@@ -11,7 +12,7 @@ import { getExpressionStartAt } from './vue-template-expressions';
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	const plugin = createEmmetPlugin({
 		mappedLanguages: {
-			'vue-root-tags': 'html',
+			[rootTagsLanguageId]: 'html',
 			'postcss': 'scss',
 		},
 	});
@@ -25,7 +26,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					const info = resolveEmbeddedCode(context, document.uri);
 					const ast = info?.root.ir.template?.ast;
 					if (
-						info?.code.id === 'template' && ast
+						info?.code.id === embeddedCodeIds.template && ast
 						&& getExpressionStartAt(ts, ast, document.offsetAt(position), []) !== undefined
 					) {
 						return;

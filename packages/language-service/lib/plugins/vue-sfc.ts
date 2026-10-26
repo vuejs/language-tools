@@ -11,13 +11,13 @@ import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
 import { loadLanguageBlocks } from '../data';
 import { resolveEmbeddedCode } from '../utils';
-import { VueVirtualCode } from '../virtualCode';
+import { embeddedCodeIds, rootTagsLanguageId, VueVirtualCode } from '../virtualCode';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
 export function create(): LanguageServicePlugin {
 	const htmlService = createHtmlService({
-		documentSelector: ['vue-root-tags'],
+		documentSelector: [rootTagsLanguageId],
 		useDefaultDataProvider: false,
 		getCustomData(context) {
 			sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
@@ -25,7 +25,7 @@ export function create(): LanguageServicePlugin {
 		},
 		async getFormattingOptions(document, options, context) {
 			const info = resolveEmbeddedCode(context, document.uri);
-			if (info?.code.id !== 'root_tags') {
+			if (info?.code.id !== embeddedCodeIds.rootTags) {
 				return {};
 			}
 
@@ -69,17 +69,17 @@ export function create(): LanguageServicePlugin {
 				provideDocumentLinks: undefined,
 				async resolveEmbeddedCodeFormattingOptions(sourceScript, virtualCode, options) {
 					if (sourceScript.generated?.root instanceof VueVirtualCode) {
-						if (virtualCode.id === 'script_raw' || virtualCode.id === 'scriptsetup_raw') {
+						if (virtualCode.id === embeddedCodeIds.scriptRaw || virtualCode.id === embeddedCodeIds.scriptSetupRaw) {
 							if (await context.env.getConfiguration<boolean>?.('vue.format.script.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
 						}
-						else if (virtualCode.id.startsWith('style_')) {
+						else if (virtualCode.id.startsWith(embeddedCodeIds.stylePrefix)) {
 							if (await context.env.getConfiguration<boolean>?.('vue.format.style.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
 						}
-						else if (virtualCode.id === 'template') {
+						else if (virtualCode.id === embeddedCodeIds.template) {
 							if (await context.env.getConfiguration<boolean>?.('vue.format.template.initialIndent') ?? true) {
 								options.initialIndentLevel++;
 							}
@@ -90,7 +90,7 @@ export function create(): LanguageServicePlugin {
 
 				async provideDiagnostics(document, token) {
 					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'root_tags') {
+					if (info?.code.id !== embeddedCodeIds.rootTags) {
 						return [];
 					}
 
@@ -135,7 +135,7 @@ export function create(): LanguageServicePlugin {
 
 				provideDocumentSymbols(document) {
 					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'root_tags') {
+					if (info?.code.id !== embeddedCodeIds.rootTags) {
 						return;
 					}
 

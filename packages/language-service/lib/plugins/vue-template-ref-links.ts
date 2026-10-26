@@ -1,6 +1,7 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
 import { forEachElementNode, getTemplateRef } from '@vue/language-core';
 import { resolveEmbeddedCode } from '../utils';
+import { embeddedCodeIds } from '../virtualCode';
 
 export function create(): LanguageServicePlugin {
 	return {
@@ -12,7 +13,7 @@ export function create(): LanguageServicePlugin {
 			return {
 				provideDocumentLinks(document) {
 					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'scriptsetup_raw') {
+					if (info?.code.id !== embeddedCodeIds.scriptSetupRaw) {
 						return;
 					}
 
@@ -21,11 +22,11 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 
-					const templateVirtualCode = info.script.generated.embeddedCodes.get('template');
+					const templateVirtualCode = info.script.generated.embeddedCodes.get(embeddedCodeIds.template);
 					if (!templateVirtualCode) {
 						return;
 					}
-					const templateDocumentUri = context.encodeEmbeddedDocumentUri(info.script.id, 'template');
+					const templateDocumentUri = context.encodeEmbeddedDocumentUri(info.script.id, embeddedCodeIds.template);
 					const templateDocument = context.documents.get(
 						templateDocumentUri,
 						templateVirtualCode.languageId,

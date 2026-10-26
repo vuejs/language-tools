@@ -4,7 +4,7 @@ import type { IRTemplate } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 import { asClassicNode, resolveEmbeddedCode } from '../utils';
-import type { VueVirtualCode } from '../virtualCode';
+import { embeddedCodeIds, type VueVirtualCode } from '../virtualCode';
 
 interface ActionData {
 	uri: string;
@@ -40,7 +40,7 @@ export function create(
 					}
 
 					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'template') {
+					if (info?.code.id !== embeddedCodeIds.template) {
 						return;
 					}
 
@@ -73,7 +73,7 @@ export function create(
 					const [startOffset, endOffset]: [number, number] = range;
 
 					const info = resolveEmbeddedCode(context, uri);
-					if (info?.code.id !== 'template') {
+					if (info?.code.id !== embeddedCodeIds.template) {
 						return codeAction;
 					}
 

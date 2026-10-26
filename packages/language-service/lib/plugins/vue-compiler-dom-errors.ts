@@ -1,5 +1,6 @@
 import type { Diagnostic, DiagnosticSeverity, LanguageServicePlugin } from '@volar/language-service';
 import { resolveEmbeddedCode } from '../utils';
+import { embeddedCodeIds } from '../virtualCode';
 
 export function create(): LanguageServicePlugin {
 	return {
@@ -14,7 +15,7 @@ export function create(): LanguageServicePlugin {
 			return {
 				provideDiagnostics(document) {
 					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'template') {
+					if (info?.code.id !== embeddedCodeIds.template) {
 						return;
 					}
 

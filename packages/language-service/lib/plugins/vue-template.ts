@@ -19,7 +19,7 @@ import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
-import type { VueVirtualCode } from '../virtualCode';
+import { embeddedCodeIds, type VueVirtualCode } from '../virtualCode';
 
 const EVENT_PROP_REGEX = /^on[A-Z]/;
 
@@ -104,7 +104,7 @@ export function create(
 
 				htmlService.parseHTMLDocument = document => {
 					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id === 'template') {
+					if (info?.code.id === embeddedCodeIds.template) {
 						const templateAst = info.root.ir.template?.ast;
 						if (templateAst) {
 							let text = document.getText();
@@ -164,7 +164,7 @@ export function create(
 						return;
 					}
 					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'template') {
+					if (info?.code.id !== embeddedCodeIds.template) {
 						return;
 					}
 
@@ -337,7 +337,7 @@ export function create(
 						return;
 					}
 					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'template') {
+					if (info?.code.id !== embeddedCodeIds.template) {
 						return;
 					}
 					let {

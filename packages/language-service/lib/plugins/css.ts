@@ -2,6 +2,7 @@ import type { LanguageServicePlugin, TextDocument } from '@volar/language-servic
 import { create as baseCreate, type Provide } from 'volar-service-css';
 import type * as css from 'vscode-css-languageservice';
 import { resolveEmbeddedCode } from '../utils';
+import { embeddedCodeIds } from '../virtualCode';
 
 export function create({ isRenamedByTypeScript }: import('../requests').Requests): LanguageServicePlugin {
 	const baseService = baseCreate({
@@ -53,7 +54,7 @@ export function create({ isRenamedByTypeScript }: import('../requests').Requests
 				position: css.Position,
 			) {
 				const info = resolveEmbeddedCode(context, document.uri);
-				if (!info?.code.id.startsWith('style_')) {
+				if (!info?.code.id.startsWith(embeddedCodeIds.stylePrefix)) {
 					return false;
 				}
 				const block = info.root.ir.styles.find(style => style.name === info.code.id);

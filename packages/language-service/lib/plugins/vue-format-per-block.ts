@@ -1,5 +1,6 @@
 import type { LanguageServicePlugin, LanguageServicePluginInstance, TextDocument } from '@volar/language-service';
 import { URI } from 'vscode-uri';
+import { embeddedCodeIds } from '../virtualCode';
 
 export function create(): LanguageServicePlugin {
 	return {
@@ -33,16 +34,16 @@ export function create(): LanguageServicePlugin {
 
 				const [, embeddedCodeId] = decoded;
 
-				if (embeddedCodeId === 'script_raw' || embeddedCodeId === 'scriptsetup_raw') {
+				if (embeddedCodeId === embeddedCodeIds.scriptRaw || embeddedCodeId === embeddedCodeIds.scriptSetupRaw) {
 					return await context.env.getConfiguration<boolean>?.('vue.format.script.enabled') === false;
 				}
-				if (embeddedCodeId.startsWith('style_')) {
+				if (embeddedCodeId.startsWith(embeddedCodeIds.stylePrefix)) {
 					return await context.env.getConfiguration<boolean>?.('vue.format.style.enabled') === false;
 				}
 				if (
-					embeddedCodeId === 'template'
-					|| embeddedCodeId.startsWith('template_inline_ts_')
-					|| embeddedCodeId === 'root_tags'
+					embeddedCodeId === embeddedCodeIds.template
+					|| embeddedCodeId.startsWith(embeddedCodeIds.templateInlineTsPrefix)
+					|| embeddedCodeId === embeddedCodeIds.rootTags
 				) {
 					return await context.env.getConfiguration<boolean>?.('vue.format.template.enabled') === false;
 				}

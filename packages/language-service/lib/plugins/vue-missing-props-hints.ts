@@ -3,6 +3,7 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import { forEachElementNode, getElementTagOffsets, hyphenateAttr } from '@vue/language-core';
 import { AttrNameCasing, getAttrNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
+import { embeddedCodeIds } from '../virtualCode';
 
 export function create(
 	{ getComponentProps }: import('../requests').Requests,
@@ -16,7 +17,7 @@ export function create(
 			return {
 				async provideInlayHints(document, range, cancellationToken) {
 					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'template') {
+					if (info?.code.id !== embeddedCodeIds.template) {
 						return;
 					}
 

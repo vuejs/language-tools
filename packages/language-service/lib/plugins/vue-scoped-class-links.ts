@@ -1,6 +1,7 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
 import { forEachElementNode, forEachStyleScopedClassReference } from '@vue/language-core';
 import { asCoreTypeScript, resolveEmbeddedCode } from '../utils';
+import { embeddedCodeIds } from '../virtualCode';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	const coreTs = asCoreTypeScript(ts);
@@ -14,7 +15,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 			return {
 				provideDocumentLinks(document) {
 					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'template') {
+					if (info?.code.id !== embeddedCodeIds.template) {
 						return;
 					}
 					const { ir } = info.root;

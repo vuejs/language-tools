@@ -1,6 +1,7 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
 import { URI } from 'vscode-uri';
 import { getComponentTagAt, resolveEmbeddedCode } from '../utils';
+import { embeddedCodeIds } from '../virtualCode';
 
 /**
  * Leads a component tag to the declaration of the component in another file, e.g. the Vue file of a global
@@ -19,7 +20,7 @@ export function create(
 				async provideDefinition(document, position) {
 					const info = resolveEmbeddedCode(context, document.uri);
 					const template = info?.root.ir.template;
-					if (info?.code.id !== 'template' || !template) {
+					if (info?.code.id !== embeddedCodeIds.template || !template) {
 						return;
 					}
 					const tag = getComponentTagAt(template, document.offsetAt(position));

@@ -10,6 +10,7 @@ import { collectBindingNames, parseVForNode } from '@vue/language-core';
 import { URI } from 'vscode-uri';
 import type { AutoImportExport } from '../requests';
 import { asCoreTypeScript, resolveEmbeddedCode } from '../utils';
+import { embeddedCodeIds } from '../virtualCode';
 
 // Keywords that may appear in a single JavaScript expression
 const keywords = [
@@ -61,7 +62,7 @@ export function create(
 					}
 					const info = resolveEmbeddedCode(context, document.uri);
 					const ast = info?.root.ir.template?.ast;
-					if (info?.code.id !== 'template' || !ast) {
+					if (info?.code.id !== embeddedCodeIds.template || !ast) {
 						return;
 					}
 					const offset = document.offsetAt(position);
