@@ -8,8 +8,8 @@ import {
 	type TextRange,
 } from '@vue/language-core';
 import { names } from '../names';
-import type { CoreRewriteWriter, RewriteSlice } from '../rewrite';
-import { createBlockRewrite, type TsCodeData } from '../rewrite/tsCode';
+import { createBlockRewrite, type TsCodeData } from '../rewrite/blockRewrite';
+import type { CoreRewriteWriter, RewriteSlice } from '../rewrite/sourceRewrite';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import {
 	asType,
@@ -22,8 +22,8 @@ import {
 	isTsLang,
 	newLine,
 	typeAliasRef,
-} from '../utils';
-import { generateCamelized } from '../utils/camelized';
+} from '../writers';
+import { generateCamelized } from '../writers/camelized';
 import { generateComponent } from './component';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';

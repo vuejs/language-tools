@@ -11,7 +11,7 @@ import {
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../../protocol';
 import { names } from '../names';
 import { Boundary, isSynthesizedIgnore, OpenRanges, type TsCode } from '../tsCode';
-import { asType, endOfLine, isTsLang, newLine, typeAliasRef } from '../utils';
+import { asType, endOfLine, isTsLang, newLine, typeAliasRef } from '../writers';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 

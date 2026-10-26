@@ -1,6 +1,6 @@
 import { type IRAttr, navigationFeatures } from '@vue/language-core';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
-import { identifierRE, newLine } from '../utils';
+import { identifierRE, newLine } from '../writers';
 
 export function* generateClassProperty(
 	source: string,

@@ -13,10 +13,10 @@ import {
 import * as path from 'path-browserify';
 import { names } from '../names';
 import type { CodegenContributions, ScriptEdit } from '../plugin';
-import { createBlockRewrite } from '../rewrite/tsCode';
+import { createBlockRewrite } from '../rewrite/blockRewrite';
 import { generateStyleModuleImports } from '../style/modules';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
-import { asType, endOfLine, isTsLang, newLine } from '../utils';
+import { asType, endOfLine, isTsLang, newLine } from '../writers';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { createScriptSetupCopies, generateGeneric, generateMacros, generateSetupFunction } from './scriptSetup';
 import { generateTemplate } from './template';

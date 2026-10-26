@@ -1,8 +1,8 @@
 import { names } from '../names';
 import type { TemplateCodegenContext } from '../template/context';
-import { generateStyleScopedClassReference } from '../template/styleScopedClasses';
+import { generateStyleScopedClassReference } from '../template/scopedClassReferences';
 import type { TsCode } from '../tsCode';
-import { endOfLine, generateTypeAlias, isTsLang } from '../utils';
+import { endOfLine, generateTypeAlias, isTsLang } from '../writers';
 import type { StyleCodegenOptions } from '.';
 import { generateClassProperty } from './common';
 

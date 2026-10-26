@@ -3,9 +3,9 @@ import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeature
 import { camelize, isBuiltInDirective } from '@vue/shared';
 import { names } from '../names';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
-import { asType, endOfLine, newLine } from '../utils';
-import { generateCamelized } from '../utils/camelized';
-import { generateStringLiteralKey } from '../utils/stringLiteralKey';
+import { asType, endOfLine, newLine } from '../writers';
+import { generateCamelized } from '../writers/camelized';
+import { generateStringLiteralKey } from '../writers/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
 import { generatePropExp } from './elementProps';
 import type { TemplateCodegenOptions } from './index';

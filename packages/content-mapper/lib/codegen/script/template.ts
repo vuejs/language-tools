@@ -13,8 +13,8 @@ import {
 	intersectTypes,
 	isTsLang,
 	typeAliasRef,
-} from '../utils';
-import { generateSpreadMerge } from '../utils/merge';
+} from '../writers';
+import { generateSpreadMerge } from '../writers/merge';
 import type { ScriptCodegenOptions } from './index';
 
 export function* generateTemplate(

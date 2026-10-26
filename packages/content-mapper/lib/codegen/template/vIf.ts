@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { codeToString, scriptFeatures } from '@vue/language-core';
 import type { TsCode } from '../tsCode';
-import { newLine } from '../utils';
+import { newLine } from '../writers';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';

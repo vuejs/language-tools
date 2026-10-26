@@ -8,9 +8,9 @@ import {
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import type { TsCode } from '../tsCode';
-import { endOfLine } from '../utils';
+import { endOfLine } from '../writers';
 import { generateStyleModules } from './modules';
-import { generateStyleScopedClasses } from './scopedClasses';
+import { generateStyleScopedClasses } from './scopedClassNames';
 
 export interface StyleCodegenOptions {
 	typescript: TypeScript;

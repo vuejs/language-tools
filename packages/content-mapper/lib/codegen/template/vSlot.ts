@@ -4,7 +4,7 @@ import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAS
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { names } from '../names';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
-import { endOfLine, isTsLang, newLine } from '../utils';
+import { endOfLine, isTsLang, newLine } from '../writers';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';

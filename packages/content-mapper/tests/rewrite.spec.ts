@@ -8,7 +8,7 @@ import {
 	type RewriteSlice,
 	type RewriteWriter,
 	type SourceRewrite,
-} from '../lib/codegen/rewrite';
+} from '../lib/codegen/rewrite/sourceRewrite';
 
 type Segment = string | MappedSegment<string>;
 
@@ -632,6 +632,6 @@ function buildNestedCase(rewrite: SourceRewrite<string>, { length, cuts, edits }
 }
 
 test('the core imports nothing but the type of a code segment', () => {
-	const source = fs.readFileSync(path.join(__dirname, '../lib/codegen/rewrite/index.ts'), 'utf8');
+	const source = fs.readFileSync(path.join(__dirname, '../lib/codegen/rewrite/sourceRewrite.ts'), 'utf8');
 	expect(source.match(/^import .*$/gm)).toEqual([`import type { CodeSegment } from '@vue/language-core';`]);
 });

@@ -12,9 +12,9 @@ import {
 import { camelize } from '@vue/shared';
 import { names } from '../names';
 import { Boundary, type TsCode } from '../tsCode';
-import { asType, identifierRE, newLine } from '../utils';
-import { generateCamelized } from '../utils/camelized';
-import { generateUnicode } from '../utils/unicode';
+import { asType, identifierRE, newLine } from '../writers';
+import { generateCamelized } from '../writers/camelized';
+import { generateUnicode } from '../writers/unicode';
 import type { TemplateCodegenContext } from './context';
 import { generateModifiers } from './elementDirectives';
 import { generateEventArg, generateEventExpression, getEventArgName } from './elementEvents';

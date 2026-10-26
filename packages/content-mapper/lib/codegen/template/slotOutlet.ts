@@ -8,7 +8,7 @@ import {
 } from '@vue/language-core';
 import { names } from '../names';
 import { Boundary, type TsCode } from '../tsCode';
-import { endOfLine, newLine } from '../utils';
+import { endOfLine, newLine } from '../writers';
 import type { TemplateCodegenContext } from './context';
 import { generateElementProps, generatePropExp } from './elementProps';
 import type { TemplateCodegenOptions } from './index';

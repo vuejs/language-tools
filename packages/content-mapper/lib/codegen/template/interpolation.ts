@@ -8,7 +8,7 @@ import {
 } from '@vue/language-core';
 import { names } from '../names';
 import { Boundary, type TsCode } from '../tsCode';
-import { getRefBrandArgument } from '../utils';
+import { getRefBrandArgument } from '../writers';
 import type { TemplateCodegenContext } from './context';
 
 /**

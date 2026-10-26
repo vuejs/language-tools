@@ -1,8 +1,8 @@
 import { type IRScript, type IRScriptSetup, scriptFeatures, type VueCodeMarker } from '@vue/language-core';
 import type { ScriptEdit } from '../plugin';
 import type { TsCode } from '../tsCode';
-import { generateSfcBlockSection } from '../utils';
-import { createSourceRewrite, type RewriteSink, type RewriteSlice, type SourceRewrite } from '.';
+import { generateSfcBlockSection } from '../writers';
+import { createSourceRewrite, type RewriteSink, type RewriteSlice, type SourceRewrite } from './sourceRewrite';
 
 /** The data of a segment of generated TypeScript code. */
 export type TsCodeData = Exclude<TsCode, string>[3];

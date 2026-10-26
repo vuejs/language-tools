@@ -1,7 +1,7 @@
 import type { VueCodeMarker } from '@vue/language-core';
 import type { TsCode } from '../tsCode';
-import { identifierRE } from '../utils';
-import { generateStringLiteralKey } from '../utils/stringLiteralKey';
+import { identifierRE } from '../writers';
+import { generateStringLiteralKey } from '../writers/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';

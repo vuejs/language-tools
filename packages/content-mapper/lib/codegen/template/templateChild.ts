@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { hyphenateTag, parseInterpolationNode, scriptFeatures } from '@vue/language-core';
 import type { TsCode } from '../tsCode';
-import { endOfLine } from '../utils';
+import { endOfLine } from '../writers';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement, generateFragment } from './element';
 import type { TemplateCodegenOptions } from './index';

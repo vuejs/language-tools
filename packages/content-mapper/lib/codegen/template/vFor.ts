@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { parseVForAliases, scriptFeatures } from '@vue/language-core';
 import { names } from '../names';
 import type { TsCode } from '../tsCode';
-import { asType, endOfLine, newLine } from '../utils';
+import { asType, endOfLine, newLine } from '../writers';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';

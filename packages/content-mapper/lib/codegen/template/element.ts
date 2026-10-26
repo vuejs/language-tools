@@ -14,9 +14,9 @@ import { camelize, capitalize } from '@vue/shared';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
-import { endOfLine, generateTypedVar, identifierRE, newLine, typeAliasRef } from '../utils';
-import { generateCamelized } from '../utils/camelized';
-import { generateStringLiteralKey } from '../utils/stringLiteralKey';
+import { endOfLine, generateTypedVar, identifierRE, newLine, typeAliasRef } from '../writers';
+import { generateCamelized } from '../writers/camelized';
+import { generateStringLiteralKey } from '../writers/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
 import { generateElementDirectives } from './elementDirectives';
 import { generateElementEvents } from './elementEvents';
@@ -24,7 +24,7 @@ import { type FailedPropExpressions, generateElementProps } from './elementProps
 import type { TemplateCodegenOptions } from './index';
 import { generateIdentifier, generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
-import { generateStyleScopedClassReferences } from './styleScopedClasses';
+import { generateStyleScopedClassReferences } from './scopedClassReferences';
 import { generateTemplateChild } from './templateChild';
 import { generateVSlot } from './vSlot';
 

@@ -2,7 +2,7 @@ import { type IRStyle, navigationFeatures } from '@vue/language-core';
 import { names } from '../names';
 import type { TemplateCodegenContext } from '../template/context';
 import { Boundary, type TsCode } from '../tsCode';
-import { endOfLine, generateTypeAlias, identifierRE, newLine } from '../utils';
+import { endOfLine, generateTypeAlias, identifierRE, newLine } from '../writers';
 import type { StyleCodegenOptions } from '.';
 import { generateClassProperty, generateStyleSrc } from './common';
 
