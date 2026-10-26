@@ -11,7 +11,8 @@
 		"**/node_modules",
 		"**/*-lock.json",
 		"packages/language-service/data",
-		"volar.js"
+		"volar.js",
+		"services"
 	],
 	"plugins": [
 		"https://plugins.dprint.dev/typescript-0.95.7.wasm",

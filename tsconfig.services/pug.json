@@ -1,0 +1,20 @@
+{
+	// Type-checks the services submodule with the repo's TypeScript 7 and the services' own options, minus what TS 7 dropped (`esModuleInterop: false`, implicit `@types`).
+	// Its runtime JS is emitted by `npm run build:services` (TypeScript 5.9), as the services publish it.
+	"extends": "../services/packages/pug/tsconfig.json",
+	"compilerOptions": {
+		"esModuleInterop": null,
+		"types": ["node"],
+		// `lib/services/scanner.ts` reads volar 2's `Mapping` object shape, which volar.js 3 replaced with a tuple; it can only be fixed in the submodule.
+		"noCheck": true,
+		"rootDir": "../services/packages/pug",
+		"emitDeclarationOnly": true,
+		"declarationDir": "../node_modules/.services-types/pug",
+		"tsBuildInfoFile": "../node_modules/.services-types/pug.tsbuildinfo"
+	},
+	"references": [
+		{ "path": "../tsconfig.volar/language-service.json" },
+		{ "path": "./html.json" },
+		{ "path": "../packages/language-plugin-pug/tsconfig.json" }
+	]
+}

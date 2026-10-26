@@ -3,7 +3,6 @@ shellEmulator: true
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - semver@5.7.2
-  - volar-service-pug@0.0.71
 # This repo dogfoods typescript-native-bridge releases on publish day;
 # pnpm 11's default 24h minimumReleaseAge gate would reject them.
 minimumReleaseAge: 0
@@ -19,6 +18,14 @@ packages:
   - volar.js/packages/source-map
   - volar.js/packages/test-utils
   - volar.js/packages/vscode
+  # the services submodule (branch master), only the packages that @vue/language-service uses; the release workflow does not publish these
+  - services/packages/css
+  - services/packages/emmet
+  - services/packages/html
+  - services/packages/json
+  - services/packages/pug
+  - services/packages/pug-beautify
+  - services/packages/typescript
 
 allowBuilds:
   "@vscode/vsce-sign": true
@@ -37,5 +44,13 @@ overrides:
   '@volar/source-map': workspace:*
   '@volar/test-utils': workspace:*
   '@volar/vscode': workspace:*
+  # dependencies such as volar-service-pug resolve volar-service-* to the submodule too, so there is one copy
+  volar-service-css: workspace:*
+  volar-service-emmet: workspace:*
+  volar-service-html: workspace:*
+  volar-service-json: workspace:*
+  volar-service-pug: workspace:*
+  volar-service-pug-beautify: workspace:*
+  volar-service-typescript: workspace:*
   # volar-service-pug feeds its baseParse mappings to @volar/language-service, so both must share one format
   '@vue/language-plugin-pug': workspace:*

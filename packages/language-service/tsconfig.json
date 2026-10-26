@@ -7,6 +7,13 @@
 	},
 	"references": [
 		{ "path": "../../tsconfig.volar/language-service.json" },
+		{ "path": "../../tsconfig.services/css.json" },
+		{ "path": "../../tsconfig.services/emmet.json" },
+		{ "path": "../../tsconfig.services/html.json" },
+		{ "path": "../../tsconfig.services/json.json" },
+		{ "path": "../../tsconfig.services/pug.json" },
+		{ "path": "../../tsconfig.services/pug-beautify.json" },
+		{ "path": "../../tsconfig.services/typescript.json" },
 		{ "path": "../component-meta/tsconfig.json" },
 		{ "path": "../language-core/tsconfig.json" }
 	],

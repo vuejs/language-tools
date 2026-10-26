@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { defineConfig } from 'rolldown';
 
-const volarDir = path.resolve(__dirname, '../../volar.js') + path.sep;
+const submoduleDirs = ['volar.js', 'services'].map(dir => path.resolve(__dirname, '../..', dir) + path.sep);
 
 export default defineConfig({
 	input: {
@@ -55,15 +55,18 @@ export default defineConfig({
 			},
 		},
 		{
-			// The volar.js submodule keeps its sources next to the output, and its
-			// sources are not isolatedModules-safe: bundle the JS that `npm run build:volar` emits.
-			name: 'volar.js',
+			// The volar.js and services submodules keep their sources next to the output, and their
+			// sources are not isolatedModules-safe: bundle the JS that `npm run build:volar` and `npm run build:services` emit.
+			name: 'submodules',
 			resolveId(source, importer) {
 				if (!importer) {
 					return;
 				}
-				const fromVolar = path.normalize(importer).startsWith(volarDir);
-				if (source.startsWith('@volar/') || (fromVolar && source.startsWith('.'))) {
+				const fromSubmodule = submoduleDirs.some(dir => path.normalize(importer).startsWith(dir));
+				if (
+					source.startsWith('@volar/') || source.startsWith('volar-service-')
+					|| (fromSubmodule && source.startsWith('.'))
+				) {
 					return { id: require.resolve(source, { paths: [path.dirname(importer)] }) };
 				}
 			},
