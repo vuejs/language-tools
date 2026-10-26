@@ -1,4 +1,5 @@
 import type { InsertTextFormat, LanguageServicePlugin, TextEdit } from '@volar/language-service';
+import type { TypeScript } from '@vue/language-core';
 import { hyphenate } from '@vue/shared';
 import { URI } from 'vscode-uri';
 import { getTagNameCasing, TagNameCasing } from '../nameCasing';
@@ -7,7 +8,6 @@ import { placeScriptImportEdits, resolveEmbeddedCode } from '../virtualCodeQueri
 import { createAddComponentToOptionEdit } from './extractFile';
 
 export function create(
-	ts: typeof import('typescript'),
 	{ getDefaultImportEdits }: import('../requests').Requests,
 ): LanguageServicePlugin {
 	return {
@@ -48,7 +48,7 @@ export function create(
 						info.root,
 						await getDefaultImportEdits(info.root.fileName, incomingFileName),
 					);
-					const name = importEdits && getDefaultImportName(ts, importEdits);
+					const name = importEdits && getDefaultImportName(info.root.ts, importEdits);
 					if (!importEdits || !name) {
 						return;
 					}
@@ -89,7 +89,7 @@ export function create(
 }
 
 /** The local name of the default import the TypeScript language server's edits add. */
-function getDefaultImportName(ts: typeof import('typescript'), edits: readonly { newText: string }[]) {
+function getDefaultImportName(ts: TypeScript, edits: readonly { newText: string }[]) {
 	for (const { newText } of edits) {
 		const ast = ts.createSourceFile('drop.ts', newText, ts.ScriptTarget.Latest);
 		for (const statement of ast.statements) {

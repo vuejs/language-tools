@@ -60,7 +60,7 @@ export function createVueLanguageServicePlugins(
 		// type aware plugins
 		createCssPlugin(client),
 		createVueAutoDotValuePlugin(client),
-		createVueDocumentDropPlugin(ts, client),
+		createVueDocumentDropPlugin(client),
 		createVueExtractFilePlugin(ts, client),
 		createVueMissingPropsHintsPlugin(client),
 		createVueComponentDefinitionPlugin(client),
