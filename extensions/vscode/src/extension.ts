@@ -15,6 +15,7 @@ import {
 } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
+import { createInferredContentMapperContributions, inferredContentMappers } from './contentMappers';
 import * as focusMode from './focusMode';
 import * as interpolationDecorators from './interpolationDecorators';
 import { restrictFormattingEditsToRange } from './rangeFormatting';
@@ -22,23 +23,6 @@ import * as reactivityVisualization from './reactivityVisualization';
 import * as welcome from './welcome';
 
 let serverPath = resolveServerPath();
-
-/**
- * Content mappers for files outside any tsconfig, registered with TypeScript and passed to the language
- * server. Each contribution runs its own mapper process, since the host keys processes by contribution.
- */
-const inferredContentMappers = [
-	{
-		package: '@vue/content-mapper',
-		extensions: ['.vue'],
-		options: { languageFeatures: true, target: 99, format: 'sfc' },
-	},
-	{
-		package: '@vue/content-mapper',
-		extensions: ['.vue.md'],
-		options: { languageFeatures: true, target: 99, format: 'vitepress' },
-	},
-];
 
 /** Resolves with the first TypeScript SDK; `latestTypeScriptSdk` follows later TypeScript language server restarts. */
 let typescriptSdk: Promise<TypeScriptSDK> = Promise.reject(new Error('TypeScript (Native Preview) is not installed.'));
@@ -312,27 +296,14 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 		if (!api?.registerContentMappers) {
 			return;
 		}
-		const createContribution = ({ extensions, options }: typeof inferredContentMappers[number]) => ({
+		const contributions = createInferredContentMapperContributions(
+			context.extensionPath,
+			require('../package.json').version,
+		).map(({ extensions, inferredProjectContribution: { options, manifest } }) => ({
 			extensions,
-			inferredProjectContribution: {
-				options,
-				manifest: {
-					name: '@vue/content-mapper',
-					version: require('../package.json').version,
-					exec: [
-						process.execPath,
-						path.join(context.extensionPath, 'dist', 'content-mapper-server.js'),
-						`--worker=${path.join(context.extensionPath, 'dist', 'content-mapper-worker.js')}`,
-					],
-					cwd: vscode.Uri.file(context.extensionPath),
-					dynamicConfig: true,
-				},
-			},
-		});
-		context.subscriptions.push(api.registerContentMappers(
-			'Vue.volar',
-			inferredContentMappers.map(createContribution),
-		));
+			inferredProjectContribution: { options, manifest: { ...manifest, cwd: vscode.Uri.file(manifest.cwd) } },
+		}));
+		context.subscriptions.push(api.registerContentMappers('Vue.volar', contributions));
 	}, error => logger.logger.value?.error(String(error)));
 }
 
