@@ -1,7 +1,8 @@
 import { type Mapping, SpanMapKind } from '@volar/source-map';
-import type { Segment } from 'muggle-string';
+/** Generated HTML: plain text, or text copied from an offset of the pug code. */
+export type PugCode = string | [text: string, offset: number];
 
-export function buildMappings(chunks: Segment<any>[]) {
+export function buildMappings(chunks: PugCode[]) {
 	let length = 0;
 	const mappings: Mapping[] = [];
 	for (const segment of chunks) {
@@ -9,7 +10,7 @@ export function buildMappings(chunks: Segment<any>[]) {
 			length += segment.length;
 		}
 		else {
-			mappings.push([length, segment[0].length, segment[2], segment[0].length, SpanMapKind.Verbatim, 0]);
+			mappings.push([length, segment[0].length, segment[1], segment[0].length, SpanMapKind.Verbatim, 0]);
 			length += segment[0].length;
 		}
 	}

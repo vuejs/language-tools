@@ -1,14 +1,13 @@
-import { type Segment, toString } from 'muggle-string';
 import pugLex from 'pug-lexer';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { buildMappings } from './buildMappings';
+import { buildMappings, type PugCode } from './buildMappings';
 
 const pugParser = require('pug-parser');
 
 export function baseParse(pugCode: string) {
 	const fileName = 'file.pug';
 	const pugTextDocument = TextDocument.create('file:///file.pug', 'pug', 0, pugCode);
-	const codes: Segment<any>[] = [];
+	const codes: PugCode[] = [];
 	let error: {
 		code: string;
 		msg: string;
@@ -31,7 +30,6 @@ export function baseParse(pugCode: string) {
 
 		codes.push([
 			'',
-			undefined,
 			pugCode.trimEnd().length,
 		]);
 	}
@@ -45,7 +43,7 @@ export function baseParse(pugCode: string) {
 	}
 
 	return {
-		htmlCode: toString(codes),
+		htmlCode: codes.map(code => typeof code === 'string' ? code : code[0]).join(''),
 		mappings: buildMappings(codes),
 		pugTextDocument,
 		error,
@@ -69,7 +67,6 @@ export function baseParse(pugCode: string) {
 
 			codes.push([
 				'',
-				undefined,
 				pugTagRange.start,
 			]);
 
@@ -81,14 +78,12 @@ export function baseParse(pugCode: string) {
 			}
 			codes.push([
 				'',
-				undefined,
 				pugTagRange.start,
 			]);
 		}
 		else if (node.type === 'Text') {
 			codes.push([
 				node.val,
-				undefined,
 				getDocOffset(node.line, node.column),
 			]);
 		}
@@ -97,7 +92,6 @@ export function baseParse(pugCode: string) {
 	function addStartTag(node: TagNode, selfClosing: boolean) {
 		codes.push([
 			'',
-			undefined,
 			getDocOffset(node.line, node.column),
 		]);
 		codes.push('<');
@@ -105,7 +99,6 @@ export function baseParse(pugCode: string) {
 		if (pugCode.substring(tagRange.start, tagRange.end) === node.name) {
 			codes.push([
 				node.name,
-				undefined,
 				tagRange.start,
 			]);
 		}
@@ -120,7 +113,6 @@ export function baseParse(pugCode: string) {
 				for (const char of attr.name) {
 					codes.push([
 						char,
-						undefined,
 						offset,
 					]);
 				}
@@ -132,7 +124,6 @@ export function baseParse(pugCode: string) {
 				codes.push('=');
 				codes.push([
 					attr.val,
-					undefined,
 					getDocOffset(attr.line, attr.column),
 				]);
 			}
@@ -143,7 +134,6 @@ export function baseParse(pugCode: string) {
 			codes.push(' ');
 			codes.push([
 				attrsBlock.text,
-				undefined,
 				attrsBlock.offset,
 			]);
 		}
@@ -172,7 +162,6 @@ export function baseParse(pugCode: string) {
 		if (nextStart !== undefined) {
 			codes.push([
 				'',
-				undefined,
 				nextStart,
 			]);
 		}
