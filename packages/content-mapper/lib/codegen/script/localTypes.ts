@@ -1,5 +1,5 @@
 import type { VueCompilerOptions } from '@vue/language-core';
-import { endOfLine, isTsLang, newLine } from './utils';
+import { endOfLine, isTsLang, newLine } from '../utils';
 
 export function getLocalTypesGenerator(vueCompilerOptions: VueCompilerOptions, lang: string) {
 	const used = new Set<string>();
