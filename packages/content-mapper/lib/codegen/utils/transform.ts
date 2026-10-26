@@ -27,7 +27,8 @@ export function insert(position: number, insertion: () => Iterable<TsCode>): Cod
  * Generates `start`..`end` with the transforms applied in a total order: by start, inserts before a replace at the
  * same position, transforms of Vue before script edits of plugins, then in the order given. A script edit may touch
  * the range of another transform but not overlap it: one that overlaps a transform of Vue fails the generation, and
- * one that overlaps an earlier script edit is dropped.
+ * one that overlaps an earlier script edit is dropped. `section` generates the user code between the transforms, and
+ * is not called for an empty range.
  */
 export function* generateCodeWithTransforms(
 	start: number,
@@ -60,14 +61,20 @@ export function* generateCodeWithTransforms(
 				);
 			}
 		}
-		yield* section(start, range[0]);
+		yield* generateSection(start, range[0]);
 		yield* generate();
 		start = range[1];
 		if (!covering || range[1] >= covering.range[1]) {
 			covering = transform;
 		}
 	}
-	yield* section(start, end);
+	yield* generateSection(start, end);
+
+	function* generateSection(start: number, end: number) {
+		if (start < end) {
+			yield* section(start, end);
+		}
+	}
 }
 
 /**

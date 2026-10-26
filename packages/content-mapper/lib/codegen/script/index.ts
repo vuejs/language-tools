@@ -15,7 +15,7 @@ import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
 import type { CodegenContributions, ScriptEdit } from '../plugin';
 import { generateStyleModuleImports } from '../style/modules';
-import { asType, endOfLine, generateSfcBlockSection, isTsLang, newLine } from '../utils';
+import { asType, endOfLine, generateEmptyBlock, generateSfcBlockSection, isTsLang, newLine } from '../utils';
 import { type CodeTransform, generateCodeWithTransforms, getScriptEditTransforms } from '../utils/transform';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateGeneric, generateMacros, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
@@ -329,6 +329,7 @@ function* generateScriptWithExportDefault(
 
 function* generateWholeScript(script: IRScript, scriptEdits: readonly ScriptEdit[]): Generator<TsCode> {
 	const [edits] = getScriptEditTransforms(scriptEdits, script, [[0, script.content.length]]);
+	yield* generateEmptyBlock(script);
 	yield* generateScriptSection(script, 0, script.content.length, edits!);
 }
 

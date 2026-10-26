@@ -12,6 +12,7 @@ import { names } from '../names';
 import {
 	asType,
 	endOfLine,
+	generateEmptyBlock,
 	generateSfcBlockSection,
 	generateTypeAlias,
 	generateTypedVar,
@@ -39,6 +40,7 @@ export function* generateScriptSetupImports(
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<TsCode> {
+	yield* generateEmptyBlock(scriptSetup);
 	yield* generateCodeWithTransforms(
 		0,
 		getImportSectionEnd(scriptSetupRanges),
