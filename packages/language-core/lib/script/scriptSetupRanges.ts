@@ -1,7 +1,7 @@
 import { camelize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { IRScriptSetup, TextRange, TypeScript, VueCompilerOptions } from '../types';
-import { getNodeText, getStartEnd, isFunctionLikeDeclaration, isStringLiteralLike } from '../typescript/nodes';
+import { getNodeText, getStartEnd, isStringLiteralLike } from '../typescript/nodes';
 import { collectBindingIdentifiers } from './bindingPatterns';
 import { getClosestMultiLineCommentRange, parseBindings } from './scriptBindings';
 
@@ -199,7 +199,7 @@ export function parseScriptSetupRanges(
 								if (ts.isPropertyAssignment(property)) {
 									defaultValue = _getStartEnd(initializer);
 								}
-								if (isFunctionLikeDeclaration(ts, initializer) && initializer.parameters.length) {
+								if (ts.isFunctionLikeDeclaration(initializer) && initializer.parameters.length) {
 									const firstArg = initializer.parameters[0]!;
 									if (!firstArg.dotDotDotToken && !firstArg.type) {
 										defaultPropsArg = _getStartEnd(firstArg);
@@ -334,7 +334,7 @@ export function parseScriptSetupRanges(
 		}
 
 		node.forEachChild(child => {
-			if (isFunctionLikeDeclaration(ts, node)) {
+			if (ts.isFunctionLikeDeclaration(node)) {
 				return;
 			}
 			parents.push(node);

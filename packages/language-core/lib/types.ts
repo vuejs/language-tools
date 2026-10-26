@@ -8,8 +8,7 @@ export type { SFCParseResult } from '@vue/compiler-sfc';
 export type { ts };
 
 /**
- * The TypeScript 7 AST API with a synchronous parser. Hosts on the classic TypeScript API pass it instead,
- * so language-core only reads what both APIs provide alike.
+ * The TypeScript 7 AST API with a synchronous parser.
  */
 export type TypeScript = typeof import('typescript/ast', { with: { 'resolution-mode': 'import' }}) & {
 	createSourceFile(

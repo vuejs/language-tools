@@ -20,27 +20,13 @@ export function getNodeText(
 	return ast.text.slice(start, end);
 }
 
-// The type guards below are named differently, or missing, in the TypeScript 7 and classic APIs.
+// The type guards below are missing in the TypeScript 7 AST API.
 
 export function isStringLiteralLike(
 	ts: TypeScript,
 	node: ts.Node,
 ): node is ts.StringLiteral | ts.NoSubstitutionTemplateLiteral {
 	return node.kind === ts.SyntaxKind.StringLiteral || node.kind === ts.SyntaxKind.NoSubstitutionTemplateLiteral;
-}
-
-export function isFunctionLikeDeclaration(ts: TypeScript, node: ts.Node): node is ts.FunctionLikeDeclaration {
-	switch (node.kind) {
-		case ts.SyntaxKind.FunctionDeclaration:
-		case ts.SyntaxKind.MethodDeclaration:
-		case ts.SyntaxKind.GetAccessor:
-		case ts.SyntaxKind.SetAccessor:
-		case ts.SyntaxKind.Constructor:
-		case ts.SyntaxKind.FunctionExpression:
-		case ts.SyntaxKind.ArrowFunction:
-			return true;
-	}
-	return false;
 }
 
 /** A function declaration or expression, a signature or a function type. */
@@ -54,13 +40,5 @@ export function isFunctionLike(ts: TypeScript, node: ts.Node): node is ts.Signat
 		case ts.SyntaxKind.ConstructorType:
 			return true;
 	}
-	return isFunctionLikeDeclaration(ts, node);
-}
-
-export function isParameter(ts: TypeScript, node: ts.Node): node is ts.ParameterDeclaration {
-	return node.kind === ts.SyntaxKind.Parameter;
-}
-
-export function isTypeAssertionExpression(ts: TypeScript, node: ts.Node): node is ts.TypeAssertion {
-	return node.kind === ts.SyntaxKind.TypeAssertionExpression;
+	return ts.isFunctionLikeDeclaration(node);
 }

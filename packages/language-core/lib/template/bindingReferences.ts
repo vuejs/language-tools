@@ -2,7 +2,7 @@ import { isGloballyAllowed, makeMap } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { collectBindingNames } from '../script/bindingPatterns';
 import type { TypeScript } from '../types';
-import { getNodeText, isFunctionLikeDeclaration, isTypeAssertionExpression } from '../typescript/nodes';
+import { getNodeText } from '../typescript/nodes';
 import { forEachNode } from '../typescript/typescriptAST';
 
 /** The scopes of the locals that template expressions declare around the identifiers they reference. */
@@ -107,7 +107,7 @@ export function* forEachDeclarations(
 	else if (ts.isNonNullExpression(node)) {
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 	}
-	else if (isTypeAssertionExpression(ts, node)) {
+	else if (ts.isTypeAssertion(node)) {
 		yield* forEachDeclarationsInTypeNode(ts, node.type, ast, ctx, scope);
 		yield* forEachDeclarations(ts, node.expression, ast, ctx, scope, inNarrowing);
 	}
@@ -225,7 +225,7 @@ export function* forEachDeclarations(
 				yield* forEachDeclarations(ts, prop.expression, ast, ctx, scope, false);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/4604
-			else if (isFunctionLikeDeclaration(ts, prop) && prop.body) {
+			else if (ts.isFunctionLikeDeclaration(prop) && prop.body) {
 				if (prop.name && ts.isComputedPropertyName(prop.name)) {
 					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx, scope, false);
 				}

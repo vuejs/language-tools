@@ -1,5 +1,5 @@
 import type { LanguageServicePlugin, TextDocument } from '@volar/language-service';
-import { hyphenateAttr, isParameter, type ts, type TypeScript } from '@vue/language-core';
+import { hyphenateAttr, type ts, type TypeScript } from '@vue/language-core';
 import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
 export function create(
@@ -78,7 +78,7 @@ function shouldSkip(ts: TypeScript, node: ts.Node, pos: number, allowAccessDotVa
 	) {
 		return true;
 	}
-	else if (isParameter(ts, node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
+	else if (ts.isParameterDeclaration(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 		return true;
 	}
 	else if (ts.isPropertyAssignment(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {

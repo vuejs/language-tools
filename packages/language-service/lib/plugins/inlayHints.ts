@@ -340,7 +340,7 @@ export function findDestructuredProps(
 			ts.isExpressionWithTypeArguments(parent)
 			|| ts.isInterfaceDeclaration(parent)
 			|| ts.isTypeAliasDeclaration(parent)
-			|| parent.kind === ts.SyntaxKind.PropertySignature
+			|| ts.isPropertySignatureDeclaration(parent)
 		) {
 			return false;
 		}
