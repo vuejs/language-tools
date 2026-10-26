@@ -2,6 +2,7 @@ import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import picomatch from 'picomatch';
 import type { RawPlugin, RawVueCompilerOptions, ResolvedVuePlugin, VueCompilerOptions, VuePluginError } from './types';
+import { getDefaultTypesRoot } from './typesRoot';
 import { hyphenateTag } from './utils/names';
 
 export class CompilerOptionsResolver {
@@ -216,9 +217,7 @@ function findPackageJson(
 export function getDefaultCompilerOptions(
 	target = 99,
 	lib = 'vue',
-	typesRoot = typeof __dirname !== 'undefined'
-		? path.join(__dirname.replace(/\\/g, '/'), '..', 'types')
-		: '@vue/language-core/types',
+	typesRoot = getDefaultTypesRoot(),
 ): VueCompilerOptions {
 	const dataAttributes: string[] = [];
 	const htmlAttributes = ['aria-*'];
