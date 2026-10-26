@@ -1,4 +1,5 @@
 import type { TypeScript as CoreTypeScript } from '@vue/language-core';
+import { resolveTypeScriptModule } from '@vue/language-core/typescript';
 import type { VueVirtualCode } from '@vue/language-service';
 import type {
 	AutoImportComponent,
@@ -8,8 +9,6 @@ import type {
 	ExtractPropsInfo,
 	TextEdit,
 } from '@vue/language-service/lib/requests';
-import * as fs from 'node:fs';
-import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import type { ComponentMeta, TypeScript } from 'vue-component-meta';
 import { getComponentMetaOfType } from 'vue-component-meta/lib/componentMeta';
@@ -151,12 +150,9 @@ export async function connectTypeScriptProjectResolver(
 	inferredContentMappers?: ContentMapperEntry[],
 	parser?: CoreTypeScript,
 ): Promise<TypeScriptProjectResolver> {
-	const manifestPath = fs.realpathSync(packageJsonPath);
-	const { name } = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-	const require = createRequire(manifestPath);
 	const ts: TypeScript = {
-		...await import(pathToFileURL(require.resolve(`${name}/ast`)).href),
-		...await import(pathToFileURL(require.resolve(`${name}/async`)).href),
+		...await import(pathToFileURL(resolveTypeScriptModule(packageJsonPath, 'ast')).href),
+		...await import(pathToFileURL(resolveTypeScriptModule(packageJsonPath, 'async')).href),
 	};
 	const api = await ts.API.fromLSPConnection({ pipe });
 	const projects = new Map<string, Promise<TypeScriptProject | undefined>>();
