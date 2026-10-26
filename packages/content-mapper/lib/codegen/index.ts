@@ -143,6 +143,7 @@ function useCodegen(
 			expose: getCodegenContributions().expose,
 			elements: getCodegenContributions().elements,
 			declarations: getCodegenContributions().declarations,
+			exports: getCodegenContributions().exports,
 		});
 	});
 

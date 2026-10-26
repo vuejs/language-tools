@@ -10,6 +10,11 @@ defineDtsEmitTests('dts/js-script-setup', [], emitted => {
 	// the codegen of a JS component declares only what its `lang="ts"` twin declares
 	expect(emitted.get('runtime-props.d.vue.ts')).toBe(emitted.get('runtime-props-ts.d.vue.ts'));
 });
+defineDtsEmitTests('content-mapper-codegen/dts', [], emitted => {
+	// the doc comment that the codegen plugin copies onto the export of the component
+	expect(emitted.get('DocComment.d.vue.ts'))
+		.toMatch(/\/\*\* The doc comment of the component\. \*\/\n(declare const _default|export default)/);
+});
 
 function defineDtsEmitTests(
 	workspace: string,

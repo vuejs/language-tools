@@ -13,9 +13,7 @@ exports[`content mapper fixtures > test-workspace/content-mapper-codegen/tsconfi
   Types of parameters 'value' and 'value' are incompatible.
   Types of parameters 'value' and 'value' are incompatible.
 test-workspace/content-mapper-codegen/Declarations.vue(3,14): error TS2345: Argument of type '"b"' is not assignable to parameter of type '"a"'.
-test-workspace/content-mapper-codegen/ExportsUser.vue(2,25): error TS2614: Module '"./ExportsScript.vue"' has no exported member 'ExportsScript'. Did you mean to use 'import ExportsScript from "./ExportsScript.vue"' instead?
-test-workspace/content-mapper-codegen/ExportsUser.vue(3,24): error TS2614: Module '"./NamedExport.vue"' has no exported member 'NamedExport'. Did you mean to use 'import NamedExport from "./NamedExport.vue"' instead?
-test-workspace/content-mapper-codegen/ExportsUser.vue(4,28): error TS2614: Module '"./NoDefault.vue"' has no exported member 'NoDefault'. Did you mean to use 'import NoDefault from "./NoDefault.vue"' instead?
+test-workspace/content-mapper-codegen/ExportsUser.vue(4,8): error TS1192: Module '"<root>/test-workspace/content-mapper-codegen/NoDefault.vue"' has no default export.
 test-workspace/content-mapper-codegen/PropsParent.vue(19,15): error TS2322: Type 'string' is not assignable to type 'number'.
 test-workspace/content-mapper-codegen/PropsParent.vue(19,38): error TS2322: Type '(value: string) => void' is not assignable to type '(value: number) => any'.
 test-workspace/content-mapper-codegen/PropsParent.vue(21,31): error TS2322: Type 'string' is not assignable to type 'number'.

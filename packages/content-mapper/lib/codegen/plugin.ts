@@ -10,6 +10,7 @@ import type {
 	VuePluginError,
 } from '@vue/language-core';
 import { Boundary, type TsCode } from '../boundary';
+import { identifierRE } from './utils';
 
 /** The `codegen` export of a `plugins` entry's module. */
 export type VueCodegenExport = VueCodegenPlugin | ((ctx: VuePluginContext) => VueCodegenPlugin);
@@ -145,6 +146,14 @@ export interface CodegenContributions {
 	elements: TsCode[] | undefined;
 	/** Statements at module scope. */
 	declarations: TsCode[][];
+	exports: {
+		/** Named exports of the component, de-duplicated. */
+		names: string[];
+		/** Whether the synthetic default export is kept, of the first plugin that sets it. */
+		default: boolean;
+		/** The text of a doc comment of the component, of the first plugin that sets a valid one. */
+		docComment: string | undefined;
+	};
 }
 
 export interface ScriptEdit {
@@ -173,7 +182,9 @@ export function getContributions(plugins: readonly CodegenPlugin[], file: VueCod
 		expose: [],
 		elements: undefined,
 		declarations: [],
+		exports: { names: [], default: true, docComment: undefined },
 	};
+	let isDefaultSet = false;
 	for (const { name, plugin } of plugins) {
 		const contribution = plugin.contribute(file);
 		if (typeof contribution !== 'object' || contribution === null) {
@@ -194,6 +205,34 @@ export function getContributions(plugins: readonly CodegenPlugin[], file: VueCod
 		for (const key of ['templateContext', 'props', 'emits', 'expose', 'declarations'] as const) {
 			for (const type of toArray(contribution[key])) {
 				contributions[key].push(toTsCode(blocks, type));
+			}
+		}
+		const { exports } = contribution;
+		if (typeof exports !== 'object' || exports === null) {
+			continue;
+		}
+		for (const exportName of toArray(exports.names)) {
+			if (
+				typeof exportName === 'string' && identifierRE.test(exportName)
+				&& !contributions.exports.names.includes(exportName)
+			) {
+				contributions.exports.names.push(exportName);
+			}
+		}
+		if (!isDefaultSet && typeof exports.default === 'boolean') {
+			isDefaultSet = true;
+			contributions.exports.default = exports.default;
+		}
+		if (
+			contributions.exports.docComment === undefined && typeof exports.docComment === 'object' && exports.docComment
+		) {
+			const { block, start, end } = exports.docComment;
+			if ((block === ir.script || block === ir.scriptSetup) && block && isRange(block, start, end)) {
+				const text = block.content.slice(start, end);
+				// one block comment, so that it can't end the generated code's own comments or add code
+				if (/^\/\*(?:[^*]|\*(?!\/))*\*\/$/.test(text)) {
+					contributions.exports.docComment = text;
+				}
 			}
 		}
 	}

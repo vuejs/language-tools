@@ -192,3 +192,38 @@ test('adds the declarations of plugins at module scope', () => {
 	expect(text).toMatch(/\ndeclare const \$l: \(key: 'a'\) => string;\n/);
 	expect(text.indexOf('declare const $l')).toBeGreaterThan(text.indexOf(`const a = $l('a');`));
 });
+
+test('adds the named exports of plugins and drops the synthetic default export of the first plugin that drops it', () => {
+	const { text } = generateWith(
+		`<script setup lang="ts">\n/** Doc. */\nconst a = 1;\n</script>\n`,
+		plugin(({ ir }) => ({
+			exports: {
+				names: ['Comp', 'not-an-identifier'],
+				default: false,
+				docComment: { block: ir.scriptSetup!, ...rangeOf(ir.scriptSetup!, '/** Doc. */') },
+			},
+		})),
+		plugin(({ ir }) => ({
+			exports: {
+				names: ['Comp', 'Other'],
+				default: true,
+				// not one block comment
+				docComment: { block: ir.scriptSetup!, ...rangeOf(ir.scriptSetup!, '/** Doc. */\nconst') },
+			},
+		}), 'second-plugin'),
+	);
+	expect(text).not.toContain('export default');
+	expect(text).not.toContain('not-an-identifier');
+	expect(text).toContain(`/** Doc. */\nconst Comp = {} as typeof __VLS_export;\nexport { Comp };\n`);
+	expect(text).toContain(`/** Doc. */\nconst Other = {} as typeof __VLS_export;\nexport { Other };\n`);
+	expect(text.split('export { Comp }').length).toBe(2);
+});
+
+test('keeps the user default export of `<script>` when a plugin drops the synthetic one', () => {
+	const { text } = generateWith(
+		`<script lang="ts">\nexport default {};\n</script>\n`,
+		plugin(() => ({ exports: { names: ['Comp'], default: false } })),
+	);
+	expect(text).toContain('export default {} as typeof __VLS_export');
+	expect(text).toContain(`const Comp = {} as typeof __VLS_export;\nexport { Comp };`);
+});

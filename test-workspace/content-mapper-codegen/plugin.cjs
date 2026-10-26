@@ -29,6 +29,19 @@ exports.codegen = () => ({
 			expose: isChild ? [['{ contributedExposed: typeof exposedValue }']] : [],
 			elements: name.startsWith('Elements') ? ['{ div: HTMLDivElement & { readonly contributed: true } }'] : undefined,
 			declarations: name === 'Declarations' ? [["declare const $l: (key: 'a') => string;"]] : [],
+			exports: {
+				names: ['NamedExport', 'NoDefault', 'ExportsScript', 'DocComment'].includes(name) ? [name] : [],
+				// `ExportsScript` keeps its own `export default`
+				default: name === 'NoDefault' || name === 'ExportsScript' ? false : undefined,
+				docComment: name === 'DocComment' ? getDocComment(ts, ir.scriptSetup) : undefined,
+			},
 		};
 	},
 });
+
+// the JSDoc of the first statement of `block`
+function getDocComment(ts, block) {
+	const [statement] = block?.ast.statements ?? [];
+	const [doc] = statement ? ts.getJSDocCommentsAndTags(statement) : [];
+	return doc && { block, start: doc.getStart(block.ast), end: doc.end };
+}

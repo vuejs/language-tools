@@ -13,7 +13,7 @@ import {
 import * as path from 'path-browserify';
 import { Boundary, synthesizedIgnore, type TsCode } from '../../boundary';
 import { names } from '../names';
-import type { ScriptEdit } from '../plugin';
+import type { CodegenContributions, ScriptEdit } from '../plugin';
 import { generateStyleModuleImports } from '../style/modules';
 import { asType, endOfLine, generateSfcBlockSection, isTsLang, newLine } from '../utils';
 import { type CodeTransform, generateCodeWithTransforms, getScriptEditTransforms } from '../utils/transform';
@@ -52,17 +52,42 @@ export interface ScriptCodegenOptions {
 	elements: readonly TsCode[] | undefined;
 	/** The statements that the codegen plugins add at module scope. */
 	declarations: readonly TsCode[][];
+	/** The named exports, synthetic default export and doc comment of the component, as the codegen plugins set them. */
+	exports: Readonly<CodegenContributions['exports']>;
 }
 
 export { generate as generateScript };
 
-function* generateSyntheticDefaultExport(exportedExpression: string): Generator<TsCode> {
-	// keep the synthetic default export navigable: go-to-definition on
+function* generateSyntheticDefaultExport(
+	{ exports }: ScriptCodegenOptions,
+	exportedExpression: string,
+): Generator<TsCode> {
+	if (!exports.default) {
+		return;
+	}
+	if (exports.docComment !== undefined) {
+		yield exports.docComment + newLine;
+	}
+	yield* generateNavigableExport(`export default ${exportedExpression};`);
+}
+
+function* generateNamedExports({ exports }: ScriptCodegenOptions, exportedExpression: string): Generator<TsCode> {
+	for (const exportName of exports.names) {
+		if (exports.docComment !== undefined) {
+			yield exports.docComment + newLine;
+		}
+		// `export { … }` rather than `export const`, so that no emitted `export` line names a `__VLS_` declaration
+		yield* generateNavigableExport(`const ${exportName} = ${exportedExpression};${newLine}export { ${exportName} };`);
+	}
+}
+
+function* generateNavigableExport(code: string): Generator<TsCode> {
+	// keep the synthetic exports navigable: go-to-definition on
 	// `import Foo from './Foo.vue'` targets the whole statement, which maps to the SFC top;
 	// a rename reaching it would insert the new name there
 	const ignore = yield* Boundary.start('main', 0, 0, synthesizedIgnore);
 	const boundary = yield* Boundary.start('main', 0, 0, { features: navigationFeatures & ~SpanMapFeature.Rename });
-	yield `export default ${exportedExpression};`;
+	yield code;
 	yield boundary.end();
 	yield ignore.end();
 	yield newLine;
@@ -79,7 +104,7 @@ function* generateWorker(
 	ctx: ScriptCodegenContext,
 ): Generator<TsCode> {
 	const { script, scriptRanges, scriptSetup, scriptSetupRanges, vueCompilerOptions, fileName } = options;
-	const exportExpression = asType(`typeof ${names.export}`, options.scriptLang);
+	let exportExpression = asType(`typeof ${names.export}`, options.scriptLang);
 
 	yield* generateGlobalTypesReference(vueCompilerOptions, fileName);
 
@@ -106,7 +131,8 @@ function* generateWorker(
 		yield `'`;
 		yield boundary.end();
 		yield endOfLine;
-		yield* generateSyntheticDefaultExport(names.src);
+		exportExpression = names.src;
+		yield* generateSyntheticDefaultExport(options, exportExpression);
 
 		yield* generateTemplate(options, names.src);
 	}
@@ -131,7 +157,7 @@ function* generateWorker(
 		}
 		else {
 			yield* generateWholeScript(script, options.scriptEdits);
-			yield* generateSyntheticDefaultExport(exportExpression);
+			yield* generateSyntheticDefaultExport(options, exportExpression);
 		}
 
 		// <script setup>
@@ -198,7 +224,7 @@ function* generateWorker(
 				generateComponentDeclareEqual(scriptSetup, names.export),
 			);
 		}
-		yield* generateSyntheticDefaultExport(exportExpression);
+		yield* generateSyntheticDefaultExport(options, exportExpression);
 	}
 	// only <script>
 	else if (script && scriptRanges) {
@@ -220,10 +246,11 @@ function* generateWorker(
 			yield* generateComponentDeclareEqual(script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 			yield* generateTemplate(options, names.export);
-			yield* generateSyntheticDefaultExport(exportExpression);
+			yield* generateSyntheticDefaultExport(options, exportExpression);
 		}
 	}
 
+	yield* generateNamedExports(options, exportExpression);
 	yield* ctx.localTypes.generate();
 	yield* generatePluginDeclarations(options);
 	// after the user's code, which may start with `/// <reference>` or `// @ts-nocheck`

@@ -899,6 +899,23 @@ export declare const Bar: import("vue").DefineSetupFnComponent<{
 "
 `;
 
+exports[`content mapper declaration emit: content-mapper-codegen/dts > DocComment.d.vue.ts 1`] = `
+"declare const __VLS_export: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+/** The doc comment of the component. */
+declare const _default: typeof __VLS_export;
+export default _default;
+/** The doc comment of the component. */
+declare const DocComment: typeof __VLS_export;
+export { DocComment };
+"
+`;
+
+exports[`content mapper declaration emit: content-mapper-codegen/dts > declaration output files 1`] = `
+[
+  "DocComment.d.vue.ts",
+]
+`;
+
 exports[`content mapper declaration emit: dts/js-script-setup > declaration output files 1`] = `
 [
   "runtime-props-ts.d.vue.ts",

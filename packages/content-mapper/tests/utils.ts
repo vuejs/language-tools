@@ -36,6 +36,8 @@ export function runTsc(args: string[]) {
 export function normalizeCompilerOutput(output: { stdout: string; stderr: string }) {
 	return (output.stdout + output.stderr)
 		.replace(/^.*TNB ACTIVE.*\n/gm, '')
+		// module names in messages are absolute
+		.replaceAll(repositoryRoot.replaceAll('\\', '/'), '<root>')
 		.replace(/\r\n/g, '\n')
 		.split('\n')
 		.map(line => line.trimEnd())
