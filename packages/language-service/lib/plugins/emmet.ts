@@ -1,8 +1,8 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
 import { create as createEmmetPlugin } from 'volar-service-emmet';
-import { resolveEmbeddedCode } from '../utils';
 import { embeddedCodeIds, rootTagsLanguageId } from '../virtualCode';
-import { getExpressionStartAt } from './vue-template-expressions';
+import { resolveEmbeddedCode } from '../virtualCodeQueries';
+import { getExpressionStartAt } from './templateExpressions';
 
 /**
  * Emmet, except in the template expressions of the HTML template, which are JavaScript. Emmet completes only the

@@ -1,7 +1,8 @@
 import type { LanguageServicePlugin, TextDocument } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { asClassicNode, resolveEmbeddedCode } from '../utils';
+import { asClassicNode } from '../coreTypeScript';
+import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
 export function create(
 	ts: typeof import('typescript'),

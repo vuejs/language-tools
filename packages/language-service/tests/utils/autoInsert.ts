@@ -10,7 +10,7 @@ import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { createVueLanguagePlugin, createVueLanguageServicePlugins } from '../..';
-import { asCoreTypeScript } from '../../lib/utils';
+import { asCoreTypeScript } from '../../lib/coreTypeScript';
 import { createTestEnvironment } from './environment';
 
 export function createAutoInserter(

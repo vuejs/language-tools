@@ -9,9 +9,9 @@ import type {
 } from '@volar/language-service';
 import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
-import { loadLanguageBlocks } from '../data';
-import { resolveEmbeddedCode } from '../utils';
+import { loadLanguageBlocks } from '../htmlData';
 import { embeddedCodeIds, rootTagsLanguageId, VueVirtualCode } from '../virtualCode';
+import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 

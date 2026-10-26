@@ -1,6 +1,6 @@
 import { getDefaultCompilerOptions } from '@vue/language-core';
 import { createVueLanguagePlugin, type VueVirtualCode } from '@vue/language-service';
-import { asCoreTypeScript } from '@vue/language-service/lib/utils';
+import { asCoreTypeScript } from '@vue/language-service/lib/coreTypeScript';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';

@@ -15,11 +15,11 @@ import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import type { PropMeta, TypeId, TypeNode } from 'vue-component-meta';
-import { loadModelModifiersData, loadTemplateData } from '../data';
+import { loadModelModifiersData, loadTemplateData } from '../htmlData';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
-import { resolveEmbeddedCode } from '../utils';
 import { embeddedCodeIds, type VueVirtualCode } from '../virtualCode';
+import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
 const EVENT_PROP_REGEX = /^on[A-Z]/;
 

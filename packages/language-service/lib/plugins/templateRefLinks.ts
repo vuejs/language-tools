@@ -1,7 +1,7 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
 import { forEachElementNode, getTemplateRef } from '@vue/language-core';
-import { resolveEmbeddedCode } from '../utils';
 import { embeddedCodeIds } from '../virtualCode';
+import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
 export function create(): LanguageServicePlugin {
 	return {

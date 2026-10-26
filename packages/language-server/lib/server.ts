@@ -16,8 +16,9 @@ import {
 	type LanguageService,
 	VueVirtualCode,
 } from '@vue/language-service';
+import { asCoreTypeScript } from '@vue/language-service/lib/coreTypeScript';
 import type { TextEdit } from '@vue/language-service/lib/requests';
-import { asCoreTypeScript, placeScriptImportEdits } from '@vue/language-service/lib/utils';
+import { placeScriptImportEdits } from '@vue/language-service/lib/virtualCodeQueries';
 import { camelize, capitalize } from '@vue/shared';
 import * as path from 'node:path';
 import { URI } from 'vscode-uri';

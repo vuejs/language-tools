@@ -1,7 +1,8 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
 import { forEachElementNode, forEachStyleScopedClassReference } from '@vue/language-core';
-import { asCoreTypeScript, resolveEmbeddedCode } from '../utils';
+import { asCoreTypeScript } from '../coreTypeScript';
 import { embeddedCodeIds } from '../virtualCode';
+import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	const coreTs = asCoreTypeScript(ts);

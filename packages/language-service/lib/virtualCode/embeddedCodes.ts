@@ -10,14 +10,14 @@ import {
 	type VirtualCode,
 } from '@vue/language-core';
 import { computed } from 'alien-signals';
+import { getCustomBlockDocuments } from './customBlocks';
 import type { EmbeddedDocument } from './embeddedDocument';
-import { getRootTagsDocument } from './vue-root-tags';
-import { getCustomBlockDocuments } from './vue-sfc-customblocks';
-import { getScriptDocuments } from './vue-sfc-scripts';
-import { getStyleDocuments } from './vue-sfc-styles';
-import { getTemplateDocument } from './vue-sfc-template';
-import { getTemplateInlineCssDocument } from './vue-template-inline-css';
-import { getTemplateInlineTsDocuments } from './vue-template-inline-ts';
+import { getTemplateInlineCssDocument } from './inlineCss';
+import { getTemplateInlineTsDocuments } from './inlineTs';
+import { getRootTagsDocument } from './rootTags';
+import { getScriptDocuments } from './scripts';
+import { getStyleDocuments } from './styles';
+import { getTemplateDocument } from './template';
 
 interface ResolvedDocument {
 	id: string;

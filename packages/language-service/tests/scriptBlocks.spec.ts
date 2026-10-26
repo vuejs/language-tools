@@ -4,7 +4,7 @@ import * as ts from 'typescript';
 import { expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { createVueLanguagePlugin, createVueLanguageServicePlugins } from '..';
-import { asCoreTypeScript } from '../lib/utils';
+import { asCoreTypeScript } from '../lib/coreTypeScript';
 import { createTestEnvironment } from './utils/environment';
 
 // The TypeScript syntactic features of script blocks come from the verbatim code of each block.

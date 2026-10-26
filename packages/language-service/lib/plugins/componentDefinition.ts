@@ -1,7 +1,7 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
 import { URI } from 'vscode-uri';
-import { getComponentTagAt, resolveEmbeddedCode } from '../utils';
 import { embeddedCodeIds } from '../virtualCode';
+import { getComponentTagAt, resolveEmbeddedCode } from '../virtualCodeQueries';
 
 /**
  * Leads a component tag to the declaration of the component in another file, e.g. the Vue file of a global

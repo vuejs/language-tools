@@ -3,8 +3,9 @@ import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
 import type { IRTemplate } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import { asClassicNode, resolveEmbeddedCode } from '../utils';
+import { asClassicNode } from '../coreTypeScript';
 import { embeddedCodeIds, type VueVirtualCode } from '../virtualCode';
+import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
 interface ActionData {
 	uri: string;

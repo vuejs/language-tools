@@ -8,9 +8,10 @@ import { getSourceRange } from '@volar/language-service/lib/utils/featureWorkers
 import type * as CompilerDOM from '@vue/compiler-dom';
 import { collectBindingNames, parseVForNode } from '@vue/language-core';
 import { URI } from 'vscode-uri';
+import { asCoreTypeScript } from '../coreTypeScript';
 import type { AutoImportExport } from '../requests';
-import { asCoreTypeScript, resolveEmbeddedCode } from '../utils';
 import { embeddedCodeIds } from '../virtualCode';
+import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
 // Keywords that may appear in a single JavaScript expression
 const keywords = [

@@ -1,8 +1,8 @@
 import { getDefaultCompilerOptions, type VirtualCode } from '@vue/language-core';
 import * as ts from 'typescript';
 import { expect, test } from 'vitest';
+import { asCoreTypeScript } from '../lib/coreTypeScript';
 import { createVueLanguagePlugin } from '../lib/languagePlugin';
-import { asCoreTypeScript } from '../lib/utils';
 
 const fileName = '/project/src/Comp.vue';
 

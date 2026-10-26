@@ -1,10 +1,11 @@
 import type { InsertTextFormat, LanguageServicePlugin, TextEdit } from '@volar/language-service';
 import { hyphenate } from '@vue/shared';
 import { URI } from 'vscode-uri';
+import { asClassicNode } from '../coreTypeScript';
 import { getTagNameCasing, TagNameCasing } from '../nameCasing';
-import { createAddComponentToOptionEdit } from '../plugins/vue-extract-file';
-import { asClassicNode, placeScriptImportEdits, resolveEmbeddedCode } from '../utils';
 import { embeddedCodeIds } from '../virtualCode';
+import { placeScriptImportEdits, resolveEmbeddedCode } from '../virtualCodeQueries';
+import { createAddComponentToOptionEdit } from './extractFile';
 
 export function create(
 	ts: typeof import('typescript'),

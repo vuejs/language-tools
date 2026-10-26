@@ -1,8 +1,8 @@
 import type { LanguageServicePlugin, TextDocument } from '@volar/language-service';
 import { create as baseCreate, type Provide } from 'volar-service-css';
 import type * as css from 'vscode-css-languageservice';
-import { resolveEmbeddedCode } from '../utils';
 import { embeddedCodeIds } from '../virtualCode';
+import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
 export function create({ isRenamedByTypeScript }: import('../requests').Requests): LanguageServicePlugin {
 	const baseService = baseCreate({

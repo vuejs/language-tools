@@ -1,6 +1,6 @@
 import type { CompletionItem, CompletionItemKind, LanguageServicePlugin } from '@volar/language-service';
 import type { TextRange } from '@vue/language-core';
-import { resolveEmbeddedCode } from '../utils';
+import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {

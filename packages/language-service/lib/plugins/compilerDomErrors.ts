@@ -1,6 +1,6 @@
 import type { Diagnostic, DiagnosticSeverity, LanguageServicePlugin } from '@volar/language-service';
-import { resolveEmbeddedCode } from '../utils';
 import { embeddedCodeIds } from '../virtualCode';
+import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
 export function create(): LanguageServicePlugin {
 	return {

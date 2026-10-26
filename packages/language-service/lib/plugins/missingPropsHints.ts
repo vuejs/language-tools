@@ -2,8 +2,8 @@ import type { InlayHint, InlayHintKind, LanguageServicePlugin } from '@volar/lan
 import type * as CompilerDOM from '@vue/compiler-dom';
 import { forEachElementNode, getElementTagOffsets, hyphenateAttr } from '@vue/language-core';
 import { AttrNameCasing, getAttrNameCasing } from '../nameCasing';
-import { resolveEmbeddedCode } from '../utils';
 import { embeddedCodeIds } from '../virtualCode';
+import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
 export function create(
 	{ getComponentProps }: import('../requests').Requests,

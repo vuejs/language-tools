@@ -1,6 +1,6 @@
 import type { CodeAction, LanguageServicePlugin } from '@volar/language-service';
-import { getComponentTagAt, resolveEmbeddedCode } from '../utils';
 import { embeddedCodeIds } from '../virtualCode';
+import { getComponentTagAt, resolveEmbeddedCode } from '../virtualCodeQueries';
 
 export function create(
 	{ getImportFixes }: import('../requests').Requests,
