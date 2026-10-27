@@ -65,7 +65,7 @@ export function* generateInterpolation(
 		}
 
 		const identifierFeatures = member ? featuresWithoutCompletion : features;
-		if (local) {
+		if (local || (isShorthand && options.setupConsts.has(name))) {
 			yield [name, block.name, start + offset, identifierFeatures];
 			continue;
 		}

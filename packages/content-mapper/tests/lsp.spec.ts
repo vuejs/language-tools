@@ -5,6 +5,7 @@ import { repositoryRoot } from './utils';
 
 const workspace = path.join(repositoryRoot, 'test-workspace/content-mapper-lsp');
 const shorthand = new LspDocument(path.join(workspace, 'Shorthand.vue'));
+const constShorthand = new LspDocument(path.join(workspace, 'ConstShorthand.vue'));
 const cssModule = new LspDocument(path.join(workspace, 'CssModule.vue'));
 const cssModuleSrc = new LspDocument(path.join(workspace, 'CssModuleSrc.vue'));
 const runtimeProps = new LspDocument(path.join(workspace, 'RuntimeProps.vue'));
@@ -26,6 +27,7 @@ const emitsParent = new LspDocument(path.join(workspace, 'EmitsParent.vue'));
 const styleClassNames = new LspDocument(path.join(workspace, 'StyleClassNames.vue'));
 const documents = [
 	shorthand,
+	constShorthand,
 	cssModule,
 	styleClassNames,
 	cssModuleSrc,
@@ -173,6 +175,12 @@ test('semantic tokens come from script and interpolation identifiers only, not t
 		'12:24 item variable.declaration.readonly',
 		'12:35 item variable.readonly',
 	]);
+});
+
+test('rename expands object shorthands of const bindings in interpolations', async () => {
+	const binding = constShorthand.at('function format', 0, 9);
+	expect(await rename(constShorthand, binding)).toEqual(['1:6 format -> format: NEW', '5:9 format -> NEW']);
+	expect(await definition(constShorthand, constShorthand.at('{ format }', 0, 2))).toEqual(['5:9 format']);
 });
 
 // Waits on TypeScript expanding a shorthand of the source on rename through span maps (upstream ask TS-1): a
