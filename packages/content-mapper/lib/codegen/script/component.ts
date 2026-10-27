@@ -1,15 +1,7 @@
 import { type IRScriptSetup, navigationFeatures, type ScriptSetupRanges } from '@vue/language-core';
 import { names } from '../names';
 import type { TsCode } from '../tsCode';
-import {
-	asType,
-	asTypeCode,
-	generateSfcBlockSection,
-	generateTypeAlias,
-	intersectTypes,
-	newLine,
-	typeAliasRef,
-} from '../writers';
+import { asType, asTypeCode, generateSfcBlockSection, intersectTypes, newLine, typeAliasRef } from '../writers';
 import { generateSpreadMerge } from '../writers/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
@@ -57,38 +49,23 @@ function* generateEmitsOption(
 	options: ScriptCodegenOptions,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<TsCode> {
-	if (hasTypeEmits(options, scriptSetupRanges)) {
-		yield `__typeEmits: ${asType(typeAliasRef(names.TypeEmits, options.scriptLang), options.scriptLang)},${newLine}`;
-		return;
+	const typeCodes = options.vueCompilerOptions.target >= 3.5 && !scriptSetupRanges.defineEmits?.hasUnionTypeArg
+		? [...generateTypeEmitsOption(options, scriptSetupRanges)]
+		: [];
+
+	const runtimeCodes = !typeCodes.length
+		? [...generateRuntimeEmitsOption(options, scriptSetupRanges)]
+		: [];
+
+	if (typeCodes.length) {
+		yield `__typeEmits: `;
+		yield* asTypeCode(intersectTypes(typeCodes), options.scriptLang);
+		yield `,${newLine}`;
 	}
-	const runtimeCodes = [...generateRuntimeEmitsOption(options, scriptSetupRanges)];
-	if (runtimeCodes.length) {
+	else if (runtimeCodes.length) {
 		yield `emits: `;
 		yield* generateSpreadMerge(...runtimeCodes);
 		yield `,${newLine}`;
-	}
-}
-
-function getTypeEmits(options: ScriptCodegenOptions, scriptSetupRanges: ScriptSetupRanges) {
-	return options.vueCompilerOptions.target >= 3.5 && !scriptSetupRanges.defineEmits?.hasUnionTypeArg
-		? [...generateTypeEmitsOption(options, scriptSetupRanges)]
-		: [];
-}
-
-export function hasTypeEmits(options: ScriptCodegenOptions, scriptSetupRanges: ScriptSetupRanges) {
-	return getTypeEmits(options, scriptSetupRanges).length > 0;
-}
-
-/** `names.TypeEmits`, the type-based `emits` of the component that `generateComponent` generates. */
-export function* generateTypeEmits(
-	options: ScriptCodegenOptions,
-	scriptSetupRanges: ScriptSetupRanges,
-): Generator<TsCode> {
-	const types = getTypeEmits(options, scriptSetupRanges);
-	if (types.length) {
-		yield* generateTypeAlias(names.TypeEmits, options.scriptLang, function*() {
-			yield* intersectTypes(types);
-		});
 	}
 }
 

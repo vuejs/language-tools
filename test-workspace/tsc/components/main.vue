@@ -29,16 +29,15 @@ const ScriptSetupExposeExact = defineComponent({
 	},
 });
 // https://vuejs.org/api/sfc-script-setup.html#typescript-only-features
-type ScriptSetupTypeOnlyEmits = {
-	(e: 'change', id: number): void;
-	(e: 'update', value: string): void;
-};
 const ScriptSetupTypeOnlyExact = defineComponent({
 	__typeProps: {} as {
 		foo: string,
 		bar?: number;
 	},
-	__typeEmits: {} as ScriptSetupTypeOnlyEmits,
+	__typeEmits: {} as {
+		(e: 'change', id: number): void;
+		(e: 'update', value: string): void;
+	},
 });
 // https://vuejs.org/api/sfc-script-setup.html#default-props-values-when-using-type-declaration
 const ScriptSetupDefaultPropsExact = defineComponent({
@@ -70,10 +69,7 @@ declare const ScriptSetupGenericExact: <T, >(
 
 exactType(ScriptSetup, ScriptSetupExact);
 exactType(ScriptSetupExpose, ScriptSetupExposeExact);
-exactType(
-	ScriptSetupTypeOnly,
-	ScriptSetupTypeOnlyExact as typeof ScriptSetupTypeOnlyExact & { __typeEmits?: ScriptSetupTypeOnlyEmits },
-);
+exactType(ScriptSetupTypeOnly, ScriptSetupTypeOnlyExact);
 exactType(ScriptSetupDefaultProps, ScriptSetupDefaultPropsExact);
 exactType(ScriptSetupGeneric, ScriptSetupGenericExact);
 </script>

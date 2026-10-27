@@ -48,15 +48,6 @@ type __VLS_WithSlots<T, S> = T & {
 `.trimStart()
 				: jsGenericAlias(`T, S`, `__VLS_WithSlots`, `T & { new(): { $slots: S; } }`),
 	);
-	// `DefineComponent` keeps a type-based `emits` only as resolved options, whose properties are new symbols;
-	// the parent resolves the declared events from `__typeEmits`, so that its listeners link to them
-	const WithTypeEmits = defineHelper(
-		`__VLS_WithTypeEmits`,
-		() =>
-			isTs
-				? `type __VLS_WithTypeEmits<T, E> = T & { __typeEmits?: E; }${endOfLine}`
-				: jsGenericAlias(`T, E`, `__VLS_WithTypeEmits`, `T & { __typeEmits?: E; }`),
-	);
 	const PropsChildren = defineHelper(
 		`__VLS_PropsChildren`,
 		() =>
@@ -112,7 +103,6 @@ type __VLS_TypePropsToOption<T> = {
 		[PrettifyLocal.name]: PrettifyLocal,
 		[WithDefaults.name]: WithDefaults,
 		[WithSlots.name]: WithSlots,
-		[WithTypeEmits.name]: WithTypeEmits,
 		[PropsChildren.name]: PropsChildren,
 		[TypePropsToOption.name]: TypePropsToOption,
 		[OmitIndexSignature.name]: OmitIndexSignature,
@@ -131,9 +121,6 @@ type __VLS_TypePropsToOption<T> = {
 		},
 		get WithSlots(): (component: string, slots: string) => string {
 			return instantiate(WithSlots.name);
-		},
-		get WithTypeEmits(): (component: string, typeEmits: string) => string {
-			return instantiate(WithTypeEmits.name);
 		},
 		get PropsChildren(): (slots: string) => string {
 			return instantiate(PropsChildren.name);

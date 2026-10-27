@@ -3,14 +3,6 @@ import { defineComponent } from 'vue';
 import { exactType } from '../shared';
 import ScriptSetup from './script-setup.vue';
 
-type ScriptSetupEmits = {
-	'update:modelValue': [modelValue: string | undefined];
-	'update:c': [c: number];
-	'update:d': [d: number | undefined];
-	'update:e': [e: string];
-	'update:f': [f: string | undefined];
-	'update:gG': [g: string | undefined];
-};
 const ScriptSetupExact = defineComponent({
 	__typeProps: {} as {
 		modelValue?: string,
@@ -20,10 +12,17 @@ const ScriptSetupExact = defineComponent({
 		'f'?: string,
 		'gG'?: string,
 	},
-	__typeEmits: {} as ScriptSetupEmits,
+	__typeEmits: {} as {
+		'update:modelValue': [modelValue: string | undefined];
+		'update:c': [c: number];
+		'update:d': [d: number | undefined];
+		'update:e': [e: string];
+		'update:f': [f: string | undefined];
+		'update:gG': [g: string | undefined];
+	},
 });
 
-exactType(ScriptSetup, ScriptSetupExact as typeof ScriptSetupExact & { __typeEmits?: ScriptSetupEmits });
+exactType(ScriptSetup, ScriptSetupExact);
 </script>
 
 <template>
