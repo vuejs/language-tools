@@ -301,11 +301,13 @@ test('event props link the declaration and the parent listeners', async () => {
 	]);
 });
 
-// Waits on Vue's `TypeEmitsToOptions` keeping the declarations of the events: its keys are mapped over
-// `keyof T & string`, which is not homomorphic, so `DefineComponent` exposes a type-based emits only as new
-// symbols, and the parent can read the events by their declarations only once `__VLS_ResolveEmits` reads them
-// from the component type. A marker in the emitted declarations would link them now but no longer matches the
-// type that `defineComponent` gives.
+// Waits on Vue's `TypeEmitsToOptions` keeping the declarations of the events (upstream ask Vue-1): its keys are
+// mapped over `keyof T & string`, which is not homomorphic, so `DefineComponent` exposes a type-based emits only as
+// new symbols, and the parent can read the events by their declarations only once `__VLS_ResolveEmits` reads them
+// from the component type. The `on${Capitalize<K>}` listener props then link them only once TypeScript links the
+// properties of a 1:1 key-remapping mapped type to their source keys (upstream ask TS-2). A marker in the emitted
+// declarations would link them now but no longer matches the type that `defineComponent` gives. Exit: this passes
+// once Vue-1 and TS-2 are in.
 test.fails('type-based defineEmits link the declaration and the parent listeners', async () => {
 	expect(await references(typeEmits, typeEmits.at('fooBar'))).toEqual([
 		'1:14 fooBar',
@@ -317,13 +319,10 @@ test.fails('type-based defineEmits link the declaration and the parent listeners
 		'2:13 fooBar',
 		'TypeEmits:1:14 fooBar',
 	]);
-	// the listener key also defines itself: a key-remapping mapped type links no declaration to it
 	expect(await definition(emitsParent, emitsParent.at('@foo-bar', 0, 1))).toEqual([
-		'1:13 foo-bar',
 		'TypeEmits:1:14 fooBar',
 	]);
 	expect(await definition(emitsParent, emitsParent.at('@fooBar', 0, 1))).toEqual([
-		'2:13 fooBar',
 		'TypeEmits:1:14 fooBar',
 	]);
 });
