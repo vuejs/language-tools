@@ -90,6 +90,45 @@ const total = computed(() => count['value'] + state[key]);
 		'total = computed',
 		{ dependencies: ['state'], dependents: [] },
 	],
+	[
+		'the reads of a destructured composable result, not of another call of the composable',
+		`import { computed, ref } from 'vue';
+function useCounter() {
+	const n = ref(0);
+	return { n };
+}
+const { n } = useCounter();
+const counter = useCounter();
+const fromDestructured = computed(() => n.value);
+const fromOther = computed(() => counter.n.value);
+`,
+		'n } = useCounter',
+		{ dependencies: [], dependents: ['n.value'] },
+	],
+	[
+		'the reads of a namespace export by its name in the namespace, not by qualified name',
+		`import { computed, ref } from 'vue';
+namespace NS {
+	export const inner = ref(0);
+	export const local = computed(() => inner.value);
+}
+const qualified = computed(() => NS.inner.value);
+`,
+		'inner = ref',
+		{ dependencies: [], dependents: ['inner.value'] },
+	],
+	[
+		'the signals that a called named function expression reads',
+		`import { computed, ref } from 'vue';
+const count = ref(0);
+const fn = function named() {
+	return count.value;
+};
+const viaCall = computed(() => fn() * 2);
+`,
+		'viaCall = computed',
+		{ dependencies: ['fn', 'return count.value;', 'count'], dependents: [] },
+	],
 ])('reactivity analysis follows %s', async (_name, script, cursor, expected) => {
 	const server = await getLanguageServer();
 	const result = await server.vueserver.connection.sendRequest<ReactivityAnalysisResult | undefined>(
