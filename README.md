@@ -207,7 +207,7 @@ To pick up commits that others pushed to `v3`, run `git submodule update --remot
 
 ### Volar services
 
-[volarjs/services](https://github.com/volarjs/services) is checked out at `services/` as a git submodule tracking its `master` branch. Only the `volar-service-*` packages that `@vue/language-service` uses are part of the pnpm workspace, and they resolve to the submodule instead of npm. `npm run build` compiles them first (`npm run build:services`, emitting with TypeScript 5.9, as the services still set `esModuleInterop: false`, which TypeScript 7 removed) and type-checks them with the repository's TypeScript through `tsconfig.services/`; `npm run watch:services` watches them.
+[volarjs/services](https://github.com/volarjs/services) is checked out at `services/` as a git submodule tracking its `master` branch. Only the `volar-service-*` packages that `@vue/language-service` uses are part of the pnpm workspace, and they resolve to the submodule instead of npm. `npm run build` compiles them first (`npm run build:services`, emitting with TypeScript 7.1) and type-checks them with the repository's TypeScript through `tsconfig.services/`; `npm run watch:services` watches them.
 
 Changing them works as for Volar.js, with `services` and `master` in place of `volar.js` and `v3`. Releases do not publish `volar-service-*` either, and the release workflow stops unless the submodule's versions are already on npm.
 
