@@ -13,7 +13,7 @@
 			"options": {
 				"languageFeatures": false,
 				"target": 99,
-				"plugins": ["./plugin.cjs"]
+				"plugins": ["./plugin.cjs", { "name": "./plugin.cjs", "order": "second" }]
 			}
 		}
 	],

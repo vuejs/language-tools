@@ -9,19 +9,27 @@ exports[`content mapper fixtures > test-workspace/content-mapper-codegen/tsconfi
 "    Type 'number' is not assignable to type 'string'.
     Type 'number' is not assignable to type 'string'.
     Type 'number' is not assignable to type 'string'.
+    Type 'number' is not assignable to type 'string'.
+  Types of parameters 'value' and 'value' are incompatible.
   Types of parameters 'value' and 'value' are incompatible.
   Types of parameters 'value' and 'value' are incompatible.
   Types of parameters 'value' and 'value' are incompatible.
 test-workspace/content-mapper-codegen/Declarations.vue(3,14): error TS2345: Argument of type '"b"' is not assignable to parameter of type '"a"'.
 test-workspace/content-mapper-codegen/ExportsUser.vue(4,8): error TS1192: Module '"<root>/test-workspace/content-mapper-codegen/NoDefault.vue"' has no default export.
-test-workspace/content-mapper-codegen/PropsParent.vue(19,15): error TS2322: Type 'string' is not assignable to type 'number'.
-test-workspace/content-mapper-codegen/PropsParent.vue(19,38): error TS2322: Type '(value: string) => void' is not assignable to type '(value: number) => any'.
-test-workspace/content-mapper-codegen/PropsParent.vue(21,31): error TS2322: Type 'string' is not assignable to type 'number'.
-test-workspace/content-mapper-codegen/PropsParent.vue(21,54): error TS2322: Type '(value: string) => void' is not assignable to type '(value: number) => any'.
-test-workspace/content-mapper-codegen/PropsParent.vue(23,17): error TS2322: Type 'string' is not assignable to type 'number'.
-test-workspace/content-mapper-codegen/PropsParent.vue(23,40): error TS2322: Type '(value: string) => void' is not assignable to type '(value: number) => any'.
-test-workspace/content-mapper-codegen/PropsParent.vue(24,25): error TS2353: Object literal may only specify known properties, and 'contributed' does not exist in type 'Partial<{}> & Omit<{ readonly own?: string | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps, never>'.
+test-workspace/content-mapper-codegen/PropsParent.vue(20,15): error TS2322: Type 'string' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/PropsParent.vue(20,38): error TS2322: Type '(value: string) => void' is not assignable to type '(value: number) => any'.
+test-workspace/content-mapper-codegen/PropsParent.vue(22,31): error TS2322: Type 'string' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/PropsParent.vue(22,54): error TS2322: Type '(value: string) => void' is not assignable to type '(value: number) => any'.
+test-workspace/content-mapper-codegen/PropsParent.vue(24,17): error TS2322: Type 'string' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/PropsParent.vue(24,40): error TS2322: Type '(value: string) => void' is not assignable to type '(value: number) => any'.
+test-workspace/content-mapper-codegen/PropsParent.vue(25,25): error TS2353: Object literal may only specify known properties, and 'contributed' does not exist in type 'Partial<{}> & Omit<{ readonly own?: string | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps, never>'.
+test-workspace/content-mapper-codegen/PropsParent.vue(27,22): error TS2322: Type 'string' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/PropsParent.vue(27,45): error TS2322: Type '(value: string) => void' is not assignable to type '(value: number) => any'.
+test-workspace/content-mapper-codegen/ScriptEditUser.vue(12,16): error TS2322: Type 'string' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/ScriptEditUser.vue(13,15): error TS2353: Object literal may only specify known properties, and 'own' does not exist in type 'Partial<{}> & Omit<{ readonly wrapped?: number | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps, never>'.
+test-workspace/content-mapper-codegen/ScriptEditUser.vue(18,33): error TS2339: Property 'nope' does not exist on type 'number'.
 test-workspace/content-mapper-codegen/TemplateContext.vue(8,10): error TS2339: Property 'nope' does not exist on type 'number'.
+test-workspace/content-mapper-codegen/TemplateContextJs.vue(8,10): error TS2339: Property 'nope' does not exist on type 'number'.
 test-workspace/content-mapper-codegen/TemplateContextOptions.vue(10,10): error TS2339: Property 'nope' does not exist on type 'number'."
 `;
 

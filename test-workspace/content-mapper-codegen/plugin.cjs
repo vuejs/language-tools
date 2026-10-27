@@ -1,10 +1,14 @@
-// The codegen plugin of the content-mapper-codegen fixture.
+// The codegen plugin of the content-mapper-codegen fixture. The fixture lists it more than once; the later entries
+// have `"order": "second"` or `"order": "third"` and contribute what an earlier one already decides.
 const path = require('node:path');
 
-exports.codegen = () => ({
+exports.codegen = ({ config }) => ({ second, third })[config.order] ?? first;
+
+const first = {
 	contribute({ ts, fileName, ir }) {
 		const name = path.basename(fileName, '.vue');
 		const scriptEdits = [];
+		const declarations = [];
 		for (const block of [ir.script, ir.scriptSetup]) {
 			if (block) {
 				// `useFoo()` → `useFoo<number>()`
@@ -19,6 +23,39 @@ exports.codegen = () => ({
 				});
 			}
 		}
+		if (name === 'WrapDefault') {
+			// `export default { … }` → `export default withWrapped({ … })`
+			const { expression } = ir.script.ast.statements.find(ts.isExportAssignment);
+			scriptEdits.push(
+				{ block: ir.script, insertBefore: expression.getStart(ir.script.ast), code: ['withWrapped('] },
+				{ block: ir.script, insertAfter: expression.end, code: [')'] },
+			);
+			declarations.push(['declare function withWrapped(options: object): { props: { wrapped: NumberConstructor } };']);
+		}
+		if (name === 'EndInsert') {
+			scriptEdits.push({
+				block: ir.script,
+				insertBefore: ir.script.content.length,
+				code: ['\nexport const tail = 1;'],
+			});
+		}
+		if (name === 'SlotsAlias') {
+			// `defineSlots<T>()` → `defineSlots<WithExtra<T>>()`
+			const [{ expression: call }] = ir.scriptSetup.ast.statements;
+			const [type] = call.typeArguments;
+			scriptEdits.push(
+				{ block: ir.scriptSetup, insertBefore: type.getStart(ir.scriptSetup.ast), code: ['WithExtra<'] },
+				{ block: ir.scriptSetup, insertAfter: type.end, code: ['>'] },
+			);
+			declarations.push(['type WithExtra<T> = T & { extra(props: { n: number }): any };']);
+		}
+		if (name === 'EmptySetup') {
+			// the same name as the `<script>` binding, which only the scope of the `<script setup>` body can declare
+			scriptEdits.push({ block: ir.scriptSetup, insertBefore: 0, code: ["const s = 'setup';"] });
+		}
+		if (name === 'Declarations') {
+			declarations.push(["declare const $l: (key: 'a') => string;"]);
+		}
 		const isChild = name.startsWith('Props') && name !== 'PropsParent';
 		return {
 			scriptEdits,
@@ -28,20 +65,50 @@ exports.codegen = () => ({
 			// `exposedValue` is a binding of `<script setup>`
 			expose: isChild ? [['{ contributedExposed: typeof exposedValue }']] : [],
 			elements: name.startsWith('Elements') ? ['{ div: HTMLDivElement & { readonly contributed: true } }'] : undefined,
-			declarations: name === 'Declarations' ? [["declare const $l: (key: 'a') => string;"]] : [],
+			declarations,
 			exports: {
 				names: ['NamedExport', 'NoDefault', 'ExportsScript', 'DocComment'].includes(name) ? [name] : [],
 				// `ExportsScript` keeps its own `export default`
 				default: name === 'NoDefault' || name === 'ExportsScript' ? false : undefined,
-				docComment: name === 'DocComment' ? getDocComment(ts, ir.scriptSetup) : undefined,
+				// not one block comment, so a later plugin's comment is used
+				docComment: name === 'DocComment' ? getDocComment(ts, ir.scriptSetup, 0, 'const'.length) : undefined,
 			},
 		};
 	},
-});
+};
 
-// the JSDoc of the first statement of `block`
-function getDocComment(ts, block) {
-	const [statement] = block?.ast.statements ?? [];
+const second = {
+	contribute({ ts, fileName, ir }) {
+		const name = path.basename(fileName, '.vue');
+		return {
+			elements: name.startsWith('Elements') ? ['{ div: HTMLSpanElement }'] : undefined,
+			exports: {
+				// `NamedExport` again, and a name that is not an identifier
+				names: name === 'NamedExport'
+					? ['NamedExport', 'SecondExport', 'not-an-identifier']
+					: name === 'DocComment'
+					? ['DocComment']
+					: [],
+				default: name === 'NoDefault' ? true : undefined,
+				docComment: name === 'DocComment' ? getDocComment(ts, ir.scriptSetup, 0) : undefined,
+			},
+		};
+	},
+};
+
+const third = {
+	contribute({ ts, fileName, ir }) {
+		return {
+			exports: {
+				docComment: path.basename(fileName, '.vue') === 'DocComment' ? getDocComment(ts, ir.scriptSetup, 1) : undefined,
+			},
+		};
+	},
+};
+
+// the JSDoc of the `index`th statement of `block`, and `extra` chars after it
+function getDocComment(ts, block, index, extra = 0) {
+	const statement = block?.ast.statements[index];
 	const [doc] = statement ? ts.getJSDocCommentsAndTags(statement) : [];
-	return doc && { block, start: doc.getStart(block.ast), end: doc.end };
+	return doc && { block, start: doc.getStart(block.ast), end: doc.end + extra };
 }
