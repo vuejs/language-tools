@@ -101,6 +101,8 @@ export interface TemplateScopeOptions {
 	setupBindings: Set<string>;
 	setupConsts: Set<string>;
 	setupRefs: Set<string>;
+	/** The setup bindings that a template directive refers to by its name, like `vFoo` for `v-foo`. */
+	localDirectives: Set<string>;
 	hasDefineSlots: boolean;
 	propsAssignName: string | undefined;
 	slotsAssignName: string | undefined;
@@ -138,7 +140,8 @@ class BlockScope extends Scope {
  * reads `expressions` and `blockScopes` by the offset of each expression and by the node of each block scope.
  */
 export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateScopeOptions) {
-	const { vueCompilerOptions, isVapor, setupBindings, setupConsts, setupRefs, hasDefineSlots } = options;
+	const { vueCompilerOptions, isVapor, setupBindings, setupConsts, setupRefs, localDirectives, hasDefineSlots } =
+		options;
 	const templateNames = new Set<string>();
 	const styleNames = new Set<string>();
 	const contextAccesses: ContextAccess[] = [];
@@ -879,8 +882,12 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 			) {
 				continue;
 			}
-			if (!isBuiltInDirective(prop.name)) {
-				record(template, camelize('v-' + prop.name), prop.loc.start.offset, 'v-' + prop.name);
+			const directiveName = camelize('v-' + prop.name);
+			if (localDirectives.has(directiveName)) {
+				visitIdentifier(template, directiveName, prop.loc.start.offset);
+			}
+			else if (!isBuiltInDirective(prop.name)) {
+				record(template, directiveName, prop.loc.start.offset, 'v-' + prop.name);
 			}
 			const visitValue = () => {
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {

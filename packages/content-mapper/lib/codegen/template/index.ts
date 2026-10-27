@@ -21,6 +21,8 @@ export interface TemplateCodegenOptions {
 	setupRefs: Set<string>;
 	setupConsts: Set<string>;
 	setupBindings: Set<string>;
+	// The setup bindings that a template directive refers to by its name, like `vFoo` for `v-foo`.
+	localDirectives: Set<string>;
 	// Bindings narrowed at least once anywhere in the template/styles; every
 	// access of these is emitted with `.value`.
 	dotValueBindings: Set<string>;

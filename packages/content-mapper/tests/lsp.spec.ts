@@ -18,6 +18,7 @@ const eventProps = new LspDocument(path.join(workspace, 'EventProps.vue'));
 const eventPropsParent = new LspDocument(path.join(workspace, 'EventPropsParent.vue'));
 const modelKebab = new LspDocument(path.join(workspace, 'ModelKebab.vue'));
 const modelKebabParent = new LspDocument(path.join(workspace, 'ModelKebabParent.vue'));
+const localDirective = new LspDocument(path.join(workspace, 'LocalDirective.vue'));
 const documents = [
 	shorthand,
 	cssModule,
@@ -33,6 +34,7 @@ const documents = [
 	eventPropsParent,
 	modelKebab,
 	modelKebabParent,
+	localDirective,
 ];
 
 let server: LspServer;
@@ -280,4 +282,11 @@ test('kebab-case defineModel names link to the parent v-model arguments', async 
 	expect(await definition(modelKebabParent, modelKebabParent.at(':fooBar', 0, 1))).toEqual([
 		"ModelKebab:1:35 'foo-bar'",
 	]);
+});
+
+test('local directives link the setup binding and the template usages', async () => {
+	const usages = ['1:6 v-my-dir', '5:6 vMyDir'];
+	expect(await references(localDirective, localDirective.at('vMyDir'))).toEqual(usages);
+	expect(await references(localDirective, localDirective.at('v-my-dir'))).toEqual(usages);
+	expect(await definition(localDirective, localDirective.at('v-my-dir'))).toEqual(['5:6 vMyDir']);
 });

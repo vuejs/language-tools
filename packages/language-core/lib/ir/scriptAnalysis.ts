@@ -149,6 +149,7 @@ export function createScriptAnalysis(
 			setupBindings: getSetupBindings(),
 			setupConsts: getSetupConsts(),
 			setupRefs: getSetupRefs(),
+			localDirectives: getLocalDirectives(),
 			hasDefineSlots: !!scriptSetupRanges?.defineSlots,
 			propsAssignName: scriptSetupRanges?.defineProps?.name,
 			slotsAssignName: scriptSetupRanges?.defineSlots?.name,
@@ -218,7 +219,8 @@ export function createScriptAnalysis(
 		// `v[A-Z]` is a naming heuristic: without type analysis there is no
 		// reliable signal to tell a directive from a same-named value binding.
 		// This feeds the local-directive type / completion, where false positives
-		// are harmless (they only surface as extra completion candidates).
+		// are harmless (they only surface as extra completion candidates), and the
+		// template, where `v-foo` refers to `vFoo` like `@vue/compiler-sfc` resolves it.
 		return new Set([...bindings].filter(name => /^v[A-Z]/.test(name)));
 	});
 

@@ -9,7 +9,7 @@ import { generateStringLiteralKey } from '../writers/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
 import { generatePropExp } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
-import { generateInterpolation } from './interpolation';
+import { generateIdentifier, generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 
 export function* generateElementDirectives(
@@ -35,7 +35,7 @@ export function* generateElementDirectives(
 				{ features: 0 },
 			);
 			// vapor custom directives receive a value getter instead of a vdom binding object
-			yield* generateIdentifier(ctx, prop);
+			yield* generateDirectiveName(options, ctx, prop);
 			yield `(${names.nonNull}(null), `;
 			yield* generateValue(options, ctx, prop, false);
 			yield* generateArg(options, ctx, prop, false);
@@ -47,7 +47,7 @@ export function* generateElementDirectives(
 		else {
 			const hookVar = ctx.getInternalVariable();
 			yield `const ${hookVar} = ${names.asFunctionalDirective}(`;
-			yield* generateIdentifier(ctx, prop);
+			yield* generateDirectiveName(options, ctx, prop);
 			yield `, ${
 				asType(`import('${options.vueCompilerOptions.lib}').ObjectDirective`, options.scriptLang)
 			})${endOfLine}`;
@@ -71,30 +71,43 @@ export function* generateElementDirectives(
 	}
 }
 
-function* generateIdentifier(
+function* generateDirectiveName(
+	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<TsCode> {
 	const rawName = 'v-' + prop.name;
+	const name = camelize(rawName);
 	const startOffset = prop.loc.start.offset;
-	const boundary = yield* Boundary.start(
-		'template',
-		startOffset,
-		startOffset + rawName.length,
-		{ features: 0 },
-	);
+	const endOffset = startOffset + rawName.length;
+	const nameCodes = generateCamelized(rawName, 'template', startOffset, {
+		features: semanticFeatures | navigationFeatures,
+	});
+	// Like `@vue/compiler-sfc`, a directive refers to the setup binding of its name;
+	// referencing it like a template expression links it to the binding.
+	if (options.localDirectives.has(name)) {
+		yield* generateIdentifier(
+			options,
+			ctx,
+			nameCodes,
+			ctx.getExpression(options.template, startOffset, name).references[0]!,
+			'template',
+			startOffset,
+			endOffset,
+		);
+		return;
+	}
+	const boundary = yield* Boundary.start('template', startOffset, endOffset, { features: 0 });
 	yield names.directives;
 	yield `.`;
 	const builtIn = isBuiltInDirective(prop.name);
 	const ignore = builtIn ? yield* Boundary.start('template', 0, 0, synthesizedIgnore) : undefined;
-	yield* generateCamelized(rawName, 'template', prop.loc.start.offset, {
-		features: semanticFeatures | navigationFeatures,
-	});
+	yield* nameCodes;
 	if (ignore) {
 		yield ignore.end();
 	}
 	else {
-		ctx.accessLog.push(camelize(rawName));
+		ctx.accessLog.push(name);
 	}
 	yield boundary.end();
 }

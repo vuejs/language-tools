@@ -84,6 +84,7 @@ function useCodegen(
 			setupRefs: getSetupRefs(),
 			setupConsts: getSetupConsts(),
 			setupBindings: getSetupBindings(),
+			localDirectives: getLocalDirectives(),
 			dotValueBindings,
 			reassertBindings: new Set(
 				[...dotValueBindings].filter(name => (getBindingFlags().get(name) ?? 0) & BindingFlag.Variable),
