@@ -274,20 +274,20 @@ function addTransforms(
 			});
 		});
 	}
+	const defaultPropsType = scriptSetupRanges.defineProps?.typeArg
+		? names.Props
+		: runtimeDefineProps
+		? typeAliasRef(names.RuntimeProps, options.scriptLang)
+		: `typeof ${names.props}`;
 	for (const { defaultPropsArg } of scriptSetupRanges.defineModel) {
-		if (defaultPropsArg) {
-			core.insertAfter(defaultPropsArg.end, function*() {
-				yield `: `;
-				if (scriptSetupRanges.defineProps?.typeArg) {
-					yield names.Props;
-				}
-				else if (runtimeDefineProps) {
-					yield typeAliasRef(names.RuntimeProps, options.scriptLang);
-				}
-				else {
-					yield `typeof ${names.props}`;
-				}
-			});
+		if (!defaultPropsArg) {
+			continue;
+		}
+		if (isTsLang(options.scriptLang)) {
+			core.insertAfter(defaultPropsArg.end, `: ${defaultPropsType}`);
+		}
+		else {
+			core.insertBefore(defaultPropsArg.start, `/** @type {${defaultPropsType}} */ `);
 		}
 	}
 	if (scriptSetupRanges.defineProps) {
