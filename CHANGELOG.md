@@ -51,6 +51,7 @@ Unsupported: wrapping the template (layout slots of dxup), changing the shape of
 - **fix:** renaming a scoped or CSS module class whose name is not an identifier (`.foo-bar`) renames it in both the template and the style block, from either one; it renamed only the template use, and nothing from the style block.
 - **fix:** find references and go to definition link a template directive (`v-my-dir`) to its key in the Options API `directives` option (`directives: { myDir }`, `{ 'my-dir': … }`). Directives that a spread in the option registers resolve their types but do not link yet.
 - **fix:** a template directive resolves in the `directives` option by the keys Vue searches (`'my-dir'`, `myDir`, `MyDir` for `v-my-dir`), including a quoted kebab-case key and an option that is not an object literal (`directives: dirs`); both were reported as unknown directives.
+- **fix:** component meta gives the declarations in the source of the props of `defineModel` (its name) and of a runtime `defineProps` in script setup, as it already did for type-based props; they had none.
 
 ### Language server
 

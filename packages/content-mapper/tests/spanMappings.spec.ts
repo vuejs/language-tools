@@ -59,7 +59,7 @@ test('maps verbatim mappings whose texts differ as atoms', () => {
 		.toEqual([[0, 5, 0, 5, SpanMapKind.Atom, navigationFeatures]]);
 });
 
-test('keeps exact duplicate projections and removes incompatible overlaps', () => {
+test('removes overlaps in the generated text and keeps overlaps in the original', () => {
 	expect(toSpanMappings(
 		[
 			[0, 2, 0, 2, Verbatim, 0],
@@ -72,6 +72,7 @@ test('keeps exact duplicate projections and removes incompatible overlaps', () =
 	)).toEqual([
 		[0, 2, 0, 2, SpanMapKind.Verbatim, 0],
 		[2, 2, 0, 2, SpanMapKind.Atom, 0],
+		[4, 2, 1, 2, SpanMapKind.Atom, 0],
 	]);
 });
 
@@ -144,38 +145,18 @@ test('keeps atoms with equal texts as atoms', () => {
 	]);
 });
 
-test('cuts a verbatim section at a navigation-only copy of its content', () => {
+test('keeps a verbatim section whole around a copy of its content', () => {
 	// generated: f(x); x   (`x` copied from the section at 2..3 to 6..7)
 	// original:  f(x);
 	expect(toSpanMappings(
 		[
 			[0, 5, 0, 5, Verbatim, navigationFeatures],
-			[6, 1, 2, 1, Verbatim, navigationFeatures],
+			[6, 1, 2, 1, Verbatim, navigationFeatures | completionFeatures],
 		],
 		'f(x); x',
 		'f(x);',
 	)).toEqual([
-		[0, 2, 0, 2, SpanMapKind.Verbatim, navigationFeatures],
-		[2, 1, 2, 1, SpanMapKind.Verbatim, navigationFeatures],
-		[3, 2, 3, 2, SpanMapKind.Verbatim, navigationFeatures],
-		[6, 1, 2, 1, SpanMapKind.Verbatim, navigationFeatures],
-	]);
-});
-
-test('cuts a verbatim section at a copy that also offers completion', () => {
-	// generated: ('a'); a   (`a` copied from the section at 2..3 to 7..8)
-	// original:  ('a');
-	expect(toSpanMappings(
-		[
-			[0, 5, 0, 5, Verbatim, 0],
-			[7, 1, 2, 1, Verbatim, navigationFeatures | completionFeatures],
-		],
-		`('a'); a`,
-		`('a');`,
-	)).toEqual([
-		[0, 2, 0, 2, SpanMapKind.Verbatim, 0],
-		[2, 1, 2, 1, SpanMapKind.Verbatim, 0],
-		[3, 2, 3, 2, SpanMapKind.Verbatim, 0],
-		[7, 1, 2, 1, SpanMapKind.Verbatim, navigationFeatures | completionFeatures],
+		[0, 5, 0, 5, SpanMapKind.Verbatim, navigationFeatures],
+		[6, 1, 2, 1, SpanMapKind.Verbatim, navigationFeatures | completionFeatures],
 	]);
 });

@@ -159,8 +159,13 @@ describe('vue-component-meta', async () => {
 				type: { parameters: { value: { union: ['undefined', 'string'] } }, returns: 'void' },
 			},
 		});
-		// `defineModel` declares no props in the source
-		expect(declarations(declaredProps(meta))).toEqual({ modelValue: [], foo: [], bar: [], barModifiers: [] });
+		// the name of a `defineModel` declares its prop; the default model and the modifiers have no name in the source
+		expect(declarations(declaredProps(meta))).toEqual({
+			modelValue: [],
+			foo: [`reference-type-model/component.vue: 'foo'`],
+			bar: [`reference-type-model/component.vue: 'bar'`],
+			barModifiers: [],
+		});
 		expect(declarations(meta.events)).toEqual({
 			'update:bar': [runtimeCore],
 			'update:foo': [runtimeCore],
@@ -386,8 +391,18 @@ describe('vue-component-meta', async () => {
 				type: { union: ['undefined', { array: 'unknown' }] },
 			},
 		});
-		// the props of a runtime `defineProps` in script setup have no declarations in the source
-		expect(declaredProps(meta).every(prop => !prop.declarations.length)).toBe(true);
+		const componentJsSetup = (text: string) => [`reference-type-props/component-js-setup.vue: ${text}`];
+		expect(declarations(declaredProps(meta))).toEqual({
+			foo: componentJsSetup('foo: {\n    type: String,\n    required: true\n  }'),
+			bar: componentJsSetup(`bar: {\n    type: String,\n    default: 'BAR'\n  }`),
+			baz: componentJsSetup('baz: {\n    type: String\n  }'),
+			xfoo: componentJsSetup('xfoo: StringRequired'),
+			xbar: componentJsSetup('xbar: StringEmpty'),
+			xbaz: componentJsSetup('xbaz: StringUndefined'),
+			hello: componentJsSetup(`hello: {\n    type: String,\n    default: 'Hello'\n  }`),
+			numberOrStringProp: componentJsSetup('numberOrStringProp: {\n    type: [Number, String],\n    default: 42\n  }'),
+			arrayProps: componentJsSetup('arrayProps: {\n    type: Array,\n    default: () => [42, 43, 44]\n  }'),
+		});
 	});
 
 	test('reference-type-events', async () => {
@@ -456,7 +471,7 @@ describe('vue-component-meta', async () => {
 		});
 		expect(declarations(declaredProps(meta))).toEqual({
 			foo: ['generic/component.vue: foo: number'],
-			title: [],
+			title: [`generic/component.vue: 'title'`],
 		});
 	});
 
@@ -709,7 +724,10 @@ describe('vue-component-meta', async () => {
 			header: { description: '', tags: [], type: { count: 'number' } },
 		});
 		expect(meta.description).toBeUndefined();
-		expect(declarations(declaredProps(meta))).toEqual({ bar: [], foo: [] });
+		expect(declarations(declaredProps(meta))).toEqual({
+			bar: ['js-component/component.vue: bar: {\n\t\ttype: Number,\n\t\tdefault: 1\n\t}'],
+			foo: ['js-component/component.vue: foo: {\n\t\ttype: String,\n\t\trequired: true\n\t}'],
+		});
 		expect(declarations(meta.slots)).toEqual({ header: ['js-component/component.vue: header'] });
 	});
 

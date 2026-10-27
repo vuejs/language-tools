@@ -72,8 +72,6 @@ export function toSpanMappings(
 		}
 	}
 
-	splitAtNavigationCopies(candidates);
-
 	candidates.sort((left, right) =>
 		left.kind - right.kind
 		|| left.generatedStart - right.generatedStart
@@ -81,17 +79,12 @@ export function toSpanMappings(
 	);
 
 	const selected: Candidate[] = [];
-	const generatedIntervals = new IntervalSet(false);
-	const originalIntervals = new IntervalSet(true);
+	const generatedIntervals = new IntervalSet();
 	for (const candidate of candidates) {
 		if (!generatedIntervals.canAdd(candidate.generatedStart, candidate.generatedEnd)) {
 			continue;
 		}
-		if (!originalIntervals.canAdd(candidate.originalStart, candidate.originalEnd)) {
-			continue;
-		}
 		generatedIntervals.add(candidate.generatedStart, candidate.generatedEnd);
-		originalIntervals.add(candidate.originalStart, candidate.originalEnd);
 		selected.push(candidate);
 	}
 
@@ -104,9 +97,6 @@ export function toSpanMappings(
 	);
 	fills.sort((left, right) => (left.generatedEnd - left.generatedStart) - (right.generatedEnd - right.generatedStart));
 	for (const fill of fills) {
-		if (!originalIntervals.canAdd(fill.originalStart, fill.originalEnd)) {
-			continue;
-		}
 		const inner = selected
 			.filter(mapping =>
 				rangesOverlap(fill.generatedStart, fill.generatedEnd, mapping.generatedStart, mapping.generatedEnd)
@@ -127,7 +117,6 @@ export function toSpanMappings(
 			generatedIntervals.add(piece.generatedStart, piece.generatedEnd);
 			selected.push(piece);
 		}
-		originalIntervals.add(fill.originalStart, fill.originalEnd);
 	}
 
 	selected.sort((left, right) => left.generatedStart - right.generatedStart);
@@ -141,85 +130,18 @@ export function toSpanMappings(
 	]);
 }
 
-// Navigation copies of code (the runtime props object repeated in `defineComponent`,
-// a `defineModel` name in the model props type, as is or camelized, a scoped class
-// name in a `:class` string) lie inside the verbatim section they were copied from.
-// Original spans may not contain one another, so cut that section at each copy's
-// bounds to make the spans identical.
-// Interim: the cut only meets TypeScript's rule that original spans do not contain
-// one another, and a navigation result whose span crosses a cut now falls in more
-// than one segment, which TypeScript drops. The right fix is for TypeScript to map a result
-// across contiguous segments, or to accept a copy inside the section it was copied
-// from; once it does either, stop cutting and keep the section a single segment.
-function splitAtNavigationCopies(candidates: Candidate[]) {
-	const copies = candidates.filter(candidate =>
-		candidate.originalStart < candidate.originalEnd
-		&& candidate.features
-		&& !(candidate.features & ~(navigationFeatures | completionFeatures))
-	);
-	if (!copies.length) {
-		return;
-	}
-	for (let index = candidates.length - 1; index >= 0; index--) {
-		const section = candidates[index]!;
-		if (section.kind !== SpanMapKind.Verbatim) {
-			continue;
-		}
-		const cuts = new Set<number>();
-		for (const copy of copies) {
-			if (
-				copy.originalStart >= section.originalStart
-				&& copy.originalEnd <= section.originalEnd
-				&& copy.originalEnd - copy.originalStart < section.originalEnd - section.originalStart
-			) {
-				cuts.add(copy.originalStart);
-				cuts.add(copy.originalEnd);
-			}
-		}
-		cuts.delete(section.originalStart);
-		cuts.delete(section.originalEnd);
-		if (!cuts.size) {
-			continue;
-		}
-		const offset = section.generatedStart - section.originalStart;
-		const bounds = [section.originalStart, ...[...cuts].sort((left, right) => left - right), section.originalEnd];
-		const pieces = bounds.slice(1).map((end, i): Candidate => ({
-			...section,
-			generatedStart: bounds[i]! + offset,
-			generatedEnd: end + offset,
-			originalStart: bounds[i]!,
-			originalEnd: end,
-		}));
-		candidates.splice(index, 1, ...pieces);
-	}
-}
-
 function rangesOverlap(startA: number, endA: number, startB: number, endB: number) {
 	return startA < endB && startB < endA;
 }
 
 class IntervalSet {
-	#allowExactDuplicates: boolean;
-	#exact = new Set<string>();
 	#root: IntervalNode | undefined;
 
-	constructor(allowExactDuplicates: boolean) {
-		this.#allowExactDuplicates = allowExactDuplicates;
-	}
-
 	canAdd(start: number, end: number) {
-		if (this.#allowExactDuplicates && this.#exact.has(toKey(start, end))) {
-			return true;
-		}
 		return !hasOverlap(this.#root, start, end);
 	}
 
 	add(start: number, end: number) {
-		const key = toKey(start, end);
-		if (this.#allowExactDuplicates && this.#exact.has(key)) {
-			return;
-		}
-		this.#exact.add(key);
 		this.#root = insert(this.#root, {
 			start,
 			end,
@@ -282,8 +204,4 @@ function rotateRight(root: IntervalNode) {
 
 function compareIntervals(left: IntervalNode, right: IntervalNode) {
 	return left.start - right.start || left.end - right.end;
-}
-
-function toKey(start: number, end: number) {
-	return `${start}:${end}`;
 }
