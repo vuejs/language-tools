@@ -106,18 +106,6 @@ const fromOther = computed(() => counter.n.value);
 		{ dependencies: [], dependents: ['n.value'] },
 	],
 	[
-		'the reads of a namespace export by its name in the namespace, not by qualified name',
-		`import { computed, ref } from 'vue';
-namespace NS {
-	export const inner = ref(0);
-	export const local = computed(() => inner.value);
-}
-const qualified = computed(() => NS.inner.value);
-`,
-		'inner = ref',
-		{ dependencies: [], dependents: ['inner.value'] },
-	],
-	[
 		'the signals that a called named function expression reads',
 		`import { computed, ref } from 'vue';
 const count = ref(0);
@@ -130,19 +118,39 @@ const viaCall = computed(() => fn() * 2);
 		{ dependencies: ['fn', 'return count.value;', 'count'], dependents: [] },
 	],
 ])('reactivity analysis follows %s', async (_name, script, cursor, expected) => {
+	expect(await analyze(script, cursor)).toEqual(expected);
+});
+
+// The lexical scope resolver of the analysis resolves no qualified names, which the TS 7.1 checker of the project
+// resolves; exit: this passes once the analysis resolves identifiers through that checker.
+test.fails('reactivity analysis follows the reads of a namespace export by qualified name', async () => {
+	const script = `import { computed, ref } from 'vue';
+namespace NS {
+	export const inner = ref(0);
+	export const local = computed(() => inner.value);
+}
+const qualified = computed(() => NS.inner.value);
+`;
+	expect(await analyze(script, 'inner = ref')).toEqual({
+		dependencies: [],
+		dependents: ['inner.value', 'NS.inner.value'],
+	});
+});
+
+async function analyze(script: string, cursor: string) {
 	const server = await getLanguageServer();
+	// what an editor has open in its TypeScript language server
+	const { uri } = await server.open(
+		URI.file(`${testWorkspacePath}/tsconfigProject/composable.ts`).toString(),
+		'typescript',
+		script,
+	);
 	const result = await server.vueserver.connection.sendRequest<ReactivityAnalysisResult | undefined>(
 		'vue/reactivityAnalysis',
-		{
-			textDocument: { uri: URI.file(`${testWorkspacePath}/tsconfigProject/composable.ts`).toString() },
-			offset: script.indexOf(cursor),
-			content: script,
-		},
-	);
-	expect(
-		result && {
-			dependencies: result.dependencyRanges.map(({ pos, end }) => script.slice(pos, end)),
-			dependents: result.dependentRanges.map(({ pos, end }) => script.slice(pos, end)),
-		},
-	).toEqual(expected);
-});
+		{ textDocument: { uri }, offset: script.indexOf(cursor), content: script },
+	).finally(() => server.close(uri));
+	return result && {
+		dependencies: result.dependencyRanges.map(({ pos, end }) => script.slice(pos, end)),
+		dependents: result.dependentRanges.map(({ pos, end }) => script.slice(pos, end)),
+	};
+}

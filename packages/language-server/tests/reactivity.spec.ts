@@ -40,7 +40,7 @@ watchEffect(() => el.value);
 });
 
 test('reactivity analysis of a script the client sends', async () => {
-	const uri = URI.file(`${testWorkspacePath}/tsconfigProject/composable.ts`).toString();
+	const { uri } = await open('tsconfigProject/composable.ts', 'typescript', script);
 	expect(slice(script, await analyze(uri, script.indexOf('count = ref') + 1, script))).toEqual({
 		dependencyRanges: [],
 		dependentRanges: ['count.value * 2'],
