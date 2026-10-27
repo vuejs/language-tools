@@ -52,9 +52,6 @@ importers:
       typescript:
         specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
         version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-      typescript-5:
-        specifier: npm:typescript@~5.9.3
-        version: typescript@5.9.3
       typescript-7:
         specifier: npm:typescript@7.1.0-beta
         version: typescript@7.1.0-beta
@@ -2418,11 +2415,6 @@ packages:
     engines: {node: '>=20.19'}
     hasBin: true
 
-  typescript@5.9.3:
-    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-
   typescript@7.1.0-beta:
     resolution: {integrity: sha512-cjWjZAJDsmZzsNC5GwHNlW0YPM65jZa5oR0KyQcYX3KSVIfTvtBq//vewISyatKk4OLi5grZjHhIVE9fdrw1UQ==}
     engines: {node: '>=16.20.0'}
@@ -4392,8 +4384,6 @@ snapshots:
       '@typescript-native-bridge/linux-x64': 6.0.3-bridge.16.tsgo.7.0.2
       '@typescript-native-bridge/win32-arm64': 6.0.3-bridge.16.tsgo.7.0.2
       '@typescript-native-bridge/win32-x64': 6.0.3-bridge.16.tsgo.7.0.2
-
-  typescript@5.9.3: {}
 
   typescript@7.1.0-beta:
     optionalDependencies:

@@ -1,10 +1,8 @@
 {
-	// Type-checks the services submodule with the repo's TypeScript 7 and the services' own options, minus what TS 7 dropped (`esModuleInterop: false`, implicit `@types`).
-	// Its runtime JS is emitted by `npm run build:services` (TypeScript 5.9), as the services publish it.
+	// Type-checks the services submodule with the repo's TypeScript 7 and the services' own options, emitting only declarations for project references.
+	// Its runtime JS is emitted by `npm run build:services` (TypeScript 7.1), as the services publish it.
 	"extends": "../services/packages/emmet/tsconfig.json",
 	"compilerOptions": {
-		"esModuleInterop": null,
-		"types": ["node"],
 		"rootDir": "../services/packages/emmet",
 		"emitDeclarationOnly": true,
 		"declarationDir": "../node_modules/.services-types/emmet",
