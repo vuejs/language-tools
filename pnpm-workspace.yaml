@@ -3,9 +3,6 @@ shellEmulator: true
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - semver@5.7.2
-# This repo dogfoods typescript-native-bridge releases on publish day;
-# pnpm 11's default 24h minimumReleaseAge gate would reject them.
-minimumReleaseAge: 0
 
 packages:
   - extensions/*
