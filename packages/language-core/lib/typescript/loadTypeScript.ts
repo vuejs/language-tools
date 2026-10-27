@@ -32,9 +32,10 @@ export function resolveTypeScriptPackageJson(directory: string) {
 }
 
 /**
- * TypeScript 7 has no parser in the AST package, so source files are parsed by a TypeScript API
- * process, started on the first parse. Without `packageJsonPath`, the `typescript` package that
- * resolves from here provides them.
+ * Interim: TS 7.1 has no parser in `typescript/ast`, so source files are parsed by a `typescript/sync` API process,
+ * started on the first parse, and the parse returns no diagnostics (upstream ask TS-3). Exit: parse in-process, or take
+ * the host's parse from the transform request, once TS-3 gives either. Without `packageJsonPath`, the `typescript`
+ * package that resolves from here provides them.
  */
 export function loadTypeScript(packageJsonPath?: string): TypeScript {
 	const cached = loaded.get(packageJsonPath);
@@ -57,8 +58,9 @@ export function loadTypeScript(packageJsonPath?: string): TypeScript {
 			const retained = api.createSourceFile(fileName, sourceText, { scriptKind });
 			retained.dispose();
 			const sourceFile = retained.sourceFile;
-			// The API returns no parse diagnostics. language-core only reads them for code cut off at the
-			// end, so they are approximated by the erroneous nodes that reach the end of the code.
+			// Interim: the API returns no parse diagnostics (upstream ask TS-3). language-core only reads them for code
+			// cut off at the end, so they are approximated by the erroneous nodes that reach the end of the code; exit:
+			// read the parse diagnostics that TS-3 returns.
 			let parseDiagnostics: { start: number; length: number }[] | undefined;
 			Object.defineProperty(sourceFile, 'parseDiagnostics', {
 				get: () => parseDiagnostics ??= collectTruncationErrors(sourceFile, sourceText.trimEnd().length),
