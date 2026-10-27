@@ -5,8 +5,6 @@
 	"compilerOptions": {
 		"esModuleInterop": null,
 		"types": ["node"],
-		// `lib/services/scanner.ts` reads volar 2's `Mapping` object shape, which volar.js 3 replaced with a tuple; it can only be fixed in the submodule.
-		"noCheck": true,
 		"rootDir": "../services/packages/pug",
 		"emitDeclarationOnly": true,
 		"declarationDir": "../node_modules/.services-types/pug",

@@ -445,9 +445,6 @@ importers:
       '@types/semver':
         specifier: latest
         version: 7.8.0
-      '@volar/typescript':
-        specifier: ~2.4.0
-        version: 2.4.30(typescript@5.9.3)
 
   test-workspace:
     devDependencies:
@@ -1443,14 +1440,6 @@ packages:
 
   '@vitest/utils@4.1.11':
     resolution: {integrity: sha512-zTCVGpyFsGWBhllOyKlTw/vnr6D9qxsfSDyfbyZmTyjHw5N/VuvzHpHoQjm2ZJzn4RJgx5w4r7V0er69CmLgPQ==}
-
-  '@volar/typescript@2.4.30':
-    resolution: {integrity: sha512-/DgA5tgYFPfrLFuSjIMXMGHk1LQv2+P8eny6+BhGNzFJELWIW7UZlc56ZLIRFhLsPpMfIFxM8/HvOPBggrjTZg==}
-    peerDependencies:
-      typescript: <7
-    peerDependenciesMeta:
-      typescript:
-        optional: true
 
   '@vscode-tmlanguage-snapshot/core@2.0.0':
     resolution: {integrity: sha512-9jrkEZuhcs71fEVmbkQ7H2z/4pqTVQEOiauhNA8oYDggPKesGB9VfEQnH6CV3DOFm7kbjfbmefRXMK6sgHMxjw==}
@@ -3419,15 +3408,6 @@ snapshots:
       '@vitest/pretty-format': 4.1.11
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.0
-
-  '@volar/typescript@2.4.30(typescript@5.9.3)':
-    dependencies:
-      '@volar/language-core': link:volar.js/packages/language-core
-      '@volar/language-service': link:volar.js/packages/language-service
-      path-browserify: 1.0.1
-      vscode-uri: 3.1.0
-    optionalDependencies:
-      typescript: 5.9.3
 
   '@vscode-tmlanguage-snapshot/core@2.0.0': {}
 

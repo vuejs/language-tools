@@ -5,8 +5,6 @@
 	"compilerOptions": {
 		"esModuleInterop": null,
 		"types": ["node"],
-		// The type-only devDependency `@volar/typescript` gets the npm `typescript` 5.9 as its optional peer, because pnpm does not match the prerelease bridge against `<7`; one `typescript` keeps `LanguageServiceHost` and friends identical.
-		"paths": { "typescript": ["../node_modules/typescript/lib/typescript.d.ts"] },
 		"rootDir": "../services/packages/typescript",
 		"emitDeclarationOnly": true,
 		"declarationDir": "../node_modules/.services-types/typescript",
