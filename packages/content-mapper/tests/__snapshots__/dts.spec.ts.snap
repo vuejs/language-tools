@@ -71,6 +71,17 @@ declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractP
 "
 `;
 
+exports[`content mapper declaration emit: component-meta > component-name-description/component-define-component.d.vue.ts 1`] = `
+"declare const _default: typeof __VLS_export;
+export default _default;
+declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
+    value: StringConstructor;
+}>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
+    value: StringConstructor;
+}>> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+"
+`;
+
 exports[`content mapper declaration emit: component-meta > component-name-description/component-no-name.d.vue.ts 1`] = `
 "/**
  * Component without explicit name
@@ -80,6 +91,16 @@ type __VLS_Props = {
      * The value prop
      */
     value: string;
+};
+declare const __VLS_export: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
+declare const _default: typeof __VLS_export;
+export default _default;
+"
+`;
+
+exports[`content mapper declaration emit: component-meta > component-name-description/component-script-setup.d.vue.ts 1`] = `
+"type __VLS_Props = {
+    value?: string;
 };
 declare const __VLS_export: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: typeof __VLS_export;
@@ -116,7 +137,9 @@ exports[`content mapper declaration emit: component-meta > declaration output fi
 [
   "#4577/main.d.vue.ts",
   "#5546/main.d.vue.ts",
+  "component-name-description/component-define-component.d.vue.ts",
   "component-name-description/component-no-name.d.vue.ts",
+  "component-name-description/component-script-setup.d.vue.ts",
   "component-name-description/component-ts.d.ts",
   "component-name-description/component.d.vue.ts",
   "empty-component/component.d.vue.ts",

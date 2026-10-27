@@ -787,6 +787,18 @@ describe('vue-component-meta', async () => {
 		expect(props(meta).message).toMatchObject({ required: true, description: 'The message prop' });
 	});
 
+	test('component-name of defineComponent (vue)', async () => {
+		const meta = await getMeta('component-name-description/component-define-component.vue');
+
+		expect(meta.name).toBe('DefinedComponent');
+	});
+
+	test('component-name of script setup (vue)', async () => {
+		const meta = await getMeta('component-name-description/component-script-setup.vue');
+
+		expect(meta.name).toBeUndefined();
+	});
+
 	test('component-no-name (vue)', async () => {
 		const meta = await getMeta('component-name-description/component-no-name.vue');
 

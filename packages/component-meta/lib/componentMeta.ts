@@ -85,11 +85,12 @@ export async function getComponentMetaOfType(
 		? getVueFile(parser, project, declaration.getSourceFile())
 		: undefined;
 
-	const [events, slots, exposed, description] = await Promise.all([
+	const [events, slots, exposed, description, name] = await Promise.all([
 		getEvents(),
 		getSlots(),
 		getExposed(),
 		getDescription(),
+		getName(),
 	]);
 	const props = await getProps(events);
 	await table.flush();
@@ -100,7 +101,7 @@ export async function getComponentMetaOfType(
 		member.type = map(member.type);
 	}
 	return {
-		name: getName(),
+		name,
 		description,
 		props,
 		events,
@@ -283,14 +284,21 @@ export async function getComponentMetaOfType(
 		);
 	}
 
-	function getName() {
+	async function getName() {
 		if (!declaration) {
 			return;
 		}
-		if (vueFile) {
-			return vueFile.ir.scriptSetup
-				? undefined
-				: vueFile.analysis.getScriptRanges()?.exportDefault?.options?.name?.node.text;
+		// a Vue file exports `{} as typeof <component>`; the options are in the initializer of that declaration
+		if (
+			isVueFileExport(declaration)
+			&& ts.isAsExpression(declaration)
+			&& ts.isTypeQueryNode(declaration.type)
+		) {
+			const symbol = await checker.getSymbolAtLocation(declaration.type.exprName);
+			const component = await symbol?.valueDeclaration?.resolve();
+			return component && ts.isVariableDeclaration(component) && component.initializer
+				? getNameOption(component.initializer, component.getSourceFile())
+				: undefined;
 		}
 		return getNameOption(declaration, declaration.getSourceFile());
 	}
