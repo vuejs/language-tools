@@ -146,6 +146,11 @@ export function toSpanMappings(
 // name in a `:class` string) lie inside the verbatim section they were copied from.
 // Original spans may not contain one another, so cut that section at each copy's
 // bounds to make the spans identical.
+// Interim: the cut only meets TypeScript's rule that original spans do not contain
+// one another, and a navigation result whose span crosses a cut now falls in more
+// than one segment, which TypeScript drops. The right fix is for TypeScript to map a result
+// across contiguous segments, or to accept a copy inside the section it was copied
+// from; once it does either, stop cutting and keep the section a single segment.
 function splitAtNavigationCopies(candidates: Candidate[]) {
 	const copies = candidates.filter(candidate =>
 		candidate.originalStart < candidate.originalEnd

@@ -21,6 +21,10 @@ export function* generateClassProperty(
 	}
 	// TypeScript gives a definition the span of the quoted name and a reference the span inside the quotes; as a
 	// segment inside another one keeps the outer one from mapping a span, the name is declared once for each.
+	// Interim: declaring the name twice only works around TypeScript, which drops a result that falls in more than
+	// one segment and gives one quoted name two spans. The right fix is for TypeScript to map such a result, or to
+	// give the definition and the references of a quoted name the same span; once it does either, declare the name
+	// once again, as a single Atom over the quoted key.
 	yield* generateMember(source, generateQuotedDefinition(source, className, start), propertyType);
 	yield* generateMember(source, [
 		`'`,
