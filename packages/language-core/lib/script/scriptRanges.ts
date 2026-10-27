@@ -18,7 +18,7 @@ export function parseScriptRanges(
 				expression: TextRange;
 				args: TextRange<ts.ObjectLiteralExpression>;
 				components: TextRange<ts.ObjectLiteralExpression> | undefined;
-				directives: TextRange | undefined;
+				directives: TextRange<ts.ObjectLiteralExpression> | undefined;
 				name: TextRange<ts.StringLiteral> | undefined;
 				inheritAttrs: string | undefined;
 			};

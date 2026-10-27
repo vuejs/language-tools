@@ -224,6 +224,24 @@ export function createScriptAnalysis(
 		return new Set([...bindings].filter(name => /^v[A-Z]/.test(name)));
 	});
 
+	/**
+	 * The keys of the `directives` option by the name that a template directive refers to them by, like `myDir` and
+	 * `MyDir` by `vMyDir` for `v-my-dir`, as `__VLS_ResolveDirectives` renames them.
+	 */
+	const getOptionDirectives = computed(() => {
+		const directives = new Map<string, string>();
+		for (const property of getScriptRanges()?.exportDefault?.options?.directives?.node.properties ?? []) {
+			if (ts.isSpreadAssignment(property)) {
+				continue;
+			}
+			const { name } = property;
+			if (ts.isIdentifier(name) || ts.isStringLiteral(name)) {
+				directives.set(`v${capitalize(name.text)}`, name.text);
+			}
+		}
+		return directives;
+	});
+
 	return {
 		getResolvedOptions,
 		getScriptRanges,
@@ -238,6 +256,7 @@ export function createScriptAnalysis(
 		getComponentName,
 		getLocalComponents,
 		getLocalDirectives,
+		getOptionDirectives,
 		getTemplateScope,
 		getScopeBindings,
 		getDotValueBindings,

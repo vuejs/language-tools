@@ -52,6 +52,7 @@ function useCodegen(
 		getSetupRefs,
 		getLocalComponents,
 		getLocalDirectives,
+		getOptionDirectives,
 		getTemplateScope,
 		getScopeBindings,
 		getDotValueBindings,
@@ -85,6 +86,7 @@ function useCodegen(
 			setupConsts: getSetupConsts(),
 			setupBindings: getSetupBindings(),
 			localDirectives: getLocalDirectives(),
+			optionDirectives: getOptionDirectives(),
 			dotValueBindings,
 			reassertBindings: new Set(
 				[...dotValueBindings].filter(name => (getBindingFlags().get(name) ?? 0) & BindingFlag.Variable),

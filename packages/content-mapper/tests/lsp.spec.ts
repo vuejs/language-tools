@@ -19,6 +19,7 @@ const eventPropsParent = new LspDocument(path.join(workspace, 'EventPropsParent.
 const modelKebab = new LspDocument(path.join(workspace, 'ModelKebab.vue'));
 const modelKebabParent = new LspDocument(path.join(workspace, 'ModelKebabParent.vue'));
 const localDirective = new LspDocument(path.join(workspace, 'LocalDirective.vue'));
+const optionsDirective = new LspDocument(path.join(workspace, 'OptionsDirective.vue'));
 const typeEmits = new LspDocument(path.join(workspace, 'TypeEmits.vue'));
 const emitsParent = new LspDocument(path.join(workspace, 'EmitsParent.vue'));
 const styleClassNames = new LspDocument(path.join(workspace, 'StyleClassNames.vue'));
@@ -39,6 +40,7 @@ const documents = [
 	modelKebab,
 	modelKebabParent,
 	localDirective,
+	optionsDirective,
 	typeEmits,
 	emitsParent,
 ];
@@ -333,4 +335,16 @@ test('local directives link the setup binding and the template usages', async ()
 	expect(await references(localDirective, localDirective.at('vMyDir'))).toEqual(usages);
 	expect(await references(localDirective, localDirective.at('v-my-dir'))).toEqual(usages);
 	expect(await definition(localDirective, localDirective.at('v-my-dir'))).toEqual(['5:6 vMyDir']);
+});
+
+test('directives of the directives option link their keys and the template usages', async () => {
+	expect(await references(optionsDirective, optionsDirective.at('v-my-dir'))).toEqual(['1:6 v-my-dir', '7:15 myDir']);
+	expect(await references(optionsDirective, optionsDirective.at('{ myDir', 0, 2))).toEqual([
+		'1:6 v-my-dir',
+		'5:6 myDir',
+		'7:15 myDir',
+	]);
+	expect(await references(optionsDirective, optionsDirective.at('Focus:'))).toEqual(['1:15 v-focus', '7:22 Focus']);
+	expect(await definition(optionsDirective, optionsDirective.at('v-my-dir'))).toEqual(['7:15 myDir']);
+	expect(await definition(optionsDirective, optionsDirective.at('v-focus'))).toEqual(['7:22 Focus']);
 });

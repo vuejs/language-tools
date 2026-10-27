@@ -3,7 +3,7 @@ import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeature
 import { camelize, isBuiltInDirective } from '@vue/shared';
 import { names } from '../names';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
-import { asType, endOfLine, newLine } from '../writers';
+import { asType, endOfLine, identifierRE, newLine } from '../writers';
 import { generateCamelized } from '../writers/camelized';
 import { generateStringLiteralKey } from '../writers/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
@@ -98,6 +98,20 @@ function* generateDirectiveName(
 		return;
 	}
 	const boundary = yield* Boundary.start('template', startOffset, endOffset, { features: 0 });
+	const optionKey = options.optionDirectives.get(name);
+	// A directive of the `directives` option is read by its key instead of its `__VLS_directives` name, which
+	// `__VLS_ResolveDirectives` renames into a new symbol, so that references and definitions link the two.
+	if (optionKey !== undefined && identifierRE.test(optionKey)) {
+		yield names.directivesOption;
+		yield `.`;
+		const key = yield* Boundary.start('template', startOffset, endOffset, {
+			features: semanticFeatures | navigationFeatures,
+		});
+		yield [optionKey, 'template', startOffset, undefined];
+		yield key.end();
+		yield boundary.end();
+		return;
+	}
 	yield names.directives;
 	yield `.`;
 	const builtIn = isBuiltInDirective(prop.name);
