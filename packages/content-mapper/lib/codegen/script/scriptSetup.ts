@@ -24,7 +24,7 @@ import {
 	typeAliasRef,
 } from '../writers';
 import { generateCamelized } from '../writers/camelized';
-import { generateComponent } from './component';
+import { generateComponent, generateTypeEmits, hasTypeEmits } from './component';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 import { getEmitTypes } from './template';
@@ -195,15 +195,22 @@ export function* generateSetupFunction(
 	yield* body;
 
 	if (output) {
-		if (hasSlotsType(options)) {
+		yield* generateTypeEmits(options, scriptSetupRanges);
+		const withTypeEmits = hasTypeEmits(options, scriptSetupRanges);
+		const withSlots = hasSlotsType(options);
+		if (withTypeEmits || withSlots) {
 			yield `const ${names.base} = `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
+			let type = `typeof ${names.base}`;
+			if (withTypeEmits) {
+				type = ctx.localTypes.WithTypeEmits(type, typeAliasRef(names.TypeEmits, options.scriptLang));
+			}
+			if (withSlots) {
+				type = ctx.localTypes.WithSlots(type, typeAliasRef(names.Slots, options.scriptLang));
+			}
 			yield* output;
-			yield asType(
-				ctx.localTypes.WithSlots(`typeof ${names.base}`, typeAliasRef(names.Slots, options.scriptLang)),
-				options.scriptLang,
-			);
+			yield asType(type, options.scriptLang);
 			yield endOfLine;
 		}
 		else {

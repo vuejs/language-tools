@@ -19,6 +19,8 @@ const eventPropsParent = new LspDocument(path.join(workspace, 'EventPropsParent.
 const modelKebab = new LspDocument(path.join(workspace, 'ModelKebab.vue'));
 const modelKebabParent = new LspDocument(path.join(workspace, 'ModelKebabParent.vue'));
 const localDirective = new LspDocument(path.join(workspace, 'LocalDirective.vue'));
+const typeEmits = new LspDocument(path.join(workspace, 'TypeEmits.vue'));
+const emitsParent = new LspDocument(path.join(workspace, 'EmitsParent.vue'));
 const documents = [
 	shorthand,
 	cssModule,
@@ -35,6 +37,8 @@ const documents = [
 	modelKebab,
 	modelKebabParent,
 	localDirective,
+	typeEmits,
+	emitsParent,
 ];
 
 let server: LspServer;
@@ -247,6 +251,28 @@ test('event props link the declaration and the parent listeners', async () => {
 	]);
 	expect(await definition(eventPropsParent, eventPropsParent.at('@fooBar', 0, 1))).toEqual([
 		'EventProps:1:14 onFooBar',
+	]);
+});
+
+test('type-based defineEmits link the declaration and the parent listeners', async () => {
+	expect(await references(typeEmits, typeEmits.at('fooBar'))).toEqual([
+		'1:14 fooBar',
+		'EmitsParent:1:13 foo-bar',
+		'EmitsParent:2:13 fooBar',
+	]);
+	expect(await references(emitsParent, emitsParent.at('@foo-bar', 0, 1))).toEqual([
+		'1:13 foo-bar',
+		'2:13 fooBar',
+		'TypeEmits:1:14 fooBar',
+	]);
+	// the listener key also defines itself: a key-remapping mapped type links no declaration to it
+	expect(await definition(emitsParent, emitsParent.at('@foo-bar', 0, 1))).toEqual([
+		'1:13 foo-bar',
+		'TypeEmits:1:14 fooBar',
+	]);
+	expect(await definition(emitsParent, emitsParent.at('@fooBar', 0, 1))).toEqual([
+		'2:13 fooBar',
+		'TypeEmits:1:14 fooBar',
 	]);
 });
 

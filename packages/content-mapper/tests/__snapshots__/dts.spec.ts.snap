@@ -35,13 +35,21 @@ exports[`content mapper declaration emit: component-meta > #5546/main.d.vue.ts 1
     title: string;
     onCompleted: () => void;
 };
-declare const __VLS_export: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+type __VLS_Emit = {
+    close: [];
+};
+type __VLS_TypeEmits = __VLS_Emit;
+declare const __VLS_base: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     close: () => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     onClose?: (() => any) | undefined;
 }>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
+declare const __VLS_export: __VLS_WithTypeEmits<typeof __VLS_base, __VLS_TypeEmits>;
 declare const _default: typeof __VLS_export;
 export default _default;
+type __VLS_WithTypeEmits<T, E> = T & {
+    __typeEmits?: E;
+};
 "
 `;
 
@@ -348,7 +356,9 @@ export default _default;
 
 exports[`content mapper declaration emit: component-meta > reference-type-events/component.d.vue.ts 1`] = `
 "import type { MyEvents } from './my-events';
-declare const __VLS_export: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, import("vue").TypeEmitsToOptions<MyEvents>, string, import("vue").PublicProps, Readonly<{}> & Readonly<{
+type __VLS_Emit = MyEvents;
+type __VLS_TypeEmits = __VLS_Emit;
+declare const __VLS_base: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, import("vue").TypeEmitsToOptions<MyEvents>, string, import("vue").PublicProps, Readonly<{}> & Readonly<{
     onBar?: ((value: {
         arg1: number;
         arg2?: any;
@@ -358,8 +368,12 @@ declare const __VLS_export: import("vue").DefineComponent<{}, {}, {}, {}, {}, im
         foo: string;
     } | undefined) => any) | undefined;
 }>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+declare const __VLS_export: __VLS_WithTypeEmits<typeof __VLS_base, __VLS_TypeEmits>;
 declare const _default: typeof __VLS_export;
 export default _default;
+type __VLS_WithTypeEmits<T, E> = T & {
+    __typeEmits?: E;
+};
 "
 `;
 
@@ -388,17 +402,24 @@ import type { MyExposed } from './my-exposed';
 type __VLS_Props = {
     label: string;
 };
+type __VLS_Emit = {
+    click: [event: Event];
+};
 type __VLS_Slots = {
     default: () => VNode[];
 };
+type __VLS_TypeEmits = __VLS_Emit;
 declare const __VLS_base: import("vue").DefineComponent<__VLS_Props, MyExposed, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     click: (event: Event) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{
     onClick?: ((event: Event) => any) | undefined;
 }>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
-declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
+declare const __VLS_export: __VLS_WithSlots<__VLS_WithTypeEmits<typeof __VLS_base, __VLS_TypeEmits>, __VLS_Slots>;
 declare const _default: typeof __VLS_export;
 export default _default;
+type __VLS_WithTypeEmits<T, E> = T & {
+    __typeEmits?: E;
+};
 type __VLS_WithSlots<T, S> = T & {
     new (): {
         $slots: S;
@@ -453,7 +474,13 @@ exports[`content mapper declaration emit: component-meta > reference-type-model/
     'bar'?: string;
     'barModifiers'?: Partial<Record<'lazy' | 'trim', true>>;
 };
-declare const __VLS_export: import("vue").DefineComponent<__VLS_ModelProps, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+type __VLS_ModelEmit = {
+    'update:modelValue': [value: number];
+    'update:foo': [value: boolean];
+    'update:bar': [value: string | undefined];
+};
+type __VLS_TypeEmits = __VLS_ModelEmit;
+declare const __VLS_base: import("vue").DefineComponent<__VLS_ModelProps, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     "update:bar": (value: string | undefined) => any;
     "update:foo": (value: boolean) => any;
     "update:modelValue": (value: number) => any;
@@ -462,8 +489,12 @@ declare const __VLS_export: import("vue").DefineComponent<__VLS_ModelProps, {}, 
     "onUpdate:foo"?: ((value: boolean) => any) | undefined;
     "onUpdate:modelValue"?: ((value: number) => any) | undefined;
 }>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
+declare const __VLS_export: __VLS_WithTypeEmits<typeof __VLS_base, __VLS_TypeEmits>;
 declare const _default: typeof __VLS_export;
 export default _default;
+type __VLS_WithTypeEmits<T, E> = T & {
+    __typeEmits?: E;
+};
 "
 `;
 
@@ -910,9 +941,27 @@ export { DocComment };
 "
 `;
 
+exports[`content mapper declaration emit: content-mapper-codegen/dts > ScriptAndSetupEmits.d.vue.ts 1`] = `
+"export declare const x = 1;
+declare const _default: typeof __VLS_export;
+export default _default;
+declare const __VLS_export: __VLS_WithTypeEmits<import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+    close: () => any;
+}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{
+    onClose?: (() => any) | undefined;
+}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>, {
+    close: [];
+}>;
+type __VLS_WithTypeEmits<T, E> = T & {
+    __typeEmits?: E;
+};
+"
+`;
+
 exports[`content mapper declaration emit: content-mapper-codegen/dts > declaration output files 1`] = `
 [
   "DocComment.d.vue.ts",
+  "ScriptAndSetupEmits.d.vue.ts",
 ]
 `;
 
@@ -968,12 +1017,16 @@ export default _default;
 
 exports[`content mapper declaration emit: dts/js-script-setup > template-types.d.vue.ts 1`] = `
 "declare const model: import("vue").ModelRef<string, string, string, string>;
+declare var __VLS_ModelEmit: {
+    'update:modelValue': [value: typeof model['value']];
+};
 declare var __VLS_1: {
     value: string;
 };
 declare var __VLS_Slots: {} & {
     footer?: (props: typeof __VLS_1) => any;
 };
+declare var __VLS_TypeEmits: typeof __VLS_ModelEmit;
 declare const __VLS_base: import("vue").DefineComponent<{
     modelValue?: typeof model['value'];
 }, {
@@ -985,9 +1038,12 @@ declare const __VLS_base: import("vue").DefineComponent<{
 }> & Readonly<{
     "onUpdate:modelValue"?: ((value: string) => any) | undefined;
 }>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
-declare const __VLS_export: ReturnType<typeof __VLS_WithSlots<typeof __VLS_base, typeof __VLS_Slots>>;
+declare const __VLS_export: ReturnType<typeof __VLS_WithSlots<ReturnType<typeof __VLS_WithTypeEmits<typeof __VLS_base, typeof __VLS_TypeEmits>>, typeof __VLS_Slots>>;
 declare const _default: typeof __VLS_export;
 export default _default;
+declare var __VLS_WithTypeEmits: <T, E>() => T & {
+    __typeEmits?: E;
+};
 declare var __VLS_WithSlots: <T, S>() => T & {
     new (): {
         $slots: S;

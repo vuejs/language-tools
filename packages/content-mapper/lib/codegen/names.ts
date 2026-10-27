@@ -38,6 +38,7 @@ const raw = {
 	StyleModules: '',
 	StyleScopedClasses: '',
 	TemplateRefs: '',
+	TypeEmits: '',
 
 	// #region template helpers
 	asFunctionalComponent0: '',
