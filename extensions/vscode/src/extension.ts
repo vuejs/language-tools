@@ -1,6 +1,5 @@
 import { activateAutoInsertion, activateDocumentDropEdit, createLabsInfo, middleware } from '@volar/vscode';
 import * as lsp from '@volar/vscode/node';
-import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
 	defineExtension,
@@ -134,12 +133,6 @@ export = defineExtension(() => {
 			});
 		}
 
-		const tsdk = resolveTsdkPath();
-		if (tsdk === undefined) {
-			vscode.window.showErrorMessage('Cannot find TypeScript SDK.');
-			return;
-		}
-
 		if (!serverPath) {
 			try {
 				serverPath = require.resolve('../node_modules/@vue/language-server');
@@ -149,7 +142,7 @@ export = defineExtension(() => {
 			}
 		}
 
-		client = launch(serverPath, tsdk.replace(/\\/g, '/'));
+		client = launch(serverPath);
 
 		volarLabs.addLanguageClient(client);
 
@@ -183,21 +176,18 @@ function getIncludeLanguages() {
 	return config.server.includeLanguages as lsp.DocumentSelector;
 }
 
-function launch(serverPath: string, tsdk: string) {
-	const args = ['--tsdk=' + tsdk];
+function launch(serverPath: string) {
 	const client = new lsp.LanguageClient(
 		'vue',
 		'Vue',
 		{
 			run: {
 				module: serverPath,
-				args,
 				transport: lsp.TransportKind.ipc,
 				options: {},
 			},
 			debug: {
 				module: serverPath,
-				args,
 				transport: lsp.TransportKind.ipc,
 				options: { execArgv: ['--nolazy', '--inspect=' + 6009] },
 			},
@@ -249,23 +239,6 @@ function launch(serverPath: string, tsdk: string) {
 	client.start();
 
 	return client;
-}
-
-function resolveTsdkPath() {
-	const vscodeTsdk = path.join(vscode.env.appRoot, 'extensions', 'node_modules', 'typescript', 'lib');
-	if (fs.existsSync(vscodeTsdk)) {
-		return vscodeTsdk;
-	}
-
-	const tsExt = vscode.extensions.getExtension('vscode.typescript-language-features');
-	if (tsExt) {
-		// Eclipse Theia
-		// see: https://github.com/eclipse-theia/vscode-builtin-extensions/blob/65c70ec636bd879ef9529d0a2da36f4b99139c40/src/package-vsix.js#L71
-		const theiaTsdk = path.join(tsExt.extensionPath, 'deps', 'typescript', 'lib');
-		if (fs.existsSync(theiaTsdk)) {
-			return theiaTsdk;
-		}
-	}
 }
 
 function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
