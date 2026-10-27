@@ -25,6 +25,9 @@ const optionsDirectiveKeys = new LspDocument(path.join(workspace, 'OptionsDirect
 const typeEmits = new LspDocument(path.join(workspace, 'TypeEmits.vue'));
 const emitsParent = new LspDocument(path.join(workspace, 'EmitsParent.vue'));
 const styleClassNames = new LspDocument(path.join(workspace, 'StyleClassNames.vue'));
+const unnamedProps = new LspDocument(path.join(workspace, 'UnnamedProps.vue'));
+const emptySetup = new LspDocument(path.join(workspace, 'EmptySetup.vue'));
+const emptyScript = new LspDocument(path.join(workspace, 'EmptyScript.vue'));
 const documents = [
 	shorthand,
 	constShorthand,
@@ -47,6 +50,9 @@ const documents = [
 	optionsDirectiveKeys,
 	typeEmits,
 	emitsParent,
+	unnamedProps,
+	emptySetup,
+	emptyScript,
 ];
 
 let server: LspServer;
@@ -106,6 +112,22 @@ async function rename(doc: LspDocument, position: ReturnType<LspDocument['at']>)
 			edits.flatMap(edit => describe(doc, uri, edit.range).map(text => `${text} -> ${edit.newText}`))
 		)
 		.sort();
+}
+
+/** The positions of the additional edits of the `ref` completion at `position`, which imports it. */
+async function refImportEdits(doc: LspDocument, position: ReturnType<LspDocument['at']>) {
+	const completion: any = await server.request('textDocument/completion', { textDocument: { uri: doc.uri }, position });
+	const item = (Array.isArray(completion) ? completion : completion?.items ?? []).find((item: any) =>
+		item.label === 'ref'
+	);
+	if (!item) {
+		return [];
+	}
+	const resolved: { additionalTextEdits?: { range: any; newText: string }[] } = await server.request(
+		'completionItem/resolve',
+		item,
+	);
+	return (resolved.additionalTextEdits ?? []).map(({ range }) => `${range.start.line}:${range.start.character}`);
 }
 
 test('same-name v-bind shorthand links the template and the script variable', async () => {
@@ -393,4 +415,15 @@ test('directives of the directives option link their quoted keys and the templat
 // names of the template, and the checker links such properties to no declaration.
 test.fails('directives that a spread of the directives option registers link their keys and the template usages', async () => {
 	expect(await definition(optionsDirectiveKeys, optionsDirectiveKeys.at('v-spread-dir'))).toEqual(['5:17 spreadDir']);
+});
+
+test('an unnamed macro call at the start of its statement links like any call', async () => {
+	const call = unnamedProps.at('defineProps');
+	expect(await references(unnamedProps, call)).toEqual(['1:0 defineProps']);
+	expect(await highlights(unnamedProps, call)).toEqual(['1:0 defineProps']);
+});
+
+test('completions in a wholly empty block import into the block', async () => {
+	expect(await refImportEdits(emptySetup, emptySetup.at('></script>', 0, 1))).toEqual(['0:24']);
+	expect(await refImportEdits(emptyScript, emptyScript.at('></script>', 0, 1))).toEqual(['0:18']);
 });
