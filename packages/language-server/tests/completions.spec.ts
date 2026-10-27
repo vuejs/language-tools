@@ -551,7 +551,7 @@ test.each([
 		(await requestCompletionListToTsServer('tsconfigProject/fixture.vue', 'vue', content))
 			.filter(item => item.label === '/** */')
 			.map(item => item.textEdit!.newText),
-	).toEqual(['/**\n * \n * @param a\n */']);
+	).toEqual(['/**\n * $0\n * @param a ${1}\n */']);
 	expect(
 		(await requestCompletionListToVueServer('tsconfigProject/fixture.vue', 'vue', content)).items
 			.filter(item => item.label === '/** */'),

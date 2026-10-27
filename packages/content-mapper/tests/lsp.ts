@@ -125,6 +125,7 @@ export function startLspServer(cwd: string, env: NodeJS.ProcessEnv = {}): Promis
 		rootUri: pathToFileURL(cwd).href,
 		capabilities: {
 			textDocument: {
+				completion: { completionItem: { snippetSupport: true } },
 				rename: { prepareSupport: true },
 				semanticTokens: { requests: { full: true }, tokenTypes, tokenModifiers, formats: ['relative'] },
 			},
