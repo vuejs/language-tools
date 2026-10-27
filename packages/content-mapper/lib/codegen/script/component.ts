@@ -158,10 +158,14 @@ function* generateRuntimePropsOption(
 		);
 		yield asType(propsType, options.scriptLang);
 	}
-	// a runtime `defineProps` argument alone types the props of a 3.6 component, but not the props of plugins
+	// a runtime `defineProps` argument alone types the props of a 3.6 component, but not its models or the props of
+	// plugins
 	if (
 		ctx.generatedTypes.has(names.PublicProps)
-		&& (options.vueCompilerOptions.target < 3.6 || (options.props.length && scriptSetupRanges.defineProps?.arg))
+		&& (
+			options.vueCompilerOptions.target < 3.6
+			|| ((options.props.length || scriptSetupRanges.defineModel.length) && scriptSetupRanges.defineProps?.arg)
+		)
 	) {
 		let propsType = ctx.localTypes.TypePropsToOption(typeAliasRef(names.PublicProps, options.scriptLang));
 		if (scriptSetupRanges.withDefaults?.arg) {

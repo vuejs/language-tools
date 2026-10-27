@@ -469,7 +469,8 @@ function* generatePublicProps(
 	const used = !!scriptSetup.generic
 		|| target < 3.6
 		|| (target >= 3.5 && !scriptSetupRanges.defineProps?.arg)
-		|| !!options.props.length;
+		|| !!options.props.length
+		|| !!scriptSetupRanges.defineModel.length;
 	if (propTypes.length && used) {
 		yield* generateTypeAlias(names.PublicProps, options.scriptLang, function*() {
 			yield* intersectTypes(propTypes);

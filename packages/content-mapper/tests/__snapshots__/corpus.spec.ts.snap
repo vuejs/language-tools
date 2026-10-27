@@ -98,11 +98,12 @@ exports[`content mapper full corpus 1`] = `
   Type 'undefined' is not assignable to type 'never'.",
   "test-workspace/tsc/propDefaults/main.vue(21,11): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'never'.
   Type 'undefined' is not assignable to type 'never'.",
-  "test-workspace/tsc/propDefaults/main.vue(24,56): error TS2339: Property 'modelValue' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<ExtractPropTypes<{ a: NumberConstructor; }>, { "update:modelValue": (value: number) => any; "update:o": (value: number | undefined) => any; }>, ... 24 more ..., ...>'.",
-  "test-workspace/tsc/propDefaults/main.vue(25,56): error TS2339: Property 'o' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<ExtractPropTypes<{ a: NumberConstructor; }>, { "update:modelValue": (value: number) => any; "update:o": (value: number | undefined) => any; }>, ... 24 more ..., ...>'.",
+  "test-workspace/tsc/propDefaults/main.vue(24,11): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'never'.
+  Type 'undefined' is not assignable to type 'never'.",
   "test-workspace/tsc/propDefaults/main.vue(26,11): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'never'.
   Type 'undefined' is not assignable to type 'never'.",
-  "test-workspace/tsc/propDefaults/main.vue(28,41): error TS2339: Property 'modelValue' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<ExtractPropTypes<{ a: NumberConstructor; d: NumberConstructor; }>, { "update:modelValue": (value: number) => any; }>, ... 24 more ..., ...>'.",
+  "test-workspace/tsc/propDefaults/main.vue(28,11): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'never'.
+  Type 'undefined' is not assignable to type 'never'.",
   "test-workspace/tsc/propDefaults_target3.5/main.vue(14,11): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'never'.
   Type 'undefined' is not assignable to type 'never'.",
   "test-workspace/tsc/propDefaults_target3.5/main.vue(15,11): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'never'.
