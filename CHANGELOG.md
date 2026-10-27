@@ -51,6 +51,8 @@ Unsupported: wrapping the template (layout slots of dxup), changing the shape of
 
 ### Language server
 
+- **breaking:** the language server no longer needs TypeScript 5 or 6: the `--tsdk` parameter, its TypeScript 5/6 check and the `typescript` peer dependency are removed, and `startServer` / `createVueLanguageServicePlugins` take no `ts` argument. The VS Code extension no longer looks for a TypeScript SDK.
+- **breaking:** formatting (document, range and on type), folding, selection ranges, outline and JSX closing tags of `.vue` script blocks and template expressions are unavailable until TypeScript provides the APIs. They ran on classic TypeScript, which TS 7.1 replaces without a project-free syntactic API in `typescript/sync`; the `vue.format.script.*` and `vue.format.template.*` settings are kept for when it does. JSDoc comment templates in script blocks now come from TS 7.1 only.
 - **refactor:** Reactivity Visualization analyzes scripts on the TS 7.1 AST, resolving their declarations by scope, instead of with a classic TypeScript language service, and `@vue/language-server` no longer depends on `laplacenoma`. Reads through the object type of a composable declared in the same file (`counter.n.value` for `const { n } = useCounter()`) and of namespace exports by qualified name are no longer followed; a call of a variable that holds a named function expression now counts as reading it.
 
 ### Language service
