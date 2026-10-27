@@ -5,7 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  typescript@<7: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
   '@volar/language-core': workspace:*
   '@volar/language-server': workspace:*
   '@volar/language-service': workspace:*
@@ -50,8 +49,8 @@ importers:
         specifier: ^9.39.0
         version: 9.39.5
       typescript:
-        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+        specifier: <7
+        version: 6.0.3
       typescript-7:
         specifier: npm:typescript@7.1.0-beta
         version: typescript@7.1.0-beta
@@ -80,8 +79,8 @@ importers:
         specifier: latest
         version: 1.2.5
       typescript:
-        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+        specifier: <7
+        version: 6.0.3
       vscode-ext-gen:
         specifier: latest
         version: 1.6.0
@@ -220,9 +219,6 @@ importers:
       '@vue/shared':
         specifier: ^3.5.0
         version: 3.5.40
-      typescript:
-        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
       vscode-uri:
         specifier: ^3.1.0
         version: 3.1.0
@@ -236,6 +232,9 @@ importers:
       '@vue/content-mapper':
         specifier: workspace:*
         version: link:../content-mapper
+      typescript:
+        specifier: <7
+        version: 6.0.3
       typescript-7:
         specifier: npm:typescript@7.1.0-beta
         version: typescript@7.1.0-beta
@@ -295,8 +294,8 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
       typescript:
-        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+        specifier: <7
+        version: 6.0.3
       vscode-css-languageservice:
         specifier: ^6.3.10
         version: 6.3.10
@@ -1247,41 +1246,6 @@ packages:
   '@typescript-eslint/visitor-keys@8.72.0':
     resolution: {integrity: sha512-E2mroviasaWecDzTGiGMtuEguuLVOeRggnrIn93CJuxYJzQBHbyymlT08aVQydbBal5538o+JkBKXh2sRuCyIA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@typescript-native-bridge/darwin-arm64@6.0.3-bridge.16.tsgo.7.0.2':
-    resolution: {integrity: sha512-D0yL7T3gDXwn4XiRtA1x7bW+0zedMUVG3PnIt+X4lxblnId+Wo2FBvf+2ZLZpPOO3DILGz5bdX+Aq8tqboeGEg==}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@typescript-native-bridge/darwin-x64@6.0.3-bridge.16.tsgo.7.0.2':
-    resolution: {integrity: sha512-HLPoAVsmkgDec3UZpUPI4hquvA/X/qZ71w4dQXP7LbsN+5ROpum7gWx9S0ZwVgvoaC4++iu08Qnw1l5gXknyvg==}
-    cpu: [x64]
-    os: [darwin]
-
-  '@typescript-native-bridge/linux-arm64@6.0.3-bridge.16.tsgo.7.0.2':
-    resolution: {integrity: sha512-tVOhuwktZREiVdfOTgh4K8sLaJZHyXOz5SwtwkMknM3A6tSdYTqQ3s7s/hDkB18l33+ZWBKYfJ69Sge8pGeKJw==}
-    cpu: [arm64]
-    os: [linux]
-
-  '@typescript-native-bridge/linux-arm@6.0.3-bridge.16.tsgo.7.0.2':
-    resolution: {integrity: sha512-rCqqctyc4801hX2pCVM1kv7rYfBiSi0SGJU+Nv3RQ5C2gBXkShBA39+Vw0bsqrX+Fj+Tre4kuOdSlUnSeDv2GA==}
-    cpu: [arm]
-    os: [linux]
-
-  '@typescript-native-bridge/linux-x64@6.0.3-bridge.16.tsgo.7.0.2':
-    resolution: {integrity: sha512-WKIuVkh9YuL1udrL0Dp+XvNLaM9maQZMz38ukNn93kwNhSXIXa+62xK69IKdc8osVZU6fDk0ZbIKkcrGkOi51A==}
-    cpu: [x64]
-    os: [linux]
-
-  '@typescript-native-bridge/win32-arm64@6.0.3-bridge.16.tsgo.7.0.2':
-    resolution: {integrity: sha512-u0/Aq5bkdFcuw463Y6zsYSKRdX1rcTtLkAK1PTwRH70aMkaU6vkr7BSIjvLj3lDCqsySFuoHHuNg5J2pmqxp3A==}
-    cpu: [arm64]
-    os: [win32]
-
-  '@typescript-native-bridge/win32-x64@6.0.3-bridge.16.tsgo.7.0.2':
-    resolution: {integrity: sha512-l0OPZ6xD69vQpyfS5yTSwJ5xJTYM2hUKFRYlvyyUSvbFubUz8jQRLcrn+WU4QehV9WkVIQIx8CLgNCI0Zqhmyg==}
-    cpu: [x64]
-    os: [win32]
 
   '@typescript/typescript-aix-ppc64@7.1.0-beta':
     resolution: {integrity: sha512-DXDG+jIWxBHGdoO70tcHON33rCnSzsEZj9P13oyf/r/KEGIo6awsdSNVNjAw0uMwEpqRu75IrgCcW58YcVkZHg==}
@@ -2410,9 +2374,9 @@ packages:
   typescript-auto-import-cache@0.3.6:
     resolution: {integrity: sha512-RpuHXrknHdVdK7wv/8ug3Fr0WNsNi5l5aB8MYYuXhq2UH5lnEB1htJ1smhtD5VeCsGr2p8mUDtd83LCQDFVgjQ==}
 
-  typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2:
-    resolution: {integrity: sha512-bO+fh23fh4j0mK2NmlFOrlbR9Ke5cHpjOsDaM2czXlSXqxNchGdDVyAdaVCFz0DofkFOov96HLvQaP3W57F+CA==}
-    engines: {node: '>=20.19'}
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
+    engines: {node: '>=14.17'}
     hasBin: true
 
   typescript@7.1.0-beta:
@@ -3275,27 +3239,6 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.72.0
       eslint-visitor-keys: 5.0.1
-
-  '@typescript-native-bridge/darwin-arm64@6.0.3-bridge.16.tsgo.7.0.2':
-    optional: true
-
-  '@typescript-native-bridge/darwin-x64@6.0.3-bridge.16.tsgo.7.0.2':
-    optional: true
-
-  '@typescript-native-bridge/linux-arm64@6.0.3-bridge.16.tsgo.7.0.2':
-    optional: true
-
-  '@typescript-native-bridge/linux-arm@6.0.3-bridge.16.tsgo.7.0.2':
-    optional: true
-
-  '@typescript-native-bridge/linux-x64@6.0.3-bridge.16.tsgo.7.0.2':
-    optional: true
-
-  '@typescript-native-bridge/win32-arm64@6.0.3-bridge.16.tsgo.7.0.2':
-    optional: true
-
-  '@typescript-native-bridge/win32-x64@6.0.3-bridge.16.tsgo.7.0.2':
-    optional: true
 
   '@typescript/typescript-aix-ppc64@7.1.0-beta':
     optional: true
@@ -4375,15 +4318,7 @@ snapshots:
     dependencies:
       semver: 7.8.5
 
-  typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2:
-    optionalDependencies:
-      '@typescript-native-bridge/darwin-arm64': 6.0.3-bridge.16.tsgo.7.0.2
-      '@typescript-native-bridge/darwin-x64': 6.0.3-bridge.16.tsgo.7.0.2
-      '@typescript-native-bridge/linux-arm': 6.0.3-bridge.16.tsgo.7.0.2
-      '@typescript-native-bridge/linux-arm64': 6.0.3-bridge.16.tsgo.7.0.2
-      '@typescript-native-bridge/linux-x64': 6.0.3-bridge.16.tsgo.7.0.2
-      '@typescript-native-bridge/win32-arm64': 6.0.3-bridge.16.tsgo.7.0.2
-      '@typescript-native-bridge/win32-x64': 6.0.3-bridge.16.tsgo.7.0.2
+  typescript@6.0.3: {}
 
   typescript@7.1.0-beta:
     optionalDependencies:

@@ -35,8 +35,6 @@ allowBuilds:
   keytar: true
 
 overrides:
-  # TypeScript 7 (e.g. vue-component-meta, built against its API) is not replaced
-  typescript@<7: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
   # dependencies such as volar-service-* resolve @volar/* to the submodule too, so there is one copy
   '@volar/language-core': workspace:*
   '@volar/language-server': workspace:*
