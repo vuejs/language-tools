@@ -441,17 +441,52 @@ function* generatePublicProps(
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<TsCode> {
-	if (scriptSetupRanges.defineProps?.typeArg && scriptSetupRanges.withDefaults?.arg) {
+	const { defineProps, withDefaults, defineModel } = scriptSetupRanges;
+	const defaults: string[] = [];
+	if (defineProps?.typeArg && withDefaults?.arg) {
 		yield `const ${names.defaults} = `;
 		yield* generateSfcBlockSection(
 			scriptSetup,
-			scriptSetupRanges.withDefaults.arg.start,
-			scriptSetupRanges.withDefaults.arg.end,
+			withDefaults.arg.start,
+			withDefaults.arg.end,
 			{ features: navigationFeatures },
 			true,
 		);
 		yield endOfLine;
 		yield `void ${names.defaults}${endOfLine}`;
+		defaults.push(`typeof ${names.defaults}`);
+	}
+	// Vue applies the defaults of a destructure from 3.5, unless `withDefaults` is used
+	else if (
+		options.vueCompilerOptions.target >= 3.5
+		&& !withDefaults
+		&& defineProps?.destructuredDefaults?.length
+	) {
+		yield `const ${names.defaults} = {${newLine}`;
+		for (const { key, value } of defineProps.destructuredDefaults) {
+			// a destructure default is the value, which the `default` option of a prop gives through a factory
+			yield `${key}: () => (${getRangeText(scriptSetup, value)}),${newLine}`;
+		}
+		yield `}${endOfLine}`;
+		yield `void ${names.defaults}${endOfLine}`;
+		defaults.push(`typeof ${names.defaults}`);
+	}
+	if (defineModel.some(model => model.defaultValue)) {
+		defaults.push(`typeof ${names.defaultModels}`);
+	}
+	if (defaults.length) {
+		const props: string[] = [];
+		if (defineProps) {
+			props.push(
+				defineProps.typeArg
+					? names.Props
+					: `typeof ${defineProps.name && identifierRE.test(defineProps.name) ? defineProps.name : names.props}`,
+			);
+		}
+		if (defineModel.length) {
+			props.push(typeAliasRef(names.ModelProps, options.scriptLang));
+		}
+		ctx.propDefaults = { props, defaults };
 	}
 
 	const propTypes: (string | TsCode[])[] = [];

@@ -111,14 +111,13 @@ function* generatePropsOption(
 		? [...generateTypePropsOption(options, ctx, hasEmitsOption)]
 		: [];
 
-	const runtimeCodes = scriptSetupRanges.withDefaults || !typeCodes.length
-		? [...generateRuntimePropsOption(options, ctx, scriptSetup, scriptSetupRanges, hasEmitsOption)]
+	// the instance type of a component gives the props that have defaults through the runtime option, also next to
+	// `__typeProps`
+	const runtimeCodes = ctx.propDefaults || !typeCodes.length
+		? [...generateRuntimePropsOption(options, ctx, scriptSetup, scriptSetupRanges, hasEmitsOption, !!typeCodes.length)]
 		: [];
 
 	if (typeCodes.length) {
-		if (options.vueCompilerOptions.target >= 3.6 && scriptSetupRanges.withDefaults?.arg) {
-			yield `__defaults: ${names.defaults},${newLine}`;
-		}
 		yield `__typeProps: `;
 		yield* generateSpreadMerge(...typeCodes);
 		yield `,${newLine}`;
@@ -150,8 +149,9 @@ function* generateRuntimePropsOption(
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 	hasEmitsOption: boolean,
+	hasTypeProps: boolean,
 ): Generator<string | TsCode[]> {
-	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
+	if (!hasTypeProps && options.templateAndStyleTypes.has(names.InheritedAttrs)) {
 		const attrsType = getInheritedAttrsType(options, hasEmitsOption);
 		const propsType = ctx.localTypes.TypePropsToOption(
 			`${names.PickNotAny}<${ctx.localTypes.OmitIndexSignature(attrsType)}, {}>`,
@@ -161,17 +161,17 @@ function* generateRuntimePropsOption(
 	// a runtime `defineProps` argument alone types the props of a 3.6 component, but not its models or the props of
 	// plugins
 	if (
-		ctx.generatedTypes.has(names.PublicProps)
+		!hasTypeProps
+		&& ctx.generatedTypes.has(names.PublicProps)
 		&& (
 			options.vueCompilerOptions.target < 3.6
 			|| ((options.props.length || scriptSetupRanges.defineModel.length) && scriptSetupRanges.defineProps?.arg)
 		)
 	) {
-		let propsType = ctx.localTypes.TypePropsToOption(typeAliasRef(names.PublicProps, options.scriptLang));
-		if (scriptSetupRanges.withDefaults?.arg) {
-			propsType = ctx.localTypes.WithDefaults(propsType, `typeof ${names.defaults}`);
-		}
-		yield asType(propsType, options.scriptLang);
+		yield asType(
+			ctx.localTypes.TypePropsToOption(typeAliasRef(names.PublicProps, options.scriptLang)),
+			options.scriptLang,
+		);
 	}
 	if (scriptSetupRanges.defineProps?.arg) {
 		const { arg } = scriptSetupRanges.defineProps;
@@ -182,6 +182,11 @@ function* generateRuntimePropsOption(
 			{ features: navigationFeatures },
 			true,
 		)];
+	}
+	// last, so that a prop with a default takes its option from it
+	if (ctx.propDefaults) {
+		const { props, defaults } = ctx.propDefaults;
+		yield asType(ctx.localTypes.WithDefaults(props.join(' & '), defaults.join(' & ')), options.scriptLang);
 	}
 }
 

@@ -31,6 +31,8 @@ export interface DefineProps extends CallExpressionRange {
 	name?: string;
 	destructured?: Map<string, ts.Expression | undefined>;
 	destructuredRest?: string;
+	/** The default values of the destructure, by the text of the prop name as written (`a`, `'foo-bar'`). */
+	destructuredDefaults?: { key: string; value: TextRange }[];
 	statement: TextRange;
 }
 
@@ -250,6 +252,16 @@ export function parseScriptSetupRanges(
 						}
 						else {
 							defineProps.destructured.set(name, initializer);
+						}
+					}
+					defineProps.destructuredDefaults = [];
+					for (const element of parent.name.elements) {
+						const key: ts.Node | undefined = element.propertyName ?? element.name;
+						if (key && !element.dotDotDotToken && element.initializer && !ts.isComputedPropertyName(key)) {
+							defineProps.destructuredDefaults.push({
+								key: _getNodeText(key),
+								value: _getStartEnd(element.initializer),
+							});
 						}
 					}
 				}

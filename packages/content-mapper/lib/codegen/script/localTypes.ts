@@ -5,23 +5,24 @@ export function getLocalTypesGenerator(vueCompilerOptions: VueCompilerOptions, l
 	const used = new Set<string>();
 	const isTs = isTsLang(lang);
 
+	// The runtime props option of the props `P` that the defaults `D` give. It maps over `keyof D`, filtering, so each
+	// option keeps the declaration of its default.
 	const WithDefaults = defineHelper(
 		`__VLS_WithDefaults`,
 		() =>
 			isTs
 				? `
 type __VLS_WithDefaults<P, D> = {
-	[K in keyof P & string]: K extends keyof D
-		? ${PrettifyLocal.name}<P[K] & { default: D[K] }>
-		: P[K]
+	[K in keyof D as K extends keyof P ? K : never]-?: {
+		type: import('${vueCompilerOptions.lib}').PropType<Required<P>[K & keyof P]>;
+		default: D[K];
+	}
 };
 `.trimStart()
 				: jsGenericAlias(
 					`P, D`,
 					`__VLS_WithDefaults`,
-					`{ [K in keyof Pick<P, keyof P>]: K extends keyof D ? ${
-						reference(PrettifyLocal.name, `P[K] & { default: D[K] }`)
-					} : P[K] }`,
+					`{ [K in keyof D as K extends keyof P ? K : never]-?: { type: import('${vueCompilerOptions.lib}').PropType<Required<P>[K & keyof P]>; default: D[K] } }`,
 				),
 	);
 	const PrettifyLocal = defineHelper(
