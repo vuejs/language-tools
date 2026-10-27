@@ -1,6 +1,10 @@
+import { SpanMapFeature } from '@volar/language-core';
 import { type IRAttr, navigationFeatures } from '@vue/language-core';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { identifierRE, newLine } from '../writers';
+
+/** The features whose results span a quoted name without its quotes. */
+const quotedNameFeatures = SpanMapFeature.References | SpanMapFeature.DocumentHighlights | SpanMapFeature.Rename;
 
 export function* generateClassProperty(
 	source: string,
@@ -8,25 +12,37 @@ export function* generateClassProperty(
 	offset: number,
 	propertyType: string,
 ): Generator<TsCode> {
-	yield `${newLine} & { `;
 	const className = classNameWithDot.slice(1);
+	const start = offset + 1;
 	// An unquoted name maps verbatim, so it can be both a definition and renamed.
-	const ignore = yield* Boundary.start(source, 0, 0, synthesizedIgnore);
 	if (identifierRE.test(className)) {
-		yield [className, source, offset + 1, { features: navigationFeatures }];
+		yield* generateMember(source, [[className, source, start, { features: navigationFeatures }]], propertyType);
+		return;
 	}
-	else {
-		const boundary = yield* Boundary.start(
-			source,
-			offset,
-			offset + classNameWithDot.length,
-			{ features: navigationFeatures },
-		);
-		yield `'`;
-		yield [className, source, offset + 1, undefined];
-		yield `'`;
-		yield boundary.end();
-	}
+	// TypeScript gives a definition the span of the quoted name and a reference the span inside the quotes; as a
+	// segment inside another one keeps the outer one from mapping a span, the name is declared once for each.
+	yield* generateMember(source, generateQuotedDefinition(source, className, start), propertyType);
+	yield* generateMember(source, [
+		`'`,
+		[className, source, start, { features: navigationFeatures & quotedNameFeatures }],
+		`'`,
+	], propertyType);
+}
+
+function* generateQuotedDefinition(source: string, className: string, start: number): Generator<TsCode> {
+	const boundary = yield* Boundary.start(source, start, start + className.length, {
+		features: navigationFeatures & ~quotedNameFeatures,
+	});
+	yield `'`;
+	yield [className, source, start, undefined];
+	yield `'`;
+	yield boundary.end();
+}
+
+function* generateMember(source: string, name: Iterable<TsCode>, propertyType: string): Generator<TsCode> {
+	yield `${newLine} & { `;
+	const ignore = yield* Boundary.start(source, 0, 0, synthesizedIgnore);
+	yield* name;
 	yield ignore.end();
 	yield `: ${propertyType}`;
 	yield ` }`;

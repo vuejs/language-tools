@@ -21,9 +21,11 @@ const modelKebabParent = new LspDocument(path.join(workspace, 'ModelKebabParent.
 const localDirective = new LspDocument(path.join(workspace, 'LocalDirective.vue'));
 const typeEmits = new LspDocument(path.join(workspace, 'TypeEmits.vue'));
 const emitsParent = new LspDocument(path.join(workspace, 'EmitsParent.vue'));
+const styleClassNames = new LspDocument(path.join(workspace, 'StyleClassNames.vue'));
 const documents = [
 	shorthand,
 	cssModule,
+	styleClassNames,
 	cssModuleSrc,
 	runtimeProps,
 	typeProps,
@@ -193,6 +195,22 @@ test('CSS module classes rename from either side', async () => {
 	expect(await rename(cssModule, cssModule.at('.foo', 0, 1))).toEqual(expected);
 	expect(await definition(cssModule, cssModule.at('$style.foo', 0, 7))).toEqual(['5:1 foo']);
 });
+
+test.each([
+	['scoped', 'class="scoped-name', 7, '.scoped-name', ['1:13 scoped-name', '5:1 scoped-name']],
+	['CSS module', `$style['module-name`, 8, '.module-name', ['1:42 module-name', '9:1 module-name']],
+])(
+	'%s class names that are not identifiers link the template and the style block',
+	async (_, use, offset, rule, [template, style]) => {
+		const fromTemplate = styleClassNames.at(use, 0, offset);
+		const fromStyle = styleClassNames.at(rule, 0, 1);
+		const renamed = [`${template} -> NEW`, `${style} -> NEW`];
+		expect(await rename(styleClassNames, fromTemplate)).toEqual(renamed);
+		expect(await rename(styleClassNames, fromStyle)).toEqual(renamed);
+		expect(await references(styleClassNames, fromStyle)).toEqual([template, style]);
+		expect(await definition(styleClassNames, fromTemplate)).toEqual([style]);
+	},
+);
 
 test('<style module src> imports the src, which types $style', async () => {
 	const definitionFiles = async (position: ReturnType<LspDocument['at']>) => {
