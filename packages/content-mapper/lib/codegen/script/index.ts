@@ -35,6 +35,8 @@ export interface ScriptCodegenOptions {
 	setupBindings: Set<string>;
 	localComponents: Set<string>;
 	localDirectives: Set<string>;
+	/** The keys searched for each template directive that the `directives` option resolves only by its type. */
+	unlistedOptionDirectives: Map<string, string[]>;
 	dotValueBindings: Set<string>;
 	/** Setup bindings that template and style expressions reference. */
 	scopeBindings: Set<string>;

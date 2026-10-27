@@ -1,12 +1,14 @@
-import { camelize, capitalize } from '@vue/shared';
+import * as CompilerDOM from '@vue/compiler-dom';
+import { camelize, capitalize, isBuiltInDirective } from '@vue/shared';
 import { computed } from 'alien-signals';
 import * as path from 'path-browserify';
-import { getBaseNameWithoutExtension } from '../names';
+import { getAssetKeys, getBaseNameWithoutExtension } from '../names';
 import { parseVueCompilerOptions } from '../options/commentOptions';
 import { CompilerOptionsResolver } from '../options/compilerOptions';
 import { BindingFlag } from '../script/scriptBindings';
 import { parseScriptRanges } from '../script/scriptRanges';
 import { parseScriptSetupRanges } from '../script/scriptSetupRanges';
+import { forEachElementNode } from '../template/forEachTemplateNode';
 import { collectTemplateScope, type InlayHintInfo } from '../template/templateScope';
 import type { IR, TypeScript, VueCompilerOptions } from '../types';
 import { computedSet } from './signals';
@@ -225,21 +227,61 @@ export function createScriptAnalysis(
 	});
 
 	/**
-	 * The keys of the `directives` option by the name that a template directive refers to them by, like `myDir` and
-	 * `MyDir` by `vMyDir` for `v-my-dir`, as `__VLS_ResolveDirectives` renames them.
+	 * How the template directives that are not setup bindings resolve in the `directives` option, by the name that the
+	 * template refers to them by (`vMyDir` for `v-my-dir`). `keys` holds the directives that resolve to a key the option
+	 * lists, like `myDir` or `MyDir` for `v-my-dir`. When the option has entries whose keys its syntax does not show (a
+	 * spread, a computed key, or an initializer that is not an object literal), `unlisted` holds the keys searched for
+	 * each other directive, for the type of the option to resolve.
 	 */
 	const getOptionDirectives = computed(() => {
-		const directives = new Map<string, string>();
-		for (const property of getScriptRanges()?.exportDefault?.options?.directives?.node.properties ?? []) {
-			if (ts.isSpreadAssignment(property)) {
-				continue;
-			}
-			const { name } = property;
-			if (ts.isIdentifier(name) || ts.isStringLiteral(name)) {
-				directives.set(`v${capitalize(name.text)}`, name.text);
+		const keys = new Map<string, string>();
+		const unlisted = new Map<string, string[]>();
+		const option = getScriptRanges()?.exportDefault?.options?.directives;
+		if (!option) {
+			return { keys, unlisted };
+		}
+		const listed = new Set<string>();
+		let listsAll = ts.isObjectLiteralExpression(option.node);
+		if (ts.isObjectLiteralExpression(option.node)) {
+			for (const property of option.node.properties) {
+				const name = ts.isSpreadAssignment(property) ? undefined : property.name;
+				if (name && (ts.isIdentifier(name) || ts.isStringLiteral(name))) {
+					listed.add(name.text);
+				}
+				else {
+					listsAll = false;
+				}
 			}
 		}
-		return directives;
+		const localDirectives = getLocalDirectives();
+		const names = new Set<string>();
+		if (ir.template?.ast) {
+			for (const node of forEachElementNode(ir.template.ast)) {
+				for (const prop of node.props) {
+					if (prop.type === CompilerDOM.NodeTypes.DIRECTIVE && !isBuiltInDirective(prop.name)) {
+						names.add(prop.name);
+					}
+				}
+			}
+		}
+		for (const name of names) {
+			const directiveName = camelize('v-' + name);
+			if (localDirectives.has(directiveName)) {
+				continue;
+			}
+			const searched = getAssetKeys(name);
+			for (const key of searched) {
+				if (listed.has(key)) {
+					keys.set(directiveName, key);
+					break;
+				}
+				if (!listsAll) {
+					unlisted.set(directiveName, searched);
+					break;
+				}
+			}
+		}
+		return { keys, unlisted };
 	});
 
 	return {

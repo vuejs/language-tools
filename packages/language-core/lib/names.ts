@@ -18,6 +18,20 @@ export function getBaseNameWithoutExtension(fileName: string) {
 	return baseName.slice(0, baseName.lastIndexOf('.'));
 }
 
+/**
+ * The keys that a registry of directives or components is searched by for the `name` that a template uses, in order,
+ * like `resolveAsset` of `@vue/runtime-core` searches them.
+ */
+export function getAssetKeys(name: string) {
+	return [...new Set([name, camelize(name), capitalize(camelize(name))])];
+}
+
+/** A name that a template can use the registry key `key` by: its hyphenated form if `getAssetKeys` resolves it. */
+export function getAssetName(key: string) {
+	const name = hyphenate(key);
+	return getAssetKeys(name).includes(key) ? name : key;
+}
+
 /** The name a Vue file's template refers to the file's own component by. */
 export function getSelfComponentName(fileName: string) {
 	return capitalize(camelize(getBaseNameWithoutExtension(fileName)));

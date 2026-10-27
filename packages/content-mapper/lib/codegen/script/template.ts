@@ -162,7 +162,8 @@ function* generateTemplateComponents(
 }
 
 function* generateTemplateDirectives(
-	{ vueCompilerOptions, script, scriptRanges, localDirectives, scriptLang }: ScriptCodegenOptions,
+	{ vueCompilerOptions, script, scriptRanges, localDirectives, unlistedOptionDirectives, scriptLang }:
+		ScriptCodegenOptions,
 ): Generator<TsCode> {
 	const types: string[] = [];
 
@@ -180,7 +181,14 @@ function* generateTemplateDirectives(
 			true,
 		);
 		yield endOfLine;
-		types.push(`${names.ResolveDirectives}<typeof ${names.directivesOption}>`);
+		// The template reads the directives that resolve to a listed key of the option by that key; only those whose key
+		// the syntax of the option does not show are resolved by its type, from the keys that the template searches.
+		if (unlistedOptionDirectives.size) {
+			const searched = [...unlistedOptionDirectives].map(([name, keys]) =>
+				`'${name}': [${keys.map(key => `'${key}'`).join(', ')}]`
+			);
+			types.push(`${names.ResolveAssets}<typeof ${names.directivesOption}, { ${searched.join(', ')} }>`);
+		}
 	}
 
 	yield* generateTypeAlias(names.LocalDirectives, scriptLang, function*() {

@@ -49,7 +49,8 @@ Unsupported: wrapping the template (layout slots of dxup), changing the shape of
 - **breaking:** the Content Mapper parses with the TS 7.1 `typescript` package that resolves from the project directory (the directory of the tsconfig, or the working directory for an inferred project), and fails to open a project from which none resolves. The VS Code extension no longer bundles TS 7.1, whose bundled copy could not find its executable.
 - **breaking:** in VS Code, the Content Mapper of Vue files outside any tsconfig runs in the first local workspace folder, so TS 7.1 resolves from it; with more folders, the first one is used for all of them. A window without a local workspace folder gets no Content Mapper for those files and logs an error.
 - **fix:** renaming a scoped or CSS module class whose name is not an identifier (`.foo-bar`) renames it in both the template and the style block, from either one; it renamed only the template use, and nothing from the style block.
-- **fix:** find references and go to definition link a template directive (`v-my-dir`) to its key in the Options API `directives` option (`directives: { myDir }`).
+- **fix:** find references and go to definition link a template directive (`v-my-dir`) to its key in the Options API `directives` option (`directives: { myDir }`, `{ 'my-dir': … }`). Directives that a spread in the option registers resolve their types but do not link yet.
+- **fix:** a template directive resolves in the `directives` option by the keys Vue searches (`'my-dir'`, `myDir`, `MyDir` for `v-my-dir`), including a quoted kebab-case key and an option that is not an object literal (`directives: dirs`); both were reported as unknown directives.
 
 ### Language server
 

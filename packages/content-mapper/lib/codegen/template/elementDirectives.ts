@@ -99,16 +99,22 @@ function* generateDirectiveName(
 	}
 	const boundary = yield* Boundary.start('template', startOffset, endOffset, { features: 0 });
 	const optionKey = options.optionDirectives.get(name);
-	// A directive of the `directives` option is read by its key instead of its `__VLS_directives` name, which
-	// `__VLS_ResolveDirectives` renames into a new symbol, so that references and definitions link the two.
-	if (optionKey !== undefined && identifierRE.test(optionKey)) {
+	// A directive that resolves to a listed key of the `directives` option is read by that key: a type that renames the
+	// keys into the template names would be a key-remapping mapped type, whose properties TypeScript links to no
+	// declaration (the checker links them only when the mapped type is not `Remapping`), so references and
+	// definitions would not link the directive to its key.
+	if (optionKey !== undefined) {
 		yield names.directivesOption;
-		yield `.`;
+		const quoted = !identifierRE.test(optionKey);
+		yield quoted ? `[` : `.`;
 		const key = yield* Boundary.start('template', startOffset, endOffset, {
 			features: semanticFeatures | navigationFeatures,
 		});
-		yield [optionKey, 'template', startOffset, undefined];
+		yield [quoted ? `'${optionKey}'` : optionKey, 'template', startOffset, undefined];
 		yield key.end();
+		if (quoted) {
+			yield `]`;
+		}
 		yield boundary.end();
 		return;
 	}

@@ -18,7 +18,7 @@ export function parseScriptRanges(
 				expression: TextRange;
 				args: TextRange<ts.ObjectLiteralExpression>;
 				components: TextRange<ts.ObjectLiteralExpression> | undefined;
-				directives: TextRange<ts.ObjectLiteralExpression> | undefined;
+				directives: TextRange<ts.Expression> | undefined;
 				name: TextRange<ts.StringLiteral> | undefined;
 				inheritAttrs: string | undefined;
 			};
@@ -68,7 +68,7 @@ export function parseOptionsFromExtression(
 
 	if (obj) {
 		let componentsOptionNode: ts.ObjectLiteralExpression | undefined;
-		let directivesOptionNode: ts.ObjectLiteralExpression | undefined;
+		let directivesOptionNode: ts.Expression | undefined;
 		let nameOptionNode: ts.StringLiteral | undefined;
 		let inheritAttrsOption: string | undefined;
 		obj.forEachChild(node => {
@@ -77,7 +77,7 @@ export function parseOptionsFromExtression(
 				if (name === 'components' && ts.isObjectLiteralExpression(node.initializer)) {
 					componentsOptionNode = node.initializer;
 				}
-				else if (name === 'directives' && ts.isObjectLiteralExpression(node.initializer)) {
+				else if (name === 'directives') {
 					directivesOptionNode = node.initializer;
 				}
 				else if (name === 'name' && ts.isStringLiteral(node.initializer)) {
@@ -86,6 +86,11 @@ export function parseOptionsFromExtression(
 				else if (name === 'inheritAttrs') {
 					inheritAttrsOption = _getNodeText(node.initializer);
 				}
+			}
+			else if (
+				ts.isShorthandPropertyAssignment(node) && ts.isIdentifier(node.name) && _getNodeText(node.name) === 'directives'
+			) {
+				directivesOptionNode = node.name;
 			}
 		});
 		return {

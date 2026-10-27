@@ -1,5 +1,6 @@
 import {
 	forEachElementNode,
+	getAssetName,
 	getElementTagOffsets,
 	getSelfComponentName,
 	getStartEnd,
@@ -8,7 +9,7 @@ import {
 } from '@vue/language-core';
 import type { VueVirtualCode } from '@vue/language-service';
 import type { AutoImportExport, ComponentPropInfo, ExtractPropsInfo } from '@vue/language-service/lib/requests';
-import { capitalize } from '@vue/shared';
+import { camelize } from '@vue/shared';
 import * as path from 'node:path';
 import type { TypeScript } from 'vue-component-meta';
 import { inferComponentProps } from 'vue-component-meta/lib/inferComponentTypes';
@@ -563,7 +564,7 @@ export async function getComponentDirectives(
 	);
 	return [
 		...scriptAnalysis.getLocalDirectives(),
-		...directiveOptions.map(name => `v${capitalize(name)}`),
+		...directiveOptions.map(key => camelize('v-' + getAssetName(key))),
 		...(await getExportedTypeProperties(checker, vue, 'GlobalDirectives') ?? []).map(symbol => symbol.name),
 	].filter(name => directiveRE.test(name));
 }

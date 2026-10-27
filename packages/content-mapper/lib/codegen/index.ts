@@ -86,7 +86,7 @@ function useCodegen(
 			setupConsts: getSetupConsts(),
 			setupBindings: getSetupBindings(),
 			localDirectives: getLocalDirectives(),
-			optionDirectives: getOptionDirectives(),
+			optionDirectives: getOptionDirectives().keys,
 			dotValueBindings,
 			reassertBindings: new Set(
 				[...dotValueBindings].filter(name => (getBindingFlags().get(name) ?? 0) & BindingFlag.Variable),
@@ -127,6 +127,7 @@ function useCodegen(
 			setupBindings: getScriptSetupBindingNames(),
 			localComponents: getLocalComponents(),
 			localDirectives: getLocalDirectives(),
+			unlistedOptionDirectives: getOptionDirectives().unlisted,
 			dotValueBindings: getDotValueBindings(),
 			scopeBindings: getScopeBindings(),
 			scriptRanges: getScriptRanges(),

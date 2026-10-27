@@ -88,7 +88,9 @@ declare global {
 	// what `v-model` writes back from the prop it binds; `any` for a prop the component does not declare,
 	// which the props check reports instead
 	type __VLS_ModelWriteBack<Props, K extends PropertyKey> = K extends keyof Props ? Props[K] & {} : any;
-	// `Pick` keeps a declared event prop as the listener's symbol, so references and definitions reach it
+	// The checker links the properties of a mapped type to declarations only when it maps a `keyof` without renaming
+	// the keys (not `Remapping`); `Pick` does, so a declared event prop stays the listener's symbol and references and
+	// definitions reach it, while the listeners of emits are new symbols
 	type __VLS_ResolveEvent<
 		Props,
 		Emits,
@@ -152,9 +154,14 @@ declare global {
 		TypeEmits = Comp extends { __typeEmits?: infer T } ? unknown extends T ? {} : __VLS_ShortEmitsToObject<T> : {},
 		NormalizedEmits = __VLS_NormalizeEmits<Emits> extends infer E ? string extends keyof E ? {} : E : never,
 	> = __VLS_SpreadMerge<NormalizedEmits, TypeEmits>;
-	type __VLS_ResolveDirectives<T> = {
-		[K in keyof T & string as `v${Capitalize<K>}`]: T[K];
+	// the entries of `T` by the names of `Searched`, each the entry of the first key in its list that `T` has
+	type __VLS_ResolveAssets<T, Searched extends Record<string, string[]>> = {
+		[N in keyof Searched as [__VLS_FirstKey<T, Searched[N]>] extends [never] ? never : N]: T[
+			__VLS_FirstKey<T, Searched[N]> & keyof T
+		];
 	};
+	type __VLS_FirstKey<T, Keys> = Keys extends [infer K, ...infer Rest] ? K extends keyof T ? K : __VLS_FirstKey<T, Rest>
+		: never;
 	type __VLS_PrettifyGlobal<T> = (T extends any ? { [K in keyof T]: T[K] } : { [K in keyof T as K]: T[K] }) & {};
 
 	// hooks are called with their own arity; those taking fewer than (el, binding) are padded so the binding can be passed

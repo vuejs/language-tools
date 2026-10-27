@@ -20,6 +20,7 @@ const modelKebab = new LspDocument(path.join(workspace, 'ModelKebab.vue'));
 const modelKebabParent = new LspDocument(path.join(workspace, 'ModelKebabParent.vue'));
 const localDirective = new LspDocument(path.join(workspace, 'LocalDirective.vue'));
 const optionsDirective = new LspDocument(path.join(workspace, 'OptionsDirective.vue'));
+const optionsDirectiveKeys = new LspDocument(path.join(workspace, 'OptionsDirectiveKeys.vue'));
 const typeEmits = new LspDocument(path.join(workspace, 'TypeEmits.vue'));
 const emitsParent = new LspDocument(path.join(workspace, 'EmitsParent.vue'));
 const styleClassNames = new LspDocument(path.join(workspace, 'StyleClassNames.vue'));
@@ -41,6 +42,7 @@ const documents = [
 	modelKebabParent,
 	localDirective,
 	optionsDirective,
+	optionsDirectiveKeys,
 	typeEmits,
 	emitsParent,
 ];
@@ -352,4 +354,19 @@ test('directives of the directives option link their keys and the template usage
 	expect(await references(optionsDirective, optionsDirective.at('Focus:'))).toEqual(['1:15 v-focus', '7:22 Focus']);
 	expect(await definition(optionsDirective, optionsDirective.at('v-my-dir'))).toEqual(['7:15 myDir']);
 	expect(await definition(optionsDirective, optionsDirective.at('v-focus'))).toEqual(['7:22 Focus']);
+});
+
+test('directives of the directives option link their quoted keys and the template usages', async () => {
+	expect(await references(optionsDirectiveKeys, optionsDirectiveKeys.at('v-kebab-dir'))).toEqual([
+		'1:6 v-kebab-dir',
+		'7:16 kebab-dir',
+	]);
+	expect(await definition(optionsDirectiveKeys, optionsDirectiveKeys.at('v-kebab-dir'))).toEqual(["7:15 'kebab-dir'"]);
+});
+
+// Waits on TypeScript linking the properties of a key-remapping mapped type to the declarations they map from: the
+// syntax of the option does not show the keys of a spread, so only the type of the option resolves them, under the
+// names of the template, and the checker links such properties to no declaration.
+test.fails('directives that a spread of the directives option registers link their keys and the template usages', async () => {
+	expect(await definition(optionsDirectiveKeys, optionsDirectiveKeys.at('v-spread-dir'))).toEqual(['5:17 spreadDir']);
 });
