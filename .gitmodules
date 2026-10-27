@@ -5,4 +5,4 @@
 [submodule "services"]
 	path = services
 	url = https://github.com/volarjs/services.git
-	branch = master
+	branch = cursor/volar-3-mappings-39dc
