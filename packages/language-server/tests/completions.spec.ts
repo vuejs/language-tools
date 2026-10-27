@@ -543,6 +543,21 @@ test('Directive modifiers from the TypeScript language server', async () => {
 	).toEqual(['attr', 'prop']);
 });
 
+test.each([
+	['<script setup>', `<script setup lang="ts">\n/**| */\nfunction foo(a: number) {}\n</script>\n`],
+	['<script>', `<script lang="ts">\n/**| */\nexport function foo(a: number) {}\n</script>\n`],
+])('JSDoc comment template in %s comes from the TypeScript language server only', async (_, content) => {
+	expect(
+		(await requestCompletionListToTsServer('tsconfigProject/fixture.vue', 'vue', content))
+			.filter(item => item.label === '/** */')
+			.map(item => item.textEdit!.newText),
+	).toEqual(['/**\n * \n * @param a\n */']);
+	expect(
+		(await requestCompletionListToVueServer('tsconfigProject/fixture.vue', 'vue', content)).items
+			.filter(item => item.label === '/** */'),
+	).toEqual([]);
+});
+
 test('$event argument', async () => {
 	await requestCompletionItemToTsServer(
 		'tsconfigProject/fixture.vue',

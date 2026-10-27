@@ -106,29 +106,6 @@ const vnode = <div>|;
 	).toBe('$0</div>');
 });
 
-test('completes the JSDoc comment template of the script', async () => {
-	const content = `<script setup lang="ts">
-/** */
-function add(a: number) {}
-</script>
-`;
-	const server = await getLanguageServer(serverModule);
-	const uri = URI.file(path.join(testWorkspacePath, 'templateScope', 'jsdoc.vue')).toString();
-	const document = await server.open(uri, 'vue', content);
-	try {
-		const completion = await server.vueserver.sendCompletionRequest(
-			uri,
-			document.positionAt(content.indexOf('/**') + '/**'.length),
-		);
-		expect(completion?.items.map(item => [item.label, item.textEdit?.newText])).toEqual([
-			['/** */', '/**\n * $0\n * @param a ${1}\n */'],
-		]);
-	}
-	finally {
-		await server.close(uri);
-	}
-});
-
 test('formats the script block', async () => {
 	const content = `<script setup lang="ts">
 function add(a: number) {

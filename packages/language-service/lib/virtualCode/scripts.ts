@@ -9,8 +9,8 @@ import {
 import { embeddedCodeIds, type EmbeddedDocument } from './embeddedDocument';
 
 /**
- * Each script block verbatim, for the TypeScript syntactic features of the block (structure, formatting, JSDoc
- * comment templates, JSX closing tags), whichever content mapper serves the file to TypeScript.
+ * Each script block verbatim, for the TypeScript syntactic features of the block (structure, formatting, JSX closing
+ * tags) and the define assignment suggestions, whichever content mapper serves the file to TypeScript.
  */
 export function getScriptDocuments(ir: IR): EmbeddedDocument[] {
 	const result: EmbeddedDocument[] = [];

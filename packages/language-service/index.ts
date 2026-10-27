@@ -6,7 +6,6 @@ export * from './lib/virtualCode';
 
 import { create as createJsonPlugin } from 'volar-service-json';
 import { create as createPugFormatPlugin } from 'volar-service-pug-beautify';
-import { create as createTypeScriptDocCommentTemplatePlugin } from 'volar-service-typescript/lib/plugins/docCommentTemplate';
 import { create as createTypeScriptSyntacticPlugin } from 'volar-service-typescript/lib/plugins/syntactic';
 import { create as createVueAutoDotValuePlugin } from './lib/plugins/autoInsertDotValue';
 import { create as createVueAutoSpacePlugin } from './lib/plugins/autoInsertSpace';
@@ -53,7 +52,6 @@ export function createVueLanguageServicePlugins(
 
 		// TS related plugins
 		createVueSuggestDefineAssignmentPlugin(),
-		createTypeScriptDocCommentTemplatePlugin(ts),
 		createTypeScriptSyntacticPlugin(ts),
 		createVueInlayHintsPlugin(),
 

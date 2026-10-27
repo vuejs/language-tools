@@ -14,7 +14,6 @@ test('script blocks have TypeScript syntactic features', async () => {
 		// the block, the JSDoc comment, the function and the JSX element
 		foldingRanges: ['0-5', '1-1', '2-4', '4-4'],
 		outline: [['script setup', ['add', ['sum']]]],
-		jsDocCompletion: [['/** */', '/**\n * $0\n * @param a ${1}\n */']],
 		jsxClosingTag: '$0</div>',
 		formatted: `<script setup lang="tsx">
 /** */
@@ -60,10 +59,9 @@ return <div>{sum}</div>;
 }
 </script>
 `;
-	const { uri, document, positionAfter } = open('script.vue', content);
+	const { uri, document } = open('script.vue', content);
 	const foldingRanges = await languageService.getFoldingRanges(uri);
 	const symbols = await languageService.getDocumentSymbols(uri);
-	const completion = await languageService.getCompletionItems(uri, positionAfter('/**'));
 	const edits = await languageService.getDocumentFormattingEdits(
 		uri,
 		{ tabSize: 4, insertSpaces: false },
@@ -85,7 +83,6 @@ const vnode = <div>;
 	return {
 		foldingRanges: foldingRanges?.map(range => `${range.startLine}-${range.endLine}`).sort(),
 		outline: symbols?.map(toOutline),
-		jsDocCompletion: completion.items.map(item => [item.label, item.textEdit?.newText]),
 		jsxClosingTag,
 		formatted: [...edits ?? []]
 			.sort((a, b) => document.offsetAt(b.range.start) - document.offsetAt(a.range.start))
