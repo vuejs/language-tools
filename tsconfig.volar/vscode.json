@@ -1,10 +1,8 @@
 {
-	// Type-checks the volar.js submodule with the repo's TypeScript 7 and volar.js's own options, minus what TS 7 dropped (`esModuleInterop: false`, implicit `@types`).
-	// Its runtime JS is emitted by `npm run build:volar` (TypeScript 5.9), as volar.js publishes it.
+	// Type-checks the volar.js submodule with the repo's TypeScript 7 and volar.js's own options, emitting only declarations for project references.
+	// Its runtime JS is emitted by `npm run build:volar` (TypeScript 7.1), as volar.js publishes it.
 	"extends": "../volar.js/packages/vscode/tsconfig.json",
 	"compilerOptions": {
-		"esModuleInterop": null,
-		"types": ["node"],
 		"rootDir": "../volar.js/packages/vscode",
 		"emitDeclarationOnly": true,
 		"declarationDir": "../node_modules/.volar.js-types/vscode",

@@ -55,6 +55,9 @@ importers:
       typescript-5:
         specifier: npm:typescript@~5.9.3
         version: typescript@5.9.3
+      typescript-7:
+        specifier: npm:typescript@7.1.0-beta
+        version: typescript@7.1.0-beta
       vitest:
         specifier: latest
         version: 4.1.11(@types/node@26.1.1)(vite@8.1.5(@types/node@26.1.1)(yaml@2.9.1))
@@ -481,9 +484,6 @@ importers:
       request-light:
         specifier: ^0.7.0
         version: 0.7.0
-      typescript:
-        specifier: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
-        version: typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
       vscode-languageserver:
         specifier: ^9.0.1
         version: 9.0.1

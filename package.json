@@ -3,7 +3,7 @@
 	"packageManager": "pnpm@11.9.0",
 	"scripts": {
 		"build": "npm run build:volar && npm run build:services && tsc -b",
-		"build:volar": "node node_modules/typescript-5/bin/tsc -b volar.js/packages/test-utils volar.js/packages/vscode",
+		"build:volar": "node node_modules/typescript-7/bin/tsc -b volar.js/packages/test-utils volar.js/packages/vscode",
 		"build:services": "node node_modules/typescript-5/bin/tsc -b services/packages/css services/packages/emmet services/packages/html services/packages/json services/packages/pug services/packages/pug-beautify services/packages/typescript --noCheck",
 		"build:ext": "pnpm --dir extensions/vscode exec rolldown --config",
 		"watch": "npm run build:volar && npm run build:services && tsc -b -w",
@@ -27,6 +27,7 @@
 		"eslint": "^9.39.0",
 		"typescript": "<7",
 		"typescript-5": "npm:typescript@~5.9.3",
+		"typescript-7": "npm:typescript@7.1.0-beta",
 		"vitest": "latest"
 	}
 }
