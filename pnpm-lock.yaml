@@ -17,7 +17,6 @@ overrides:
   volar-service-json: workspace:*
   volar-service-pug: workspace:*
   volar-service-pug-beautify: workspace:*
-  volar-service-typescript: workspace:*
   '@vue/language-plugin-pug': workspace:*
 
 importers:
@@ -277,9 +276,6 @@ importers:
       volar-service-pug-beautify:
         specifier: workspace:*
         version: link:../../services/packages/pug-beautify
-      volar-service-typescript:
-        specifier: workspace:*
-        version: link:../../services/packages/typescript
       vscode-html-languageservice:
         specifier: ^5.6.2
         version: 5.6.2
@@ -413,37 +409,6 @@ importers:
       '@types/node':
         specifier: latest
         version: 26.6.5
-
-  services/packages/typescript:
-    dependencies:
-      '@volar/language-service':
-        specifier: workspace:*
-        version: link:../../../volar.js/packages/language-service
-      path-browserify:
-        specifier: ^1.0.1
-        version: 1.0.1
-      semver:
-        specifier: ^7.6.2
-        version: 7.8.5
-      typescript-auto-import-cache:
-        specifier: ^0.3.5
-        version: 0.3.6
-      vscode-languageserver-textdocument:
-        specifier: ^1.0.11
-        version: 1.0.12
-      vscode-nls:
-        specifier: ^5.2.0
-        version: 5.2.0
-      vscode-uri:
-        specifier: ^3.0.8
-        version: 3.1.0
-    devDependencies:
-      '@types/path-browserify':
-        specifier: latest
-        version: 1.0.3
-      '@types/semver':
-        specifier: latest
-        version: 7.8.0
 
   test-workspace:
     devDependencies:
@@ -1228,9 +1193,6 @@ packages:
 
   '@types/picomatch@4.0.3':
     resolution: {integrity: sha512-iG0T6+nYJ9FAPmx9SsUlnwcq1ZVRuCXcVEvWnntoPlrOpwtSTKNDC9uVAxTsC3PUvJ+99n4RpAcNgBbHX3JSnQ==}
-
-  '@types/semver@7.8.0':
-    resolution: {integrity: sha512-1mAINjtQCXXeLkJ9ehXkwOcBpqtLxiVtKhpUf83DdRNdQKV0iXZpaHYqRr7nj+wvxuJzoAmAwXI+sCNMv1CzLQ==}
 
   '@types/vscode@1.88.0':
     resolution: {integrity: sha512-rWY+Bs6j/f1lvr8jqZTyp5arRMfovdxolcqGi+//+cPDOh8SBvzXH90e7BiSXct5HJ9HGW6jATchbRTpTJpEkw==}
@@ -2371,9 +2333,6 @@ packages:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
     engines: {node: '>= 0.8.0'}
 
-  typescript-auto-import-cache@0.3.6:
-    resolution: {integrity: sha512-RpuHXrknHdVdK7wv/8ug3Fr0WNsNi5l5aB8MYYuXhq2UH5lnEB1htJ1smhtD5VeCsGr2p8mUDtd83LCQDFVgjQ==}
-
   typescript@6.0.3:
     resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
@@ -3223,8 +3182,6 @@ snapshots:
   '@types/path-browserify@1.0.3': {}
 
   '@types/picomatch@4.0.3': {}
-
-  '@types/semver@7.8.0': {}
 
   '@types/vscode@1.88.0': {}
 
@@ -4313,10 +4270,6 @@ snapshots:
   type-check@0.4.0:
     dependencies:
       prelude-ls: 1.2.1
-
-  typescript-auto-import-cache@0.3.6:
-    dependencies:
-      semver: 7.8.5
 
   typescript@6.0.3: {}
 

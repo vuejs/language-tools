@@ -4,7 +4,7 @@
 	"scripts": {
 		"build": "npm run build:volar && npm run build:services && node node_modules/typescript-7/bin/tsc -b",
 		"build:volar": "node node_modules/typescript-7/bin/tsc -b volar.js/packages/test-utils volar.js/packages/vscode",
-		"build:services": "node node_modules/typescript-7/bin/tsc -b services/packages/css services/packages/emmet services/packages/html services/packages/json services/packages/pug services/packages/pug-beautify services/packages/typescript --noCheck",
+		"build:services": "node node_modules/typescript-7/bin/tsc -b services/packages/css services/packages/emmet services/packages/html services/packages/json services/packages/pug services/packages/pug-beautify --noCheck",
 		"build:ext": "pnpm --dir extensions/vscode exec rolldown --config",
 		"watch": "npm run build:volar && npm run build:services && node node_modules/typescript-7/bin/tsc -b -w",
 		"watch:volar": "npm run build:volar -- -w",

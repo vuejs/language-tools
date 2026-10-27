@@ -22,7 +22,6 @@ packages:
   - services/packages/json
   - services/packages/pug
   - services/packages/pug-beautify
-  - services/packages/typescript
 
 allowBuilds:
   "@vscode/vsce-sign": true
@@ -46,6 +45,5 @@ overrides:
   volar-service-json: workspace:*
   volar-service-pug: workspace:*
   volar-service-pug-beautify: workspace:*
-  volar-service-typescript: workspace:*
   # volar-service-pug feeds its baseParse mappings to @volar/language-service, so both must share one format
   '@vue/language-plugin-pug': workspace:*
