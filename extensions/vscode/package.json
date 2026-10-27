@@ -481,7 +481,6 @@
 		"@vue/language-server": "workspace:*",
 		"reactive-vscode": "^1.0.2",
 		"rolldown": "latest",
-		"typescript": "<7",
 		"vscode-ext-gen": "latest",
 		"vscode-tmlanguage-snapshot": "latest"
 	}

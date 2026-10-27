@@ -2,11 +2,11 @@
 	"private": true,
 	"packageManager": "pnpm@11.9.0",
 	"scripts": {
-		"build": "npm run build:volar && npm run build:services && node node_modules/typescript-7/bin/tsc -b",
-		"build:volar": "node node_modules/typescript-7/bin/tsc -b volar.js/packages/test-utils volar.js/packages/vscode",
-		"build:services": "node node_modules/typescript-7/bin/tsc -b services/packages/css services/packages/emmet services/packages/html services/packages/json services/packages/pug services/packages/pug-beautify --noCheck",
+		"build": "npm run build:volar && npm run build:services && node node_modules/typescript/bin/tsc -b",
+		"build:volar": "node node_modules/typescript/bin/tsc -b volar.js/packages/test-utils volar.js/packages/vscode",
+		"build:services": "node node_modules/typescript/bin/tsc -b services/packages/css services/packages/emmet services/packages/html services/packages/json services/packages/pug services/packages/pug-beautify --noCheck",
 		"build:ext": "pnpm --dir extensions/vscode exec rolldown --config",
-		"watch": "npm run build:volar && npm run build:services && node node_modules/typescript-7/bin/tsc -b -w",
+		"watch": "npm run build:volar && npm run build:services && node node_modules/typescript/bin/tsc -b -w",
 		"watch:volar": "npm run build:volar -- -w",
 		"watch:services": "npm run build:services -- -w",
 		"watch:ext": "npm run build:ext && npm run watch",
@@ -25,8 +25,7 @@
 		"@types/node": "^26.0.1",
 		"dprint": "latest",
 		"eslint": "^9.39.0",
-		"typescript": "<7",
-		"typescript-7": "npm:typescript@7.1.0-beta",
+		"typescript": "npm:typescript@7.1.0-beta",
 		"vitest": "latest"
 	}
 }

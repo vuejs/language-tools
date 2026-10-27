@@ -48,11 +48,8 @@ importers:
         specifier: ^9.39.0
         version: 9.39.5
       typescript:
-        specifier: <7
-        version: 6.0.3
-      typescript-7:
         specifier: npm:typescript@7.1.0-beta
-        version: typescript@7.1.0-beta
+        version: 7.1.0-beta
       vitest:
         specifier: latest
         version: 4.1.11(@types/node@26.1.1)(vite@8.1.5(@types/node@26.1.1)(yaml@2.9.1))
@@ -77,9 +74,6 @@ importers:
       rolldown:
         specifier: latest
         version: 1.2.5
-      typescript:
-        specifier: <7
-        version: 6.0.3
       vscode-ext-gen:
         specifier: latest
         version: 1.6.0
@@ -232,11 +226,8 @@ importers:
         specifier: workspace:*
         version: link:../content-mapper
       typescript:
-        specifier: <7
-        version: 6.0.3
-      typescript-7:
         specifier: npm:typescript@7.1.0-beta
-        version: typescript@7.1.0-beta
+        version: 7.1.0-beta
 
   packages/language-service:
     dependencies:
@@ -289,9 +280,6 @@ importers:
       '@types/path-browserify':
         specifier: ^1.0.3
         version: 1.0.3
-      typescript:
-        specifier: <7
-        version: 6.0.3
       vscode-css-languageservice:
         specifier: ^6.3.10
         version: 6.3.10
@@ -2333,11 +2321,6 @@ packages:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
     engines: {node: '>= 0.8.0'}
 
-  typescript@6.0.3:
-    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-
   typescript@7.1.0-beta:
     resolution: {integrity: sha512-cjWjZAJDsmZzsNC5GwHNlW0YPM65jZa5oR0KyQcYX3KSVIfTvtBq//vewISyatKk4OLi5grZjHhIVE9fdrw1UQ==}
     engines: {node: '>=16.20.0'}
@@ -4270,8 +4253,6 @@ snapshots:
   type-check@0.4.0:
     dependencies:
       prelude-ls: 1.2.1
-
-  typescript@6.0.3: {}
 
   typescript@7.1.0-beta:
     optionalDependencies:

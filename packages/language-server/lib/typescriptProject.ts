@@ -30,8 +30,8 @@ import {
 	toCheckedPositions,
 } from './checkerQueries';
 
-type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
-type Project = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Project;
+type SourceFile = import('typescript/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
+type Project = import('typescript/async', { with: { 'resolution-mode': 'import' }}).Project;
 
 const defaultImportRE = /\bimport\s+[\w$]+(?=\s*(?:,|from\b))/;
 const scriptExtensions = ['.ts', '.tsx', '.js', '.jsx', '.mts', '.cts', '.mjs', '.cjs'];

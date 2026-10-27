@@ -14,14 +14,14 @@ import type { TypeScript } from 'vue-component-meta';
 import { inferComponentProps } from 'vue-component-meta/lib/inferComponentTypes';
 
 type ElementNode = Parameters<typeof getElementTagOffsets>[0];
-type Node = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).Node;
-type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
-type SpanMapFeature = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SpanMapFeature;
-type TypeNode = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).TypeNode;
-type Checker = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Checker;
-type Program = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Program;
-type Symbol = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Symbol;
-type Type = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Type;
+type Node = import('typescript/ast', { with: { 'resolution-mode': 'import' }}).Node;
+type SourceFile = import('typescript/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
+type SpanMapFeature = import('typescript/ast', { with: { 'resolution-mode': 'import' }}).SpanMapFeature;
+type TypeNode = import('typescript/ast', { with: { 'resolution-mode': 'import' }}).TypeNode;
+type Checker = import('typescript/async', { with: { 'resolution-mode': 'import' }}).Checker;
+type Program = import('typescript/async', { with: { 'resolution-mode': 'import' }}).Program;
+type Symbol = import('typescript/async', { with: { 'resolution-mode': 'import' }}).Symbol;
+type Type = import('typescript/async', { with: { 'resolution-mode': 'import' }}).Type;
 
 const directiveRE = /^v[A-Z]/;
 
