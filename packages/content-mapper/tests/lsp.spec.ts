@@ -28,6 +28,7 @@ const styleClassNames = new LspDocument(path.join(workspace, 'StyleClassNames.vu
 const unnamedProps = new LspDocument(path.join(workspace, 'UnnamedProps.vue'));
 const emptySetup = new LspDocument(path.join(workspace, 'EmptySetup.vue'));
 const emptyScript = new LspDocument(path.join(workspace, 'EmptyScript.vue'));
+const emptySetupTemplate = new LspDocument(path.join(workspace, 'EmptySetupTemplate.vue'));
 const documents = [
 	shorthand,
 	constShorthand,
@@ -53,6 +54,7 @@ const documents = [
 	unnamedProps,
 	emptySetup,
 	emptyScript,
+	emptySetupTemplate,
 ];
 
 let server: LspServer;
@@ -426,4 +428,11 @@ test('an unnamed macro call at the start of its statement links like any call', 
 test('completions in a wholly empty block import into the block', async () => {
 	expect(await refImportEdits(emptySetup, emptySetup.at('></script>', 0, 1))).toEqual(['0:24']);
 	expect(await refImportEdits(emptyScript, emptyScript.at('></script>', 0, 1))).toEqual(['0:18']);
+});
+
+// The edit goes to the first mapped char of the template instead, for an empty `<script>` too, while without a
+// template it goes into the block. Not yet known whether the content mapper or TS 7.1 places it there; exit: this
+// passes.
+test.fails('completions in a wholly empty block of a component with a template import into the block', async () => {
+	expect(await refImportEdits(emptySetupTemplate, emptySetupTemplate.at('></script>', 0, 1))).toEqual(['0:24']);
 });
