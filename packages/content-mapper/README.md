@@ -3,13 +3,12 @@
 `@vue/content-mapper` transforms Vue single-file components into the
 TypeScript or JavaScript code that TypeScript checks. It parses Vue files with
 `@vue/language-core` and generates that code itself. It implements the TypeScript
-7.1 Content Mapper protocol and keeps transforms parallel with a worker-thread
-pool.
+7.1 Content Mapper protocol.
 
 ## Configuration
 
 The mapper needs TypeScript 7.1 or later and Node.js 20.19 or 22.12 and later. It parses scripts
-through a TypeScript API process that each mapper worker starts.
+through a TypeScript API process that the mapper starts.
 
 Install the mapper beside TypeScript 7.1 (`typescript@latest` is still 7.0, which has no content mappers):
 
