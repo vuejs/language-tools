@@ -183,6 +183,11 @@ function* generateTemplateDirectives(
 		yield endOfLine;
 		// The template reads the directives that resolve to a listed key of the option by that key; only those whose key
 		// the syntax of the option does not show are resolved by its type, from the keys that the template searches.
+		// Interim: those resolve to the right type but link no declaration, because the type has to rename the keys of
+		// the option to the names of the directives, and TypeScript links no declaration to the properties of a
+		// key-remapping mapped type. The right fix is in TypeScript, linking such a property to the declaration of the
+		// key it maps from; then these resolve through `[K in keyof T as <name of K>]` over the option and the spread
+		// link test in lsp.spec.ts passes.
 		if (unlistedOptionDirectives.size) {
 			const searched = [...unlistedOptionDirectives].map(([name, keys]) =>
 				`'${name}': [${keys.map(key => `'${key}'`).join(', ')}]`
