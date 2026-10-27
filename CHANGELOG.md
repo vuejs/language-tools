@@ -46,6 +46,7 @@ Unsupported: wrapping the template (layout slots of dxup), changing the shape of
 
 ### Content Mapper
 
+- **breaking:** the `vue-tsc` package is removed. Type-check and emit declarations with the `tsc` of TS 7.1 and `@vue/content-mapper` in the `contentMappers` of `tsconfig.json`: `tsc --runExternalCode` (see [Configuration](packages/content-mapper/README.md#configuration)).
 - **breaking:** the Content Mapper parses with the TS 7.1 `typescript` package that resolves from the project directory (the directory of the tsconfig, or the working directory for an inferred project), and fails to open a project from which none resolves. The VS Code extension no longer bundles TS 7.1, whose bundled copy could not find its executable.
 - **breaking:** in VS Code, the Content Mapper of Vue files outside any tsconfig runs in the first local workspace folder, so TS 7.1 resolves from it; with more folders, the first one is used for all of them. A window without a local workspace folder gets no Content Mapper for those files and logs an error.
 - **regression:** renaming a variable, prop or class name that a same-name shorthand uses (`:foo-bar`, `:count`, `{ foo }` in a template expression or in `:class`) leaves the shorthand unchanged, so after the rename the template refers to a name that no longer exists; v3 expanded it (`:foo-bar="NEW"`, `{ foo: NEW }`). Renaming from the shorthand itself does nothing. It waits on TypeScript expanding shorthands through span maps.
@@ -62,12 +63,15 @@ Unsupported: wrapping the template (layout slots of dxup), changing the shape of
 
 ### Language server
 
+- **breaking:** the `@vue/typescript-plugin` package is removed. The TypeScript 7.1 language server serves Vue files through `@vue/content-mapper` (`initializationOptions: { runExternalCode: true }`), and the Vue language server reads from it.
+- **breaking:** the Vue language server no longer provides semantic tokens; TS 7.1 is the only provider. Component tags are colored by the grammar, and a tag that resolves to no component is reported as a diagnostic.
 - **breaking:** the language server no longer needs TypeScript 5 or 6: the `--tsdk` parameter, its TypeScript 5/6 check and the `typescript` peer dependency are removed, and `startServer` / `createVueLanguageServicePlugins` take no `ts` argument. The VS Code extension no longer looks for a TypeScript SDK.
 - **breaking:** formatting (document, range and on type), folding, selection ranges, outline and JSX closing tags of `.vue` script blocks and template expressions are unavailable until TypeScript provides the APIs. They ran on classic TypeScript, which TS 7.1 replaces without a project-free syntactic API in `typescript/sync`; the `vue.format.script.*` and `vue.format.template.*` settings are kept for when it does. JSDoc comment templates in script blocks now come from TS 7.1 only.
 - **fix:** Reactivity Visualization resolves the identifiers of a script through the checker of its TS 7.1 project, instead of a classic TypeScript language service that had no default library and resolved no imports, and `@vue/language-server` no longer depends on `laplacenoma`. `counter.n.value` of another `useCounter()` call no longer counts as reading the `n` of `const { n } = useCounter()`, and a call of a variable that holds a named function expression now counts as reading it. While the TypeScript language server has another text of the script, it has no analysis.
 
 ### Language service
 
+- **breaking:** twoslash queries (`// ^?` in script blocks and `<!-- ^? -->` in the template, shown as inlay hints) are removed. TS 7.1 gives no twoslash queries in TypeScript files either, so the same comment would act differently in `.vue` and `.ts` files, and the template form was a convention of this project only; twoslash queries belong to the tools that implement the convention for every language.
 - **fix:** dropping a component into the template, or extracting one, adds it to the Options API `components` by inserting the new property after the last one, instead of reprinting the object. The formatting, comments and trailing comma of the object are kept.
 
 ## 3.3.13 (2026-10-10)
