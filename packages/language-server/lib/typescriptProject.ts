@@ -23,6 +23,7 @@ import {
 	getElementNames,
 	getNamedValueExports,
 	getProjectValueExports,
+	getSymbolIds,
 	getTagType,
 	getUnresolvedName,
 	isRefAtOffset,
@@ -131,6 +132,15 @@ export interface TypeScriptProjectResolver {
 	isRefAtOffset(fileName: string, offset: number): Promise<boolean | undefined>;
 	/** Whether TypeScript renames the code at `offset` in the source text of the Vue file `fileName`. */
 	isRenamedAtOffset(fileName: string, offset: number): Promise<boolean | undefined>;
+	/**
+	 * The ids of the symbols that the identifiers at `offsets` of the source text of `fileName` refer to, the value of a
+	 * shorthand property for its name; undefined when the source text TypeScript checks is not `text`.
+	 */
+	getSymbolIds(
+		fileName: string,
+		text: string,
+		offsets: readonly number[],
+	): Promise<readonly (number | undefined)[] | undefined>;
 	/** Releases the file opened by `getProject`. */
 	closeFile(fileName: string): void;
 	/** Forgets the cached auto-import exports that a change to `fileName`, if it can export components, may affect. */
@@ -369,6 +379,13 @@ export async function connectTypeScriptProjectResolver(
 				(_project, sourceFile) =>
 					!!sourceFile.spanMap?.originalToVirtualPositions(offset, ts.SpanMapFeature.Rename).length,
 			);
+		},
+		getSymbolIds(fileName, text, offsets) {
+			return withSourceFile(fileName, async (project, sourceFile) => {
+				if (sourceFile.originalText === text) {
+					return await getSymbolIds(ts, project.checker, sourceFile, offsets);
+				}
+			});
 		},
 		closeFile(fileName) {
 			if (projects.delete(fileName)) {

@@ -446,6 +446,35 @@ export async function isRefAtOffset(ts: TypeScript, checker: Checker, sourceFile
 }
 
 /**
+ * The ids of the symbols that the identifiers starting at `offsets` of the file's source text refer to, the value of a
+ * shorthand property for its name.
+ */
+export async function getSymbolIds(
+	ts: TypeScript,
+	checker: Checker,
+	sourceFile: SourceFile,
+	offsets: readonly number[],
+) {
+	const identifiers = offsets.map(offset => {
+		for (const position of toCheckedPositions(sourceFile, offset, ts.SpanMapFeature.Definition)) {
+			const node = getNodeAt(sourceFile, position, false);
+			if (ts.isIdentifier(node) && node.getStart(sourceFile) === position) {
+				return node;
+			}
+		}
+	});
+	const names = identifiers.filter(node => node !== undefined);
+	const symbols = await checker.getSymbolAtLocation(names);
+	const ids = new Map(names.map((node, i) => [node, symbols[i]?.id]));
+	await Promise.all(names.map(async node => {
+		if (ts.isShorthandPropertyAssignment(node.parent) && node.parent.name === node) {
+			ids.set(node, (await checker.getShorthandAssignmentValueSymbol(node.parent))?.id);
+		}
+	}));
+	return identifiers.map(node => node && ids.get(node));
+}
+
+/**
  * The props of the component whose tag name starts at `offset` of a Vue file's source text or, given
  * `expressionLength`, of the component that the expression of that length at `offset` evaluates to.
  */

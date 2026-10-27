@@ -1,9 +1,14 @@
-import { forEachInterpolationNode, getScriptLang, parseInterpolationNode, type TypeScript } from '@vue/language-core';
+import {
+	forEachInterpolationNode,
+	getScriptLang,
+	parseInterpolationNode,
+	type ts,
+	type TypeScript,
+} from '@vue/language-core';
 import type { VueVirtualCode } from '@vue/language-service';
-import { type AnalysisContext, analyze, type ReactivityAnalysisResult } from './analyze';
+import { type AnalysisContext, analyze, type ReactivityAnalysisResult, type SameFileSymbols } from './analyze';
 import { vueRules } from './rules';
 import { collectAccesses, collectSignals } from './signals';
-import { resolveSameFileSymbols } from './symbols';
 
 export type { ReactivityAnalysisResult } from './analyze';
 
@@ -15,13 +20,35 @@ export interface ReactivityAnalysisParams {
 	content?: string;
 }
 
+/**
+ * The ids of the symbols that the identifiers at `offsets` of the source text of `fileName` refer to, or undefined
+ * when the source text that the checker of its project has is not `text`.
+ */
+export type SymbolIdResolver = (
+	fileName: string,
+	text: string,
+	offsets: readonly number[],
+) => Promise<readonly (number | undefined)[] | undefined>;
+
 /** Analyzes one script at a time, keeping what it collected from the last one. */
-export function createReactivityAnalyzer() {
+export function createReactivityAnalyzer(getSymbolIds: SymbolIdResolver) {
 	let current: { ts: TypeScript; fileName: string; text: string; context: AnalysisContext } | undefined;
 
-	function analyzeText(ts: TypeScript, fileName: string, text: string, offset: number) {
+	/** `text` is the source text of `fileName`, `scriptText` the same text with what is not script blanked out. */
+	async function analyzeText(
+		ts: TypeScript,
+		fileName: string,
+		text: string,
+		scriptFileName: string,
+		scriptText: string,
+		offset: number,
+	) {
 		if (current?.ts !== ts || current.fileName !== fileName || current.text !== text) {
-			const sourceFile = ts.createSourceFile(fileName, text, ts.ScriptTarget.ESNext);
+			const sourceFile = ts.createSourceFile(scriptFileName, scriptText, ts.ScriptTarget.ESNext);
+			const symbols = await resolveSymbols(ts, sourceFile, offsets => getSymbolIds(fileName, text, offsets));
+			if (!symbols) {
+				return;
+			}
 			current = {
 				ts,
 				fileName,
@@ -31,7 +58,7 @@ export function createReactivityAnalyzer() {
 					sourceFile,
 					signals: collectSignals(ts, sourceFile, vueRules),
 					accesses: collectAccesses(ts, sourceFile),
-					symbols: resolveSameFileSymbols(ts, sourceFile),
+					symbols,
 				},
 			};
 		}
@@ -40,25 +67,80 @@ export function createReactivityAnalyzer() {
 
 	return {
 		analyzeScript(ts: TypeScript, fileName: string, text: string, offset: number) {
-			return analyzeText(ts, fileName, text, offset);
+			return analyzeText(ts, fileName, text, fileName, text, offset);
 		},
 		/** Analyzes the script blocks of a Vue file in its source offsets, with the rest of the file blanked out. */
 		analyzeVueScript(
 			virtualCode: VueVirtualCode,
 			fileName: string,
 			offset: number,
-		): ReactivityAnalysisResult | undefined {
+		): Promise<ReactivityAnalysisResult | undefined> {
 			const { ir, snapshot } = virtualCode;
-			let text = snapshot.getText(0, snapshot.getLength()).replace(/[^\r\n]/g, ' ');
+			const text = snapshot.getText(0, snapshot.getLength());
+			let scriptText = text.replace(/[^\r\n]/g, ' ');
 			for (const block of [ir.script, ir.scriptSetup]) {
 				if (block) {
-					text = text.slice(0, block.startTagEnd) + block.content
-						+ text.slice(block.startTagEnd + block.content.length);
+					scriptText = scriptText.slice(0, block.startTagEnd) + block.content
+						+ scriptText.slice(block.startTagEnd + block.content.length);
 				}
 			}
-			return analyzeText(virtualCode.ts, `${fileName}.${getScriptLang(ir)}`, text, offset);
+			return analyzeText(virtualCode.ts, fileName, text, `${fileName}.${getScriptLang(ir)}`, scriptText, offset);
 		},
 	};
+}
+
+async function resolveSymbols(
+	ts: TypeScript,
+	sourceFile: ts.SourceFile,
+	getSymbolIds: (offsets: readonly number[]) => ReturnType<SymbolIdResolver>,
+): Promise<SameFileSymbols | undefined> {
+	const identifiers: ts.Identifier[] = [];
+	sourceFile.forEachChild(function visit(node) {
+		if (ts.isIdentifier(node)) {
+			identifiers.push(node);
+		}
+		node.forEachChild(visit);
+	});
+	const ids = await getSymbolIds(identifiers.map(id => id.getStart(sourceFile)));
+	if (!ids) {
+		return;
+	}
+	const symbols = new Map<ts.Identifier, { declarations: ts.Identifier[]; references: ts.Identifier[] }>();
+	const byId = new Map<number, { declarations: ts.Identifier[]; references: ts.Identifier[] }>();
+	identifiers.forEach((id, i) => {
+		const symbolId = ids[i];
+		if (symbolId === undefined) {
+			return;
+		}
+		let symbol = byId.get(symbolId);
+		if (!symbol) {
+			byId.set(symbolId, symbol = { declarations: [], references: [] });
+		}
+		if (isDeclarationName(ts, id)) {
+			symbol.declarations.push(id);
+		}
+		symbol.references.push(id);
+		symbols.set(id, symbol);
+	});
+	return {
+		getDeclarations: position => getSymbol(position)?.declarations ?? [],
+		getReferences: position => getSymbol(position)?.references ?? [],
+	};
+
+	function getSymbol(position: number) {
+		const token = ts.getTouchingPropertyName(sourceFile, position);
+		return ts.isIdentifier(token) ? symbols.get(token) : undefined;
+	}
+}
+
+/** Whether `id` names what its parent declares, as a property name of an access or a shorthand value does not. */
+function isDeclarationName(ts: TypeScript, id: ts.Identifier) {
+	const { parent } = id;
+	return (parent as { name?: ts.Node }).name === id
+		&& !ts.isPropertyAccessExpression(parent)
+		&& !ts.isShorthandPropertyAssignment(parent)
+		&& !ts.isExportSpecifier(parent)
+		&& !ts.isJsxAttribute(parent);
 }
 
 /** The source ranges of the template interpolations and style `v-bind()` expressions of a Vue file. */

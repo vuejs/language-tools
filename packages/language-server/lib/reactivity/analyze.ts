@@ -1,7 +1,14 @@
 import type { ts, TypeScript } from '@vue/language-core';
 import type { Access } from './rules';
 import { type Accesses, createSignalNode, type Signal, type SignalNode } from './signals';
-import type { SameFileSymbols } from './symbols';
+
+/** The identifiers of one source file grouped by what they refer to, as the checker of its project resolves them. */
+export interface SameFileSymbols {
+	/** The names of the declarations, in the file, of what the identifier at `position` refers to. */
+	getDeclarations(position: number): readonly ts.Identifier[];
+	/** The identifiers that refer to what the identifier at `position` refers to, its declarations among them, in source order. */
+	getReferences(position: number): readonly ts.Identifier[];
+}
 
 export interface Range {
 	pos: number;

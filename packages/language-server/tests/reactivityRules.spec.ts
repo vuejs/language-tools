@@ -106,6 +106,18 @@ const fromOther = computed(() => counter.n.value);
 		{ dependencies: [], dependents: ['n.value'] },
 	],
 	[
+		'the reads of a namespace export by qualified name',
+		`import { computed, ref } from 'vue';
+namespace NS {
+	export const inner = ref(0);
+	export const local = computed(() => inner.value);
+}
+const qualified = computed(() => NS.inner.value);
+`,
+		'inner = ref',
+		{ dependencies: [], dependents: ['inner.value', 'NS.inner.value'] },
+	],
+	[
 		'the signals that a called named function expression reads',
 		`import { computed, ref } from 'vue';
 const count = ref(0);
@@ -119,22 +131,6 @@ const viaCall = computed(() => fn() * 2);
 	],
 ])('reactivity analysis follows %s', async (_name, script, cursor, expected) => {
 	expect(await analyze(script, cursor)).toEqual(expected);
-});
-
-// The lexical scope resolver of the analysis resolves no qualified names, which the TS 7.1 checker of the project
-// resolves; exit: this passes once the analysis resolves identifiers through that checker.
-test.fails('reactivity analysis follows the reads of a namespace export by qualified name', async () => {
-	const script = `import { computed, ref } from 'vue';
-namespace NS {
-	export const inner = ref(0);
-	export const local = computed(() => inner.value);
-}
-const qualified = computed(() => NS.inner.value);
-`;
-	expect(await analyze(script, 'inner = ref')).toEqual({
-		dependencies: [],
-		dependents: ['inner.value', 'NS.inner.value'],
-	});
 });
 
 async function analyze(script: string, cursor: string) {

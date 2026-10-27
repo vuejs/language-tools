@@ -47,6 +47,12 @@ test('reactivity analysis of a script the client sends', async () => {
 	});
 });
 
+test('reactivity analysis of a script the TypeScript language server has another text of', async () => {
+	const content = `// edited\n${script}`;
+	const { uri } = await open('tsconfigProject/composable.ts', 'typescript', script);
+	expect(await analyze(uri, content.indexOf('count = ref') + 1, content)).toBeFalsy();
+});
+
 test('interpolation ranges cover the template interpolations', async () => {
 	const content = `<template>\n\t<div>{{ foo }}</div>\n\t{{ bar + 1 }}\n</template>\n`;
 	const document = await open('tsconfigProject/fixture.vue', 'vue', content);

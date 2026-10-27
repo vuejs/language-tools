@@ -421,7 +421,9 @@ export function startServer() {
 			version: packageJson.version,
 		};
 
-		const reactivityAnalyzer = createReactivityAnalyzer();
+		const reactivityAnalyzer = createReactivityAnalyzer(
+			async (fileName, text, offsets) => (await connectTypeScriptApi()).getSymbolIds(fileName, text, offsets),
+		);
 		connection.onRequest(
 			'vue/reactivityAnalysis',
 			async ({ textDocument, offset, content }: ReactivityAnalysisParams) => {
