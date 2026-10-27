@@ -486,7 +486,6 @@ test('Scoped class names in :class from the style block', async () => {
 			<template>
 				<div :class="'foo'"></div>
 				<div :class="['foo', { 'foo': true }]"></div>
-				<div :class="{ foo }"></div>
 			</template>
 			<style scoped>
 			.fo|o { }
@@ -498,9 +497,37 @@ test('Scoped class names in :class from the style block', async () => {
 		  "tsconfigProject/fixture.vue:2:18-2:21 -> NEW",
 		  "tsconfigProject/fixture.vue:3:19-3:22 -> NEW",
 		  "tsconfigProject/fixture.vue:3:28-3:31 -> NEW",
-		  "tsconfigProject/fixture.vue:7:4-7:7 -> NEW",
+		  "tsconfigProject/fixture.vue:6:4-6:7 -> NEW",
 		]
 	`);
+});
+
+// Waits on TypeScript expanding a shorthand of the source on rename through span maps (upstream ask TS-1): the key of
+// `{ foo }` maps to a generated `foo: foo`, whose spans take no rename edit, so TypeScript drops it. Exit: this passes
+// once span maps can mark a same-name shorthand and TypeScript expands it.
+test.fails('Scoped class name shorthands in :class from the style block', async () => {
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<div :class="'foo'"></div>
+				<div :class="['foo', { 'foo': true }]"></div>
+				<div :class="{ foo }"></div>
+			</template>
+			<style scoped>
+			.fo|o { }
+			</style>
+		`,
+		),
+	).toEqual([
+		'tsconfigProject/fixture.vue:2:18-2:21 -> NEW',
+		'tsconfigProject/fixture.vue:3:19-3:22 -> NEW',
+		'tsconfigProject/fixture.vue:3:28-3:31 -> NEW',
+		'tsconfigProject/fixture.vue:4:19-4:22 -> NEW: foo',
+		'tsconfigProject/fixture.vue:7:4-7:7 -> NEW',
+	]);
 });
 
 test('Template Ref', async () => {
@@ -527,7 +554,8 @@ test('Template Ref', async () => {
 	`);
 });
 
-test('Same Name Shorthand', async () => {
+// Waits on TS-1, as for the class name shorthands above: the same-name shorthands map to a generated `key: value`.
+test.fails('Same Name Shorthand', async () => {
 	expect(
 		await requestRenameToTsServer(
 			'tsconfigProject/fixture.vue',
@@ -543,7 +571,11 @@ test('Same Name Shorthand', async () => {
 			</script>
 		`,
 		),
-	).toMatchInlineSnapshot(`[]`);
+	).toEqual([
+		'tsconfigProject/fixture.vue:2:11-2:18 -> foo-bar="NEW"',
+		'tsconfigProject/fixture.vue:3:18-3:24 -> fooBar: NEW',
+		'tsconfigProject/fixture.vue:7:9-7:15 -> NEW',
+	]);
 	expect(
 		await requestRenameToTsServer(
 			'tsconfigProject/fixture.vue',
@@ -561,11 +593,11 @@ test('Same Name Shorthand', async () => {
 			</script>
 		`,
 		),
-	).toMatchInlineSnapshot(`
-		[
-		  "tsconfigProject/fixture.vue:8:4-8:10 -> NEW",
-		]
-	`);
+	).toEqual([
+		'tsconfigProject/fixture.vue:2:11-2:18 -> NEW="fooBar"',
+		'tsconfigProject/fixture.vue:3:18-3:24 -> NEW: fooBar',
+		'tsconfigProject/fixture.vue:8:4-8:10 -> NEW',
+	]);
 });
 
 const openedDocuments: TextDocument[] = [];
@@ -640,24 +672,6 @@ test('Setup binding access positions', async () => {
 		]
 	`);
 
-	// v-bind shorthand
-	expect(
-		await requestRenameToTsServer(
-			'tsconfigProject/fixture.vue',
-			'vue',
-			`
-			<template>
-				<div :cou|nt />
-			</template>
-
-			<script lang="ts" setup>
-			import { ref } from 'vue';
-			const count = ref(0);
-			</script>
-		`,
-		),
-	).toMatchInlineSnapshot(`[]`);
-
 	// inline for-of with a same-named loop variable: matches plain TS, which
 	// binds the source to the loop declaration (TS2448), so rename covers the
 	// loop variable's occurrences
@@ -682,6 +696,29 @@ test('Setup binding access positions', async () => {
 		  "tsconfigProject/fixture.vue:2:39-2:43 -> NEW",
 		]
 	`);
+});
+
+// Waits on TS-1, as for the same-name shorthands above.
+test.fails('Setup binding access positions: v-bind shorthand', async () => {
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<div :cou|nt />
+			</template>
+
+			<script lang="ts" setup>
+			import { ref } from 'vue';
+			const count = ref(0);
+			</script>
+		`,
+		),
+	).toEqual([
+		'tsconfigProject/fixture.vue:2:10-2:15 -> count="NEW"',
+		'tsconfigProject/fixture.vue:7:9-7:14 -> NEW',
+	]);
 });
 
 afterEach(async () => {

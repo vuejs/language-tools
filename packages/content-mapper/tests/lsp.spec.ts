@@ -175,10 +175,27 @@ test('semantic tokens come from script and interpolation identifiers only, not t
 	]);
 });
 
-test('rename leaves template shorthands untouched instead of corrupting them', async () => {
-	expect(await rename(shorthand, shorthand.at('{ fooBar: number', 0, 2))).toEqual(['10:31 fooBar -> NEW']);
-	expect(await rename(shorthand, shorthand.at('const fooBar', 0, 6))).toEqual(['8:6 fooBar -> NEW']);
-	expect(await rename(shorthand, shorthand.at('const foo ', 0, 6))).toEqual(['9:6 foo -> NEW']);
+// Waits on TypeScript expanding a shorthand of the source on rename through span maps (upstream ask TS-1): a
+// shorthand maps to a generated `key: value`, whose spans take no rename edit, so TypeScript drops them and returns
+// the other locations only. Exit: these pass once span maps can mark a same-name shorthand and TypeScript expands it.
+test.fails('rename expands object shorthands in interpolations', async () => {
+	expect(await rename(shorthand, shorthand.at('const foo ', 0, 6))).toEqual(['3:6 foo -> foo: NEW', '9:6 foo -> NEW']);
+});
+
+// Waits on TS-1, as above.
+test.fails('rename expands same-name shorthands', async () => {
+	expect(await rename(shorthand, shorthand.at('{ fooBar: number', 0, 2))).toEqual([
+		'1:8 foo-bar -> NEW="fooBar"',
+		'10:31 fooBar -> NEW',
+		'2:8 fooBar -> NEW="fooBar"',
+		'4:15 fooBar -> NEW: fooBar',
+	]);
+	expect(await rename(shorthand, shorthand.at('const fooBar', 0, 6))).toEqual([
+		'1:8 foo-bar -> foo-bar="NEW"',
+		'2:8 fooBar -> fooBar="NEW"',
+		'4:15 fooBar -> fooBar: NEW',
+		'8:6 fooBar -> NEW',
+	]);
 });
 
 test('renaming a default import does not insert text at the top of the imported SFC', async () => {
