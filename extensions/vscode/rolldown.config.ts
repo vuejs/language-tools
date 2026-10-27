@@ -9,7 +9,6 @@ export default defineConfig({
 		'extension': './src/extension.ts',
 		'language-server': './node_modules/@vue/language-server/index.ts',
 		'content-mapper-server': '../../packages/content-mapper/server.ts',
-		'content-mapper-worker': '../../packages/content-mapper/worker.ts',
 	},
 	output: {
 		format: 'cjs',

@@ -63,7 +63,7 @@ export function startLspServer(cwd: string, env: NodeJS.ProcessEnv = {}): Promis
 	const proc: ChildProcess = spawn(
 		process.execPath,
 		[tscPath, '--lsp', '--stdio'],
-		{ cwd, env: { ...process.env, VUE_CONTENT_MAPPER_WORKERS: '1', ...env } },
+		{ cwd, env: { ...process.env, ...env } },
 	);
 	const pending = new Map<number, (message: any) => void>();
 	let buffer = Buffer.alloc(0);

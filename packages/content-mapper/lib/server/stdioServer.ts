@@ -9,7 +9,6 @@ import type {
 	TransformResult,
 } from '../protocol';
 import { getUnusedExpectErrorMessage } from '../result/unusedExpectErrorMessages';
-import { TransformPool } from './workerPool';
 
 interface RequestMessage {
 	jsonrpc: '2.0';
@@ -19,10 +18,8 @@ interface RequestMessage {
 }
 
 /** Runs a content mapper process: reads protocol messages from stdin and writes results to stdout. */
-export function runMapperServer(mapper: ContentMapper, options: { workerPath: string }) {
+export function runMapperServer(mapper: ContentMapper) {
 	let input = Buffer.alloc(0);
-	const workerPath = readArgument('worker') ?? options.workerPath;
-	const transformPool = new TransformPool(mapper, undefined, workerPath);
 	let unusedExpectErrorMessage = getUnusedExpectErrorMessage();
 
 	console.log =
@@ -36,9 +33,6 @@ export function runMapperServer(mapper: ContentMapper, options: { workerPath: st
 		readMessages();
 	});
 	process.stdin.on('error', fail);
-	process.stdin.on('end', () => {
-		void transformPool.close();
-	});
 
 	function readMessages() {
 		while (true) {
@@ -72,13 +66,11 @@ export function runMapperServer(mapper: ContentMapper, options: { workerPath: st
 			const result = message.method === 'initialize'
 				? initialize(message.params as InitializeParams)
 				: message.method === 'openProject'
-				? await transformPool.openProject(message.params as OpenProjectParams)
+				? mapper.openProject(message.params as OpenProjectParams)
 				: message.method === 'closeProject'
-				? await transformPool.closeProject(message.params as CloseProjectParams)
+				? mapper.closeProject((message.params as CloseProjectParams).projectHandle)
 				: message.method === 'transform'
-				? localizeDiagnosticDirectives(
-					await transformPool.transform(message.params as TransformParams),
-				)
+				? localizeDiagnosticDirectives(mapper.transform(message.params as TransformParams))
 				: undefined;
 			if (result === undefined && message.method !== 'closeProject') {
 				writeMessage({
@@ -134,10 +126,4 @@ export function runMapperServer(mapper: ContentMapper, options: { workerPath: st
 		console.error(error);
 		process.exitCode = 1;
 	}
-}
-
-function readArgument(name: string) {
-	const prefix = `--${name}=`;
-	const argument = process.argv.find(argument => argument.startsWith(prefix));
-	return argument?.slice(prefix.length);
 }

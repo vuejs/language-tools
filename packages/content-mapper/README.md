@@ -41,10 +41,6 @@ enable the mapper with `initializationOptions: { runExternalCode: true }` in its
 In VS Code, the TypeScript (Native Preview) extension does this through its `js/ts.contentMappers.enabled`
 setting.
 
-Set `VUE_CONTENT_MAPPER_WORKERS` to a positive integer to override the worker
-count. The default is the smaller of four and the host's available parallelism.
-`VUE_CONTENT_MAPPER_WORKERS=1` runs transforms in the protocol process.
-
 An entry's `format` option decides how its files are parsed, whatever their extension: `"sfc"`
 (the default) for single-file components, or `"vitepress"` for VitePress markdown — frontmatter,
 fenced code blocks and `<<<` snippet imports blanked, `<script>` / `<style>` blocks lifted out, the

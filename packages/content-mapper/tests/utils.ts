@@ -39,10 +39,6 @@ function spawnCompiler(args: string[]) {
 	return spawnSync(process.execPath, [...compilerArgs, ...args], {
 		cwd: repositoryRoot,
 		encoding: 'utf8',
-		env: {
-			...process.env,
-			VUE_CONTENT_MAPPER_WORKERS: '2',
-		},
 	});
 }
 

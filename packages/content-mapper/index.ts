@@ -16,5 +16,3 @@ export * from './lib/mapper/mapperOptions';
 export * from './lib/mapper/optionDiagnostics';
 export * from './lib/protocol';
 export * from './lib/server/stdioServer';
-export * from './lib/server/workerPool';
-export * from './lib/server/workerThread';

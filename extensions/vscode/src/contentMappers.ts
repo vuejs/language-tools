@@ -40,7 +40,6 @@ export function createInferredContentMapperContributions(
 				exec: [
 					process.execPath,
 					path.join(extensionPath, 'dist', 'content-mapper-server.js'),
-					`--worker=${path.join(extensionPath, 'dist', 'content-mapper-worker.js')}`,
 				],
 				cwd,
 				dynamicConfig: true,
