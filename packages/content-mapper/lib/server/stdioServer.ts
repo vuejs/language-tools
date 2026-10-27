@@ -57,11 +57,11 @@ export function runMapperServer(mapper: ContentMapper) {
 
 			const message = JSON.parse(input.subarray(messageStart, messageEnd).toString('utf8')) as RequestMessage;
 			input = input.subarray(messageEnd);
-			void handleMessage(message);
+			handleMessage(message);
 		}
 	}
 
-	async function handleMessage(message: RequestMessage) {
+	function handleMessage(message: RequestMessage) {
 		try {
 			const result = message.method === 'initialize'
 				? initialize(message.params as InitializeParams)
