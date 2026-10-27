@@ -36,7 +36,9 @@ export interface BlockRewrite {
 	render(slice: RewriteSlice<TsCodeData>, terminate?: boolean): TsCode[];
 	/**
 	 * If the block renders no source chars (it is empty, or plugins removed all of it), one empty copy of it, so that
-	 * an edit of the generated code there (e.g. an auto import) maps back into the block.
+	 * an edit of the generated code there (e.g. an auto import) maps back into the block. TS 7.1 places an import at
+	 * the top of the file past this copy when a later verbatim segment exists, e.g. of the template, so that one misses
+	 * the block; see the expected failure in tests/lsp.spec.ts.
 	 */
 	generateEmptyCopy(): Generator<TsCode>;
 }
