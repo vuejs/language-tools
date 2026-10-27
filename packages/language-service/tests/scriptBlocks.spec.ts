@@ -32,6 +32,8 @@ function add(a: number) {
 	});
 });
 
+// Pins the wiring to a provisional shape of `SyntacticApi`, not an upstream contract: when TypeScript ships the
+// project-free syntactic API, the interface and this test follow its shape.
 test('the syntactic API gets the parsed AST of each block and the options of the call', async () => {
 	const calls: unknown[][] = [];
 	const api: Partial<SyntacticApi> = {

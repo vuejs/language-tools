@@ -29,6 +29,13 @@ export interface SyntacticFormatOptions {
  * The syntactic features of a script block or a template expression, computed from its parsed AST alone: no language
  * service, program or project. They wait on a project-free syntactic API of TypeScript 7.1 `typescript/sync` for a
  * RetainedSourceFile, which does not exist yet, so no implementation is passed and the providers return nothing.
+ *
+ * They ran on classic TypeScript (5/6) before. It stays out even as an interim solution: it is a second TypeScript
+ * that parses each block again, a second syntax tree that can disagree with the one of TS 7.1 that every other feature
+ * reads, so the same file gets different results by feature; it keeps a second compiler loaded in the server; and it
+ * implements beside TS 7.1 what TS 7.1 owns, which leaves TypeScript nothing to answer. Porting the Go code is the
+ * same parallel implementation. So the interface stays and the features wait: the tests of them are expected
+ * failures, and the shape of this interface is ours, a guess at the upstream API to adapt when it lands.
  */
 export interface SyntacticApi {
 	getFoldingRanges(sourceFile: SourceFile): FoldingRange[];
