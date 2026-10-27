@@ -1,4 +1,4 @@
-import { SpanMapKind } from '@volar/language-core';
+import { SpanMapFeature, SpanMapKind } from '@volar/language-core';
 import {
 	completionFeatures,
 	type IRBlock,
@@ -13,7 +13,8 @@ import type { TemplateCodegenContext } from './context';
 
 /**
  * The code of the expression `code` at `start` of `block`. The ranges of `omit` (offsets in `code`, sorted and
- * disjoint) generate no code; the references inside them are skipped.
+ * disjoint) generate no code; the references inside them are skipped. The code out of references in the ranges of
+ * `renamedElsewhere` (sorted and disjoint too) takes no rename, which another copy of the same source takes.
  */
 export function* generateInterpolation(
 	options: IdentifierOptions,
@@ -25,6 +26,7 @@ export function* generateInterpolation(
 	prefix: string = '',
 	suffix: string = '',
 	omit: readonly (readonly [start: number, end: number])[] = [],
+	renamedElsewhere: readonly (readonly [start: number, end: number])[] = [],
 ): Generator<TsCode> {
 	if (prefix) {
 		yield prefix;
@@ -48,12 +50,16 @@ export function* generateInterpolation(
 		}
 		if (prevEnd < offset) {
 			yield* omitRanges(
-				generateNonIdentifierCode(
-					code.slice(prevEnd, offset),
-					block.name,
-					start + prevEnd,
-					features,
-					prevEnd > 0,
+				withoutRename(
+					generateNonIdentifierCode(
+						code.slice(prevEnd, offset),
+						block.name,
+						start + prevEnd,
+						features,
+						prevEnd > 0,
+					),
+					start,
+					renamedElsewhere,
 				),
 				start,
 				omit,
@@ -90,12 +96,16 @@ export function* generateInterpolation(
 
 	if (prevEnd < code.length) {
 		yield* omitRanges(
-			generateNonIdentifierCode(
-				code.slice(prevEnd),
-				block.name,
-				start + prevEnd,
-				features,
-				prevEnd > 0,
+			withoutRename(
+				generateNonIdentifierCode(
+					code.slice(prevEnd),
+					block.name,
+					start + prevEnd,
+					features,
+					prevEnd > 0,
+				),
+				start,
+				renamedElsewhere,
 			),
 			start,
 			omit,
@@ -124,6 +134,39 @@ function* omitRanges(
 				yield [text.slice(kept - offset, start + omitStart - offset), source, kept, data];
 			}
 			kept = start + omitEnd;
+		}
+		if (kept < end) {
+			yield [text.slice(kept - offset), source, kept, data];
+		}
+	}
+}
+
+/** The parts of the source `segments` of an expression at `start`, without rename in the ranges of `ranges`. */
+function* withoutRename(
+	segments: Generator<[string, string, number, VueCodeMarker]>,
+	start: number,
+	ranges: readonly (readonly [start: number, end: number])[],
+): Generator<[string, string, number, VueCodeMarker]> {
+	for (const segment of segments) {
+		const [text, source, offset, data] = segment;
+		const end = offset + text.length;
+		let kept = offset;
+		for (const [rangeStart, rangeEnd] of ranges) {
+			const from = Math.max(start + rangeStart, kept);
+			const to = Math.min(start + rangeEnd, end);
+			if (from >= to) {
+				continue;
+			}
+			if (kept < from) {
+				yield [text.slice(kept - offset, from - offset), source, kept, data];
+			}
+			yield [
+				text.slice(from - offset, to - offset),
+				source,
+				from,
+				{ ...data, features: data.features & ~SpanMapFeature.Rename },
+			];
+			kept = to;
 		}
 		if (kept < end) {
 			yield [text.slice(kept - offset), source, kept, data];

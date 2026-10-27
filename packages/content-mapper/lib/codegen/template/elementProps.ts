@@ -1,6 +1,7 @@
 import { SpanMapKind } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import {
+	forEachPropStyleScopedClassReference,
 	getModelPropName,
 	hyphenateAttr,
 	navigationFeatures,
@@ -285,6 +286,14 @@ export function* generatePropExp(
 			exp.loc.start.offset,
 			`(`,
 			`)`,
+			[],
+			// a class name renames through its reference to the style classes; the chars around it share its offsets
+			[...forEachPropStyleScopedClassReference(options.typescript, options.template, prop)]
+				.map(([className, offset]) => {
+					const start = offset - exp.loc.start.offset;
+					return [start - 1, start + className.length + 1] as const;
+				})
+				.sort((a, b) => a[0] - b[0]),
 		);
 	}
 	else {

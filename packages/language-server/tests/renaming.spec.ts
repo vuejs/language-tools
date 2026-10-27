@@ -452,6 +452,32 @@ test('#4673', async () => {
 	`);
 });
 
+test('Scoped class names in :class from the template', async () => {
+	for (const position of [`'|foo'`, `'foo|'`]) {
+		expect(
+			await requestRenameToTsServer(
+				'tsconfigProject/fixture.vue',
+				'vue',
+				`
+			<template>
+				<div :class="${position}"></div>
+				<div :class="['foo', { 'foo': true }]"></div>
+			</template>
+			<style scoped>
+			.foo { }
+			</style>
+		`,
+			),
+		).toEqual([
+			'tsconfigProject/fixture.vue:2:18-2:21 -> NEW',
+			'tsconfigProject/fixture.vue:3:19-3:22 -> NEW',
+			'tsconfigProject/fixture.vue:3:28-3:31 -> NEW',
+			'tsconfigProject/fixture.vue:6:4-6:7 -> NEW',
+		]);
+	}
+});
+
+// Waits on TS-1, as for the class name shorthands below: `{ foo }` maps to a generated `foo: foo`.
 test.fails('Scoped Classes', async () => {
 	expect(
 		await requestRenameToTsServer(
