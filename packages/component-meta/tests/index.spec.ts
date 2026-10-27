@@ -335,6 +335,16 @@ describe('vue-component-meta', async () => {
 		});
 	});
 
+	test('reference-type-props-block-default', async () => {
+		const meta = await getMeta('reference-type-props/component-block-default.vue');
+
+		expect(props(meta).expression).toMatchObject({ default: '[1]' });
+		expect(props(meta).returned).toMatchObject({ default: '[2]' });
+		expect(props(meta).statements).toMatchObject({
+			default: '() => {\n\t\tconst value = [3];\n\t\treturn value;\n\t}',
+		});
+	});
+
 	test('reference-type-props-js', async () => {
 		const meta = await getMeta('reference-type-props/component-js.vue');
 		const optionalString = { union: ['undefined', 'string'] };

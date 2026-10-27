@@ -69,13 +69,20 @@ function findObjectLiteralExpression(ts: CoreTypeScript, node: Node): ObjectLite
 	return node.forEachChild(child => findObjectLiteralExpression(ts, child));
 }
 
+/**
+ * The value that a default option gives: what an arrow function returns when its body is that expression or a block of
+ * a single `return` of it, otherwise the option as written.
+ */
 export function resolveDefaultOptionExpression(
-	ts: Pick<CoreTypeScript, 'isArrowFunction' | 'isBlock' | 'isParenthesizedExpression'>,
+	ts: Pick<CoreTypeScript, 'isArrowFunction' | 'isBlock' | 'isParenthesizedExpression' | 'isReturnStatement'>,
 	_default: Expression,
 ): Node {
 	if (ts.isArrowFunction(_default)) {
 		if (ts.isBlock(_default.body)) {
-			return _default; // TODO
+			const [statement, ...rest] = _default.body.statements;
+			return statement && !rest.length && ts.isReturnStatement(statement) && statement.expression
+				? statement.expression
+				: _default;
 		}
 		else if (ts.isParenthesizedExpression(_default.body)) {
 			return _default.body.expression;

@@ -58,6 +58,7 @@ Unsupported: wrapping the template (layout slots of dxup), changing the shape of
 - **fix:** find references and go to definition link a template directive (`v-my-dir`) to its key in the Options API `directives` option (`directives: { myDir }`, `{ 'my-dir': … }`). Directives that a spread in the option registers resolve their types but do not link yet.
 - **fix:** a template directive resolves in the `directives` option by the keys Vue searches (`'my-dir'`, `myDir`, `MyDir` for `v-my-dir`), including a quoted kebab-case key and an option that is not an object literal (`directives: dirs`); both were reported as unknown directives.
 - **fix:** component meta gives the declarations in the source of the props of `defineModel` (its name) and of a runtime `defineProps` in script setup, as it already did for type-based props; they had none.
+- **fix:** component meta gives the returned expression as the default of a prop whose default is an arrow function with a block body of a single `return`, as it does for an expression body; it gave the whole function.
 
 ### Language server
 

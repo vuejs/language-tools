@@ -132,6 +132,7 @@ exports[`content mapper declaration emit: component-meta > declaration output fi
   "reference-type-exposed/component.d.vue.ts",
   "reference-type-exposed/my-exposed.d.ts",
   "reference-type-model/component.d.vue.ts",
+  "reference-type-props/component-block-default.d.vue.ts",
   "reference-type-props/component-destructure.d.vue.ts",
   "reference-type-props/component-js-setup.d.vue.ts",
   "reference-type-props/component-js.d.vue.ts",
@@ -470,6 +471,18 @@ export default _default;
 exports[`content mapper declaration emit: component-meta > reference-type-props/component.d.vue.ts 1`] = `
 "import { MyProps } from './my-props';
 declare const __VLS_export: import("vue").DefineComponent<MyProps, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<MyProps> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
+declare const _default: typeof __VLS_export;
+export default _default;
+"
+`;
+
+exports[`content mapper declaration emit: component-meta > reference-type-props/component-block-default.d.vue.ts 1`] = `
+"type __VLS_Props = {
+    expression?: number[];
+    returned?: number[];
+    statements?: number[];
+};
+declare const __VLS_export: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: typeof __VLS_export;
 export default _default;
 "
