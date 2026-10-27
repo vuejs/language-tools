@@ -14,6 +14,8 @@ const model = new LspDocument(path.join(workspace, 'Model.vue'));
 const modelParent = new LspDocument(path.join(workspace, 'ModelParent.vue'));
 const tagHighlights = new LspDocument(path.join(workspace, 'TagHighlights.vue'));
 const semanticTokens = new LspDocument(path.join(workspace, 'SemanticTokens.vue'));
+const eventProps = new LspDocument(path.join(workspace, 'EventProps.vue'));
+const eventPropsParent = new LspDocument(path.join(workspace, 'EventPropsParent.vue'));
 const documents = [
 	shorthand,
 	cssModule,
@@ -25,6 +27,8 @@ const documents = [
 	modelParent,
 	tagHighlights,
 	semanticTokens,
+	eventProps,
+	eventPropsParent,
 ];
 
 let server: LspServer;
@@ -224,6 +228,19 @@ test('runtime props link the declaration and the parent usages like type-based p
 	expect(await rename(runtimeProps, runtimeProps.at('aaaBbb'))).toEqual([
 		'1:14 aaaBbb -> NEW',
 		'PropsParent:2:16 aaaBbb -> NEW',
+	]);
+});
+
+test('event props link the declaration and the parent listeners', async () => {
+	const usages = ['1:14 onFooBar', 'EventPropsParent:1:14 foo-bar', 'EventPropsParent:2:14 fooBar'];
+	expect(await references(eventProps, eventProps.at('onFooBar'))).toEqual(usages);
+	expect(await references(eventPropsParent, eventPropsParent.at('@foo-bar', 0, 1))).toEqual([
+		'1:14 foo-bar',
+		'2:14 fooBar',
+		'EventProps:1:14 onFooBar',
+	]);
+	expect(await definition(eventPropsParent, eventPropsParent.at('@fooBar', 0, 1))).toEqual([
+		'EventProps:1:14 onFooBar',
 	]);
 });
 

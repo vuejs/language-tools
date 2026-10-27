@@ -88,13 +88,14 @@ declare global {
 	// what `v-model` writes back from the prop it binds; `any` for a prop the component does not declare,
 	// which the props check reports instead
 	type __VLS_ModelWriteBack<Props, K extends PropertyKey> = K extends keyof Props ? Props[K] & {} : any;
+	// `Pick` keeps a declared event prop as the listener's symbol, so references and definitions reach it
 	type __VLS_ResolveEvent<
 		Props,
 		Emits,
 		onEvent extends string,
 		Event extends string,
 		CamelizedEvent extends string,
-	> = __VLS_IsFunction<Props, onEvent> extends true ? { [K in onEvent]?: Props[K & keyof Props] }
+	> = __VLS_IsFunction<Props, onEvent> extends true ? Pick<Props, onEvent & keyof Props>
 		: __VLS_IsFunction<Emits, Event> extends true ? { [K in onEvent]?: Emits[Event & keyof Emits] }
 		: __VLS_IsFunction<Emits, CamelizedEvent> extends true ? { [K in onEvent]?: Emits[CamelizedEvent & keyof Emits] }
 		: Props;
