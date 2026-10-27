@@ -24,7 +24,11 @@ export function* generateClassProperty(
 	// Interim: declaring the name twice only works around TypeScript, which drops a result that falls in more than
 	// one segment and gives one quoted name two spans. The right fix is for TypeScript to map such a result, or to
 	// give the definition and the references of a quoted name the same span; once it does either, declare the name
-	// once again, as a single Atom over the quoted key.
+	// once again, as a verbatim name inside the quotes.
+	// One declaration does not do it: a single Atom over the quoted key links definitions and references, as a result
+	// inside one Atom maps to it, but TypeScript writes an edit only through verbatim geometry, so a rename leaves the
+	// style block; a verbatim segment over the quotes would claim that they are the characters around the name in the
+	// style block; and the shape of a reference does not matter, as the span with the quotes is that of the declaration.
 	yield* generateMember(source, generateQuotedDefinition(source, className, start), propertyType);
 	yield* generateMember(source, [
 		`'`,
