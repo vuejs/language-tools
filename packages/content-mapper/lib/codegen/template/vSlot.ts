@@ -114,16 +114,11 @@ function* generateSlotParameters(
 
 	const { expression } = statement;
 	const startOffset = exp.loc.start.offset - 1;
-	const types: (TsCode | null)[] = [];
+	const types: ([number, number] | null)[] = [];
 	const omit: [number, number][] = [[0, `(`.length]];
 	for (const { name, type } of expression.parameters) {
 		if (type) {
-			types.push([
-				ast.text.slice(name.end, type.end),
-				'template',
-				startOffset + name.end,
-				{ features: scriptFeatures },
-			]);
+			types.push([name.end, type.end]);
 			omit.push([name.end, type.end]);
 		}
 		else {
@@ -155,7 +150,23 @@ function* generateSlotParameters(
 			{ features: 0 },
 		);
 		yield `(`;
-		yield* types.flatMap(type => type ? [`_`, type, `, `] : `_, `);
+		for (const type of types) {
+			yield `_`;
+			if (type) {
+				yield* generateInterpolation(
+					options,
+					ctx,
+					options.template,
+					{ features: scriptFeatures },
+					ast.text,
+					startOffset,
+					undefined,
+					undefined,
+					[[0, type[0]], [type[1], ast.text.length]],
+				);
+			}
+			yield `, `;
+		}
 		yield isTsLang(options.scriptLang) ? `) => [] as any` : `) => /** @type {any} */ ([])`;
 		yield boundary.end();
 	}

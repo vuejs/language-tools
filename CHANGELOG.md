@@ -54,6 +54,7 @@ Unsupported: wrapping the template (layout slots of dxup), changing the shape of
 - **fix:** the parameter of a `defineModel` `default` function can have the name of the runtime `defineProps` binding (`default: (props) => props.n` with `const props = defineProps({ n: Number })`); it was reported as TS2502.
 - **fix:** in JavaScript, the props parameter of a `defineModel` `default` function is typed through JSDoc; it was reported as TS8010 (type annotations in a JavaScript file).
 - **fix:** renaming a function, class, enum or destructured prop that an object shorthand in a template expression uses expands the shorthand (`{ format: NEW }`).
+- **fix:** a type annotation of a `v-slot` parameter reads the template's bindings as the rest of the template does: `typeof foo` of a ref `foo` is the unwrapped value, not the `Ref`.
 - **fix:** renaming a scoped class from its name in a string of `:class` (`:class="'foo'"`, `['foo']`, `{ 'foo': true }`) renames it in the template and the style block; it renamed nothing.
 - **fix:** renaming a scoped or CSS module class whose name is not an identifier (`.foo-bar`) renames it in both the template and the style block, from either one; it renamed only the template use, and nothing from the style block.
 - **fix:** find references and go to definition link a template directive (`v-my-dir`) to its key in the Options API `directives` option (`directives: { myDir }`, `{ 'my-dir': … }`). Directives that a spread in the option registers resolve their types but do not link yet.
