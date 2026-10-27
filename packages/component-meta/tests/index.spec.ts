@@ -441,6 +441,20 @@ describe('vue-component-meta', async () => {
 		expect(declarations(meta.events)).toEqual({ foo: [runtimeCore], bar: [runtimeCore], baz: [runtimeCore] });
 	});
 
+	// Waits on TypeScript exposing the documentation of signatures in its API (upstream ask TS-5), which the events
+	// read from their call signatures; exit: this passes once `getEvents` reads it.
+	test.fails('reference-type-events w/ documentation', async () => {
+		const meta = await getMeta('reference-type-events/component-docs.vue');
+
+		expect(members(meta, meta.events)).toEqual({
+			save: {
+				description: 'Fired on save.',
+				tags: [{ name: 'since', text: 'v1.0.0' }],
+				type: { parameters: {}, returns: 'void' },
+			},
+		});
+	});
+
 	test('reference-type-events w/ tuple syntax', async () => {
 		const meta = await getMeta('reference-type-exposed/component.vue');
 

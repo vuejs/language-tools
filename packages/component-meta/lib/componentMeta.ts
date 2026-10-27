@@ -193,7 +193,9 @@ export async function getComponentMetaOfType(
 			]);
 			return {
 				name: nameType.value,
-				// TypeScript 7 does not expose the documentation of signatures
+				// Interim: the documentation of the call signature belongs here, which TS 7.1 does not expose for signatures
+				// (upstream ask TS-5); exit: read it once `Signature` or the checker gives it, and the
+				// 'reference-type-events w/ documentation' test passes.
 				description: '',
 				tags: [],
 				declarations: toDeclarations(ts, nodes),

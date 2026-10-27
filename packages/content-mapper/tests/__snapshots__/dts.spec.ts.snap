@@ -126,6 +126,7 @@ exports[`content mapper declaration emit: component-meta > declaration output fi
   "js-component/component.d.vue.ts",
   "non-component/component.d.ts",
   "options-api/component.d.ts",
+  "reference-type-events/component-docs.d.vue.ts",
   "reference-type-events/component.d.vue.ts",
   "reference-type-events/my-events.d.ts",
   "reference-type-exposed/component-options-api.d.vue.ts",
@@ -358,6 +359,22 @@ declare const __VLS_export: import("vue").DefineComponent<{}, {}, {}, {}, {}, im
     onFoo?: ((data?: {
         foo: string;
     } | undefined) => any) | undefined;
+}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+declare const _default: typeof __VLS_export;
+export default _default;
+"
+`;
+
+exports[`content mapper declaration emit: component-meta > reference-type-events/component-docs.d.vue.ts 1`] = `
+"type __VLS_Emit = {
+    /**
+     * Fired on save.
+     * @since v1.0.0
+     */
+    (e: 'save'): void;
+};
+declare const __VLS_export: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, import("vue").TypeEmitsToOptions<__VLS_Emit>, string, import("vue").PublicProps, Readonly<{}> & Readonly<{
+    onSave?: (() => any) | undefined;
 }>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 declare const _default: typeof __VLS_export;
 export default _default;
