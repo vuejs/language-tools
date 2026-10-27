@@ -16,6 +16,8 @@ const tagHighlights = new LspDocument(path.join(workspace, 'TagHighlights.vue'))
 const semanticTokens = new LspDocument(path.join(workspace, 'SemanticTokens.vue'));
 const eventProps = new LspDocument(path.join(workspace, 'EventProps.vue'));
 const eventPropsParent = new LspDocument(path.join(workspace, 'EventPropsParent.vue'));
+const modelKebab = new LspDocument(path.join(workspace, 'ModelKebab.vue'));
+const modelKebabParent = new LspDocument(path.join(workspace, 'ModelKebabParent.vue'));
 const documents = [
 	shorthand,
 	cssModule,
@@ -29,6 +31,8 @@ const documents = [
 	semanticTokens,
 	eventProps,
 	eventPropsParent,
+	modelKebab,
+	modelKebabParent,
 ];
 
 let server: LspServer;
@@ -260,4 +264,20 @@ test('defineModel names link to the parent v-model arguments', async () => {
 	]);
 	// The default model prop is synthesized as `modelValue` with no source token to map back to.
 	expect(await definition(modelParent, modelParent.at('v-model=', 0, 2))).toEqual([]);
+});
+
+test('kebab-case defineModel names link to the parent v-model arguments', async () => {
+	const usages = ['1:21 foo-bar', '2:21 fooBar', "ModelKebab:1:35 'foo-bar'"];
+	expect(await references(modelKebabParent, modelKebabParent.at(':fooBar', 0, 1))).toEqual(usages);
+	expect(await references(modelKebab, modelKebab.at("'foo-bar'", 0, 1))).toEqual([
+		"1:35 'foo-bar'",
+		'ModelKebabParent:1:21 foo-bar',
+		'ModelKebabParent:2:21 fooBar',
+	]);
+	expect(await definition(modelKebabParent, modelKebabParent.at(':foo-bar', 0, 1))).toEqual([
+		"ModelKebab:1:35 'foo-bar'",
+	]);
+	expect(await definition(modelKebabParent, modelKebabParent.at(':fooBar', 0, 1))).toEqual([
+		"ModelKebab:1:35 'foo-bar'",
+	]);
 });

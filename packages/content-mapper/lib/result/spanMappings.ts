@@ -142,14 +142,13 @@ export function toSpanMappings(
 }
 
 // Navigation copies of code (the runtime props object repeated in `defineComponent`,
-// a `defineModel` name in the model props type, a scoped class name in a `:class`
-// string) lie inside the verbatim section they were copied from. Original spans
-// may not contain one another, so cut that section at each copy's bounds to make
-// the spans identical.
+// a `defineModel` name in the model props type, as is or camelized, a scoped class
+// name in a `:class` string) lie inside the verbatim section they were copied from.
+// Original spans may not contain one another, so cut that section at each copy's
+// bounds to make the spans identical.
 function splitAtNavigationCopies(candidates: Candidate[]) {
 	const copies = candidates.filter(candidate =>
-		candidate.kind === SpanMapKind.Verbatim
-		&& candidate.originalStart < candidate.originalEnd
+		candidate.originalStart < candidate.originalEnd
 		&& candidate.features
 		&& !(candidate.features & ~(navigationFeatures | completionFeatures))
 	);
