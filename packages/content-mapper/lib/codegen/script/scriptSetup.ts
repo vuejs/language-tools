@@ -264,6 +264,16 @@ function addTransforms(
 	core: CoreRewriteWriter<TsCodeData>,
 	scriptSetupRanges: ScriptSetupRanges,
 ) {
+	const runtimeDefineProps = scriptSetupRanges.defineProps?.typeArg ? undefined : scriptSetupRanges.defineProps;
+	if (runtimeDefineProps && scriptSetupRanges.defineModel.some(({ defaultPropsArg }) => defaultPropsArg)) {
+		// the parameter of `default` may have the name of the props, which `typeof` in its own annotation would refer to
+		core.insertAfter(runtimeDefineProps.statement.end, function*() {
+			yield newLine;
+			yield* generateTypeAlias(names.RuntimeProps, options.scriptLang, function*() {
+				yield `typeof ${runtimeDefineProps.name ?? names.props}`;
+			});
+		});
+	}
 	for (const { defaultPropsArg } of scriptSetupRanges.defineModel) {
 		if (defaultPropsArg) {
 			core.insertAfter(defaultPropsArg.end, function*() {
@@ -271,10 +281,11 @@ function addTransforms(
 				if (scriptSetupRanges.defineProps?.typeArg) {
 					yield names.Props;
 				}
+				else if (runtimeDefineProps) {
+					yield typeAliasRef(names.RuntimeProps, options.scriptLang);
+				}
 				else {
-					// FIXME: (props: typeof props) => ... would cause TS2502
-					yield `typeof `;
-					yield scriptSetupRanges.defineProps?.name ?? names.props;
+					yield `typeof ${names.props}`;
 				}
 			});
 		}

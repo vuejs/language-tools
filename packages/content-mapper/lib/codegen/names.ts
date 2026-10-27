@@ -33,6 +33,7 @@ const raw = {
 	Props: '',
 	PublicProps: '',
 	RootEl: '',
+	RuntimeProps: '',
 	Scope: '',
 	Slots: '',
 	StyleModules: '',
