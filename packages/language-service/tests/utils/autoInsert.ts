@@ -8,7 +8,6 @@ import {
 import { stringToSnapshot } from '@volar/language-service/lib/utils/common';
 import { getDefaultCompilerOptions } from '@vue/language-core';
 import { loadTypeScript } from '@vue/language-core/typescript';
-import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { createVueLanguagePlugin, createVueLanguageServicePlugins } from '../..';
@@ -71,7 +70,7 @@ const vueLanguagePlugin: typeof vuePlugin = {
 	createVirtualCode: (uri, languageId, snapshot, ctx) =>
 		languageId === 'vue' ? vuePlugin.createVirtualCode!(uri, languageId, snapshot, ctx) : undefined,
 };
-const vueServicePLugins = createVueLanguageServicePlugins(ts);
+const vueServicePLugins = createVueLanguageServicePlugins();
 const autoInserter = createAutoInserter([vueLanguagePlugin], vueServicePLugins);
 
 export function defineAutoInsertTest(options: {

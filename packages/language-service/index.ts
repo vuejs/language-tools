@@ -6,7 +6,6 @@ export * from './lib/virtualCode';
 
 import { create as createJsonPlugin } from 'volar-service-json';
 import { create as createPugFormatPlugin } from 'volar-service-pug-beautify';
-import { create as createTypeScriptSyntacticPlugin } from 'volar-service-typescript/lib/plugins/syntactic';
 import { create as createVueAutoDotValuePlugin } from './lib/plugins/autoInsertDotValue';
 import { create as createVueAutoSpacePlugin } from './lib/plugins/autoInsertSpace';
 import { create as createVueCompilerDomErrorsPlugin } from './lib/plugins/compilerDomErrors';
@@ -26,12 +25,12 @@ import { create as createVueTemplatePlugin } from './lib/plugins/template';
 import { create as createVueTemplateExpressionsPlugin } from './lib/plugins/templateExpressions';
 import { create as createVueTemplateImportFixPlugin } from './lib/plugins/templateImportFix';
 import { create as createVueTemplateRefLinksPlugin } from './lib/plugins/templateRefLinks';
+import { create as createTypeScriptSyntacticPlugin } from './lib/plugins/typescriptSyntactic';
 import type { Requests } from './lib/requests';
 
 const noop = () => {};
 
 export function createVueLanguageServicePlugins(
-	ts: typeof import('typescript'),
 	client = new Proxy({} as Requests, {
 		get() {
 			return noop;
@@ -52,7 +51,7 @@ export function createVueLanguageServicePlugins(
 
 		// TS related plugins
 		createVueSuggestDefineAssignmentPlugin(),
-		createTypeScriptSyntacticPlugin(ts),
+		createTypeScriptSyntacticPlugin(),
 		createVueInlayHintsPlugin(),
 
 		// type aware plugins

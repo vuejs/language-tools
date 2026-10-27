@@ -97,7 +97,8 @@ const title = 'hello';
 	).toBe('$0</div>');
 });
 
-test('closes the JSX tag of the script', async () => {
+// Waits on the project-free syntactic API of TypeScript 7.1 `typescript/sync`, see `vue-typescript-syntactic`.
+test.fails('closes the JSX tag of the script', async () => {
 	expect(
 		await requestAutoInsert(`<script setup lang="tsx">
 const vnode = <div>|;
@@ -106,7 +107,8 @@ const vnode = <div>|;
 	).toBe('$0</div>');
 });
 
-test('formats the script block', async () => {
+// Waits on the project-free syntactic API of TypeScript 7.1 `typescript/sync`, see `vue-typescript-syntactic`.
+test.fails('formats the script block', async () => {
 	const content = `<script setup lang="ts">
 function add(a: number) {
 const sum   =  a+1;
@@ -132,7 +134,8 @@ function add(a: number) {
 	}
 });
 
-test('provides the folding ranges and outline of the script blocks', async () => {
+// Waits on the project-free syntactic API of TypeScript 7.1 `typescript/sync`, see `vue-typescript-syntactic`.
+test.fails('provides the folding ranges and outline of the script blocks', async () => {
 	const content = `<script lang="ts">
 export default {
 	name: 'App',

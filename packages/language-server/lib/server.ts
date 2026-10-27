@@ -45,7 +45,7 @@ interface TypeScriptApiConnection {
 	packageJsonPath: string;
 }
 
-export function startServer(ts: typeof import('typescript')) {
+export function startServer() {
 	const connection = createConnection();
 	const server = createServer(connection);
 
@@ -217,7 +217,7 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 				},
 			},
-			createVueLanguageServicePlugins(ts, {
+			createVueLanguageServicePlugins({
 				async collectExtractProps(fileName, [start, end]) {
 					try {
 						const virtualCode = (await getVueScript(fileName))?.virtualCode;

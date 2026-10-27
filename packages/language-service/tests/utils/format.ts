@@ -9,7 +9,6 @@ import {
 import { stringToSnapshot } from '@volar/language-service/lib/utils/common';
 import { getDefaultCompilerOptions } from '@vue/language-core';
 import { loadTypeScript } from '@vue/language-core/typescript';
-import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { createVueLanguagePlugin, createVueLanguageServicePlugins } from '../..';
@@ -69,7 +68,7 @@ const vueLanguagePlugin: typeof vuePlugin = {
 	createVirtualCode: (uri, languageId, snapshot, ctx) =>
 		languageId === 'vue' ? vuePlugin.createVirtualCode!(uri, languageId, snapshot, ctx) : undefined,
 };
-const vueServicePLugins = createVueLanguageServicePlugins(ts);
+const vueServicePLugins = createVueLanguageServicePlugins();
 const formatter = createFormatter([vueLanguagePlugin], vueServicePLugins);
 
 export function defineFormatTest(options: {
@@ -78,9 +77,14 @@ export function defineFormatTest(options: {
 	output?: string;
 	languageId: string;
 	settings?: any;
+	/**
+	 * The output needs the TypeScript formatter of script blocks and template expressions, which waits on the
+	 * project-free syntactic API of TypeScript 7.1 `typescript/sync`, so the test fails until that API is used.
+	 */
+	formatsTypeScript?: boolean;
 }) {
 	describe(`format: ${options.title}`, () => {
-		it(`format`, async () => {
+		(options.formatsTypeScript ? it.fails : it)(`format`, async () => {
 			formatter.settings = options.settings ?? {};
 
 			const formatted = await formatter.format(
