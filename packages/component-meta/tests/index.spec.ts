@@ -817,8 +817,7 @@ describe('vue-component-meta', async () => {
 		expect(meta.name).toBe('DefinedComponent');
 	});
 
-	// The name is read only from an `as` type of the default export, which a JavaScript Vue file gives as JSDoc.
-	test.fails('component-name of JavaScript (vue)', async () => {
+	test('component-name of JavaScript (vue)', async () => {
 		const meta = await getMeta('component-name-description/component-js.vue');
 
 		expect(meta.name).toBe('JsComponent');
