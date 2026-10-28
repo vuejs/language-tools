@@ -478,6 +478,31 @@ describe('vue-component-meta', async () => {
 		});
 	});
 
+	test('generic withDefaults and defineModel defaults', async () => {
+		const meta = await getMeta('generic/component-defaults.vue');
+
+		expect(props(meta).foo).toMatchObject({ required: false, default: '1' });
+		expect(props(meta).bar).not.toHaveProperty('default');
+		expect(props(meta).baz).toMatchObject({ required: false, default: '() => 2' });
+		expect(props(meta).modelValue).toMatchObject({ required: false, default: '3' });
+	});
+
+	test('generic destructure and defineModel defaults', async () => {
+		const meta = await getMeta('generic/component-destructure.vue');
+
+		expect(props(meta).foo).toMatchObject({ required: false, default: '1' });
+		expect(props(meta).bar).not.toHaveProperty('default');
+		expect(props(meta).title).toMatchObject({ required: false, default: `'x'` });
+	});
+
+	// The defaults are keyed by the text of the quoted name, quotes included, so no prop finds them.
+	test.fails('defaults of quoted prop names', async () => {
+		expect(props(await getMeta('generic/component-destructure.vue'))['foo-bar']).toMatchObject({ default: '[2]' });
+		expect(props(await getMeta('reference-type-props/component-quoted-default.vue'))['foo-bar']).toMatchObject({
+			default: '1',
+		});
+	});
+
 	test('reference-type-events w/ generic', async () => {
 		const meta = await getMeta('generic/component.vue');
 

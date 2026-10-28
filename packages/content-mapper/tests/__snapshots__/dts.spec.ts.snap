@@ -143,6 +143,8 @@ exports[`content mapper declaration emit: component-meta > declaration output fi
   "component-name-description/component-ts.d.ts",
   "component-name-description/component.d.vue.ts",
   "empty-component/component.d.vue.ts",
+  "generic/component-defaults.d.vue.ts",
+  "generic/component-destructure.d.vue.ts",
   "generic/component.d.vue.ts",
   "generic/main.d.vue.ts",
   "js-component/component-options.d.vue.ts",
@@ -161,6 +163,7 @@ exports[`content mapper declaration emit: component-meta > declaration output fi
   "reference-type-props/component-js-setup.d.vue.ts",
   "reference-type-props/component-js.d.vue.ts",
   "reference-type-props/component-non-ascii.d.vue.ts",
+  "reference-type-props/component-quoted-default.d.vue.ts",
   "reference-type-props/component.d.vue.ts",
   "reference-type-props/my-props.d.ts",
   "reference-type-slots/component-define-slots.d.vue.ts",
@@ -200,6 +203,62 @@ exports[`content mapper declaration emit: component-meta > generic/component.d.v
         }) => any;
     };
     emit: ((e: 'bar', data: number) => void) & ((event: "update:title", value: string) => void);
+}>) => import('vue').VNode & {
+    __ctx?: NonNullable<Awaited<typeof __VLS_setup>>;
+};
+declare const _default: typeof __VLS_export;
+export default _default;
+type __VLS_PrettifyLocal<T> = (T extends any ? {
+    [K in keyof T]: T[K];
+} : {
+    [K in keyof T as K]: T[K];
+}) & {};
+"
+`;
+
+exports[`content mapper declaration emit: component-meta > generic/component-defaults.d.vue.ts 1`] = `
+"declare const __VLS_export: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>['props'], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, 'attrs' | 'emit' | 'slots'>>, __VLS_exposed?: NonNullable<Awaited<typeof __VLS_setup>>['expose'], __VLS_setup?: Promise<{
+    props: import('vue').PublicProps & __VLS_PrettifyLocal<({
+        foo?: number;
+        bar?: T;
+        baz?: () => number;
+    } & {
+        modelValue?: number;
+    }) & {
+        "onUpdate:modelValue"?: ((value: number) => any) | undefined;
+    }>;
+    expose: (exposed: {}) => void;
+    attrs: any;
+    slots: {};
+    emit: (event: "update:modelValue", value: number) => void;
+}>) => import('vue').VNode & {
+    __ctx?: NonNullable<Awaited<typeof __VLS_setup>>;
+};
+declare const _default: typeof __VLS_export;
+export default _default;
+type __VLS_PrettifyLocal<T> = (T extends any ? {
+    [K in keyof T]: T[K];
+} : {
+    [K in keyof T as K]: T[K];
+}) & {};
+"
+`;
+
+exports[`content mapper declaration emit: component-meta > generic/component-destructure.d.vue.ts 1`] = `
+"declare const __VLS_export: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>['props'], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, 'attrs' | 'emit' | 'slots'>>, __VLS_exposed?: NonNullable<Awaited<typeof __VLS_setup>>['expose'], __VLS_setup?: Promise<{
+    props: import('vue').PublicProps & __VLS_PrettifyLocal<({
+        foo?: number;
+        bar?: T;
+        'foo-bar'?: number[];
+    } & {
+        title?: string;
+    }) & {
+        "onUpdate:title"?: ((value: string) => any) | undefined;
+    }>;
+    expose: (exposed: {}) => void;
+    attrs: any;
+    slots: {};
+    emit: (event: "update:title", value: string) => void;
 }>) => import('vue').VNode & {
     __ctx?: NonNullable<Awaited<typeof __VLS_setup>>;
 };
@@ -704,6 +763,18 @@ exports[`content mapper declaration emit: component-meta > reference-type-props/
 };
 declare const __VLS_export: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
     label: string;
+}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
+declare const _default: typeof __VLS_export;
+export default _default;
+"
+`;
+
+exports[`content mapper declaration emit: component-meta > reference-type-props/component-quoted-default.d.vue.ts 1`] = `
+"type __VLS_Props = {
+    'foo-bar'?: number;
+};
+declare const __VLS_export: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {
+    'foo-bar': number;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 declare const _default: typeof __VLS_export;
 export default _default;
