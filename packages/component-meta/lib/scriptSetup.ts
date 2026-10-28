@@ -19,6 +19,9 @@ export function getDefaultsFromScriptSetup(ts: CoreTypeScript, { ir, analysis }:
 	const { ast } = scriptSetup;
 	const { defineProps, withDefaults, defineModel } = ranges;
 	const add = (name: string, expression: Node) => result.set(name, getNodeText(expression, ast));
+	// a quoted name gives the prop name without its quotes
+	const getNameText = (name: Node) =>
+		ts.isStringLiteral(name) || ts.isNumericLiteral(name) ? name.text : getNodeText(name, ast);
 
 	// `const { foo = 1 } = defineProps()`
 	const propsCall = defineProps && (withDefaults?.callExp ?? defineProps.callExp);
@@ -34,7 +37,7 @@ export function getDefaultsFromScriptSetup(ts: CoreTypeScript, { ir, analysis }:
 				for (const { propertyName, name, initializer } of node.name.elements) {
 					const key = propertyName ?? name;
 					if (key && initializer) {
-						add(getNodeText(key, ast), initializer);
+						add(getNameText(key), initializer);
 					}
 				}
 			}
@@ -54,7 +57,7 @@ export function getDefaultsFromScriptSetup(ts: CoreTypeScript, { ir, analysis }:
 	if (defineProps?.typeArg && withDefaults?.arg) {
 		for (const prop of findObjectLiteralExpression(ts, withDefaults.arg.node)?.properties ?? []) {
 			if (ts.isPropertyAssignment(prop)) {
-				add(getNodeText(prop.name, ast), resolveDefaultOptionExpression(ts, prop.initializer));
+				add(getNameText(prop.name), resolveDefaultOptionExpression(ts, prop.initializer));
 			}
 		}
 	}

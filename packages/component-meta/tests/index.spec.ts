@@ -495,8 +495,7 @@ describe('vue-component-meta', async () => {
 		expect(props(meta).title).toMatchObject({ required: false, default: `'x'` });
 	});
 
-	// The defaults are keyed by the text of the quoted name, quotes included, so no prop finds them.
-	test.fails('defaults of quoted prop names', async () => {
+	test('defaults of quoted prop names', async () => {
 		expect(props(await getMeta('generic/component-destructure.vue'))['foo-bar']).toMatchObject({ default: '[2]' });
 		expect(props(await getMeta('reference-type-props/component-quoted-default.vue'))['foo-bar']).toMatchObject({
 			default: '1',
