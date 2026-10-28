@@ -18,7 +18,6 @@
 		"typescript": ">=7.1.0-beta"
 	},
 	"dependencies": {
-		"@vue/language-core": "workspace:*",
 		"path-browserify": "^1.0.1"
 	},
 	"devDependencies": {

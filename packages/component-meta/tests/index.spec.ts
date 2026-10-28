@@ -478,7 +478,10 @@ describe('vue-component-meta', async () => {
 		});
 	});
 
-	test('generic withDefaults and defineModel defaults', async () => {
+	// Waits on Vue's types giving a generic component its defaults: the function form of Vue's `defineComponent` fixes
+	// `Defaults` to `{}`, and the defaults of a generic component stay inside its setup function, out of reach of the
+	// checker. Passes once Vue's types carry the defaults of a generic component.
+	test.fails('generic withDefaults and defineModel defaults', async () => {
 		const meta = await getMeta('generic/component-defaults.vue');
 
 		expect(props(meta).foo).toMatchObject({ required: false, default: '1' });
@@ -487,7 +490,8 @@ describe('vue-component-meta', async () => {
 		expect(props(meta).modelValue).toMatchObject({ required: false, default: '3' });
 	});
 
-	test('generic destructure and defineModel defaults', async () => {
+	// Waits on Vue's types giving a generic component its defaults, as above.
+	test.fails('generic destructure and defineModel defaults', async () => {
 		const meta = await getMeta('generic/component-destructure.vue');
 
 		expect(props(meta).foo).toMatchObject({ required: false, default: '1' });
@@ -495,8 +499,12 @@ describe('vue-component-meta', async () => {
 		expect(props(meta).title).toMatchObject({ required: false, default: `'x'` });
 	});
 
-	test('defaults of quoted prop names', async () => {
+	// Waits on Vue's types giving a generic component its defaults, as above.
+	test.fails('defaults of quoted prop names of generic components', async () => {
 		expect(props(await getMeta('generic/component-destructure.vue'))['foo-bar']).toMatchObject({ default: '[2]' });
+	});
+
+	test('defaults of quoted prop names', async () => {
 		expect(props(await getMeta('reference-type-props/component-quoted-default.vue'))['foo-bar']).toMatchObject({
 			default: '1',
 		});

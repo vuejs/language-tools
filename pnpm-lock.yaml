@@ -83,9 +83,6 @@ importers:
 
   packages/component-meta:
     dependencies:
-      '@vue/language-core':
-        specifier: workspace:*
-        version: link:../language-core
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1

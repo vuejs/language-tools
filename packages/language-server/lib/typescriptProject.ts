@@ -321,7 +321,7 @@ export async function connectTypeScriptProjectResolver(
 		getComponentMeta(fileName, offset) {
 			return withSourceFile(fileName, async (project, sourceFile) => {
 				const component = await getTagType(ts, project.checker, sourceFile, offset);
-				return component && await getComponentMetaOfType(ts, project, component.type, component.node, parser);
+				return component && await getComponentMetaOfType(ts, project, component.type, component.node);
 			});
 		},
 		getElementNames(fileName, virtualCode) {
