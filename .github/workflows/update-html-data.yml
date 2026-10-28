@@ -14,8 +14,6 @@ jobs:
           submodules: true
 
       - uses: pnpm/action-setup@v6
-        with:
-          cache: pnpm
 
       - run: pnpm install
 
