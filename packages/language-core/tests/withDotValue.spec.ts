@@ -2,7 +2,7 @@ import * as ts from 'typescript';
 import { expect, test } from 'vitest';
 import { createLanguage, createVueLanguagePlugin, forEachEmbeddedCode, getDefaultCompilerOptions } from '../index';
 
-function generateTemplateAssertions(source: string) {
+function generate(source: string) {
 	const language = createLanguage<string>(
 		[createVueLanguagePlugin<string>(ts, {}, getDefaultCompilerOptions(), fileName => fileName)],
 		new Map(),
@@ -10,9 +10,31 @@ function generateTemplateAssertions(source: string) {
 	);
 	const root = language.scripts.set('/Comp.vue', ts.ScriptSnapshot.fromString(source), 'vue')!.generated!.root;
 	const script = [...forEachEmbeddedCode(root)].find(code => code.id === 'script_ts')!;
-	const text = script.snapshot.getText(0, script.snapshot.getLength());
+	return script.snapshot.getText(0, script.snapshot.getLength());
+}
+
+function generateTemplateAssertions(source: string) {
+	const text = generate(source);
 	return text.slice(text.indexOf('__VLS_withDotValue('), text.indexOf('// @ts-ignore\n['));
 }
+
+test('top-level assertions skip imports and mutable bindings read only inside functions', () => {
+	const text = generate(`<script setup lang="ts">
+import { SOME_CONST, OTHER } from './constants';
+const rows = ['a'];
+let count = 1;
+let clicks = 0;
+</script>
+
+<template>
+	<div v-if="count" />
+	{{ rows.map(() => SOME_CONST.A) }}
+	<button @click="clicks++; OTHER.B" />
+</template>
+`);
+	const topLevel = text.slice(text.indexOf('__VLS_withDotValue('), text.indexOf('if (count.value)'));
+	expect(topLevel.match(/(?<=__VLS_withDotValue\()\w+/g)).toEqual(['count', 'rows']);
+});
 
 test('functions in the template re-assert the imports and mutable bindings they read', () => {
 	expect(generateTemplateAssertions(`<script setup lang="ts">
