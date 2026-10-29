@@ -191,8 +191,6 @@ export function create(
 				defaultTags.set(tag.name, tag);
 			}
 
-			let lastCompletionDocument: TextDocument | undefined;
-
 			return {
 				...baseServiceInstance,
 
@@ -271,7 +269,11 @@ export function create(
 							if (!autoImport) {
 								continue;
 							}
-							const tsCompletion = convertCompletionInfo(ts, autoImport, document, position, entry => entry.data);
+							const tsCompletion = convertCompletionInfo(ts, autoImport, document, position, entry => ({
+								...entry.data,
+								// Resolve can arrive after completions for another file and an LSP round-trip.
+								__vue__embeddedDocumentUri: document.uri,
+							}));
 							const placeholder = htmlCompletion.items[autoImportPlaceholderIndex]!;
 							for (const tsItem of tsCompletion.items) {
 								if (placeholder.textEdit) {
@@ -289,7 +291,6 @@ export function create(
 							}
 							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1, ...tsCompletion.items);
 							spliced = true;
-							lastCompletionDocument = document;
 							break;
 						}
 						if (!spliced) {
@@ -339,10 +340,12 @@ export function create(
 				},
 
 				async resolveCompletionItem(item) {
-					const data = item.data as import('@vue/typescript-plugin/lib/common').VueCompletionData;
+					const data = item.data as import('@vue/typescript-plugin/lib/common').VueCompletionData & {
+						__vue__embeddedDocumentUri: string;
+					};
 
 					if (data?.__vue__autoImport || data?.__vue__componentAutoImport) {
-						const embeddedUri = URI.parse(lastCompletionDocument!.uri);
+						const embeddedUri = URI.parse(data.__vue__embeddedDocumentUri);
 						const decoded = context.decodeEmbeddedDocumentUri(embeddedUri);
 						if (!decoded) {
 							return item;
