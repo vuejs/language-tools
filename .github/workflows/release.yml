@@ -28,10 +28,13 @@
 # `vX.Y.Z` tag. pnpm skips packages whose version is already on npm, and the
 # marketplaces skip an extension version they already have.
 #
-# @volar/* and volar-service-* come from the volar.js and services submodules as
-# workspace packages. They are not published here: pnpm rewrites `workspace:*` to
-# the submodules' exact versions, so the job stops unless those versions are
-# already on npm.
+# Only the lerna.json packages are published. Before anything is versioned, the
+# job stops if a published package depends on another workspace package, such
+# as one of a git submodule, that is not on npm at its exact version released
+# from the checked out commit: pnpm rewrites `workspace:*` to that version.
+# @volar/* and volar-service-* come from the volar.js and services submodules, so
+# release them from their repositories first and point the submodules at those
+# release commits.
 
 name: release
 
@@ -101,18 +104,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Check the submodule packages are on npm
-        run: |
-          pnpm -r --filter './volar.js/**' --filter './services/**' exec node -e '
-            const { name, version } = require("./package.json");
-            const { execFileSync } = require("child_process");
-            try {
-              execFileSync("npm", ["view", `${name}@${version}`, "version"], { stdio: "pipe" });
-            } catch {
-              console.log(`::error::${name}@${version} from a submodule is not on npm; publish it from its repository first`);
-              process.exit(1);
-            }
-          '
+      - name: Check the workspace dependencies outside this release
+        run: node .github/scripts/check-workspace-deps.mjs
 
       - run: pnpm run build
 
@@ -143,7 +136,7 @@ jobs:
               --sync-workspace-lock \
               --yes
           fi
-          pnpm -r --filter '!./volar.js/**' --filter '!./services/**' publish --tag "$DIST_TAG" --no-git-checks
+          pnpm -r --filter './packages/**' --filter './extensions/**' publish --tag "$DIST_TAG" --no-git-checks
           published="$(node -p "require('./lerna.json').version")"
           echo "version=$published" >> "$GITHUB_OUTPUT"
           if previous="$(git describe --tags --abbrev=0 --match 'v*' "v$published^" 2>/dev/null)"; then
