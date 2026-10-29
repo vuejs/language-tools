@@ -1,4 +1,4 @@
-import { type Mapping, mapping } from '@volar/language-core';
+import { type Mapping, SpanMapKind } from '@volar/language-core';
 import type { Code } from '../types';
 
 /** One mapping per segment with a marker, over the segment's text at its source offset. */
@@ -11,7 +11,14 @@ export function buildMappings(chunks: Code[]): Mapping[] {
 			continue;
 		}
 		const [text, , sourceStart, marker] = segment;
-		mappings.push(mapping(generatedStart, text.length, sourceStart, text.length, marker.features, marker.kind));
+		mappings.push([
+			generatedStart,
+			text.length,
+			sourceStart,
+			text.length,
+			marker.kind ?? SpanMapKind.Verbatim,
+			marker.features,
+		]);
 		generatedStart += text.length;
 	}
 	return mappings;
