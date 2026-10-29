@@ -80,28 +80,27 @@ export function* generateInterpolation(
 			yield* codes;
 			return;
 		}
-		if (body.kind === 'expression') {
-			yield `{${newLine}`;
-			yield* generateReasserts(reasserts);
-		}
-		// Diagnostics reported on the generated `return` statement or call map back to the original expression.
-		const boundary = yield* Boundary.start(block.name, start + body.start, start + body.end, {
-			verification: features.verification,
-		});
+		// Diagnostics reported on the generated call, or on the `return` keyword (where TS reports
+		// return type mismatches), map back to the original expression.
+		const verification = { verification: features.verification };
 		if (body.kind === 'parameter') {
+			const boundary = yield* Boundary.start(block.name, start + body.start, start + body.end, verification);
 			yield `(() => {${newLine}`;
 			yield* generateReasserts(reasserts);
-		}
-		yield `return (`;
-		yield* codes;
-		if (body.kind === 'parameter') {
+			yield `return (`;
+			yield* codes;
 			yield `)${endOfLine}})()`;
 			yield boundary.end();
 		}
 		else {
-			yield `);`;
+			yield `{${newLine}`;
+			yield* generateReasserts(reasserts);
+			const boundary = yield* Boundary.start(block.name, start + body.start, start + body.end, verification);
+			yield `return`;
 			yield boundary.end();
-			yield `${newLine}}`;
+			yield ` (`;
+			yield* codes;
+			yield `)${endOfLine}}`;
 		}
 	}
 
