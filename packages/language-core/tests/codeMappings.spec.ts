@@ -11,8 +11,15 @@ test('maps each segment with a marker by itself', () => {
 		['', undefined, 40, { features: 0 }],
 		['de', 'template', 5, { features: 0, kind: SpanMapKind.Atom }],
 	])).toEqual([
-		[11, 3, 20, 3, SpanMapKind.Verbatim, navigationFeatures],
-		[16, 0, 40, 0, SpanMapKind.Verbatim, 0],
-		[16, 2, 5, 2, SpanMapKind.Atom, 0],
+		{
+			virtualStart: 11,
+			virtualEnd: 14,
+			originalStart: 20,
+			originalEnd: 23,
+			kind: SpanMapKind.Verbatim,
+			features: navigationFeatures,
+		},
+		{ virtualStart: 16, virtualEnd: 16, originalStart: 40, originalEnd: 40, kind: SpanMapKind.Verbatim, features: 0 },
+		{ virtualStart: 16, virtualEnd: 18, originalStart: 5, originalEnd: 7, kind: SpanMapKind.Atom, features: 0 },
 	]);
 });

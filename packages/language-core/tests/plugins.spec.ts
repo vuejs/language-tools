@@ -1,3 +1,4 @@
+import { SpanMapKind, type SpanMapSegment } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { describe, expect, it } from 'vitest';
 import { createIRPipeline } from '../lib/ir/irPipeline';
@@ -7,6 +8,17 @@ import { ts } from './typescript';
 
 const legacyMessage =
 	'VueLanguagePlugin functions are no longer supported; export `{ ir: … }` (see language-core README)';
+
+function segment(virtualStart: number, length: number, originalStart: number): SpanMapSegment {
+	return {
+		virtualStart,
+		virtualEnd: virtualStart + length,
+		originalStart,
+		originalEnd: originalStart + length,
+		kind: SpanMapKind.Verbatim,
+		features: 0,
+	};
+}
 
 function withPlugins(modules: Record<string, unknown>, options: Partial<VueCompilerOptions> = {}): VueCompilerOptions {
 	return {
@@ -66,9 +78,9 @@ describe('createIRPipeline', () => {
 							lang: () => ({
 								html,
 								mappings: [
-									[0, 5, 0, 5, 0, 0], // `<div>`
-									[5, 1, 10, 1, 0, 0], // `x`
-									[19, 12, 30, 12, 0, 0], // `<p v-if></p>`
+									segment(0, 5, 0), // `<div>`
+									segment(5, 1, 10), // `x`
+									segment(19, 12, 30), // `<p v-if></p>`
 								],
 								ignoreError: (error: CompilerDOM.CompilerError) => {
 									ignored.push(error.code);

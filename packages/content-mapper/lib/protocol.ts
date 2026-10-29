@@ -1,4 +1,4 @@
-import type { Mapping as SpanMapping } from '@volar/language-core';
+import type { SpanMapKind } from '@volar/language-core';
 
 export interface InitializeParams {
 	locale?: string;
@@ -92,5 +92,14 @@ export type VirtualExtension =
 	| '.cts'
 	| '.json';
 
-export type { SpanMapping };
+/** A span map segment as a content mapper returns it to TS 7.1. */
+export type SpanMapping = [
+	virtualStart: number,
+	virtualLength: number,
+	originalStart: number,
+	originalLength: number,
+	kind: SpanMapKind,
+	features: number,
+];
+
 export { SpanMapFeature, SpanMapKind } from '@volar/language-core';

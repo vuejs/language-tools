@@ -1,4 +1,4 @@
-import { SourceMap } from '@volar/language-core';
+import { SpanMap } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
 import { buildMappings } from '../mappings/codeMappings';
 import { type Code, codeToString, type VueFormat } from '../types';
@@ -62,7 +62,7 @@ export const vitePressParser: VueFormat = {
 		codes.push('\n</template>');
 
 		const mappings = buildMappings(codes);
-		const mapper = new SourceMap(mappings);
+		const mapper = new SpanMap(mappings);
 		const sfc = parse(codeToString(codes));
 
 		for (
@@ -87,14 +87,8 @@ export const vitePressParser: VueFormat = {
 			const endOffset = end.offset;
 			start.offset = -1;
 			end.offset = -1;
-			for (const [offset] of mapper.toSourceLocation(startOffset)) {
-				start.offset = offset;
-				break;
-			}
-			for (const [offset] of mapper.toSourceLocation(endOffset)) {
-				end.offset = offset;
-				break;
-			}
+			start.offset = mapper.virtualToOriginalPositions(startOffset)[0]?.position ?? -1;
+			end.offset = mapper.virtualToOriginalPositions(endOffset)[0]?.position ?? -1;
 		}
 	},
 };

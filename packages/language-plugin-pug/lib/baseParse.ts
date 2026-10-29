@@ -1,4 +1,4 @@
-import type { Mapping } from '@volar/source-map';
+import type { SpanMapSegment } from '@volar/source-map';
 import pugLex from 'pug-lexer';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { buildMappings, type PugCode } from './pugMappings';
@@ -23,15 +23,12 @@ export function baseParse(pugCode: string): ReturnType<typeof parse> {
 			+ parsed.htmlCode.slice('<template>'.length, -'</template>'.length)
 			+ ' '.repeat('</template>'.length),
 		mappings: parsed.mappings
-			.filter(mapping => mapping[2] >= prefixLength)
-			.map((mapping): Mapping => [
-				mapping[0],
-				mapping[1],
-				mapping[2] - prefixLength,
-				mapping[3],
-				mapping[4],
-				mapping[5],
-			]),
+			.filter(segment => segment.originalStart >= prefixLength)
+			.map((segment): SpanMapSegment => ({
+				...segment,
+				originalStart: segment.originalStart - prefixLength,
+				originalEnd: segment.originalEnd - prefixLength,
+			})),
 		pugTextDocument: TextDocument.create('file:///file.pug', 'pug', 0, pugCode),
 		error: parsed.error && { ...parsed.error, line: parsed.error.line - 1 },
 		ast: parsed.ast && toPrevLine(((parsed.ast as BlockNode).nodes[0] as TagNode).block),

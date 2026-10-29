@@ -1,4 +1,4 @@
-import { SpanMapKind } from '@volar/language-core';
+import { SpanMapKind, type SpanMapSegment } from '@volar/language-core';
 import { completionFeatures, navigationFeatures, type VueCodeMarker } from '@vue/language-core';
 import { expect, test } from 'vitest';
 import { type CodeBoundary, synthesizedIgnore, type TsCode } from '../lib/codegen/tsCode';
@@ -10,6 +10,24 @@ const navigationAndCompletion = { features: navigationFeatures | completionFeatu
 const none = { features: 0 };
 const end: CodeBoundary = { end: true };
 
+function seg(
+	virtualStart: number,
+	virtualLength: number,
+	originalStart: number,
+	originalLength: number,
+	kind: SpanMapKind,
+	features: number,
+): SpanMapSegment {
+	return {
+		virtualStart,
+		virtualEnd: virtualStart + virtualLength,
+		originalStart,
+		originalEnd: originalStart + originalLength,
+		kind,
+		features,
+	};
+}
+
 test('merges a boundary-wrapped token into one atom', () => {
 	expect(buildMappings([
 		'-'.repeat(10),
@@ -19,7 +37,7 @@ test('merges a boundary-wrapped token into one atom', () => {
 		`'`,
 		['', 'template', 23, end],
 	])).toEqual([
-		[10, 5, 20, 3, SpanMapKind.Atom, navigation.features],
+		seg(10, 5, 20, 3, SpanMapKind.Atom, navigation.features),
 	]);
 });
 
@@ -32,8 +50,8 @@ test('keeps the content of a boundary-wrapped completion token separate', () => 
 		`'`,
 		['', 'template', 22, end],
 	])).toEqual([
-		[10, 4, 20, 2, SpanMapKind.Atom, 0],
-		[11, 2, 20, 2, SpanMapKind.Verbatim, navigationAndCompletion.features],
+		seg(10, 4, 20, 2, SpanMapKind.Atom, 0),
+		seg(11, 2, 20, 2, SpanMapKind.Verbatim, navigationAndCompletion.features),
 	]);
 });
 
@@ -46,8 +64,8 @@ test('keeps an empty boundary-wrapped completion token as a point', () => {
 		`'`,
 		['', 'template', 20, end],
 	])).toEqual([
-		[10, 2, 20, 0, SpanMapKind.Atom, 0],
-		[11, 0, 20, 0, SpanMapKind.Verbatim, navigationAndCompletion.features],
+		seg(10, 2, 20, 0, SpanMapKind.Atom, 0),
+		seg(11, 0, 20, 0, SpanMapKind.Verbatim, navigationAndCompletion.features),
 	]);
 });
 
@@ -58,7 +76,7 @@ test('merges camelized segments into one atom', () => {
 		['Once', 'template', 2, undefined],
 		['', 'template', 6, end],
 	])).toEqual([
-		[0, 5, 0, 6, SpanMapKind.Atom, navigation.features],
+		seg(0, 5, 0, 6, SpanMapKind.Atom, navigation.features),
 	]);
 });
 
@@ -69,7 +87,7 @@ test('merges a verbatim copy into one verbatim span', () => {
 		['bc', 'template', 1, undefined],
 		['', 'template', 3, end],
 	])).toEqual([
-		[0, 3, 0, 3, SpanMapKind.Verbatim, navigation.features],
+		seg(0, 3, 0, 3, SpanMapKind.Verbatim, navigation.features),
 	]);
 });
 
@@ -86,8 +104,8 @@ test('pairs boundaries by nesting and maps a segment without data as part of the
 		')',
 		['', 'template', 3, end],
 	])).toEqual([
-		[0, 5, 0, 3, SpanMapKind.Atom, none.features],
-		[1, 3, 0, 3, SpanMapKind.Atom, navigation.features],
+		seg(0, 5, 0, 3, SpanMapKind.Atom, none.features),
+		seg(1, 3, 0, 3, SpanMapKind.Atom, navigation.features),
 	]);
 });
 
@@ -105,8 +123,8 @@ test('maps a segment by the kind written in its data, verbatim if omitted', () =
 		['a', 'template', 1, { ...navigation, kind: SpanMapKind.Atom }],
 		'}',
 	])).toEqual([
-		[1, 1, 1, 1, SpanMapKind.Verbatim, navigation.features],
-		[4, 1, 1, 1, SpanMapKind.Atom, navigation.features],
+		seg(1, 1, 1, 1, SpanMapKind.Verbatim, navigation.features),
+		seg(4, 1, 1, 1, SpanMapKind.Atom, navigation.features),
 	]);
 });
 
@@ -118,8 +136,8 @@ test('lets segments inside a feature-less boundary stay individual', () => {
 		'}',
 		['', 'template', 1, end],
 	])).toEqual([
-		[0, 6, 0, 1, SpanMapKind.Atom, none.features],
-		[4, 1, 2, 1, SpanMapKind.Verbatim, navigation.features],
+		seg(0, 6, 0, 1, SpanMapKind.Atom, none.features),
+		seg(4, 1, 2, 1, SpanMapKind.Verbatim, navigation.features),
 	]);
 });
 
@@ -131,7 +149,7 @@ test('keeps diagnostic directives out of the mappings', () => {
 		['', 'template', 5, end],
 	];
 	expect(buildMappings(chunks)).toEqual([
-		[0, 3, 5, 3, SpanMapKind.Verbatim, none.features],
+		seg(0, 3, 5, 3, SpanMapKind.Verbatim, none.features),
 	]);
 	expect(buildDiagnosticDirectives(chunks)).toEqual([
 		[5, 3, 0, 3, DiagnosticDirectivePolicy.Ignore],
@@ -183,8 +201,8 @@ test('pairs directive and mapping boundaries by nesting', () => {
 		['', 'template', 5, end],
 	];
 	expect(buildMappings(chunks)).toEqual([
-		[0, 2, 0, 2, SpanMapKind.Atom, navigation.features],
-		[2, 1, 2, 1, SpanMapKind.Verbatim, none.features],
+		seg(0, 2, 0, 2, SpanMapKind.Atom, navigation.features),
+		seg(2, 1, 2, 1, SpanMapKind.Verbatim, none.features),
 	]);
 	expect(buildDiagnosticDirectives(chunks)).toEqual([
 		[5, 3, 0, 3, DiagnosticDirectivePolicy.Ignore],

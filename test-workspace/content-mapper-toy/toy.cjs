@@ -14,19 +14,30 @@ function toy(source) {
 		const headEnd = bar !== -1 && bar < end ? bar : end;
 		const head = source.slice(start, headEnd);
 		const tag = head.split(' ')[0];
-		mappings.push([html.length, 0, start, 0, 0, 0]);
+		mappings.push(segment(html.length, start, 0));
 		html += '<';
-		mappings.push([html.length, head.length, start, head.length, 0, 0]);
+		mappings.push(segment(html.length, start, head.length));
 		html += head + '>';
 		if (headEnd < end) {
 			const textStart = headEnd + 3;
-			mappings.push([html.length, end - textStart, textStart, end - textStart, 0, 0]);
+			mappings.push(segment(html.length, textStart, end - textStart));
 			html += source.slice(textStart, end);
 		}
 		html += `</${tag}>`;
-		mappings.push([html.length, 0, end, 0, 0, 0]);
+		mappings.push(segment(html.length, end, 0));
 	}
 	return { html, mappings };
+}
+
+function segment(virtualStart, originalStart, length) {
+	return {
+		virtualStart,
+		virtualEnd: virtualStart + length,
+		originalStart,
+		originalEnd: originalStart + length,
+		kind: 0,
+		features: 0,
+	};
 }
 
 module.exports = { ir: { templateCompilers: { toy } } };

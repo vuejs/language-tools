@@ -1,4 +1,4 @@
-import type { Mapping, SpanMapKind } from '@volar/language-core';
+import type { SpanMapKind, SpanMapSegment } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
@@ -49,7 +49,7 @@ export interface ResolvedVuePlugin {
 	module: unknown;
 }
 
-/** The `kind` and `features` of the protocol `Mapping` a generated segment maps by, which the protocol has no object type for. */
+/** The `kind` and `features` of the `SpanMapSegment` a generated segment maps by. */
 export interface VueCodeMarker {
 	/** `SpanMapFeature` bits. */
 	features: number;
@@ -200,8 +200,8 @@ export interface VuePluginContext {
  */
 export interface TemplateHTML {
 	html: string;
-	/** From ranges of `html` (generated) to ranges of the template (source). */
-	mappings: Mapping[];
+	/** From ranges of `html` (virtual) to ranges of the template (original). */
+	mappings: SpanMapSegment[];
 	/**
 	 * Whether an error of the compiler, at offsets of `html`, comes from the conversion rather than the template, so
 	 * that it is not reported.
