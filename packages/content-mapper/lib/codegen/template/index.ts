@@ -80,6 +80,7 @@ function* generateWorker(
 	yield* generateRootElType(options, ctx);
 
 	if (ctx.dollarVars.size) {
+		ctx.generatedTypes.add(names.dollars);
 		yield* generateTypedVar('var', names.dollars, options.scriptLang, function*() {
 			yield `{${newLine}`;
 			if (ctx.dollarVars.has('$slots')) {

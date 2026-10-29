@@ -92,11 +92,9 @@ export function* generateInterpolation(
 			yield* generateSourceCode(from, offset);
 			from = offset;
 			if (enter) {
-				ctx.enterFunction();
 				frames.push({ body, codes: [], reasserts: new Set() });
 			}
 			else {
-				ctx.exitFunction();
 				yield* write(generateFunctionBody(frames.pop()!));
 			}
 		}

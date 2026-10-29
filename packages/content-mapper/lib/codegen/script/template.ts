@@ -1,5 +1,4 @@
 import { navigationFeatures } from '@vue/language-core';
-import { BindingFlag } from '@vue/language-core/lib/script/scriptBindings';
 import { names } from '../names';
 import type { TsCode } from '../tsCode';
 import {
@@ -12,6 +11,7 @@ import {
 	getRefBrandArgument,
 	intersectTypes,
 	isTsLang,
+	newLine,
 	typeAliasRef,
 } from '../writers';
 import { generateSpreadMerge } from '../writers/merge';
@@ -28,26 +28,57 @@ export function* generateTemplate(
 
 	yield `void ${names.ctx}, ${names.components}, ${names.intrinsics}, ${names.directives}${endOfLine}`;
 
+	// The template renders after setup, so it runs in its own function: the bindings
+	// it reads take their render-time types, not the narrowing at the end of setup.
+	// The types setup and the export need from it are passed out through its return type.
+	const { scriptLang } = options;
+	const exportedTypes = [names.Slots, names.InheritedAttrs, names.TemplateRefs, names.RootEl, names.StyleModules]
+		.filter(name =>
+			options.templateAndStyleTypes.has(name) && !(name === names.Slots && options.scriptSetupRanges?.defineSlots)
+		);
+	yield `const ${names.template} = () => {${newLine}`;
+
 	for (const name of options.dotValueBindings) {
-		const flags = options.scriptSetupRanges?.bindings.get(name) ?? options.scriptRanges?.bindings.get(name) ?? 0;
-		// an assignment is not a read, so it cannot raise TS2454; the assertion
-		// still narrows `name` through the assignment target. The `unknown` step
-		// avoids TS2352 when `typeof name` is `undefined` (an untyped `let`).
-		const target = flags & BindingFlag.Uninitialized
-			? `${name} = ${
-				isTsLang(options.scriptLang)
-					? `{} as unknown as typeof ${name}`
-					: `/** @type {typeof ${name}} */ (/** @type {unknown} */ ({}))`
-			}`
-			: name;
-		yield `${names.withDotValue}(${target}, ${
-			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
-		})${endOfLine}`;
+		yield `${names.withDotValue}(${name}, ${getRefBrandArgument(options.vueCompilerOptions, scriptLang)})${endOfLine}`;
 	}
 
 	if (options.templateAndStyleCodes.length) {
 		yield* options.templateAndStyleCodes;
 	}
+
+	yield `return {${newLine}`;
+	for (const name of exportedTypes) {
+		yield `${name}: ${asType(typeAliasRef(name, scriptLang), scriptLang)},${newLine}`;
+	}
+	if (options.templateAndStyleTypes.has(names.dollars)) {
+		yield `${names.dollars},${newLine}`;
+	}
+	yield `}${endOfLine}`;
+	yield `}${endOfLine}`;
+
+	// Consumed only by the parts of setup and the export that apply.
+	const used = [names.template];
+	const returnType = `ReturnType<typeof ${names.template}>`;
+	for (const name of exportedTypes) {
+		yield* generateTypeAlias(name, scriptLang, function*() {
+			yield `${returnType}['${name}']`;
+		});
+	}
+	if (exportedTypes.length) {
+		if (isTsLang(scriptLang)) {
+			used.push(asType(`[${exportedTypes.join(`, `)}]`, scriptLang));
+		}
+		else {
+			used.push(...exportedTypes);
+		}
+	}
+	if (options.templateAndStyleTypes.has(names.dollars)) {
+		yield* generateTypedVar('let', names.dollars, scriptLang, function*() {
+			yield `${returnType}['${names.dollars}']`;
+		});
+		used.push(names.dollars);
+	}
+	yield `void [${used.join(`, `)}]${endOfLine}`;
 }
 
 function* generateTemplateCtx(
