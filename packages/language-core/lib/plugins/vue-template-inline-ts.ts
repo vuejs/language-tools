@@ -1,14 +1,11 @@
-import type { CodeInformation } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
+import { codeFeatures } from '../codegen/codeFeatures';
 import { isCompoundExpression } from '../codegen/template/elementEvents';
 import { parseInterpolationNode } from '../codegen/template/templateChild';
 import { parseVForNode } from '../codegen/template/vFor';
 import { getTypeScriptAST } from '../codegen/utils';
 import type { Code, IR, VueLanguagePlugin } from '../types';
 
-const codeFeatures: CodeInformation = {
-	format: true,
-};
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
 	if: ['if (', ') { }'] as [string, string],
@@ -21,6 +18,8 @@ const formatBrackets = {
 	event: ['() => ', ';'] as [string, string],
 	generic: ['<', '>() => {};'] as [string, string],
 };
+
+const genericCommentRE = /^<!--\s*@vue-generic\s*\{(?<content>[\s\S]*)\}\s*-->$/;
 
 const plugin: VueLanguagePlugin = ({ modules: { typescript: ts } }) => {
 	const parseds = new WeakMap<IR, ReturnType<typeof parse>>();
@@ -74,7 +73,7 @@ const plugin: VueLanguagePlugin = ({ modules: { typescript: ts } }) => {
 
 		function visit(node: CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode) {
 			if (node.type === CompilerDOM.NodeTypes.COMMENT) {
-				const match = node.loc.source.match(/^<!--\s*@vue-generic\s*\{(?<content>[\s\S]*)\}\s*-->$/);
+				const match = node.loc.source.match(genericCommentRE);
 				if (match) {
 					const { content } = match.groups!;
 					addFormatCodes(
@@ -258,7 +257,7 @@ const plugin: VueLanguagePlugin = ({ modules: { typescript: ts } }) => {
 					code,
 					'template',
 					offset,
-					codeFeatures,
+					codeFeatures.format,
 				],
 				wrapper[1],
 			]);

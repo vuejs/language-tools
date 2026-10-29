@@ -7,6 +7,7 @@ import {
 import { getServiceScript } from '@volar/typescript/lib/node/utils';
 import {
 	type Language,
+	names,
 	tsCodegen,
 	type VueCodeInformation,
 	type VueCompilerOptions,
@@ -16,9 +17,10 @@ import { camelize, capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
 import { forEachTouchingNode } from './requests/utils';
 
-const windowsPathReg = /\\/g;
+const windowsPathRE = /\\/g;
 
 export function preprocessLanguageService(
+	ts: typeof import('typescript'),
 	languageService: ts.LanguageService,
 	getLanguage: () => Language<any> | undefined,
 ) {
@@ -56,7 +58,7 @@ export function preprocessLanguageService(
 	): ts.LanguageService['getQuickInfoAtPosition'] {
 		return (fileName, position, ...rests) => {
 			const result = getQuickInfoAtPosition(fileName, position, ...rests);
-			if (!result || result.tags?.length) {
+			if (!result) {
 				return result;
 			}
 			const language = getLanguage();
@@ -67,10 +69,11 @@ export function preprocessLanguageService(
 			if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
 				return result;
 			}
-			const codegen = tsCodegen.get(sourceScript.generated.root.ir);
+			const { ir } = sourceScript.generated.root;
+			const codegen = tsCodegen.get(ir);
 			const leadingOffset = sourceScript.snapshot.getLength();
-			for (
-				const sourceRange of toSourceRanges(
+			const sourceRanges = [
+				...toSourceRanges(
 					sourceScript,
 					language,
 					serviceScript,
@@ -78,8 +81,19 @@ export function preprocessLanguageService(
 					result.textSpan.start + result.textSpan.length,
 					true,
 					() => true,
-				)
+				),
+			];
+			if (
+				codegen
+				&& ir.template
+				&& sourceRanges.some(([, start]) => start >= ir.template!.innerStart && start <= ir.template!.innerEnd)
 			) {
+				unwrapTemplateBindingQuickInfo(fileName, result, codegen.getUsedSetupBindings());
+			}
+			if (result.tags?.length) {
+				return result;
+			}
+			for (const sourceRange of sourceRanges) {
 				const generateRange2 = toGeneratedRange(
 					language,
 					serviceScript,
@@ -93,7 +107,7 @@ export function preprocessLanguageService(
 						generateRange2[0] - leadingOffset,
 						generateRange2[1] - leadingOffset,
 					);
-					if (codegen?.getSetupExposed().has(variableName)) {
+					if (codegen?.getUsedSetupBindings().has(variableName)) {
 						const extraInfo = getQuickInfoAtPosition(fileName, generateRange2[0], ...rests);
 						result.tags = extraInfo?.tags;
 					}
@@ -101,6 +115,54 @@ export function preprocessLanguageService(
 			}
 			return result;
 		};
+	}
+
+	// Template reads of setup bindings compile to `__VLS_unwrap(foo, ...)` or `foo.value`,
+	// so the mapped identifier alone still carries the wrapped `Ref` type.
+	function unwrapTemplateBindingQuickInfo(fileName: string, quickInfo: ts.QuickInfo, bindings: Set<string>) {
+		const program = languageService.getProgram();
+		const sourceFile = program?.getSourceFile(fileName);
+		if (!program || !sourceFile) {
+			return;
+		}
+		let id: ts.Identifier | undefined;
+		for (const node of forEachTouchingNode(ts, sourceFile, quickInfo.textSpan.start)) {
+			if (ts.isIdentifier(node)) {
+				id = node;
+				break;
+			}
+		}
+		if (!id || !bindings.has(id.text)) {
+			return;
+		}
+		const { parent } = id;
+		const isUnwrapCall = ts.isCallExpression(parent)
+			&& parent.arguments[0] === id
+			&& ts.isIdentifier(parent.expression)
+			&& parent.expression.text === names.unwrap;
+		const isDotValue = ts.isPropertyAccessExpression(parent)
+			&& parent.expression === id
+			&& parent.name.text === 'value';
+		if (!isUnwrapCall && !isDotValue) {
+			return;
+		}
+		const checker = program.getTypeChecker();
+		const type = checker.getTypeAtLocation(parent);
+		if (type === checker.getTypeAtLocation(id)) {
+			return;
+		}
+		quickInfo.kind = ts.ScriptElementKind.memberVariableElement;
+		quickInfo.kindModifiers = '';
+		quickInfo.displayParts = [
+			{ text: '(', kind: 'punctuation' },
+			{ text: 'property', kind: 'text' },
+			{ text: ')', kind: 'punctuation' },
+			{ text: ' ', kind: 'space' },
+			{ text: id.text, kind: 'propertyName' },
+			{ text: ':', kind: 'punctuation' },
+			{ text: ' ', kind: 'space' },
+			{ text: checker.typeToString(type, id), kind: 'text' },
+		];
 	}
 
 	function getCompletionsAtPosition(
@@ -201,7 +263,7 @@ export function preprocessLanguageService(
 							generateRange2[0] - leadingOffset,
 							generateRange2[1] - leadingOffset,
 						);
-						if (codegen?.getSetupExposed().has(variableName)) {
+						if (codegen?.getUsedSetupBindings().has(variableName)) {
 							diagnostic.start = generateRange2[0];
 							diagnostic.length = generateRange2[1] - generateRange2[0];
 							break;
@@ -435,7 +497,7 @@ export function postprocessLanguageService<T>(
 					}
 					const styles = root.ir.styles;
 					if (!styles.length) {
-						return result;
+						continue;
 					}
 					const isInStyle = styles.some(style =>
 						reference.textSpan.start >= style.innerStart
@@ -459,7 +521,7 @@ export function postprocessLanguageService<T>(
 		getCompletionsAtPosition: ts.LanguageService['getCompletionsAtPosition'],
 	): ts.LanguageService['getCompletionsAtPosition'] {
 		return (filePath, position, ...rests) => {
-			const fileName = filePath.replace(windowsPathReg, '/');
+			const fileName = filePath.replace(windowsPathRE, '/');
 			const result = getCompletionsAtPosition(fileName, position, ...rests);
 			if (result) {
 				resolveCompletionResult(
@@ -633,7 +695,7 @@ export function resolveCompletionResult<T>(
 		);
 
 		if (ranges.some(([start, end]) => position >= start && position <= end)) {
-			const globalKinds = new Set(['var', 'function', 'module']);
+			const globalKinds = new Set(['var', 'function', 'module', 'const']);
 			const globalsOrKeywords = (ts as any).Completions.SortText.GlobalsOrKeywords;
 			const sortTexts = new Set([
 				globalsOrKeywords,

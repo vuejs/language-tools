@@ -1,3 +1,4 @@
+export * from './lib/codegen/codeFeatures';
 export * from './lib/codegen/template';
 export * from './lib/compilerOptions';
 export * from './lib/languagePlugin';

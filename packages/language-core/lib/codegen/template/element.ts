@@ -1,14 +1,13 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
-import type * as ts from 'typescript';
 import type { Code } from '../../types';
-import { getElementTagOffsets, getNodeText, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
+import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { endOfLine, forEachNode, getTypeScriptAST, identifierRegex, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { endOfLine, generateTypedVar, identifierRE, newLine } from '../utils';
+import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
@@ -18,7 +17,7 @@ import { type FailedPropExpressions, generateElementProps } from './elementProps
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
-import { generateStyleScopedClassReference } from './styleScopedClasses';
+import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
 import { generateVSlot } from './vSlot';
 
@@ -94,12 +93,12 @@ export function* generateComponent(
 			camelize(tag),
 			tag,
 		]);
-		const matchedSetupConst = [...originalNames].find(name => options.setupConsts.has(name));
-		if (matchedSetupConst) {
+		const matchedImportedComponent = [...originalNames].find(name => options.importedComponents.has(name));
+		if (matchedImportedComponent) {
 			// navigation & auto import support
 			yield `const ${componentVar} = `;
 			yield* generateCamelized(
-				matchedSetupConst[0]! + tag.slice(1),
+				matchedImportedComponent[0]! + tag.slice(1),
 				'template',
 				startTagOffset,
 				{
@@ -110,7 +109,7 @@ export function* generateComponent(
 			if (endTagOffset !== undefined) {
 				yield ` || `;
 				yield* generateCamelized(
-					matchedSetupConst[0]! + tag.slice(1),
+					matchedImportedComponent[0]! + tag.slice(1),
 					'template',
 					endTagOffset,
 					codeFeatures.withoutHighlightAndCompletion,
@@ -119,38 +118,37 @@ export function* generateComponent(
 			yield endOfLine;
 		}
 		else {
-			yield `let ${componentVar}!: ${names.WithComponent}<'${tag}', ${names.LocalComponents}, ${names.GlobalComponents}`;
-			yield originalNames.has(options.componentName)
-				? `, typeof ${names.export}`
-				: `, void`;
-			for (const name of originalNames) {
-				yield `, '${name}'`;
-			}
-			yield `>[`;
-			yield* generateStringLiteralKey(
-				tag,
-				startTagOffset,
-				{
-					...codeFeatures.semanticWithoutHighlight,
-					...options.vueCompilerOptions.checkUnknownComponents
-						? codeFeatures.verification
-						: codeFeatures.doNotReportTs2339AndTs2551,
-				},
-			);
-			yield `]${endOfLine}`;
+			yield* generateTypedVar('let', componentVar, options.scriptLang, function*() {
+				yield `${names.WithComponent}<'${tag}', ${names.LocalComponents}, ${names.GlobalComponents}`;
+				yield originalNames.has(options.componentName)
+					? `, typeof ${names.export}`
+					: `, void`;
+				yield `, ${options.vueCompilerOptions.checkUnknownComponents}`;
+				for (const name of originalNames) {
+					yield `, '${name}'`;
+				}
+				yield `>[`;
+				yield* generateStringLiteralKey(
+					tag,
+					startTagOffset,
+					{
+						...codeFeatures.semanticWithoutHighlight,
+						...codeFeatures.verification,
+					},
+				);
+				yield `]`;
+			});
 
-			if (identifierRegex.test(camelize(tag))) {
+			if (identifierRE.test(camelize(tag))) {
 				// navigation support
 				yield `/** @ts-ignore @type {`;
 				for (const offset of [startTagOffset, endTagOffset]) {
 					if (offset === undefined) {
 						continue;
 					}
-					yield ` | typeof ${names.components}.`;
-					yield* generateCamelized(tag, 'template', offset, codeFeatures.navigation);
-					if (tag[0] !== tag[0]!.toUpperCase()) {
-						yield ` | typeof ${names.components}.`;
-						yield* generateCamelized(capitalize(tag), 'template', offset, codeFeatures.navigation);
+					for (const name of new Set([tag, capitalize(tag)])) {
+						yield ` | typeof ${options.setupBindings.has(camelize(name)) ? '' : `${names.components}.`}`;
+						yield* generateCamelized(name, 'template', offset, codeFeatures.navigation);
 					}
 					if (tag.includes('-')) {
 						yield ` | typeof ${names.components}[`;
@@ -189,34 +187,60 @@ export function* generateComponent(
 	)];
 	const propsStr = toString(propCodes);
 
+	// The instance type comes from a real construct call with a copy of the props: only a call resolves the
+	// overloads of the component and infers its type parameters from the props, including intersections of
+	// construct signatures such as `DefineComponent<...> & (new <T>(props: { items: T[] }, slots) => ...)` of
+	// Vuetify's `genericComponent`. Inferring from the constructor type alone takes the last overload and loses
+	// the type parameters of intersections. The two `@ts-ignore`s cover what the call reports for valid templates:
+	// - components that are not constructable (functional components, plain objects, `{}`) or abstract;
+	// - construct signatures of other arities (`new () => ...`, Vuetify's `(props, slots)`);
+	// - excess or weakly matching props, since attributes and events are passed along with the props;
+	// - diagnostics of the copy itself: its expressions have the parameter types of the constructor as contextual
+	//   type (`any` for `DefineComponent`), so function expressions report implicit `any`, and typing it like
+	//   `$props` instead would report every props error a second time. The copy is not mapped to the template.
 	yield `// @ts-ignore${newLine}`;
 	yield `const ${functionalVar} = ${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
-	yield propsStr;
+	yield `// @ts-ignore${newLine}`;
+	yield propsStr
+		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
+		.replace(/\n/g, ' ');
 	yield `}))${endOfLine}`;
 
 	yield `const `;
-	const token = yield* startBoundary('template', node.loc.start.offset, codeFeatures.doNotReportTs6133);
+	const boundary = yield* Boundary.start(
+		'template',
+		node.loc.start.offset,
+		node.loc.end.offset,
+		codeFeatures.doNotReportTs6133,
+	);
 	yield vnodeVar;
-	yield endBoundary(token, node.loc.end.offset);
+	yield boundary.end();
 	yield ` = ${functionalVar}`;
 
-	if (ctx.currentInfo.generic) {
-		const { content, offset } = ctx.currentInfo.generic;
-		const token = yield* startBoundary('template', offset, codeFeatures.verification);
+	const commentInfo = ctx.getCommentInfo();
+	if (commentInfo.generic) {
+		const { content, offset } = commentInfo.generic;
+		const boundary = yield* Boundary.start(
+			'template',
+			offset,
+			offset + content.length,
+			codeFeatures.verification,
+		);
 		yield `<`;
 		yield [content, 'template', offset, codeFeatures.all];
 		yield `>`;
-		yield endBoundary(token, offset + content.length);
+		yield boundary.end();
 	}
 
 	const shouldInheritAttrs = hasVBindAttrs(options, ctx, node);
 
 	yield `(`;
-	const token2 = yield* startBoundary(
+	const boundary2 = yield* Boundary.start(
 		'template',
 		startTagOffset,
+		startTagOffset + tag.length,
 		shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes
 			? {}
 			: codeFeatures.verification,
@@ -226,7 +250,7 @@ export function* generateComponent(
 	yield newLine;
 	yield* propCodes;
 	yield `}`;
-	yield endBoundary(token2, startTagOffset + tag.length);
+	yield boundary2.end();
 	yield `, ...${names.functionalComponentArgsRest}(${functionalVar}))${endOfLine}`;
 
 	yield* generateFailedExpressions(options, ctx, failedPropExps);
@@ -243,20 +267,25 @@ export function* generateComponent(
 	const templateRef = getTemplateRef(node);
 	const isSingleRoot = ctx.singleRootNodes.has(node)
 		&& !options.vueCompilerOptions.fallthroughComponentNames.includes(hyphenateTag(tag));
+	const inferRootEl = ctx.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl;
+	const inferTemplateRefs = options.vueCompilerOptions.inferTemplateDollarRefs
+		|| options.vueCompilerOptions.inferComponentDollarRefs
+		|| options.setupRefs.size > 0;
 
-	if (templateRef || isSingleRoot) {
+	if ((templateRef && inferTemplateRefs) || (isSingleRoot && inferRootEl)) {
 		const componentInstanceVar = ctx.getInternalVariable();
-		yield `var ${componentInstanceVar}!: Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0]`;
-		yield endOfLine;
+		yield* generateTypedVar('var', componentInstanceVar, options.scriptLang, function*() {
+			yield `Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0]`;
+		});
 
-		if (templateRef) {
+		if (templateRef && inferTemplateRefs) {
 			let typeExp = `typeof ${ctx.getHoistVariable(componentInstanceVar)} | null`;
 			if (ctx.inVFor) {
 				typeExp = `(${typeExp})[]`;
 			}
 			ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 		}
-		if (isSingleRoot) {
+		if (isSingleRoot && inferRootEl) {
 			ctx.singleRootElTypes.add(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
 		}
 	}
@@ -275,15 +304,23 @@ export function* generateComponent(
 	yield* generateStyleScopedClassReferences(options, node);
 
 	const slotDir = node.props.find(CompilerDOM.isVSlot);
-	if (slotDir || node.children.length) {
-		yield* generateVSlot(options, ctx, node, slotDir, getCtxVar());
-	}
+	const hasSlots = !!slotDir || node.children.length > 0;
 
-	if (isCtxVarUsed) {
-		yield `var ${ctxVar}!: ${names.FunctionalComponentCtx}<typeof ${componentVar}, typeof ${vnodeVar}>${endOfLine}`;
+	// declared ahead of the slot code that reads them: JS has no `var x!: T`,
+	// so a later declaration would be read before assignment (TS2454)
+	if (isCtxVarUsed || hasSlots) {
+		yield* generateTypedVar('var', ctxVar, options.scriptLang, function*() {
+			yield `${names.ExtractComponentContext}<typeof ${componentVar}, typeof ${vnodeVar}>`;
+		});
 	}
 	if (isPropsVarUsed) {
-		yield `var ${propsVar}!: ${names.FunctionalComponentProps}<typeof ${componentVar}, typeof ${vnodeVar}>${endOfLine}`;
+		yield* generateTypedVar('var', propsVar, options.scriptLang, function*() {
+			yield `${names.ExtractComponentProps}<typeof ${componentVar}, typeof ${vnodeVar}>`;
+		});
+	}
+
+	if (hasSlots) {
+		yield* generateVSlot(options, ctx, node, slotDir, ctxVar);
 	}
 	ctx.components.pop();
 }
@@ -318,7 +355,12 @@ export function* generateElement(
 		);
 	}
 	yield `)(`;
-	const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+	const boundary = yield* Boundary.start(
+		'template',
+		startTagOffset,
+		startTagOffset + node.tag.length,
+		codeFeatures.verification,
+	);
 	yield `{${newLine}`;
 	yield* generateElementProps(
 		options,
@@ -327,9 +369,10 @@ export function* generateElement(
 		node.props,
 		options.vueCompilerOptions.checkUnknownProps,
 		failedPropExps,
+		`typeof ${names.intrinsics}['${node.tag}']`,
 	);
 	yield `}`;
-	yield endBoundary(token, startTagOffset + node.tag.length);
+	yield boundary.end();
 	yield `)${endOfLine}`;
 
 	yield* generateFailedExpressions(options, ctx, failedPropExps);
@@ -343,7 +386,9 @@ export function* generateElement(
 		}
 		ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 	}
-	if (ctx.singleRootNodes.has(node)) {
+	if (
+		ctx.singleRootNodes.has(node) && (ctx.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl)
+	) {
 		ctx.singleRootElTypes.add(`${names.Elements}['${node.tag}']`);
 	}
 
@@ -364,11 +409,19 @@ export function* generateFragment(
 	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
 	const [startTagOffset] = getElementTagOffsets(node, options.template);
+	const failedPropExps: FailedPropExpressions[] = [];
 
 	// special case for <template v-for="..." :key="..." />
 	if (node.props.length) {
-		yield `__VLS_asFunctionalElement(__VLS_intrinsics.template)(`;
-		const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+		yield `${
+			options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalElement0 : names.asFunctionalElement1
+		}(${names.intrinsics}.template)(`;
+		const boundary = yield* Boundary.start(
+			'template',
+			startTagOffset,
+			startTagOffset + node.tag.length,
+			codeFeatures.verification,
+		);
 		yield `{${newLine}`;
 		yield* generateElementProps(
 			options,
@@ -376,116 +429,18 @@ export function* generateFragment(
 			node,
 			node.props,
 			options.vueCompilerOptions.checkUnknownProps,
+			failedPropExps,
+			`typeof ${names.intrinsics}.template`,
 		);
 		yield `}`;
-		yield endBoundary(token, startTagOffset + node.tag.length);
+		yield boundary.end();
 		yield `)${endOfLine}`;
+
+		yield* generateFailedExpressions(options, ctx, failedPropExps);
 	}
 
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
-	}
-}
-
-function* generateStyleScopedClassReferences(
-	{ template, typescript: ts }: TemplateCodegenOptions,
-	node: CompilerDOM.ElementNode,
-): Generator<Code> {
-	for (const prop of node.props) {
-		if (
-			prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
-			&& prop.name === 'class'
-			&& prop.value
-		) {
-			const [text, start] = normalizeAttributeValue(prop.value);
-			for (const [className, offset] of forEachClassName(text)) {
-				yield* generateStyleScopedClassReference(template, className, start + offset);
-			}
-		}
-		else if (
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-			&& prop.arg.content === 'class'
-		) {
-			const content = '(' + prop.exp.content + ')';
-			const startOffset = prop.exp.loc.start.offset - 1;
-			const ast = getTypeScriptAST(ts, template, content);
-			const literals: ts.StringLiteralLike[] = [];
-
-			for (const node of forEachNode(ts, ast)) {
-				if (
-					!ts.isExpressionStatement(node)
-					|| !ts.isParenthesizedExpression(node.expression)
-				) {
-					continue;
-				}
-				const { expression } = node.expression;
-
-				if (ts.isStringLiteralLike(expression)) {
-					literals.push(expression);
-				}
-				else if (ts.isArrayLiteralExpression(expression)) {
-					yield* walkArrayLiteral(expression);
-				}
-				else if (ts.isObjectLiteralExpression(expression)) {
-					yield* walkObjectLiteral(expression);
-				}
-			}
-
-			for (const literal of literals) {
-				const start = literal.end - literal.text.length - 1 + startOffset;
-				for (const [className, offset] of forEachClassName(literal.text)) {
-					yield* generateStyleScopedClassReference(template, className, start + offset);
-				}
-			}
-
-			function* walkArrayLiteral(node: ts.ArrayLiteralExpression) {
-				const { elements } = node;
-				for (const element of elements) {
-					if (ts.isStringLiteralLike(element)) {
-						literals.push(element);
-					}
-					else if (ts.isObjectLiteralExpression(element)) {
-						yield* walkObjectLiteral(element);
-					}
-				}
-			}
-
-			function* walkObjectLiteral(node: ts.ObjectLiteralExpression) {
-				const { properties } = node;
-				for (const property of properties) {
-					if (ts.isPropertyAssignment(property)) {
-						const { name } = property;
-						if (ts.isIdentifier(name)) {
-							const text = getNodeText(ts, name, ast);
-							yield* generateStyleScopedClassReference(template, text, name.end - text.length + startOffset);
-						}
-						else if (ts.isStringLiteral(name)) {
-							literals.push(name);
-						}
-						else if (ts.isComputedPropertyName(name)) {
-							const { expression } = name;
-							if (ts.isStringLiteralLike(expression)) {
-								literals.push(expression);
-							}
-						}
-					}
-					else if (ts.isShorthandPropertyAssignment(property)) {
-						const text = getNodeText(ts, property.name, ast);
-						yield* generateStyleScopedClassReference(template, text, property.name.end - text.length + startOffset);
-					}
-				}
-			}
-		}
-	}
-}
-
-function* forEachClassName(content: string) {
-	let offset = 0;
-	for (const className of content.split(' ')) {
-		yield [className, offset] as const;
-		offset += className.length + 1;
 	}
 }
 

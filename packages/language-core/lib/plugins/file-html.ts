@@ -1,8 +1,8 @@
 import type { VueLanguagePlugin } from '../types';
 import type { RawIR } from '../virtualCode/rawIr';
 
-const sfcBlockReg = /<(script|style)\b([\s\S]*?)>([\s\S]*?)<\/\1>/g;
-const langReg = /\blang\s*=\s*(['"]?)(\S*)\b\1/;
+const sfcBlockRE = /<(script|style)\b([\s\S]*?)>([\s\S]*?)<\/\1>/g;
+const langRE = /\blang\s*=\s*(['"]?)(\S*)\b\1/;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
@@ -33,11 +33,11 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 			let templateContent = content;
 
-			for (const match of content.matchAll(sfcBlockReg)) {
+			for (const match of content.matchAll(sfcBlockRE)) {
 				const matchText = match[0];
 				const tag = match[1];
 				const attrs = match[2]!;
-				const lang = attrs.match(langReg)?.[2];
+				const lang = attrs.match(langRE)?.[2];
 				const content = match[3]!;
 				const contentStart = match.index + matchText.indexOf(content);
 

@@ -1,11 +1,20 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
+import { getUnwrappedExpression } from '../../parsers/utils';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, getTypeScriptAST, identifierRegex, newLine } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import {
+	endOfLine,
+	generateTypedVar,
+	getRefBrandArgument,
+	getTypeScriptAST,
+	identifierRE,
+	isTsLang,
+	newLine,
+} from '../utils';
+import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -84,30 +93,52 @@ export function* generateElementEvents(
 	}
 
 	const emitsVar = ctx.getInternalVariable();
-	yield `let ${emitsVar}!: ${names.ResolveEmits}<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>${endOfLine}`;
+	yield* generateTypedVar('let', emitsVar, options.scriptLang, function*() {
+		yield `${names.ResolveEmits}<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>`;
+	});
 
 	for (const { propPrefix, emitPrefix, propName, emitName, items } of Object.values(definitions)) {
-		yield `const ${ctx.getInternalVariable()}: ${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
+		const eventVar = ctx.getInternalVariable();
+		const eventType = `${
+			options.vueCompilerOptions.checkUnknownEvents ? '' : 'Record<string, unknown> & '
+		}Partial<${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
 			camelize(emitName)
-		}'> = {${newLine}`;
+		}'>>`;
+		if (isTsLang(options.scriptLang)) {
+			yield `const ${eventVar}: ${eventType} = {${newLine}`;
+		}
+		else {
+			yield `/** @type {${eventType}} */${newLine}const ${eventVar} = {${newLine}`;
+		}
 		for (const { prop, source, offset } of items) {
+			const argsType = `${names.EventArgs}<${eventType}, '${propName}'>`;
 			if (prop.name === 'on') {
 				yield `/** @type {typeof ${emitsVar}.`;
 				yield* generateEventArg(options, source, offset!, emitPrefix.slice(0, -1), codeFeatures.navigation);
 				yield `} */${newLine}`;
-			}
-			if (prop.name === 'on') {
+				// in JS, the JSDoc above types the property, and fails to parse for a non-identifier name
+				const emitArgName = getEventArgName(source, emitPrefix.slice(0, -1));
 				yield* generateEventArg(options, source, offset!, propPrefix.slice(0, -1));
 				yield `: `;
-				yield* generateEventExpression(options, ctx, prop);
+				yield* generateEventExpression(
+					options,
+					ctx,
+					prop,
+					isTsLang(options.scriptLang)
+						? argsType
+						: identifierRE.test(emitArgName)
+						? `${names.EventArgs}<typeof ${emitsVar}, '${emitArgName}'>`
+						: `any[]`,
+				);
 			}
 			else {
 				yield `'${propName}': `;
-				yield* generateModelEventExpression(options, ctx, prop);
+				yield* generateModelEventExpression(options, ctx, prop, argsType);
 			}
 			yield `,${newLine}`;
 		}
 		yield `}${endOfLine}`;
+		yield `void ${eventVar}${endOfLine}`;
 	}
 }
 
@@ -129,18 +160,36 @@ export function* generateEventArg(
 	if (directive.length) {
 		name = capitalize(name);
 	}
-	if (identifierRegex.test(camelize(name))) {
-		const token = yield* startBoundary('template', start, features);
+	const boundary = yield* Boundary.start('template', start, start + name.length, features);
+	if (identifierRE.test(camelize(name))) {
 		yield directive;
-		yield* generateCamelized(name, 'template', start, { __combineToken: token });
+		yield* generateCamelized(name, 'template', start, boundary.features);
 	}
 	else {
-		const token = yield* startBoundary('template', start, features);
 		yield `'`;
 		yield directive;
-		yield* generateCamelized(name, 'template', start, { __combineToken: token });
+		yield* generateCamelized(name, 'template', start, boundary.features);
 		yield `'`;
-		yield endBoundary(token, start + name.length);
+		yield boundary.end();
+	}
+}
+
+export function getEventArgName(name: string, directive = 'on') {
+	if (directive.length) {
+		name = capitalize(name);
+	}
+	return directive + name.split('-').map((part, i) => i ? capitalize(part) : part).join('');
+}
+
+function* generateEventParameter(
+	options: TemplateCodegenOptions,
+	argsType: string,
+): Generator<Code> {
+	if (isTsLang(options.scriptLang)) {
+		yield `(...[$event]: ${argsType}) => {${newLine}`;
+	}
+	else {
+		yield `(/** @type {${argsType}} */ ...[$event]) => {${newLine}`;
 	}
 }
 
@@ -148,6 +197,7 @@ export function* generateEventExpression(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
+	argsType: string,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const ast = getTypeScriptAST(options.typescript, options.template, prop.exp.content);
@@ -164,13 +214,32 @@ export function* generateEventExpression(
 		);
 
 		if (isCompound) {
-			yield `(...[$event]) => {${newLine}`;
-			const endScope = ctx.startScope();
-			ctx.declare('$event');
+			const scope = ctx.scope();
+			scope.declare('$event');
+
+			const accessMark = ctx.accessLog.length;
+			const codes: Code[] = [];
+			for (const code of interpolation) {
+				codes.push(code);
+			}
+
+			yield* generateEventParameter(options, argsType);
+			// consume $event to avoid TS6133 when the expression doesn't use it
+			yield `void $event${endOfLine}`;
+
+			yield* generateReasserts(options, ctx, accessMark);
 			yield* ctx.generateConditionGuards();
-			yield* interpolation;
+
+			if (isSingleExpression(options.typescript, ast)) {
+				yield `return (`;
+				yield* codes;
+				yield `)`;
+			}
+			else {
+				yield* codes;
+			}
 			yield endOfLine;
-			yield* endScope();
+			yield* scope.end();
 			yield `}`;
 
 			ctx.inlayHints.push({
@@ -199,18 +268,25 @@ export function* generateModelEventExpression(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
+	argsType: string,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		yield `(...[$event]) => {${newLine}`;
-		yield* ctx.generateConditionGuards();
-		yield* generateInterpolation(
+		const accessMark = ctx.accessLog.length;
+		const codes = [...generateInterpolation(
 			options,
 			ctx,
 			options.template,
 			codeFeatures.verification,
 			prop.exp.content,
 			prop.exp.loc.start.offset,
-		);
+			undefined,
+			undefined,
+			true,
+		)];
+		yield* generateEventParameter(options, argsType);
+		yield* generateReasserts(options, ctx, accessMark);
+		yield* ctx.generateConditionGuards();
+		yield* codes;
 		yield ` = $event${endOfLine}`;
 		yield `}`;
 	}
@@ -219,37 +295,64 @@ export function* generateModelEventExpression(
 	}
 }
 
-export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.SourceFile) {
-	let result = true;
-	if (ast.statements.length === 0) {
-		result = false;
+// Assertion narrowing does not flow into nested closures for imports and
+// `let`/`var` bindings (TS limitation), so re-assert those bindings at closure tops.
+function* generateReasserts(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	accessMark: number,
+): Generator<Code> {
+	const reasserts = new Set<string>();
+	const collect = (name: string) => {
+		if (options.reassertBindings.has(name) && !ctx.scopes.some(scope => scope.has(name))) {
+			reasserts.add(name);
+		}
+	};
+	for (const name of ctx.accessLog.slice(accessMark)) {
+		collect(name);
 	}
-	else if (ast.statements.length === 1) {
-		ts.forEachChild(ast, child_1 => {
-			if (ts.isExpressionStatement(child_1)) {
-				ts.forEachChild(child_1, child_2 => {
-					if (ts.isArrowFunction(child_2)) {
-						result = false;
-					}
-					else if (isPropertyAccessOrId(ts, child_2)) {
-						result = false;
-					}
-				});
-			}
-			else if (ts.isFunctionDeclaration(child_1)) {
-				result = false;
-			}
-		});
+	for (const condition of ctx.conditions) {
+		for (const name of condition.accesses) {
+			collect(name);
+		}
 	}
-	return result;
+	for (const name of reasserts) {
+		yield `${names.withDotValue}(${name}, ${
+			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
+		})${endOfLine}`;
+	}
 }
 
-function isPropertyAccessOrId(ts: typeof import('typescript'), node: ts.Node) {
-	if (ts.isIdentifier(node)) {
-		return true;
+export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.SourceFile) {
+	if (ast.statements.length === 0) {
+		return false;
 	}
-	if (ts.isPropertyAccessExpression(node)) {
-		return isPropertyAccessOrId(ts, node.expression);
+	if (ast.statements.length === 1 && ast.text[ast.endOfFileToken.pos - 1] !== ';') {
+		const statement = ast.statements[0]!;
+		if (ts.isExpressionStatement(statement)) {
+			const node = getUnwrappedExpression(ts, statement.expression);
+			if (
+				ts.isArrowFunction(node)
+				|| ts.isIdentifier(node)
+				|| ts.isElementAccessExpression(node)
+				|| ts.isPropertyAccessExpression(node)
+			) {
+				return false;
+			}
+		}
+		else if (ts.isFunctionDeclaration(statement)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function isSingleExpression(ts: typeof import('typescript'), ast: ts.SourceFile) {
+	if (ast.statements.length === 1 && ast.text[ast.endOfFileToken.pos - 1] !== ';') {
+		const statement = ast.statements[0]!;
+		if (ts.isExpressionStatement(statement)) {
+			return true;
+		}
 	}
 	return false;
 }

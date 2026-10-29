@@ -14,5 +14,5 @@ const barAlias = defineModel('bar', {
 
 exactType(modelAlias.value, {} as number | undefined);
 exactType(fooAlias.value, {} as number);
-exactType(barAlias.value, {} as number);
+exactType(barAlias.value, {} as 1);
 </script>

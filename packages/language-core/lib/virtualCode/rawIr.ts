@@ -155,6 +155,13 @@ function createBlock(node: CompilerDOM.ElementNode, source: string): RawIRBlock 
 			else {
 				attrs[prop.name] = true;
 			}
+			if (node.tag === 'style' && prop.name === 'module') {
+				const attr = attrs[prop.name]!;
+				// an empty name means the default `$style`, anchored to the attribute name
+				if (attr === true || !attr.text) {
+					attrs[prop.name] = { text: '', offset: prop.loc.start.offset - node.loc.start.offset };
+				}
+			}
 		}
 	}
 

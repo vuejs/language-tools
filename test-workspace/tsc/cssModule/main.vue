@@ -16,6 +16,11 @@ const bar = useCssModule('bar');
 exactType(bar, {} as Record<string, string> & {
     bar: string;
 });
+
+const baz = useCssModule('baz-qux');
+exactType(baz, {} as Record<string, string> & {
+    baz: string;
+});
 </script>
 
 <style module>
@@ -28,4 +33,8 @@ exactType(bar, {} as Record<string, string> & {
 
 <style module="bar">
 .bar {}
+</style>
+
+<style module="baz-qux">
+.baz {}
 </style>

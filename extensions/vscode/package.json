@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "3.3.5",
+	"version": "3.3.13",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -253,6 +253,11 @@
 			"type": "object",
 			"title": "Vue",
 			"properties": {
+				"vue.welcome.show": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "%configuration.welcome.show%"
+				},
 				"vue.trace.server": {
 					"scope": "window",
 					"type": "string",
@@ -479,19 +484,21 @@
 	"scripts": {
 		"vscode:prepublish": "rolldown --config",
 		"pack": "npx @vscode/vsce package",
-		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generated-meta.ts && cd ../.. && npm run format"
+		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generated-meta.ts && cd ../.. && npm run format",
+		"version": "npm run gen-ext-meta && git add src/generated-meta.ts"
 	},
 	"devDependencies": {
-		"@types/node": "^24.1.0",
+		"@types/node": "^26.0.1",
 		"@types/vscode": "1.88.0",
-		"@volar/typescript": "2.4.28",
-		"@volar/vscode": "2.4.28",
+		"@volar/typescript": "2.4.30",
+		"@volar/vscode": "2.4.30",
 		"@vue/language-core": "workspace:*",
 		"@vue/language-server": "workspace:*",
 		"@vue/typescript-plugin": "workspace:*",
 		"laplacenoma": "latest",
 		"reactive-vscode": "^1.0.2",
 		"rolldown": "latest",
+		"typescript": "latest",
 		"vscode-ext-gen": "latest",
 		"vscode-tmlanguage-snapshot": "latest"
 	}

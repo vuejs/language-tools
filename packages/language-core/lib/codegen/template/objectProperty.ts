@@ -1,8 +1,8 @@
 import { camelize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
 import { names } from '../names';
-import { identifierRegex } from '../utils';
-import { endBoundary, startBoundary } from '../utils/boundary';
+import { identifierRE } from '../utils';
+import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
@@ -43,19 +43,19 @@ export function* generateObjectProperty(
 		}
 	}
 	else if (shouldCamelize) {
-		if (identifierRegex.test(camelize(code))) {
+		if (identifierRE.test(camelize(code))) {
 			yield* generateCamelized(code, 'template', offset, features);
 		}
 		else {
-			const token = yield* startBoundary('template', offset, features);
+			const boundary = yield* Boundary.start('template', offset, offset + code.length, features);
 			yield `'`;
-			yield* generateCamelized(code, 'template', offset, { __combineToken: token });
+			yield* generateCamelized(code, 'template', offset, boundary.features);
 			yield `'`;
-			yield endBoundary(token, offset + code.length);
+			yield boundary.end();
 		}
 	}
 	else {
-		if (identifierRegex.test(code)) {
+		if (identifierRE.test(code)) {
 			yield [code, 'template', offset, features];
 		}
 		else {

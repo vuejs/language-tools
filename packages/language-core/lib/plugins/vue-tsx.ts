@@ -7,10 +7,12 @@ import { generateTemplate } from '../codegen/template';
 import { CompilerOptionsResolver } from '../compilerOptions';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
+import { BindingFlag } from '../parsers/utils';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
 import type { IR, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { computedSet } from '../utils/signals';
 
+export const serviceScriptRE = /^script_(?:js|jsx|ts|tsx)$/;
 export const tsCodegen = new WeakMap<IR, ReturnType<typeof useCodegen>>();
 
 const validLangs = new Set(['js', 'jsx', 'ts', 'tsx']);
@@ -28,7 +30,7 @@ const plugin: VueLanguagePlugin = ({
 		},
 
 		resolveEmbeddedCode(fileName, ir, embeddedFile) {
-			if (/script_(js|jsx|ts|tsx)/.test(embeddedFile.id)) {
+			if (serviceScriptRE.test(embeddedFile.id)) {
 				let codegen = tsCodegen.get(ir);
 				if (!codegen) {
 					tsCodegen.set(ir, codegen = useCodegen(ts, vueCompilerOptions, fileName, ir));
@@ -38,23 +40,23 @@ const plugin: VueLanguagePlugin = ({
 			}
 		},
 	};
-
-	function computeLang(ir: IR) {
-		let lang = ir.scriptSetup?.lang ?? ir.script?.lang;
-		if (ir.script && ir.scriptSetup) {
-			if (ir.scriptSetup.lang !== 'js') {
-				lang = ir.scriptSetup.lang;
-			}
-			else {
-				lang = ir.script.lang;
-			}
-		}
-		if (lang && validLangs.has(lang)) {
-			return lang;
-		}
-		return 'ts';
-	}
 };
+
+function computeLang(ir: IR) {
+	let lang = ir.scriptSetup?.lang ?? ir.script?.lang;
+	if (ir.script && ir.scriptSetup) {
+		if (ir.scriptSetup.lang !== 'js') {
+			lang = ir.scriptSetup.lang;
+		}
+		else {
+			lang = ir.script.lang;
+		}
+	}
+	if (lang && validLangs.has(lang)) {
+		return lang;
+	}
+	return 'ts';
+}
 
 export default plugin;
 
@@ -74,6 +76,10 @@ function useCodegen(
 		return vueCompilerOptions;
 	});
 
+	const getIsVapor = computed(() =>
+		getResolvedOptions().vapor || !!(ir.scriptSetup?.attrs.vapor || ir.template?.attrs.vapor)
+	);
+
 	const getScriptRanges = computed(() =>
 		ir.script && validLangs.has(ir.script.lang)
 			? parseScriptRanges(ts, ir.script.ast, getResolvedOptions())
@@ -86,32 +92,48 @@ function useCodegen(
 			: undefined
 	);
 
+	const getBindingFlags = computed(() => {
+		const flags = new Map<string, BindingFlag>(getScriptSetupRanges()?.bindings);
+		const scriptRanges = getScriptRanges();
+		if (ir.scriptSetup && scriptRanges) {
+			for (const [name, flag] of scriptRanges.bindings) {
+				if (!flags.has(name)) {
+					flags.set(name, flag);
+				}
+			}
+		}
+		return flags;
+	});
+
 	const getImportedComponents = computedSet(() => {
 		const names = new Set<string>();
-		const scriptSetupRanges = getScriptSetupRanges();
-		if (ir.scriptSetup && scriptSetupRanges) {
-			for (const range of scriptSetupRanges.components) {
-				names.add(ir.scriptSetup.content.slice(range.start, range.end));
-			}
-			const scriptRange = getScriptRanges();
-			if (ir.script && scriptRange) {
-				for (const range of scriptRange.components) {
-					names.add(ir.script.content.slice(range.start, range.end));
-				}
+		for (const [name, flags] of getBindingFlags()) {
+			if (flags & BindingFlag.Component) {
+				names.add(name);
 			}
 		}
 		return names;
 	});
 
+	const getSetupBindings = computedSet(() => new Set(getBindingFlags().keys()));
+
+	const getScriptSetupBindings = computedSet(() => new Set(getScriptSetupRanges()?.bindings.keys()));
+
 	const getSetupConsts = computedSet(() => {
-		const scriptSetupRanges = getScriptSetupRanges();
-		const names = new Set([
-			...scriptSetupRanges?.defineProps?.destructured?.keys() ?? [],
-			...getImportedComponents(),
-		]);
-		const rest = scriptSetupRanges?.defineProps?.destructuredRest;
-		if (rest) {
-			names.add(rest);
+		const names = new Set<string>();
+		for (const [name, flags] of getBindingFlags()) {
+			if (flags & BindingFlag.Const) {
+				names.add(name);
+			}
+		}
+		const { defineProps } = getScriptSetupRanges() ?? {};
+		if (defineProps?.destructured) {
+			for (const name of defineProps.destructured.keys()) {
+				names.add(name);
+			}
+			if (defineProps.destructuredRest) {
+				names.add(defineProps.destructuredRest);
+			}
 		}
 		return names;
 	});
@@ -158,7 +180,7 @@ function useCodegen(
 		return capitalize(camelize(name));
 	});
 
-	const getGeneratedTemplate = computed(() => {
+	const generateTemplatePass = (dotValueBindings: Set<string>) => {
 		if (getResolvedOptions().skipTemplateCodegen || !ir.template) {
 			return;
 		}
@@ -166,17 +188,25 @@ function useCodegen(
 			typescript: ts,
 			vueCompilerOptions: getResolvedOptions(),
 			template: ir.template,
+			isVapor: getIsVapor(),
+			scriptLang: computeLang(ir),
 			componentName: getComponentName(),
-			setupConsts: getSetupConsts(),
+			importedComponents: getImportedComponents(),
 			setupRefs: getSetupRefs(),
+			setupConsts: getSetupConsts(),
+			setupBindings: getSetupBindings(),
+			dotValueBindings,
+			reassertBindings: new Set(
+				[...dotValueBindings].filter(name => (getBindingFlags().get(name) ?? 0) & BindingFlag.Variable),
+			),
 			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getInheritAttrs(),
 		});
-	});
+	};
 
-	const getGeneratedStyle = computed(() => {
+	const generateStylePass = (dotValueBindings: Set<string>) => {
 		if (!ir.styles.length) {
 			return;
 		}
@@ -184,36 +214,71 @@ function useCodegen(
 			typescript: ts,
 			vueCompilerOptions: getResolvedOptions(),
 			styles: ir.styles,
-			setupConsts: getSetupConsts(),
+			scriptLang: computeLang(ir),
 			setupRefs: getSetupRefs(),
+			setupConsts: getSetupConsts(),
+			setupBindings: getSetupBindings(),
+			dotValueBindings,
 		});
+	};
+
+	const getLocalComponents = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
+		}
+		return new Set(
+			ir.template?.ast?.components
+				.flatMap(name => [camelize(name), capitalize(camelize(name))])
+				.filter(name => bindings.has(name)),
+		);
 	});
 
-	const getSetupExposed = computedSet(() => {
-		const allVars = new Set<string>();
-		const scriptSetupRanges = getScriptSetupRanges();
-		if (!ir.scriptSetup || !scriptSetupRanges) {
-			return allVars;
+	const getLocalDirectives = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
 		}
-		for (const range of scriptSetupRanges.bindings) {
-			const name = ir.scriptSetup.content.slice(range.start, range.end);
-			allVars.add(name);
+		// `v[A-Z]` is a naming heuristic: without type analysis there is no
+		// reliable signal to tell a directive from a same-named value binding.
+		// This feeds the local-directive type / completion, where false positives
+		// are harmless (they only surface as extra completion candidates).
+		return new Set([...bindings].filter(name => /^v[A-Z]/.test(name)));
+	});
+
+	// First pass: collect bindings used in narrowing positions (output discarded);
+	// the second pass (the computeds below) finalizes every access of these with `.value`.
+	const getDotValueBindings = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
 		}
-		const scriptRanges = getScriptRanges();
-		if (ir.script && scriptRanges) {
-			for (const range of scriptRanges.bindings) {
-				const name = ir.script.content.slice(range.start, range.end);
-				allVars.add(name);
-			}
+		const names: string[] = [];
+		for (const generated of [generateTemplatePass(new Set()), generateStylePass(new Set())]) {
+			names.push(...generated?.dotValueAccesses ?? []);
 		}
-		if (!allVars.size) {
-			return allVars;
+		return new Set(names);
+	});
+
+	const getGeneratedTemplate = computed(() => generateTemplatePass(getDotValueBindings()));
+	const getGeneratedStyle = computed(() => generateStylePass(getDotValueBindings()));
+
+	const getReferencedBindings = computedSet(() => {
+		const bindings = getSetupBindings();
+		if (!bindings.size) {
+			return bindings;
 		}
 		return new Set([
-			...getGeneratedTemplate()?.componentAccessMap.keys() ?? [],
-			...getGeneratedStyle()?.componentAccessMap.keys() ?? [],
-			...ir.template?.ast?.components.flatMap(name => [camelize(name), capitalize(camelize(name))]) ?? [],
-		].filter(name => allVars.has(name)));
+			...getGeneratedTemplate()?.contextAccesses.keys() ?? [],
+			...getGeneratedStyle()?.contextAccesses.keys() ?? [],
+		].filter(name => bindings.has(name)));
+	});
+
+	const getUsedSetupBindings = computedSet(() => {
+		return new Set([
+			...getReferencedBindings(),
+			...getLocalComponents(),
+		]);
 	});
 
 	const getGeneratedScript = computed(() => {
@@ -222,7 +287,11 @@ function useCodegen(
 			fileName,
 			script: ir.script,
 			scriptSetup: ir.scriptSetup,
-			exposed: getSetupExposed(),
+			scriptLang: computeLang(ir),
+			setupBindings: getScriptSetupBindings(),
+			localComponents: getLocalComponents(),
+			localDirectives: getLocalDirectives(),
+			dotValueBindings: getDotValueBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateAndStyleTypes: new Set([
@@ -242,6 +311,8 @@ function useCodegen(
 		getGeneratedScript,
 		getGeneratedTemplate,
 		getImportedComponents,
-		getSetupExposed,
+		getSetupBindings,
+		getLocalComponents,
+		getUsedSetupBindings,
 	};
 }
