@@ -306,7 +306,12 @@ function parse(pugCode: string) {
 							getDocOffset(attrToken.loc.end.line, attrToken.loc.end.column),
 						);
 						if (typeof attrToken.val === 'string' && attrText.includes('=')) {
-							let valText = attrToken.val;
+							// the lexer reads the code with `\n` line ends, so the value is found in that text and read from the code
+							const valStart = toCodeIndex(
+								attrText,
+								attrText.replace(/\r\n?/g, '\n').lastIndexOf(attrToken.val),
+							);
+							let valText = attrText.slice(valStart);
 							if (valText.startsWith('`') && valText.endsWith('`')) {
 								const innerContent = valText.slice(1, -1);
 								if (!innerContent.includes('"')) {
@@ -322,8 +327,8 @@ function parse(pugCode: string) {
 									valText = `'${innerContent.replace(/'/g, '"')}'`;
 								}
 							}
-							valText = valText.replace(/ \\\n/g, '//\n');
-							text += attrText.substring(0, attrText.lastIndexOf(attrToken.val)) + valText;
+							valText = valText.replace(/ \\(?=\r?\n)/g, '//');
+							text += attrText.slice(0, valStart) + valText;
 						}
 						else {
 							text += attrText;
@@ -425,6 +430,18 @@ export interface MixinNode {
 	block: BlockNode | null;
 	line: number;
 	column: number;
+}
+
+/** The index in `code` of `index` in `code` with `\n` line ends. */
+function toCodeIndex(code: string, index: number) {
+	let codeIndex = 0;
+	for (let i = 0; i < index; i++) {
+		if (code[codeIndex] === '\r' && code[codeIndex + 1] === '\n') {
+			codeIndex++;
+		}
+		codeIndex++;
+	}
+	return codeIndex;
 }
 
 function getLineText(document: TextDocument, line: number) {
