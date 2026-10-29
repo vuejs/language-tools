@@ -97,7 +97,7 @@ function* generateIdentifier(
 		},
 	);
 	if (!isBuiltInDirective(prop.name)) {
-		ctx.accessVariable('template', camelize(rawName), prop.loc.start.offset);
+		ctx.accessVariable('template', camelize(rawName), prop.loc.start.offset, false, rawName);
 	}
 	yield boundary.end();
 }

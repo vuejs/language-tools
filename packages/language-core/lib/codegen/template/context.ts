@@ -6,6 +6,7 @@ import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { endOfLine, isTsLang, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
+import { generateCamelized } from '../utils/camelized';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
@@ -214,14 +215,15 @@ export function createTemplateCodegenContext() {
 
 	// context accesses -----------------------------------------------------------
 
-	const contextAccesses = new Map<string, Map<string, Set<number>>>();
+	/** Per name and source, the offsets of the accesses and their source text, which may be the hyphenated name. */
+	const contextAccesses = new Map<string, Map<string, Map<number, string>>>();
 	const dotValueAccesses = new Set<string>();
 
 	// Ordered log of accessed names; event-handler closures slice from a mark
 	// to find the names accessed within their body.
 	const accessLog: string[] = [];
 
-	function accessVariable(source: string, name: string, offset?: number, dotValue = false) {
+	function accessVariable(source: string, name: string, offset?: number, dotValue = false, sourceName = name) {
 		accessLog.push(name);
 		let map = contextAccesses.get(name);
 		if (!map) {
@@ -229,10 +231,10 @@ export function createTemplateCodegenContext() {
 		}
 		let arr = map.get(source);
 		if (!arr) {
-			map.set(source, arr = new Set());
+			map.set(source, arr = new Map());
 		}
 		if (offset !== undefined) {
-			arr.add(offset);
+			arr.set(offset, sourceName);
 		}
 		if (dotValue) {
 			dotValueAccesses.add(name);
@@ -249,8 +251,8 @@ export function createTemplateCodegenContext() {
 		for (const [varName, map] of all) {
 			for (const [source, offsets] of map) {
 				if (!reservedWords.has(varName)) {
-					for (const offset of offsets) {
-						yield [varName, source, offset, codeFeatures.importCompletionOnly];
+					for (const [offset, sourceName] of offsets) {
+						yield* generateCamelized(sourceName, source, offset, codeFeatures.importCompletionOnly);
 						yield `,`;
 					}
 				}
