@@ -539,6 +539,9 @@
 			"path": "./#6237/tsconfig.json"
 		},
 		{
+			"path": "./#6246/tsconfig.json"
+		},
+		{
 			"path": "./#625/tsconfig.json"
 		},
 		{
@@ -696,6 +699,9 @@
 		},
 		{
 			"path": "./slots/tsconfig.json"
+		},
+		{
+			"path": "./template-function-scope/tsconfig.json"
 		},
 		{
 			"path": "./templateRef/tsconfig.json"

@@ -223,23 +223,8 @@ export function createTemplateCodegenContext() {
 	// to find the names accessed within their body.
 	const accessLog: string[] = [];
 
-	// Names accessed outside the generated functions that re-assert their bindings.
-	const topLevelAccesses = new Set<string>();
-	let functionDepth = 0;
-
-	function enterFunction() {
-		functionDepth++;
-	}
-
-	function exitFunction() {
-		functionDepth--;
-	}
-
 	function accessVariable(source: string, name: string, offset?: number, dotValue = false, sourceName = name) {
 		accessLog.push(name);
-		if (!functionDepth) {
-			topLevelAccesses.add(name);
-		}
 		let map = contextAccesses.get(name);
 		if (!map) {
 			contextAccesses.set(name, map = new Map());
@@ -364,9 +349,6 @@ export function createTemplateCodegenContext() {
 		contextAccesses,
 		dotValueAccesses,
 		accessLog,
-		topLevelAccesses,
-		enterFunction,
-		exitFunction,
 		accessVariable,
 		generateAutoImport,
 		conditions,

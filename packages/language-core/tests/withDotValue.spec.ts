@@ -18,24 +18,6 @@ function generateTemplateAssertions(source: string) {
 	return text.slice(text.indexOf('__VLS_withDotValue('), text.indexOf('// @ts-ignore\n['));
 }
 
-test('top-level assertions skip imports and mutable bindings read only inside functions', () => {
-	const text = generate(`<script setup lang="ts">
-import { SOME_CONST, OTHER } from './constants';
-const rows = ['a'];
-let count = 1;
-let clicks = 0;
-</script>
-
-<template>
-	<div v-if="count" />
-	{{ rows.map(() => SOME_CONST.A) }}
-	<button @click="clicks++; OTHER.B" />
-</template>
-`);
-	const topLevel = text.slice(text.indexOf('__VLS_withDotValue('), text.indexOf('if (count.value)'));
-	expect(topLevel.match(/(?<=__VLS_withDotValue\()\w+/g)).toEqual(['count', 'rows']);
-});
-
 test('functions in the template re-assert the imports and mutable bindings they read', () => {
 	expect(generateTemplateAssertions(`<script setup lang="ts">
 import { SOME_CONST } from './constants';
@@ -53,6 +35,7 @@ let count = 1;
 `)).toMatchInlineSnapshot(`
   "__VLS_withDotValue(count, {} as import('vue').Ref<unknown>);
   __VLS_withDotValue(rows, {} as import('vue').Ref<unknown>);
+  __VLS_withDotValue(SOME_CONST, {} as import('vue').Ref<unknown>);
   if (count.value) {
   __VLS_asFunctionalElement1(__VLS_intrinsics.div)({
   });

@@ -58,11 +58,9 @@ export function* generateInterpolation(
 			yield* write(generateNonIdentifierCode(code.slice(from, offset), block.name, start + from, features, from > 0));
 			from = offset;
 			if (enter) {
-				ctx.enterFunction();
 				frames.push({ body, codes: [], reasserts: new Set() });
 			}
 			else {
-				ctx.exitFunction();
 				yield* write(generateFunctionBody(frames.pop()!));
 			}
 		}
