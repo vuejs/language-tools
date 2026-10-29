@@ -208,6 +208,23 @@ describe('createIRPipeline', () => {
 		expect(() => source.ir.template!.lang).toThrow(`The format gave the block 'template' no \`lang\`.`);
 	});
 
+	it('updates with the format of a plugin whatever the errors of its result', () => {
+		const error = { code: 0, message: 'error' } as CompilerDOM.CompilerError;
+		const updated = { ...emptyResult(), comments: ['updated'] };
+		const custom = {
+			ir: { formats: { custom: { parse: () => ({ ...emptyResult(), errors: [error] }), update: () => updated } } },
+		};
+		const options = withPlugins({ custom }, { format: 'custom' });
+		const source = createVueSource(ts, options, createIRPipeline(ts, options), '/project/App.vue', createSnapshot('a'));
+		expect(source.ir.errors).toEqual([error]);
+
+		source.update({
+			...createSnapshot('ab'),
+			getChangeRange: () => ({ span: { start: 1, length: 0 }, newLength: 1 }),
+		});
+		expect(source.ir.comments).toEqual(['updated']);
+	});
+
 	it('applies the template compiler options of the plugins in order', () => {
 		const order: string[] = [];
 		const resolve = (name: string) => (options: object) => {

@@ -62,6 +62,15 @@ test('leaves the errors in the content of the template of an SFC to the template
 	]);
 });
 
+test('parses an SFC again on the edit after a parse with errors, those in the template included', () => {
+	const content = `<template><div></template>\n<script setup>const a = 1;</script>\n`;
+	const sfc = sfcParser.parse('/a.vue', content)!;
+	const start = content.indexOf('1;');
+
+	expect(sfc.errors).toEqual([]);
+	expect(sfcParser.update!(sfc, { start, end: start + 1, newText: '2' })).toBeUndefined();
+});
+
 test('reads a VitePress file as a template over the file and its blocks at the offsets of the file', () => {
 	const content =
 		`# {{ title }}\n\n<script setup lang="ts">\nconst title = 1;\n</script>\n\n<style scoped>a {}</style>\n`;

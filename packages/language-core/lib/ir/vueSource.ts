@@ -65,7 +65,7 @@ export class VueSource {
 	) {
 		const snapshot = this.snapshot;
 
-		if (lastResult?.format.update && !lastResult.result.errors.length) {
+		if (lastResult?.format.update) {
 			const change = snapshot.getChangeRange(lastResult.snapshot);
 			if (change) {
 				const newResult = lastResult.format.update(lastResult.result, {

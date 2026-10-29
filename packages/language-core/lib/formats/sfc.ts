@@ -1,10 +1,16 @@
 import type { IRAttr, VueFormat, VueFormatBlock, VueFormatResult } from '../types';
 import { parse } from './parseSfc';
 
+// the blocks of a file that parses with errors may not be where an edit would put them
+const parsedWithErrors = new WeakSet<VueFormatResult>();
+
 export const sfcParser: VueFormat = {
 	parse(_fileName, content) {
 		const sfc = parse(content);
 		const { template } = sfc;
+		if (sfc.errors.length) {
+			parsedWithErrors.add(sfc);
+		}
 		for (const error of sfc.errors) {
 			// Handle 'Element is missing end tag.' error, see #4893
 			if (
@@ -29,6 +35,9 @@ export const sfcParser: VueFormat = {
 	},
 
 	update(sfc, change) {
+		if (parsedWithErrors.has(sfc)) {
+			return;
+		}
 		const hit = getBlocks(sfc).find(([block]) =>
 			change.start >= block.offset && change.end <= block.offset + block.content.length
 		);
