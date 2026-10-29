@@ -74,12 +74,7 @@ export class VueSource {
 					newText: snapshot.getText(change.span.start, change.span.start + change.newLength),
 				});
 				if (newResult) {
-					return {
-						snapshot,
-						format: lastResult.format,
-						// force dirty
-						result: JSON.parse(JSON.stringify(newResult)) as VueFormatResult,
-					};
+					return { snapshot, format: lastResult.format, result: newResult };
 				}
 			}
 		}

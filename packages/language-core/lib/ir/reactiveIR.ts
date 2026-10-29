@@ -15,7 +15,6 @@ import type {
 	TemplateCompileResult,
 	TypeScript,
 	VueFormatBlock,
-	VueFormatElement,
 	VueFormatResult,
 } from '../types';
 import { computedArray, reactiveArray } from './signals';
@@ -305,11 +304,11 @@ export function useIR(
 		const getAttrs = computed(() => getBlock().attrs); // TODO: computed it
 		const getContent = computed(() => getBlock().content);
 		const getOffset = computed(() => getBlock().offset);
-		const getElement = computed<VueFormatElement | undefined>(oldElement => {
-			const element = getBlock().element;
-			return element && oldElement?.start === element.start && oldElement.end === element.end
-				? oldElement
-				: element;
+		const getElementStart = computed(() => getBlock().element?.start);
+		const getElementEnd = computed(() => getBlock().element?.end);
+		const getElement = computed(() => {
+			const start = getElementStart();
+			return start === undefined ? undefined : { start, end: getElementEnd()! };
 		});
 		return {
 			name,

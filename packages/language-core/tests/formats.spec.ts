@@ -35,14 +35,21 @@ test('reads the blocks of an SFC at the offsets of the file', () => {
 	expect(sfc.customBlocks[0]!.type).toBe('i18n');
 });
 
-test('shifts the offsets of the blocks after an edit', () => {
-	const content = `<script setup generic="T">const a = 1;</script>\n<style src="./a.css"></style>\n`;
+test('updates the blocks that an edit changes and keeps the others', () => {
+	const content = `<template><div/></template>\n<script setup generic="T">const a = 1;</script>\n`
+		+ `<style src="./a.css"></style>\n`;
 	const sfc = sfcParser.parse('/a.vue', content)!;
+	const snapshot = structuredClone(sfc);
 	const start = content.indexOf('1;');
 	const updated = sfcParser.update!(sfc, { start, end: start + 1, newText: '123' })!;
 	const newContent = content.slice(0, start) + '123' + content.slice(start + 1);
 
 	expect(updated).toEqual(sfcParser.parse('/a.vue', newContent));
+	expect(sfc).toEqual(snapshot);
+	expect(updated.template).toBe(sfc.template);
+	expect(updated.scriptSetup).not.toBe(sfc.scriptSetup);
+	expect(updated.styles[0]).not.toBe(sfc.styles[0]);
+	expect(sfcParser.update!(sfc, { start, end: start + 1, newText: '1' })).toBe(sfc);
 });
 
 test('reads a VitePress file as a template over the file and its blocks at the offsets of the file', () => {

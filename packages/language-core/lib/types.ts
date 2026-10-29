@@ -140,7 +140,10 @@ export interface TextChange {
 /** Reads a file into its blocks. */
 export interface VueFormat {
 	parse(fileName: string, content: string): VueFormatResult | undefined;
-	/** Updates `old` in place for `change`, or returns `undefined` to have the file parsed again. */
+	/**
+	 * The result for `change`, which keeps the objects of `old` for the blocks that `change` leaves as they are and
+	 * does not modify `old`, or `undefined` to have the file parsed again.
+	 */
 	update?(old: VueFormatResult, change: TextChange): VueFormatResult | undefined;
 }
 
