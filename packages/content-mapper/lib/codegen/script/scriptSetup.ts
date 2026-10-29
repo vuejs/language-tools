@@ -129,11 +129,13 @@ export function* generateGeneric(
 			`import('${vueCompilerOptions.lib}').ExtractPublicPropTypes<typeof ${names.propsOption}>`,
 		);
 	}
-	if (emitTypes.length) {
-		propTypes.push(typeAliasRef(names.EmitProps, scriptLang));
+	const emitProps = emitTypes.length ? typeAliasRef(names.EmitProps, scriptLang) : undefined;
+	if (emitProps) {
+		propTypes.push(emitProps);
 	}
 	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
-		propTypes.push(typeAliasRef(names.InheritedAttrs, scriptLang));
+		const inheritedAttrs = typeAliasRef(names.InheritedAttrs, scriptLang);
+		propTypes.push(emitProps ? `Omit<${inheritedAttrs}, keyof ${emitProps}>` : inheritedAttrs);
 	}
 
 	yield `return {} as {${newLine}`;
