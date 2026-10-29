@@ -16,5 +16,5 @@
 			}
 		}
 	],
-	"include": ["App.vue"]
+	"include": ["App.vue", "Child.vue", "Positions.vue"]
 }
