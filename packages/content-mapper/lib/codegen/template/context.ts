@@ -299,6 +299,9 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 	// event-handler closures slice from a mark to find the names accessed within their body.
 	const accessLog: string[] = [];
 
+	// Direct references preserve editor links to the script bindings behind synthetic wrappers.
+	const bindingReferences: TsCode[] = [];
+
 	// conditions -----------------------------------------------------------------
 
 	// Active branch conditions with the names each accessed; the guards are
@@ -389,6 +392,7 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 		isDeclared,
 		setMemberFeatures,
 		accessLog,
+		bindingReferences,
 		conditions,
 		generateConditionGuards,
 		hoistVars,

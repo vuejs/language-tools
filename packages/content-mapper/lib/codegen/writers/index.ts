@@ -5,6 +5,10 @@ export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
 export const identifierRE = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
+export function getDotValueBindingName(name: string): string {
+	return `__VLS_ref_${name}`;
+}
+
 export function isTsLang(lang: string): boolean {
 	return lang === 'ts' || lang === 'tsx';
 }

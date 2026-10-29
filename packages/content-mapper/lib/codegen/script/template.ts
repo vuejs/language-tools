@@ -9,6 +9,7 @@ import {
 	generateSfcBlockSection,
 	generateTypeAlias,
 	generateTypedVar,
+	getDotValueBindingName,
 	getRefBrandArgument,
 	intersectTypes,
 	isTsLang,
@@ -30,9 +31,8 @@ export function* generateTemplate(
 
 	for (const name of options.dotValueBindings) {
 		const flags = options.scriptSetupRanges?.bindings.get(name) ?? options.scriptRanges?.bindings.get(name) ?? 0;
-		// an assignment is not a read, so it cannot raise TS2454; the assertion
-		// still narrows `name` through the assignment target. The `unknown` step
-		// avoids TS2352 when `typeof name` is `undefined` (an untyped `let`).
+		// An assignment avoids TS2454 when wrapping an uninitialized binding.
+		// The `unknown` step avoids TS2352 when its type is `undefined` (an untyped `let`).
 		const target = flags & BindingFlag.Uninitialized
 			? `${name} = ${
 				isTsLang(options.scriptLang)
@@ -40,7 +40,7 @@ export function* generateTemplate(
 					: `/** @type {typeof ${name}} */ (/** @type {unknown} */ ({}))`
 			}`
 			: name;
-		yield `${names.withDotValue}(${target}, ${
+		yield `const ${getDotValueBindingName(name)} = ${names.withDotValue}(${target}, ${
 			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
 		})${endOfLine}`;
 	}

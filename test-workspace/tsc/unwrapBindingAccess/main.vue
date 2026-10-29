@@ -248,8 +248,8 @@
 	<div>{{ exactType(box2.value, {} as number) }}</div>
 	<div v-if="box2.value">{{ exactType(box2.value, {} as number) }}</div>
 
-	<!-- ref-or-nullish union (inject): `.value` resolves; the ref's own `value` absorbs the nullish member -->
-	<div>{{ exactType(injected, {} as number) }}</div>
+	<!-- ref-or-nullish union (inject): unwrapping preserves undefined until guarded -->
+	<div>{{ exactType(injected, {} as number | undefined) }}</div>
 	<div v-if="injected">{{ exactType(injected, {} as number) }}</div>
 
 	<!-- logical right operand is a plain read, not a narrowing position: `box` stays unmarked -->

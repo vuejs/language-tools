@@ -137,6 +137,8 @@ function useCodegen(
 				...getGeneratedStyle()?.generatedTypes ?? [],
 			]),
 			templateAndStyleCodes: [
+				...getGeneratedStyle()?.bindingReferences ?? [],
+				...getGeneratedTemplate()?.bindingReferences ?? [],
 				...getGeneratedStyle()?.codes ?? [],
 				...getGeneratedTemplate()?.codes ?? [],
 			],

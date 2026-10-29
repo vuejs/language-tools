@@ -8,7 +8,7 @@ import {
 } from '@vue/language-core';
 import { names } from '../names';
 import { Boundary, type TsCode } from '../tsCode';
-import { getRefBrandArgument } from '../writers';
+import { getDotValueBindingName, getRefBrandArgument } from '../writers';
 import type { TemplateCodegenContext } from './context';
 
 /**
@@ -43,6 +43,9 @@ export function* generateInterpolation(
 		const { name, offset, isShorthand, local, member } = reference;
 		const omitted = omit.some(([omitStart, omitEnd]) => omitStart <= offset && offset < omitEnd);
 		if (member && !omitted) {
+			if (local) {
+				ctx.accessLog.push(name);
+			}
 			ctx.setMemberFeatures(block, start + offset, memberFeatures);
 		}
 		if (local && !member) {
@@ -252,15 +255,9 @@ export function* generateIdentifier(
 	else if (options.setupBindings.has(name)) {
 		ctx.accessLog.push(name);
 		if (inTypeQuery || options.dotValueBindings.has(name)) {
-			yield* codes;
-			yield `.`;
-			const boundary = yield* Boundary.start(
-				source,
-				start,
-				end,
-				{ features: 0 },
-			);
-			yield `value`;
+			ctx.bindingReferences.push(`void `, ...codes, `;\n`);
+			const boundary = yield* Boundary.start(source, start, end, { features: 0 });
+			yield `${getDotValueBindingName(name)}.value`;
 			yield boundary.end();
 		}
 		else {

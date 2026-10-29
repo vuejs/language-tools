@@ -13,7 +13,15 @@ import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { names } from '../names';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
-import { endOfLine, generateTypedVar, getRefBrandArgument, identifierRE, isTsLang, newLine } from '../writers';
+import {
+	endOfLine,
+	generateTypedVar,
+	getDotValueBindingName,
+	getRefBrandArgument,
+	identifierRE,
+	isTsLang,
+	newLine,
+} from '../writers';
 import { generateCamelized } from '../writers/camelized';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -299,8 +307,8 @@ export function* generateModelEventExpression(
 	}
 }
 
-// Assertion narrowing does not flow into nested closures for imports and
-// `let`/`var` bindings (TS limitation), so re-assert those bindings at closure tops.
+// Refresh wrappers for imports and mutable bindings at closure tops, before
+// replaying the template guards against their current values.
 function* generateReasserts(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
@@ -321,7 +329,7 @@ function* generateReasserts(
 		}
 	}
 	for (const name of reasserts) {
-		yield `${names.withDotValue}(${name}, ${
+		yield `const ${getDotValueBindingName(name)} = ${names.withDotValue}(${name}, ${
 			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
 		})${endOfLine}`;
 	}
