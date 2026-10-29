@@ -43,7 +43,8 @@ export function parseInterpolationNode(node: CompilerDOM.InterpolationNode, temp
 
 export function isCompoundExpression(ts: TypeScript, ast: ts.SourceFile) {
 	if (ast.statements.length === 0) {
-		return false;
+		// Empty and comment-only handlers need a function body, not a parenthesized expression.
+		return true;
 	}
 	if (ast.statements.length === 1 && ast.text[ast.endOfFileToken.pos - 1] !== ';') {
 		const statement = ast.statements[0]!;
