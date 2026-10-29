@@ -218,12 +218,7 @@ export function* generateEventExpression(
 			scope.declare('$event');
 
 			const accessMark = ctx.accessLog.length;
-			const codes: Code[] = [];
-			ctx.enterFunction();
-			for (const code of interpolation) {
-				codes.push(code);
-			}
-			ctx.exitFunction();
+			const codes = [...interpolation];
 
 			yield* generateEventParameter(options, argsType);
 			// consume $event to avoid TS6133 when the expression doesn't use it
@@ -274,7 +269,6 @@ export function* generateModelEventExpression(
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const accessMark = ctx.accessLog.length;
-		ctx.enterFunction();
 		const codes = [...generateInterpolation(
 			options,
 			ctx,
@@ -286,7 +280,6 @@ export function* generateModelEventExpression(
 			undefined,
 			true,
 		)];
-		ctx.exitFunction();
 		yield* generateEventParameter(options, argsType);
 		yield* generateReasserts(options, ctx, accessMark);
 		yield* ctx.generateConditionGuards();

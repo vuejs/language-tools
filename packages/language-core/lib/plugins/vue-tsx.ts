@@ -263,19 +263,6 @@ function useCodegen(
 	const getGeneratedTemplate = computed(() => generateTemplatePass(getDotValueBindings()));
 	const getGeneratedStyle = computed(() => generateStylePass(getDotValueBindings()));
 
-	// Imports and `let`/`var` read only inside template functions are re-asserted there instead.
-	const getTopLevelDotValueBindings = computedSet(() => {
-		const topLevelAccesses = new Set([
-			...getGeneratedTemplate()?.topLevelAccesses ?? [],
-			...getGeneratedStyle()?.topLevelAccesses ?? [],
-		]);
-		return new Set(
-			[...getDotValueBindings()].filter(name =>
-				!((getBindingFlags().get(name) ?? 0) & BindingFlag.Variable) || topLevelAccesses.has(name)
-			),
-		);
-	});
-
 	const getReferencedBindings = computedSet(() => {
 		const bindings = getSetupBindings();
 		if (!bindings.size) {
@@ -304,7 +291,7 @@ function useCodegen(
 			setupBindings: getScriptSetupBindings(),
 			localComponents: getLocalComponents(),
 			localDirectives: getLocalDirectives(),
-			dotValueBindings: getTopLevelDotValueBindings(),
+			dotValueBindings: getDotValueBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateAndStyleTypes: new Set([

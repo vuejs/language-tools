@@ -164,18 +164,20 @@ export default _default;
 export type __VLS_LocalComponents = {};
 export type __VLS_GlobalComponents = import("vue").GlobalComponents;
 export type __VLS_LocalDirectives = {};
-export type __VLS_Slots = {} & {
-    header?: (props: typeof __VLS_1) => any;
-};
+export type __VLS_Slots = ReturnType<typeof __VLS_template>["__VLS_Slots"];
 export type __VLS_WithSlots<T, S> = T & {
     new (): {
         $slots: S;
     };
 };
 declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
-declare namespace __VLS_1 {
-    let count: number;
-}
+declare function __VLS_template(): {
+    __VLS_Slots: {
+        header?: (props: {
+            count: number;
+        }) => any;
+    };
+};
 declare const __VLS_base: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
     foo: {
         type: StringConstructor;
@@ -206,9 +208,7 @@ export default _default;
 export type __VLS_LocalComponents = {};
 export type __VLS_GlobalComponents = import("vue").GlobalComponents;
 export type __VLS_LocalDirectives = {};
-export type __VLS_Slots = {} & {
-    header?: (props: typeof __VLS_1) => any;
-};
+export type __VLS_Slots = ReturnType<typeof __VLS_template>["__VLS_Slots"];
 declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
     foo: {
         type: StringConstructor;
@@ -222,9 +222,13 @@ declare const __VLS_export: import("vue").DefineComponent<import("vue").ExtractP
 }>> & Readonly<{
     onChange?: ((...args: any[]) => any) | undefined;
 }>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
-declare namespace __VLS_1 {
-    let count: number;
-}
+declare function __VLS_template(): {
+    __VLS_Slots: {
+        header?: (props: {
+            count: number;
+        }) => any;
+    };
+};
 "
 `;
 
@@ -810,23 +814,25 @@ export {};
 `;
 
 exports[`Input: reference-type-slots/component.vue, Output: reference-type-slots/component.vue.d.ts 1`] = `
-"declare var __VLS_1: {}, __VLS_3: {
-    num: number;
-}, __VLS_5: {
-    str: string;
-}, __VLS_7: {
-    num: number;
-    str: string;
+"declare const __VLS_template: () => {
+    __VLS_Slots: {
+        'no-bind'?: (props: {}) => any;
+    } & {
+        default?: (props: {
+            num: number;
+        }) => any;
+    } & {
+        'named-slot'?: (props: {
+            str: string;
+        }) => any;
+    } & {
+        vbind?: (props: {
+            num: number;
+            str: string;
+        }) => any;
+    };
 };
-type __VLS_Slots = {} & {
-    'no-bind'?: (props: typeof __VLS_1) => any;
-} & {
-    default?: (props: typeof __VLS_3) => any;
-} & {
-    'named-slot'?: (props: typeof __VLS_5) => any;
-} & {
-    vbind?: (props: typeof __VLS_7) => any;
-};
+type __VLS_Slots = ReturnType<typeof __VLS_template>['__VLS_Slots'];
 declare const __VLS_base: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
 declare const _default: typeof __VLS_export;
@@ -855,23 +861,25 @@ type __VLS_WithSlots<T, S> = T & {
 `;
 
 exports[`Input: reference-type-slots/component-no-script.vue, Output: reference-type-slots/component-no-script.vue.d.ts 1`] = `
-"declare var __VLS_1: {}, __VLS_3: {
-    num: number;
-}, __VLS_5: {
-    str: string;
-}, __VLS_7: {
-    num: number;
-    str: string;
+"declare const __VLS_template: () => {
+    __VLS_Slots: {
+        'no-bind'?: (props: {}) => any;
+    } & {
+        default?: (props: {
+            num: number;
+        }) => any;
+    } & {
+        'named-slot'?: (props: {
+            str: string;
+        }) => any;
+    } & {
+        vbind?: (props: {
+            num: number;
+            str: string;
+        }) => any;
+    };
 };
-type __VLS_Slots = {} & {
-    'no-bind'?: (props: typeof __VLS_1) => any;
-} & {
-    default?: (props: typeof __VLS_3) => any;
-} & {
-    'named-slot'?: (props: typeof __VLS_5) => any;
-} & {
-    vbind?: (props: typeof __VLS_7) => any;
-};
+type __VLS_Slots = ReturnType<typeof __VLS_template>['__VLS_Slots'];
 declare const __VLS_base: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
 declare const _default: typeof __VLS_export;
