@@ -4,7 +4,7 @@ import {
 	type IRPipeline,
 	type IScriptSnapshot,
 	type Mapping,
-	SpanMapKind,
+	mapping,
 	type TypeScript,
 	type VirtualCode,
 	type VueCompilerOptions,
@@ -71,7 +71,7 @@ export class VueVirtualCode implements VirtualCode {
 		this._embeddedCodes = useEmbeddedCodes(ts, this.source.ir);
 		this._mappings = computed(() => {
 			const length = this.source.snapshot.getLength();
-			return [[0, length, 0, length, SpanMapKind.Verbatim, allFeatures]];
+			return [mapping(0, length, 0, length, allFeatures)];
 		});
 	}
 

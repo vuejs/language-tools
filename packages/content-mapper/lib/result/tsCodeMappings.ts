@@ -1,4 +1,4 @@
-import { isCompletionEnabled, type Mapping, SpanMapKind } from '@volar/language-core';
+import { isCompletionEnabled, type Mapping, mapping, SpanMapKind } from '@volar/language-core';
 import type { VueCodeMarker } from '@vue/language-core';
 import { isSynthesizedIgnore, OpenRanges, type TsCode } from '../codegen/tsCode';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../protocol';
@@ -41,7 +41,7 @@ function fromGroup(group: Entry[]): Mapping[] {
 }
 
 function toMapping({ generatedStart, length, sourceStart, info }: Entry): Mapping {
-	return [generatedStart, length, sourceStart, length, info.kind ?? SpanMapKind.Verbatim, info.features];
+	return mapping(generatedStart, length, sourceStart, length, info.features, info.kind);
 }
 
 /**
