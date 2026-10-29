@@ -34,7 +34,8 @@ export function* generateSlotOutlet(
 	});
 
 	if (options.hasDefineSlots) {
-		yield `${names.asFunctionalSlot}(`;
+		const slotVar = ctx.getInternalVariable();
+		yield `const ${slotVar} = ${names.asFunctionalSlot}(`;
 		if (nameProp) {
 			let codes: Generator<Code> | Code[];
 			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
@@ -60,22 +61,43 @@ export function* generateSlotOutlet(
 				codes = [`['default']`];
 			}
 
-			const boundary = yield* Boundary.start('template', nameProp.loc.start.offset, codeFeatures.verification);
+			const boundary = yield* Boundary.start(
+				'template',
+				nameProp.loc.start.offset,
+				nameProp.loc.end.offset,
+				codeFeatures.verification,
+			);
 			yield options.slotsAssignName ?? names.slots;
 			yield* codes;
-			yield boundary.end(nameProp.loc.end.offset);
+			yield boundary.end();
 		}
 		else {
-			const boundary = yield* Boundary.start('template', startTagOffset, codeFeatures.verification);
+			const boundary = yield* Boundary.start(
+				'template',
+				startTagOffset,
+				startTagEndOffset,
+				codeFeatures.verification,
+			);
 			yield `${options.slotsAssignName ?? names.slots}[`;
-			const boundary2 = yield* Boundary.start('template', startTagOffset, codeFeatures.verification);
+			const boundary2 = yield* Boundary.start(
+				'template',
+				startTagOffset,
+				startTagEndOffset,
+				codeFeatures.verification,
+			);
 			yield `'default'`;
-			yield boundary2.end(startTagEndOffset);
+			yield boundary2.end();
 			yield `]`;
-			yield boundary.end(startTagEndOffset);
+			yield boundary.end();
 		}
-		yield `)(`;
-		const boundary = yield* Boundary.start('template', startTagOffset, codeFeatures.verification);
+		yield `)${endOfLine}`;
+		yield `${slotVar}(`;
+		const boundary = yield* Boundary.start(
+			'template',
+			startTagOffset,
+			startTagEndOffset,
+			codeFeatures.verification,
+		);
 		yield `{${newLine}`;
 		yield* generateElementProps(
 			options,
@@ -83,9 +105,11 @@ export function* generateSlotOutlet(
 			node,
 			node.props.filter(prop => prop !== nameProp),
 			true,
+			undefined,
+			`Parameters<typeof ${slotVar}>[0]`,
 		);
 		yield `}`;
-		yield boundary.end(startTagEndOffset);
+		yield boundary.end();
 		yield `)${endOfLine}`;
 	}
 	else {

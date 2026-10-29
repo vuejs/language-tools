@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { exactType } from '../shared';
+
 interface Props {
 	onClick?: () => number;
 }
@@ -17,4 +19,8 @@ declare const foo: unknown;
 	<template v-if="true">
 		<Comp @click="(() => 1)()" />
 	</template>
+	<!-- #6114 -->
+	<div @click="
+		typeof foo === 'string' && exactType(foo, {} as string)
+	" />
 </template>

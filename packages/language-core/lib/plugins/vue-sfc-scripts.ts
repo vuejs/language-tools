@@ -1,3 +1,4 @@
+import { codeFeatures } from '../codegen/codeFeatures';
 import type { EmbeddedCodeInfo, VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
@@ -29,10 +30,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 					script.content,
 					script.name,
 					0,
-					{
-						structure: true,
-						format: true,
-					},
+					codeFeatures.structureAndFormat,
 				]);
 			}
 		},

@@ -4,24 +4,26 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRBlock, IRScript, IRScriptSetup, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
-import { generateGeneric, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
+import { generateGeneric, generateMacros, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
 import { generateTemplate } from './template';
-
-const exportExpression = `{} as typeof ${names.export}`;
 
 export interface ScriptCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	script: IRScript | undefined;
 	scriptSetup: IRScriptSetup | undefined;
 	fileName: string;
+	scriptLang: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateAndStyleTypes: Set<string>;
 	templateAndStyleCodes: Code[];
-	exposed: Set<string>;
+	setupBindings: Set<string>;
+	localComponents: Set<string>;
+	localDirectives: Set<string>;
+	dotValueBindings: Set<string>;
 }
 
 export { generate as generateScript };
@@ -37,6 +39,7 @@ function* generateWorker(
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
 	const { script, scriptRanges, scriptSetup, scriptSetupRanges, vueCompilerOptions, fileName } = options;
+	const exportExpression = asType(`typeof ${names.export}`, options.scriptLang);
 
 	yield* generateGlobalTypesReference(vueCompilerOptions, fileName);
 
@@ -51,23 +54,29 @@ function* generateWorker(
 		}
 
 		yield `import ${names.src} from `;
-		const boundary = yield* Boundary.start('main', script.src.offset, {
-			...codeFeatures.all,
-			...src !== script.src.text ? codeFeatures.navigationWithoutRename : {},
-		});
+		const boundary = yield* Boundary.start(
+			'main',
+			script.src.offset,
+			script.src.offset + script.src.text.length,
+			{
+				...codeFeatures.all,
+				...src !== script.src.text ? codeFeatures.navigationWithoutRename : {},
+			},
+		);
 		yield `'`;
 		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, boundary.features];
 		yield src.slice(script.src.text.length);
 		yield `'`;
-		yield boundary.end(script.src.offset + script.src.text.length);
+		yield boundary.end();
 		yield endOfLine;
 		yield `export default ${names.src}${endOfLine}`;
 
-		yield* generateTemplate(options, ctx, names.src);
+		yield* generateTemplate(options, names.src);
 	}
 	// <script> + <script setup>
 	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
 		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
+		yield* generateMacros(options);
 
 		// <script>
 		let selfType: string | undefined;
@@ -80,6 +89,7 @@ function* generateWorker(
 				exportDefault,
 				vueCompilerOptions,
 				selfType = names.self,
+				exportExpression,
 			);
 		}
 		else {
@@ -101,7 +111,7 @@ function* generateWorker(
 					ctx,
 					scriptSetup,
 					scriptSetupRanges,
-					generateTemplate(options, ctx, selfType),
+					generateTemplate(options, selfType),
 				),
 			);
 		}
@@ -112,7 +122,7 @@ function* generateWorker(
 				ctx,
 				scriptSetup,
 				scriptSetupRanges,
-				generateTemplate(options, ctx, selfType),
+				generateTemplate(options, selfType),
 				[`return `],
 			);
 			yield `})()${endOfLine}`;
@@ -121,6 +131,7 @@ function* generateWorker(
 	// only <script setup>
 	else if (scriptSetup && scriptSetupRanges) {
 		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
+		yield* generateMacros(options);
 
 		if (scriptSetup.generic) {
 			yield* generateExportDeclareEqual(scriptSetup, names.export);
@@ -135,7 +146,7 @@ function* generateWorker(
 					ctx,
 					scriptSetup,
 					scriptSetupRanges,
-					generateTemplate(options, ctx),
+					generateTemplate(options),
 				),
 			);
 		}
@@ -146,7 +157,7 @@ function* generateWorker(
 				ctx,
 				scriptSetup,
 				scriptSetupRanges,
-				generateTemplate(options, ctx),
+				generateTemplate(options),
 				generateExportDeclareEqual(scriptSetup, names.export),
 			);
 		}
@@ -163,14 +174,15 @@ function* generateWorker(
 				exportDefault,
 				vueCompilerOptions,
 				names.export,
-				generateTemplate(options, ctx, names.export),
+				exportExpression,
+				generateTemplate(options, names.export),
 			);
 		}
 		else {
 			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
 			yield* generateExportDeclareEqual(script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
-			yield* generateTemplate(options, ctx, names.export);
+			yield* generateTemplate(options, names.export);
 			yield `export default ${exportExpression}${endOfLine}`;
 		}
 	}
@@ -185,6 +197,7 @@ function* generateScriptWithExportDefault(
 	exportDefault: NonNullable<ScriptRanges['exportDefault']>,
 	vueCompilerOptions: VueCompilerOptions,
 	varName: string,
+	exportExpression: string,
 	templateGenerator?: Generator<Code>,
 ): Generator<Code> {
 	const componentOptions = scriptRanges.exportDefault?.options;
@@ -264,8 +277,8 @@ function* generateGlobalTypesReference(
 
 function* generateExportDeclareEqual(block: IRBlock, name: string): Generator<Code> {
 	yield `const `;
-	const boundary = yield* Boundary.start(block.name, 0, codeFeatures.doNotReportTs6133);
+	const boundary = yield* Boundary.start(block.name, 0, block.content.length, codeFeatures.doNotReportTs6133);
 	yield name;
-	yield boundary.end(block.content.length);
+	yield boundary.end();
 	yield ` = `;
 }

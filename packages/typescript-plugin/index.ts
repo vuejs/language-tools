@@ -38,7 +38,7 @@ export = createLanguageServicePlugin(
 		addVueCommands();
 
 		let _language: core.Language<string> | undefined;
-		info.languageService = preprocessLanguageService(info.languageService, () => _language);
+		info.languageService = preprocessLanguageService(ts, info.languageService, () => _language);
 
 		return {
 			languagePlugins: [languagePlugin],
@@ -51,7 +51,7 @@ export = createLanguageServicePlugin(
 					vueOptions,
 					fileName => fileName,
 				);
-				(info.project as any).__vue__ = { language };
+				(info.project as any).__vue__ = { language, vueOptions };
 			},
 		};
 
@@ -136,7 +136,7 @@ export = createLanguageServicePlugin(
 			});
 			session.addProtocolHandler('_vue:getAutoImportSuggestions', request => {
 				const [fileName, position]: Parameters<Requests['getAutoImportSuggestions']> = request.arguments;
-				const { project, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
+				const { project, language, vueOptions, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
 				const tsLanguageService = projectToOriginalLanguageService.get(project);
 				if (!tsLanguageService) {
 					return createResponse(undefined);
@@ -173,7 +173,10 @@ export = createLanguageServicePlugin(
 									return data?.__vue__componentAutoImport || data?.__vue__autoImport;
 								});
 							for (const entry of result.entries) {
-								const data = (entry.data as VueCompletionData)!;
+								const data = entry.data as VueCompletionData;
+								if (!data) {
+									continue;
+								}
 								data.__vue__autoImportSuggestions = {
 									fileName,
 									position: tsPosition + sourceScript.snapshot.getLength(),
@@ -206,7 +209,10 @@ export = createLanguageServicePlugin(
 								return data?.__vue__componentAutoImport || data?.__vue__autoImport;
 							});
 						for (const entry of result.entries) {
-							const data = (entry.data as VueCompletionData)!;
+							const data = entry.data as VueCompletionData;
+							if (!data) {
+								continue;
+							}
 							data.__vue__autoImportSuggestions = {
 								fileName,
 								position: 0,
@@ -327,7 +333,8 @@ export = createLanguageServicePlugin(
 			});
 			session.addProtocolHandler('_vue:resolveModuleName', request => {
 				const [fileName, ...args]: Parameters<Requests['resolveModuleName']> = request.arguments;
-				return createResponse(resolveModuleName(ts, info.languageServiceHost, fileName, ...args));
+				const { project } = getProject(fileName);
+				return createResponse(resolveModuleName(ts, project, fileName, ...args));
 			});
 
 			projectService.logger.info('Vue specific commands are successfully added.');
@@ -371,6 +378,7 @@ export = createLanguageServicePlugin(
 					project,
 					program: project.getLanguageService().getProgram()!,
 					language: (project as any).__vue__.language as core.Language<string>,
+					vueOptions: (project as any).__vue__.vueOptions as core.VueCompilerOptions,
 				};
 			}
 		}

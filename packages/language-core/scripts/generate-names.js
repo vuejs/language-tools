@@ -13,10 +13,10 @@ async function generateNames() {
 	/** @type {Set<string>} */
 	const camelNames = new Set();
 
-	const declReg = /(?<=const\s+)\w*?(?=:)|(?<=type\s+)\w*?(?=\s*=|<)|(?<=function\s+)\w*?(?=\(|<)/g;
+	const declarationRE = /(?<=const\s+)\w*?(?=:)|(?<=type\s+)\w*?(?=\s*=|<)|(?<=function\s+)\w*?(?=\(|<)/g;
 	const prefix = '__VLS_';
 
-	for (const match of typeText.matchAll(declReg)) {
+	for (const match of typeText.matchAll(declarationRE)) {
 		const name = match[0].slice(prefix.length);
 		if (name[0]?.toUpperCase() === name[0]) {
 			pascalNames.add(name);

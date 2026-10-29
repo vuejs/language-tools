@@ -3,9 +3,9 @@ import { Boundary } from './boundary';
 
 export function* generateUnicode(code: string, offset: number, features: VueCodeInformation): Generator<Code> {
 	if (needToUnicode(code)) {
-		const boundary = yield* Boundary.start('template', offset, features);
+		const boundary = yield* Boundary.start('template', offset, offset + code.length, features);
 		yield toUnicode(code);
-		yield boundary.end(offset + code.length);
+		yield boundary.end();
 	}
 	else {
 		yield [code, 'template', offset, features];

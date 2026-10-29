@@ -19,6 +19,7 @@ import * as focusMode from './focusMode';
 import * as interpolationDecorators from './interpolationDecorators';
 import { restrictFormattingEditsToRange } from './rangeFormatting';
 import * as reactivityVisualization from './reactivityVisualization';
+import { registerModuleTransform } from './registerModuleTransform';
 import * as welcome from './welcome';
 
 let serverPath = resolveServerPath();
@@ -247,8 +248,6 @@ function resolveTsdkPath() {
 }
 
 function resolveServerPath() {
-	const tsPluginEntry = path.join(__dirname, '..', 'node_modules', 'vue-typescript-plugin-pack', 'index.js');
-
 	if (!config.server.path) {
 		return;
 	}
@@ -263,8 +262,8 @@ function resolveServerPath() {
 		try {
 			const entryFile = require.resolve('./index.js', { paths: [serverPath] });
 			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-			// FIXME: cannot work on read-only file system
-			fs.writeFileSync(tsPluginEntry, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
+			// allow tsserver inherit the per-window path without mutating the shared plugin shim
+			process.env.VUE_TYPESCRIPT_PLUGIN_PATH = tsPluginPath;
 			return entryFile;
 		}
 		catch {}
@@ -277,7 +276,6 @@ function patchTypeScriptExtension() {
 		return false;
 	}
 
-	const fs = require('node:fs');
 	const child_process = require('node:child_process');
 	const extensionJsPath = require.resolve('./dist/extension.js', { paths: [tsExtension.extensionPath] });
 	const { publisher, name } = require('../package.json');
@@ -297,72 +295,68 @@ function patchTypeScriptExtension() {
 		},
 	];
 
-	const readFileSync = fs.readFileSync;
-	fs.readFileSync = (...args: any[]) => {
-		if (args[0] === extensionJsPath) {
-			let text = readFileSync(...args) as string;
+	registerModuleTransform(extensionJsPath, text => {
+		const id = String.raw`[\w$]+(?:\.[\w$]+)?`;
 
-			const id = String.raw`[\w$]+(?:\.[\w$]+)?`;
+		// patch jsTsLanguageModes
+		// before 1.110: t.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]
+		// since 1.110:  "javascriptreact",Oh=[Ma,Ua,bl,Ns]
+		text = text.replace(
+			new RegExp(
+				String
+					.raw`(\.jsTsLanguageModes=\[${id},${id},${id},${id}\])|("javascriptreact",(${id})=\[(${id},${id},${id},${id})\])`,
+			),
+			(_match, oldFormat, _newFull, newLhs, newElements) => {
+				if (oldFormat) {
+					return oldFormat + '.concat("vue")';
+				}
+				return `"javascriptreact",${newLhs}=[${newElements}].concat("vue")`;
+			},
+		);
+		// patch isSupportedLanguageMode (4 language IDs)
+		// before 1.110: .languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]
+		// since 1.110:  .languages.match([bl,Ns,Ma,Ua],r)>0
+		text = text.replace(
+			new RegExp(String.raw`\.languages\.match\(\[(${id},${id},${id},${id})\]`),
+			(_, ids) => `.languages.match([${ids}].concat("vue")`,
+		);
+		// patch isTypeScriptDocument (2 language IDs)
+		// before 1.110: .languages.match([t.typescript,t.typescriptreact]
+		// since 1.110:  .languages.match([bl,Ns],r)>0
+		text = text.replace(
+			new RegExp(String.raw`\.languages\.match\(\[(${id},${id})\]`),
+			(_, ids) => `.languages.match([${ids}].concat("vue")`,
+		);
+		// patch standardFileExtensions
+		text = text.replace(
+			new RegExp(String.raw`registerExtensionLanguageProvider\((${id}),${id}\)\{`),
+			(match, id) => `${match}if(${id}.languageIds.includes("vue"))${id}.standardFileExtensions.push("vue");`,
+		);
+		// patch getJsTsFileBeingMoved
+		text = text.replace(
+			new RegExp(String.raw`.RelativePattern\(${id},"\*\*\/\*\.\{ts,tsx,js,jsx`),
+			match => `${match},vue`,
+		);
 
-			// patch jsTsLanguageModes
-			// before 1.110: t.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]
-			// since 1.110:  "javascriptreact",Oh=[Ma,Ua,bl,Ns]
-			text = text.replace(
-				new RegExp(
-					String
-						.raw`(\.jsTsLanguageModes=\[${id},${id},${id},${id}\])|("javascriptreact",(${id})=\[(${id},${id},${id},${id})\])`,
-				),
-				(_match, oldFormat, _newFull, newLhs, newElements) => {
-					if (oldFormat) {
-						return oldFormat + '.concat("vue")';
-					}
-					return `"javascriptreact",${newLhs}=[${newElements}].concat("vue")`;
-				},
-			);
-			// patch isSupportedLanguageMode (4 language IDs)
-			// before 1.110: .languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]
-			// since 1.110:  .languages.match([bl,Ns,Ma,Ua],r)>0
-			text = text.replace(
-				new RegExp(String.raw`\.languages\.match\(\[(${id},${id},${id},${id})\]`),
-				(_, ids) => `.languages.match([${ids}].concat("vue")`,
-			);
-			// patch isTypeScriptDocument (2 language IDs)
-			// before 1.110: .languages.match([t.typescript,t.typescriptreact]
-			// since 1.110:  .languages.match([bl,Ns],r)>0
-			text = text.replace(
-				new RegExp(String.raw`\.languages\.match\(\[(${id},${id})\]`),
-				(_, ids) => `.languages.match([${ids}].concat("vue")`,
-			);
-			// patch standardFileExtensions
-			text = text.replace(
-				new RegExp(String.raw`registerExtensionLanguageProvider\((${id}),${id}\)\{`),
-				(match, id) => `${match}if(${id}.languageIds.includes("vue"))${id}.standardFileExtensions.push("vue");`,
-			);
-			// patch getJsTsFileBeingMoved
-			text = text.replace(
-				new RegExp(String.raw`.RelativePattern\(${id},"\*\*\/\*\.\{ts,tsx,js,jsx`),
-				match => `${match},vue`,
-			);
+		// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
+		// before 1.110: "--globalPlugins",i.plugins
+		// since 1.110:  "--globalPlugins",o.plugins.map(v=>v.name).join(","))
+		text = text.replace(
+			/"--globalPlugins",([\w$]+)\.plugins/,
+			s => s + `.sort((a,b)=>(b.name==="${tsPluginName}"?-1:0)-(a.name==="${tsPluginName}"?-1:0))`,
+		);
 
-			// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
-			// before 1.110: "--globalPlugins",i.plugins
-			// since 1.110:  "--globalPlugins",o.plugins.map(v=>v.name).join(","))
-			text = text.replace(
-				/"--globalPlugins",([\w$]+)\.plugins/,
-				s => s + `.sort((a,b)=>(b.name==="${tsPluginName}"?-1:0)-(a.name==="${tsPluginName}"?-1:0))`,
-			);
+		return text;
+	});
 
-			return text;
-		}
-		return readFileSync(...args);
-	};
+	const patchTsserverPath = path.join(__dirname, 'patch-tsserver.js');
 
 	const spawn = child_process.spawn;
 	child_process.spawn = (...args: any[]) => {
 		if (Array.isArray(args[1])) {
 			const index = args[1].findIndex(arg => typeof arg === 'string' && isTsserverFile(arg));
 			if (index !== -1) {
-				args[1][index] = transformTsserver(args[1][index]);
+				args[1].splice(index, 0, '--require', patchTsserverPath);
 			}
 		}
 		return spawn(...args);
@@ -371,63 +365,15 @@ function patchTypeScriptExtension() {
 	const fork = child_process.fork;
 	child_process.fork = (...args: any[]) => {
 		if (typeof args[0] === 'string' && isTsserverFile(args[0])) {
-			args[0] = transformTsserver(args[0]);
+			const optionsIndex = Array.isArray(args[1]) ? 2 : 1;
+			const options = args[optionsIndex] ??= {};
+			options.execArgv = [...options.execArgv ?? process.execArgv, '--require', patchTsserverPath];
 		}
 		return fork(...args);
 	};
 
 	function isTsserverFile(file: string) {
 		return path.isAbsolute(file) && path.basename(file) === 'tsserver.js';
-	}
-
-	function transformTsserver(serverPath: string) {
-		const resolvedServerPath = require.resolve(serverPath, { paths: [path.dirname(serverPath)] });
-		const typescriptPath = path.join(path.dirname(resolvedServerPath), 'typescript.js');
-		const text = `
-			const fs = require('node:fs');
-			const readFileSync = fs.readFileSync;
-			fs.readFileSync = (...args) => {
-			  if (args[0] === ${JSON.stringify(typescriptPath)}) {
-					let content = readFileSync(...args);
-					content = content.replace(
-						/supportedTSExtensions = .*(?=;)/,
-						s => s + \`.concat([".vue"])\`,
-					);
-					content = content.replace(
-						/supportedJSExtensions = .*(?=;)/,
-						s => s + \`.concat([".vue"])\`,
-					);
-					content = content.replace(
-						/allSupportedExtensions = .*(?=;)/,
-						s => s + \`.concat([".vue"])\`,
-					);
-					content = content.replace(
-						/function changeExtension\\(/,
-						s => \`function changeExtension(path, newExtension) {
-							return [".vue"].some(ext => path.endsWith(ext))
-							? path + newExtension
-							: _changeExtension(path, newExtension);
-						}\n\` + s.replace("changeExtension", "_changeExtension"),
-					);
-					content = content.replace(
-						/const isJs = hasJSFileExtension\\((.*?)\\.fileName\\)/,
-						(s, file) => \`const isJs = isSourceFileJS(\${file})\`,
-					);
-					return content;
-				}
-				return readFileSync(...args);
-			};
-			require(${JSON.stringify(resolvedServerPath)});
-		`;
-		try {
-			const proxyPath = path.join(__dirname, 'tsserver.js');
-			// FIXME: cannot work on read-only file system
-			fs.writeFileSync(proxyPath, text);
-			return proxyPath;
-		}
-		catch {
-			return serverPath;
-		}
 	}
 
 	const loadedModule = require.cache[extensionJsPath];

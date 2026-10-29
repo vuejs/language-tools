@@ -1,6 +1,6 @@
 <!-- @inferComponentDollarEl true -->
 
-<script lang="ts" setup generic="T">
+<script lang="ts" setup generic>
 const doSomething = () => {
 	console.log('Something!');
 };

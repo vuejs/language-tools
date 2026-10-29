@@ -331,6 +331,19 @@ export function createSchemaResolvers(
 		else if (subtype.getCallSignatures().length === 1) {
 			return resolveCallbackSchema(subtype.getCallSignatures()[0]!);
 		}
+		else if (subtype.flags & ts.TypeFlags.EnumLiteral && subtype.isLiteral()) {
+			// enum members stringify to their qualified name (e.g. "MyEnum.Small"), which
+			// hides the runtime value from consumers such as docs generators; expose the
+			// value alongside, printed like any other literal
+			const { value } = subtype;
+			if (typeof value === 'string' || typeof value === 'number') {
+				return {
+					kind: 'literal',
+					type,
+					value: JSON.stringify(value),
+				};
+			}
+		}
 
 		return type;
 	}

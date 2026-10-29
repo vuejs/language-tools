@@ -20,8 +20,12 @@ export function getComponentNames(
 		.filter(entry => !entry.includes('$') && !entry.startsWith('_'))
 		?? [];
 
-	componentNames.push(getSelfComponentName(virtualCode.fileName));
-	componentNames.push(...tsCodegen.get(virtualCode.ir)?.getImportedComponents() ?? []);
+	const codegen = tsCodegen.get(virtualCode.ir);
+	componentNames.push(
+		getSelfComponentName(virtualCode.fileName),
+		...codegen?.getImportedComponents() ?? [],
+		...codegen?.getSetupBindings() ?? [],
+	);
 
 	return [...new Set(componentNames)];
 }

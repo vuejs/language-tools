@@ -1,7 +1,6 @@
 {
 	"recommendations": [
 		"dprint.dprint",
-		"johnsoncodehk.vscode-tsslint",
-		"typescriptteam.native-preview"
+		"johnsoncodehk.vscode-tsslint"
 	]
 }

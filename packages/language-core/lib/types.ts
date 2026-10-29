@@ -9,11 +9,15 @@ export type { SFCParseResult } from '@vue/compiler-sfc';
 
 export { VueEmbeddedCode };
 
-export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
-	strictTemplates?: boolean;
-	target?: 'auto' | 3 | 3.3 | 3.5 | 3.6 | 99 | number;
-	plugins?: RawPlugin[];
-};
+export type RawVueCompilerOptions =
+	& Partial<
+		Omit<VueCompilerOptions, 'target' | 'plugins' | 'isDataAttribute' | 'isHtmlAttribute'>
+	>
+	& {
+		strictTemplates?: boolean;
+		target?: 'auto' | 3 | 3.3 | 3.5 | 3.6 | 99 | number;
+		plugins?: RawPlugin[];
+	};
 
 export type RawPlugin =
 	| string
@@ -26,7 +30,6 @@ export interface VueCodeInformation extends CodeInformation {
 	__propsCompletion?: boolean;
 	__shorthandExpression?: 'html' | 'js';
 	__combineToken?: symbol;
-	__linkedToken?: symbol;
 }
 
 export type Code = Segment<VueCodeInformation>;
@@ -53,6 +56,7 @@ export interface VueCompilerOptions {
 	inferTemplateDollarRefs: boolean;
 	inferTemplateDollarSlots: boolean;
 	skipTemplateCodegen: boolean;
+	vapor: boolean;
 	fallthroughAttributes: boolean;
 	checkRequiredFallthroughAttributes: boolean;
 	resolveStyleImports: boolean;
@@ -60,6 +64,8 @@ export interface VueCompilerOptions {
 	fallthroughComponentNames: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
+	isDataAttribute: (name: string) => boolean;
+	isHtmlAttribute: (name: string) => boolean;
 	optionsWrapper: [string, string] | [];
 	macros: {
 		defineProps: string[];
