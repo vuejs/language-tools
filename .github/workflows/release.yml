@@ -61,6 +61,8 @@ jobs:
       id-token: write # npm trusted publishing / provenance
     outputs:
       version: ${{ steps.publish.outputs.version }}
+      previous: ${{ steps.publish.outputs.previous }}
+      commits: ${{ steps.publish.outputs.commits }}
     steps:
       - name: Validate inputs
         env:
@@ -144,6 +146,10 @@ jobs:
           pnpm -r --filter '!./volar.js/**' --filter '!./services/**' publish --tag "$DIST_TAG" --no-git-checks
           published="$(node -p "require('./lerna.json').version")"
           echo "version=$published" >> "$GITHUB_OUTPUT"
+          if previous="$(git describe --tags --abbrev=0 --match 'v*' "v$published^" 2>/dev/null)"; then
+            echo "previous=${previous#v}" >> "$GITHUB_OUTPUT"
+            echo "commits=$(git rev-list --count "$previous..v$published^")" >> "$GITHUB_OUTPUT"
+          fi
           echo "Published \`$published\` with dist-tag \`$DIST_TAG\`." >> "$GITHUB_STEP_SUMMARY"
 
   comment-alpha:
@@ -158,6 +164,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           HEAD: ${{ github.repository_owner }}:${{ github.ref_name }}
           VERSION: ${{ needs.release.outputs.version }}
+          PREVIOUS: ${{ needs.release.outputs.previous }}
+          COMMITS: ${{ needs.release.outputs.commits }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           if [[ -z "$VERSION" ]]; then
@@ -169,14 +177,14 @@ jobs:
             echo "No open pull request has the head $HEAD; nothing to comment on."
             exit 0
           fi
-          fence='```'
-          body="Published \`$VERSION\` to npm with dist-tag \`alpha\` ([release run]($RUN_URL)).
-
-          ${fence}sh
-          npm i @vue/language-server@$VERSION
-          ${fence}
-
-          Every public package of this repository is published at \`$VERSION\`."
+          if [[ -n "$PREVIOUS" ]]; then
+            commits="$COMMITS commit"
+            (( COMMITS == 1 )) || commits+=s
+            since="$commits since \`$PREVIOUS\` ([diff]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/v$PREVIOUS...v$VERSION), [run]($RUN_URL))"
+          else
+            since="[run]($RUN_URL)"
+          fi
+          body="\`$VERSION\` is on npm with dist-tag \`alpha\`: $since."
           for pr in $prs; do
             gh api "repos/$GITHUB_REPOSITORY/issues/$pr/comments" -f body="$body" --jq '.html_url'
           done
