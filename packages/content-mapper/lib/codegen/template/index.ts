@@ -28,8 +28,6 @@ export interface TemplateCodegenOptions {
 	// Bindings narrowed at least once anywhere in the template/styles; every
 	// access of these is emitted with `.value`.
 	dotValueBindings: Set<string>;
-	// The subset of `dotValueBindings` re-asserted at closure tops (imports, `let`/`var`).
-	reassertBindings: Set<string>;
 	hasDefineSlots?: boolean;
 	propsAssignName?: string;
 	slotsAssignName?: string;

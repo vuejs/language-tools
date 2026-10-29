@@ -1,5 +1,4 @@
 import { getScriptLang, type IR, type ScriptAnalysis, type TypeScript, type VueSource } from '@vue/language-core';
-import { BindingFlag } from '@vue/language-core/lib/script/scriptBindings';
 import { computed } from 'alien-signals';
 import { type CodegenPlugin, getContributions } from './plugin';
 import { generateScript } from './script';
@@ -46,7 +45,6 @@ function useCodegen(
 		getResolvedOptions,
 		getScriptRanges,
 		getScriptSetupRanges,
-		getBindingFlags,
 		getSetupBindings,
 		getSetupConsts,
 		getSetupRefs,
@@ -74,7 +72,6 @@ function useCodegen(
 		if (!ir.template) {
 			return;
 		}
-		const dotValueBindings = getDotValueBindings();
 		return generateTemplate({
 			typescript: ts,
 			vueCompilerOptions: getResolvedOptions(),
@@ -87,10 +84,7 @@ function useCodegen(
 			setupBindings: getSetupBindings(),
 			localDirectives: getLocalDirectives(),
 			optionDirectives: getOptionDirectives().keys,
-			dotValueBindings,
-			reassertBindings: new Set(
-				[...dotValueBindings].filter(name => (getBindingFlags().get(name) ?? 0) & BindingFlag.Variable),
-			),
+			dotValueBindings: getDotValueBindings(),
 			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
@@ -137,10 +131,12 @@ function useCodegen(
 				...getGeneratedStyle()?.generatedTypes ?? [],
 			]),
 			templateAndStyleCodes: [
-				...getGeneratedStyle()?.bindingReferences ?? [],
-				...getGeneratedTemplate()?.bindingReferences ?? [],
 				...getGeneratedStyle()?.codes ?? [],
 				...getGeneratedTemplate()?.codes ?? [],
+			],
+			templateAndStyleBindingReferences: [
+				...getGeneratedStyle()?.bindingReferences ?? [],
+				...getGeneratedTemplate()?.bindingReferences ?? [],
 			],
 			scriptEdits: getCodegenContributions().scriptEdits,
 			templateContext: getCodegenContributions().templateContext,

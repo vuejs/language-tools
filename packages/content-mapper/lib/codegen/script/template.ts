@@ -8,7 +8,6 @@ import {
 	generateSfcBlockSection,
 	generateTypeAlias,
 	generateTypedVar,
-	getDotValueBindingName,
 	getRefBrandArgument,
 	intersectTypes,
 	isTsLang,
@@ -37,12 +36,23 @@ export function* generateTemplate(
 		.filter(name =>
 			options.templateAndStyleTypes.has(name) && !(name === names.Slots && options.scriptSetupRanges?.defineSlots)
 		);
-	yield `const ${names.template} = () => {${newLine}`;
+	yield* options.templateAndStyleBindingReferences;
 
-	for (const name of options.dotValueBindings) {
-		yield `const ${getDotValueBindingName(name)} = ${names.withDotValue}(${name}, ${
-			getRefBrandArgument(options.vueCompilerOptions, scriptLang)
-		})${endOfLine}`;
+	// Bindings the template narrows are read through `.value` wrappers. The wrappers keep the
+	// binding names, which diagnostics show, so they are created before the shadowing scope.
+	const dotValueBindings = [...options.dotValueBindings];
+	if (dotValueBindings.length) {
+		yield `const ${names.dotValueBindings} = () => ({${newLine}`;
+		for (const name of dotValueBindings) {
+			yield `${name}: ${names.withDotValue}(${name}, ${
+				getRefBrandArgument(options.vueCompilerOptions, scriptLang)
+			}),${newLine}`;
+		}
+		yield `})${endOfLine}`;
+	}
+	yield `const ${names.template} = () => {${newLine}`;
+	if (dotValueBindings.length) {
+		yield `const { ${dotValueBindings.join(`, `)} } = ${names.dotValueBindings}()${endOfLine}`;
 	}
 
 	if (options.templateAndStyleCodes.length) {

@@ -321,12 +321,17 @@ export function createTemplateCodegenContext(
 	// conditions -----------------------------------------------------------------
 
 	// Active branch conditions with the names each accessed; the guards are
-	// replayed inside inline-handler closures.
-	const conditions: { text: string; accesses: string[] }[] = [];
+	// replayed inside inline-handler closures. Closures keep the narrowing of the
+	// block-scope locals, which are `const`, but not of their properties.
+	const conditions: { text: string; accesses: string[]; readsLocalProperty: boolean }[] = [];
 
 	function* generateConditionGuards() {
 		for (const condition of conditions) {
-			if (condition.accesses.length && condition.accesses.every(isDeclared)) {
+			if (
+				!condition.readsLocalProperty
+				&& condition.accesses.length
+				&& condition.accesses.every(isDeclared)
+			) {
 				continue;
 			}
 			yield `if (!${condition.text}) throw 0${endOfLine}`;

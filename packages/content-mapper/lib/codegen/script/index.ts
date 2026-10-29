@@ -33,6 +33,8 @@ export interface ScriptCodegenOptions {
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateAndStyleTypes: Set<string>;
 	templateAndStyleCodes: TsCode[];
+	/** Type queries that link template and style reads of shadowed bindings back to the setup bindings. */
+	templateAndStyleBindingReferences: TsCode[];
 	setupBindings: Set<string>;
 	localComponents: Set<string>;
 	localDirectives: Set<string>;
