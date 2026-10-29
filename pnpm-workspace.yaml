@@ -4,12 +4,16 @@ trustPolicy: no-downgrade
 trustPolicyExclude:
   - semver@5.7.2
   - volar-service-pug@0.0.71
+  # chokidar@4.0.3 is pulled in by the e2e runner (@vscode/test-cli -> mocha).
+  # 4.0.3 lost provenance attestation vs earlier releases, tripping trustPolicy.
+  - chokidar@4.0.3
 # This repo dogfoods typescript-native-bridge releases on publish day;
 # pnpm 11's default 24h minimumReleaseAge gate would reject them.
 minimumReleaseAge: 0
 
 packages:
   - extensions/*
+  - extensions/vscode/e2e/workspace
   - packages/*
   - test-workspace
 
