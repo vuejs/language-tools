@@ -25,4 +25,4 @@ overrides:
 
 patchedDependencies:
   # #6225: isolate concurrent completion requests until the fix is available upstream.
-  '@volar/language-service@2.4.28': patches/@volar__language-service@2.4.28.patch
+  '@volar/language-service@2.4.30': patches/@volar__language-service@2.4.30.patch

@@ -1,8 +1,8 @@
 diff --git a/lib/features/provideCompletionItems.js b/lib/features/provideCompletionItems.js
-index b3a092dc12b05f61922ae5e35dc4aad4d41bc55a..086f0526257775f3d587df99d4ee827394be3cc9 100644
+index eb4697f1ae63b7daf2a6599a26ad99b274ac708b..d5247b308f09da7a8387639a3cac156320b513ac 100644
 --- a/lib/features/provideCompletionItems.js
 +++ b/lib/features/provideCompletionItems.js
-@@ -7,10 +7,17 @@ const cancellation_1 = require("../utils/cancellation");
+@@ -7,14 +7,17 @@ const cancellation_1 = require("../utils/cancellation");
  const featureWorkers_1 = require("../utils/featureWorkers");
  const transform_1 = require("../utils/transform");
  function register(context) {
@@ -12,6 +12,10 @@ index b3a092dc12b05f61922ae5e35dc4aad4d41bc55a..086f0526257775f3d587df99d4ee8273
      return async (uri, position, completionContext = {
          triggerKind: 1,
      }, token = cancellation_1.NoneCancellationToken) => {
+-        // The results of this request. `lastResult` is only a cache for the
+-        // TriggerForIncompleteCompletions case; requests that overlap must not
+-        // push into each other's list.
+-        let currentResult;
 +        const result = {
 +            uri,
 +            requestId: ++requestId,
@@ -20,11 +24,12 @@ index b3a092dc12b05f61922ae5e35dc4aad4d41bc55a..086f0526257775f3d587df99d4ee8273
          let langaugeIdAndSnapshot;
          let sourceScript;
          const decoded = context.decodeEmbeddedDocumentUri(uri);
-@@ -29,7 +36,12 @@ function register(context) {
+@@ -33,8 +36,12 @@ function register(context) {
          }
          if (completionContext?.triggerKind === 3
              && lastResult?.uri.toString() === uri.toString()) {
--            for (const cacheData of lastResult.results) {
+-            currentResult = lastResult;
+-            for (const cacheData of currentResult.results) {
 +            // Refreshes replace list fields, so each request needs its own cache entries.
 +            result.results = lastResult.results.map(cacheData => ({ ...cacheData }));
 +            for (const cacheData of result.results) {
@@ -34,40 +39,40 @@ index b3a092dc12b05f61922ae5e35dc4aad4d41bc55a..086f0526257775f3d587df99d4ee8273
                  if (!cacheData.list?.isIncomplete) {
                      continue;
                  }
-@@ -104,10 +116,6 @@ function register(context) {
+@@ -109,10 +116,6 @@ function register(context) {
              }
          }
          else {
--            lastResult = {
+-            currentResult = lastResult = {
 -                uri,
 -                results: [],
 -            };
              // monky fix https://github.com/johnsoncodehk/volar/issues/1358
              let isFirstMapping = true;
              let mainCompletionUri;
-@@ -135,7 +143,7 @@ function register(context) {
+@@ -140,7 +143,7 @@ function register(context) {
                          continue;
                      }
                      // avoid duplicate items with .vue and .vue.html
--                    if (plugin[1].isAdditionalCompletion && lastResult?.results.some(data => data.plugin === plugin[1])) {
+-                    if (plugin[1].isAdditionalCompletion && currentResult.results.some(data => data.plugin === plugin[1])) {
 +                    if (plugin[1].isAdditionalCompletion && result.results.some(data => data.plugin === plugin[1])) {
                          continue;
                      }
                      let completionList = await plugin[1].provideCompletionItems(document, position, completionContext, token);
-@@ -169,7 +177,7 @@ function register(context) {
+@@ -174,7 +177,7 @@ function register(context) {
                      if (docs) {
                          completionList = (0, transform_1.transformCompletionList)(completionList, range => (0, featureWorkers_1.getSourceRange)(docs, range, language_core_1.isCompletionEnabled), document, context);
                      }
--                    lastResult?.results.push({
+-                    currentResult.results.push({
 +                    result.results.push({
                          embeddedDocumentUri: docs ? vscode_uri_1.URI.parse(document.uri) : undefined,
                          plugin: plugin[1],
                          list: completionList,
-@@ -193,7 +201,11 @@ function register(context) {
+@@ -198,7 +201,11 @@ function register(context) {
                  await worker(document, position);
              }
          }
--        return combineCompletionList(lastResult.results.map(cacheData => cacheData.list));
+-        return combineCompletionList(currentResult.results.map(cacheData => cacheData.list));
 +        // A late response must not overwrite a newer successful request's cache.
 +        if (!token.isCancellationRequested && (!lastResult || result.requestId > lastResult.requestId)) {
 +            lastResult = result;
