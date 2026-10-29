@@ -1,4 +1,3 @@
-import { createServiceEnvironment } from '@volar/kit/lib/createServiceEnvironment';
 import {
 	createLanguage,
 	createLanguageService,
@@ -6,14 +5,14 @@ import {
 	type LanguagePlugin,
 	type LanguageServicePlugin,
 } from '@volar/language-service';
-import { createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
-import * as ts from 'typescript';
+import { stringToSnapshot } from '@volar/language-service/lib/utils/common';
+import { getDefaultCompilerOptions } from '@vue/language-core';
+import { loadTypeScript } from '@vue/language-core/typescript';
 import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
-import { createVueLanguageServicePlugins } from '../..';
-import { asCoreTypeScript } from '../../lib/utils';
+import { createVueLanguagePlugin, createVueLanguageServicePlugins } from '../..';
+import { createTestEnvironment } from './environment';
 
-// TODO: migrate to @volar/kit
 export function createAutoInserter(
 	languages: LanguagePlugin<URI>[],
 	services: LanguageServicePlugin[],
@@ -21,7 +20,7 @@ export function createAutoInserter(
 	let settings = {};
 
 	const fakeUri = URI.parse('file:///dummy.txt');
-	const env = createServiceEnvironment(() => settings);
+	const env = createTestEnvironment(() => settings);
 	const language = createLanguage(languages, createUriMap(false), () => {});
 	const languageService = createLanguageService(language, services, env, {});
 
@@ -43,7 +42,7 @@ export function createAutoInserter(
 		}
 		const content = textWithCursor.slice(0, cursorIndex) + insertedText
 			+ textWithCursor.slice(cursorIndex + cursor.length);
-		const snapshot = ts.ScriptSnapshot.fromString(content);
+		const snapshot = stringToSnapshot(content);
 		language.scripts.set(fakeUri, snapshot, languageId);
 		const document = languageService.context.documents.get(fakeUri, languageId, snapshot);
 		return await languageService.getAutoInsertSnippet(
@@ -62,7 +61,7 @@ export function createAutoInserter(
 
 const vueCompilerOptions = getDefaultCompilerOptions();
 const vuePlugin = createVueLanguagePlugin<URI>(
-	asCoreTypeScript(ts),
+	loadTypeScript(),
 	vueCompilerOptions,
 	() => '',
 );
@@ -71,7 +70,7 @@ const vueLanguagePlugin: typeof vuePlugin = {
 	createVirtualCode: (uri, languageId, snapshot, ctx) =>
 		languageId === 'vue' ? vuePlugin.createVirtualCode!(uri, languageId, snapshot, ctx) : undefined,
 };
-const vueServicePLugins = createVueLanguageServicePlugins(ts);
+const vueServicePLugins = createVueLanguageServicePlugins();
 const autoInserter = createAutoInserter([vueLanguagePlugin], vueServicePLugins);
 
 export function defineAutoInsertTest(options: {

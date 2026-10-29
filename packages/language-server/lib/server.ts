@@ -1,50 +1,39 @@
 import type { LanguageServer, MessageActionItem } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createConnection, createServer } from '@volar/language-server/node';
-import type { MapperOptions } from '@vue/content-mapper/protocol';
-import { resolveVueCompilerOptions } from '@vue/content-mapper/vueOptions';
 import {
 	createLanguage,
-	createVueLanguagePlugin,
-	isCompletionEnabled,
-	isSemanticTokensEnabled,
+	getComponentIsBinding,
 	type LanguagePlugin,
-	tsCodegen,
-	VueVirtualCode,
+	type RawVueCompilerOptions,
+	resolveVueCompilerOptions,
+	type TypeScript as CoreTypeScript,
 } from '@vue/language-core';
+import { readFileIfExists } from '@vue/language-core/lib/options/readFileIfExists';
 import {
 	createLanguageService,
 	createUriMap,
+	createVueLanguagePlugin,
 	createVueLanguageServicePlugins,
 	type LanguageService,
+	VueVirtualCode,
 } from '@vue/language-service';
 import type { TextEdit } from '@vue/language-service/lib/requests';
-import { asCoreTypeScript, placeScriptImportEdits } from '@vue/language-service/lib/utils';
+import { placeScriptImportEdits } from '@vue/language-service/lib/virtualCodeQueries';
 import { camelize, capitalize } from '@vue/shared';
 import * as path from 'node:path';
 import { URI } from 'vscode-uri';
-import {
-	getComponentPropsOffset,
-	toServiceScriptOffset,
-	toServiceScriptOffsets,
-	toSourceOffset,
-} from './componentMeta';
+import { getElementAt, getTagNameOffset } from './checkerQueries';
 import { createReactivityAnalyzer, getInterpolationRanges, type ReactivityAnalysisParams } from './reactivity';
 import {
 	connectTypeScriptProjectResolver,
+	type ContentMapperEntry,
 	getComponentModuleExtensions,
 	type TypeScriptProject,
 	type TypeScriptProjectResolver,
 } from './typescriptProject';
 
 const moduleSpecifierRE = /\bfrom\s*(['"])(.+?)\1/;
-
-/** A `contentMappers[]` entry, as written in a tsconfig or contributed for inferred projects. */
-interface ContentMapperEntry {
-	package: string;
-	extensions: string[];
-	options?: MapperOptions;
-}
 
 /**
  * Result of the `vue/typescriptApiConnection` request the server sends to the client. The client forwards
@@ -56,7 +45,7 @@ interface TypeScriptApiConnection {
 	packageJsonPath: string;
 }
 
-export function startServer(ts: typeof import('typescript')) {
+export function startServer() {
 	const connection = createConnection();
 	const server = createServer(connection);
 
@@ -64,6 +53,9 @@ export function startServer(ts: typeof import('typescript')) {
 	// The content mappers the client registers for files outside any tsconfig.
 	let inferredContentMappers: ContentMapperEntry[] | undefined;
 	const watchedExtensions = new Set<string>();
+	const watchedPluginFiles = new Set<string>();
+	/** The files of the `plugins` of each project's language service, which it is created again for when they change. */
+	const projectPluginFiles = new WeakMap<LanguageService, Set<string>>();
 	let initialized = false;
 
 	connection.listen();
@@ -77,6 +69,17 @@ export function startServer(ts: typeof import('typescript')) {
 		// before initialization, `onInitialized` watches the whole set
 		if (initialized && added.length) {
 			void server.fileWatcher.watchFiles(added.map(extension => `**/*${extension}`));
+		}
+	}
+
+	/** Plugin files may lie outside the workspace, so each one is watched by its own path. */
+	function watchPluginFiles(fileNames: Iterable<string>) {
+		const added = [...fileNames].filter(fileName => !watchedPluginFiles.has(fileName));
+		for (const fileName of added) {
+			watchedPluginFiles.add(fileName);
+		}
+		if (initialized && added.length) {
+			void server.fileWatcher.watchFiles(added);
 		}
 	}
 
@@ -135,6 +138,19 @@ export function startServer(ts: typeof import('typescript')) {
 				void typescriptApi?.then(resolver => resolver.invalidate(), () => {});
 				return;
 			}
+			const changedFileNames = changes.map(change => URI.parse(change.uri).fsPath.replace(/\\/g, '/'));
+			const usesChangedPlugin = (languageService: LanguageService) =>
+				changedFileNames.some(fileName => projectPluginFiles.get(languageService)?.has(fileName));
+			for (const [uri, languageService] of tsconfigProjects) {
+				if (usesChangedPlugin(languageService)) {
+					languageService.dispose();
+					tsconfigProjects.delete(uri);
+				}
+			}
+			if (simpleLanguageService && usesChangedPlugin(simpleLanguageService)) {
+				simpleLanguageService.dispose();
+				simpleLanguageService = undefined;
+			}
 			for (const change of changes) {
 				withResolver(change.uri, (resolver, fileName) => resolver.fileChanged(fileName));
 			}
@@ -172,15 +188,16 @@ export function startServer(ts: typeof import('typescript')) {
 					const project = uri.scheme === 'file'
 						? await getTypeScriptProject(uri.fsPath.replace(/\\/g, '/'))
 						: undefined;
+					const { parser } = await connectTypeScriptApi();
 					if (project?.configFileName) {
 						let languageService = tsconfigProjects.get(URI.file(project.configFileName));
 						if (!languageService) {
-							languageService = createProjectLanguageService(server, project);
+							languageService = createProjectLanguageService(server, parser, project);
 							tsconfigProjects.set(URI.file(project.configFileName), languageService);
 						}
 						return languageService;
 					}
-					return simpleLanguageService ??= createProjectLanguageService(server, undefined);
+					return simpleLanguageService ??= createProjectLanguageService(server, parser, undefined);
 				},
 				getExistingLanguageServices() {
 					const projects = [...tsconfigProjects.values()];
@@ -200,39 +217,36 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 				},
 			},
-			createVueLanguageServicePlugins(ts, {
+			createVueLanguageServicePlugins({
 				async collectExtractProps(fileName, [start, end]) {
 					try {
-						const script = await getVueScript(fileName);
-						const template = script?.virtualCode.ir.template;
-						if (script && template) {
-							return await (await connectTypeScriptApi()).collectExtractProps(fileName, offset => {
-								const sourceOffset = toSourceOffset(
-									script.language,
-									script.sourceScript,
-									script.virtualCode,
-									offset,
-									isSemanticTokensEnabled,
-								);
-								return sourceOffset !== undefined
-									&& sourceOffset >= template.startTagEnd + start
-									&& sourceOffset <= template.startTagEnd + end;
-							});
+						const virtualCode = (await getVueScript(fileName))?.virtualCode;
+						const template = virtualCode?.ir.template;
+						if (template) {
+							return await (await connectTypeScriptApi()).collectExtractProps(
+								fileName,
+								virtualCode,
+								template.offset + start,
+								template.offset + end,
+							);
 						}
 					}
 					catch {}
 				},
 				async getComponentDirectives(fileName) {
 					try {
-						return await (await connectTypeScriptApi()).getComponentDirectives(fileName);
+						const script = await getVueScript(fileName);
+						if (script) {
+							return await (await connectTypeScriptApi()).getComponentDirectives(fileName, script.virtualCode);
+						}
 					}
 					catch {}
 				},
-				async getComponentMeta(fileName, tag) {
+				async getComponentMeta(fileName, position) {
 					try {
-						const script = await getVueScript(fileName);
-						if (script) {
-							return await (await connectTypeScriptApi()).getComponentMeta(fileName, script.virtualCode, tag);
+						const offset = await getComponentTagNameOffset(fileName, position);
+						if (offset !== undefined) {
+							return await (await connectTypeScriptApi()).getComponentMeta(fileName, offset);
 						}
 					}
 					catch {}
@@ -248,12 +262,21 @@ export function startServer(ts: typeof import('typescript')) {
 				},
 				async getComponentProps(fileName, position) {
 					try {
-						const script = await getVueScript(fileName);
-						const offset = script
-							&& getComponentPropsOffset(script.language, script.sourceScript, script.virtualCode, position);
-						if (offset !== undefined) {
-							return await (await connectTypeScriptApi()).getComponentProps(fileName, offset);
+						const template = (await getVueScript(fileName))?.virtualCode.ir.template;
+						const element = getElementAt(template, position);
+						// ElementTypes.COMPONENT
+						if (!template || element?.tagType !== 1) {
+							return;
 						}
+						const is = getComponentIsBinding(element);
+						const api = await connectTypeScriptApi();
+						return is
+							? await api.getComponentProps(
+								fileName,
+								template.offset + is.exp.loc.start.offset,
+								is.exp.loc.end.offset - is.exp.loc.start.offset,
+							)
+							: await api.getComponentProps(fileName, getTagNameOffset(template, element));
 					}
 					catch {}
 				},
@@ -266,15 +289,29 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 					catch {}
 				},
-				async getElementAttrs(fileName, tag) {
+				async getElementAttrs(fileName, position) {
 					try {
-						return await (await connectTypeScriptApi()).getElementAttrs(fileName, tag);
+						const virtualCode = (await getVueScript(fileName))?.virtualCode;
+						const template = virtualCode?.ir.template;
+						const element = getElementAt(template, position);
+						if (virtualCode && template && element) {
+							return await (await connectTypeScriptApi()).getElementAttrs(
+								fileName,
+								virtualCode,
+								// ElementTypes.ELEMENT
+								element.tagType === 0 ? getTagNameOffset(template, element) : undefined,
+								element.tag,
+							);
+						}
 					}
 					catch {}
 				},
 				async getElementNames(fileName) {
 					try {
-						return await (await connectTypeScriptApi()).getElementNames(fileName);
+						const script = await getVueScript(fileName);
+						if (script) {
+							return await (await connectTypeScriptApi()).getElementNames(fileName, script.virtualCode);
+						}
 					}
 					catch {}
 				},
@@ -308,7 +345,7 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 					catch {}
 				},
-				async getImportFixes(fileName, position, tag) {
+				async getImportFixes(fileName, position, elementPosition) {
 					try {
 						const script = await getVueScript(fileName);
 						if (!script) {
@@ -316,35 +353,22 @@ export function startServer(ts: typeof import('typescript')) {
 						}
 						const api = await connectTypeScriptApi();
 						let name: string | undefined;
-						if (tag !== undefined) {
-							const tagNames = [tag, camelize(tag), capitalize(camelize(tag))];
-							const setupBindings = tsCodegen.get(script.virtualCode.ir)?.getSetupBindings();
-							const componentNames = await api.getComponentNames(fileName, script.virtualCode);
-							if (
-								!componentNames
-								|| tagNames.some(tagName => setupBindings?.has(tagName) || componentNames.includes(tagName))
-							) {
+						const { template } = script.virtualCode.ir;
+						const element = elementPosition === undefined ? undefined : getElementAt(template, elementPosition);
+						if (element) {
+							if (!template || !await api.isUnresolvedTag(fileName, getTagNameOffset(template, element))) {
 								return;
 							}
-							name = camelize(tag);
+							name = camelize(element.tag);
 						}
 						else {
-							const offsets = toServiceScriptOffsets(
-								script.language,
-								script.sourceScript,
-								script.virtualCode,
-								position,
-								data => !!data.navigation,
-							);
-							for (const offset of offsets) {
-								name ??= await api.getUnresolvedName(fileName, offset);
-							}
+							name = await api.getUnresolvedName(fileName, position);
 						}
 						if (!name) {
 							return;
 						}
 						let candidates: { fileName: string; edits: readonly TextEdit[] | undefined }[];
-						if (tag !== undefined) {
+						if (element) {
 							const components = (await api.getAutoImportComponents(fileName) ?? [])
 								.filter(component => component.name === name || component.name === capitalize(name));
 							candidates = await Promise.all(components.map(async component => ({
@@ -367,28 +391,24 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 					catch {}
 				},
-				async getComponentDefinition(fileName, tag) {
+				async getComponentDefinition(fileName, position) {
 					try {
-						const script = await getVueScript(fileName);
-						if (script) {
-							return await (await connectTypeScriptApi()).getComponentDefinition(fileName, script.virtualCode, tag);
+						const offset = await getComponentTagNameOffset(fileName, position);
+						if (offset !== undefined) {
+							return await (await connectTypeScriptApi()).getComponentDefinition(fileName, offset);
 						}
 					}
 					catch {}
 				},
 				async isRefAtPosition(fileName, position) {
 					try {
-						const script = await getVueScript(fileName);
-						const offset = script && toServiceScriptOffset(
-							script.language,
-							script.sourceScript,
-							script.virtualCode,
-							position,
-							isCompletionEnabled,
-						);
-						if (offset !== undefined) {
-							return await (await connectTypeScriptApi()).isRefAtOffset(fileName, offset);
-						}
+						return await (await connectTypeScriptApi()).isRefAtOffset(fileName, position);
+					}
+					catch {}
+				},
+				async isRenamedByTypeScript(fileName, position) {
+					try {
+						return await (await connectTypeScriptApi()).isRenamedAtOffset(fileName, position);
 					}
 					catch {}
 				},
@@ -401,23 +421,20 @@ export function startServer(ts: typeof import('typescript')) {
 			version: packageJson.version,
 		};
 
-		const reactivityAnalyzer = createReactivityAnalyzer(ts);
+		const reactivityAnalyzer = createReactivityAnalyzer(
+			async (fileName, text, offsets) => (await connectTypeScriptApi()).getSymbolIds(fileName, text, offsets),
+		);
 		connection.onRequest(
 			'vue/reactivityAnalysis',
 			async ({ textDocument, offset, content }: ReactivityAnalysisParams) => {
 				const fileName = URI.parse(textDocument.uri).fsPath.replace(/\\/g, '/');
 				if (content !== undefined) {
-					return reactivityAnalyzer.analyzeScript(fileName, content, offset);
+					const { parser } = await connectTypeScriptApi();
+					return reactivityAnalyzer.analyzeScript(parser, fileName, content, offset);
 				}
 				const script = await getVueScript(fileName);
 				if (script) {
-					return reactivityAnalyzer.analyzeVueScript(
-						script.language,
-						script.sourceScript,
-						script.virtualCode,
-						fileName,
-						offset,
-					);
+					return reactivityAnalyzer.analyzeVueScript(script.virtualCode, fileName, offset);
 				}
 			},
 		);
@@ -438,25 +455,46 @@ export function startServer(ts: typeof import('typescript')) {
 			}
 		}
 
-		function createProjectLanguageService(server: LanguageServer, project: TypeScriptProject | undefined) {
+		/** The source offset of the tag name of the component element that the template offset `position` lies in (or after the start of). */
+		async function getComponentTagNameOffset(fileName: string, position: number) {
+			const template = (await getVueScript(fileName))?.virtualCode.ir.template;
+			const element = getElementAt(template, position);
+			// ElementTypes.COMPONENT
+			if (template && element?.tagType === 1) {
+				return getTagNameOffset(template, element);
+			}
+		}
+
+		function createProjectLanguageService(
+			server: LanguageServer,
+			parser: CoreTypeScript,
+			project: TypeScriptProject | undefined,
+		) {
 			const configFileName = project?.configFileName;
 			const asFileName = (uri: URI) => uri.fsPath.replace(/\\/g, '/');
-			const contentMappers = configFileName
-				? project!.contentMappers as ContentMapperEntry[] | undefined
-				: inferredContentMappers;
+			const contentMappers = configFileName ? project!.contentMappers : inferredContentMappers;
+			const rootDir = (configFileName ? path.dirname(configFileName) : process.cwd()).replace(/\\/g, '/');
 			watchExtensions(getComponentModuleExtensions(contentMappers));
-			const vuePlugins = (contentMappers ?? [])
-				.filter(entry => entry.package === '@vue/content-mapper')
-				.map(entry =>
-					routeByExtensions(
-						createVueLanguagePlugin(
-							asCoreTypeScript(ts),
-							resolveVueCompilerOptions(ts.sys.readFile, configFileName, entry.options),
-							asFileName,
+			const pluginFiles: string[] = [];
+			// Whichever Content Mapper an entry names, its files that the client syncs to this server, which it
+			// selects by Vue language ids, are Vue files.
+			const vuePlugins = (contentMappers ?? []).map(entry =>
+				routeByExtensions(
+					createVueLanguagePlugin(
+						parser,
+						resolveVueCompilerOptions(
+							readFileIfExists,
+							rootDir,
+							entry.options as RawVueCompilerOptions,
+							pluginFiles,
 						),
-						entry.extensions,
-					)
-				);
+						asFileName,
+					),
+					entry.extensions,
+				)
+			);
+			const normalizedPluginFiles = new Set(pluginFiles.map(fileName => fileName.replace(/\\/g, '/')));
+			watchPluginFiles(normalizedPluginFiles);
 			const language = createLanguage<URI>(
 				[
 					{
@@ -475,16 +513,22 @@ export function startServer(ts: typeof import('typescript')) {
 					}
 				},
 			);
-			return createLanguageService(
+			const languageService = createLanguageService(
 				language,
 				server.languageServicePlugins,
 				createLanguageServiceEnvironment(server, [...server.workspaceFolders.all]),
 				{},
 			);
+			projectPluginFiles.set(languageService, normalizedPluginFiles);
+			return languageService;
 
 			/** Like the TypeScript host, hands the Vue plugin only the files matching `extensions`. */
 			function routeByExtensions(plugin: LanguagePlugin<URI>, extensions: string[]): LanguagePlugin<URI> {
-				const isContentMapperFile = (uri: URI) => extensions.some(extension => asFileName(uri).endsWith(extension));
+				const isContentMapperFile = (uri: URI) => {
+					// Volar formats a document through a copy of it at `<uri>.tmp`, with the plugin of the document.
+					const fileName = asFileName(uri).replace(/\.tmp$/, '');
+					return extensions.some(extension => fileName.endsWith(extension));
+				};
 				return {
 					...plugin,
 					getLanguageId: uri => isContentMapperFile(uri) ? plugin.getLanguageId(uri) : undefined,
@@ -498,7 +542,11 @@ export function startServer(ts: typeof import('typescript')) {
 	connection.onInitialized(() => {
 		server.initialized();
 		initialized = true;
-		void server.fileWatcher.watchFiles(['**/*.json', ...[...watchedExtensions].map(extension => `**/*${extension}`)]);
+		void server.fileWatcher.watchFiles([
+			'**/*.json',
+			...[...watchedExtensions].map(extension => `**/*${extension}`),
+			...watchedPluginFiles,
+		]);
 	});
 
 	connection.onShutdown(server.shutdown);

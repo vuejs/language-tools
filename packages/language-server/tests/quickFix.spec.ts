@@ -13,16 +13,17 @@ afterEach(async () => {
 	openedDocuments.length = 0;
 });
 
+// `testFn` is saved in `tsconfigProject/functions.ts`: TypeScript 7 can leave an export only an open document has
+// out of its auto-import data, so whether it imported one would depend on the timing of the previous test's close.
 test('"Add import" quick fix for undefined variable in template', async () => {
-	await prepareDocument('tsconfigProject/fixture.ts', 'typescript', `export function foo() {}`);
 	expect(
 		Object.keys(
 			await applyImportFixes(
 				'tsconfigProject/fixture.vue',
-				`<template>\n\t<button @click="|foo"></button>\n</template>\n\n<script setup lang="ts">\n</script>\n`,
+				`<template>\n\t<button @click="|testFn"></button>\n</template>\n\n<script setup lang="ts">\n</script>\n`,
 			),
 		),
-	).toEqual(['Add import from "./fixture"']);
+	).toEqual(['Add import from "./functions"']);
 });
 
 const scriptSetup = `<script setup lang="ts">\nconst a = 1;\n</script>\n\n`;

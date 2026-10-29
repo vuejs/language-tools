@@ -1,3 +1,5 @@
+import { getDefaultCompilerOptions } from '@vue/language-core';
+import { createVueLanguagePlugin, type VueVirtualCode } from '@vue/language-service';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -171,26 +173,38 @@ test('a .vue file no content mapper covers has no project', async () => {
 	expect(await resolver.getProject(fileName('fixture.vue'))).toBeUndefined();
 });
 
-test('element names come from the intrinsic elements of the Vue file', async () => {
-	const elementNames = await resolver.getElementNames(fileName('tsconfigProject/empty.vue'));
+test('element names come from the intrinsic elements of Vue', async () => {
+	const elementNames = await resolver.getElementNames(...vueFile('tsconfigProject/empty.vue'));
 	expect(elementNames).toContain('div');
 	expect(elementNames).toContain('svg');
 });
 
 test('a .vue file no content mapper covers has no element names', async () => {
-	expect(await resolver.getElementNames(fileName('fixture.vue'))).toBeUndefined();
+	expect(await resolver.getElementNames(...vueFile('fixture.vue'))).toBeUndefined();
 });
 
-test('directive names come from the directives of the Vue file', async () => {
-	const directives = await resolver.getComponentDirectives(fileName('tsconfigProject/empty.vue'));
-	expect(directives).toContain('vHtml');
+test('directive names come from the global directives of Vue', async () => {
+	const directives = await resolver.getComponentDirectives(...vueFile('tsconfigProject/empty.vue'));
 	expect(directives).toContain('vShow');
 	expect(directives).not.toContain('Transition');
 });
 
 test('a .vue file no content mapper covers has no directive names', async () => {
-	expect(await resolver.getComponentDirectives(fileName('fixture.vue'))).toBeUndefined();
+	expect(await resolver.getComponentDirectives(...vueFile('fixture.vue'))).toBeUndefined();
 });
+
+/** A workspace Vue file name and its virtual code, as the language server passes them. */
+function vueFile(file: string): [string, VueVirtualCode] {
+	const name = fileName(file);
+	const text = fs.existsSync(name) ? fs.readFileSync(name, 'utf8') : '';
+	const plugin = createVueLanguagePlugin<string>(resolver.parser, getDefaultCompilerOptions(), id => id);
+	const snapshot = {
+		getText: (start: number, end: number) => text.slice(start, end),
+		getLength: () => text.length,
+		getChangeRange: () => undefined,
+	};
+	return [name, plugin.createVirtualCode!(name, 'vue', snapshot, {} as any) as VueVirtualCode];
+}
 
 test('a closed file resolves again when asked later', async () => {
 	resolver.closeFile(fileName('typescriptProject/jsconfig/a.js'));

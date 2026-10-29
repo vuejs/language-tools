@@ -17,11 +17,10 @@ npm install @vue/language-service
 
 ```typescript
 import { createVueLanguageServicePlugins } from '@vue/language-service';
-import * as ts from 'typescript';
 
 // Create Vue language service plugins
-// The optional second argument `client` answers the type-aware requests of `lib/requests`
-const plugins = createVueLanguageServicePlugins(ts);
+// The optional argument `client` answers the type-aware requests of `lib/requests`
+const plugins = createVueLanguageServicePlugins();
 ```
 
 ## Built-in Plugins
@@ -33,8 +32,6 @@ const plugins = createVueLanguageServicePlugins(ts);
 | JSON | `volar-service-json` | JSON language service |
 | Pug Format | `volar-service-pug-beautify` | Pug formatting |
 | Emmet | `volar-service-emmet` | Emmet abbreviation expansion |
-| TypeScript Syntactic | `volar-service-typescript` | TypeScript syntactic features |
-| TypeScript Doc Comment | `volar-service-typescript` | JSDoc comment templates |
 
 ### Vue-specific Plugins
 
@@ -43,6 +40,7 @@ const plugins = createVueLanguageServicePlugins(ts);
 | `vue-sfc` | SFC structure support, including folding, symbols, document links |
 | `vue-template` | Template language service, supporting HTML and Pug |
 | `vue-format-per-block` | Formatting per block |
+| `vue-typescript-syntactic` | Folding, selection ranges, outline, formatting and JSX closing tags of script blocks and template expressions; provides nothing until TypeScript 7.1 has a project-free syntactic API |
 | `vue-compiler-dom-errors` | Vue compiler error diagnostics |
 | `vue-directive-comments` | Directive comment support (`<!-- @vue-skip -->`, etc.) |
 | `vue-inlayhints` | Inlay hints (destructured props, inline handlers, etc.) |
@@ -55,26 +53,6 @@ const plugins = createVueLanguageServicePlugins(ts);
 | `vue-document-drop` | Auto-generation of import on file drop |
 | `vue-suggest-define-assignment` | Assignment suggestions for `defineProps`, etc. |
 | `css` | CSS language service, supporting v-bind and CSS Modules |
-
-## Usage with @volar/kit
-
-To use the language service in a Node.js environment (e.g., for linting or testing):
-
-```typescript
-import { createLanguage, createVueLanguagePlugin } from '@vue/language-core';
-import { createLanguageService, createVueLanguageServicePlugins } from '@vue/language-service';
-import ts from 'typescript';
-
-const language = createLanguage([
-  createVueLanguagePlugin(ts, vueCompilerOptions, asFileName),
-]);
-
-const service = createLanguageService(
-  language,
-  createVueLanguageServicePlugins(ts),
-  env,
-);
-```
 
 ## Related Packages
 

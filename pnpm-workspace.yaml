@@ -3,15 +3,25 @@ shellEmulator: true
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - semver@5.7.2
-  - volar-service-pug@0.0.71
-# This repo dogfoods typescript-native-bridge releases on publish day;
-# pnpm 11's default 24h minimumReleaseAge gate would reject them.
-minimumReleaseAge: 0
 
 packages:
   - extensions/*
   - packages/*
   - test-workspace
+  # the volar.js submodule (branch v3); the release workflow does not publish these
+  - volar.js/packages/language-core
+  - volar.js/packages/language-server
+  - volar.js/packages/language-service
+  - volar.js/packages/source-map
+  - volar.js/packages/test-utils
+  - volar.js/packages/vscode
+  # the services submodule (branch master), only the packages that @vue/language-service uses; the release workflow does not publish these
+  - services/packages/css
+  - services/packages/emmet
+  - services/packages/html
+  - services/packages/json
+  - services/packages/pug
+  - services/packages/pug-beautify
 
 allowBuilds:
   "@vscode/vsce-sign": true
@@ -21,5 +31,19 @@ allowBuilds:
   keytar: true
 
 overrides:
-  # TypeScript 7 (e.g. vue-component-meta, built against its API) is not replaced
-  typescript@<7: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+  # dependencies such as volar-service-* resolve @volar/* to the submodule too, so there is one copy
+  '@volar/language-core': workspace:*
+  '@volar/language-server': workspace:*
+  '@volar/language-service': workspace:*
+  '@volar/source-map': workspace:*
+  '@volar/test-utils': workspace:*
+  '@volar/vscode': workspace:*
+  # dependencies such as volar-service-pug resolve volar-service-* to the submodule too, so there is one copy
+  volar-service-css: workspace:*
+  volar-service-emmet: workspace:*
+  volar-service-html: workspace:*
+  volar-service-json: workspace:*
+  volar-service-pug: workspace:*
+  volar-service-pug-beautify: workspace:*
+  # volar-service-pug feeds its baseParse mappings to @volar/language-service, so both must share one format
+  '@vue/language-plugin-pug': workspace:*

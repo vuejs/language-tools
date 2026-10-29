@@ -471,17 +471,16 @@
 	"scripts": {
 		"vscode:prepublish": "rolldown --config",
 		"pack": "npx @vscode/vsce package",
-		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generated-meta.ts && cd ../.. && npm run format",
-		"version": "npm run gen-ext-meta && git add src/generated-meta.ts"
+		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generatedMeta.ts && cd ../.. && npm run format",
+		"version": "npm run gen-ext-meta && git add src/generatedMeta.ts"
 	},
 	"devDependencies": {
 		"@types/node": "^26.0.1",
 		"@types/vscode": "1.88.0",
-		"@volar/vscode": "2.4.30",
+		"@volar/vscode": "workspace:*",
 		"@vue/language-server": "workspace:*",
 		"reactive-vscode": "^1.0.2",
 		"rolldown": "latest",
-		"typescript": "<7",
 		"vscode-ext-gen": "latest",
 		"vscode-tmlanguage-snapshot": "latest"
 	}

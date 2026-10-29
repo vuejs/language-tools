@@ -11,7 +11,7 @@ import {
 	type SimpleExpressionNode,
 	traverseNode,
 } from '@vue/compiler-dom';
-import { cloneLoc, createStructuralDirectiveTransform } from '../utils';
+import { cloneLoc, createStructuralDirectiveTransform } from './structuralDirective';
 
 export const transformIf = createStructuralDirectiveTransform(
 	/^(?:if|else-if|else)$/,

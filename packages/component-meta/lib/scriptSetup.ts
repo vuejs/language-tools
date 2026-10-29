@@ -1,67 +1,20 @@
-import { names } from '@vue/language-core';
-import type { Expression, Node, ObjectLiteralExpression, SourceFile } from 'typescript/ast' with {
-	'resolution-mode': 'import',
-};
+import type { Expression, Node } from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { TypeScript } from './types';
 
-export function getDefaultsFromScriptSetup(ts: TypeScript, sourceFile: SourceFile) {
-	const result = new Map<string, string>();
-	if (!sourceFile.contentMapper) {
-		return result;
-	}
-	visit(sourceFile);
-	return result;
-
-	function visit(node: Node) {
-		if (ts.isVariableDeclaration(node) && node.initializer) {
-			const name = node.name.getText();
-			if (name === names.defaults) {
-				const obj = findObjectLiteralExpression(ts, node.initializer);
-				for (const prop of obj?.properties ?? []) {
-					if (ts.isPropertyAssignment(prop)) {
-						add(prop.name.getText(), resolveDefaultOptionExpression(ts, prop.initializer));
-					}
-				}
-			}
-			else if (name === names.defaultModels && ts.isObjectLiteralExpression(node.initializer)) {
-				for (const prop of node.initializer.properties) {
-					if (ts.isPropertyAssignment(prop) && ts.isStringLiteral(prop.name)) {
-						add(prop.name.text, resolveDefaultOptionExpression(ts, prop.initializer));
-					}
-				}
-			}
-			else if (
-				ts.isObjectBindingPattern(node.name)
-				&& ts.isIdentifier(node.initializer)
-				&& node.initializer.text === names.props
-			) {
-				for (const { propertyName, name, initializer } of node.name.elements) {
-					const key = propertyName ?? name;
-					if (key && initializer) {
-						add(key.getText(), initializer);
-					}
-				}
-			}
-		}
-		node.forEachChild(visit);
-	}
-
-	function add(name: string, expression: Node) {
-		result.set(name, expression.getText(sourceFile));
-	}
-}
-
-function findObjectLiteralExpression(ts: TypeScript, node: Node): ObjectLiteralExpression | undefined {
-	if (ts.isObjectLiteralExpression(node)) {
-		return node;
-	}
-	return node.forEachChild(child => findObjectLiteralExpression(ts, child));
-}
-
-export function resolveDefaultOptionExpression(ts: TypeScript, _default: Expression): Node {
+/**
+ * The value that a default option gives: what an arrow function returns when its body is that expression or a block of
+ * a single `return` of it, otherwise the option as written.
+ */
+export function resolveDefaultOptionExpression(
+	ts: Pick<TypeScript, 'isArrowFunction' | 'isBlock' | 'isParenthesizedExpression' | 'isReturnStatement'>,
+	_default: Expression,
+): Node {
 	if (ts.isArrowFunction(_default)) {
 		if (ts.isBlock(_default.body)) {
-			return _default; // TODO
+			const [statement, ...rest] = _default.body.statements;
+			return statement && !rest.length && ts.isReturnStatement(statement) && statement.expression
+				? statement.expression
+				: _default;
 		}
 		else if (ts.isParenthesizedExpression(_default.body)) {
 			return _default.body.expression;

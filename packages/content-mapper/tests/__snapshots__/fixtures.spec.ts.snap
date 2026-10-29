@@ -5,12 +5,40 @@ exports[`content mapper fixtures > test-workspace/content-mapper/tsconfig.json 1
 test-workspace/content-mapper/App.vue(7,23): error TS2339: Property 'templateValue' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'."
 `;
 
+exports[`content mapper fixtures > test-workspace/content-mapper-codegen/tsconfig.json 1`] = `
+"    Type 'number' is not assignable to type 'string'.
+    Type 'number' is not assignable to type 'string'.
+    Type 'number' is not assignable to type 'string'.
+    Type 'number' is not assignable to type 'string'.
+  Types of parameters 'value' and 'value' are incompatible.
+  Types of parameters 'value' and 'value' are incompatible.
+  Types of parameters 'value' and 'value' are incompatible.
+  Types of parameters 'value' and 'value' are incompatible.
+test-workspace/content-mapper-codegen/Declarations.vue(3,14): error TS2345: Argument of type '"b"' is not assignable to parameter of type '"a"'.
+test-workspace/content-mapper-codegen/ExportsUser.vue(4,8): error TS1192: Module '"<root>/test-workspace/content-mapper-codegen/NoDefault.vue"' has no default export.
+test-workspace/content-mapper-codegen/PropsParent.vue(20,15): error TS2322: Type 'string' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/PropsParent.vue(20,38): error TS2322: Type '(value: string) => void' is not assignable to type '(value: number) => any'.
+test-workspace/content-mapper-codegen/PropsParent.vue(22,31): error TS2322: Type 'string' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/PropsParent.vue(22,54): error TS2322: Type '(value: string) => void' is not assignable to type '(value: number) => any'.
+test-workspace/content-mapper-codegen/PropsParent.vue(24,17): error TS2322: Type 'string' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/PropsParent.vue(24,40): error TS2322: Type '(value: string) => void' is not assignable to type '(value: number) => any'.
+test-workspace/content-mapper-codegen/PropsParent.vue(25,25): error TS2353: Object literal may only specify known properties, and 'contributed' does not exist in type 'Partial<{}> & Omit<{ readonly own?: string | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps, never>'.
+test-workspace/content-mapper-codegen/PropsParent.vue(27,22): error TS2322: Type 'string' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/PropsParent.vue(27,45): error TS2322: Type '(value: string) => void' is not assignable to type '(value: number) => any'.
+test-workspace/content-mapper-codegen/ScriptEditUser.vue(12,16): error TS2322: Type 'string' is not assignable to type 'number'.
+test-workspace/content-mapper-codegen/ScriptEditUser.vue(13,15): error TS2353: Object literal may only specify known properties, and 'own' does not exist in type 'Partial<{}> & Omit<{ readonly wrapped?: number | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps, never>'.
+test-workspace/content-mapper-codegen/ScriptEditUser.vue(18,33): error TS2339: Property 'nope' does not exist on type 'number'.
+test-workspace/content-mapper-codegen/TemplateContext.vue(8,10): error TS2339: Property 'nope' does not exist on type 'number'.
+test-workspace/content-mapper-codegen/TemplateContextJs.vue(8,10): error TS2339: Property 'nope' does not exist on type 'number'.
+test-workspace/content-mapper-codegen/TemplateContextOptions.vue(10,10): error TS2339: Property 'nope' does not exist on type 'number'."
+`;
+
 exports[`content mapper fixtures > test-workspace/content-mapper-directives/tsconfig.json 1`] = `
-"test-workspace/content-mapper-directives/App.vue(13,2): error vue2578: Unused '@ts-expect-error' directive.
-test-workspace/content-mapper-directives/App.vue(16,2): error vue2578: Unused '@ts-expect-error' directive.
+"test-workspace/content-mapper-directives/App.vue(13,2): error vue2578: Unused '@vue-expect-error' directive.
+test-workspace/content-mapper-directives/App.vue(16,2): error vue2578: Unused '@vue-expect-error' directive.
 test-workspace/content-mapper-directives/App.vue(17,10): error TS2339: Property 'childExpectedError' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.
-test-workspace/content-mapper-directives/App.vue(20,2): error vue2578: Unused '@ts-expect-error' directive.
-test-workspace/content-mapper-directives/App.vue(23,2): error vue2578: Unused '@ts-expect-error' directive.
+test-workspace/content-mapper-directives/App.vue(20,2): error vue2578: Unused '@vue-expect-error' directive.
+test-workspace/content-mapper-directives/App.vue(23,2): error vue2578: Unused '@vue-expect-error' directive.
 test-workspace/content-mapper-directives/App.vue(4,6): error TS2339: Property 'childError' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'."
 `;
 
@@ -20,7 +48,24 @@ test-workspace/content-mapper-options/tsconfig.json(13,17): error vue3: Option '
 test-workspace/content-mapper-options/tsconfig.json(14,22): error vue1: Unknown option 'unknownOption'."
 `;
 
-exports[`content mapper fixtures > test-workspace/content-mapper-pug/tsconfig.json 1`] = `"test-workspace/content-mapper-pug/App.vue(7,6): error TS2339: Property 'missing' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'."`;
+exports[`content mapper fixtures > test-workspace/content-mapper-pug/tsconfig.json 1`] = `
+"  Property 'msg' is missing in type '{ name: "email"; }' but required in type '{ readonly msg: string; readonly name?: string | undefined; }'.
+test-workspace/content-mapper-pug/App.vue(7,6): error TS2339: Property 'missing' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.
+test-workspace/content-mapper-pug/Issues.vue(39,1): error TS2345: Argument of type '{ name: "email"; }' is not assignable to parameter of type '{ readonly msg: string; readonly name?: string | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps'.
+test-workspace/content-mapper-pug/Positions.vue(12,21): error TS2339: Property 'badProp' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.
+test-workspace/content-mapper-pug/Positions.vue(12,38): error TS2339: Property 'badEvent' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.
+test-workspace/content-mapper-pug/Positions.vue(13,11): error TS2339: Property 'badIf' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.
+test-workspace/content-mapper-pug/Positions.vue(14,23): error TS2339: Property 'badSource' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.
+test-workspace/content-mapper-pug/Positions.vue(15,54): error TS2339: Property 'badAlias' does not exist on type 'number'.
+test-workspace/content-mapper-pug/Positions.vue(17,26): error TS2339: Property 'badSlot' does not exist on type '{ slotValue: string; }'.
+test-workspace/content-mapper-pug/Positions.vue(18,19): error TS2339: Property 'badB' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.
+test-workspace/content-mapper-pug/Positions.vue(18,29): error TS2339: Property 'badC' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.
+test-workspace/content-mapper-pug/Positions.vue(18,6): error TS2353: Object literal may only specify known properties, and 'a' does not exist in type 'HTMLAttributes & ReservedProps'.
+test-workspace/content-mapper-pug/Positions.vue(18,9): error TS2339: Property 'badA' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.
+test-workspace/content-mapper-pug/Positions.vue(20,15): error TS2339: Property 'badPiped' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.
+test-workspace/content-mapper-pug/Positions.vue(22,6): error TS2353: Object literal may only specify known properties, and 'x' does not exist in type 'HTMLAttributes & ReservedProps'.
+test-workspace/content-mapper-pug/Positions.vue(23,9): error TS2339: Property 'badMultiLine' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'."
+`;
 
 exports[`content mapper fixtures > test-workspace/content-mapper-vitepress/tsconfig.json 1`] = `
 "test-workspace/content-mapper-vitepress/main.vue.md(12,7): error TS2322: Type 'string' is not assignable to type 'number'.

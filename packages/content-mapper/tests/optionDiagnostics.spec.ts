@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { OptionDiagnosticCode, toOptionDiagnostics } from '../optionDiagnostics';
+import { OptionDiagnosticCode, toOptionDiagnostics } from '../lib/mapper/optionDiagnostics';
 
 test('accepts every documented option', () => {
 	expect(toOptionDiagnostics(undefined)).toEqual([]);
@@ -17,6 +17,7 @@ test('accepts every documented option', () => {
 		dataAttributes: ['data-*'],
 		macros: { defineProps: ['defineProps'] },
 		plugins: ['@vue/plugin', { name: '@vue/plugin2', custom: 1 }],
+		vModelPropName: { 'my-input': 'value', 'f-radio-field': false },
 	})).toEqual([]);
 });
 
@@ -32,6 +33,50 @@ test('reports options removed in v4 with a migration hint', () => {
 	expect(toOptionDiagnostics({ resolveStyleImports: true })).toMatchObject([{
 		path: ['resolveStyleImports'],
 		code: OptionDiagnosticCode.RemovedOption,
+	}]);
+	expect(toOptionDiagnostics({ skipTemplateCodegen: true })).toMatchObject([{
+		path: ['skipTemplateCodegen'],
+		code: OptionDiagnosticCode.RemovedOption,
+	}]);
+});
+
+const droppedEmptyKeys =
+	`TypeScript 7 drops \`""\` keys from these options, so entries under \`""\` are missing; add them as \`false\`.`;
+
+test('converts experimentalModelPropName to vModelPropName in its migration hint', () => {
+	expect(toOptionDiagnostics({
+		experimentalModelPropName: {
+			value: { input: { type: 'text' }, textarea: true, select: true, 'c2-input': true },
+			checked: { 'c2-switch': true, 'c2-toggle': [{ type: 'checkbox' }] },
+		},
+	})).toEqual([{
+		path: ['experimentalModelPropName'],
+		messageText: `Option 'experimentalModelPropName' was removed in v4. Use \`vModelPropName\`, which maps each tag `
+			+ `to the prop its \`v-model\` binds or \`false\` for none: {"c2-input":"value","c2-switch":"checked"}. `
+			+ `Attribute conditions are not supported, so these tags need an entry of their own: 'c2-toggle'. `
+			+ droppedEmptyKeys,
+		code: OptionDiagnosticCode.RemovedOption,
+	}]);
+});
+
+test('reports the prop-keyed shape and invalid entries of vModelPropName', () => {
+	expect(toOptionDiagnostics({ vModelPropName: { 'input-value': { 'v-checkbox': true } } })).toEqual([{
+		path: ['vModelPropName'],
+		messageText: `Option 'vModelPropName' maps each tag to the prop its \`v-model\` binds or \`false\` for none: `
+			+ `{"v-checkbox":"input-value"}. ${droppedEmptyKeys}`,
+		code: OptionDiagnosticCode.InvalidOptionType,
+	}]);
+	expect(toOptionDiagnostics({ vModelPropName: { a: true, b: 1, c: 'value', d: false } })).toEqual(
+		['a', 'b'].map(tag => ({
+			path: ['vModelPropName', tag],
+			messageText: `Option 'vModelPropName' entries require a prop name or \`false\`.`,
+			code: OptionDiagnosticCode.InvalidOptionType,
+		})),
+	);
+	expect(toOptionDiagnostics({ vModelPropName: [] })).toEqual([{
+		path: ['vModelPropName'],
+		messageText: `Option 'vModelPropName' requires an object.`,
+		code: OptionDiagnosticCode.InvalidOptionType,
 	}]);
 });
 
@@ -55,9 +100,9 @@ test('reports unknown options and the removed vueCompilerOptions wrapper', () =>
 });
 
 test('reports invalid option values with their path', () => {
-	expect(toOptionDiagnostics({ format: 'md' })).toEqual([{
+	expect(toOptionDiagnostics({ format: 1 })).toEqual([{
 		path: ['format'],
-		messageText: `Option 'format' requires 'sfc', 'vitepress' or 'petite-vue'.`,
+		messageText: `Option 'format' requires 'sfc', 'vitepress', 'petite-vue' or a format of a plugin.`,
 		code: OptionDiagnosticCode.InvalidOptionType,
 	}]);
 	expect(toOptionDiagnostics({

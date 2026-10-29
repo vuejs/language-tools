@@ -1,5 +1,87 @@
 # Changelog
 
+## Unreleased (4.0)
+
+### Vue language plugins
+
+v4 replaces the `VueLanguagePlugin` API with plugin modules that export one key per mode. This is a clean break, with no adapter for v3 plugins: `version: 4` already rejected every third-party plugin, and their main use, rewriting the generated TypeScript of `script_*` embedded codes, has had no effect since v4 stopped producing that code.
+
+- **breaking:** a plugin module exports `ir` (`formats`, `templateCompilers`, `resolveTemplateCompilerOptions`) instead of a `VueLanguagePlugin` function. A function, an array or an object with `version` fails to load with a message naming the migration. `version`, `name`, `order`, `ctx.modules`, `parseSFC`/`updateSFC`, `compileSFCScript`, `compileSFCStyle`, `compileSFCTemplate` and `updateSFCTemplate` are removed. See [Plugins](packages/language-core/README.md#plugins).
+- **breaking:** plugins no longer add or change embedded documents of the language service (`getEmbeddedCodes`, `resolveEmbeddedCode`). The documents, including the one of a `pug` template, are built in. Custom blocks get the language of their own `lang` only.
+- **breaking:** a format or template language belongs to the one plugin that provides its key; providing a built-in key or one that another plugin provides is a load error. Formats of plugins are selected by name through the `format` option instead of the first `parseSFC` that returns a result.
+- **breaking:** `createVueLanguagePlugin` and `VueVirtualCode` moved to `@vue/language-service`; `createVuePlugins` is replaced by `createIRPipeline`.
+- **breaking:** a template compiler of a plugin, `templateCompilers[lang](source)`, returns only the HTML of the template and its mappings to the source (`TemplateHTML`), and optionally `ignoreError` for compiler errors of the conversion. The host compiles the HTML and maps every location of the AST, errors and warnings to the source once. `VueTemplateCompilerHost` and the `options` and `host` parameters are removed, and `TemplateCompiler` results are `{ ast, addedSuffix? }` instead of a `CodegenResult`.
+- **feat:** `@vue/content-mapper` reports plugins that fail to load, and a `format` that nothing provides, as option diagnostics, and includes the `name@version` of each plugin package in its config identity.
+- **feat:** the language server creates a project's IR again when one of its plugin files changes.
+- **feat:** `@vue/language-plugin-pug` exports `ir.templateCompilers.pug`; `@vue/language-core` is only a type dependency of it.
+- **breaking:** `baseParse` of `@vue/language-plugin-pug` (which `volar-service-pug` uses) parses a template whose every line is indented, as Vue does, instead of reporting `unexpected token "indent"`; its mappings, AST lines, error lines and empty line ends are those of the written template.
+
+- **feat:** `@vue/content-mapper` reads a `codegen` export of plugin modules, which contributes to the code it generates: edits of the user's script code, template context types, props, emits and exposed types of script setup components, native element types, module declarations, named exports and the doc comment of the component. A script edit inserts code before or after a char (`insertBefore` / `insertAfter`) or replaces a range (`replace`); edits never conflict with each other or with the mapper's own transforms, and inserts move with the code that the mapper moves. The language server and vue-component-meta never load it. See [Codegen plugins](packages/content-mapper/README.md#codegen-plugins).
+
+Plugins that changed the generated TypeScript move to `codegen`. Each one drops `version`, `name`, `order` and `ctx.modules`, exports `codegen = ctx => ({ contribute(file) { … } })`, takes its options from its `plugins` entry (`ctx.config`), and walks `file.ir.scriptSetup.ast` with `node.forEachChild` instead of matching generated code:
+
+| Plugin | `codegen` contribution |
+|---|---|
+| vue-router typed routes | `scriptEdits`: insert the route name type argument after `useRoute` / `definePage` (a JSDoc cast in JavaScript). `templateContext`: `$route`. |
+| vue-macros `define-models` / `define-prop` / `define-emit` | `props` / `emits` built from `SourceText`s of the member types, so that they stay navigable. Overloads go to `declarations`. |
+| vue-macros `export-props` | `scriptEdits` (remove the `export` modifier) and `props` (`{ x?: typeof x }`). |
+| vue-macros `export-expose` | `scriptEdits` (rewrite the export statements, mapping the names) and `expose` (`{ b: typeof a }`). |
+| vue-macros `export-render` | `scriptEdits`: replace `export default ` with `defineRender(` and insert `)`. |
+| vue-macros `define-slots` | `scriptEdits`: `insertBefore` / `insertAfter` around the type argument of `defineSlots` wrap the shorthand where the mapper moves it. |
+| vue-macros `setup-jsdoc` | `exports.docComment`: the range of the JSDoc. |
+| ts-macro (`jsx-directive`, `jsx-ref`) | Its Vue adapter returns the `replaceRange` calls as `scriptEdits` of `<script>` and `<script setup>`. |
+| vue-macros `define-props` / `define-props-refs` | No plugin: `macros.defineProps: ['defineProps', '$defineProps', 'definePropsRefs']`. |
+| vue-macros `define-options` | Not needed: built in. |
+| unplugin-vue-named-export | `exports: { names: [name], default: !removeDefault }`, with the option in the plugin's entry instead of `vueCompilerOptions.namedExport`. |
+| vite-vue-internationalization | `declarations` (`$locale`, `$l`, and locale diagnostics as `SourceSpan`s over the locale block) and `templateContext` (`$locale`, `$l`). The global dictionary becomes a type import of a file that its Vite plugin generates. Template `@ts-expect-error` becomes `@vue-expect-error`. |
+| vue-remote | `elements` for remote files, and `scriptEdits` for the `ref(null)` casts. |
+| weapp-vite | `elements` when the resolved `lib` is `wevu`. The `<json lang="ts">` block becomes `declarations`, with its imports as `SourceText`s. |
+| fusion-php | `templateContext`, with the variable names as `SourceText`s over the `<php>` block. |
+| server-block-nuxt | `declarations`: the content of the block as one `SourceText`. |
+
+Unsupported: wrapping the template (layout slots of dxup), changing the shape of the component (`define-generic` of vue-macros; use `generic="…"`), template expressions in custom blocks, and intersecting a type into the default export.
+
+### Language core
+
+- **breaking:** `@vue/language-core` no longer exports `isFunctionLikeDeclaration` and `isTypeAssertionExpression`; use `ts.isFunctionLikeDeclaration` and `ts.isTypeAssertion` of TS 7.1.
+
+### Content Mapper
+
+- **breaking:** the `vue-tsc` package is removed. Type-check and emit declarations with the `tsc` of TS 7.1 and `@vue/content-mapper` in the `contentMappers` of `tsconfig.json`: `tsc --runExternalCode` (see [Configuration](packages/content-mapper/README.md#configuration)).
+- **breaking:** the Content Mapper parses with the TS 7.1 `typescript` package that resolves from the project directory (the directory of the tsconfig, or the working directory for an inferred project), and fails to open a project from which none resolves. The VS Code extension no longer bundles TS 7.1, whose bundled copy could not find its executable.
+- **breaking:** in VS Code, the Content Mapper of Vue files outside any tsconfig runs in the first local workspace folder, so TS 7.1 resolves from it; with more folders, the first one is used for all of them. A window without a local workspace folder gets no Content Mapper for those files and logs an error.
+- **regression:** renaming a variable, prop or class name that a same-name shorthand uses (`:foo-bar`, `:count`, `{ foo }` in a template expression or in `:class`) leaves the shorthand unchanged, so after the rename the template refers to a name that no longer exists; v3 expanded it (`:foo-bar="NEW"`, `{ foo: NEW }`). Renaming from the shorthand itself does nothing. It waits on TypeScript expanding shorthands through span maps.
+- **regression:** go to definition on a module specifier that leads to a Vue file through `paths` (`import Foo from '@/Foo.vue'`) gives no result; a relative specifier and the default import name lead to the file. v3 led to the component. It waits on TypeScript resolving such specifiers.
+- **regression:** accepting an auto-import completion in a wholly empty `<script setup>` or `<script>` of a component with a template inserts the import into the template; without a template it goes into the block. v3 inserted it into the block. It waits on TypeScript placing an import on the empty block.
+- **regression:** component meta gives no defaults for the props of a generic component (`<script setup generic="T">`), from `withDefaults`, a props destructure or `defineModel`; v3 gave them. It waits on Vue's types giving a generic component its defaults: the function form of Vue's `defineComponent` fixes `Defaults` to `{}`.
+- **feat:** vue-component-meta no longer depends on `@vue/language-core`. It reads the name and the script setup defaults of a component through the checker of TS 7.1, instead of parsing the Vue file again.
+- **fix:** the parameter of a `defineModel` `default` function can have the name of the runtime `defineProps` binding (`default: (props) => props.n` with `const props = defineProps({ n: Number })`); it was reported as TS2502.
+- **fix:** at target 3.6, the instance type of a script setup component with a runtime `defineProps` argument includes its `defineModel` props; they were missing. v3 also missed them.
+- **fix:** the instance type of a script setup component, and its emitted declaration, give a prop that has a default without `undefined`, as Vue applies the default: a `withDefaults` default at target 3.6, a props destructure default from target 3.5, and a `defineModel` default. The defaults go to the runtime `props` option that Vue's types read; the `__defaults` option that target 3.6 used is not read by any released Vue. v3 gave them with `undefined` too, except `withDefaults` below target 3.6.
+- **fix:** in JavaScript, the props parameter of a `defineModel` `default` function is typed through JSDoc; it was reported as TS8010 (type annotations in a JavaScript file).
+- **fix:** renaming a function, class, enum or destructured prop that an object shorthand in a template expression uses expands the shorthand (`{ format: NEW }`).
+- **fix:** a type annotation of a `v-slot` parameter reads the template's bindings as the rest of the template does: `typeof foo` of a ref `foo` is the unwrapped value, not the `Ref`.
+- **fix:** renaming a scoped class from its name in a string of `:class` (`:class="'foo'"`, `['foo']`, `{ 'foo': true }`) renames it in the template and the style block; it renamed nothing.
+- **fix:** renaming a scoped or CSS module class whose name is not an identifier (`.foo-bar`) renames it in both the template and the style block, from either one; it renamed only the template use, and nothing from the style block.
+- **fix:** find references and go to definition link a template directive (`v-my-dir`) to its key in the Options API `directives` option (`directives: { myDir }`, `{ 'my-dir': … }`). Directives that a spread in the option registers resolve their types but do not link yet.
+- **fix:** a template directive resolves in the `directives` option by the keys Vue searches (`'my-dir'`, `myDir`, `MyDir` for `v-my-dir`), including a quoted kebab-case key and an option that is not an object literal (`directives: dirs`); both were reported as unknown directives.
+- **fix:** component meta gives the declarations in the source of the props of `defineModel` (its name) and of a runtime `defineProps` in script setup, as it already did for type-based props; they had none.
+- **fix:** component meta gives the returned expression as the default of a prop whose default is an arrow function with a block body of a single `return`, as it does for an expression body; it gave the whole function.
+- **fix:** component meta gives the default of a prop whose name is quoted in a props destructure (`'foo-bar': fooBar = 1`) or in the `withDefaults` defaults (`{ 'foo-bar': 1 }`); it gave none.
+
+### Language server
+
+- **breaking:** the `@vue/typescript-plugin` package is removed. The TypeScript 7.1 language server serves Vue files through `@vue/content-mapper` (`initializationOptions: { runExternalCode: true }`), and the Vue language server reads from it.
+- **breaking:** the Vue language server no longer provides semantic tokens; TS 7.1 is the only provider. Component tags are colored by the grammar, and a tag that resolves to no component is reported as a diagnostic.
+- **breaking:** the language server no longer needs TypeScript 5 or 6: the `--tsdk` parameter, its TypeScript 5/6 check and the `typescript` peer dependency are removed, and `startServer` / `createVueLanguageServicePlugins` take no `ts` argument. The VS Code extension no longer looks for a TypeScript SDK.
+- **breaking:** formatting (document, range and on type), folding, selection ranges, outline and JSX closing tags of `.vue` script blocks and template expressions are unavailable until TypeScript provides the APIs. They ran on classic TypeScript, which TS 7.1 replaces without a project-free syntactic API in `typescript/sync`; the `vue.format.script.*` and `vue.format.template.*` settings are kept for when it does. JSDoc comment templates in script blocks now come from TS 7.1 only.
+- **fix:** Reactivity Visualization resolves the identifiers of a script through the checker of its TS 7.1 project, instead of a classic TypeScript language service that had no default library and resolved no imports, and `@vue/language-server` no longer depends on `laplacenoma`. `counter.n.value` of another `useCounter()` call no longer counts as reading the `n` of `const { n } = useCounter()`, and a call of a variable that holds a named function expression now counts as reading it. While the TypeScript language server has another text of the script, it has no analysis.
+
+### Language service
+
+- **breaking:** twoslash queries (`// ^?` in script blocks and `<!-- ^? -->` in the template, shown as inlay hints) are removed. TS 7.1 gives no twoslash queries in TypeScript files either, so the same comment would act differently in `.vue` and `.ts` files, and the template form was a convention of this project only; twoslash queries belong to the tools that implement the convention for every language.
+- **fix:** dropping a component into the template, or extracting one, adds it to the Options API `components` by inserting the new property after the last one, instead of reprinting the object. The formatting, comments and trailing comma of the object are kept.
+
 ## 3.3.13 (2026-10-10)
 
 ### language-core

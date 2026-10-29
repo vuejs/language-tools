@@ -2,7 +2,7 @@
 	"private": true,
 	"devDependencies": {
 		"@vue/content-mapper": "workspace:*",
-		"typescript": "<7",
+		"typescript": "npm:typescript@7.1.0-beta",
 		"vue": "3.6.0-rc.6",
 		"vue-component-meta": "workspace:*",
 		"vue-component-type-helpers": "workspace:*"

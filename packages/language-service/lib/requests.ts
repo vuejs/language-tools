@@ -63,12 +63,18 @@ export interface Requests {
 		fileName: string,
 		position: number,
 	): Response<boolean>;
+	/** Whether TypeScript renames the code at `position` of `fileName`'s source text. */
+	isRenamedByTypeScript(
+		fileName: string,
+		position: number,
+	): Response<boolean>;
 	getComponentDirectives(
 		fileName: string,
 	): Response<string[]>;
+	/** The metadata of the component element that `position` of the template lies in (or after the start of). */
 	getComponentMeta(
 		fileName: string,
-		tag: string,
+		position: number,
 	): Response<import('vue-component-meta').ComponentMeta>;
 	getComponentNames(
 		fileName: string,
@@ -80,9 +86,10 @@ export interface Requests {
 	getComponentSlots(
 		fileName: string,
 	): Response<string[]>;
+	/** The attributes of the intrinsic element that `position` of the template lies in (or after the start of). */
 	getElementAttrs(
 		fileName: string,
-		tag: string,
+		position: number,
 	): Response<ComponentPropInfo[]>;
 	getElementNames(
 		fileName: string,
@@ -101,17 +108,21 @@ export interface Requests {
 		component: AutoImportComponent,
 	): Response<readonly TextEdit[]>;
 	/**
-	 * Quick fixes that import, into the Vue file `fileName`, the components named like `tag` when it resolves to no
-	 * component, otherwise the named exports of the unresolved name at `position` of the template.
+	 * Quick fixes that import, into the Vue file `fileName`, the components named like the tag of the component element
+	 * starting at `elementPosition` of the template when that tag resolves to nothing, otherwise the named exports of
+	 * the unresolved name at `position` of the file's source text.
 	 */
 	getImportFixes(
 		fileName: string,
 		position: number,
-		tag: string | undefined,
+		elementPosition: number | undefined,
 	): Response<ImportFix[]>;
-	/** The declaration of the component `tag` refers to, when another file declares it. */
+	/**
+	 * The declaration of the component of the element that `position` of the template lies in (or after the start of),
+	 * when another file declares it.
+	 */
 	getComponentDefinition(
 		fileName: string,
-		tag: string,
+		position: number,
 	): Response<DefinitionLocation>;
 }

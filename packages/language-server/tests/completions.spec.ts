@@ -313,6 +313,18 @@ test('Auto import into a Vue file without script', async () => {
 	);
 });
 
+test('Auto import into a script setup whose code a codegen plugin removes', async () => {
+	expect(
+		await applyCompletionItem(
+			'languageServerCodegen/fixture.vue',
+			`<script setup lang="ts">\nconst a = 1;\n</script>\n\n<template><| /></template>`,
+			'Comp',
+		),
+	).toBe(
+		`<script setup lang="ts">\nimport { Comp } from './comp';\n\n\nconst a = 1;\n</script>\n\n<template><Comp /></template>`,
+	);
+});
+
 test('Boolean props', async () => {
 	expect(
 		await requestCompletionItemToVueServer(
@@ -418,6 +430,62 @@ test('Component props', async () => {
 	`);
 });
 
+test('Component props come from the component type, without inferring its type parameters', async () => {
+	const items = (await requestCompletionListToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<template>
+			<Gen :value="true" f| />
+		</template>
+
+		<script setup lang="ts">
+		declare const Gen: new <T>(props: { value: T; flag?: T }) => { $props: { value: T; flag?: T } };
+		</script>
+		`,
+	)).items;
+	// not a boolean prop, as `T` stays unresolved
+	expect(items.find(item => item.label === 'flag')?.textEdit?.newText).toBe('flag="$1"');
+});
+
+test('Component props of an overloaded component come from its first construct signature', async () => {
+	const items = (await requestCompletionListToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<template>
+			<Over :b="1" | />
+		</template>
+
+		<script setup lang="ts">
+		declare const Over: {
+			new(props: { a: string }): { $props: { a: string } };
+			new(props: { b: number }): { $props: { b: number } };
+		};
+		</script>
+		`,
+	)).items;
+	expect(items.some(item => item.label === ':a')).toBe(true);
+	expect(items.some(item => item.label === ':b')).toBe(false);
+});
+
+test('Component props of a dynamic component', async () => {
+	const items = (await requestCompletionListToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<template>
+			<component :is="Comp" | />
+		</template>
+
+		<script setup lang="ts">
+		declare const Comp: new () => { $props: { foo?: string } };
+		</script>
+		`,
+	)).items;
+	expect(items.some(item => item.label === ':foo')).toBe(true);
+});
+
 test('Element attributes', async () => {
 	const content = `
 		<template>
@@ -473,6 +541,21 @@ test('Directive modifiers from the TypeScript language server', async () => {
 		`,
 		)).map(item => item.label),
 	).toEqual(['attr', 'prop']);
+});
+
+test.each([
+	['<script setup>', `<script setup lang="ts">\n/**| */\nfunction foo(a: number) {}\n</script>\n`],
+	['<script>', `<script lang="ts">\n/**| */\nexport function foo(a: number) {}\n</script>\n`],
+])('JSDoc comment template in %s comes from the TypeScript language server only', async (_, content) => {
+	expect(
+		(await requestCompletionListToTsServer('tsconfigProject/fixture.vue', 'vue', content))
+			.filter(item => item.label === '/** */')
+			.map(item => item.textEdit!.newText),
+	).toEqual(['/**\n * $0\n * @param a ${1}\n */']);
+	expect(
+		(await requestCompletionListToVueServer('tsconfigProject/fixture.vue', 'vue', content)).items
+			.filter(item => item.label === '/** */'),
+	).toEqual([]);
 });
 
 test('$event argument', async () => {
@@ -1001,12 +1084,34 @@ test('Auto insert defines', async () => {
 	`);
 });
 
+test('Auto insert defines only in script setup', async () => {
+	const content = `
+<script lang="ts" setup>
+defineProps<{ foo: string }>();
+</script>
+
+<script lang="ts">
+props
+</script>
+
+<template>
+	<div>{{ props }}</div>
+</template>
+`;
+	for (const textBefore of ['\nprops', '{{ props']) {
+		const offset = content.indexOf(textBefore) + textBefore.length;
+		const completions = await requestCompletionListToVueServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			content.slice(0, offset) + '|' + content.slice(offset),
+		);
+		expect(completions.items.filter(item => item.label === 'props' && item.additionalTextEdits)).toEqual([]);
+	}
+});
+
+// `testFn` is saved in `tsconfigProject/functions.ts`: TypeScript 7 can leave an export only an open document has
+// out of its auto-import data, so whether it imported one would depend on the timing of the previous test's close.
 test('#5847', async () => {
-	await prepareDocument(
-		'tsconfigProject/fixture.ts',
-		'typescript',
-		`export function testFn() { console.log('testFn'); }`,
-	);
 	const content = `
 <script setup lang="ts"></script>
 
@@ -1014,11 +1119,11 @@ test('#5847', async () => {
 `;
 	expect(
 		await requestCompletionItemToVueServer('tsconfigProject/fixture.vue', 'vue', content, 'testFn'),
-	).toMatchObject({ kind: 3, labelDetails: { description: 'fixture.ts' } });
+	).toMatchObject({ kind: 3, labelDetails: { description: 'functions.ts' } });
 	expect(await applyCompletionItem('tsconfigProject/fixture.vue', content, 'testFn')).toMatchInlineSnapshot(`
 		"
 		<script setup lang="ts">
-		import { testFn } from './fixture';
+		import { testFn } from './functions';
 		</script>
 
 		<template>{{ testFn }}</template>
@@ -1027,11 +1132,6 @@ test('#5847', async () => {
 });
 
 test('Not-imported exports skip setup bindings of the same name', async () => {
-	await prepareDocument(
-		'tsconfigProject/fixture.ts',
-		'typescript',
-		`export function testFn() { console.log('testFn'); }`,
-	);
 	const content = `
 <script setup lang="ts">
 const testFn = 1;
@@ -1093,6 +1193,23 @@ const list = [1];
 		const labels = (await getItems(content)).map(item => item.label);
 		expect(labels.filter(label => label === 'bar' || label === 'item'), content).toEqual([]);
 	}
+});
+
+test('Setup bindings complete in template expressions whatever their names', async () => {
+	const labels = (await requestCompletionListToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+<script setup lang="ts">
+const __VLS_foo = 1;
+const used = 1;
+</script>
+<template>{{ used + | }}</template>
+`,
+	)).items
+		.filter(item => item.kind === 6 satisfies typeof CompletionItemKind.Variable)
+		.map(item => item.label);
+	expect(labels).toEqual(['__VLS_foo']);
 });
 
 test('Setup bindings complete as components by type', async () => {

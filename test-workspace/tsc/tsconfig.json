@@ -578,6 +578,9 @@
 			"path": "./_failed_fragment_props/tsconfig.json"
 		},
 		{
+			"path": "./_failed_vueIgnoreScope/tsconfig.json"
+		},
+		{
 			"path": "./attrs/tsconfig.json"
 		},
 		{
@@ -732,6 +735,9 @@
 		},
 		{
 			"path": "./v-if/tsconfig.json"
+		},
+		{
+			"path": "./vModelPropName/tsconfig.json"
 		},
 		{
 			"path": "./withDefaults/tsconfig.json"

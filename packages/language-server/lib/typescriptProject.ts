@@ -1,4 +1,6 @@
-import { names, type VueVirtualCode } from '@vue/language-core';
+import type { TypeScript as CoreTypeScript } from '@vue/language-core';
+import { loadTypeScript, resolveTypeScriptModule } from '@vue/language-core/typescript';
+import type { VueVirtualCode } from '@vue/language-service';
 import type {
 	AutoImportComponent,
 	AutoImportExport,
@@ -7,38 +9,46 @@ import type {
 	ExtractPropsInfo,
 	TextEdit,
 } from '@vue/language-service/lib/requests';
-import * as fs from 'node:fs';
-import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import type { ComponentMeta, TypeScript } from 'vue-component-meta';
 import { getComponentMetaOfType } from 'vue-component-meta/lib/componentMeta';
 import {
 	collectExtractProps,
-	findVariable,
 	getComponentDefinition,
+	getComponentDirectives,
 	getComponentNames,
 	getComponentProps,
 	getComponentSlots,
-	getComponentType,
 	getElementAttrs,
+	getElementNames,
 	getNamedValueExports,
 	getProjectValueExports,
+	getSymbolIds,
+	getTagType,
 	getUnresolvedName,
 	isRefAtOffset,
-} from './componentMeta';
+	isUnresolvedTag,
+	toCheckedPositions,
+} from './checkerQueries';
 
-type SourceFile = import('typescript-7/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
-type Project = import('typescript-7/async', { with: { 'resolution-mode': 'import' }}).Project;
+type SourceFile = import('typescript/ast', { with: { 'resolution-mode': 'import' }}).SourceFile;
+type Project = import('typescript/async', { with: { 'resolution-mode': 'import' }}).Project;
 
-const directiveRE = /^v[A-Z]/;
 const defaultImportRE = /\bimport\s+[\w$]+(?=\s*(?:,|from\b))/;
 const scriptExtensions = ['.ts', '.tsx', '.js', '.jsx', '.mts', '.cts', '.mjs', '.cjs'];
 
+/** An entry of the TS 7.1 tsconfig option `contentMappers`, whose API leaves the raw config untyped. */
+export interface ContentMapperEntry {
+	package: string;
+	extensions: string[];
+	options?: Record<string, unknown>;
+}
+
 /** The extensions of the files that can export components: script modules and the files of `contentMappers`. */
-export function getComponentModuleExtensions(contentMappers: unknown[] | undefined) {
+export function getComponentModuleExtensions(contentMappers: ContentMapperEntry[] | undefined) {
 	return [
 		...scriptExtensions,
-		...(contentMappers as { extensions?: string[] }[] | undefined)?.flatMap(entry => entry.extensions ?? []) ?? [],
+		...contentMappers?.flatMap(entry => entry.extensions ?? []) ?? [],
 	];
 }
 
@@ -46,10 +56,12 @@ export interface TypeScriptProject {
 	/** Undefined for the TypeScript language server's inferred project. */
 	configFileName: string | undefined;
 	/** The config's resolved (possibly inherited) `contentMappers`. */
-	contentMappers: unknown[] | undefined;
+	contentMappers: ContentMapperEntry[] | undefined;
 }
 
 export interface TypeScriptProjectResolver {
+	/** The TS 7.1 AST API and parser of the installation that the TypeScript language server runs. */
+	parser: CoreTypeScript;
 	/** The file's default project in the running TypeScript language server, or undefined when it has none for it. */
 	getProject(fileName: string): Promise<TypeScriptProject | undefined>;
 	/**
@@ -66,43 +78,69 @@ export interface TypeScriptProjectResolver {
 	getAutoImportValues(fileName: string): Promise<AutoImportExport[] | undefined>;
 	/** The TypeScript language server's edits that import `component` into `fileName` under `component.name`. */
 	getComponentImportEdits(fileName: string, component: AutoImportComponent): Promise<readonly TextEdit[] | undefined>;
-	/** The name of the identifier at `offset` in the service script of the Vue file `fileName`, when it resolves to nothing. */
+	/** The name of the identifier at `offset` in the source text of the Vue file `fileName`, when it resolves to nothing. */
 	getUnresolvedName(fileName: string, offset: number): Promise<string | undefined>;
+	/** Whether the tag name starting at `offset` in the source text of the Vue file `fileName` resolves to nothing. */
+	isUnresolvedTag(fileName: string, offset: number): Promise<boolean | undefined>;
 	/** The TypeScript language server's edits that import each named value export called `name` into `fileName`. */
 	getNamedImportFixes(
 		fileName: string,
 		name: string,
 	): Promise<{ fileName: string; edits: readonly TextEdit[] }[] | undefined>;
-	/** The declaration of the component that `tag` refers to in the template of the Vue file `fileName`, in another file. */
-	getComponentDefinition(
-		fileName: string,
-		virtualCode: VueVirtualCode,
-		tag: string,
-	): Promise<DefinitionLocation | undefined>;
-	/** The metadata of the component that `tag` refers to in the template of the Vue file `fileName`. */
-	getComponentMeta(fileName: string, virtualCode: VueVirtualCode, tag: string): Promise<ComponentMeta | undefined>;
+	/**
+	 * The declaration, in another file, of the component whose tag name starts at `offset` in the source text of the
+	 * Vue file `fileName`.
+	 */
+	getComponentDefinition(fileName: string, offset: number): Promise<DefinitionLocation | undefined>;
+	/** The metadata of the component whose tag name starts at `offset` in the source text of the Vue file `fileName`. */
+	getComponentMeta(fileName: string, offset: number): Promise<ComponentMeta | undefined>;
 	/** The intrinsic element names available in the template of the Vue file `fileName`. */
-	getElementNames(fileName: string): Promise<string[] | undefined>;
-	/** The props of the component whose props object literal contains `offset` in the service script of the Vue file `fileName`. */
-	getComponentProps(fileName: string, offset: number): Promise<ComponentPropInfo[] | undefined>;
+	getElementNames(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
+	/**
+	 * The props of the component whose tag name starts at `offset` in the source text of the Vue file `fileName` or,
+	 * given `expressionLength`, of the component that the expression of that length at `offset` evaluates to.
+	 */
+	getComponentProps(
+		fileName: string,
+		offset: number,
+		expressionLength?: number,
+	): Promise<ComponentPropInfo[] | undefined>;
 	/** The names of the slots the Vue file `fileName` declares. */
 	getComponentSlots(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
-	/** The attributes of the intrinsic element `tag` in the template of the Vue file `fileName`. */
-	getElementAttrs(fileName: string, tag: string): Promise<ComponentPropInfo[] | undefined>;
+	/**
+	 * The attributes of the intrinsic element whose tag name starts at `offset` in the source text of the Vue file
+	 * `fileName`, or else of the intrinsic element `tag`.
+	 */
+	getElementAttrs(
+		fileName: string,
+		virtualCode: VueVirtualCode,
+		offset: number | undefined,
+		tag: string,
+	): Promise<ComponentPropInfo[] | undefined>;
 	/** The component names available in the template of the Vue file `fileName`. */
 	getComponentNames(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
 	/** The directive names (`vFoo`) available in the template of the Vue file `fileName`. */
-	getComponentDirectives(fileName: string): Promise<string[] | undefined>;
-	/**
-	 * The template context properties of the Vue file `fileName` whose end offset in its service script `isExtracted`
-	 * accepts.
-	 */
+	getComponentDirectives(fileName: string, virtualCode: VueVirtualCode): Promise<string[] | undefined>;
+	/** The template context properties that the code between `start` and `end` in the source text of the Vue file `fileName` reads. */
 	collectExtractProps(
 		fileName: string,
-		isExtracted: (offset: number) => boolean,
+		virtualCode: VueVirtualCode,
+		start: number,
+		end: number,
 	): Promise<ExtractPropsInfo[] | undefined>;
-	/** Whether the identifier at `offset` in the service script of the Vue file `fileName` is a `Ref`. */
+	/** Whether the identifier at `offset` in the source text of the Vue file `fileName` is a `Ref`. */
 	isRefAtOffset(fileName: string, offset: number): Promise<boolean | undefined>;
+	/** Whether TypeScript renames the code at `offset` in the source text of the Vue file `fileName`. */
+	isRenamedAtOffset(fileName: string, offset: number): Promise<boolean | undefined>;
+	/**
+	 * The ids of the symbols that the identifiers at `offsets` of the source text of `fileName` refer to, the value of a
+	 * shorthand property for its name; undefined when the source text TypeScript checks is not `text`.
+	 */
+	getSymbolIds(
+		fileName: string,
+		text: string,
+		offsets: readonly number[],
+	): Promise<readonly (number | undefined)[] | undefined>;
 	/** Releases the file opened by `getProject`. */
 	closeFile(fileName: string): void;
 	/** Forgets the cached auto-import exports that a change to `fileName`, if it can export components, may affect. */
@@ -120,14 +158,12 @@ export interface TypeScriptProjectResolver {
 export async function connectTypeScriptProjectResolver(
 	pipe: string,
 	packageJsonPath: string,
-	inferredContentMappers?: unknown[],
+	inferredContentMappers?: ContentMapperEntry[],
 ): Promise<TypeScriptProjectResolver> {
-	const manifestPath = fs.realpathSync(packageJsonPath);
-	const { name } = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-	const require = createRequire(manifestPath);
+	const parser = loadTypeScript(packageJsonPath);
 	const ts: TypeScript = {
-		...await import(pathToFileURL(require.resolve(`${name}/ast`)).href),
-		...await import(pathToFileURL(require.resolve(`${name}/async`)).href),
+		...await import(pathToFileURL(resolveTypeScriptModule(packageJsonPath, 'ast')).href),
+		...await import(pathToFileURL(resolveTypeScriptModule(packageJsonPath, 'async')).href),
 	};
 	const api = await ts.API.fromLSPConnection({ pipe });
 	const projects = new Map<string, Promise<TypeScriptProject | undefined>>();
@@ -170,7 +206,7 @@ export async function connectTypeScriptProjectResolver(
 				fileName,
 				extensions: getComponentModuleExtensions(
 					project.configFileName
-						? (project.parsedCommandLine.raw as { contentMappers?: unknown[] } | undefined)?.contentMappers
+						? (project.parsedCommandLine.raw as { contentMappers?: ContentMapperEntry[] } | undefined)?.contentMappers
 						: inferredContentMappers,
 				),
 				components: exports.then(entries => entries.filter(entry => entry.isComponent)),
@@ -186,7 +222,7 @@ export async function connectTypeScriptProjectResolver(
 
 	function withSourceFile<T>(
 		fileName: string,
-		fn: (project: Project, sourceFile: SourceFile) => Promise<T | undefined>,
+		fn: (project: Project, sourceFile: SourceFile) => T | undefined | Promise<T | undefined>,
 	) {
 		return withProject(fileName, async project => {
 			const sourceFile = await project.program.getSourceFile(fileName);
@@ -195,6 +231,7 @@ export async function connectTypeScriptProjectResolver(
 	}
 
 	return {
+		parser,
 		getProject(fileName) {
 			let result = projects.get(fileName);
 			if (!result) {
@@ -205,7 +242,7 @@ export async function connectTypeScriptProjectResolver(
 							configFileName: project.configFileName,
 							// The config file's own JSON, not merged with `extends`, except that `contentMappers` is replaced by
 							// the resolved (possibly inherited) array. Undefined for inferred projects.
-							contentMappers: (project.parsedCommandLine.raw as { contentMappers?: unknown[] } | undefined)
+							contentMappers: (project.parsedCommandLine.raw as { contentMappers?: ContentMapperEntry[] } | undefined)
 								?.contentMappers,
 						};
 					}
@@ -248,9 +285,19 @@ export async function connectTypeScriptProjectResolver(
 			});
 		},
 		getUnresolvedName(fileName, offset) {
+			return withSourceFile(fileName, async (project, sourceFile) => {
+				for (const position of toCheckedPositions(sourceFile, offset, ts.SpanMapFeature.Definition)) {
+					const name = await getUnresolvedName(ts, project.checker, sourceFile, position);
+					if (name) {
+						return name;
+					}
+				}
+			});
+		},
+		isUnresolvedTag(fileName, offset) {
 			return withSourceFile(
 				fileName,
-				(project, sourceFile) => getUnresolvedName(ts, project.checker, sourceFile, offset),
+				(project, sourceFile) => isUnresolvedTag(ts, project.checker, sourceFile, offset),
 			);
 		},
 		getNamedImportFixes(fileName, name) {
@@ -265,29 +312,28 @@ export async function connectTypeScriptProjectResolver(
 				})));
 			});
 		},
-		getComponentDefinition(fileName, virtualCode, tag) {
+		getComponentDefinition(fileName, offset) {
 			return withSourceFile(
 				fileName,
-				(project, sourceFile) => getComponentDefinition(ts, project.checker, sourceFile, virtualCode, tag),
+				(project, sourceFile) => getComponentDefinition(ts, project.checker, sourceFile, offset),
 			);
 		},
-		getComponentMeta(fileName, virtualCode, tag) {
+		getComponentMeta(fileName, offset) {
 			return withSourceFile(fileName, async (project, sourceFile) => {
-				const component = await getComponentType(ts, project.checker, sourceFile, virtualCode, tag);
+				const component = await getTagType(ts, project.checker, sourceFile, offset);
 				return component && await getComponentMetaOfType(ts, project, component.type, component.node);
 			});
 		},
-		getElementNames(fileName) {
-			return withSourceFile(fileName, async (project, sourceFile) => {
-				const intrinsics = findVariable(ts, sourceFile, names.intrinsics);
-				const type = intrinsics && await project.checker.getTypeAtLocation(intrinsics);
-				return type && (await type.getProperties()).map(symbol => symbol.name);
-			});
-		},
-		getComponentProps(fileName, offset) {
+		getElementNames(fileName, virtualCode) {
 			return withSourceFile(
 				fileName,
-				(project, sourceFile) => getComponentProps(ts, project.checker, sourceFile, offset),
+				(project, sourceFile) => getElementNames(ts, project.program, project.checker, sourceFile, virtualCode),
+			);
+		},
+		getComponentProps(fileName, offset, expressionLength) {
+			return withSourceFile(
+				fileName,
+				(project, sourceFile) => getComponentProps(ts, project.checker, sourceFile, offset, expressionLength),
 			);
 		},
 		getComponentSlots(fileName, virtualCode) {
@@ -296,38 +342,50 @@ export async function connectTypeScriptProjectResolver(
 				(project, sourceFile) => getComponentSlots(ts, project.checker, sourceFile, virtualCode),
 			);
 		},
-		getElementAttrs(fileName, tag) {
+		getElementAttrs(fileName, virtualCode, offset, tag) {
 			return withSourceFile(
 				fileName,
-				(project, sourceFile) => getElementAttrs(ts, project.checker, sourceFile, tag),
+				(project, sourceFile) =>
+					getElementAttrs(ts, project.program, project.checker, sourceFile, virtualCode, offset, tag),
 			);
 		},
 		getComponentNames(fileName, virtualCode) {
 			return withSourceFile(
 				fileName,
-				(project, sourceFile) => getComponentNames(ts, project.checker, sourceFile, virtualCode),
+				(project, sourceFile) => getComponentNames(ts, project.program, project.checker, sourceFile, virtualCode),
 			);
 		},
-		getComponentDirectives(fileName) {
-			return withSourceFile(fileName, async (project, sourceFile) => {
-				const directives = findVariable(ts, sourceFile, names.directives);
-				const type = directives && await project.checker.getTypeAtLocation(directives);
-				return type && (await type.getProperties())
-					.map(symbol => symbol.name)
-					.filter(name => directiveRE.test(name));
-			});
-		},
-		collectExtractProps(fileName, isExtracted) {
+		getComponentDirectives(fileName, virtualCode) {
 			return withSourceFile(
 				fileName,
-				(project, sourceFile) => collectExtractProps(ts, project.checker, sourceFile, isExtracted),
+				(project, sourceFile) => getComponentDirectives(ts, project.program, project.checker, sourceFile, virtualCode),
+			);
+		},
+		collectExtractProps(fileName, virtualCode, start, end) {
+			return withSourceFile(
+				fileName,
+				(project, sourceFile) => collectExtractProps(ts, project.checker, sourceFile, virtualCode, start, end),
 			);
 		},
 		isRefAtOffset(fileName, offset) {
+			return withSourceFile(fileName, async (project, sourceFile) => {
+				const [position] = toCheckedPositions(sourceFile, offset, ts.SpanMapFeature.Completion);
+				return position !== undefined && await isRefAtOffset(ts, project.checker, sourceFile, position);
+			});
+		},
+		isRenamedAtOffset(fileName, offset) {
 			return withSourceFile(
 				fileName,
-				(project, sourceFile) => isRefAtOffset(ts, project.checker, sourceFile, offset),
+				(_project, sourceFile) =>
+					!!sourceFile.spanMap?.originalToVirtualPositions(offset, ts.SpanMapFeature.Rename).length,
 			);
+		},
+		getSymbolIds(fileName, text, offsets) {
+			return withSourceFile(fileName, async (project, sourceFile) => {
+				if (sourceFile.originalText === text) {
+					return await getSymbolIds(ts, project.checker, sourceFile, offsets);
+				}
+			});
 		},
 		closeFile(fileName) {
 			if (projects.delete(fileName)) {

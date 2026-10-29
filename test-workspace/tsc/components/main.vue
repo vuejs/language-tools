@@ -1,6 +1,6 @@
 <script lang="ts">
 import { exactType } from '../shared';
-import { defineComponent, ref } from 'vue';
+import { defineComponent, type PropType, ref } from 'vue';
 import ScriptSetup from './script-setup.vue';
 import ScriptSetupExpose from './script-setup-expose.vue';
 import ScriptSetupTypeOnly from './script-setup-type-only.vue';
@@ -45,9 +45,15 @@ const ScriptSetupDefaultPropsExact = defineComponent({
 		msg?: string;
 		labels?: string[];
 	},
-	__defaults: {
-		msg: 'hello',
-		labels: () => ['one', 'two']
+	props: {
+		msg: {
+			type: String,
+			default: 'hello'
+		},
+		labels: {
+			type: Array as PropType<string[]>,
+			default: () => ['one', 'two']
+		}
 	},
 });
 // vue 3.3 generic

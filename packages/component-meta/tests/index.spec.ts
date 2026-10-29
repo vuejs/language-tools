@@ -159,8 +159,13 @@ describe('vue-component-meta', async () => {
 				type: { parameters: { value: { union: ['undefined', 'string'] } }, returns: 'void' },
 			},
 		});
-		// `defineModel` declares no props in the source
-		expect(declarations(declaredProps(meta))).toEqual({ modelValue: [], foo: [], bar: [], barModifiers: [] });
+		// the name of a `defineModel` declares its prop; the default model and the modifiers have no name in the source
+		expect(declarations(declaredProps(meta))).toEqual({
+			modelValue: [],
+			foo: [`reference-type-model/component.vue: 'foo'`],
+			bar: [`reference-type-model/component.vue: 'bar'`],
+			barModifiers: [],
+		});
 		expect(declarations(meta.events)).toEqual({
 			'update:bar': [runtimeCore],
 			'update:foo': [runtimeCore],
@@ -330,6 +335,16 @@ describe('vue-component-meta', async () => {
 		});
 	});
 
+	test('reference-type-props-block-default', async () => {
+		const meta = await getMeta('reference-type-props/component-block-default.vue');
+
+		expect(props(meta).expression).toMatchObject({ default: '[1]' });
+		expect(props(meta).returned).toMatchObject({ default: '[2]' });
+		expect(props(meta).statements).toMatchObject({
+			default: '() => {\n\t\tconst value = [3];\n\t\treturn value;\n\t}',
+		});
+	});
+
 	test('reference-type-props-js', async () => {
 		const meta = await getMeta('reference-type-props/component-js.vue');
 		const optionalString = { union: ['undefined', 'string'] };
@@ -386,8 +401,18 @@ describe('vue-component-meta', async () => {
 				type: { union: ['undefined', { array: 'unknown' }] },
 			},
 		});
-		// the props of a runtime `defineProps` in script setup have no declarations in the source
-		expect(declaredProps(meta).every(prop => !prop.declarations.length)).toBe(true);
+		const componentJsSetup = (text: string) => [`reference-type-props/component-js-setup.vue: ${text}`];
+		expect(declarations(declaredProps(meta))).toEqual({
+			foo: componentJsSetup('foo: {\n    type: String,\n    required: true\n  }'),
+			bar: componentJsSetup(`bar: {\n    type: String,\n    default: 'BAR'\n  }`),
+			baz: componentJsSetup('baz: {\n    type: String\n  }'),
+			xfoo: componentJsSetup('xfoo: StringRequired'),
+			xbar: componentJsSetup('xbar: StringEmpty'),
+			xbaz: componentJsSetup('xbaz: StringUndefined'),
+			hello: componentJsSetup(`hello: {\n    type: String,\n    default: 'Hello'\n  }`),
+			numberOrStringProp: componentJsSetup('numberOrStringProp: {\n    type: [Number, String],\n    default: 42\n  }'),
+			arrayProps: componentJsSetup('arrayProps: {\n    type: Array,\n    default: () => [42, 43, 44]\n  }'),
+		});
 	});
 
 	test('reference-type-events', async () => {
@@ -416,6 +441,20 @@ describe('vue-component-meta', async () => {
 		expect(declarations(meta.events)).toEqual({ foo: [runtimeCore], bar: [runtimeCore], baz: [runtimeCore] });
 	});
 
+	// Waits on TypeScript exposing the documentation of signatures in its API (upstream ask TS-5), which the events
+	// read from their call signatures; exit: this passes once `getEvents` reads it.
+	test.fails('reference-type-events w/ documentation', async () => {
+		const meta = await getMeta('reference-type-events/component-docs.vue');
+
+		expect(members(meta, meta.events)).toEqual({
+			save: {
+				description: 'Fired on save.',
+				tags: [{ name: 'since', text: 'v1.0.0' }],
+				type: { parameters: {}, returns: 'void' },
+			},
+		});
+	});
+
 	test('reference-type-events w/ tuple syntax', async () => {
 		const meta = await getMeta('reference-type-exposed/component.vue');
 
@@ -439,6 +478,38 @@ describe('vue-component-meta', async () => {
 		});
 	});
 
+	// Waits on Vue's types giving a generic component its defaults: the function form of Vue's `defineComponent` fixes
+	// `Defaults` to `{}`, and the defaults of a generic component stay inside its setup function, out of reach of the
+	// checker. Passes once Vue's types carry the defaults of a generic component.
+	test.fails('generic withDefaults and defineModel defaults', async () => {
+		const meta = await getMeta('generic/component-defaults.vue');
+
+		expect(props(meta).foo).toMatchObject({ required: false, default: '1' });
+		expect(props(meta).bar).not.toHaveProperty('default');
+		expect(props(meta).baz).toMatchObject({ required: false, default: '() => 2' });
+		expect(props(meta).modelValue).toMatchObject({ required: false, default: '3' });
+	});
+
+	// Waits on Vue's types giving a generic component its defaults, as above.
+	test.fails('generic destructure and defineModel defaults', async () => {
+		const meta = await getMeta('generic/component-destructure.vue');
+
+		expect(props(meta).foo).toMatchObject({ required: false, default: '1' });
+		expect(props(meta).bar).not.toHaveProperty('default');
+		expect(props(meta).title).toMatchObject({ required: false, default: `'x'` });
+	});
+
+	// Waits on Vue's types giving a generic component its defaults, as above.
+	test.fails('defaults of quoted prop names of generic components', async () => {
+		expect(props(await getMeta('generic/component-destructure.vue'))['foo-bar']).toMatchObject({ default: '[2]' });
+	});
+
+	test('defaults of quoted prop names', async () => {
+		expect(props(await getMeta('reference-type-props/component-quoted-default.vue'))['foo-bar']).toMatchObject({
+			default: '1',
+		});
+	});
+
 	test('reference-type-events w/ generic', async () => {
 		const meta = await getMeta('generic/component.vue');
 
@@ -456,7 +527,7 @@ describe('vue-component-meta', async () => {
 		});
 		expect(declarations(declaredProps(meta))).toEqual({
 			foo: ['generic/component.vue: foo: number'],
-			title: [],
+			title: [`generic/component.vue: 'title'`],
 		});
 	});
 
@@ -709,7 +780,10 @@ describe('vue-component-meta', async () => {
 			header: { description: '', tags: [], type: { count: 'number' } },
 		});
 		expect(meta.description).toBeUndefined();
-		expect(declarations(declaredProps(meta))).toEqual({ bar: [], foo: [] });
+		expect(declarations(declaredProps(meta))).toEqual({
+			bar: ['js-component/component.vue: bar: {\n\t\ttype: Number,\n\t\tdefault: 1\n\t}'],
+			foo: ['js-component/component.vue: foo: {\n\t\ttype: String,\n\t\trequired: true\n\t}'],
+		});
 		expect(declarations(meta.slots)).toEqual({ header: ['js-component/component.vue: header'] });
 	});
 
@@ -743,6 +817,24 @@ describe('vue-component-meta', async () => {
 		expect(meta.name).toBe('TsComponent');
 		expect(meta.description).toBe('TypeScript component with description');
 		expect(props(meta).message).toMatchObject({ required: true, description: 'The message prop' });
+	});
+
+	test('component-name of defineComponent (vue)', async () => {
+		const meta = await getMeta('component-name-description/component-define-component.vue');
+
+		expect(meta.name).toBe('DefinedComponent');
+	});
+
+	test('component-name of JavaScript (vue)', async () => {
+		const meta = await getMeta('component-name-description/component-js.vue');
+
+		expect(meta.name).toBe('JsComponent');
+	});
+
+	test('component-name of script setup (vue)', async () => {
+		const meta = await getMeta('component-name-description/component-script-setup.vue');
+
+		expect(meta.name).toBeUndefined();
 	});
 
 	test('component-no-name (vue)', async () => {

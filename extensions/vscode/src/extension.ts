@@ -1,6 +1,5 @@
 import { activateAutoInsertion, activateDocumentDropEdit, createLabsInfo, middleware } from '@volar/vscode';
 import * as lsp from '@volar/vscode/node';
-import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
 	defineExtension,
@@ -15,6 +14,7 @@ import {
 } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
+import { createInferredContentMapperContributions, inferredContentMappers } from './contentMappers';
 import * as focusMode from './focusMode';
 import * as interpolationDecorators from './interpolationDecorators';
 import { restrictFormattingEditsToRange } from './rangeFormatting';
@@ -22,23 +22,6 @@ import * as reactivityVisualization from './reactivityVisualization';
 import * as welcome from './welcome';
 
 let serverPath = resolveServerPath();
-
-/**
- * Content mappers for files outside any tsconfig, registered with TypeScript and passed to the language
- * server. Each contribution runs its own mapper process, since the host keys processes by contribution.
- */
-const inferredContentMappers = [
-	{
-		package: '@vue/content-mapper',
-		extensions: ['.vue'],
-		options: { languageFeatures: true, target: 99, format: 'sfc' },
-	},
-	{
-		package: '@vue/content-mapper',
-		extensions: ['.vue.md'],
-		options: { languageFeatures: true, target: 99, format: 'vitepress' },
-	},
-];
 
 /** Resolves with the first TypeScript SDK; `latestTypeScriptSdk` follows later TypeScript language server restarts. */
 let typescriptSdk: Promise<TypeScriptSDK> = Promise.reject(new Error('TypeScript (Native Preview) is not installed.'));
@@ -150,12 +133,6 @@ export = defineExtension(() => {
 			});
 		}
 
-		const tsdk = resolveTsdkPath();
-		if (tsdk === undefined) {
-			vscode.window.showErrorMessage('Cannot find TypeScript SDK.');
-			return;
-		}
-
 		if (!serverPath) {
 			try {
 				serverPath = require.resolve('../node_modules/@vue/language-server');
@@ -165,7 +142,7 @@ export = defineExtension(() => {
 			}
 		}
 
-		client = launch(serverPath, tsdk.replace(/\\/g, '/'));
+		client = launch(serverPath);
 
 		volarLabs.addLanguageClient(client);
 
@@ -199,21 +176,18 @@ function getIncludeLanguages() {
 	return config.server.includeLanguages as lsp.DocumentSelector;
 }
 
-function launch(serverPath: string, tsdk: string) {
-	const args = ['--tsdk=' + tsdk];
+function launch(serverPath: string) {
 	const client = new lsp.LanguageClient(
 		'vue',
 		'Vue',
 		{
 			run: {
 				module: serverPath,
-				args,
 				transport: lsp.TransportKind.ipc,
 				options: {},
 			},
 			debug: {
 				module: serverPath,
-				args,
 				transport: lsp.TransportKind.ipc,
 				options: { execArgv: ['--nolazy', '--inspect=' + 6009] },
 			},
@@ -267,23 +241,6 @@ function launch(serverPath: string, tsdk: string) {
 	return client;
 }
 
-function resolveTsdkPath() {
-	const vscodeTsdk = path.join(vscode.env.appRoot, 'extensions', 'node_modules', 'typescript', 'lib');
-	if (fs.existsSync(vscodeTsdk)) {
-		return vscodeTsdk;
-	}
-
-	const tsExt = vscode.extensions.getExtension('vscode.typescript-language-features');
-	if (tsExt) {
-		// Eclipse Theia
-		// see: https://github.com/eclipse-theia/vscode-builtin-extensions/blob/65c70ec636bd879ef9529d0a2da36f4b99139c40/src/package-vsix.js#L71
-		const theiaTsdk = path.join(tsExt.extensionPath, 'deps', 'typescript', 'lib');
-		if (fs.existsSync(theiaTsdk)) {
-			return theiaTsdk;
-		}
-	}
-}
-
 function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 	const nativePreview = vscode.extensions.getExtension<TypeScriptNativePreviewAPI>(
 		'TypeScriptTeam.native-preview',
@@ -312,33 +269,39 @@ function registerTypeScriptContentMapper(context: vscode.ExtensionContext) {
 		if (!api?.registerContentMappers) {
 			return;
 		}
-		const tsdk = resolveTsdkPath();
-		if (!tsdk) {
-			return;
-		}
-		const typescriptPath = path.join(tsdk, 'typescript.js');
-		const createContribution = ({ extensions, options }: typeof inferredContentMappers[number]) => ({
-			extensions,
-			inferredProjectContribution: {
-				options,
-				manifest: {
-					name: '@vue/content-mapper',
-					version: require('../package.json').version,
-					exec: [
-						process.execPath,
-						path.join(context.extensionPath, 'dist', 'content-mapper-server.js'),
-						`--worker=${path.join(context.extensionPath, 'dist', 'content-mapper-worker.js')}`,
-						`--typescript=${typescriptPath}`,
-					],
-					cwd: vscode.Uri.file(context.extensionPath),
-					dynamicConfig: true,
-				},
-			},
-		});
-		context.subscriptions.push(api.registerContentMappers(
-			'Vue.volar',
-			inferredContentMappers.map(createContribution),
-		));
+		let registration: vscode.Disposable | undefined;
+		let registeredFolder: string | undefined | null = null;
+		const register = () => {
+			const folders = (vscode.workspace.workspaceFolders ?? [])
+				.filter(folder => folder.uri.scheme === 'file')
+				.map(folder => folder.uri.fsPath);
+			if (folders[0] === registeredFolder) {
+				return;
+			}
+			registeredFolder = folders[0];
+			registration?.dispose();
+			registration = undefined;
+			const contributions = createInferredContentMapperContributions(
+				context.extensionPath,
+				require('../package.json').version,
+				folders,
+			).map(({ extensions, inferredProjectContribution: { options, manifest } }) => ({
+				extensions,
+				inferredProjectContribution: { options, manifest: { ...manifest, cwd: vscode.Uri.file(manifest.cwd) } },
+			}));
+			if (!contributions.length) {
+				logger.logger.value?.error(
+					'Vue files outside any tsconfig need a local workspace folder, from which the Content Mapper resolves TS 7.1.',
+				);
+				return;
+			}
+			registration = api.registerContentMappers('Vue.volar', contributions);
+		};
+		register();
+		context.subscriptions.push(
+			vscode.workspace.onDidChangeWorkspaceFolders(register),
+			{ dispose: () => registration?.dispose() },
+		);
 	}, error => logger.logger.value?.error(String(error)));
 }
 

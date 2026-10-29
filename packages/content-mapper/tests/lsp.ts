@@ -2,7 +2,7 @@ import { type ChildProcess, spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { repositoryRoot } from './utils';
+import { tscPath } from './utils';
 
 interface Position {
 	line: number;
@@ -14,17 +14,56 @@ interface Range {
 	end: Position;
 }
 
+const tokenTypes = [
+	'namespace',
+	'type',
+	'class',
+	'enum',
+	'interface',
+	'struct',
+	'typeParameter',
+	'parameter',
+	'variable',
+	'property',
+	'enumMember',
+	'event',
+	'function',
+	'method',
+	'macro',
+	'keyword',
+	'modifier',
+	'comment',
+	'string',
+	'number',
+	'regexp',
+	'operator',
+	'decorator',
+];
+const tokenModifiers = [
+	'declaration',
+	'definition',
+	'readonly',
+	'static',
+	'deprecated',
+	'abstract',
+	'async',
+	'modification',
+	'documentation',
+	'defaultLibrary',
+];
+
 export interface LspServer {
+	capabilities: any;
 	request<T = any>(method: string, params: unknown): Promise<T>;
 	notify(method: string, params: unknown): void;
 	close(): void;
 }
 
-export function startLspServer(cwd: string): Promise<LspServer> {
+export function startLspServer(cwd: string, env: NodeJS.ProcessEnv = {}): Promise<LspServer> {
 	const proc: ChildProcess = spawn(
 		process.execPath,
-		[path.join(repositoryRoot, 'node_modules/typescript-7/bin/tsc'), '--lsp', '--stdio'],
-		{ cwd, env: { ...process.env, VUE_CONTENT_MAPPER_WORKERS: '1' } },
+		[tscPath, '--lsp', '--stdio'],
+		{ cwd, env: { ...process.env, ...env } },
 	);
 	const pending = new Map<number, (message: any) => void>();
 	let buffer = Buffer.alloc(0);
@@ -65,6 +104,7 @@ export function startLspServer(cwd: string): Promise<LspServer> {
 	}
 
 	const server: LspServer = {
+		capabilities: undefined,
 		request(method, params) {
 			return new Promise((resolve, reject) => {
 				const id = ++nextId;
@@ -83,9 +123,16 @@ export function startLspServer(cwd: string): Promise<LspServer> {
 	return server.request('initialize', {
 		processId: process.pid,
 		rootUri: pathToFileURL(cwd).href,
-		capabilities: { textDocument: { rename: { prepareSupport: true } } },
+		capabilities: {
+			textDocument: {
+				completion: { completionItem: { snippetSupport: true } },
+				rename: { prepareSupport: true },
+				semanticTokens: { requests: { full: true }, tokenTypes, tokenModifiers, formats: ['relative'] },
+			},
+		},
 		initializationOptions: { runExternalCode: true },
-	}).then(() => {
+	}).then(result => {
+		server.capabilities = result.capabilities;
 		server.notify('initialized', {});
 		return server;
 	});

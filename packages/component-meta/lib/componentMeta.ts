@@ -1,8 +1,12 @@
-import { names } from '@vue/language-core';
-import type { Node, SourceFile } from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type { Node, PropertyAssignment } from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { Project, Symbol, Type } from 'typescript/async' with { 'resolution-mode': 'import' };
-import { inferComponentEmit, inferComponentExposed, inferComponentProps, inferComponentSlots } from './helpers';
-import { getDefaultsFromScriptSetup, resolveDefaultOptionExpression } from './scriptSetup';
+import {
+	inferComponentEmit,
+	inferComponentExposed,
+	inferComponentProps,
+	inferComponentSlots,
+} from './inferComponentTypes';
+import { resolveDefaultOptionExpression } from './scriptSetup';
 import type { ComponentMeta, EventMeta, ExposeMeta, PropMeta, SlotMeta, TypeScript } from './types';
 import { createTypeTable, toDeclarations } from './typeTable';
 
@@ -19,7 +23,9 @@ export async function getExportNames(project: Project, fileName: string): Promis
 	return (await getExports(project, fileName)).map(e => e.name);
 }
 
-/** The metadata of a component exported from a file. Throws if the file or the export is not found in `project`. */
+/**
+ * The metadata of a component exported from a file. Throws if the file or the export is not found in `project`.
+ */
 export async function getComponentMeta(
 	ts: TypeScript,
 	project: Project,
@@ -67,6 +73,7 @@ export async function getComponentMetaOfType(
 	const { checker } = project;
 	const table = createTypeTable(ts, project);
 	const declaration = componentNode && await resolveDeclaration(componentNode);
+	const options = declaration && await getOptions(declaration);
 
 	const [events, slots, exposed, description] = await Promise.all([
 		getEvents(),
@@ -101,29 +108,56 @@ export async function getComponentMetaOfType(
 			events.map(event => `on${event.name.charAt(0).toUpperCase()}${event.name.slice(1)}`),
 		);
 		const properties = (await propsType.getProperties()).filter(prop => !eventProps.has(prop.name));
-		const types = properties.length ? await checker.getTypeOfSymbol(properties) : [];
-		// script setup defaults belong to the component a Vue file exports, not to other components declared in it
-		const defaults = declaration && isVueFileExport(declaration)
-			? getDefaultsFromScriptSetup(ts, declaration.getSourceFile())
-			: new Map<string, string>();
+		const [types, optionDeclarations] = await Promise.all([
+			properties.length ? checker.getTypeOfSymbol(properties) : [],
+			getPropsOptionDeclarations(),
+		]);
 
 		return await Promise.all(properties.map(async (prop, i): Promise<PropMeta> => {
 			let name = prop.escapedName as string;
+			const [nodes, docs] = await Promise.all([table.resolveNodes(prop.declarations), getDocs(prop)]);
+			const options = getPropOptions(prop, nodes);
+			const _default = options.default ?? getDefault(optionDeclarations.get(name) ?? [], nodes);
 			if (vnodeEventRE.test(name)) {
 				name = 'onVue:' + name['onVnode'.length]?.toLowerCase() + name.slice('onVnode'.length + 1);
 			}
-			const [nodes, docs] = await Promise.all([table.resolveNodes(prop.declarations), getDocs(prop)]);
-			const options = getPropOptions(prop, nodes);
 			return {
 				name,
 				required: options.required,
-				default: options.default ?? defaults.get(name),
+				default: _default,
 				...docs,
 				global: options.global,
 				declarations: toDeclarations(ts, nodes),
 				type: table.ref(types[i]!),
 			};
 		}));
+	}
+
+	/** The declarations of the properties of the type of the props option, by property name. */
+	async function getPropsOptionDeclarations() {
+		const result = new Map<string, Node[]>();
+		const initializer = getOption('props')?.initializer;
+		if (!initializer) {
+			return result;
+		}
+		const type = await checker.getTypeAtLocation(initializer);
+		await Promise.all((await type.getProperties()).map(async prop => {
+			result.set(prop.escapedName as string, await table.resolveNodes(prop.declarations));
+		}));
+		return result;
+	}
+
+	/**
+	 * The default that the props option gives a prop: script setup defaults reach the type of the props option as
+	 * declarations of its properties, `name: value`, that are not declarations of the prop itself.
+	 */
+	function getDefault(optionDeclarations: Node[], propDeclarations: Node[]) {
+		const isSame = (a: Node, b: Node) =>
+			a.pos === b.pos && a.end === b.end && a.getSourceFile().fileName === b.getSourceFile().fileName;
+		const decl = optionDeclarations.find(decl =>
+			ts.isPropertyAssignment(decl) && !propDeclarations.some(node => isSame(node, decl))
+		) as PropertyAssignment | undefined;
+		return decl && resolveDefaultOptionExpression(ts, decl.initializer).getText();
 	}
 
 	function getPropOptions(prop: Symbol, nodes: Node[]) {
@@ -179,7 +213,9 @@ export async function getComponentMetaOfType(
 			]);
 			return {
 				name: nameType.value,
-				// TypeScript 7 does not expose the documentation of signatures
+				// Interim: the documentation of the call signature belongs here, which TS 7.1 does not expose for signatures
+				// (upstream ask TS-5); exit: read it once `Signature` or the checker gives it, and the
+				// 'reference-type-events w/ documentation' test passes.
 				description: '',
 				tags: [],
 				declarations: toDeclarations(ts, nodes),
@@ -256,31 +292,62 @@ export async function getComponentMetaOfType(
 		return getComponentExpression(ts, node);
 	}
 
+	/** Whether `node` is what the default export of a file that a content mapper maps evaluates to. */
 	function isVueFileExport(node: Node) {
-		return node.getSourceFile().text.slice(node.pos, node.end).includes(names.export);
+		const sourceFile = node.getSourceFile();
+		return !!sourceFile.contentMapper && sourceFile.statements.some(statement =>
+			ts.isExportAssignment(statement)
+			&& !statement.isExportEquals
+			&& statement.expression.pos === node.pos
+			&& statement.expression.end === node.end
+		);
+	}
+
+	/** The options object of the component that `node` declares, if it is given as an object literal. */
+	async function getOptions(node: Node) {
+		// a Vue file exports `{} as typeof <component>`, or the JSDoc type of it in JavaScript; the options are in the
+		// initializer of that declaration
+		if (isVueFileExport(node)) {
+			const typeExpression = ts.getJSDocTags(node).filter(ts.isJSDocTypeTag)[0]?.typeExpression;
+			const type = ts.isAsExpression(node)
+				? node.type
+				: typeExpression && ts.isJSDocTypeExpression(typeExpression)
+				? typeExpression.type
+				: undefined;
+			if (!type || !ts.isTypeQueryNode(type)) {
+				return;
+			}
+			const symbol = await checker.getSymbolAtLocation(type.exprName);
+			const component = await symbol?.valueDeclaration?.resolve();
+			if (!component || !ts.isVariableDeclaration(component) || !component.initializer) {
+				return;
+			}
+			node = component.initializer;
+		}
+		while (
+			ts.isParenthesizedExpression(node)
+			|| ts.isAssertionExpression(node)
+			|| ts.isNonNullExpression(node)
+			|| ts.isSatisfiesExpression(node)
+		) {
+			node = node.expression;
+		}
+		return ts.isObjectLiteralExpression(node)
+			? node
+			: ts.isCallExpression(node) && node.arguments[0] && ts.isObjectLiteralExpression(node.arguments[0])
+			? node.arguments[0]
+			: undefined;
+	}
+
+	function getOption(key: string) {
+		return options?.properties.find(prop =>
+			ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name) && prop.name.text === key
+		) as PropertyAssignment | undefined;
 	}
 
 	function getName() {
-		if (!declaration) {
-			return;
-		}
-		const componentFile = declaration.getSourceFile();
-		let decl = declaration;
-
-		// const __VLS_export = ...
-		if (isVueFileExport(decl)) {
-			for (const statement of componentFile.statements) {
-				if (ts.isVariableStatement(statement)) {
-					for (const { name, initializer } of statement.declarationList.declarations) {
-						if (name.getText() === names.export && initializer) {
-							decl = initializer;
-						}
-					}
-				}
-			}
-		}
-
-		return getNameOption(decl, componentFile);
+		const initializer = getOption('name')?.initializer;
+		return initializer && ts.isStringLiteral(initializer) ? initializer.text : undefined;
 	}
 
 	async function getDescription() {
@@ -298,35 +365,5 @@ export async function getComponentMetaOfType(
 		if (symbol) {
 			return await checker.getDocumentationCommentOfSymbol(symbol) || undefined;
 		}
-	}
-
-	function getNameOption(exp: Node, sourceFile: SourceFile) {
-		while (
-			ts.isParenthesizedExpression(exp)
-			|| ts.isAssertionExpression(exp)
-			|| ts.isNonNullExpression(exp)
-			|| ts.isSatisfiesExpression(exp)
-		) {
-			exp = exp.expression;
-		}
-
-		const obj = ts.isObjectLiteralExpression(exp)
-			? exp
-			: ts.isCallExpression(exp) && exp.arguments[0] && ts.isObjectLiteralExpression(exp.arguments[0])
-			? exp.arguments[0]
-			: undefined;
-
-		let name: string | undefined;
-		for (const prop of obj?.properties ?? []) {
-			if (
-				ts.isPropertyAssignment(prop)
-				&& ts.isIdentifier(prop.name)
-				&& prop.name.getText(sourceFile) === 'name'
-				&& ts.isStringLiteral(prop.initializer)
-			) {
-				name = prop.initializer.text;
-			}
-		}
-		return name;
 	}
 }

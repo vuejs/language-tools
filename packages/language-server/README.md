@@ -13,6 +13,8 @@ A Vue language server based on the [Language Server Protocol](https://microsoft.
 npm install @vue/language-server
 ```
 
+The server works with any Vue Content Mapper of TypeScript 7.1, [`@vue/content-mapper`](https://www.npmjs.com/package/@vue/content-mapper) or another one.
+
 ## Command-Line Usage
 
 After installation, the `vue-language-server` command is available:
@@ -23,16 +25,7 @@ vue-language-server --stdio
 
 # Check version
 vue-language-server --version
-
-# Specify TypeScript SDK path
-vue-language-server --stdio --tsdk=/path/to/typescript/lib
 ```
-
-### `--tsdk` Parameter (required)
-
-The server runs on the API of TypeScript 5 or 6, which TypeScript 7's `typescript` package does not provide. Point `--tsdk` at the `lib` directory of a `typescript` 5 or 6 package; without it, the server loads `typescript` from its own location and exits if that is TypeScript 7.
-
-To keep TypeScript 5/6 beside the project's TypeScript 7, install it under an alias, e.g. `npm i -D typescript-6@npm:typescript@6`. That package also installs `tsc` and `tsserver` into `node_modules/.bin` and may replace TypeScript 7's `tsc` there, so run TypeScript 7 as `node node_modules/typescript/bin/tsc`, or install TypeScript 5/6 outside the project.
 
 ## Editor Integration
 
@@ -46,7 +39,7 @@ Configure the `vue_ls` config of [nvim-lspconfig](https://github.com/neovim/nvim
 
 ```lua
 vim.lsp.config('vue_ls', {
-  cmd = { 'vue-language-server', '--stdio', '--tsdk=/path/to/typescript-6/lib' },
+  cmd = { 'vue-language-server', '--stdio' },
 })
 vim.lsp.enable('vue_ls')
 ```
@@ -67,12 +60,10 @@ If you need to start the language server within your own program:
 
 ```typescript
 import { startServer } from '@vue/language-server/lib/server';
-// TypeScript 5 or 6, see `--tsdk`
-import * as ts from 'typescript';
 
 // startServer creates an LSP connection and starts listening
 // Requires communication with the client via stdio or other means
-startServer(ts);
+startServer();
 ```
 
 > **Note**: `startServer` creates a stdio-based LSP connection. The client must implement the requests described in [Client Requirements](#client-requirements).
@@ -81,10 +72,10 @@ startServer(ts);
 
 Besides LSP, the client that starts this server must connect it to the editor's TypeScript 7 language server. VS Code does this in the Vue (Official) extension; other editors must:
 
-1. Start the server with [`--tsdk`](#--tsdk-parameter-required).
-2. Start the TypeScript 7 language server (`tsc --lsp --stdio`) with `initializationOptions: { runExternalCode: true }`, so that it loads the `contentMappers` of the project's tsconfig. `tsc --lsp` has no `--runExternalCode` flag.
-3. Answer [`vue/typescriptApiConnection`](#vuetypescriptapiconnection-required).
-4. Optionally, pass `initializationOptions: { contentMappers: [...] }` to this server, in the tsconfig `contentMappers` format (e.g. `[{ "package": "@vue/content-mapper", "extensions": [".vue"] }]`), for files outside any tsconfig.
+1. Start the TypeScript 7 language server (`tsc --lsp --stdio`) with `initializationOptions: { runExternalCode: true }`, so that it loads the `contentMappers` of the project's tsconfig. `tsc --lsp` has no `--runExternalCode` flag.
+2. Answer [`vue/typescriptApiConnection`](#vuetypescriptapiconnection-required).
+   The server treats the files of every `contentMappers` entry that the client syncs to it as Vue files, whichever Content Mapper the entry names, and reads the entry's `options` as [`vueCompilerOptions`](../language-core#vuecompileroptions); so the client should sync only Vue documents (e.g. the `vue` language id).
+3. Optionally, pass `initializationOptions: { contentMappers: [...] }` to this server, in the tsconfig `contentMappers` format (e.g. `[{ "package": "@vue/content-mapper", "extensions": [".vue"] }]`), for files outside any tsconfig.
 
 ### `vue/typescriptApiConnection` (required)
 

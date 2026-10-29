@@ -1,14 +1,15 @@
 import { createUriMap, type LanguageServiceContext } from '@volar/language-service';
-import { createLanguage, createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
-import * as ts from 'typescript';
+import { stringToSnapshot } from '@volar/language-service/lib/utils/common';
+import { createLanguage, getDefaultCompilerOptions } from '@vue/language-core';
+import { loadTypeScript } from '@vue/language-core/typescript';
 import { describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
+import { createVueLanguagePlugin } from '..';
 import { getAttrNameCasing, getTagNameCasing } from '../lib/nameCasing';
 import type { AttrNameCasing, TagNameCasing } from '../lib/nameCasing';
-import { asCoreTypeScript } from '../lib/utils';
 
 const vueLanguagePlugin = createVueLanguagePlugin<URI>(
-	asCoreTypeScript(ts),
+	loadTypeScript(),
 	getDefaultCompilerOptions(),
 	uri => uri.path,
 );
@@ -31,10 +32,10 @@ describe('nameCasing detection', () => {
 		const { language, context } = createTestContext();
 		const uri = URI.parse('file:///tagCasing.vue');
 
-		language.scripts.set(uri, ts.ScriptSnapshot.fromString(`<template><MyComp /></template>`), 'vue');
+		language.scripts.set(uri, stringToSnapshot(`<template><MyComp /></template>`), 'vue');
 		expect(await getTagNameCasing(context, uri)).toBe(1 satisfies TagNameCasing.Pascal);
 
-		language.scripts.set(uri, ts.ScriptSnapshot.fromString(`<template><my-comp /></template>`), 'vue');
+		language.scripts.set(uri, stringToSnapshot(`<template><my-comp /></template>`), 'vue');
 		expect(await getTagNameCasing(context, uri)).toBe(0 satisfies TagNameCasing.Kebab);
 	});
 
@@ -42,10 +43,10 @@ describe('nameCasing detection', () => {
 		const { language, context } = createTestContext();
 		const uri = URI.parse('file:///attrCasing.vue');
 
-		language.scripts.set(uri, ts.ScriptSnapshot.fromString(`<template><MyComp :fooBar="1" /></template>`), 'vue');
+		language.scripts.set(uri, stringToSnapshot(`<template><MyComp :fooBar="1" /></template>`), 'vue');
 		expect(await getAttrNameCasing(context, uri)).toBe(1 satisfies AttrNameCasing.Camel);
 
-		language.scripts.set(uri, ts.ScriptSnapshot.fromString(`<template><MyComp :foo-bar="1" /></template>`), 'vue');
+		language.scripts.set(uri, stringToSnapshot(`<template><MyComp :foo-bar="1" /></template>`), 'vue');
 		expect(await getAttrNameCasing(context, uri)).toBe(0 satisfies AttrNameCasing.Kebab);
 	});
 
@@ -53,13 +54,13 @@ describe('nameCasing detection', () => {
 		const { language, context } = createTestContext();
 		const uri = URI.parse('file:///noTemplate.vue');
 
-		language.scripts.set(uri, ts.ScriptSnapshot.fromString(`<script setup lang="ts">const a = 1;</script>`), 'vue');
+		language.scripts.set(uri, stringToSnapshot(`<script setup lang="ts">const a = 1;</script>`), 'vue');
 		expect(await getTagNameCasing(context, uri)).toBe(1 satisfies TagNameCasing.Pascal);
 		expect(await getAttrNameCasing(context, uri)).toBe(1 satisfies AttrNameCasing.Camel);
 
 		language.scripts.set(
 			uri,
-			ts.ScriptSnapshot.fromString(
+			stringToSnapshot(
 				`<template><my-comp foo-bar /></template><script setup lang="ts">const a = 1;</script>`,
 			),
 			'vue',
@@ -67,7 +68,7 @@ describe('nameCasing detection', () => {
 		expect(await getTagNameCasing(context, uri)).toBe(0 satisfies TagNameCasing.Kebab);
 		expect(await getAttrNameCasing(context, uri)).toBe(0 satisfies AttrNameCasing.Kebab);
 
-		language.scripts.set(uri, ts.ScriptSnapshot.fromString(`<script setup lang="ts">const a = 1;</script>`), 'vue');
+		language.scripts.set(uri, stringToSnapshot(`<script setup lang="ts">const a = 1;</script>`), 'vue');
 		expect(await getTagNameCasing(context, uri)).toBe(1 satisfies TagNameCasing.Pascal);
 		expect(await getAttrNameCasing(context, uri)).toBe(1 satisfies AttrNameCasing.Camel);
 	});

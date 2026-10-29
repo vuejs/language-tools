@@ -1,9 +1,16 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { expect, test } from 'vitest';
-import { closeProject, openProject, transformVue } from '../project';
-import { SpanMapFeature } from '../protocol';
+import { afterAll, beforeAll, expect, test } from 'vitest';
+import { closeProject, openProject, transformVue } from '../lib/mapper/vueContentMapper';
+import { DiagnosticDirectivePolicy, SpanMapFeature } from '../lib/protocol';
+import { getUnusedExpectErrorMessage } from '../lib/result/unusedExpectErrorMessages';
+import { linkTypeScript, repositoryRoot } from './utils';
+
+// Inferred projects resolve TS 7.1 from the working directory.
+const vitestCwd = process.cwd();
+beforeAll(() => process.chdir(path.join(repositoryRoot, 'test-workspace')));
+afterAll(() => process.chdir(vitestCwd));
 
 test('generates a Vue service script with source mappings', () => {
 	const projectHandle = 'test-project';
@@ -50,7 +57,7 @@ test('uses stable mapper options for inferred projects', () => {
 		projectHandle,
 		compilerOptions: { strict: true },
 		options: {
-			skipTemplateCodegen: true,
+			lib: 'custom-vue',
 			target: 99,
 		},
 	});
@@ -63,7 +70,26 @@ test('uses stable mapper options for inferred projects', () => {
 	});
 	closeProject(projectHandle);
 
-	expect(result.text).not.toContain('templateValue');
+	expect(result.text).toContain(`'custom-vue'`);
+});
+
+test('generates the template code although the removed skipTemplateCodegen option is set', () => {
+	const projectHandle = 'skip-template-codegen-project';
+	const opened = openProject({
+		configFileName: '',
+		projectHandle,
+		compilerOptions: {},
+		options: { skipTemplateCodegen: true },
+	});
+	const result = transformVue({
+		projectHandle,
+		fileName: path.resolve(__dirname, 'SkipTemplateCodegen.vue'),
+		content: `<script setup lang="ts">const value = 1;</script>\n<template>{{ templateValue }}</template>\n`,
+	});
+	closeProject(projectHandle);
+
+	expect(result.text).toContain('templateValue');
+	expect(opened.optionDiagnostics).toMatchObject([{ path: ['skipTemplateCodegen'] }]);
 });
 
 test('applies mapper options on top of the tsconfig options', () => {
@@ -79,12 +105,13 @@ test('applies mapper options on top of the tsconfig options', () => {
 		configFileName,
 		projectHandle: 'configured-project',
 		compilerOptions: {},
-		options: { skipTemplateCodegen: true },
+		options: { lib: 'custom-vue' },
 	});
 	const result = transformVue({ projectHandle: 'configured-project', fileName, content }).text;
 	closeProject('configured-project');
 
-	expect(result.length).toBeLessThan(baseline.length);
+	expect(baseline).not.toContain(`'custom-vue'`);
+	expect(result).toContain(`'custom-vue'`);
 	expect(opened.optionDiagnostics).toEqual([]);
 });
 
@@ -241,13 +268,15 @@ test('maps Vue diagnostic directives to virtual regions', () => {
 	const diagnosticDirectives = result.diagnosticDirectives!;
 	expect(diagnosticDirectives.unusedExpectDirectiveDiagnostics).toEqual([{
 		code: 2578,
-		messageText: "Unused '@vue-expect-error' directive.",
+		messageText: getUnusedExpectErrorMessage(),
 	}]);
-	expect(diagnosticDirectives.directives.filter(directive => directive[4] === 1)).toHaveLength(2);
-	expect(diagnosticDirectives.directives.filter(directive => directive[4] === 0).length).toBeGreaterThan(2);
+	expect(diagnosticDirectives.directives.filter(directive => directive[4] === DiagnosticDirectivePolicy.Expect))
+		.toHaveLength(2);
+	expect(diagnosticDirectives.directives.filter(directive => directive[4] === DiagnosticDirectivePolicy.Ignore).length)
+		.toBeGreaterThan(2);
 	for (const directive of diagnosticDirectives.directives) {
 		expect(directive[3] - directive[2]).toBeGreaterThan(0);
-		if (directive[4] === 1) {
+		if (directive[4] === DiagnosticDirectivePolicy.Expect) {
 			expect(content.slice(
 				directive[0],
 				directive[0] + directive[1],
@@ -273,7 +302,8 @@ function createWorkspace() {
 		path.join(pluginDir, 'package.json'),
 		JSON.stringify({ name: 'vue-test-plugin', version: '1.0.0', main: 'index.js' }),
 	);
-	fs.writeFileSync(pluginEntry(workspace), `module.exports = () => ({ name: 'vue-test-plugin', version: 4 });\n`);
+	fs.writeFileSync(pluginEntry(workspace), `exports.ir = {};\n`);
+	linkTypeScript(workspace);
 	return workspace;
 }
 
@@ -304,7 +334,7 @@ test('tracks dynamic configuration for inferred projects', () => {
 
 		fs.writeFileSync(
 			pluginEntry(workspace),
-			`module.exports = () => ({ name: 'vue-test-plugin', version: 4, order: 3 });\n`,
+			`exports.ir = { templateCompilers: {} };\n`,
 		);
 		const withNewerPlugin = openInferredProject('inferred-project');
 		closeProject('inferred-project');
@@ -312,6 +342,23 @@ test('tracks dynamic configuration for inferred projects', () => {
 	}
 	finally {
 		process.chdir(previousCwd);
+		fs.rmSync(workspace, { recursive: true, force: true });
+	}
+});
+
+test('fails to open a project from which TS 7.1 does not resolve', () => {
+	const workspace = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'vue-content-mapper-')));
+	try {
+		expect(() =>
+			openProject({
+				configFileName: path.join(workspace, 'tsconfig.json'),
+				projectHandle: 'no-typescript-project',
+				compilerOptions: {},
+			})
+		).toThrow(`Cannot find TS 7.1 from ${workspace}`);
+	}
+	finally {
+		closeProject('no-typescript-project');
 		fs.rmSync(workspace, { recursive: true, force: true });
 	}
 });
@@ -358,4 +405,121 @@ test('watches plugins declared in the mapper entry options', () => {
 	finally {
 		fs.rmSync(workspace, { recursive: true, force: true });
 	}
+});
+
+test('generates the service script without the embedded code hooks of plugins', () => {
+	const workspace = createWorkspace();
+	const configFileName = path.join(workspace, 'tsconfig.json');
+	fs.writeFileSync(configFileName, JSON.stringify({ compilerOptions: { strict: true } }));
+	fs.writeFileSync(
+		pluginEntry(workspace),
+		`module.exports = {
+	ir: {},
+	getEmbeddedCodes: () => [{ id: 'script_ts', lang: 'ts' }],
+	resolveEmbeddedCode(_fileName, _ir, embeddedFile) {
+		embeddedFile.content.push('/* from vue-test-plugin */');
+	},
+};\n`,
+	);
+	try {
+		openProject({
+			configFileName,
+			projectHandle: 'embedded-code-plugin-project',
+			compilerOptions: {},
+			options: { plugins: ['vue-test-plugin'] },
+		});
+		const result = transformVue({
+			projectHandle: 'embedded-code-plugin-project',
+			fileName: path.join(workspace, 'App.vue'),
+			content: `<script setup lang="ts">const msg = '';</script>\n<template>{{ msg }}</template>\n`,
+		});
+		closeProject('embedded-code-plugin-project');
+		expect(result.text).toContain('msg');
+		expect(result.text).not.toContain('vue-test-plugin');
+	}
+	finally {
+		fs.rmSync(workspace, { recursive: true, force: true });
+	}
+});
+
+test('propagates an exception thrown by the codegen instead of returning an empty service script', () => {
+	const projectHandle = 'codegen-exception-project';
+	openProject({
+		configFileName: '',
+		projectHandle,
+		compilerOptions: {},
+		// not an array, so the codegen of an object literal default export throws on reading it
+		options: { optionsWrapper: null },
+	});
+	try {
+		expect(() =>
+			transformVue({
+				projectHandle,
+				fileName: path.resolve(__dirname, 'CodegenException.vue'),
+				content: `<script lang="ts">export default {};</script>\n`,
+			})
+		).toThrow(TypeError);
+	}
+	finally {
+		closeProject(projectHandle);
+	}
+});
+
+test('propagates an exception thrown by the contribute of a codegen plugin', () => {
+	const workspace = createWorkspace();
+	const configFileName = path.join(workspace, 'tsconfig.json');
+	fs.writeFileSync(configFileName, JSON.stringify({ compilerOptions: { strict: true } }));
+	fs.writeFileSync(
+		pluginEntry(workspace),
+		`exports.codegen = { contribute() { throw new Error('contribute failed'); } };\n`,
+	);
+	try {
+		openProject({
+			configFileName,
+			projectHandle: 'contribute-exception-project',
+			compilerOptions: {},
+			options: { plugins: ['vue-test-plugin'] },
+		});
+		expect(() =>
+			transformVue({
+				projectHandle: 'contribute-exception-project',
+				fileName: path.join(workspace, 'App.vue'),
+				content: `<script setup lang="ts">const msg = '';</script>\n`,
+			})
+		).toThrow('contribute failed');
+	}
+	finally {
+		closeProject('contribute-exception-project');
+		fs.rmSync(workspace, { recursive: true, force: true });
+	}
+});
+
+test('reuses the transform result of a file whose content did not change', () => {
+	const fileName = path.resolve(__dirname, 'Unchanged.vue');
+	const content = `<script setup lang="ts">const msg = '';</script>\n<template>{{ msg }}</template>\n`;
+	openProject({ configFileName: '', projectHandle: 'unchanged-project', compilerOptions: {} });
+	const first = transformVue({ projectHandle: 'unchanged-project', fileName, content });
+	const second = transformVue({ projectHandle: 'unchanged-project', fileName, content });
+	const changed = transformVue({ projectHandle: 'unchanged-project', fileName, content: content + '\n' });
+	closeProject('unchanged-project');
+	expect(second).toBe(first);
+	expect(changed).not.toBe(first);
+});
+
+test('transforms a changed file of an open project as a newly opened project does', () => {
+	const fileName = path.resolve(__dirname, 'Changed.vue');
+	const before = `<script setup lang="ts">const before = 1;</script>\n<template>{{ before }}</template>\n`;
+	const after = `<script setup lang="ts">const after = '';</script>\n<template><div :title="after" /></template>\n`;
+
+	openProject({ configFileName: '', projectHandle: 'changed-project', compilerOptions: {} });
+	transformVue({ projectHandle: 'changed-project', fileName, content: before });
+	const changed = transformVue({ projectHandle: 'changed-project', fileName, content: after });
+	closeProject('changed-project');
+
+	openProject({ configFileName: '', projectHandle: 'fresh-project', compilerOptions: {} });
+	const fresh = transformVue({ projectHandle: 'fresh-project', fileName, content: after });
+	closeProject('fresh-project');
+
+	expect(changed.text).not.toContain('before');
+	expect(changed).toEqual(fresh);
 });

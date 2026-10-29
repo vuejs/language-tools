@@ -2,12 +2,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { defineConfig } from 'rolldown';
 
+const submoduleDirs = ['volar.js', 'services'].map(dir => path.resolve(__dirname, '../..', dir) + path.sep);
+
 export default defineConfig({
 	input: {
 		'extension': './src/extension.ts',
 		'language-server': './node_modules/@vue/language-server/index.ts',
 		'content-mapper-server': '../../packages/content-mapper/server.ts',
-		'content-mapper-worker': '../../packages/content-mapper/worker.ts',
 	},
 	output: {
 		format: 'cjs',
@@ -53,13 +54,30 @@ export default defineConfig({
 			},
 		},
 		{
+			// The volar.js and services submodules keep their sources next to the output, and their
+			// sources are not isolatedModules-safe: bundle the JS that `npm run build:volar` and `npm run build:services` emit.
+			name: 'submodules',
+			resolveId(source, importer) {
+				if (!importer) {
+					return;
+				}
+				const fromSubmodule = submoduleDirs.some(dir => path.normalize(importer).startsWith(dir));
+				if (
+					source.startsWith('@volar/') || source.startsWith('volar-service-')
+					|| (fromSubmodule && source.startsWith('.'))
+				) {
+					return { id: require.resolve(source, { paths: [path.dirname(importer)] }) };
+				}
+			},
+		},
+		{
 			name: 'typescript',
 			resolveId: {
 				filter: {
-					id: /^typescript$/,
+					id: /^typescript(\/|$)/,
 				},
-				handler() {
-					return { id: 'typescript', external: true };
+				handler(source) {
+					return { id: source, external: true };
 				},
 			},
 		},

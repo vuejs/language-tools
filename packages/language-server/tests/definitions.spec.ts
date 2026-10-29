@@ -40,6 +40,16 @@ test('Alias path', async () => {
 	`);
 });
 
+// Waits on TypeScript resolving the definition of a module specifier through `paths` when it leads to a file of a
+// content mapper (upstream ask TS-4): the program resolves it, and the definition of the same specifier as a relative
+// path or of the default import name leads to the file. Exit: these pass once TypeScript resolves it.
+test.fails('TS to vue: module specifier through a path alias', async () => {
+	expect(
+		await requestDefinition('tsconfigProject/fixture3.ts', 'typescript', `import Component from '|@/empty.vue';`),
+	).toEqual(['tsconfigProject/empty.vue:0:0-0:0']);
+});
+
+// Waits on TS-4, as above.
 test.fails('#2600', async () => {
 	await prepareDocument(
 		'tsconfigProject/foo.vue',
@@ -64,7 +74,22 @@ test.fails('#2600', async () => {
 			</script>
 		`,
 		),
-	).toEqual(['tsconfigProject/foo.vue:6:2-7:2']);
+	).toEqual(['tsconfigProject/foo.vue:0:0-0:0']);
+});
+
+test('Vue to vue: module specifier', async () => {
+	await prepareDocument('tsconfigProject/foo.vue', 'vue', `<script lang="ts">\nexport default {};\n</script>\n`);
+	expect(
+		await requestDefinition(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<script setup lang="ts">
+			import Foo from '|./foo.vue';
+			</script>
+		`,
+		),
+	).toEqual(['tsconfigProject/foo.vue:0:0-0:0']);
 });
 
 test('global component tags lead to the file declaring the component', async () => {
@@ -80,6 +105,12 @@ test('global component tags lead to the file declaring the component', async () 
 
 test('component tags declared in the file itself have no definition from the Vue language server', async () => {
 	expect(await requestVueDefinitions('ParentLocal.vue', '<Local', 1)).toEqual([]);
+	// not the global component of the same name
+	expect(await requestVueDefinitions('ParentShadow.vue', '<GlobalChild', 1)).toEqual([]);
+});
+
+test('component tags lead to the component of the binding the template checks against', async () => {
+	expect(await requestVueDefinitions('ParentCasing.vue', '<loading', 1)).toEqual(['Child.vue 0:0-0:0']);
 });
 
 /** The Vue language server's definitions at `search` + `delta` of a file in `hoverComponentMeta`, as it is on disk. */

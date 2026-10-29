@@ -22,12 +22,35 @@ test('reactivity analysis of a Vue file maps the dependents back to the SFC', as
 	});
 });
 
+test('reactivity analysis of a Vue file reads its script blocks as written', async () => {
+	const content = `<script setup lang="ts">
+import { useTemplateRef, watchEffect } from 'vue';
+const el = useTemplateRef('el');
+watchEffect(() => el.value);
+</script>
+
+<template><div ref="el"></div></template>
+`;
+	const document = await open('tsconfigProject/fixture.vue', 'vue', content);
+	expect(slice(content, await analyze(document.uri, content.indexOf('el = use')))).toEqual({
+		dependencyRanges: [],
+		dependentRanges: ['el.value'],
+	});
+	expect(await analyze(document.uri, content.indexOf('ref="el"'))).toBeFalsy();
+});
+
 test('reactivity analysis of a script the client sends', async () => {
-	const uri = URI.file(`${testWorkspacePath}/tsconfigProject/composable.ts`).toString();
+	const { uri } = await open('tsconfigProject/composable.ts', 'typescript', script);
 	expect(slice(script, await analyze(uri, script.indexOf('count = ref') + 1, script))).toEqual({
 		dependencyRanges: [],
 		dependentRanges: ['count.value * 2'],
 	});
+});
+
+test('reactivity analysis of a script the TypeScript language server has another text of', async () => {
+	const content = `// edited\n${script}`;
+	const { uri } = await open('tsconfigProject/composable.ts', 'typescript', script);
+	expect(await analyze(uri, content.indexOf('count = ref') + 1, content)).toBeFalsy();
 });
 
 test('interpolation ranges cover the template interpolations', async () => {
@@ -38,6 +61,33 @@ test('interpolation ranges cover the template interpolations', async () => {
 		textDocument: { uri: document.uri },
 	});
 	expect(ranges.map(([start, end]) => content.slice(start, end))).toEqual([' foo ', ' bar + 1 ']);
+});
+
+test('interpolation ranges cover every template interpolation and style v-bind() expression', async () => {
+	const content = `<template>
+	<div>{{ () => foo }}</div>
+	{{
+		bar
+	}}
+	{{ baz
+	}}
+</template>
+
+<style>
+.foo { color: v-bind(color); }
+</style>
+`;
+	const document = await open('tsconfigProject/fixture.vue', 'vue', content);
+	const server = await getLanguageServer();
+	const ranges: [number, number][] = await server.vueserver.connection.sendRequest('vue/interpolationRanges', {
+		textDocument: { uri: document.uri },
+	});
+	expect(ranges.map(([start, end]) => content.slice(start, end))).toEqual([
+		' () => foo ',
+		'\n\t\tbar\n\t',
+		' baz\n\t',
+		'color',
+	]);
 });
 
 const openedDocuments: TextDocument[] = [];

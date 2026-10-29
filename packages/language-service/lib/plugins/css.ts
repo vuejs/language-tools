@@ -1,10 +1,10 @@
-import type { LanguageServicePlugin, TextDocument, VirtualCode } from '@volar/language-service';
-import { isRenameEnabled } from '@vue/language-core';
+import type { LanguageServicePlugin, TextDocument } from '@volar/language-service';
 import { create as baseCreate, type Provide } from 'volar-service-css';
 import type * as css from 'vscode-css-languageservice';
-import { resolveEmbeddedCode } from '../utils';
+import { embeddedCodeIds } from '../virtualCode';
+import { resolveEmbeddedCode } from '../virtualCodeQueries';
 
-export function create(): LanguageServicePlugin {
+export function create({ isRenamedByTypeScript }: import('../requests').Requests): LanguageServicePlugin {
 	const baseService = baseCreate({
 		scssDocumentSelector: ['scss', 'postcss'],
 	});
@@ -30,20 +30,17 @@ export function create(): LanguageServicePlugin {
 					}
 					return diagnostics;
 				},
-				/**
-				 * If the position is within the virtual code and navigation is enabled,
-				 * skip the CSS navigation feature.
-				 */
-				provideReferences(document, position) {
-					if (isWithinNavigationVirtualCode(document, position)) {
+				/** TypeScript navigates the class names and `v-bind()` expressions it checks. */
+				async provideReferences(document, position) {
+					if (await isRenamedByTypeScriptAt(document, position)) {
 						return;
 					}
 					return worker(document, (stylesheet, cssLs) => {
 						return cssLs.findReferences(document, position, stylesheet);
 					});
 				},
-				provideRenameRange(document, position) {
-					if (isWithinNavigationVirtualCode(document, position)) {
+				async provideRenameRange(document, position) {
+					if (await isRenamedByTypeScriptAt(document, position)) {
 						return;
 					}
 					return worker(document, (stylesheet, cssLs) => {
@@ -52,12 +49,12 @@ export function create(): LanguageServicePlugin {
 				},
 			};
 
-			function isWithinNavigationVirtualCode(
+			async function isRenamedByTypeScriptAt(
 				document: TextDocument,
 				position: css.Position,
 			) {
 				const info = resolveEmbeddedCode(context, document.uri);
-				if (!info?.code.id.startsWith('style_')) {
+				if (!info?.code.id.startsWith(embeddedCodeIds.stylePrefix)) {
 					return false;
 				}
 				const block = info.root.ir.styles.find(style => style.name === info.code.id);
@@ -65,31 +62,7 @@ export function create(): LanguageServicePlugin {
 					return false;
 				}
 
-				let script: VirtualCode | undefined;
-				for (const [key, value] of info.script.generated.embeddedCodes) {
-					if (key.startsWith('script_')) {
-						script = value;
-						break;
-					}
-				}
-				if (!script) {
-					return false;
-				}
-
-				const offset = document.offsetAt(position) + block.startTagEnd;
-				for (const { sourceOffsets, lengths, data } of script.mappings) {
-					if (!sourceOffsets.length || !isRenameEnabled(data)) {
-						continue;
-					}
-
-					const start = sourceOffsets[0]!;
-					const end = sourceOffsets.at(-1)! + lengths.at(-1)!;
-
-					if (offset >= start && offset <= end) {
-						return true;
-					}
-				}
-				return false;
+				return !!await isRenamedByTypeScript(info.root.fileName, block.offset + document.offsetAt(position));
 			}
 
 			function worker<T>(

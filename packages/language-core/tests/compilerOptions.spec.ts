@@ -2,8 +2,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { CompilerOptionsResolver } from '../lib/compilerOptions';
-import { createPlugins } from '../lib/plugins';
+import { createIRPipeline } from '../lib/ir/irPipeline';
+import { CompilerOptionsResolver } from '../lib/options/compilerOptions';
+import { loadIRPlugins } from '../lib/options/plugins';
+import type { VueCompilerOptions } from '../lib/types';
 import { ts } from './typescript';
 
 const PLUGIN_NAME = '@fixture/vue-language-plugin-pug';
@@ -17,38 +19,33 @@ function writePluginPackage(rootDir: string, tag: string) {
 	);
 	fs.writeFileSync(
 		path.join(packageDir, 'index.js'),
-		`module.exports = () => ({
-			name: ${JSON.stringify(PLUGIN_NAME)},
-			version: 4,
-			compileSFCTemplate(lang) {
-				if (lang === 'pug') {
-					return {
-						ast: { tag: ${JSON.stringify(tag)} },
-						code: '',
-						preamble: '',
-					};
-				}
+		`exports.ir = {
+			templateCompilers: {
+				pug: () => ({ html: ${JSON.stringify(`<${tag}/>`)}, mappings: [] }),
 			},
-		});`,
+		};`,
 	);
 }
 
-function writeNamedPluginPackage(rootDir: string, specifier: string, factoryNames: string[]) {
+/** A plugin package that provides a template compiler of each of `langs`. */
+function writeNamedPluginPackage(rootDir: string, specifier: string, langs: string[]) {
 	const packageDir = path.join(rootDir, 'node_modules', specifier);
 	fs.mkdirSync(packageDir, { recursive: true });
 	fs.writeFileSync(
 		path.join(packageDir, 'package.json'),
 		JSON.stringify({ name: specifier, main: 'index.js' }),
 	);
-	const factories = factoryNames
-		.map(name => `function ${name}() {\n\treturn { name: ${JSON.stringify(name)}, version: 4 };\n}`)
-		.join(',\n');
 	fs.writeFileSync(
 		path.join(packageDir, 'index.js'),
-		factoryNames.length > 1
-			? `module.exports = [\n${factories}\n];`
-			: `${factories}\nmodule.exports = ${factoryNames[0]};`,
+		`exports.ir = {\n\ttemplateCompilers: {\n${
+			langs.map(lang => `\t\t${JSON.stringify(lang)}: () => undefined,\n`).join('')
+		}\t},\n};`,
 	);
+}
+
+/** The template languages that the plugins of `vueCompilerOptions` provide. */
+function templateLangs(vueCompilerOptions: VueCompilerOptions) {
+	return Object.keys(loadIRPlugins(vueCompilerOptions, { formats: [], templateCompilers: [] }).templateCompilers);
 }
 
 describe('CompilerOptionsResolver', () => {
@@ -77,51 +74,43 @@ describe('CompilerOptionsResolver', () => {
 
 		const vueCompilerOptions = resolver.build();
 		expect(vueCompilerOptions.plugins).toHaveLength(1);
+		expect(vueCompilerOptions.plugins[0]!.file).toBe(
+			fs.realpathSync(path.join(clientDir, 'node_modules', PLUGIN_NAME, 'index.js')),
+		);
 
-		const instances = createPlugins({
-			modules: {
-				'@vue/compiler-dom': {} as any,
-				'@vue/language-core': {} as any,
-				typescript: ts,
-			},
-			vueCompilerOptions,
-			config: {},
-		});
-		const pugPlugin = instances.find(plugin => plugin.name === PLUGIN_NAME);
-
-		expect(pugPlugin?.compileSFCTemplate?.('pug', '', {})).toEqual({
-			ast: { tag: 'client' },
-			code: '',
-			preamble: '',
-		});
+		expect(createIRPipeline(ts, vueCompilerOptions).compileTemplate('pug', '', {})?.result.ast.children[0])
+			.toMatchObject({ tag: 'client' });
 	});
 
 	it('drops every plugin inherited from the extended configs', () => {
 		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-replace-'));
 		const baseDir = path.join(tmpDir, 'base');
 		const appDir = path.join(tmpDir, 'app');
-		writeNamedPluginPackage(baseDir, '@fixture/base', ['basePlugin']);
-		writeNamedPluginPackage(appDir, '@fixture/app', ['appPlugin']);
+		writeNamedPluginPackage(baseDir, '@fixture/base', ['base']);
+		writeNamedPluginPackage(appDir, '@fixture/app', ['app']);
 
 		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: ['@fixture/base'] }, baseDir);
 		resolver.addConfig({ plugins: ['@fixture/app'] }, appDir);
 
-		expect(resolver.build().plugins.map(plugin => plugin.name)).toEqual(['appPlugin']);
+		const vueCompilerOptions = resolver.build();
+		expect(vueCompilerOptions.plugins.map(plugin => plugin.name)).toEqual(['@fixture/app']);
+		expect(templateLangs(vueCompilerOptions)).toEqual(['app']);
 	});
 
 	it('keeps the inherited plugins when a config does not declare them', () => {
 		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-inherit-'));
 		const baseDir = path.join(tmpDir, 'base');
 		const appDir = path.join(tmpDir, 'app');
-		writeNamedPluginPackage(baseDir, '@fixture/base', ['basePlugin']);
+		writeNamedPluginPackage(baseDir, '@fixture/base', ['base']);
 
 		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: ['@fixture/base'] }, baseDir);
 		resolver.addConfig({ jsxSlots: true }, appDir);
 
 		const vueCompilerOptions = resolver.build();
-		expect(vueCompilerOptions.plugins.map(plugin => plugin.name)).toEqual(['basePlugin']);
+		expect(vueCompilerOptions.plugins.map(plugin => plugin.name)).toEqual(['@fixture/base']);
+		expect(templateLangs(vueCompilerOptions)).toEqual(['base']);
 		expect(vueCompilerOptions.jsxSlots).toBe(true);
 	});
 
@@ -129,7 +118,7 @@ describe('CompilerOptionsResolver', () => {
 		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-clear-'));
 		const baseDir = path.join(tmpDir, 'base');
 		const appDir = path.join(tmpDir, 'app');
-		writeNamedPluginPackage(baseDir, '@fixture/base', ['basePlugin']);
+		writeNamedPluginPackage(baseDir, '@fixture/base', ['base']);
 
 		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: ['@fixture/base'] }, baseDir);
@@ -138,14 +127,35 @@ describe('CompilerOptionsResolver', () => {
 		expect(resolver.build().plugins).toEqual([]);
 	});
 
-	it('keeps every plugin exported by a single module', () => {
-		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-array-'));
-		writeNamedPluginPackage(tmpDir, '@fixture/multi', ['firstPlugin', 'secondPlugin']);
+	it('keeps every template compiler provided by a single module', () => {
+		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-multi-'));
+		writeNamedPluginPackage(tmpDir, '@fixture/multi', ['first', 'second']);
 
 		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ plugins: ['@fixture/multi'] }, tmpDir);
 
-		expect(resolver.build().plugins.map(plugin => plugin.name)).toEqual(['firstPlugin', 'secondPlugin']);
+		const vueCompilerOptions = resolver.build();
+		expect(vueCompilerOptions.plugins.map(plugin => plugin.name)).toEqual(['@fixture/multi']);
+		expect(templateLangs(vueCompilerOptions)).toEqual(['first', 'second']);
+	});
+
+	it('passes the entry without its name to the `ir` export as its config', () => {
+		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vue-plugin-config-'));
+		const packageDir = path.join(tmpDir, 'node_modules', '@fixture/config');
+		fs.mkdirSync(packageDir, { recursive: true });
+		fs.writeFileSync(
+			path.join(packageDir, 'index.js'),
+			`exports.ir = ({ config }) => ({ templateCompilers: { [JSON.stringify(config)]: () => undefined } });`,
+		);
+
+		const resolver = new CompilerOptionsResolver(() => undefined);
+		resolver.addConfig({ plugins: [{ name: '@fixture/config', foo: 1 }] }, tmpDir);
+
+		const vueCompilerOptions = resolver.build();
+		expect(vueCompilerOptions.plugins.map(({ name, config }) => ({ name, config }))).toEqual([
+			{ name: '@fixture/config', config: { foo: 1 } },
+		]);
+		expect(templateLangs(vueCompilerOptions)).toEqual([JSON.stringify({ foo: 1 })]);
 	});
 
 	it('has no plugins when no config declares them', () => {

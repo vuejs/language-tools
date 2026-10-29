@@ -140,11 +140,13 @@ If you want to work on the volar extension follow these commands to set up your 
 🔎 Note that you will need pnpm - you can download it here: https://pnpm.io/installation.
 
 ```bash
-git clone https://github.com/vuejs/language-tools.git
+git clone --recurse-submodules https://github.com/vuejs/language-tools.git
 cd language-tools
 pnpm install
 npm run build
 ```
+
+In an existing clone, run `git submodule update --init` to fetch the submodules.
 
 The recommended way to develop the volar extension is to use the [Debug Tools](https://code.visualstudio.com/Docs/editor/debugging) provided by VSCode.
 
@@ -154,7 +156,60 @@ Alternatively, you can run one of the scripts defined in the [package.json](http
 
 Additional info for contributing to open source projects can be found here: https://docs.github.com/en/get-started/quickstart/contributing-to-projects
 
-To develop with upstream Volar.js modules, you can setup a workspace with https://github.com/volarjs/workspace.
+### Repository layout
+
+A Vue file is read into the IR by `@vue/language-core`; `@vue/content-mapper` generates TypeScript from the IR for TS 7.1, `@vue/language-service` builds the embedded documents of the editor features, and `vue-component-meta` reads component types through the TS 7.1 API.
+
+```
+packages/
+  language-core/lib/      Vue file -> IR
+    formats/              file formats: .vue SFC, VitePress markdown, petite-vue HTML -> SFC blocks
+    template/             template blocks: compiling, element queries, expression scopes
+    script/               script blocks: script and script setup ranges, bindings
+    style/                style blocks: CSS bindings and classes, scoped class references
+    typescript/           loading the TypeScript API, cached parsing, node helpers
+    options/              Vue compiler options, comment options, IR plugins
+    ir/                   the IR pipeline and the reactive IR and analysis of a file
+    mappings/             mapping features and source mappings
+  content-mapper/         TS 7.1 Content Mapper (server.ts: the process)
+    lib/protocol.ts       the protocol messages
+    lib/server/           JSON-RPC over stdio
+    lib/mapper/           projects, their Vue options and option diagnostics, the transform of a file
+    lib/codegen/          IR -> TypeScript code, by script, template and style
+    lib/result/           generated code -> transform result: mappings, span mappings, diagnostic directives
+  language-service/lib/   Volar language service plugins (plugins/) and embedded documents (virtualCode/)
+  language-server/lib/    the LSP server, the TS 7.1 project bridge and the checker queries behind its requests
+  component-meta/         component props, events, slots and exposed types
+  language-plugin-pug/    pug templates
+  component-type-helpers/ component type helpers
+extensions/vscode/        the VS Code extension
+test-workspace/           fixtures shared by the tests
+```
+
+### Volar.js
+
+[Volar.js](https://github.com/volarjs/volar.js) is checked out at `volar.js/` as a git submodule tracking its `v3` branch, and its packages are part of the pnpm workspace, so every `@volar/*` dependency resolves to the submodule instead of npm. `npm run build` compiles them first (`npm run build:volar`, with TypeScript 7.1 as Volar.js itself does); `npm run watch:volar` watches them.
+
+To change Volar.js, commit inside the submodule, push to `v3`, then commit the new submodule pointer here:
+
+```bash
+cd volar.js
+git switch v3 # the submodule is checked out at a detached commit
+# edit, build and test, then:
+git commit -am "..."
+git push origin HEAD:refs/heads/v3
+cd ..
+git add volar.js
+git commit -m "chore: bump volar.js"
+```
+
+To pick up commits that others pushed to `v3`, run `git submodule update --remote volar.js` and commit the pointer. Releases do not publish `@volar/*`: they are published from Volar.js, and the release workflow stops unless the submodule's versions are already on npm.
+
+### Volar services
+
+[volarjs/services](https://github.com/volarjs/services) is checked out at `services/` as a git submodule tracking its `master` branch. Only the `volar-service-*` packages that `@vue/language-service` uses are part of the pnpm workspace, and they resolve to the submodule instead of npm. `npm run build` compiles them first (`npm run build:services`, emitting with TypeScript 7.1) and type-checks them with the repository's TypeScript through `tsconfig.services/`; `npm run watch:services` watches them.
+
+Changing them works as for Volar.js, with `services` and `master` in place of `volar.js` and `v3`. Releases do not publish `volar-service-*` either, and the release workflow stops unless the submodule's versions are already on npm.
 
 ## ❤️ Sponsors
 

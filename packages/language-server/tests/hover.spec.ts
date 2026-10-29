@@ -64,6 +64,19 @@ test('rich hover of a component that is not exported', async () => {
 	expect(value).toContain('change');
 });
 
+test('rich hover of a component tag follows the binding the template checks against', async () => {
+	const shadowing = await getRichHover('ParentShadow.vue', 'GlobalChild');
+	expect(shadowing).toContain('The shadowing label');
+	expect(shadowing).not.toContain('The label');
+
+	// `<loading>` refers to `Loading`, as `@vue/compiler-sfc` tries the PascalCase name first.
+	expect(await getRichHover('ParentCasing.vue', 'loading')).toContain('The label');
+});
+
+test('rich hover of a Vue file referring to itself by its `defineOptions` name', async () => {
+	expect(await getRichHover('SelfNamed.vue', 'Named')).toContain('The named label');
+});
+
 async function getRichHover(file: string, tag: string) {
 	const fileName = path.join(testWorkspacePath, 'hoverComponentMeta', file);
 	// The TypeScript language server reads the file from disk, so the document must match it.

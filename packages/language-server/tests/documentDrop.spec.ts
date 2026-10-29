@@ -36,6 +36,17 @@ test('registers a dropped component in the Options API with the name the TypeScr
 	);
 });
 
+test('adds a dropped component to the Options API components without reprinting them', async () => {
+	const { document, edit } = await drop('pages/deep/OptionsComponentsTarget.vue', 'components/deep/drop-item.vue');
+	expect(applyEdits(document, edit?.additionalEdit?.changes?.[document.uri])).toContain(
+		`	components: {
+		// shown on every page
+		DropComponent,
+		dropItem,
+	},`,
+	);
+});
+
 test('imports a dropped component into an empty script setup', async () => {
 	const { document, edit } = await drop('pages/deep/EmptySetupTarget.vue', 'components/deep/DropComponent.vue');
 	expect(applyEdits(document, edit?.additionalEdit?.changes?.[document.uri])).toBe(
