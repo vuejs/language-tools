@@ -28,6 +28,8 @@ export function* generateInterpolation(
 
 	// Assertion narrowing does not flow into functions for imports and `let`/`var`
 	// bindings (TS limitation), so each function body re-asserts the ones it reads.
+	// Parameter defaults run before the body, so each one that reads such a binding
+	// re-asserts it in an immediately invoked arrow, whose flow stays in the function.
 	// Bodies are buffered until their end, when those reads are known.
 	const bodies = options.reassertBindings?.size && !identifierRE.test(code)
 		? collectFunctionBodies(options.typescript, getTypeScriptAST(options.typescript, block, prefix + code + suffix))
@@ -38,7 +40,7 @@ export function* generateInterpolation(
 		...bodies.map(body => ({ offset: body.end, body, enter: false })).reverse(),
 		...bodies.map(body => ({ offset: body.start, body, enter: true })),
 	].sort((a, b) => a.offset - b.offset);
-	const frames: { isBlock: boolean; codes: Code[]; reasserts: Set<string> }[] = [];
+	const frames: { body: typeof bodies[number]; codes: Code[]; reasserts: Set<string> }[] = [];
 	let markIndex = 0;
 
 	function* write(codes: Iterable<Code>): Generator<Code> {
@@ -57,7 +59,7 @@ export function* generateInterpolation(
 			from = offset;
 			if (enter) {
 				ctx.enterFunction();
-				frames.push({ isBlock: body.isBlock, codes: [], reasserts: new Set() });
+				frames.push({ body, codes: [], reasserts: new Set() });
 			}
 			else {
 				ctx.exitFunction();
@@ -67,24 +69,47 @@ export function* generateInterpolation(
 		yield* write(generateNonIdentifierCode(code.slice(from, end), block.name, start + from, features, from > 0));
 	}
 
-	function* generateFunctionBody({ isBlock, codes, reasserts }: typeof frames[number]): Generator<Code> {
+	function* generateFunctionBody({ body, codes, reasserts }: typeof frames[number]): Generator<Code> {
 		if (!reasserts.size) {
 			yield* codes;
 			return;
 		}
-		yield isBlock ? newLine : `{${newLine}`;
+		if (body.kind === 'block') {
+			yield newLine;
+			yield* generateReasserts(reasserts);
+			yield* codes;
+			return;
+		}
+		if (body.kind === 'expression') {
+			yield `{${newLine}`;
+			yield* generateReasserts(reasserts);
+		}
+		// Diagnostics reported on the generated `return` statement or call map back to the original expression.
+		const boundary = yield* Boundary.start(block.name, start + body.start, start + body.end, {
+			verification: features.verification,
+		});
+		if (body.kind === 'parameter') {
+			yield `(() => {${newLine}`;
+			yield* generateReasserts(reasserts);
+		}
+		yield `return (`;
+		yield* codes;
+		if (body.kind === 'parameter') {
+			yield `)${endOfLine}})()`;
+			yield boundary.end();
+		}
+		else {
+			yield `);`;
+			yield boundary.end();
+			yield `${newLine}}`;
+		}
+	}
+
+	function* generateReasserts(reasserts: Set<string>): Generator<Code> {
 		for (const name of reasserts) {
 			yield `${names.withDotValue}(${name}, ${
 				getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
 			})${endOfLine}`;
-		}
-		if (isBlock) {
-			yield* codes;
-		}
-		else {
-			yield `return (`;
-			yield* codes;
-			yield `)${endOfLine}}`;
 		}
 	}
 
@@ -150,9 +175,31 @@ export function* generateInterpolation(
 	}
 }
 
-// Bodies in pre-order; a block body spans between its braces.
+// Function scopes in pre-order: the expressions a parameter list evaluates, then the body.
+// A block body spans from after its directive prologue to its closing brace.
 function collectFunctionBodies(ts: typeof import('typescript'), ast: ts.SourceFile) {
-	const bodies: { start: number; end: number; isBlock: boolean }[] = [];
+	const bodies: { start: number; end: number; kind: 'block' | 'expression' | 'parameter' }[] = [];
+	const visitBinding = (name: ts.BindingName) => {
+		if (ts.isIdentifier(name)) {
+			return;
+		}
+		for (const element of name.elements) {
+			if (ts.isOmittedExpression(element)) {
+				continue;
+			}
+			if (element.propertyName && ts.isComputedPropertyName(element.propertyName)) {
+				pushParameterExpression(element.propertyName.expression);
+			}
+			visitBinding(element.name);
+			if (element.initializer) {
+				pushParameterExpression(element.initializer);
+			}
+		}
+	};
+	const pushParameterExpression = (node: ts.Expression) => {
+		bodies.push({ ...getStartEnd(ts, node, ast), kind: 'parameter' });
+		visit(node);
+	};
 	const visit = (node: ts.Node) => {
 		if (
 			(ts.isArrowFunction(node)
@@ -165,11 +212,51 @@ function collectFunctionBodies(ts: typeof import('typescript'), ast: ts.SourceFi
 				|| ts.isClassStaticBlockDeclaration(node))
 			&& node.body
 		) {
-			const { start, end } = getStartEnd(ts, node.body, ast);
-			const isBlock = ts.isBlock(node.body);
-			if (!isBlock || node.body.statements.length) {
-				bodies.push({ start: isBlock ? start + 1 : start, end: isBlock ? end - 1 : end, isBlock });
+			if (!ts.isClassStaticBlockDeclaration(node)) {
+				for (const modifier of node.modifiers ?? []) {
+					visit(modifier);
+				}
+				if (node.name) {
+					visit(node.name);
+				}
+				for (const typeParameter of node.typeParameters ?? []) {
+					visit(typeParameter);
+				}
+				for (const parameter of node.parameters) {
+					for (const modifier of parameter.modifiers ?? []) {
+						visit(modifier);
+					}
+					visitBinding(parameter.name);
+					if (parameter.type) {
+						visit(parameter.type);
+					}
+					if (parameter.initializer) {
+						pushParameterExpression(parameter.initializer);
+					}
+				}
+				if (node.type) {
+					visit(node.type);
+				}
 			}
+			const { start, end } = getStartEnd(ts, node.body, ast);
+			if (ts.isBlock(node.body)) {
+				const statements = node.body.statements;
+				const prologue = statements.findIndex(statement =>
+					!ts.isExpressionStatement(statement) || !ts.isStringLiteral(statement.expression)
+				);
+				if (prologue !== -1) {
+					bodies.push({
+						start: prologue ? statements[prologue - 1]!.end : start + 1,
+						end: end - 1,
+						kind: 'block',
+					});
+				}
+			}
+			else {
+				bodies.push({ start, end, kind: 'expression' });
+			}
+			visit(node.body);
+			return;
 		}
 		ts.forEachChild(node, visit);
 	};
