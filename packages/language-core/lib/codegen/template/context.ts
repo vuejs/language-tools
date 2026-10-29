@@ -6,6 +6,7 @@ import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
 import { asType, endOfLine, isTsLang, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
+import { generateCamelized } from '../utils/camelized';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
@@ -214,14 +215,15 @@ export function createTemplateCodegenContext() {
 
 	// context accesses -----------------------------------------------------------
 
-	const contextAccesses = new Map<string, Map<string, Set<number>>>();
+	/** Per name and source, the offsets of the accesses and their source text, which may be the hyphenated name. */
+	const contextAccesses = new Map<string, Map<string, Map<number, string>>>();
 	const dotValueAccesses = new Set<string>();
 
 	// Ordered log of accessed names; event-handler closures slice from a mark
 	// to find the names accessed within their body.
 	const accessLog: string[] = [];
 
-	function accessVariable(source: string, name: string, offset?: number, dotValue = false) {
+	function accessVariable(source: string, name: string, offset?: number, dotValue = false, sourceName = name) {
 		accessLog.push(name);
 		let map = contextAccesses.get(name);
 		if (!map) {
@@ -229,10 +231,10 @@ export function createTemplateCodegenContext() {
 		}
 		let arr = map.get(source);
 		if (!arr) {
-			map.set(source, arr = new Set());
+			map.set(source, arr = new Map());
 		}
 		if (offset !== undefined) {
-			arr.add(offset);
+			arr.set(offset, sourceName);
 		}
 		if (dotValue) {
 			dotValueAccesses.add(name);
@@ -249,8 +251,8 @@ export function createTemplateCodegenContext() {
 		for (const [varName, map] of all) {
 			for (const [source, offsets] of map) {
 				if (!reservedWords.has(varName)) {
-					for (const offset of offsets) {
-						yield [varName, source, offset, codeFeatures.importCompletionOnly];
+					for (const [offset, sourceName] of offsets) {
+						yield* generateCamelized(sourceName, source, offset, codeFeatures.importCompletionOnly);
 						yield `,`;
 					}
 				}
@@ -287,9 +289,11 @@ export function createTemplateCodegenContext() {
 		return name;
 	}
 
-	function* generateHoistVariables(lang: string) {
+	function* generateHoistVariables(scriptLang: string) {
 		// trick to avoid TS 4081 (#5186)
 		if (hoistVars.size) {
+			// non-null assertions are TS-only syntax (TS8013 in JS)
+			const isTs = isTsLang(scriptLang);
 			yield `var `;
 			let first = true;
 			for (const [originalVar, hoistVar] of hoistVars) {
@@ -299,9 +303,9 @@ export function createTemplateCodegenContext() {
 				first = false;
 				yield `${hoistVar} = `;
 				// In JS, use the type without reading a possibly unassigned conditional variable.
-				yield isTsLang(lang)
+				yield isTs
 					? `${originalVar}!`
-					: `${names.nonNull}(${asType(`typeof ${originalVar}`, lang)})`;
+					: `${names.nonNull}(${asType(`typeof ${originalVar}`, scriptLang)})`;
 			}
 			yield endOfLine;
 		}

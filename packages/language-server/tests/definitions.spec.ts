@@ -118,6 +118,43 @@ test('#2600', async () => {
 	`);
 });
 
+test('#6252', async () => {
+	await prepareDocument(
+		'tsconfigProject/components.ts',
+		'typescript',
+		`import Foo from './empty.vue'; export { Foo };`,
+	);
+
+	expect(
+		await requestDefinition(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<script setup lang="ts">
+			import { Foo } from './components';
+			</script>
+			<template>
+				<F|oo />
+			</template>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		[
+		  {
+		    "end": {
+		      "line": 1,
+		      "offset": 1,
+		    },
+		    "file": "\${testWorkspacePath}/tsconfigProject/empty.vue",
+		    "start": {
+		      "line": 1,
+		      "offset": 1,
+		    },
+		  },
+		]
+	`);
+});
+
 const openedDocuments: TextDocument[] = [];
 
 afterEach(async () => {

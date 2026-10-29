@@ -1,107 +1,176 @@
-name: Release
+# Publishes every public package to npm, and the VS Code extension for stable
+# releases. Run it from the Actions tab on the branch to release:
+#
+# - master: `version` patch, minor, major or X.Y.Z, `dist-tag` latest.
+# - any branch, master included: `version` prerelease or X.Y.Z-alpha.N,
+#   `dist-tag` alpha.
+#
+# lerna-lite bumps every package, regenerates the extension metadata, syncs
+# pnpm-lock.yaml, then commits, tags `vX.Y.Z` and pushes to the selected
+# branch; a failed push stops before anything is published. The recorded
+# version is what the next `prerelease` bump starts from. `pnpm publish`
+# authenticates with npm trusted publishing (OIDC) and adds provenance.
+#
+# Only `latest` releases go to the VS Code Marketplace and Open VSX, built from
+# the pushed release tag: the marketplaces have no semver prerelease versions.
+#
+# The npm trusted publisher is bound to this filename, and a dispatch runs the
+# workflow file of the selected branch, so every release branch carries this
+# same file.
+#
+# If a publish fails after the version commit and tag were pushed, run it
+# again on the same branch with `version` from-package: it skips lerna and
+# publishes the version in lerna.json, provided the branch HEAD carries its
+# `vX.Y.Z` tag. pnpm skips packages whose version is already on npm, and the
+# marketplaces skip an extension version they already have.
+
+name: release
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - master
+    inputs:
+      version:
+        description: 'patch, minor, major, prerelease, an exact version, or from-package'
+        required: true
+        default: patch
+      dist-tag:
+        description: 'npm dist-tag (latest only from master)'
+        type: choice
+        options: [latest, alpha]
+        default: latest
+
+permissions: {}
 
 jobs:
-  auto-tag:
+  release:
+    concurrency:
+      group: release
+      cancel-in-progress: false
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'v')
+    permissions:
+      contents: write # push the version commit and tag
+      id-token: write # npm trusted publishing / provenance
+    outputs:
+      version: ${{ steps.publish.outputs.version }}
     steps:
-      - uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Check commit message and create tag
+      - name: Validate inputs
+        env:
+          VERSION: ${{ inputs.version }}
+          DIST_TAG: ${{ inputs.dist-tag }}
         run: |
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-
-          if [[ $COMMIT_MSG =~ ^(v[0-9]+\.[0-9]+\.[0-9]+) ]]; then
-            TAG_NAME="${BASH_REMATCH[1]}"
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git tag -a "$TAG_NAME" -m "Release $TAG_NAME"
-            git push origin "$TAG_NAME"
-            echo "✅ Tag $TAG_NAME created"
-          else
-            echo "❌ Invalid version format"
+          if [[ "$GITHUB_REF" != refs/heads/* ]]; then
+            echo "::error::Run this workflow on a branch, not $GITHUB_REF"
             exit 1
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          if [[ "$DIST_TAG" == latest ]]; then
+            if [[ "$GITHUB_REF" != refs/heads/master ]]; then
+              echo "::error::dist-tag latest is only published from master"
+              exit 1
+            fi
+            pattern='^(patch|minor|major|[0-9]+\.[0-9]+\.[0-9]+|from-package)$'
+          else
+            pattern='^(prerelease|[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+|from-package)$'
+          fi
+          if [[ ! "$VERSION" =~ $pattern ]]; then
+            echo "::error::version '$VERSION' does not fit dist-tag $DIST_TAG"
+            exit 1
+          fi
 
-  publish-npm:
-    permissions:
-      contents: read
-      id-token: write # to enable use of OIDC for npm provenance
-    runs-on: ubuntu-latest
-    needs: [auto-tag]
-    if: github.event_name == 'workflow_dispatch' || success()
-    steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # lerna reads the previous release tag
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v6
 
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-          cache: pnpm
-          registry-url: "https://registry.npmjs.org/"
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: npm run build
+      - run: pnpm run build
 
-      - name: Publish to NPM
-        run: pnpm dlx --package @lerna-lite/cli --package @lerna-lite/publish lerna publish from-package --yes
+      - name: Publish
+        id: publish
+        env:
+          VERSION: ${{ inputs.version }}
+          DIST_TAG: ${{ inputs.dist-tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "$VERSION" == from-package ]]; then
+            current="$(node -p "require('./lerna.json').version")"
+            if ! git tag --points-at HEAD | grep -qxF "v$current"; then
+              echo "::error::HEAD is not tagged v$current; from-package only publishes a pushed release commit"
+              exit 1
+            fi
+            if [[ ("$DIST_TAG" == latest && "$current" == *-*) || ("$DIST_TAG" != latest && "$current" != *-alpha.*) ]]; then
+              echo "::error::lerna.json version $current does not fit dist-tag $DIST_TAG"
+              exit 1
+            fi
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+            pnpm exec lerna version "$VERSION" \
+              --exact \
+              --force-publish \
+              --sync-workspace-lock \
+              --yes
+          fi
+          pnpm -r publish --tag "$DIST_TAG" --no-git-checks
+          published="$(node -p "require('./lerna.json').version")"
+          echo "version=$published" >> "$GITHUB_OUTPUT"
+          echo "Published \`$published\` with dist-tag \`$DIST_TAG\`." >> "$GITHUB_STEP_SUMMARY"
 
   publish-vscode-marketplace:
+    needs: release
+    if: inputs.dist-tag == 'latest'
     runs-on: ubuntu-latest
-    needs: [auto-tag]
-    if: github.event_name == 'workflow_dispatch' || success()
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: v${{ needs.release.outputs.version }}
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v6
 
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-          cache: pnpm
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
       - name: Publish to VSCode Marketplace
         working-directory: extensions/vscode
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: pnpm dlx @vscode/vsce publish
+        run: pnpm dlx @vscode/vsce publish --skip-duplicate
 
   publish-open-vsx:
+    needs: release
+    if: inputs.dist-tag == 'latest'
     runs-on: ubuntu-latest
-    needs: [auto-tag]
-    if: github.event_name == 'workflow_dispatch' || success()
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: v${{ needs.release.outputs.version }}
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v6
 
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-          cache: pnpm
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
       - name: Publish to Open VSX
         working-directory: extensions/vscode
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        run: pnpm dlx ovsx publish
+        run: pnpm dlx ovsx publish --skip-duplicate
