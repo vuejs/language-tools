@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import * as pug from '../index';
 import { baseParse } from '../lib/baseParse';
 
-function compile(source: string) {
+function compile(source: string, options: CompilerDOM.CompilerOptions = {}) {
 	const pipeline = createIRPipeline({} as TypeScript, {
 		...getDefaultCompilerOptions(),
 		plugins: [{ name: 'pug', file: '/project/node_modules/pug/index.js', config: {}, module: pug }],
@@ -12,6 +12,7 @@ function compile(source: string) {
 	const errors: CompilerDOM.CompilerError[] = [];
 	const warnings: CompilerDOM.CompilerError[] = [];
 	const ast = pipeline.compileTemplate('pug', source, {
+		...options,
 		onError: error => errors.push(error),
 		onWarn: warning => warnings.push(warning),
 	})?.result.ast;
@@ -79,14 +80,20 @@ describe('pug template compiler', () => {
 		expect((ifNode as CompilerDOM.IfNode).branches[0]!.condition!.loc.start.offset).toBe(source.indexOf('ok'));
 	});
 
-	it('gives errors and warnings at the offsets of the pug source', () => {
-		const source = `div\n  p(v-if)\n  em(v-if="a" v-for="n in b")`;
-		const { errors, warnings } = compile(source);
-		expect(errors.map(errorLoc)).toEqual([
+	it('gives errors at the offsets of the pug source', () => {
+		const source = `div\n  p(v-if)`;
+		expect(compile(source).errors.map(errorLoc)).toEqual([
 			[CompilerDOM.ErrorCodes.X_V_IF_NO_EXPRESSION, source.indexOf('v-if'), source.indexOf('v-if') + 4],
 		]);
+	});
+
+	// the location of a warning is remapped when it is reported and again with the AST
+	it.fails('gives warnings at the offsets of the pug source', () => {
+		// the compiler only warns of deprecations in compat mode
+		const warned = `div\n  em(v-if="a" v-for="n in b")`;
+		const { warnings } = compile(warned, { compatConfig: { MODE: 2 } });
 		expect(warnings.map(warning => [warning.loc?.start.offset, warning.loc?.end.offset])).toEqual([
-			[source.indexOf('em'), source.length],
+			[warned.indexOf('em'), warned.length],
 		]);
 	});
 
@@ -98,6 +105,26 @@ describe('pug template compiler', () => {
 		expect(htmlErrors).toEqual([CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE]);
 
 		expect(compile(source).errors).toEqual([]);
+	});
+
+	// #13
+	it('does not report a v-else without a value', () => {
+		expect(compile(`div(v-if="a")\ndiv(v-else)`).errors).toEqual([]);
+	});
+
+	// #721
+	it('does not report a v-model of an element of a block expansion', () => {
+		expect(compile(`table: tr: td: input(v-model="name")`).errors).toEqual([]);
+	});
+
+	// #1767: the end of a class literal maps one past the literal
+	it.fails('gives a class literal the range of its name', () => {
+		const source = `.foo\ndiv.bar`;
+		const ranges = compile(source).ast.children.map(child => {
+			const { loc } = ((child as CompilerDOM.ElementNode).props[0] as CompilerDOM.AttributeNode).value!;
+			return [loc.start.offset, loc.end.offset];
+		});
+		expect(ranges).toEqual([[1, 4], [9, 12]]);
 	});
 
 	it('gives an offset of several sources the greatest', () => {

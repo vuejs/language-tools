@@ -1,7 +1,7 @@
 {
 	"extends": "../tsconfig.base.json",
 	"compilerOptions": {
-		"noUnusedLocals": false,
+		"noUnusedLocals": true,
 		"noUnusedParameters": false,
 		"strict": true
 	},
@@ -16,5 +16,5 @@
 			}
 		}
 	],
-	"include": ["App.vue", "Child.vue", "Positions.vue"]
+	"include": ["App.vue", "Child.vue", "Issues.vue", "Positions.vue"]
 }

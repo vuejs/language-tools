@@ -13,7 +13,7 @@ div.wrapper(:title="badProp" @click="badEvent()")
   p(v-if="badIf") a
   span(v-for="item in badSource" :key="item") {{ item }}
   span(v-for="alias in items" :key="alias") {{ alias.badAlias }}
-  Child
+  Child(msg="m")
     template(#default="{ badSlot }") {{ badSlot }}
   b(:a="badA" :b="badB") {{ badC }}
   p
