@@ -8,7 +8,7 @@ const fileName = 'Issues.vue';
 
 /** The lines of each `//- #N` … `//- #N end` case of the fixture. */
 const cases = new Map<string, [number, number]>();
-fs.readFileSync(path.join(fixtureDir, fileName), 'utf8').split('\n').forEach((line, i) => {
+fs.readFileSync(path.join(fixtureDir, fileName), 'utf8').split(/\r?\n/).forEach((line, i) => {
 	const match = line.match(/^\/\/- (#\d+)( end)?$/);
 	if (match) {
 		const range = cases.get(match[1]!) ?? [0, 0];

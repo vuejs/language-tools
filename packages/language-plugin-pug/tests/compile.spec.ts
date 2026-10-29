@@ -107,6 +107,13 @@ describe('pug template compiler', () => {
 		expect(compile(source).errors).toEqual([]);
 	});
 
+	// #118 with CRLF line ends: the lexer offsets of a multiline attribute drop its name from the HTML
+	it.fails('keeps the name of a multiline attribute with CRLF line ends', () => {
+		const source = ['div(', `  :class="[ \\`, `    'a', \\`, `  ]"`, ') Foo'].join('\r\n');
+		const div = element(compile(source).ast, 'div');
+		expect(div.props.map(prop => prop.name)).toEqual(['bind']);
+	});
+
 	// #13
 	it('does not report a v-else without a value', () => {
 		expect(compile(`div(v-if="a")\ndiv(v-else)`).errors).toEqual([]);

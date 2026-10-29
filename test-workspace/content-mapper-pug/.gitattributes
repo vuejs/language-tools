@@ -1,0 +1,2 @@
+# the diagnostics are pinned for LF; CRLF is pinned by the expected failure of language-plugin-pug's compile test
+*.vue text eol=lf
