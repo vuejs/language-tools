@@ -75,7 +75,7 @@ let plain = 1;
 	expect(await hover('message }}')).toBe('(property) message: string');
 	expect(await hover('double }}')).toBe('(property) double: number');
 	expect(await hover('message.length')).toBe('(property) message: string');
-	expect(await hover('plain }}')).toBe('let plain: number');
+	expect(await hover('plain }}')).toBe('(property) plain: number');
 
 	await server.close(document.uri);
 });

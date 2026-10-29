@@ -5,12 +5,8 @@ import { getNodeText } from '../utils/shared';
 
 export const enum BindingFlag {
 	None,
-	// Bindings re-asserted per closure by the template codegen (imports, `let`/`var`).
-	Variable,
 	Const = 1 << 1,
 	Component = 1 << 2,
-	// `let`/`var` without an initializer; reading these may raise TS2454.
-	Uninitialized = 1 << 3,
 }
 
 export function parseBindings(
@@ -22,15 +18,9 @@ export function parseBindings(
 
 	ts.forEachChild(ast, node => {
 		if (ts.isVariableStatement(node)) {
-			const isConst = !!(node.declarationList.flags & ts.NodeFlags.Const);
 			for (const decl of node.declarationList.declarations) {
-				const flags = isConst
-					? BindingFlag.None
-					: decl.initializer
-					? BindingFlag.Variable
-					: BindingFlag.Variable | BindingFlag.Uninitialized;
 				for (const { start, end } of collectBindingRanges(ts, decl.name, ast)) {
-					bindings.set(ast.text.slice(start, end), flags);
+					bindings.set(ast.text.slice(start, end), BindingFlag.None);
 				}
 			}
 		}
@@ -59,7 +49,7 @@ export function parseBindings(
 						bindings.set(_getNodeText(name), BindingFlag.Const | BindingFlag.Component);
 					}
 					else {
-						bindings.set(_getNodeText(name), BindingFlag.Variable);
+						bindings.set(_getNodeText(name), BindingFlag.None);
 					}
 				}
 				if (namedBindings) {
@@ -76,12 +66,12 @@ export function parseBindings(
 								bindings.set(_getNodeText(element.name), BindingFlag.Const | BindingFlag.Component);
 							}
 							else {
-								bindings.set(_getNodeText(element.name), BindingFlag.Variable);
+								bindings.set(_getNodeText(element.name), BindingFlag.None);
 							}
 						}
 					}
 					else {
-						bindings.set(_getNodeText(namedBindings.name), BindingFlag.Variable);
+						bindings.set(_getNodeText(namedBindings.name), BindingFlag.None);
 					}
 				}
 			}

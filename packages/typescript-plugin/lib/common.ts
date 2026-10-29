@@ -117,8 +117,8 @@ export function preprocessLanguageService(
 		};
 	}
 
-	// Template reads of setup bindings compile to `__VLS_unwrap(foo, ...)` or `foo.value`,
-	// so the mapped identifier alone still carries the wrapped `Ref` type.
+	// Template reads of setup bindings compile to `__VLS_templateBindings.foo.value` and map to
+	// the `value` member, whose quick info names `value` rather than the binding.
 	function unwrapTemplateBindingQuickInfo(fileName: string, quickInfo: ts.QuickInfo, bindings: Set<string>) {
 		const program = languageService.getProgram();
 		const sourceFile = program?.getSourceFile(fileName);
@@ -132,25 +132,23 @@ export function preprocessLanguageService(
 				break;
 			}
 		}
-		if (!id || !bindings.has(id.text)) {
+		const access = id?.parent;
+		if (
+			!id
+			|| id.text !== 'value'
+			|| !access
+			|| !ts.isPropertyAccessExpression(access)
+			|| access.name !== id
+			|| !ts.isPropertyAccessExpression(access.expression)
+			|| !ts.isIdentifier(access.expression.expression)
+			|| access.expression.expression.text !== names.templateBindings
+			|| !bindings.has(access.expression.name.text)
+		) {
 			return;
 		}
-		const { parent } = id;
-		const isUnwrapCall = ts.isCallExpression(parent)
-			&& parent.arguments[0] === id
-			&& ts.isIdentifier(parent.expression)
-			&& parent.expression.text === names.unwrap;
-		const isDotValue = ts.isPropertyAccessExpression(parent)
-			&& parent.expression === id
-			&& parent.name.text === 'value';
-		if (!isUnwrapCall && !isDotValue) {
-			return;
-		}
+		const name = access.expression.name.text;
 		const checker = program.getTypeChecker();
-		const type = checker.getTypeAtLocation(parent);
-		if (type === checker.getTypeAtLocation(id)) {
-			return;
-		}
+		const type = checker.getTypeAtLocation(access);
 		quickInfo.kind = ts.ScriptElementKind.memberVariableElement;
 		quickInfo.kindModifiers = '';
 		quickInfo.displayParts = [
@@ -158,10 +156,10 @@ export function preprocessLanguageService(
 			{ text: 'property', kind: 'text' },
 			{ text: ')', kind: 'punctuation' },
 			{ text: ' ', kind: 'space' },
-			{ text: id.text, kind: 'propertyName' },
+			{ text: name, kind: 'propertyName' },
 			{ text: ':', kind: 'punctuation' },
 			{ text: ' ', kind: 'space' },
-			{ text: checker.typeToString(type, id), kind: 'text' },
+			{ text: checker.typeToString(type, access), kind: 'text' },
 		];
 	}
 

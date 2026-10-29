@@ -1,4 +1,3 @@
-import { BindingFlag } from '../../parsers/utils';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
@@ -8,8 +7,8 @@ import {
 	generateSfcBlockSection,
 	generateTypeAlias,
 	generateTypedVar,
-	getRefBrandArgument,
 	isTsLang,
+	newLine,
 } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenOptions } from './index';
@@ -18,28 +17,27 @@ export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	selfType?: string,
 ): Generator<Code> {
+	if (options.templateBindings.size) {
+		yield `const ${names.getTemplateBindings} = () => (`;
+		yield isTsLang(options.scriptLang) ? `{} as {` : `/** @type {{`;
+		for (const name of options.templateBindings) {
+			yield `${name}: typeof ${name}${endOfLine}`;
+		}
+		yield isTsLang(options.scriptLang) ? `})${endOfLine}` : `}} */ ({}))${endOfLine}`;
+		yield* generateTypedVar('let', names.templateBindings, options.scriptLang, function*() {
+			yield `{${newLine}`;
+			for (const name of options.templateBindings) {
+				yield `${name}: ${names.TemplateBinding}<ReturnType<typeof ${names.getTemplateBindings}>['${name}'], import('${options.vueCompilerOptions.lib}').Ref<unknown>>${endOfLine}`;
+			}
+			yield `}`;
+		});
+		yield `void ${names.templateBindings}${endOfLine}`;
+	}
 	yield* generateTemplateCtx(options, selfType);
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 
 	yield `void ${names.ctx}, ${names.components}, ${names.intrinsics}, ${names.directives}${endOfLine}`;
-
-	for (const name of options.dotValueBindings) {
-		const flags = options.scriptSetupRanges?.bindings.get(name) ?? options.scriptRanges?.bindings.get(name) ?? 0;
-		// an assignment is not a read, so it cannot raise TS2454; the assertion
-		// still narrows `name` through the assignment target. The `unknown` step
-		// avoids TS2352 when `typeof name` is `undefined` (an untyped `let`).
-		const target = flags & BindingFlag.Uninitialized
-			? `${name} = ${
-				isTsLang(options.scriptLang)
-					? `{} as unknown as typeof ${name}`
-					: `/** @type {typeof ${name}} */ (/** @type {unknown} */ ({}))`
-			}`
-			: name;
-		yield `${names.withDotValue}(${target}, ${
-			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
-		})${endOfLine}`;
-	}
 
 	if (options.templateAndStyleCodes.length) {
 		yield* options.templateAndStyleCodes;

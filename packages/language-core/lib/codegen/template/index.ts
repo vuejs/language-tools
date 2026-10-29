@@ -19,11 +19,6 @@ export interface TemplateCodegenOptions {
 	setupRefs: Set<string>;
 	setupConsts: Set<string>;
 	setupBindings: Set<string>;
-	// Bindings narrowed at least once anywhere in the template/styles; every
-	// access of these is emitted with `.value`. Collected by a first codegen pass.
-	dotValueBindings: Set<string>;
-	// The subset of `dotValueBindings` re-asserted at closure tops (imports, `let`/`var`).
-	reassertBindings: Set<string>;
 	hasDefineSlots?: boolean;
 	propsAssignName?: string;
 	slotsAssignName?: string;
@@ -114,6 +109,7 @@ function* generateWorker(
 	}
 
 	yield* scope.end();
+	yield* ctx.generateBindingReferences(options.scriptLang);
 }
 
 function* generateSlotsType(

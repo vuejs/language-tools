@@ -217,13 +217,24 @@ export function createTemplateCodegenContext() {
 
 	/** Per name and source, the offsets of the accesses and their source text, which may be the hyphenated name. */
 	const contextAccesses = new Map<string, Map<string, Map<number, string>>>();
-	const dotValueAccesses = new Set<string>();
+	const bindingReferences: Code[][] = [];
 
-	// Ordered log of accessed names; event-handler closures slice from a mark
-	// to find the names accessed within their body.
+	function* generateBindingReferences(lang: string): Generator<Code> {
+		if (!bindingReferences.length) return;
+		yield isTsLang(lang) ? `void ({} as [` : `void /** @type {[`;
+		for (const reference of bindingReferences) {
+			yield `typeof `;
+			yield* reference;
+			yield `,`;
+		}
+		yield isTsLang(lang) ? `])${endOfLine}` : `]} */ ({})${endOfLine}`;
+	}
+
+	// Conditions record their accessed names so handlers can skip a replayed
+	// guard when its bindings are shadowed by template locals.
 	const accessLog: string[] = [];
 
-	function accessVariable(source: string, name: string, offset?: number, dotValue = false, sourceName = name) {
+	function accessVariable(source: string, name: string, offset?: number, sourceName = name) {
 		accessLog.push(name);
 		let map = contextAccesses.get(name);
 		if (!map) {
@@ -235,9 +246,6 @@ export function createTemplateCodegenContext() {
 		}
 		if (offset !== undefined) {
 			arr.set(offset, sourceName);
-		}
-		if (dotValue) {
-			dotValueAccesses.add(name);
 		}
 	}
 
@@ -347,7 +355,8 @@ export function createTemplateCodegenContext() {
 		scopes,
 		scope,
 		contextAccesses,
-		dotValueAccesses,
+		bindingReferences,
+		generateBindingReferences,
 		accessLog,
 		accessVariable,
 		generateAutoImport,

@@ -180,7 +180,7 @@ function useCodegen(
 		return capitalize(camelize(name));
 	});
 
-	const generateTemplatePass = (dotValueBindings: Set<string>) => {
+	const getGeneratedTemplate = computed(() => {
 		if (getResolvedOptions().skipTemplateCodegen || !ir.template) {
 			return;
 		}
@@ -195,18 +195,14 @@ function useCodegen(
 			setupRefs: getSetupRefs(),
 			setupConsts: getSetupConsts(),
 			setupBindings: getSetupBindings(),
-			dotValueBindings,
-			reassertBindings: new Set(
-				[...dotValueBindings].filter(name => (getBindingFlags().get(name) ?? 0) & BindingFlag.Variable),
-			),
 			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getInheritAttrs(),
 		});
-	};
+	});
 
-	const generateStylePass = (dotValueBindings: Set<string>) => {
+	const getGeneratedStyle = computed(() => {
 		if (!ir.styles.length) {
 			return;
 		}
@@ -214,13 +210,11 @@ function useCodegen(
 			typescript: ts,
 			vueCompilerOptions: getResolvedOptions(),
 			styles: ir.styles,
-			scriptLang: computeLang(ir),
-			setupRefs: getSetupRefs(),
 			setupConsts: getSetupConsts(),
+			scriptLang: computeLang(ir),
 			setupBindings: getSetupBindings(),
-			dotValueBindings,
 		});
-	};
+	});
 
 	const getLocalComponents = computedSet(() => {
 		const bindings = getSetupBindings();
@@ -245,23 +239,6 @@ function useCodegen(
 		// are harmless (they only surface as extra completion candidates).
 		return new Set([...bindings].filter(name => /^v[A-Z]/.test(name)));
 	});
-
-	// First pass: collect bindings used in narrowing positions (output discarded);
-	// the second pass (the computeds below) finalizes every access of these with `.value`.
-	const getDotValueBindings = computedSet(() => {
-		const bindings = getSetupBindings();
-		if (!bindings.size) {
-			return bindings;
-		}
-		const names: string[] = [];
-		for (const generated of [generateTemplatePass(new Set()), generateStylePass(new Set())]) {
-			names.push(...generated?.dotValueAccesses ?? []);
-		}
-		return new Set(names);
-	});
-
-	const getGeneratedTemplate = computed(() => generateTemplatePass(getDotValueBindings()));
-	const getGeneratedStyle = computed(() => generateStylePass(getDotValueBindings()));
 
 	const getReferencedBindings = computedSet(() => {
 		const bindings = getSetupBindings();
@@ -291,7 +268,7 @@ function useCodegen(
 			setupBindings: getScriptSetupBindings(),
 			localComponents: getLocalComponents(),
 			localDirectives: getLocalDirectives(),
-			dotValueBindings: getDotValueBindings(),
+			templateBindings: getReferencedBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateAndStyleTypes: new Set([
