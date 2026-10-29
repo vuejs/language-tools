@@ -293,7 +293,16 @@ export function* generateModelEventExpression(
 		yield* generateEventParameter(options, argsType);
 		yield* generateReasserts(options, ctx, accessMark);
 		yield* ctx.generateConditionGuards();
+		const boundary = yield* Boundary.start(
+			options.template,
+			prop.exp.loc.start.offset,
+			prop.exp.loc.end.offset,
+			{ features: 0 },
+		);
+		yield `(`;
 		yield* codes;
+		yield `)`;
+		yield boundary.end();
 		yield ` = $event${endOfLine}`;
 		yield `}`;
 	}
