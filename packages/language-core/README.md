@@ -51,10 +51,11 @@ const msg = 'Hello'
 </script>
 `);
 
-// result.template: { content, offset, lang, attrs, element: { start, end } }
+// result.template: { content, offset, lang, element: { start, end } }
 // result.scriptSetup
 // result.styles
 // result.errors
+// result.vapor: whether `<script setup>` or `<template>` has `vapor`
 ```
 
 ## `vueCompilerOptions`

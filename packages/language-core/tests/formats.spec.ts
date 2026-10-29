@@ -34,6 +34,23 @@ test('reads the blocks of an SFC at the offsets of the file', () => {
 	expect(sfc.scriptSetup!.generic).toEqual({ text: 'T', offset: content.indexOf('T">') });
 	expect(sfc.styles[0]).toMatchObject({ module: { text: 'm', offset: content.indexOf('m"') }, scoped: true });
 	expect(sfc.customBlocks[0]!.type).toBe('i18n');
+	expect(sfc.vapor).toBe(false);
+});
+
+test.each([
+	['<script setup vapor></script>', true],
+	['<script vapor></script>', true],
+	['<template vapor></template>', true],
+	['<script vapor></script><script setup></script>', true],
+	['<script setup></script><script setup vapor></script>', false],
+	['<script vapor="false"></script>', true],
+	['<style vapor></style><i18n vapor></i18n>', false],
+])('reads whether the SFC %s is a Vapor component', (content, vapor) => {
+	expect(sfcParser.parse('/a.vue', content)!.vapor).toBe(vapor);
+});
+
+test('reads no Vapor component in a petite-vue page', () => {
+	expect(petiteVueParser.parse('/a.html', '<script vapor></script>')!.vapor).toBeUndefined();
 });
 
 test('updates the blocks that an edit changes and keeps the others', () => {

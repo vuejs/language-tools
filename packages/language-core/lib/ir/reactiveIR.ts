@@ -41,6 +41,7 @@ export function useIR(
 	const getErrors = computedArray(() => {
 		return getFormatResult()?.errors ?? [];
 	});
+	const getVapor = computed(() => !!getFormatResult()?.vapor);
 	const getTemplate = useNullableBlock(
 		'template',
 		computed(() => getFormatResult()?.template),
@@ -110,7 +111,6 @@ export function useIR(
 				element: undefined,
 				generic: undefined,
 				genericOffset: 0,
-				attrs: {},
 				ast: ts.createSourceFile('/dummy.ts', '', 99 satisfies ts.ScriptTarget.Latest, false, ts.ScriptKind.TS),
 			};
 		}
@@ -190,6 +190,9 @@ export function useIR(
 		},
 		get customBlocks() {
 			return customBlocks;
+		},
+		get vapor() {
+			return getVapor();
 		},
 	};
 
@@ -302,7 +305,6 @@ export function useIR(
 			}
 			return lang;
 		});
-		const getAttrs = computed(() => getBlock().attrs); // TODO: computed it
 		const getContent = computed(() => getBlock().content);
 		const getOffset = computed(() => getBlock().offset);
 		const getElementStart = computed(() => getBlock().element?.start);
@@ -315,9 +317,6 @@ export function useIR(
 			name,
 			get lang() {
 				return getLang();
-			},
-			get attrs() {
-				return getAttrs();
 			},
 			get content() {
 				return getContent();

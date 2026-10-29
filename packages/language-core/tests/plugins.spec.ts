@@ -198,7 +198,7 @@ describe('createIRPipeline', () => {
 			ir: {
 				formats: {
 					custom: {
-						parse: () => ({ ...emptyResult(), template: { content: '<div/>', offset: 0, attrs: {} } }),
+						parse: () => ({ ...emptyResult(), template: { content: '<div/>', offset: 0 } }),
 					},
 				},
 			},

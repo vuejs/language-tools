@@ -158,6 +158,8 @@ export interface VueFormatResult {
 	scriptSetup: VueFormatScriptSetup | undefined;
 	styles: VueFormatStyle[];
 	customBlocks: VueFormatCustomBlock[];
+	/** Whether the file is a Vapor component. */
+	vapor?: boolean;
 }
 
 /** A block of a file: its `content`, at `offset` in the file. */
@@ -167,7 +169,6 @@ export interface VueFormatBlock {
 	/** The offset of `content` in the file. */
 	offset: number;
 	lang: string;
-	attrs: Record<string, string | true>;
 	/**
 	 * The range of the element that the block is written as, from its start tag to its end tag, if it is one, like
 	 * the blocks of an SFC.
@@ -291,6 +292,8 @@ export interface IR {
 	scriptSetup: IRScriptSetup | undefined;
 	styles: readonly IRStyle[];
 	customBlocks: readonly IRCustomBlock[];
+	/** The `vapor` of the format. */
+	vapor: boolean;
 }
 
 /** An attribute without a value, or the value at its offset in the file. */

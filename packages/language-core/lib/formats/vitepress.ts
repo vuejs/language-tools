@@ -54,7 +54,7 @@ export const vitePressParser: VueFormat = {
 		}
 
 		const sfc = parse(blocksText);
-		sfc.template = { content, offset: 0, lang: 'html', attrs: {} };
+		sfc.template = { content, offset: 0, lang: 'html' };
 		return sfc;
 	},
 };

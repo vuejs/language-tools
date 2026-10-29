@@ -25,6 +25,8 @@ export function parse(source: string): VueFormatResult {
 		styles: [],
 		customBlocks: [],
 	};
+	let templateVapor = false;
+	let scriptSetupVapor = false;
 	for (const node of ast.children) {
 		if (node.type === CompilerDOM.NodeTypes.COMMENT) {
 			result.comments.push(node.content);
@@ -42,10 +44,12 @@ export function parse(source: string): VueFormatResult {
 		switch (node.tag) {
 			case 'template':
 				result.template = block;
+				templateVapor = attrs.has('vapor');
 				break;
 			case 'script': {
 				const setup = attrs.has('setup') || attrs.has('vapor');
 				if (setup && !result.scriptSetup) {
+					scriptSetupVapor = attrs.has('vapor');
 					const generic = attrs.get('generic');
 					result.scriptSetup = {
 						...block,
@@ -78,6 +82,7 @@ export function parse(source: string): VueFormatResult {
 				break;
 		}
 	}
+	result.vapor = scriptSetupVapor || templateVapor;
 	return result;
 }
 
@@ -98,21 +103,16 @@ function createBlock(node: CompilerDOM.ElementNode, source: string): VueFormatBl
 		const offset = node.loc.source.indexOf(`</`);
 		contentStart = contentEnd = offset > -1 ? node.loc.start.offset + offset : node.loc.end.offset;
 	}
-	const attrs: Record<string, string | true> = {};
 	let lang: string | undefined;
 	for (const prop of node.props) {
-		if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
-			attrs[prop.name] = prop.value ? prop.value.content || true : true;
-			if (prop.name === 'lang') {
-				lang = prop.value?.content;
-			}
+		if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === 'lang') {
+			lang = prop.value?.content;
 		}
 	}
 	return {
 		content: source.slice(contentStart, contentEnd),
 		offset: contentStart,
 		lang: lang ?? defaultLangs[node.tag] ?? 'txt',
-		attrs,
 		element: { start: node.loc.start.offset, end: node.loc.end.offset },
 	};
 }

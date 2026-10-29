@@ -31,7 +31,6 @@ export const petiteVueParser: VueFormat = {
 				content: blockContent,
 				offset: match.index + `<${tag}${attrs}>`.length,
 				lang: attrs.match(langRE)?.[2] ?? (tag === 'style' ? 'css' : 'js'),
-				attrs: {},
 				element: { start: match.index, end: match.index + matchText.length },
 			};
 
@@ -46,7 +45,7 @@ export const petiteVueParser: VueFormat = {
 				+ templateContent.slice(match.index + matchText.length);
 		}
 
-		result.template = { content: templateContent, offset: 0, lang: 'html', attrs: {} };
+		result.template = { content: templateContent, offset: 0, lang: 'html' };
 
 		return result;
 	},
