@@ -1,8 +1,9 @@
+import type * as ts from 'typescript';
 import type { Code, IRBlock, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { getRefBrandArgument, getTypeScriptAST, identifierRE } from '../utils';
+import { endOfLine, getRefBrandArgument, getTypeScriptAST, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { forEachDeclarations, shouldIdentifierSkipped } from './bindingReferences';
 import type { TemplateCodegenContext } from './context';
@@ -10,6 +11,7 @@ import type { TemplateCodegenContext } from './context';
 export function* generateInterpolation(
 	options: IdentifierOptions & {
 		typescript: typeof import('typescript');
+		reassertBindings?: Set<string>;
 	},
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
@@ -22,6 +24,68 @@ export function* generateInterpolation(
 ): Generator<Code> {
 	if (prefix) {
 		yield prefix;
+	}
+
+	// Assertion narrowing does not flow into functions for imports and `let`/`var`
+	// bindings (TS limitation), so each function body re-asserts the ones it reads.
+	// Bodies are buffered until their end, when those reads are known.
+	const bodies = options.reassertBindings?.size && !identifierRE.test(code)
+		? collectFunctionBodies(options.typescript, getTypeScriptAST(options.typescript, block, prefix + code + suffix))
+			.map(body => ({ ...body, start: body.start - prefix.length, end: body.end - prefix.length }))
+		: [];
+	// Exits precede enters at the same offset; the stable sort keeps the inner exit and the outer enter first.
+	const marks = [
+		...bodies.map(body => ({ offset: body.end, body, enter: false })).reverse(),
+		...bodies.map(body => ({ offset: body.start, body, enter: true })),
+	].sort((a, b) => a.offset - b.offset);
+	const frames: { isBlock: boolean; codes: Code[]; reasserts: Set<string> }[] = [];
+	let markIndex = 0;
+
+	function* write(codes: Iterable<Code>): Generator<Code> {
+		if (frames.length) {
+			frames[frames.length - 1]!.codes.push(...codes);
+		}
+		else {
+			yield* codes;
+		}
+	}
+
+	function* generateCodeUntil(from: number, end: number): Generator<Code> {
+		while (markIndex < marks.length && marks[markIndex]!.offset <= end) {
+			const { offset, body, enter } = marks[markIndex++]!;
+			yield* write(generateNonIdentifierCode(code.slice(from, offset), block.name, start + from, features, from > 0));
+			from = offset;
+			if (enter) {
+				ctx.enterFunction();
+				frames.push({ isBlock: body.isBlock, codes: [], reasserts: new Set() });
+			}
+			else {
+				ctx.exitFunction();
+				yield* write(generateFunctionBody(frames.pop()!));
+			}
+		}
+		yield* write(generateNonIdentifierCode(code.slice(from, end), block.name, start + from, features, from > 0));
+	}
+
+	function* generateFunctionBody({ isBlock, codes, reasserts }: typeof frames[number]): Generator<Code> {
+		if (!reasserts.size) {
+			yield* codes;
+			return;
+		}
+		yield isBlock ? newLine : `{${newLine}`;
+		for (const name of reasserts) {
+			yield `${names.withDotValue}(${name}, ${
+				getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
+			})${endOfLine}`;
+		}
+		if (isBlock) {
+			yield* codes;
+		}
+		else {
+			yield `return (`;
+			yield* codes;
+			yield `)${endOfLine}}`;
+		}
 	}
 
 	let prevEnd = 0;
@@ -37,23 +101,21 @@ export function* generateInterpolation(
 		)
 	) {
 		if (isShorthand) {
-			yield* generateNonIdentifierCode(
-				code.slice(prevEnd, offset + name.length),
-				block.name,
-				start + prevEnd,
-				features,
-				prevEnd > 0,
-			);
-			yield `: `;
+			yield* generateCodeUntil(prevEnd, offset + name.length);
+			yield* write([`: `]);
 		}
-		else if (prevEnd < offset) {
-			yield* generateNonIdentifierCode(
-				code.slice(prevEnd, offset),
-				block.name,
-				start + prevEnd,
-				features,
-				prevEnd > 0,
-			);
+		else {
+			yield* generateCodeUntil(prevEnd, offset);
+		}
+
+		if (
+			frames.length
+			&& options.reassertBindings!.has(name)
+			&& !options.setupConsts.has(name)
+			&& !options.setupRefs.has(name)
+			&& !shouldIdentifierSkipped(ctx, name)
+		) {
+			frames[frames.length - 1]!.reasserts.add(name);
 		}
 
 		const codes: Code[] = [[
@@ -65,7 +127,7 @@ export function* generateInterpolation(
 				: features,
 		]];
 
-		yield* generateIdentifier(
+		yield* write(generateIdentifier(
 			options,
 			ctx,
 			codes,
@@ -76,24 +138,43 @@ export function* generateInterpolation(
 			isNarrowing,
 			inTypeQuery,
 			isNewOperand,
-		);
+		));
 
 		prevEnd = offset + name.length;
 	}
 
-	if (prevEnd < code.length) {
-		yield* generateNonIdentifierCode(
-			code.slice(prevEnd),
-			block.name,
-			start + prevEnd,
-			features,
-			prevEnd > 0,
-		);
-	}
+	yield* generateCodeUntil(prevEnd, code.length);
 
 	if (suffix) {
 		yield suffix;
 	}
+}
+
+// Bodies in pre-order; a block body spans between its braces.
+function collectFunctionBodies(ts: typeof import('typescript'), ast: ts.SourceFile) {
+	const bodies: { start: number; end: number; isBlock: boolean }[] = [];
+	const visit = (node: ts.Node) => {
+		if (
+			(ts.isArrowFunction(node)
+				|| ts.isFunctionExpression(node)
+				|| ts.isFunctionDeclaration(node)
+				|| ts.isMethodDeclaration(node)
+				|| ts.isGetAccessorDeclaration(node)
+				|| ts.isSetAccessorDeclaration(node)
+				|| ts.isConstructorDeclaration(node)
+				|| ts.isClassStaticBlockDeclaration(node))
+			&& node.body
+		) {
+			const { start, end } = getStartEnd(ts, node.body, ast);
+			const isBlock = ts.isBlock(node.body);
+			if (!isBlock || node.body.statements.length) {
+				bodies.push({ start: isBlock ? start + 1 : start, end: isBlock ? end - 1 : end, isBlock });
+			}
+		}
+		ts.forEachChild(node, visit);
+	};
+	ts.forEachChild(ast, visit);
+	return bodies;
 }
 
 /**
