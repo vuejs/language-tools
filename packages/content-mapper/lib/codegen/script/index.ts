@@ -143,7 +143,6 @@ function* generateWorker(
 	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
 		const copies = createScriptSetupCopies(options, scriptSetup, scriptSetupRanges);
 		yield* copies.generateImports();
-		yield* generateMacros(options);
 
 		// <script>
 		let selfType: string | undefined;
@@ -165,6 +164,7 @@ function* generateWorker(
 		}
 
 		// <script setup>
+		yield* generateMacros(options);
 		yield* generateComponentDeclareEqual(scriptSetup, names.export);
 		if (scriptSetup.generic) {
 			yield* generateGeneric(
