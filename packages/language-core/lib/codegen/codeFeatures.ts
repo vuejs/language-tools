@@ -95,14 +95,6 @@ export const codeFeatures = defineCodeFeatures({
 		format: true,
 	},
 	/** @internal */
-	doNotReportTs2339AndTs2551: {
-		verification: {
-			// https://typescript.tv/errors/#ts2339
-			// https://typescript.tv/errors/#ts2551
-			shouldReport: (_source, code) => String(code) !== '2339' && String(code) !== '2551',
-		},
-	},
-	/** @internal */
 	doNotReportTs2353AndTs2561: {
 		verification: {
 			// https://typescript.tv/errors/#ts2353

@@ -12,6 +12,8 @@
 		"lint:fix": "npm run lint -- --fix"
 	},
 	"devDependencies": {
+		"@lerna-lite/cli": "latest",
+		"@lerna-lite/version": "latest",
 		"@tsslint/cli": "latest",
 		"@tsslint/compat-eslint": "latest",
 		"@tsslint/config": "latest",

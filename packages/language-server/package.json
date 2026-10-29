@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-server",
-	"version": "3.3.12",
+	"version": "3.3.13",
 	"license": "MIT",
 	"files": [
 		"bin",
@@ -22,7 +22,7 @@
 		"typescript": "*"
 	},
 	"dependencies": {
-		"@volar/language-server": "2.4.28",
+		"@volar/language-server": "2.4.30",
 		"@vue/language-core": "workspace:*",
 		"@vue/language-service": "workspace:*",
 		"@vue/typescript-plugin": "workspace:*",
@@ -30,7 +30,7 @@
 	},
 	"devDependencies": {
 		"@typescript/server-harness": "latest",
-		"@volar/test-utils": "2.4.28",
+		"@volar/test-utils": "2.4.30",
 		"typescript": "latest"
 	}
 }

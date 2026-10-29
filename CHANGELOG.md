@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.3.13 (2026-10-10)
+
+### language-core
+
+- **fix:** generate setup macros without static imports ([85f665e](https://github.com/vuejs/language-tools/commit/85f665e9397b028c48d3ddd6ecd9a46e3fadeb94))
+
+### vscode
+
+- **fix:** avoid `registerHooks` on buggy Node versions ([7e0d6c4](https://github.com/vuejs/language-tools/commit/7e0d6c4c62d3e0a356968593c34e4aae8e9b9cd5))
+
+Contributors: @KazariEX, @serkodev
+
 ## 3.3.12 (2026-10-02)
 
 ### language-core
