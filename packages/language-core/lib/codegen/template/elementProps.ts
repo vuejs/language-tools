@@ -1,20 +1,19 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
-import { isMatch } from 'picomatch';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { identifierRE, newLine } from '../utils';
+import { asType, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
 import type { TemplateCodegenContext } from './context';
 import { generateModifiers } from './elementDirectives';
-import { generateEventArg, generateEventExpression } from './elementEvents';
+import { generateEventArg, generateEventExpression, getEventArgName } from './elementEvents';
 import type { TemplateCodegenOptions } from './index';
-import { generateInterpolation, shouldIdentifierSkipped } from './interpolation';
+import { generateIdentifier, generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 
 export interface FailedPropExpressions {
@@ -30,6 +29,8 @@ export function* generateElementProps(
 	props: CompilerDOM.ElementNode['props'],
 	checkUnknownProps: boolean,
 	failedPropExps?: FailedPropExpressions[],
+	// type of the object the props are passed to, if any
+	attrsType?: string,
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
@@ -47,11 +48,18 @@ export function* generateElementProps(
 					yield `...{ `;
 					yield* generateEventArg(options, prop.arg.loc.source, prop.arg.loc.start.offset);
 					yield `: `;
-					yield* generateEventExpression(options, ctx, prop);
+					yield* generateEventExpression(
+						options,
+						ctx,
+						prop,
+						attrsType
+							? `${names.EventArgs}<${attrsType}, '${getEventArgName(prop.arg.loc.source)}'>`
+							: `any[]`,
+					);
 					yield `},`;
 				}
 				else {
-					yield `...{ '${camelize('on-' + prop.arg.loc.source)}': {} as any },`;
+					yield `...{ '${camelize('on-' + prop.arg.loc.source)}': ${asType('any', options.scriptLang)} },`;
 				}
 				yield newLine;
 			}
@@ -95,7 +103,7 @@ export function* generateElementProps(
 
 			if (
 				propName === undefined
-				|| options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(propName!, pattern))
+				|| options.vueCompilerOptions.isDataAttribute(propName)
 			) {
 				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
 					failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
@@ -170,7 +178,7 @@ export function* generateElementProps(
 			}
 		}
 		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
-			if (options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(prop.name, pattern))) {
+			if (options.vueCompilerOptions.isDataAttribute(prop.name)) {
 				continue;
 			}
 
@@ -283,28 +291,15 @@ export function* generatePropExp(
 					__shorthandExpression: 'html',
 				},
 			);
-
-			if (options.destructuredProps.has(propVariableName) || options.importedComponents.has(propVariableName)) {
-				yield* codes;
-			}
-			else if (shouldIdentifierSkipped(ctx, propVariableName)) {
-				yield* codes;
-			}
-			else if (options.setupRefs.has(propVariableName)) {
-				yield* codes;
-				yield `.value`;
-			}
-			else if (options.setupBindings.has(propVariableName)) {
-				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
-				yield* codes;
-				yield `.value`;
-			}
-			else {
-				ctx.accessVariable('template', propVariableName, exp.loc.start.offset);
-				yield names.ctx;
-				yield `.`;
-				yield* codes;
-			}
+			yield* generateIdentifier(
+				options,
+				ctx,
+				codes,
+				propVariableName,
+				'template',
+				exp.loc.start.offset,
+				exp.loc.end.offset,
+			);
 
 			ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
 		}
@@ -338,7 +333,7 @@ function getShouldCamelize(
 		&& hyphenateAttr(propName) === propName
 		&& (
 			node.tagType === CompilerDOM.ElementTypes.SLOT
-			|| !options.vueCompilerOptions.htmlAttributes.some(pattern => isMatch(propName, pattern))
+			|| !options.vueCompilerOptions.isHtmlAttribute(propName)
 		);
 }
 

@@ -527,6 +527,12 @@
 			"path": "./#6094/tsconfig.json"
 		},
 		{
+			"path": "./#6180/tsconfig.json"
+		},
+		{
+			"path": "./#6228/tsconfig.json"
+		},
+		{
 			"path": "./#625/tsconfig.json"
 		},
 		{
@@ -542,13 +548,28 @@
 			"path": "./_failed_#5823/tsconfig.json"
 		},
 		{
+			"path": "./_failed_cssModuleDuplicate/tsconfig.json"
+		},
+		{
+			"path": "./_failed_directive_arity/tsconfig.json"
+		},
+		{
+			"path": "./_failed_directive_generic/tsconfig.json"
+		},
+		{
 			"path": "./_failed_directives/tsconfig.json"
 		},
 		{
 			"path": "./_failed_fragment_props/tsconfig.json"
 		},
 		{
+			"path": "./_failed_unknownComponent/tsconfig.json"
+		},
+		{
 			"path": "./attrs/tsconfig.json"
+		},
+		{
+			"path": "./componentConstructor/tsconfig.json"
 		},
 		{
 			"path": "./components/tsconfig.json"
@@ -584,7 +605,13 @@
 			"path": "./directives/tsconfig.json"
 		},
 		{
+			"path": "./dot-value-uninitialized/tsconfig.json"
+		},
+		{
 			"path": "./dynamic-component/tsconfig.json"
+		},
+		{
+			"path": "./eventArgs/tsconfig.json"
 		},
 		{
 			"path": "./events/tsconfig.json"
@@ -614,6 +641,15 @@
 			"path": "./intrinsicProps/tsconfig.json"
 		},
 		{
+			"path": "./js-hoist-vars/tsconfig.json"
+		},
+		{
+			"path": "./js-slot-ctx-strict/tsconfig.json"
+		},
+		{
+			"path": "./macros-alias/tsconfig.json"
+		},
+		{
 			"path": "./namespace-component/tsconfig.json"
 		},
 		{
@@ -627,6 +663,9 @@
 		},
 		{
 			"path": "./reference-type-in-template/tsconfig.json"
+		},
+		{
+			"path": "./rfcs#836/tsconfig.json"
 		},
 		{
 			"path": "./rootEl/tsconfig.json"
@@ -647,10 +686,16 @@
 			"path": "./type-helpers/tsconfig.json"
 		},
 		{
+			"path": "./unknownComponent/tsconfig.json"
+		},
+		{
 			"path": "./unknownProp/tsconfig.json"
 		},
 		{
 			"path": "./unknownTag/tsconfig.json"
+		},
+		{
+			"path": "./unwrapBindingAccess/tsconfig.json"
 		},
 		{
 			"path": "./useTemplateRef-dynamic-arg/tsconfig.json"

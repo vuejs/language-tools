@@ -6,7 +6,7 @@ import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { endOfLine, identifierRE, newLine } from '../utils';
+import { endOfLine, generateTypedVar, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
@@ -118,25 +118,26 @@ export function* generateComponent(
 			yield endOfLine;
 		}
 		else {
-			yield `let ${componentVar}!: ${names.WithComponent}<'${tag}', ${names.LocalComponents}, ${names.GlobalComponents}`;
-			yield originalNames.has(options.componentName)
-				? `, typeof ${names.export}`
-				: `, void`;
-			for (const name of originalNames) {
-				yield `, '${name}'`;
-			}
-			yield `>[`;
-			yield* generateStringLiteralKey(
-				tag,
-				startTagOffset,
-				{
-					...codeFeatures.semanticWithoutHighlight,
-					...options.vueCompilerOptions.checkUnknownComponents
-						? codeFeatures.verification
-						: codeFeatures.doNotReportTs2339AndTs2551,
-				},
-			);
-			yield `]${endOfLine}`;
+			yield* generateTypedVar('let', componentVar, options.scriptLang, function*() {
+				yield `${names.WithComponent}<'${tag}', ${names.LocalComponents}, ${names.GlobalComponents}`;
+				yield originalNames.has(options.componentName)
+					? `, typeof ${names.export}`
+					: `, void`;
+				yield `, ${options.vueCompilerOptions.checkUnknownComponents}`;
+				for (const name of originalNames) {
+					yield `, '${name}'`;
+				}
+				yield `>[`;
+				yield* generateStringLiteralKey(
+					tag,
+					startTagOffset,
+					{
+						...codeFeatures.semanticWithoutHighlight,
+						...codeFeatures.verification,
+					},
+				);
+				yield `]`;
+			});
 
 			if (identifierRE.test(camelize(tag))) {
 				// navigation support
@@ -145,11 +146,9 @@ export function* generateComponent(
 					if (offset === undefined) {
 						continue;
 					}
-					yield ` | typeof ${names.components}.`;
-					yield* generateCamelized(tag, 'template', offset, codeFeatures.navigation);
-					if (tag[0] !== tag[0]!.toUpperCase()) {
-						yield ` | typeof ${names.components}.`;
-						yield* generateCamelized(capitalize(tag), 'template', offset, codeFeatures.navigation);
+					for (const name of new Set([tag, capitalize(tag)])) {
+						yield ` | typeof ${options.setupBindings.has(camelize(name)) ? '' : `${names.components}.`}`;
+						yield* generateCamelized(name, 'template', offset, codeFeatures.navigation);
 					}
 					if (tag.includes('-')) {
 						yield ` | typeof ${names.components}[`;
@@ -188,11 +187,25 @@ export function* generateComponent(
 	)];
 	const propsStr = toString(propCodes);
 
+	// The instance type comes from a real construct call with a copy of the props: only a call resolves the
+	// overloads of the component and infers its type parameters from the props, including intersections of
+	// construct signatures such as `DefineComponent<...> & (new <T>(props: { items: T[] }, slots) => ...)` of
+	// Vuetify's `genericComponent`. Inferring from the constructor type alone takes the last overload and loses
+	// the type parameters of intersections. The two `@ts-ignore`s cover what the call reports for valid templates:
+	// - components that are not constructable (functional components, plain objects, `{}`) or abstract;
+	// - construct signatures of other arities (`new () => ...`, Vuetify's `(props, slots)`);
+	// - excess or weakly matching props, since attributes and events are passed along with the props;
+	// - diagnostics of the copy itself: its expressions have the parameter types of the constructor as contextual
+	//   type (`any` for `DefineComponent`), so function expressions report implicit `any`, and typing it like
+	//   `$props` instead would report every props error a second time. The copy is not mapped to the template.
 	yield `// @ts-ignore${newLine}`;
 	yield `const ${functionalVar} = ${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
-	yield propsStr;
+	yield `// @ts-ignore${newLine}`;
+	yield propsStr
+		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
+		.replace(/\n/g, ' ');
 	yield `}))${endOfLine}`;
 
 	yield `const `;
@@ -254,20 +267,25 @@ export function* generateComponent(
 	const templateRef = getTemplateRef(node);
 	const isSingleRoot = ctx.singleRootNodes.has(node)
 		&& !options.vueCompilerOptions.fallthroughComponentNames.includes(hyphenateTag(tag));
+	const inferRootEl = ctx.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl;
+	const inferTemplateRefs = options.vueCompilerOptions.inferTemplateDollarRefs
+		|| options.vueCompilerOptions.inferComponentDollarRefs
+		|| options.setupRefs.size > 0;
 
-	if (templateRef || isSingleRoot) {
+	if ((templateRef && inferTemplateRefs) || (isSingleRoot && inferRootEl)) {
 		const componentInstanceVar = ctx.getInternalVariable();
-		yield `var ${componentInstanceVar}!: Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0]`;
-		yield endOfLine;
+		yield* generateTypedVar('var', componentInstanceVar, options.scriptLang, function*() {
+			yield `Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0]`;
+		});
 
-		if (templateRef) {
+		if (templateRef && inferTemplateRefs) {
 			let typeExp = `typeof ${ctx.getHoistVariable(componentInstanceVar)} | null`;
 			if (ctx.inVFor) {
 				typeExp = `(${typeExp})[]`;
 			}
 			ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 		}
-		if (isSingleRoot) {
+		if (isSingleRoot && inferRootEl) {
 			ctx.singleRootElTypes.add(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
 		}
 	}
@@ -286,15 +304,23 @@ export function* generateComponent(
 	yield* generateStyleScopedClassReferences(options, node);
 
 	const slotDir = node.props.find(CompilerDOM.isVSlot);
-	if (slotDir || node.children.length) {
-		yield* generateVSlot(options, ctx, node, slotDir, getCtxVar());
-	}
+	const hasSlots = !!slotDir || node.children.length > 0;
 
-	if (isCtxVarUsed) {
-		yield `var ${ctxVar}!: ${names.ExtractComponentContext}<typeof ${componentVar}, typeof ${vnodeVar}>${endOfLine}`;
+	// declared ahead of the slot code that reads them: JS has no `var x!: T`,
+	// so a later declaration would be read before assignment (TS2454)
+	if (isCtxVarUsed || hasSlots) {
+		yield* generateTypedVar('var', ctxVar, options.scriptLang, function*() {
+			yield `${names.ExtractComponentContext}<typeof ${componentVar}, typeof ${vnodeVar}>`;
+		});
 	}
 	if (isPropsVarUsed) {
-		yield `var ${propsVar}!: ${names.ExtractComponentProps}<typeof ${componentVar}, typeof ${vnodeVar}>${endOfLine}`;
+		yield* generateTypedVar('var', propsVar, options.scriptLang, function*() {
+			yield `${names.ExtractComponentProps}<typeof ${componentVar}, typeof ${vnodeVar}>`;
+		});
+	}
+
+	if (hasSlots) {
+		yield* generateVSlot(options, ctx, node, slotDir, ctxVar);
 	}
 	ctx.components.pop();
 }
@@ -343,6 +369,7 @@ export function* generateElement(
 		node.props,
 		options.vueCompilerOptions.checkUnknownProps,
 		failedPropExps,
+		`typeof ${names.intrinsics}['${node.tag}']`,
 	);
 	yield `}`;
 	yield boundary.end();
@@ -359,7 +386,9 @@ export function* generateElement(
 		}
 		ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 	}
-	if (ctx.singleRootNodes.has(node)) {
+	if (
+		ctx.singleRootNodes.has(node) && (ctx.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl)
+	) {
 		ctx.singleRootElTypes.add(`${names.Elements}['${node.tag}']`);
 	}
 
@@ -401,6 +430,7 @@ export function* generateFragment(
 			node.props,
 			options.vueCompilerOptions.checkUnknownProps,
 			failedPropExps,
+			`typeof ${names.intrinsics}.template`,
 		);
 		yield `}`;
 		yield boundary.end();

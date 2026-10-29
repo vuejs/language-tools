@@ -6,7 +6,7 @@ const windowsPathRE = /\\/g;
 const retryToken = new Error('[Vue] Extensions changed');
 
 export function run(tscPath?: string) {
-	const runExtensions = new Set(['vue']);
+	const runExtensions = new Set(['.vue']);
 
 	const main = () =>
 		runTsc(

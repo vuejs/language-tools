@@ -5,7 +5,15 @@ import { getUnwrappedExpression } from '../../parsers/utils';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, getTypeScriptAST, identifierRE, newLine } from '../utils';
+import {
+	endOfLine,
+	generateTypedVar,
+	getRefBrandArgument,
+	getTypeScriptAST,
+	identifierRE,
+	isTsLang,
+	newLine,
+} from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
@@ -85,30 +93,52 @@ export function* generateElementEvents(
 	}
 
 	const emitsVar = ctx.getInternalVariable();
-	yield `let ${emitsVar}!: ${names.ResolveEmits}<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>${endOfLine}`;
+	yield* generateTypedVar('let', emitsVar, options.scriptLang, function*() {
+		yield `${names.ResolveEmits}<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>`;
+	});
 
 	for (const { propPrefix, emitPrefix, propName, emitName, items } of Object.values(definitions)) {
-		yield `const ${ctx.getInternalVariable()}: ${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
+		const eventVar = ctx.getInternalVariable();
+		const eventType = `${
+			options.vueCompilerOptions.checkUnknownEvents ? '' : 'Record<string, unknown> & '
+		}Partial<${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
 			camelize(emitName)
-		}'> = {${newLine}`;
+		}'>>`;
+		if (isTsLang(options.scriptLang)) {
+			yield `const ${eventVar}: ${eventType} = {${newLine}`;
+		}
+		else {
+			yield `/** @type {${eventType}} */${newLine}const ${eventVar} = {${newLine}`;
+		}
 		for (const { prop, source, offset } of items) {
+			const argsType = `${names.EventArgs}<${eventType}, '${propName}'>`;
 			if (prop.name === 'on') {
 				yield `/** @type {typeof ${emitsVar}.`;
 				yield* generateEventArg(options, source, offset!, emitPrefix.slice(0, -1), codeFeatures.navigation);
 				yield `} */${newLine}`;
-			}
-			if (prop.name === 'on') {
+				// in JS, the JSDoc above types the property, and fails to parse for a non-identifier name
+				const emitArgName = getEventArgName(source, emitPrefix.slice(0, -1));
 				yield* generateEventArg(options, source, offset!, propPrefix.slice(0, -1));
 				yield `: `;
-				yield* generateEventExpression(options, ctx, prop);
+				yield* generateEventExpression(
+					options,
+					ctx,
+					prop,
+					isTsLang(options.scriptLang)
+						? argsType
+						: identifierRE.test(emitArgName)
+						? `${names.EventArgs}<typeof ${emitsVar}, '${emitArgName}'>`
+						: `any[]`,
+				);
 			}
 			else {
 				yield `'${propName}': `;
-				yield* generateModelEventExpression(options, ctx, prop);
+				yield* generateModelEventExpression(options, ctx, prop, argsType);
 			}
 			yield `,${newLine}`;
 		}
 		yield `}${endOfLine}`;
+		yield `void ${eventVar}${endOfLine}`;
 	}
 }
 
@@ -144,10 +174,30 @@ export function* generateEventArg(
 	}
 }
 
+export function getEventArgName(name: string, directive = 'on') {
+	if (directive.length) {
+		name = capitalize(name);
+	}
+	return directive + name.split('-').map((part, i) => i ? capitalize(part) : part).join('');
+}
+
+function* generateEventParameter(
+	options: TemplateCodegenOptions,
+	argsType: string,
+): Generator<Code> {
+	if (isTsLang(options.scriptLang)) {
+		yield `(...[$event]: ${argsType}) => {${newLine}`;
+	}
+	else {
+		yield `(/** @type {${argsType}} */ ...[$event]) => {${newLine}`;
+	}
+}
+
 export function* generateEventExpression(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
+	argsType: string,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const ast = getTypeScriptAST(options.typescript, options.template, prop.exp.content);
@@ -164,27 +214,21 @@ export function* generateEventExpression(
 		);
 
 		if (isCompound) {
-			yield `(...[$event]) => {${newLine}`;
 			const scope = ctx.scope();
 			scope.declare('$event');
-			yield* ctx.generateConditionGuards();
 
-			// The top-level `__VLS_withDotValue` assertion does not narrow imported
-			// bindings inside this closure (TS control-flow limitation), so re-assert
-			// the setup bindings that are called by this handler right here. Only
-			// called bindings are re-asserted: for local bindings the top-level
-			// assertion already flows into this closure, and re-asserting non-call
-			// accesses would double-narrow them.
-			ctx.callAccessedBindings.clear();
+			const accessMark = ctx.accessLog.length;
 			const codes: Code[] = [];
 			for (const code of interpolation) {
 				codes.push(code);
 			}
-			for (const name of ctx.callAccessedBindings) {
-				if (options.setupBindings.has(name)) {
-					yield `${names.withDotValue}(${name}, {} as import('${options.vueCompilerOptions.lib}').Ref<unknown>)${endOfLine}`;
-				}
-			}
+
+			yield* generateEventParameter(options, argsType);
+			// consume $event to avoid TS6133 when the expression doesn't use it
+			yield `void $event${endOfLine}`;
+
+			yield* generateReasserts(options, ctx, accessMark);
+			yield* ctx.generateConditionGuards();
 
 			if (isSingleExpression(options.typescript, ast)) {
 				yield `return (`;
@@ -224,23 +268,58 @@ export function* generateModelEventExpression(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
+	argsType: string,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		yield `(...[$event]) => {${newLine}`;
-		yield* ctx.generateConditionGuards();
-		yield* generateInterpolation(
+		const accessMark = ctx.accessLog.length;
+		const codes = [...generateInterpolation(
 			options,
 			ctx,
 			options.template,
 			codeFeatures.verification,
 			prop.exp.content,
 			prop.exp.loc.start.offset,
-		);
+			undefined,
+			undefined,
+			true,
+		)];
+		yield* generateEventParameter(options, argsType);
+		yield* generateReasserts(options, ctx, accessMark);
+		yield* ctx.generateConditionGuards();
+		yield* codes;
 		yield ` = $event${endOfLine}`;
 		yield `}`;
 	}
 	else {
 		yield `() => {}`;
+	}
+}
+
+// Assertion narrowing does not flow into nested closures for imports and
+// `let`/`var` bindings (TS limitation), so re-assert those bindings at closure tops.
+function* generateReasserts(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	accessMark: number,
+): Generator<Code> {
+	const reasserts = new Set<string>();
+	const collect = (name: string) => {
+		if (options.reassertBindings.has(name) && !ctx.scopes.some(scope => scope.has(name))) {
+			reasserts.add(name);
+		}
+	};
+	for (const name of ctx.accessLog.slice(accessMark)) {
+		collect(name);
+	}
+	for (const condition of ctx.conditions) {
+		for (const name of condition.accesses) {
+			collect(name);
+		}
+	}
+	for (const name of reasserts) {
+		yield `${names.withDotValue}(${name}, ${
+			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
+		})${endOfLine}`;
 	}
 }
 

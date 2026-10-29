@@ -1,5 +1,5 @@
 declare global {
-	const __VLS_directiveBindingRestFields: { instance: null; oldValue: null; modifiers: any; dir: any };
+	const __VLS_directiveBindingRestFields: { instance: null; oldValue: null; value: null; modifiers: any; dir: any };
 
 	type __VLS_Elements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
@@ -10,6 +10,7 @@ declare global {
 		LocalComponents,
 		GlobalComponents,
 		Self,
+		Strict extends boolean,
 		N1 extends string,
 		N2 extends string = N1,
 		N3 extends string = N1,
@@ -20,10 +21,11 @@ declare global {
 		: N1 extends keyof GlobalComponents ? { [K in N0]: GlobalComponents[N1] }
 		: N2 extends keyof GlobalComponents ? { [K in N0]: GlobalComponents[N2] }
 		: N3 extends keyof GlobalComponents ? { [K in N0]: GlobalComponents[N3] }
-		: {};
+		: Strict extends true ? {}
+		: { [K in N0]: new(...args: any) => Record<string, any> };
 	type __VLS_ExtractComponentContext<T, K> = __VLS_PickNotAny<
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? NonNullable<Ctx> : never : any,
-		T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
+		T extends (props: any, ctx: infer Ctx) => any ? (unknown extends Ctx ? any : Ctx) : any
 	>;
 	type __VLS_ExtractComponentProps<T, K> = '__ctx' extends keyof __VLS_PickNotAny<K, {}>
 		? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
@@ -47,13 +49,26 @@ declare global {
 	type __VLS_ResolveEvent<
 		Props,
 		Emits,
-		onEvent extends keyof Props,
-		Event extends keyof Emits,
-		CamelizedEvent extends keyof Emits,
-	> = __VLS_IsFunction<Props, onEvent> extends true ? Props
-		: __VLS_IsFunction<Emits, Event> extends true ? { [K in onEvent]?: Emits[Event] }
-		: __VLS_IsFunction<Emits, CamelizedEvent> extends true ? { [K in onEvent]?: Emits[CamelizedEvent] }
+		onEvent extends string,
+		Event extends string,
+		CamelizedEvent extends string,
+	> = __VLS_IsFunction<Props, onEvent> extends true ? { [K in onEvent]?: Props[K & keyof Props] }
+		: __VLS_IsFunction<Emits, Event> extends true ? { [K in onEvent]?: Emits[Event & keyof Emits] }
+		: __VLS_IsFunction<Emits, CamelizedEvent> extends true ? { [K in onEvent]?: Emits[CamelizedEvent & keyof Emits] }
 		: Props;
+	// the rest parameter `$event` of an inline handler is destructured from, as if it were contextually typed by `T[K]`:
+	// the parameters of the handler (`[undefined?]` for none), or `any[]` without one handler signature
+	// (no such property, or overloads or union members of different parameters);
+	// the parameters of each signature are wrapped, so a union of tuples in one signature stays one signature
+	type __VLS_EventArgs<T, K extends PropertyKey> = K extends keyof T
+		? __VLS_IsAny<T[K]> extends true ? any[] : __VLS_HandlerArgs<__VLS_HandlerParameters<NonNullable<T[K]>>>
+		: any[];
+	type __VLS_HandlerParameters<F> = F extends unknown
+		? __VLS_OverloadUnion<F> extends infer S ? S extends (...args: infer P) => any ? [P] : never : never
+		: never;
+	type __VLS_HandlerArgs<W> = [W] extends [never] ? any[]
+		: [W] extends [__VLS_UnionToIntersection<W>] ? W extends [infer P] ? P extends [] ? [undefined?] : P : never
+		: any[];
 	// fix https://github.com/vuejs/language-tools/issues/926
 	type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends
 		((arg: infer P) => unknown) ? P : never;
@@ -99,20 +114,39 @@ declare global {
 	};
 	type __VLS_PrettifyGlobal<T> = (T extends any ? { [K in keyof T]: T[K] } : { [K in keyof T as K]: T[K] }) & {};
 
+	// hooks are called with their own arity; those taking fewer than (el, binding) are padded so the binding can be passed
+	type __VLS_DirectiveHook<F> = F extends (...args: infer A) => infer R
+		? A['length'] extends 0 | 1 ? (el: A[0], binding: unknown) => R : OmitThisParameter<F>
+		: F;
+	type __VLS_DirectiveHookArgsRest<F> = F extends (...args: [any, any, ...infer Rest]) => any
+		? { [K in keyof Rest]: never }
+		: [];
+
 	function __VLS_vFor<const T>(source: T): T extends number ? [number, number][]
 		: T extends string ? [string, number][]
 		: T extends readonly any[] ? (T extends readonly (infer U)[] ? [U, number] : never)[]
 		: T extends Iterable<any> ? (T extends Iterable<infer V> ? [V, number] : never)[]
 		: [T[keyof T], keyof T extends string ? keyof T : `${keyof T & (string | number)}`, number][];
 	function __VLS_vSlot<S, D extends S>(slot: S, decl?: D): D extends (...args: infer P) => any ? P : any[];
+	function __VLS_nonNull<T>(value: T): NonNullable<T>;
 	function __VLS_asFunctionalDirective<T, ObjectDirective>(
 		dir: T,
 		od: ObjectDirective,
-	): T extends ObjectDirective ? NonNullable<
-			T[keyof T & ('created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted')]
-		>
-		: T extends (...args: any) => any ? T
-		: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
+	): __VLS_DirectiveHook<
+		T extends ObjectDirective ? NonNullable<
+				T[
+					keyof T & ('created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted')
+				]
+			>
+			: T extends (...args: any) => any ? T
+			: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void
+	>;
+	// the longest rest among a union of hooks
+	function __VLS_directiveHookArgsRest<F>(
+		hook: F,
+	): [never, never] extends __VLS_DirectiveHookArgsRest<F> ? [never, never]
+		: [never] extends __VLS_DirectiveHookArgsRest<F> ? [never]
+		: [];
 	function __VLS_asFunctionalComponent0<T, K>(
 		t: T,
 		instance: K,
@@ -127,19 +161,34 @@ declare global {
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
 		: __VLS_FunctionalComponent<{}, Record<string, unknown>>;
+	type __VLS_PadArgs<A extends any[]> = A extends [any, ...infer Rest] ? [any, ...__VLS_PadArgs<Rest>] : [];
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(
 		t: T,
-	): 2 extends Parameters<T>['length'] ? [any] : [];
+	): __VLS_PadArgs<Parameters<T> extends [any, ...infer Rest] ? Rest : []>;
 	function __VLS_asFunctionalElement0<T>(tag: T, endTag?: T): (attrs: T) => void;
 	function __VLS_asFunctionalElement1<T>(tag: T, endTag?: T): (attrs: T & Record<string, unknown>) => void;
-	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
+	function __VLS_asFunctionalSlot<S>(
+		slot: S,
+	): S extends (...args: any) => any ? (S extends () => infer R ? (props: {}) => R : S)
+		: (S extends null | undefined ? never : (props: S) => any);
 	function __VLS_omit<T, K>(target: T, props: K): Omit<T, keyof K>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
+	// Rewrites the binding so codegen's appended `.value` resolves with the
+	// unwrapped type: a wholly-ref type stays as-is; anything else gains a
+	// `Ref` conjunct (passed by the caller — this file cannot import vue) that
+	// doubles as the idempotency marker for re-assertion. The tuple form keeps
+	// every branch assignable to `T` (TS2677); distributing the intersection
+	// would turn nullish union members into `never`.
 	function __VLS_withDotValue<T, Ref>(
 		t: T,
 		ref: Ref,
-	): asserts t is T extends Ref ? T extends { value: infer V } ? V extends (...args: any) => any ? T & V : T : T
-		: T & { value: T };
+	): asserts t is [T] extends [Ref] ? T
+		: NonNullable<T> & Ref & { value: T extends Ref & { value: infer V } ? V : T };
+	// `const` keeps literal bindings (`const n = 1`) from widening: since TS 7.1
+	// the false-branch `T` is the distributed type parameter, which no longer
+	// counts as `T` appearing at the top level of the return type.
+	function __VLS_unwrap<const T, Ref>(t: T, ref: Ref): T extends Ref & { value: infer V } ? V
+		: T;
 }
 
 export {};

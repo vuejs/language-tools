@@ -5,7 +5,7 @@ import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, getTypeScriptAST, newLine } from '../utils';
+import { endOfLine, getTypeScriptAST, isTsLang, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -58,7 +58,7 @@ export function* generateVSlot(
 		yield `default`;
 		yield boundary.end();
 	}
-	yield `: ${slotVar} } = ${ctxVar}.slots!${endOfLine}`;
+	yield `: ${slotVar} } = ${names.nonNull}(${ctxVar}.slots)${endOfLine}`;
 
 	const scope = ctx.scope();
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -76,23 +76,23 @@ export function* generateVSlot(
 		if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 			isStatic = slotDir.arg.isStatic;
 		}
-		if (isStatic && !slotDir.arg) {
-			yield `${ctxVar}.slots!['`;
-			yield [
-				'',
-				'template',
-				slotDir.loc.start.offset + (
-					slotDir.loc.source.startsWith('#')
-						? '#'.length
-						: slotDir.loc.source.startsWith('v-slot:')
-						? 'v-slot:'.length
-						: 0
-				),
-				codeFeatures.completion,
-			];
-			yield `'/* empty slot name completion */]${endOfLine}`;
-		}
 		yield `}${newLine}`;
+		if (isStatic && !slotDir.arg) {
+			if (slotDir.loc.source.startsWith('#') || slotDir.loc.source.startsWith('v-slot:')) {
+				yield `/** @type {NonNullable<typeof ${ctxVar}['slots']>['`;
+				yield [
+					'',
+					'template',
+					slotDir.loc.start.offset + (
+						slotDir.loc.source.startsWith('#')
+							? '#'.length
+							: 'v-slot:'.length
+					),
+					codeFeatures.completion,
+				];
+				yield `']} */${endOfLine}`;
+			}
+		}
 	}
 }
 
@@ -146,7 +146,7 @@ function* generateSlotParameters(
 
 	yield `const [`;
 	yield* interpolation;
-	yield `] = ${names.vSlot}(${slotVar}!`;
+	yield `] = ${names.vSlot}(${names.nonNull}(${slotVar})`;
 
 	if (types.some(t => t)) {
 		yield `, `;
@@ -158,7 +158,7 @@ function* generateSlotParameters(
 		);
 		yield `(`;
 		yield* types.flatMap(type => type ? [`_`, type, `, `] : `_, `);
-		yield `) => [] as any`;
+		yield isTsLang(options.scriptLang) ? `) => [] as any` : `) => /** @type {any} */ ([])`;
 		yield boundary.end();
 	}
 	yield `)${endOfLine}`;

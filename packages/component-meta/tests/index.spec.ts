@@ -158,12 +158,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 					    "kind": "enum",
 					    "schema": [
 					      "undefined",
-					      "Partial<Record<"trim" | "lazy", true>>",
+					      "Partial<Record<"lazy" | "trim", true>>",
 					    ],
-					    "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
+					    "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
 					  },
 					  "tags": [],
-					  "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
+					  "type": "Partial<Record<"lazy" | "trim", true>> | undefined",
 					}
 				`);
 			}
@@ -1285,7 +1285,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  ],
 				  "signature": "(event: "foo", data?: { foo: string; } | undefined): void",
 				  "tags": [],
-				  "type": "[{ foo: string; } | undefined]",
+				  "type": "[data?: { foo: string; } | undefined]",
 				}
 			`);
 
@@ -1336,7 +1336,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  ],
 				  "signature": "(event: "bar", value: { arg1: number; arg2?: any; }): void",
 				  "tags": [],
-				  "type": "[{ arg1: number; arg2?: any; }]",
+				  "type": "[value: { arg1: number; arg2?: any; }]",
 				}
 			`);
 
@@ -1350,7 +1350,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "name": "baz",
 				  "rawType": undefined,
 				  "schema": [],
-				  "signature": "(e: "baz"): void",
+				  "signature": "(event: "baz"): void",
 				  "tags": [],
 				  "type": "[]",
 				}
@@ -1776,6 +1776,39 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "type": "unknown[] | undefined",
 				}
 			`);
+		});
+
+		test('js-component (script setup)', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/js-component/component.vue',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.type).toEqual(TypeMeta.Class);
+			expect(
+				meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.type, prop.required]),
+			).toEqual([
+				['bar', 'number | undefined', false],
+				['foo', 'string', true],
+			]);
+			expect(meta.slots.map(slot => [slot.name, slot.type])).toEqual([['header', '{ count: number; }']]);
+		});
+
+		test('js-component (options api)', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/js-component/component-options.vue',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.type).toEqual(TypeMeta.Class);
+			expect(
+				meta.props.filter(prop => !prop.global).map(prop => [prop.name, prop.type, prop.required]),
+			).toEqual([
+				['foo', 'string', true],
+			]);
+			expect(meta.events.map(event => event.name)).toEqual(['change']);
 		});
 
 		test('component-name-description (vue)', () => {

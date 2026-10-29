@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "3.3.11",
+	"version": "3.3.13",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -487,14 +487,15 @@
 		"build": "rolldown --config",
 		"vscode:prepublish": "rolldown --config",
 		"pack": "npx @vscode/vsce package",
-		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generated-meta.ts && cd ../.. && npm run format"
+		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generated-meta.ts && cd ../.. && npm run format",
+		"version": "npm run gen-ext-meta && git add src/generated-meta.ts"
 	},
 	"devDependencies": {
 		"@types/mocha": "^10.0.10",
 		"@types/node": "^26.0.1",
 		"@types/vscode": "1.88.0",
-		"@volar/typescript": "2.4.28",
-		"@volar/vscode": "2.4.28",
+		"@volar/typescript": "2.4.30",
+		"@volar/vscode": "2.4.30",
 		"@vscode/test-electron": "^3.1.0",
 		"@vscode/test-cli": "^0.0.12",
 		"@vue/language-core": "workspace:*",
@@ -503,6 +504,7 @@
 		"laplacenoma": "latest",
 		"reactive-vscode": "^1.0.2",
 		"rolldown": "latest",
+		"typescript": "latest",
 		"vscode-ext-gen": "latest",
 		"vscode-tmlanguage-snapshot": "latest"
 	}

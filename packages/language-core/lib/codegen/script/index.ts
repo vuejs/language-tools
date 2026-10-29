@@ -4,19 +4,18 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRBlock, IRScript, IRScriptSetup, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
-import { generateGeneric, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
+import { generateGeneric, generateMacros, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
 import { generateTemplate } from './template';
-
-const exportExpression = `{} as typeof ${names.export}`;
 
 export interface ScriptCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	script: IRScript | undefined;
 	scriptSetup: IRScriptSetup | undefined;
 	fileName: string;
+	scriptLang: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateAndStyleTypes: Set<string>;
@@ -24,7 +23,7 @@ export interface ScriptCodegenOptions {
 	setupBindings: Set<string>;
 	localComponents: Set<string>;
 	localDirectives: Set<string>;
-	withDotValueBindings: Set<string>;
+	dotValueBindings: Set<string>;
 }
 
 export { generate as generateScript };
@@ -40,6 +39,7 @@ function* generateWorker(
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
 	const { script, scriptRanges, scriptSetup, scriptSetupRanges, vueCompilerOptions, fileName } = options;
+	const exportExpression = asType(`typeof ${names.export}`, options.scriptLang);
 
 	yield* generateGlobalTypesReference(vueCompilerOptions, fileName);
 
@@ -76,6 +76,7 @@ function* generateWorker(
 	// <script> + <script setup>
 	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
 		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
+		yield* generateMacros(options);
 
 		// <script>
 		let selfType: string | undefined;
@@ -88,6 +89,7 @@ function* generateWorker(
 				exportDefault,
 				vueCompilerOptions,
 				selfType = names.self,
+				exportExpression,
 			);
 		}
 		else {
@@ -129,6 +131,7 @@ function* generateWorker(
 	// only <script setup>
 	else if (scriptSetup && scriptSetupRanges) {
 		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
+		yield* generateMacros(options);
 
 		if (scriptSetup.generic) {
 			yield* generateExportDeclareEqual(scriptSetup, names.export);
@@ -171,6 +174,7 @@ function* generateWorker(
 				exportDefault,
 				vueCompilerOptions,
 				names.export,
+				exportExpression,
 				generateTemplate(options, names.export),
 			);
 		}
@@ -193,6 +197,7 @@ function* generateScriptWithExportDefault(
 	exportDefault: NonNullable<ScriptRanges['exportDefault']>,
 	vueCompilerOptions: VueCompilerOptions,
 	varName: string,
+	exportExpression: string,
 	templateGenerator?: Generator<Code>,
 ): Generator<Code> {
 	const componentOptions = scriptRanges.exportDefault?.options;

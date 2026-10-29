@@ -19,6 +19,7 @@ import * as focusMode from './focusMode';
 import * as interpolationDecorators from './interpolationDecorators';
 import { restrictFormattingEditsToRange } from './rangeFormatting';
 import * as reactivityVisualization from './reactivityVisualization';
+import { registerModuleTransform } from './registerModuleTransform';
 import * as welcome from './welcome';
 
 let serverPath = resolveServerPath();
@@ -275,7 +276,6 @@ function patchTypeScriptExtension() {
 		return false;
 	}
 
-	const fs = require('node:fs');
 	const child_process = require('node:child_process');
 	const extensionJsPath = require.resolve('./dist/extension.js', { paths: [tsExtension.extensionPath] });
 	const { publisher, name } = require('../package.json');
@@ -295,65 +295,59 @@ function patchTypeScriptExtension() {
 		},
 	];
 
-	const readFileSync = fs.readFileSync;
-	fs.readFileSync = (...args: any[]) => {
-		if (args[0] === extensionJsPath) {
-			let text = readFileSync(...args) as string;
+	registerModuleTransform(extensionJsPath, text => {
+		const id = String.raw`[\w$]+(?:\.[\w$]+)?`;
 
-			const id = String.raw`[\w$]+(?:\.[\w$]+)?`;
+		// patch jsTsLanguageModes
+		// before 1.110: t.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]
+		// since 1.110:  "javascriptreact",Oh=[Ma,Ua,bl,Ns]
+		text = text.replace(
+			new RegExp(
+				String
+					.raw`(\.jsTsLanguageModes=\[${id},${id},${id},${id}\])|("javascriptreact",(${id})=\[(${id},${id},${id},${id})\])`,
+			),
+			(_match, oldFormat, _newFull, newLhs, newElements) => {
+				if (oldFormat) {
+					return oldFormat + '.concat("vue")';
+				}
+				return `"javascriptreact",${newLhs}=[${newElements}].concat("vue")`;
+			},
+		);
+		// patch isSupportedLanguageMode (4 language IDs)
+		// before 1.110: .languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]
+		// since 1.110:  .languages.match([bl,Ns,Ma,Ua],r)>0
+		text = text.replace(
+			new RegExp(String.raw`\.languages\.match\(\[(${id},${id},${id},${id})\]`),
+			(_, ids) => `.languages.match([${ids}].concat("vue")`,
+		);
+		// patch isTypeScriptDocument (2 language IDs)
+		// before 1.110: .languages.match([t.typescript,t.typescriptreact]
+		// since 1.110:  .languages.match([bl,Ns],r)>0
+		text = text.replace(
+			new RegExp(String.raw`\.languages\.match\(\[(${id},${id})\]`),
+			(_, ids) => `.languages.match([${ids}].concat("vue")`,
+		);
+		// patch standardFileExtensions
+		text = text.replace(
+			new RegExp(String.raw`registerExtensionLanguageProvider\((${id}),${id}\)\{`),
+			(match, id) => `${match}if(${id}.languageIds.includes("vue"))${id}.standardFileExtensions.push("vue");`,
+		);
+		// patch getJsTsFileBeingMoved
+		text = text.replace(
+			new RegExp(String.raw`.RelativePattern\(${id},"\*\*\/\*\.\{ts,tsx,js,jsx`),
+			match => `${match},vue`,
+		);
 
-			// patch jsTsLanguageModes
-			// before 1.110: t.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]
-			// since 1.110:  "javascriptreact",Oh=[Ma,Ua,bl,Ns]
-			text = text.replace(
-				new RegExp(
-					String
-						.raw`(\.jsTsLanguageModes=\[${id},${id},${id},${id}\])|("javascriptreact",(${id})=\[(${id},${id},${id},${id})\])`,
-				),
-				(_match, oldFormat, _newFull, newLhs, newElements) => {
-					if (oldFormat) {
-						return oldFormat + '.concat("vue")';
-					}
-					return `"javascriptreact",${newLhs}=[${newElements}].concat("vue")`;
-				},
-			);
-			// patch isSupportedLanguageMode (4 language IDs)
-			// before 1.110: .languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]
-			// since 1.110:  .languages.match([bl,Ns,Ma,Ua],r)>0
-			text = text.replace(
-				new RegExp(String.raw`\.languages\.match\(\[(${id},${id},${id},${id})\]`),
-				(_, ids) => `.languages.match([${ids}].concat("vue")`,
-			);
-			// patch isTypeScriptDocument (2 language IDs)
-			// before 1.110: .languages.match([t.typescript,t.typescriptreact]
-			// since 1.110:  .languages.match([bl,Ns],r)>0
-			text = text.replace(
-				new RegExp(String.raw`\.languages\.match\(\[(${id},${id})\]`),
-				(_, ids) => `.languages.match([${ids}].concat("vue")`,
-			);
-			// patch standardFileExtensions
-			text = text.replace(
-				new RegExp(String.raw`registerExtensionLanguageProvider\((${id}),${id}\)\{`),
-				(match, id) => `${match}if(${id}.languageIds.includes("vue"))${id}.standardFileExtensions.push("vue");`,
-			);
-			// patch getJsTsFileBeingMoved
-			text = text.replace(
-				new RegExp(String.raw`.RelativePattern\(${id},"\*\*\/\*\.\{ts,tsx,js,jsx`),
-				match => `${match},vue`,
-			);
+		// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
+		// before 1.110: "--globalPlugins",i.plugins
+		// since 1.110:  "--globalPlugins",o.plugins.map(v=>v.name).join(","))
+		text = text.replace(
+			/"--globalPlugins",([\w$]+)\.plugins/,
+			s => s + `.sort((a,b)=>(b.name==="${tsPluginName}"?-1:0)-(a.name==="${tsPluginName}"?-1:0))`,
+		);
 
-			// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
-			// before 1.110: "--globalPlugins",i.plugins
-			// since 1.110:  "--globalPlugins",o.plugins.map(v=>v.name).join(","))
-			text = text.replace(
-				/"--globalPlugins",([\w$]+)\.plugins/,
-				s => s + `.sort((a,b)=>(b.name==="${tsPluginName}"?-1:0)-(a.name==="${tsPluginName}"?-1:0))`,
-			);
-
-			return text;
-		}
-		return readFileSync(...args);
-	};
+		return text;
+	});
 
 	const patchTsserverPath = path.join(__dirname, 'patch-tsserver.js');
 
