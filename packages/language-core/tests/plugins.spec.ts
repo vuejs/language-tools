@@ -2,9 +2,10 @@ import { SpanMapKind, type SpanMapSegment } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { describe, expect, it } from 'vitest';
 import { createIRPipeline } from '../lib/ir/irPipeline';
+import { createVueSource } from '../lib/ir/vueSource';
 import { getDefaultCompilerOptions } from '../lib/options/compilerOptions';
 import type { VueCompilerOptions, VueFormatResult } from '../lib/types';
-import { ts } from './typescript';
+import { createSnapshot, ts } from './typescript';
 
 const legacyMessage =
 	'VueLanguagePlugin functions are no longer supported; export `{ ir: … }` (see language-core README)';
@@ -30,6 +31,18 @@ function withPlugins(modules: Record<string, unknown>, options: Partial<VueCompi
 			config: {},
 			module,
 		})),
+	};
+}
+
+function emptyResult(): VueFormatResult {
+	return {
+		comments: [],
+		errors: [],
+		template: undefined,
+		script: undefined,
+		scriptSetup: undefined,
+		styles: [],
+		customBlocks: [],
 	};
 }
 
@@ -161,15 +174,7 @@ describe('createIRPipeline', () => {
 	});
 
 	it('parses with the format of a plugin that `format` selects', () => {
-		const parsed: VueFormatResult = {
-			comments: [],
-			errors: [],
-			template: undefined,
-			script: undefined,
-			scriptSetup: undefined,
-			styles: [],
-			customBlocks: [],
-		};
+		const parsed = emptyResult();
 		const custom = { ir: { formats: { custom: { parse: () => parsed } } } };
 
 		const selected = createIRPipeline(ts, withPlugins({ custom }, { format: 'custom' }));
@@ -180,13 +185,27 @@ describe('createIRPipeline', () => {
 		expect(notSelected.parse('/project/App.vue', '')?.result).not.toBe(parsed);
 	});
 
-	it('falls back to the SFC format for a format that nothing provides', () => {
+	it('reads no file for a format that nothing provides', () => {
 		const pipeline = createIRPipeline(ts, withPlugins({}, { format: 'custom' }));
 		expect(pipeline.errors).toEqual([
-			{ message: `No format 'custom' is built in or provided by a plugin; 'sfc' is used instead.` },
+			{ message: `No format 'custom' is built in or provided by a plugin; no file is read.` },
 		]);
-		expect(pipeline.parse('/project/App.vue', '<template><div/></template>')?.result.template)
-			.toBeTruthy();
+		expect(pipeline.parse('/project/App.vue', '<template><div/></template>')).toBeUndefined();
+	});
+
+	it('throws on a block that a format gives no `lang`', () => {
+		const custom = {
+			ir: {
+				formats: {
+					custom: {
+						parse: () => ({ ...emptyResult(), template: { content: '<div/>', offset: 0, attrs: {} } }),
+					},
+				},
+			},
+		};
+		const options = withPlugins({ custom }, { format: 'custom' });
+		const source = createVueSource(ts, options, createIRPipeline(ts, options), '/project/App.vue', createSnapshot(''));
+		expect(() => source.ir.template!.lang).toThrow(`The format gave the block 'template' no \`lang\`.`);
 	});
 
 	it('applies the template compiler options of the plugins in order', () => {

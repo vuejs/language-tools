@@ -166,8 +166,7 @@ export interface VueFormatBlock {
 	content: string;
 	/** The offset of `content` in the file. */
 	offset: number;
-	/** The default language of the block if omitted. */
-	lang?: string;
+	lang: string;
 	attrs: Record<string, string | true>;
 	/**
 	 * The range of the element that the block is written as, from its start tag to its end tag, if it is one, like
@@ -300,7 +299,7 @@ export type IRAttr = true | {
 	offset: number;
 };
 
-export interface IRBlock extends Required<Omit<VueFormatBlock, 'element'>> {
+export interface IRBlock extends Omit<VueFormatBlock, 'element'> {
 	name: string;
 	element: VueFormatElement | undefined;
 }

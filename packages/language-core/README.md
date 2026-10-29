@@ -81,7 +81,7 @@ const msg = 'Hello'
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `target` | `number \| 'auto'` | `'auto'` | Vue version. `'auto'` reads from `node_modules/vue/package.json`. |
-| `format` | `string` | `'sfc'` | How files are read: a built-in format (below) or one of the `formats` of a plugin. |
+| `format` | `string` | `'sfc'` | How files are read: a built-in format (below) or one of the `formats` of a plugin. A `format` that nothing provides is an error, and no file is read. |
 | `plugins` | `(string \| { name: string, ... })[]` | `[]` | [Plugins](#plugins) that change how the IR is built, e.g. [`@vue/language-plugin-pug`](../language-plugin-pug). A config that declares `plugins` replaces the inherited list. |
 
 The built-in formats:
@@ -125,7 +125,8 @@ export const ir: VuePluginModule['ir'] = ({ config, vueCompilerOptions }) => ({
   formats: {
     'my-format': {
       // The blocks of the file (`VueFormatResult`): each block's `content` at its `offset` in the file, and the
-      // `element` range only for a block written as an element, like the blocks of an SFC.
+      // `element` range only for a block written as an element, like the blocks of an SFC. Every block sets its
+      // `lang`; the IR has no default language, and reading the `lang` of a block without one throws.
       parse(fileName, content) { /* return a VueFormatResult */ },
       update(oldResult, { start, end, newText }) { /* optional: update oldResult in place, or return undefined */ },
     },

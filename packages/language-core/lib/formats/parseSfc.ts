@@ -81,6 +81,12 @@ export function parse(source: string): VueFormatResult {
 	return result;
 }
 
+const defaultLangs: Record<string, string> = {
+	template: 'html',
+	script: 'js',
+	style: 'css',
+};
+
 function createBlock(node: CompilerDOM.ElementNode, source: string): VueFormatBlock {
 	let contentStart: number;
 	let contentEnd: number;
@@ -105,7 +111,7 @@ function createBlock(node: CompilerDOM.ElementNode, source: string): VueFormatBl
 	return {
 		content: source.slice(contentStart, contentEnd),
 		offset: contentStart,
-		lang,
+		lang: lang ?? defaultLangs[node.tag] ?? 'txt',
 		attrs,
 		element: { start: node.loc.start.offset, end: node.loc.end.offset },
 	};

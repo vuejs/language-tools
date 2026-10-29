@@ -43,7 +43,6 @@ export function useIR(
 	});
 	const getTemplate = useNullableBlock(
 		'template',
-		'html',
 		computed(() => getFormatResult()?.template),
 		(_block, base): IRTemplate => {
 			const getParseTemplateResult = useParseTemplateResult(base);
@@ -62,7 +61,6 @@ export function useIR(
 	);
 	const getScript = useNullableBlock(
 		'script',
-		'js',
 		computed(() => getFormatResult()?.script),
 		(block, base): IRScript => {
 			const getSrc = computed(() => block().src);
@@ -82,7 +80,6 @@ export function useIR(
 	);
 	const getOriginalScriptSetup = useNullableBlock(
 		'scriptSetup',
-		'js',
 		computed(() => getFormatResult()?.scriptSetup),
 		(block, base): IRScriptSetup => {
 			const getGeneric = computed(() => block().generic);
@@ -122,7 +119,7 @@ export function useIR(
 	const styles = reactiveArray(
 		() => getFormatResult()?.styles ?? [],
 		(getBlock, i) => {
-			const base = useBlock('style_' + i, 'css', getBlock);
+			const base = useBlock('style_' + i, getBlock);
 			const getSrc = computed(() => getBlock().src);
 			const getModule = computed(() => getBlock().module);
 			const getScoped = computed(() => !!getBlock().scoped);
@@ -158,7 +155,7 @@ export function useIR(
 	const customBlocks = reactiveArray(
 		() => getFormatResult()?.customBlocks ?? [],
 		(getBlock, i) => {
-			const base = useBlock('custom_block_' + i, 'txt', getBlock);
+			const base = useBlock('custom_block_' + i, getBlock);
 			const getType = computed(() => getBlock().type);
 			return (): IRCustomBlock =>
 				mergeObject(base, {
@@ -281,7 +278,6 @@ export function useIR(
 
 	function useNullableBlock<T extends VueFormatBlock, K extends IRBlock>(
 		name: string,
-		defaultLang: string,
 		getBlock: () => T | undefined,
 		resolve: (block: () => T, base: IRBlock) => K,
 	) {
@@ -291,16 +287,21 @@ export function useIR(
 				return;
 			}
 			const _block = computed(() => getBlock()!);
-			return resolve(_block, useBlock(name, defaultLang, _block));
+			return resolve(_block, useBlock(name, _block));
 		});
 	}
 
 	function useBlock(
 		name: string,
-		defaultLang: string,
 		getBlock: () => VueFormatBlock,
 	) {
-		const getLang = computed(() => getBlock().lang ?? defaultLang);
+		const getLang = computed(() => {
+			const { lang } = getBlock();
+			if (typeof lang !== 'string') {
+				throw new TypeError(`The format gave the block '${name}' no \`lang\`.`);
+			}
+			return lang;
+		});
 		const getAttrs = computed(() => getBlock().attrs); // TODO: computed it
 		const getContent = computed(() => getBlock().content);
 		const getOffset = computed(() => getBlock().offset);
