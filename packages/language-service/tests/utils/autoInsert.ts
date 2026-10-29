@@ -60,6 +60,7 @@ export function createAutoInserter(
 // util
 
 const vueCompilerOptions = getDefaultCompilerOptions();
+vueCompilerOptions.environment = 'languageservice';
 const vueLanguagePlugin = createVueLanguagePlugin<URI>(
 	ts,
 	{},

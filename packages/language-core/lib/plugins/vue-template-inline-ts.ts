@@ -4,7 +4,7 @@ import { isCompoundExpression } from '../codegen/template/elementEvents';
 import { parseInterpolationNode } from '../codegen/template/templateChild';
 import { parseVForNode } from '../codegen/template/vFor';
 import { getTypeScriptAST } from '../codegen/utils';
-import type { Code, IR, VueLanguagePlugin } from '../types';
+import type { Code, EmbeddedCodeInfo, IR, VueLanguagePlugin } from '../types';
 
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
@@ -21,22 +21,19 @@ const formatBrackets = {
 
 const genericCommentRE = /^<!--\s*@vue-generic\s*\{(?<content>[\s\S]*)\}\s*-->$/;
 
-const plugin: VueLanguagePlugin = ({ modules: { typescript: ts } }) => {
+const plugin: VueLanguagePlugin = ({ modules: { typescript: ts }, vueCompilerOptions }) => {
 	const parseds = new WeakMap<IR, ReturnType<typeof parse>>();
 
 	return {
 		version: 2.2,
 
 		getEmbeddedCodes(_fileName, ir) {
-			if (!ir.template?.ast) {
+			if (!ir.template?.ast || vueCompilerOptions.environment !== 'languageservice') {
 				return [];
 			}
 			const parsed = parse(ir);
 			parseds.set(ir, parsed);
-			const result: {
-				id: string;
-				lang: string;
-			}[] = [];
+			const result: EmbeddedCodeInfo[] = [];
 			for (const [id] of parsed) {
 				result.push({ id, lang: 'ts' });
 			}
