@@ -3,8 +3,8 @@ import {
 	codeToString,
 	type IR,
 	type IScriptSnapshot,
-	type Mapping,
 	resolveCodeOffsets,
+	type SpanMapSegment,
 	type TextChangeRange,
 	type TypeScript,
 	type VirtualCode,
@@ -23,7 +23,7 @@ interface ResolvedDocument {
 	id: string;
 	languageId: string;
 	snapshot: IScriptSnapshot;
-	mappings: Mapping[];
+	mappings: SpanMapSegment[];
 	children: ResolvedDocument[];
 }
 

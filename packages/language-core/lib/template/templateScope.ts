@@ -62,8 +62,8 @@ export interface TemplateExpression {
 
 export interface TemplateScopeMember {
 	name: string;
-	/** The name of the block that references the member. */
-	block: string;
+	/** The block that references the member. */
+	block: IRBlock;
 	offset: number;
 	/** The name in the source, like the hyphenated `v-my-dir` of `vMyDir`. */
 	sourceName: string;
@@ -259,8 +259,8 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		for (let i = scopes.length - 1; i >= 0; i--) {
 			const scope = scopes[i]!;
 			if (scope instanceof BlockScope) {
-				if (!scope.members.some(member => member.block === block.name && member.offset === offset)) {
-					scope.members.push({ name, block: block.name, offset, sourceName });
+				if (!scope.members.some(member => member.block === block && member.offset === offset)) {
+					scope.members.push({ name, block, offset, sourceName });
 				}
 				names.add(name);
 				return true;

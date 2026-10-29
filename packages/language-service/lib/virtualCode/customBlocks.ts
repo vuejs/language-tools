@@ -8,7 +8,7 @@ export function getCustomBlockDocuments(ir: IR): EmbeddedDocument[] {
 		lang: customBlock.lang,
 		content: [[
 			customBlock.content,
-			customBlock.name,
+			customBlock,
 			0,
 			{ features: allFeatures },
 		]],

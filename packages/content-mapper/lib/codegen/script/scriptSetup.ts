@@ -85,13 +85,13 @@ export function* generateGeneric(
 	yield `(`;
 	if (typeof generic === 'object') {
 		const boundary = yield* Boundary.start(
-			'main',
+			undefined,
 			generic.offset,
 			generic.offset + generic.text.length,
 			{ features: 0 },
 		);
 		yield `<`;
-		yield [generic.text, 'main', generic.offset, { features: scriptFeatures }];
+		yield [generic.text, undefined, generic.offset, { features: scriptFeatures }];
 		if (!generic.text.trimEnd().endsWith(`,`)) {
 			yield `,`;
 		}
@@ -129,11 +129,13 @@ export function* generateGeneric(
 			`import('${vueCompilerOptions.lib}').ExtractPublicPropTypes<typeof ${names.propsOption}>`,
 		);
 	}
-	if (emitTypes.length) {
-		propTypes.push(typeAliasRef(names.EmitProps, scriptLang));
+	const emitProps = emitTypes.length ? typeAliasRef(names.EmitProps, scriptLang) : undefined;
+	if (emitProps) {
+		propTypes.push(emitProps);
 	}
 	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
-		propTypes.push(typeAliasRef(names.InheritedAttrs, scriptLang));
+		const inheritedAttrs = typeAliasRef(names.InheritedAttrs, scriptLang);
+		propTypes.push(emitProps ? `Omit<${inheritedAttrs}, keyof ${emitProps}>` : inheritedAttrs);
 	}
 
 	yield `return {} as {${newLine}`;
@@ -247,7 +249,7 @@ export function* generateMacros(options: ScriptCodegenOptions): Generator<TsCode
 		const toImport = usedMacros.filter(({ alias }) => !options.setupBindings.has(alias));
 
 		if (toImport.length) {
-			yield `const { `;
+			yield `${newLine}const { `;
 			for (const { canonical, alias } of toImport) {
 				yield alias === canonical ? `${canonical}, ` : `${canonical}: ${alias}, `;
 			}
@@ -348,7 +350,7 @@ function addTransforms(
 			core.insertAfter(callExp.end, function*() {
 				if (isTsLang(options.scriptLang)) {
 					yield ` as ${type}[`;
-					const boundary = yield* Boundary.start(scriptSetup.name, exp.start, exp.end, { features: 0 });
+					const boundary = yield* Boundary.start(scriptSetup, exp.start, exp.end, { features: 0 });
 					yield `'$style'`;
 					yield boundary.end();
 					yield `])`;
@@ -619,10 +621,10 @@ function* generateModelProp(
 	}
 
 	if (defineModel.name) {
-		const ignore = yield* Boundary.start(scriptSetup.name, 0, 0, synthesizedIgnore);
+		const ignore = yield* Boundary.start(scriptSetup, 0, 0, synthesizedIgnore);
 		yield* generateCamelized(
 			getRangeText(scriptSetup, defineModel.name),
-			scriptSetup.name,
+			scriptSetup,
 			defineModel.name.start,
 			{ features: navigationFeatures },
 		);

@@ -1,9 +1,9 @@
 import {
 	allFeatures,
 	completionFeatures,
-	type Mapping,
 	navigationFeatures,
 	semanticFeatures,
+	type SpanMapSegment,
 } from '@vue/language-core';
 import { expect, test } from 'vitest';
 import { SpanMapFeature, SpanMapKind } from '../lib/protocol';
@@ -13,10 +13,29 @@ const Verbatim = SpanMapKind.Verbatim;
 const Atom = SpanMapKind.Atom;
 const outsideProtocol = 1 << 21;
 
+/** A segment as the tuple of the protocol, so that the expectations read the same. */
+function seg(
+	virtualStart: number,
+	virtualLength: number,
+	originalStart: number,
+	originalLength: number,
+	kind: SpanMapKind,
+	features: number,
+): SpanMapSegment {
+	return {
+		virtualStart,
+		virtualEnd: virtualStart + virtualLength,
+		originalStart,
+		originalEnd: originalStart + originalLength,
+		kind,
+		features,
+	};
+}
+
 test('passes language feature bits through and strips the bits outside the protocol', () => {
-	const mappings: Mapping[] = [
-		[0, 1, 0, 1, Verbatim, 0],
-		[1, 2, 1, 2, Verbatim, allFeatures | outsideProtocol],
+	const mappings: SpanMapSegment[] = [
+		seg(0, 1, 0, 1, Verbatim, 0),
+		seg(1, 2, 1, 2, Verbatim, allFeatures | outsideProtocol),
 	];
 
 	expect(toSpanMappings(mappings, 'abc', 'abc')).toEqual([
@@ -50,22 +69,22 @@ test('feature bits match the host protocol (spanmap.go)', () => {
 });
 
 test('can disable language feature mapping without losing diagnostic spans', () => {
-	expect(toSpanMappings([[0, 3, 0, 3, Verbatim, navigationFeatures]], 'abc', 'abc', false))
+	expect(toSpanMappings([seg(0, 3, 0, 3, Verbatim, navigationFeatures)], 'abc', 'abc', false))
 		.toEqual([[0, 3, 0, 3, SpanMapKind.Verbatim, 0]]);
 });
 
 test('maps verbatim mappings whose texts differ as atoms', () => {
-	expect(toSpanMappings([[0, 5, 0, 5, Verbatim, navigationFeatures]], 'Click', 'click'))
+	expect(toSpanMappings([seg(0, 5, 0, 5, Verbatim, navigationFeatures)], 'Click', 'click'))
 		.toEqual([[0, 5, 0, 5, SpanMapKind.Atom, navigationFeatures]]);
 });
 
 test('removes overlaps in the generated text and keeps overlaps in the original', () => {
 	expect(toSpanMappings(
 		[
-			[0, 2, 0, 2, Verbatim, 0],
-			[2, 2, 0, 2, Verbatim, 0],
-			[4, 2, 1, 2, Verbatim, 0],
-			[1, 2, 4, 2, Verbatim, 0],
+			seg(0, 2, 0, 2, Verbatim, 0),
+			seg(2, 2, 0, 2, Verbatim, 0),
+			seg(4, 2, 1, 2, Verbatim, 0),
+			seg(1, 2, 4, 2, Verbatim, 0),
 		],
 		'abcdefgh',
 		'abefghij',
@@ -79,10 +98,10 @@ test('removes overlaps in the generated text and keeps overlaps in the original'
 test('keeps zero-length navigation anchors and drops other zero-length markers', () => {
 	expect(toSpanMappings(
 		[
-			[0, 3, 0, 3, Verbatim, semanticFeatures],
-			[3, 0, 0, 0, Verbatim, navigationFeatures | semanticFeatures],
-			[3, 0, 1, 0, Verbatim, 0],
-			[3, 0, 2, 0, Verbatim, outsideProtocol],
+			seg(0, 3, 0, 3, Verbatim, semanticFeatures),
+			seg(3, 0, 0, 0, Verbatim, navigationFeatures | semanticFeatures),
+			seg(3, 0, 1, 0, Verbatim, 0),
+			seg(3, 0, 2, 0, Verbatim, outsideProtocol),
 		],
 		'abc',
 		'abc',
@@ -93,7 +112,7 @@ test('keeps zero-length navigation anchors and drops other zero-length markers',
 });
 
 test('keeps zero-length completion points', () => {
-	expect(toSpanMappings([[2, 0, 1, 0, Verbatim, completionFeatures]], 'abc', 'abc'))
+	expect(toSpanMappings([seg(2, 0, 1, 0, Verbatim, completionFeatures)], 'abc', 'abc'))
 		.toEqual([[2, 0, 1, 0, SpanMapKind.Verbatim, completionFeatures]]);
 });
 
@@ -102,8 +121,8 @@ test('lets segments inside a feature-less atom win and fills around them', () =>
 	// original:  C b
 	expect(toSpanMappings(
 		[
-			[0, 6, 0, 1, Atom, 0],
-			[4, 1, 2, 1, Verbatim, navigationFeatures],
+			seg(0, 6, 0, 1, Atom, 0),
+			seg(4, 1, 2, 1, Verbatim, navigationFeatures),
 		],
 		'{a: b}',
 		'C b',
@@ -117,8 +136,8 @@ test('lets segments inside a feature-less atom win and fills around them', () =>
 test('fills around segments inside an atom without language features', () => {
 	expect(toSpanMappings(
 		[
-			[0, 6, 0, 1, Atom, 0],
-			[4, 1, 2, 1, Verbatim, navigationFeatures],
+			seg(0, 6, 0, 1, Atom, 0),
+			seg(4, 1, 2, 1, Verbatim, navigationFeatures),
 		],
 		'{a: b}',
 		'C b',
@@ -134,8 +153,8 @@ test('keeps atoms with equal texts as atoms', () => {
 	// generated: {a: a}   original: {a}
 	expect(toSpanMappings(
 		[
-			[1, 1, 1, 1, Atom, navigationFeatures],
-			[4, 1, 1, 1, Atom, navigationFeatures],
+			seg(1, 1, 1, 1, Atom, navigationFeatures),
+			seg(4, 1, 1, 1, Atom, navigationFeatures),
 		],
 		'{a: a}',
 		'{a}',
@@ -150,8 +169,8 @@ test('keeps a verbatim section whole around a copy of its content', () => {
 	// original:  f(x);
 	expect(toSpanMappings(
 		[
-			[0, 5, 0, 5, Verbatim, navigationFeatures],
-			[6, 1, 2, 1, Verbatim, navigationFeatures | completionFeatures],
+			seg(0, 5, 0, 5, Verbatim, navigationFeatures),
+			seg(6, 1, 2, 1, Verbatim, navigationFeatures | completionFeatures),
 		],
 		'f(x); x',
 		'f(x);',

@@ -1,5 +1,6 @@
 import { SpanMapFeature } from '@volar/language-core';
 import {
+	type CodeSource,
 	type IRBlock,
 	type IRScript,
 	type IRScriptSetup,
@@ -87,8 +88,8 @@ function* generateNavigableExport(code: string): Generator<TsCode> {
 	// keep the synthetic exports navigable: go-to-definition on
 	// `import Foo from './Foo.vue'` targets the whole statement, which maps to the SFC top;
 	// a rename reaching it would insert the new name there
-	const ignore = yield* Boundary.start('main', 0, 0, synthesizedIgnore);
-	const boundary = yield* Boundary.start('main', 0, 0, { features: navigationFeatures & ~SpanMapFeature.Rename });
+	const ignore = yield* Boundary.start(undefined, 0, 0, synthesizedIgnore);
+	const boundary = yield* Boundary.start(undefined, 0, 0, { features: navigationFeatures & ~SpanMapFeature.Rename });
 	yield code;
 	yield boundary.end();
 	yield ignore.end();
@@ -122,13 +123,13 @@ function* generateWorker(
 
 		yield `import ${names.src} from `;
 		const boundary = yield* Boundary.start(
-			'main',
+			undefined,
 			script.src.offset,
 			script.src.offset + script.src.text.length,
 			src !== script.src.text ? { features: scriptFeatures & ~SpanMapFeature.Rename } : { features: scriptFeatures },
 		);
 		yield `'`;
-		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, undefined];
+		yield [src.slice(0, script.src.text.length), undefined, script.src.offset, undefined];
 		yield src.slice(script.src.text.length);
 		yield `'`;
 		yield boundary.end();
@@ -142,7 +143,6 @@ function* generateWorker(
 	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
 		const copies = createScriptSetupCopies(options, scriptSetup, scriptSetupRanges);
 		yield* copies.generateImports();
-		yield* generateMacros(options);
 
 		// <script>
 		let selfType: string | undefined;
@@ -164,6 +164,7 @@ function* generateWorker(
 		}
 
 		// <script setup>
+		yield* generateMacros(options);
 		yield* generateComponentDeclareEqual(scriptSetup, names.export);
 		if (scriptSetup.generic) {
 			yield* generateGeneric(
@@ -372,15 +373,21 @@ function* generateGlobalTypesReference(
 	}
 }
 
-// The component declaration has no source of its own: map it to the tag name of its block,
-// so that its declaration emit errors (e.g. a private type of a generic component) report there.
+// The component declaration has no source of its own: map it to the tag name of its block, or to the start of a
+// block that is not an element, so that its declaration emit errors (e.g. a private type of a generic component)
+// report there.
 function* generateComponentDeclareEqual(block: IRBlock, name: string): Generator<TsCode> {
-	const tagNameStart = block.start + 1;
-	yield* generateExportDeclareEqual('main', name, tagNameStart, tagNameStart + 'script'.length);
+	if (block.element) {
+		const tagNameStart = block.element.start + 1;
+		yield* generateExportDeclareEqual(undefined, name, tagNameStart, tagNameStart + 'script'.length);
+	}
+	else {
+		yield* generateExportDeclareEqual(undefined, name, block.offset, block.offset);
+	}
 }
 
 export function* generateExportDeclareEqual(
-	source: string,
+	source: CodeSource,
 	name: string,
 	start: number,
 	end: number,

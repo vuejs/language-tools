@@ -225,7 +225,7 @@ function parse(ts: TypeScript, ir: IR) {
 			wrapper[0],
 			[
 				code,
-				'template',
+				template,
 				offset,
 				{ features: SpanMapFeature.Formatting },
 			],

@@ -25,11 +25,11 @@ export function* generatePropertyAccess(
 	}
 	else if (identifierRE.test(code)) {
 		yield `.`;
-		yield [code, 'template', offset, features];
+		yield [code, options.template, offset, features];
 	}
 	else {
 		yield `[`;
-		yield* generateStringLiteralKey(code, offset, features);
+		yield* generateStringLiteralKey(code, options.template, offset, features);
 		yield `]`;
 	}
 }

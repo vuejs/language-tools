@@ -1,0 +1,19 @@
+{
+	"extends": "../tsconfig.base.json",
+	"compilerOptions": {
+		"noUnusedLocals": true,
+		"strict": true
+	},
+	"contentMappers": [
+		{
+			"package": "@vue/content-mapper",
+			"extensions": [".vue"],
+			"options": {
+				"languageFeatures": false,
+				"target": 99,
+				"plugins": ["./toy.cjs"]
+			}
+		}
+	],
+	"include": ["Child.vue", "Html.vue", "Toy.vue"]
+}

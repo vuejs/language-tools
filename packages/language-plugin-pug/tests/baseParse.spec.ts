@@ -138,9 +138,8 @@ describe('baseParse', () => {
 
 			expect(result.pugTextDocument.getText()).toBe(indented);
 			expect(result.mappings.length).toBeGreaterThan(0);
-			for (const [generatedStart, generatedLength, sourceStart, sourceLength] of result.mappings) {
-				expect(result.htmlCode.slice(generatedStart, generatedStart + generatedLength))
-					.toBe(indented.slice(sourceStart, sourceStart + sourceLength));
+			for (const { virtualStart, virtualEnd, originalStart, originalEnd } of result.mappings) {
+				expect(result.htmlCode.slice(virtualStart, virtualEnd)).toBe(indented.slice(originalStart, originalEnd));
 			}
 		});
 

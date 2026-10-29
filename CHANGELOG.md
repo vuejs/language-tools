@@ -82,6 +82,36 @@ Unsupported: wrapping the template (layout slots of dxup), changing the shape of
 - **breaking:** twoslash queries (`// ^?` in script blocks and `<!-- ^? -->` in the template, shown as inlay hints) are removed. TS 7.1 gives no twoslash queries in TypeScript files either, so the same comment would act differently in `.vue` and `.ts` files, and the template form was a convention of this project only; twoslash queries belong to the tools that implement the convention for every language.
 - **fix:** dropping a component into the template, or extracting one, adds it to the Options API `components` by inserting the new property after the last one, instead of reprinting the object. The formatting, comments and trailing comma of the object are kept.
 
+## 3.3.14 (2026-10-30)
+
+### language-core
+
+- **fix:** isolate template virtual code from setup control flow ([d31557b](https://github.com/vuejs/language-tools/commit/d31557b1fc551d4fe4c765ec69de63bfa68499a3))
+- **fix:** re-assert dot-value bindings in template closures ([4524874](https://github.com/vuejs/language-tools/commit/4524874cd4f4d320abd96f5661d12d7ab05b01d9)) ([f9c908f](https://github.com/vuejs/language-tools/commit/f9c908fbe7996db6150edfcbdace98b476a4ab04)) ([b65e458](https://github.com/vuejs/language-tools/commit/b65e458d1425d03f42e715ee844181de02788f18))
+- **fix:** avoid TS2454 from the withDotValue assertion ([c774144](https://github.com/vuejs/language-tools/commit/c774144d3ff0eb6ddc8a70b44de1b0bf7d8f760b))
+- **fix:** use a const type parameter in `__VLS_unwrap` to keep literal bindings on TS 7.1 ([ce6c1de](https://github.com/vuejs/language-tools/commit/ce6c1de8a1ea0b8ef5ded8c1015a864a36ae465e))
+- **fix:** avoid `never` slot props for dynamic slot names in generic components ([7957e7f](https://github.com/vuejs/language-tools/commit/7957e7f611b3ca9c1646720637b32686ec77d83b))
+- **fix:** omit emitted events from inherited attrs of generic components ([2d94d89](https://github.com/vuejs/language-tools/commit/2d94d89a08248f4c0162e608d9714e8d7a793ffc))
+- **fix:** check bindings of generic directive hooks ([0cb7d92](https://github.com/vuejs/language-tools/commit/0cb7d92451789643c7429cc7e84ca4dcf7925617))
+- **fix:** wrap the v-model assignment target in parentheses ([9bb1dc9](https://github.com/vuejs/language-tools/commit/9bb1dc965b41d577447ec2ba2363424eb3f02b5b))
+- **fix:** type the `$event` parameter of inline handlers explicitly ([d3b42a1](https://github.com/vuejs/language-tools/commit/d3b42a1597e33e64101c5274b48ab9752b3feb8c))
+- **fix:** type unknown components without diagnostic filters ([b3909a3](https://github.com/vuejs/language-tools/commit/b3909a3eaca6cccd1ac632eb3976293da20a118c))
+- **fix:** keep leading `@ts-nocheck` and `/// <reference>` effective in script setup ([c2e2e6f](https://github.com/vuejs/language-tools/commit/c2e2e6fdaba645484410da50e6df41456b4e157e))
+- **fix:** declare component context vars before slot code ([b7c773d](https://github.com/vuejs/language-tools/commit/b7c773dd78a6774e7f9d1aa81f0094c8219a82ae))
+- **fix:** avoid non-null assertion in JS slot codegen ([5633525](https://github.com/vuejs/language-tools/commit/563352582469699e7696d402d41ae92b832342ae))
+- **fix:** restore tag navigation for barrel imports ([6358d15](https://github.com/vuejs/language-tools/commit/6358d15bbeefdbb03928a2c46d6f7c5b816d6e1f))
+- **fix:** map the whole hyphenated directive name in the auto-import access ([beb0151](https://github.com/vuejs/language-tools/commit/beb01511f07e51b9bd1cd0cd8e789855599fa03b))
+
+### language-service
+
+- **fix:** prevent crash on malformed `html.customData` configuration ([3961653](https://github.com/vuejs/language-tools/commit/396165305d074c6562ce971c057b8de9d698e695))
+
+### typescript-plugin
+
+- **fix:** show unwrapped type when hovering setup refs in template ([c742c14](https://github.com/vuejs/language-tools/commit/c742c14bc839703aa3448bdf05dc359ad825d74e))
+
+Contributors: @johnsoncodehk, @lazerg, @ValentinYoushkevich, @so1ve, @WangKepeople
+
 ## 3.3.13 (2026-10-10)
 
 ### language-core

@@ -50,7 +50,7 @@ export function* generateVFor(
 			if (start > lastOffset) {
 				yield [
 					leftExpressionText.slice(lastOffset, start),
-					'template',
+					options.template,
 					leftExpressionRange.start + lastOffset,
 					{ features: scriptFeatures },
 				];
@@ -68,7 +68,7 @@ export function* generateVFor(
 		if (lastOffset < leftExpressionText.length) {
 			yield [
 				leftExpressionText.slice(lastOffset),
-				'template',
+				options.template,
 				leftExpressionRange.start + lastOffset,
 				{ features: scriptFeatures },
 			];

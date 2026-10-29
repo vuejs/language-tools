@@ -14,6 +14,7 @@ exports[`generated code of js components type checks > diagnostics 1`] = `
 
 exports[`generated code of js components type checks > lines under @ts-ignore 1`] = `
 [
+  "EmptyEventHandlers.vue.js: const __VLS_1",
   "Main.vue.js: const __VLS_1",
   "Main.vue.js: const __VLS_9",
   "Main.vue.js: const __VLS_1",
@@ -43,6 +44,7 @@ exports[`generated code of ts components type checks > diagnostics 1`] = `
 
 exports[`generated code of ts components type checks > lines under @ts-ignore 1`] = `
 [
+  "EmptyEventHandlers.vue.ts: const __VLS_1",
   "Main.vue.ts: const __VLS_1",
   "Main.vue.ts: const __VLS_9",
   "Main.vue.ts: const __VLS_1",

@@ -13,10 +13,9 @@ function plugin(
 
 function generateWith(content: string, ...plugins: CodegenPlugin[]) {
 	const result = generate('/Comp.vue', content, undefined, plugins);
-	for (const [generatedStart, generatedLength, sourceStart, sourceLength, kind] of result.mappings) {
+	for (const { virtualStart, virtualEnd, originalStart, originalEnd, kind } of result.mappings) {
 		if (kind === SpanMapKind.Verbatim) {
-			expect(result.text.slice(generatedStart, generatedStart + generatedLength))
-				.toBe(content.slice(sourceStart, sourceStart + sourceLength));
+			expect(result.text.slice(virtualStart, virtualEnd)).toBe(content.slice(originalStart, originalEnd));
 		}
 	}
 	return result;
@@ -59,15 +58,13 @@ test('applies the script edits of plugins, mapping the source text that they cop
 	expect(text).not.toContain('dropped');
 	const copied = text.indexOf('useFoo()');
 	expect(
-		mappings.some(([generatedStart, , sourceStart]) =>
-			generatedStart === copied && sourceStart === content.indexOf('useFoo()')
+		mappings.some(({ virtualStart, originalStart }) =>
+			virtualStart === copied && originalStart === content.indexOf('useFoo()')
 		),
 	).toBe(true);
 	const unmapped = text.indexOf(' as X');
 	expect(
-		mappings.some(([generatedStart, generatedLength]) =>
-			generatedStart <= unmapped && unmapped < generatedStart + generatedLength
-		),
+		mappings.some(({ virtualStart, virtualEnd }) => virtualStart <= unmapped && unmapped < virtualEnd),
 	).toBe(false);
 });
 
@@ -153,8 +150,9 @@ test('maps a `<script setup>` whose code a plugin removes by one empty copy', ()
 	);
 	expect(text).not.toContain('const a = 1;');
 	expect(
-		mappings.filter(([, generatedLength, sourceStart, sourceLength, , features]) =>
-			!generatedLength && !sourceLength && sourceStart === content.indexOf('\n') && features === scriptFeatures
+		mappings.filter(({ virtualStart, virtualEnd, originalStart, originalEnd, features }) =>
+			virtualStart === virtualEnd && originalStart === originalEnd && originalStart === content.indexOf('\n')
+			&& features === scriptFeatures
 		),
 	).toHaveLength(1);
 });

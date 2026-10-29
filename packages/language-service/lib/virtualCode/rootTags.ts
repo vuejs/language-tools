@@ -13,35 +13,30 @@ export function getRootTagsDocument(ir: IR): EmbeddedDocument {
 			...ir.customBlocks,
 		]
 	) {
-		// a block out of the file (the template of a VitePress file) or within an earlier one (a `<script>` in the
-		// template of an HTML file) adds nothing
-		if (
-			block
-			&& 0 <= block.startTagEnd && block.startTagEnd <= block.endTagStart
-			&& block.endTagStart <= ir.content.length
-			&& blocks.every(other => block.endTagStart <= other.startTagEnd || block.startTagEnd >= other.endTagStart)
-		) {
+		// a block that is not written as an element (the template of a VitePress or petite-vue file) adds nothing
+		if (block?.element) {
 			blocks.push(block);
 		}
 	}
-	blocks.sort((a, b) => a.startTagEnd - b.startTagEnd);
+	blocks.sort((a, b) => a.offset - b.offset);
 	const content: Code[] = [];
 	let start = 0;
 	for (const block of blocks) {
-		if (start < block.startTagEnd) {
-			content.push([ir.content.slice(start, block.startTagEnd), undefined, start, { features: allFeatures }]);
+		const contentEnd = block.offset + block.content.length;
+		if (start < block.offset) {
+			content.push([ir.content.slice(start, block.offset), undefined, start, { features: allFeatures }]);
 		}
 		// fix folding range end position failed to mapping
-		const marker = block.startTagEnd
+		const marker = block.offset
 			+ block.content.lastIndexOf('\n', block.content.lastIndexOf('\n') - 1) + 1;
-		if (block.startTagEnd < marker) {
-			content.push(ir.content.slice(block.startTagEnd, marker));
+		if (block.offset < marker) {
+			content.push(ir.content.slice(block.offset, marker));
 		}
 		content.push(['', undefined, marker, { features: structureFeatures }]);
-		if (marker < block.endTagStart) {
-			content.push(ir.content.slice(marker, block.endTagStart));
+		if (marker < contentEnd) {
+			content.push(ir.content.slice(marker, contentEnd));
 		}
-		start = block.endTagStart;
+		start = contentEnd;
 	}
 	if (start < ir.content.length || !blocks.length) {
 		content.push([ir.content.slice(start), undefined, start, { features: allFeatures }]);

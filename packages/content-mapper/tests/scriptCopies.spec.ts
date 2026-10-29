@@ -10,8 +10,9 @@ test('maps no empty copy of the user code at the end of a block that ends with i
 	const blockEnd = content.indexOf('</script>');
 	const { mappings } = generate('/Comp.vue', content);
 	expect(
-		mappings.filter(([, generatedLength, sourceStart, sourceLength, , features]) =>
-			!generatedLength && !sourceLength && sourceStart === blockEnd && features === scriptFeatures
+		mappings.filter(({ virtualStart, virtualEnd, originalStart, originalEnd, features }) =>
+			virtualStart === virtualEnd && originalStart === originalEnd && originalStart === blockEnd
+			&& features === scriptFeatures
 		),
 	).toEqual([]);
 });

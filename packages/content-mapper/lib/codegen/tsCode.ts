@@ -1,4 +1,4 @@
-import type { CodeSegment, VueCodeMarker } from '@vue/language-core';
+import type { CodeSegment, CodeSource, VueCodeMarker } from '@vue/language-core';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../protocol';
 
 /**
@@ -27,12 +27,12 @@ export function isSynthesizedIgnore(directive: DiagnosticDirectiveMapping) {
 /** A range of generated code, bounded by empty segments that pair by nesting. */
 export class Boundary {
 	private constructor(
-		private source: string,
+		private source: CodeSource,
 		private endOffset: number,
 	) {}
 
 	static *start(
-		source: string,
+		source: CodeSource,
 		start: number,
 		end: number,
 		data: VueCodeMarker | DiagnosticDirectiveMapping,

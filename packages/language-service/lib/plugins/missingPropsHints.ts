@@ -47,11 +47,7 @@ export function create(
 						const [startTagOffset] = getElementTagOffsets(node, template);
 						const sourceOffset = startTagOffset + node.tag.length;
 
-						let generatedOffset: number | undefined;
-						for (const [offset] of map.toGeneratedLocation(template.startTagEnd + sourceOffset)) {
-							generatedOffset = offset;
-							break;
-						}
+						const generatedOffset = map.originalToVirtualPositions(template.offset + sourceOffset)[0]?.position;
 						if (
 							generatedOffset === undefined
 							|| generatedOffset < document.offsetAt(range.start)

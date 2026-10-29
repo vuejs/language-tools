@@ -39,7 +39,12 @@ test('an indented pug template document is the template as written', () => {
 	const template = findCode(getEmbeddedCodes(`${startTag}${content}</template>\n`), 'template');
 	expect(template?.languageId).toBe('jade');
 	expect(text(template)).toBe(content);
-	expect(template?.mappings.map(mapping => mapping.slice(0, 4))).toEqual([
-		[0, content.length, startTag.length, content.length],
+	expect(template?.mappings).toMatchObject([
+		{
+			virtualStart: 0,
+			virtualEnd: content.length,
+			originalStart: startTag.length,
+			originalEnd: startTag.length + content.length,
+		},
 	]);
 });

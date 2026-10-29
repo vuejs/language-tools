@@ -48,9 +48,9 @@ test('ignores synthesized virtual regions without overlapping explicit directive
 	const expectation: DiagnosticDirectiveMapping = [0, 1, 5, 7, DiagnosticDirectivePolicy.Expect];
 	const chunks: TsCode[] = [
 		'01234',
-		['', 'main', 0, { start: [0, 1, 0, 0, DiagnosticDirectivePolicy.Expect] }],
+		['', undefined, 0, { start: [0, 1, 0, 0, DiagnosticDirectivePolicy.Expect] }],
 		'56',
-		['', 'main', 0, { end: true }],
+		['', undefined, 0, { end: true }],
 		'789',
 	];
 
@@ -69,9 +69,9 @@ test('merges synthesized ignores with the ignores of mapped regions', () => {
 	];
 	const chunks: TsCode[] = [
 		'0123',
-		['', 'main', 0, { start: synthesizedIgnore }],
+		['', undefined, 0, { start: synthesizedIgnore }],
 		'45',
-		['', 'main', 0, { end: true }],
+		['', undefined, 0, { end: true }],
 	];
 
 	expect(buildDiagnosticDirectives(chunks, getUnmappedRanges(6, mappings))).toEqual([

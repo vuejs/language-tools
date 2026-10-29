@@ -7,6 +7,7 @@ import type {
 	LanguageServicePlugin,
 	SymbolKind,
 } from '@volar/language-service';
+import type { IRBlock } from '@vue/language-core';
 import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
 import { loadLanguageBlocks } from '../htmlData';
@@ -94,42 +95,22 @@ export function create(): LanguageServicePlugin {
 						return [];
 					}
 
-					const { vueSfc, ir } = info.root;
-					if (!vueSfc) {
-						return;
-					}
-
+					const { ir } = info.root;
 					const originalResult = await htmlServiceInstance.provideDiagnostics?.(document, token);
-					const sfcErrors: Diagnostic[] = [];
-					const { template } = ir;
-
-					const {
-						startTagEnd = Infinity,
-						endTagStart = -Infinity,
-					} = template ?? {};
-
-					for (const error of vueSfc.errors) {
-						if ('code' in error) {
-							const start = error.loc?.start.offset ?? 0;
-							const end = error.loc?.end.offset ?? 0;
-							if (end < startTagEnd || start >= endTagStart) {
-								sfcErrors.push({
-									range: {
-										start: document.positionAt(start),
-										end: document.positionAt(end),
-									},
-									severity: 1 satisfies typeof DiagnosticSeverity.Error,
-									code: error.code,
-									source: 'vue',
-									message: error.message,
-								});
-							}
-						}
-					}
+					const formatErrors = ir.errors.map((error): Diagnostic => ({
+						range: {
+							start: document.positionAt(error.loc?.start.offset ?? 0),
+							end: document.positionAt(error.loc?.end.offset ?? 0),
+						},
+						severity: 1 satisfies typeof DiagnosticSeverity.Error,
+						code: error.code,
+						source: 'vue',
+						message: error.message,
+					}));
 
 					return [
 						...originalResult ?? [],
-						...sfcErrors,
+						...formatErrors,
 					];
 				},
 
@@ -142,80 +123,31 @@ export function create(): LanguageServicePlugin {
 					const result: DocumentSymbol[] = [];
 					const { ir } = info.root;
 
-					if (ir.template) {
-						result.push({
-							name: 'template',
-							kind: 2 satisfies typeof SymbolKind.Module,
-							range: {
-								start: document.positionAt(ir.template.start),
-								end: document.positionAt(ir.template.end),
-							},
-							selectionRange: {
-								start: document.positionAt(ir.template.start),
-								end: document.positionAt(ir.template.startTagEnd),
-							},
-						});
-					}
-					if (ir.script) {
-						result.push({
-							name: 'script',
-							kind: 2 satisfies typeof SymbolKind.Module,
-							range: {
-								start: document.positionAt(ir.script.start),
-								end: document.positionAt(ir.script.end),
-							},
-							selectionRange: {
-								start: document.positionAt(ir.script.start),
-								end: document.positionAt(ir.script.startTagEnd),
-							},
-						});
-					}
-					if (ir.scriptSetup) {
-						result.push({
-							name: 'script setup',
-							kind: 2 satisfies typeof SymbolKind.Module,
-							range: {
-								start: document.positionAt(ir.scriptSetup.start),
-								end: document.positionAt(ir.scriptSetup.end),
-							},
-							selectionRange: {
-								start: document.positionAt(ir.scriptSetup.start),
-								end: document.positionAt(ir.scriptSetup.startTagEnd),
-							},
-						});
-					}
-					for (const style of ir.styles) {
-						let name = 'style';
-						if (style.scoped) {
-							name += ' scoped';
-						}
-						if (style.module) {
-							name += ' module';
+					const blocks: [block: IRBlock | undefined, name: string][] = [
+						[ir.template, 'template'],
+						[ir.script, 'script'],
+						[ir.scriptSetup, 'script setup'],
+						...ir.styles.map((style): [IRBlock, string] => [
+							style,
+							'style' + (style.scoped ? ' scoped' : '') + (style.module ? ' module' : ''),
+						]),
+						...ir.customBlocks.map((block): [IRBlock, string] => [block, block.type]),
+					];
+					for (const [block, name] of blocks) {
+						// a block that is not written as an element has no symbol
+						if (!block?.element) {
+							continue;
 						}
 						result.push({
 							name,
 							kind: 2 satisfies typeof SymbolKind.Module,
 							range: {
-								start: document.positionAt(style.start),
-								end: document.positionAt(style.end),
+								start: document.positionAt(block.element.start),
+								end: document.positionAt(block.element.end),
 							},
 							selectionRange: {
-								start: document.positionAt(style.start),
-								end: document.positionAt(style.startTagEnd),
-							},
-						});
-					}
-					for (const customBlock of ir.customBlocks) {
-						result.push({
-							name: customBlock.type,
-							kind: 2 satisfies typeof SymbolKind.Module,
-							range: {
-								start: document.positionAt(customBlock.start),
-								end: document.positionAt(customBlock.end),
-							},
-							selectionRange: {
-								start: document.positionAt(customBlock.start),
-								end: document.positionAt(customBlock.startTagEnd),
+								start: document.positionAt(block.element.start),
+								end: document.positionAt(block.offset),
 							},
 						});
 					}

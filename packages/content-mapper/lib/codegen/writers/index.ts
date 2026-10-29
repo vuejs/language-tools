@@ -88,8 +88,8 @@ export function* generateSfcBlockSection(
 	ignoreDiagnostics = false,
 ): Generator<TsCode> {
 	const text = block.content.slice(start, end);
-	const ignore = ignoreDiagnostics ? yield* Boundary.start(block.name, 0, 0, synthesizedIgnore) : undefined;
-	yield [text, block.name, start, features];
+	const ignore = ignoreDiagnostics ? yield* Boundary.start(block, 0, 0, synthesizedIgnore) : undefined;
+	yield [text, block, start, features];
 	if (ignore) {
 		yield ignore.end();
 	}
@@ -103,7 +103,7 @@ export function* generateSfcBlockSection(
 			if (diagStart >= textEnd && diagEnd <= end) {
 				// map the synthesized terminator to the end of the section, so that
 				// truncation parse errors resolve back to the original block
-				yield [';', block.name, end, { features: 0 }];
+				yield [';', block, end, { features: 0 }];
 				yield newLine;
 				break;
 			}

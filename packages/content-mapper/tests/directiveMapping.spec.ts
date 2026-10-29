@@ -16,7 +16,7 @@ import { vOnClickOutside } from '@vueuse/components';
 	const { mappings } = generate('/Comp.vue', source);
 
 	const spans = mappings
-		.map(([, , sourceStart, sourceLength]): [number, number] => [sourceStart, sourceStart + sourceLength])
+		.map(({ originalStart, originalEnd }): [number, number] => [originalStart, originalEnd])
 		.filter(([rangeStart, rangeEnd]) => rangeEnd > rangeStart && rangeStart >= start && rangeEnd <= end);
 
 	expect(spans.length).toBeGreaterThan(0);

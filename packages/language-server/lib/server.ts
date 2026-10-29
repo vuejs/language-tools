@@ -226,8 +226,8 @@ export function startServer() {
 							return await (await connectTypeScriptApi()).collectExtractProps(
 								fileName,
 								virtualCode,
-								template.startTagEnd + start,
-								template.startTagEnd + end,
+								template.offset + start,
+								template.offset + end,
 							);
 						}
 					}
@@ -273,7 +273,7 @@ export function startServer() {
 						return is
 							? await api.getComponentProps(
 								fileName,
-								template.startTagEnd + is.exp.loc.start.offset,
+								template.offset + is.exp.loc.start.offset,
 								is.exp.loc.end.offset - is.exp.loc.start.offset,
 							)
 							: await api.getComponentProps(fileName, getTagNameOffset(template, element));

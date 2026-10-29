@@ -163,9 +163,6 @@ importers:
       '@types/picomatch':
         specifier: ^4.0.3
         version: 4.0.3
-      '@vue/compiler-sfc':
-        specifier: ^3.5.0
-        version: 3.5.40
       typescript:
         specifier: npm:typescript@7.1.0-beta
         version: 7.1.0-beta

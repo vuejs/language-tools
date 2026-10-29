@@ -3,8 +3,8 @@ import {
 	createVueSource,
 	type IRPipeline,
 	type IScriptSnapshot,
-	type Mapping,
 	SpanMapKind,
+	type SpanMapSegment,
 	type TypeScript,
 	type VirtualCode,
 	type VueCompilerOptions,
@@ -31,16 +31,13 @@ export class VueVirtualCode implements VirtualCode {
 	readonly source: VueSource;
 
 	private _embeddedCodes: () => VirtualCode[];
-	private _mappings: () => Mapping[];
+	private _mappings: () => SpanMapSegment[];
 
 	get languageId() {
 		return getRootLanguageId(this.vueCompilerOptions);
 	}
 	get snapshot() {
 		return this.source.snapshot;
-	}
-	get vueSfc() {
-		return this.source.vueSfc;
 	}
 	get ir() {
 		return this.source.ir;
@@ -71,7 +68,14 @@ export class VueVirtualCode implements VirtualCode {
 		this._embeddedCodes = useEmbeddedCodes(ts, this.source.ir);
 		this._mappings = computed(() => {
 			const length = this.source.snapshot.getLength();
-			return [[0, length, 0, length, SpanMapKind.Verbatim, allFeatures]];
+			return [{
+				virtualStart: 0,
+				virtualEnd: length,
+				originalStart: 0,
+				originalEnd: length,
+				kind: SpanMapKind.Verbatim,
+				features: allFeatures,
+			}];
 		});
 	}
 

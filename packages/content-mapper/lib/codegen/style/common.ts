@@ -1,5 +1,5 @@
 import { SpanMapFeature } from '@volar/language-core';
-import { type IRAttr, navigationFeatures } from '@vue/language-core';
+import { type CodeSource, type IRAttr, navigationFeatures } from '@vue/language-core';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { identifierRE, newLine } from '../writers';
 
@@ -7,7 +7,7 @@ import { identifierRE, newLine } from '../writers';
 const quotedNameFeatures = SpanMapFeature.References | SpanMapFeature.DocumentHighlights | SpanMapFeature.Rename;
 
 export function* generateClassProperty(
-	source: string,
+	source: CodeSource,
 	classNameWithDot: string,
 	offset: number,
 	propertyType: string,
@@ -37,7 +37,7 @@ export function* generateClassProperty(
 	], propertyType);
 }
 
-function* generateQuotedDefinition(source: string, className: string, start: number): Generator<TsCode> {
+function* generateQuotedDefinition(source: CodeSource, className: string, start: number): Generator<TsCode> {
 	const boundary = yield* Boundary.start(source, start, start + className.length, {
 		features: navigationFeatures & ~quotedNameFeatures,
 	});
@@ -47,7 +47,7 @@ function* generateQuotedDefinition(source: string, className: string, start: num
 	yield boundary.end();
 }
 
-function* generateMember(source: string, name: Iterable<TsCode>, propertyType: string): Generator<TsCode> {
+function* generateMember(source: CodeSource, name: Iterable<TsCode>, propertyType: string): Generator<TsCode> {
 	yield `${newLine} & { `;
 	const ignore = yield* Boundary.start(source, 0, 0, synthesizedIgnore);
 	yield* name;
@@ -58,13 +58,13 @@ function* generateMember(source: string, name: Iterable<TsCode>, propertyType: s
 
 export function* generateStyleSrc(src: Exclude<IRAttr, true>): Generator<TsCode> {
 	const boundary = yield* Boundary.start(
-		'main',
+		undefined,
 		src.offset,
 		src.offset + src.text.length,
 		{ features: navigationFeatures },
 	);
 	yield `'`;
-	yield [src.text, 'main', src.offset, undefined];
+	yield [src.text, undefined, src.offset, undefined];
 	yield `'`;
 	yield boundary.end();
 }

@@ -4,6 +4,7 @@ import {
 	forEachPropStyleScopedClassReference,
 	getModelPropName,
 	hyphenateAttr,
+	type IRTemplate,
 	navigationFeatures,
 	normalizeAttributeValue,
 	scriptFeatures,
@@ -52,7 +53,7 @@ export function* generateElementProps(
 			) {
 				if (!isComponent) {
 					yield `...{ `;
-					yield* generateEventArg(prop.arg.loc.source, prop.arg.loc.start.offset);
+					yield* generateEventArg(prop.arg.loc.source, options.template, prop.arg.loc.start.offset);
 					yield `: `;
 					yield* generateEventExpression(
 						options,
@@ -132,7 +133,7 @@ export function* generateElementProps(
 				yield `...{ `;
 			}
 			const boundary = yield* Boundary.start(
-				'template',
+				options.template,
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				{ features: 0 },
@@ -153,7 +154,7 @@ export function* generateElementProps(
 			}
 			else {
 				const boundary2 = yield* Boundary.start(
-					'template',
+					options.template,
 					prop.loc.start.offset,
 					prop.loc.start.offset + 'v-model'.length,
 					{ features: semanticFeatures | navigationFeatures },
@@ -164,7 +165,7 @@ export function* generateElementProps(
 			yield `: `;
 			const argLoc = prop.arg?.loc ?? prop.loc;
 			const boundary3 = yield* Boundary.start(
-				'template',
+				options.template,
 				argLoc.start.offset,
 				argLoc.end.offset,
 				{ features: 0 },
@@ -200,7 +201,7 @@ export function* generateElementProps(
 				yield `...{ `;
 			}
 			const boundary = yield* Boundary.start(
-				'template',
+				options.template,
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				{ features: 0 },
@@ -209,7 +210,7 @@ export function* generateElementProps(
 			if (prefix === '.' || prefix === '#') {
 				// Pug shorthand syntax
 				for (const char of prop.name) {
-					yield [char, 'template', prop.loc.start.offset, features];
+					yield [char, options.template, prop.loc.start.offset, features];
 				}
 			}
 			else {
@@ -227,7 +228,7 @@ export function* generateElementProps(
 				yield `{}`;
 			}
 			else if (prop.value) {
-				yield* generateAttrValue(prop.value, { features: scriptFeatures & ~navigationFeatures });
+				yield* generateAttrValue(options.template, prop.value, { features: scriptFeatures & ~navigationFeatures });
 			}
 			else {
 				yield `true`;
@@ -248,7 +249,7 @@ export function* generateElementProps(
 			}
 			else {
 				const boundary = yield* Boundary.start(
-					'template',
+					options.template,
 					prop.exp.loc.start.offset,
 					prop.exp.loc.end.offset,
 					{ features: 0 },
@@ -302,7 +303,7 @@ export function* generatePropExp(
 		if (identifierRE.test(propVariableName)) {
 			const codes = generateCamelized(
 				exp.loc.source,
-				'template',
+				options.template,
 				exp.loc.start.offset,
 				{ features: semanticFeatures | navigationFeatures, kind: SpanMapKind.Atom },
 			);
@@ -311,7 +312,7 @@ export function* generatePropExp(
 				ctx,
 				codes,
 				ctx.getExpression(options.template, exp.loc.start.offset, propVariableName).references[0]!,
-				'template',
+				options.template,
 				exp.loc.start.offset,
 				exp.loc.end.offset,
 			);
@@ -320,13 +321,14 @@ export function* generatePropExp(
 }
 
 function* generateAttrValue(
+	template: IRTemplate,
 	node: CompilerDOM.TextNode,
 	features: VueCodeMarker,
 ): Generator<TsCode> {
 	const quote = node.loc.source.startsWith("'") ? "'" : '"';
 	const [content, offset] = normalizeAttributeValue(node);
 	yield quote;
-	yield* generateUnicode(content, offset, features);
+	yield* generateUnicode(content, template, offset, features);
 	yield quote;
 }
 

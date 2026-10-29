@@ -1,11 +1,9 @@
 import type { IScriptSnapshot } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
-import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { computed, setActiveSub } from 'alien-signals';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type {
 	IR,
-	IRAttr,
 	IRBlock,
 	IRCustomBlock,
 	IRPipeline,
@@ -16,6 +14,8 @@ import type {
 	TemplateCompiler,
 	TemplateCompileResult,
 	TypeScript,
+	VueFormatBlock,
+	VueFormatResult,
 } from '../types';
 import { computedArray, reactiveArray } from './signals';
 
@@ -24,7 +24,7 @@ export function useIR(
 	pipeline: IRPipeline,
 	fileName: string,
 	getSnapshot: () => IScriptSnapshot,
-	getParseSfcResult: () => SFCParseResult | undefined,
+	getFormatResult: () => VueFormatResult | undefined,
 ): IR {
 	const getUntrackedSnapshot = () => {
 		const pausedSub = setActiveSub(undefined);
@@ -36,12 +36,15 @@ export function useIR(
 		return getSnapshot().getText(0, getSnapshot().getLength());
 	});
 	const getComments = computedArray(() => {
-		return getParseSfcResult()?.descriptor.comments ?? [];
+		return getFormatResult()?.comments ?? [];
 	});
-	const getTemplate = useNullableSfcBlock(
+	const getErrors = computedArray(() => {
+		return getFormatResult()?.errors ?? [];
+	});
+	const getVapor = computed(() => !!getFormatResult()?.vapor);
+	const getTemplate = useNullableBlock(
 		'template',
-		'html',
-		computed(() => getParseSfcResult()?.descriptor.template ?? undefined),
+		computed(() => getFormatResult()?.template),
 		(_block, base): IRTemplate => {
 			const getParseTemplateResult = useParseTemplateResult(base);
 			return mergeObject(base, {
@@ -57,12 +60,11 @@ export function useIR(
 			});
 		},
 	);
-	const getScript = useNullableSfcBlock(
+	const getScript = useNullableBlock(
 		'script',
-		'js',
-		computed(() => getParseSfcResult()?.descriptor.script ?? undefined),
+		computed(() => getFormatResult()?.script),
 		(block, base): IRScript => {
-			const getSrc = useAttrValue('__src', base, block);
+			const getSrc = computed(() => block().src);
 			const getAst = computed(() =>
 				pipeline.compileScript(base.lang, base.content)
 					?? ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest)
@@ -77,12 +79,11 @@ export function useIR(
 			});
 		},
 	);
-	const getOriginalScriptSetup = useNullableSfcBlock(
+	const getOriginalScriptSetup = useNullableBlock(
 		'scriptSetup',
-		'js',
-		computed(() => getParseSfcResult()?.descriptor.scriptSetup ?? undefined),
+		computed(() => getFormatResult()?.scriptSetup),
 		(block, base): IRScriptSetup => {
-			const getGeneric = useAttrValue('__generic', base, block);
+			const getGeneric = computed(() => block().generic);
 			const getAst = computed(() =>
 				pipeline.compileScript(base.lang, base.content)
 					?? ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest)
@@ -97,8 +98,8 @@ export function useIR(
 			});
 		},
 	);
-	const hasScript = computed(() => !!getParseSfcResult()?.descriptor.script);
-	const hasScriptSetup = computed(() => !!getParseSfcResult()?.descriptor.scriptSetup);
+	const hasScript = computed(() => !!getFormatResult()?.script);
+	const hasScriptSetup = computed(() => !!getFormatResult()?.scriptSetup);
 	const getScriptSetup = computed(() => {
 		if (!hasScript() && !hasScriptSetup()) {
 			// #region monkey fix: https://github.com/vuejs/language-tools/pull/2113
@@ -106,24 +107,21 @@ export function useIR(
 				content: '',
 				lang: 'ts',
 				name: '',
-				start: 0,
-				end: 0,
-				startTagEnd: 0,
-				endTagStart: 0,
+				offset: 0,
+				element: undefined,
 				generic: undefined,
 				genericOffset: 0,
-				attrs: {},
 				ast: ts.createSourceFile('/dummy.ts', '', 99 satisfies ts.ScriptTarget.Latest, false, ts.ScriptKind.TS),
 			};
 		}
 		return getOriginalScriptSetup();
 	});
 	const styles = reactiveArray(
-		() => getParseSfcResult()?.descriptor.styles ?? [],
+		() => getFormatResult()?.styles ?? [],
 		(getBlock, i) => {
-			const base = useSfcBlock('style_' + i, 'css', getBlock);
-			const getSrc = useAttrValue('__src', base, getBlock);
-			const getModule = useAttrValue('__module', base, getBlock);
+			const base = useBlock('style_' + i, getBlock);
+			const getSrc = computed(() => getBlock().src);
+			const getModule = computed(() => getBlock().module);
 			const getScoped = computed(() => !!getBlock().scoped);
 			const getIr = computed(() => pipeline.compileStyle(base.lang, base.content));
 			const getBindings = computedArray(
@@ -155,9 +153,9 @@ export function useIR(
 		},
 	);
 	const customBlocks = reactiveArray(
-		() => getParseSfcResult()?.descriptor.customBlocks ?? [],
+		() => getFormatResult()?.customBlocks ?? [],
 		(getBlock, i) => {
-			const base = useSfcBlock('custom_block_' + i, 'txt', getBlock);
+			const base = useBlock('custom_block_' + i, getBlock);
 			const getType = computed(() => getBlock().type);
 			return (): IRCustomBlock =>
 				mergeObject(base, {
@@ -175,6 +173,9 @@ export function useIR(
 		get comments() {
 			return getComments();
 		},
+		get errors() {
+			return getErrors();
+		},
 		get template() {
 			return getTemplate();
 		},
@@ -189,6 +190,9 @@ export function useIR(
 		},
 		get customBlocks() {
 			return customBlocks;
+		},
+		get vapor() {
+			return getVapor();
 		},
 	};
 
@@ -214,7 +218,7 @@ export function useIR(
 				const change = getUntrackedSnapshot().getChangeRange(lastResult.snapshot);
 				if (change) {
 					const pausedSub = setActiveSub(undefined);
-					const templateOffset = base.startTagEnd;
+					const templateOffset = base.offset;
 					setActiveSub(pausedSub);
 
 					const newText = getUntrackedSnapshot().getText(change.span.start, change.span.start + change.newLength);
@@ -275,9 +279,8 @@ export function useIR(
 		});
 	}
 
-	function useNullableSfcBlock<T extends SFCBlock, K extends IRBlock>(
+	function useNullableBlock<T extends VueFormatBlock, K extends IRBlock>(
 		name: string,
-		defaultLang: string,
 		getBlock: () => T | undefined,
 		resolve: (block: () => T, base: IRBlock) => K,
 	) {
@@ -287,68 +290,44 @@ export function useIR(
 				return;
 			}
 			const _block = computed(() => getBlock()!);
-			return resolve(_block, useSfcBlock(name, defaultLang, _block));
+			return resolve(_block, useBlock(name, _block));
 		});
 	}
 
-	function useSfcBlock(
+	function useBlock(
 		name: string,
-		defaultLang: string,
-		getBlock: () => SFCBlock,
+		getBlock: () => VueFormatBlock,
 	) {
-		const getLang = computed(() => getBlock().lang ?? defaultLang);
-		const getAttrs = computed(() => getBlock().attrs); // TODO: computed it
+		const getLang = computed(() => {
+			const { lang } = getBlock();
+			if (typeof lang !== 'string') {
+				throw new TypeError(`The format gave the block '${name}' no \`lang\`.`);
+			}
+			return lang;
+		});
 		const getContent = computed(() => getBlock().content);
-		const getStartTagEnd = computed(() => getBlock().loc.start.offset);
-		const getEndTagStart = computed(() => getBlock().loc.end.offset);
-		const getStart = computed(() =>
-			getUntrackedSnapshot().getText(0, getStartTagEnd()).lastIndexOf('<' + getBlock().type)
-		);
-		const getEnd = computed(() =>
-			getEndTagStart()
-			+ getUntrackedSnapshot().getText(getEndTagStart(), getUntrackedSnapshot().getLength()).indexOf('>') + 1
-		);
+		const getOffset = computed(() => getBlock().offset);
+		const getElementStart = computed(() => getBlock().element?.start);
+		const getElementEnd = computed(() => getBlock().element?.end);
+		const getElement = computed(() => {
+			const start = getElementStart();
+			return start === undefined ? undefined : { start, end: getElementEnd()! };
+		});
 		return {
 			name,
 			get lang() {
 				return getLang();
 			},
-			get attrs() {
-				return getAttrs();
-			},
 			get content() {
 				return getContent();
 			},
-			get startTagEnd() {
-				return getStartTagEnd();
+			get offset() {
+				return getOffset();
 			},
-			get endTagStart() {
-				return getEndTagStart();
-			},
-			get start() {
-				return getStart();
-			},
-			get end() {
-				return getEnd();
+			get element() {
+				return getElement();
 			},
 		};
-	}
-
-	function useAttrValue<T extends SFCBlock>(
-		key: keyof T & string,
-		base: ReturnType<typeof useSfcBlock>,
-		getBlock: () => T,
-	) {
-		return computed(() => {
-			const val = getBlock()[key] as IRAttr | undefined;
-			if (typeof val === 'object') {
-				return {
-					...val,
-					offset: base.start + val.offset,
-				};
-			}
-			return val;
-		});
 	}
 }
 

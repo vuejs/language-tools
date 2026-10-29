@@ -1,3 +1,4 @@
+import type { IRBlock } from '@vue/language-core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -11,6 +12,10 @@ import {
 } from '../lib/codegen/rewrite/sourceRewrite';
 
 type Segment = string | MappedSegment<string>;
+
+const s = { name: 's', offset: 0 } as IRBlock;
+const setup = { name: 'setup', offset: 0 } as IRBlock;
+const other = { name: 'other', offset: 0 } as IRBlock;
 
 /** The segments that `slice` renders: text, and kept source runs with the data of their cut. */
 function collect(slice: RewriteSlice<string>) {
@@ -70,7 +75,7 @@ function renderedOffsets(rewrite: SourceRewrite<string>, segments: Segment[]) {
 }
 
 function defineProps(text: string, statement = 'const') {
-	const rewrite = createSourceRewrite<string>('setup', text);
+	const rewrite = createSourceRewrite<string>(setup, text);
 	const { core } = rewrite;
 	const body = core.cut(0, text.length, { data: 'body' });
 	const typeArg = { start: text.indexOf('{'), end: text.lastIndexOf('}') + 1 };
@@ -121,7 +126,7 @@ describe('scenarios', () => {
 			(writer: RewriteWriter<string>) => writer.replace(name, name + 'Foo'.length, 'Second'),
 		];
 		for (const order of [[0, 1], [1, 0]]) {
-			const rewrite = createSourceRewrite<string>('s', text);
+			const rewrite = createSourceRewrite<string>(s, text);
 			const body = rewrite.core.cut(0, text.length, { data: 'body' });
 			order.forEach((edit, rank) => edits[edit]!(rewrite.writer(rank + 1)));
 			expect(render(body)).toBe('const a = first()Second;');
@@ -130,7 +135,7 @@ describe('scenarios', () => {
 
 	test('replaces of one range by two writers keep both codes, inner rank first', () => {
 		const text = 'const a = useFoo();';
-		const rewrite = createSourceRewrite<string>('s', text);
+		const rewrite = createSourceRewrite<string>(s, text);
 		const body = rewrite.core.cut(0, text.length, { data: 'body' });
 		const call = text.indexOf('useFoo()');
 		rewrite.writer(1).replace(call, call + 8, 'A()');
@@ -139,7 +144,7 @@ describe('scenarios', () => {
 	});
 
 	test('wraps of two writers nest, the lower rank inside', () => {
-		const rewrite = createSourceRewrite<string>('s', 'x = f();');
+		const rewrite = createSourceRewrite<string>(s, 'x = f();');
 		const body = rewrite.core.cut(0, 8, { data: 'body' });
 		rewrite.writer(1).insertBefore(4, 'A(');
 		rewrite.writer(1).insertAfter(7, ')');
@@ -150,7 +155,7 @@ describe('scenarios', () => {
 
 	test('an insert at a boundary of two cuts goes by its side, and a removal across them splits', () => {
 		const text = `import { a } from 'a';\nconst b = a;`;
-		const rewrite = createSourceRewrite<string>('s', text);
+		const rewrite = createSourceRewrite<string>(s, text);
 		const importEnd = text.indexOf('\n') + 1;
 		const imports = rewrite.core.cut(0, importEnd, { data: 'imports' });
 		const body = rewrite.core.cut(importEnd, text.length, { data: 'body' });
@@ -171,7 +176,7 @@ describe('scenarios', () => {
 	});
 
 	test('core inserts sit outside the inserts of other writers', () => {
-		const rewrite = createSourceRewrite<string>('s', 'useAttrs();');
+		const rewrite = createSourceRewrite<string>(s, 'useAttrs();');
 		const { core } = rewrite;
 		const body = core.cut(0, 11, { data: 'body' });
 		core.insertBefore(0, '(');
@@ -185,25 +190,25 @@ describe('scenarios', () => {
 		const { body } = defineProps('const props = defineProps<{ a: string }>();');
 		expect(collect(body)).toEqual([
 			'type __VLS_Props = ',
-			['{ a: string }', 'setup', 26, 'alias'],
+			['{ a: string }', setup, 26, 'alias'],
 			';\n',
-			['const props = defineProps<', 'setup', 0, 'body'],
+			['const props = defineProps<', setup, 0, 'body'],
 			'__VLS_Props',
-			['>();', 'setup', 39, 'body'],
+			['>();', setup, 39, 'body'],
 		]);
 	});
 
 	test('mapped segments of generated code pass through', () => {
-		const rewrite = createSourceRewrite<string>('s', 'ab');
+		const rewrite = createSourceRewrite<string>(s, 'ab');
 		const body = rewrite.core.cut(0, 2, { data: 'body' });
-		rewrite.core.insertAfter(1, () => [['x', 'other', 3, 'mapped']]);
-		expect(collect(body)).toEqual([['a', 's', 0, 'body'], ['x', 'other', 3, 'mapped'], ['b', 's', 1, 'body']]);
+		rewrite.core.insertAfter(1, () => [['x', other, 3, 'mapped']]);
+		expect(collect(body)).toEqual([['a', s, 0, 'body'], ['x', other, 3, 'mapped'], ['b', s, 1, 'body']]);
 	});
 });
 
 describe('order', () => {
 	test('order keys make one side of a char LIFO for decreasing keys and FIFO for equal ones', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abc');
+		const rewrite = createSourceRewrite<string>(s, 'abc');
 		const { core } = rewrite;
 		const body = core.cut(0, 3, { data: 'body' });
 		core.insertAfter(1, 'A');
@@ -214,7 +219,7 @@ describe('order', () => {
 	});
 
 	test('an order key orders the entries of one rank only', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abc');
+		const rewrite = createSourceRewrite<string>(s, 'abc');
 		const body = rewrite.core.cut(0, 3, { data: 'body' });
 		rewrite.writer(0).insertBefore(1, 'p0', { order: 1e9 });
 		rewrite.writer(1).insertBefore(1, 'p1', { order: -1e9 });
@@ -222,7 +227,7 @@ describe('order', () => {
 	});
 
 	test('the order at a char: before by rank descending, replacement, the char, after by rank ascending', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abc');
+		const rewrite = createSourceRewrite<string>(s, 'abc');
 		const body = rewrite.core.cut(0, 3, { data: 'body' });
 		for (const rank of [0, 1]) {
 			const writer = rewrite.writer(rank);
@@ -237,14 +242,14 @@ describe('order', () => {
 	});
 
 	test('a non-number order key is an error', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abc');
+		const rewrite = createSourceRewrite<string>(s, 'abc');
 		expect(() => rewrite.core.insertBefore(1, 'x', { order: Number.NaN })).toThrow('is not a number');
 	});
 });
 
 describe('block edges', () => {
 	test('code at the end of the text stays after all text when a cut that ends there moves', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abcdefgh');
+		const rewrite = createSourceRewrite<string>(s, 'abcdefgh');
 		const { core } = rewrite;
 		const body = core.cut(0, 8, { data: 'body' });
 		const last = core.cut(5, 8, { data: 'last' });
@@ -255,7 +260,7 @@ describe('block edges', () => {
 	});
 
 	test('code at the start of the text stays before all text when a cut that starts there moves', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abcdefgh');
+		const rewrite = createSourceRewrite<string>(s, 'abcdefgh');
 		const { core } = rewrite;
 		const body = core.cut(0, 8, { data: 'body' });
 		const first = core.cut(0, 3, { data: 'first' });
@@ -266,7 +271,7 @@ describe('block edges', () => {
 	});
 
 	test('head code renders by rank descending and tail code by rank ascending', () => {
-		const rewrite = createSourceRewrite<string>('s', 'ab');
+		const rewrite = createSourceRewrite<string>(s, 'ab');
 		const body = rewrite.core.cut(0, 2, { data: 'body' });
 		for (const [name, writer] of [['0', rewrite.writer(0)], ['c', rewrite.core], ['1', rewrite.writer(1)]] as const) {
 			writer.insertAfter(0, `h${name}`);
@@ -276,7 +281,7 @@ describe('block edges', () => {
 	});
 
 	test('an empty text renders its inserts in the first zero-width cut, after code before code', () => {
-		const rewrite = createSourceRewrite<string>('s', '');
+		const rewrite = createSourceRewrite<string>(s, '');
 		const { core } = rewrite;
 		const imports = core.cut(0, 0, { data: 'imports' });
 		const body = core.cut(0, 0, { data: 'body' });
@@ -290,22 +295,22 @@ describe('block edges', () => {
 
 describe('runs', () => {
 	test('a removal next to a run boundary or an insert renders no empty run', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abcdef');
+		const rewrite = createSourceRewrite<string>(s, 'abcdef');
 		const body = rewrite.core.cut(0, 6, { data: 'body' });
 		const writer = rewrite.writer(0);
 		writer.replace(0, 2, 'X');
 		writer.insertBefore(2, 'Y');
 		writer.replace(4, 6, '');
-		expect(collect(body)).toEqual(['X', 'Y', ['cd', 's', 2, 'body']]);
+		expect(collect(body)).toEqual(['X', 'Y', ['cd', s, 2, 'body']]);
 	});
 
 	test('a text without edits renders as one run', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abc');
-		expect(collect(rewrite.core.cut(0, 3, { data: 'body' }))).toEqual([['abc', 's', 0, 'body']]);
+		const rewrite = createSourceRewrite<string>(s, 'abc');
+		expect(collect(rewrite.core.cut(0, 3, { data: 'body' }))).toEqual([['abc', s, 0, 'body']]);
 	});
 
 	test('code is called at most once, and only if it renders', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abcdef');
+		const rewrite = createSourceRewrite<string>(s, 'abcdef');
 		const { core } = rewrite;
 		const body = core.cut(0, 6, { data: 'body' });
 		core.cut(2, 4, { data: 'unplaced', placeholder: 'P' });
@@ -324,7 +329,7 @@ describe('runs', () => {
 
 describe('construction errors', () => {
 	test('a cut that crosses a cut is an error', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abcdef');
+		const rewrite = createSourceRewrite<string>(s, 'abcdef');
 		const { core } = rewrite;
 		core.cut(0, 6, { data: 'body' });
 		core.cut(0, 3, { data: 'a' });
@@ -334,7 +339,7 @@ describe('construction errors', () => {
 	});
 
 	test('a cut that crosses a sibling other than its neighbours is an error', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abcdefg');
+		const rewrite = createSourceRewrite<string>(s, 'abcdefg');
 		const { core } = rewrite;
 		core.cut(1, 2, { data: 'a' });
 		core.cut(3, 6, { data: 'b' });
@@ -344,28 +349,28 @@ describe('construction errors', () => {
 	});
 
 	test('of two cuts of one range, the later is inside the earlier', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abc');
+		const rewrite = createSourceRewrite<string>(s, 'abc');
 		const { core } = rewrite;
 		const outer = core.cut(0, 3, { data: 'outer' });
 		const inner = core.cut(0, 3, { data: 'inner', placeholder: 'P' });
 		expect(collect(outer)).toEqual(['P']);
-		expect(collect(inner)).toEqual([['abc', 's', 0, 'inner']]);
+		expect(collect(inner)).toEqual([['abc', s, 0, 'inner']]);
 	});
 
 	test('a zero-width cut with a placeholder is an error', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abc');
+		const rewrite = createSourceRewrite<string>(s, 'abc');
 		expect(() => rewrite.core.cut(1, 1, { data: 'a', placeholder: 'P' })).toThrow('cannot have a placeholder');
 	});
 
 	test('placing a cut twice is an error', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abc');
+		const rewrite = createSourceRewrite<string>(s, 'abc');
 		const body = rewrite.core.cut(0, 3, { data: 'body' });
 		collect(body);
 		expect(() => collect(body)).toThrow('The cut 0..3 is placed twice.');
 	});
 
 	test('an edit after the first render is an error', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abc');
+		const rewrite = createSourceRewrite<string>(s, 'abc');
 		const body = rewrite.core.cut(0, 3, { data: 'body' });
 		collect(body);
 		expect(() => rewrite.writer(0).insertBefore(1, 'x')).toThrow('The rewrite is already rendered.');
@@ -373,7 +378,7 @@ describe('construction errors', () => {
 	});
 
 	test('offsets out of the text, an empty replace and an invalid rank are errors', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abc');
+		const rewrite = createSourceRewrite<string>(s, 'abc');
 		expect(() => rewrite.core.insertBefore(4, 'x')).toThrow('4..4 is out of 0..3.');
 		expect(() => rewrite.writer(0).replace(2, 1, 'x')).toThrow('2..1 is out of 0..3.');
 		expect(() => rewrite.writer(0).replace(1, 1, 'x')).toThrow('removes no char');
@@ -381,7 +386,7 @@ describe('construction errors', () => {
 	});
 
 	test('only core cuts', () => {
-		const rewrite = createSourceRewrite<string>('s', 'abc');
+		const rewrite = createSourceRewrite<string>(s, 'abc');
 		expect('cut' in rewrite.writer(0)).toBe(false);
 	});
 });
@@ -391,7 +396,7 @@ describe('properties', () => {
 		const random = createRandom(1);
 		for (let iteration = 0; iteration < 20000; iteration++) {
 			const length = 1 + random(12);
-			const rewrite = createSourceRewrite<string>('s', alphabet(length));
+			const rewrite = createSourceRewrite<string>(s, alphabet(length));
 			const { core } = rewrite;
 			const root = core.cut(0, length, { data: 'root' });
 			let moved: { start: number; end: number } | undefined;
@@ -456,7 +461,7 @@ describe('properties', () => {
 				};
 			});
 			const renderEdits = (list: typeof edits) => {
-				const rewrite = createSourceRewrite<string>('s', alphabet(length));
+				const rewrite = createSourceRewrite<string>(s, alphabet(length));
 				const root = rewrite.core.cut(0, length, { data: 'root' });
 				for (const edit of list) {
 					edit.apply(rewrite.writer(edit.rank));
@@ -485,7 +490,7 @@ describe('properties', () => {
 			) {
 				nested++;
 			}
-			const rewrite = createSourceRewrite<string>('s', alphabet(length));
+			const rewrite = createSourceRewrite<string>(s, alphabet(length));
 			const segments = buildNestedCase(rewrite, testCase);
 			const offsets = renderedOffsets(rewrite, segments);
 			const removals = testCase.edits.flatMap(edit =>

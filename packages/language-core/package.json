@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-core",
-	"version": "4.0.0-alpha.0",
+	"version": "4.0.0-alpha.1",
 	"license": "MIT",
 	"files": [
 		"index.d.ts",
@@ -37,7 +37,6 @@
 		"@types/node": "^26.0.1",
 		"@types/path-browserify": "^1.0.3",
 		"@types/picomatch": "^4.0.3",
-		"@vue/compiler-sfc": "^3.5.0",
 		"typescript": "npm:typescript@7.1.0-beta"
 	}
 }

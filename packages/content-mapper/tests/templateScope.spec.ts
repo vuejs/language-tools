@@ -141,7 +141,7 @@ function createSourceRoot(name: string) {
 
 test('the code generation fails for an expression that the template scope does not walk', () => {
 	const root = createSourceRoot('missing');
-	const start = source.indexOf('value + item') - root.ir.template!.startTagEnd;
+	const start = source.indexOf('value + item') - root.ir.template!.offset;
 	const expressions = root.analysis.getTemplateScope().expressions.get(root.ir.template!) as Map<
 		number,
 		TemplateExpression
@@ -158,7 +158,7 @@ test('the code generation reads the locals and the members of a template express
 	expect(original).toContain(`__VLS_unwrap(value, {} as import('vue').Ref<unknown>) + item`);
 
 	const root = createSourceRoot('changedReferences');
-	const start = source.indexOf('value + item') - root.ir.template!.startTagEnd;
+	const start = source.indexOf('value + item') - root.ir.template!.offset;
 	const { references } = root.analysis.getTemplateScope().expressions.get(root.ir.template!)!.get(start)!;
 	const [value, item] = references;
 	expect([value!.name, value!.local, item!.name, item!.local]).toEqual(['value', false, 'item', true]);

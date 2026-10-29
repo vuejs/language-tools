@@ -1,12 +1,25 @@
+import { SpanMapKind, type SpanMapSegment } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { describe, expect, it } from 'vitest';
 import { createIRPipeline } from '../lib/ir/irPipeline';
+import { createVueSource } from '../lib/ir/vueSource';
 import { getDefaultCompilerOptions } from '../lib/options/compilerOptions';
-import type { SFCParseResult, VueCompilerOptions } from '../lib/types';
-import { ts } from './typescript';
+import type { VueCompilerOptions, VueFormatResult } from '../lib/types';
+import { createSnapshot, ts } from './typescript';
 
 const legacyMessage =
 	'VueLanguagePlugin functions are no longer supported; export `{ ir: … }` (see language-core README)';
+
+function segment(virtualStart: number, length: number, originalStart: number): SpanMapSegment {
+	return {
+		virtualStart,
+		virtualEnd: virtualStart + length,
+		originalStart,
+		originalEnd: originalStart + length,
+		kind: SpanMapKind.Verbatim,
+		features: 0,
+	};
+}
 
 function withPlugins(modules: Record<string, unknown>, options: Partial<VueCompilerOptions> = {}): VueCompilerOptions {
 	return {
@@ -18,6 +31,18 @@ function withPlugins(modules: Record<string, unknown>, options: Partial<VueCompi
 			config: {},
 			module,
 		})),
+	};
+}
+
+function emptyResult(): VueFormatResult {
+	return {
+		comments: [],
+		errors: [],
+		template: undefined,
+		script: undefined,
+		scriptSetup: undefined,
+		styles: [],
+		customBlocks: [],
 	};
 }
 
@@ -66,9 +91,9 @@ describe('createIRPipeline', () => {
 							lang: () => ({
 								html,
 								mappings: [
-									[0, 5, 0, 5, 0, 0], // `<div>`
-									[5, 1, 10, 1, 0, 0], // `x`
-									[19, 12, 30, 12, 0, 0], // `<p v-if></p>`
+									segment(0, 5, 0), // `<div>`
+									segment(5, 1, 10), // `x`
+									segment(19, 12, 30), // `<p v-if></p>`
 								],
 								ignoreError: (error: CompilerDOM.CompilerError) => {
 									ignored.push(error.code);
@@ -130,7 +155,7 @@ describe('createIRPipeline', () => {
 			{ plugin: 'html', message: `The template compiler 'html' is built in and cannot be replaced.` },
 		]);
 		expect(pipeline.compileTemplate('html', '<div/>', {})?.result.ast?.children[0]).toMatchObject({ tag: 'div' });
-		expect(pipeline.parse('/project/App.vue', '<template><div/></template>')?.result.descriptor.template)
+		expect(pipeline.parse('/project/App.vue', '<template><div/></template>')?.result.template)
 			.toBeTruthy();
 	});
 
@@ -149,7 +174,7 @@ describe('createIRPipeline', () => {
 	});
 
 	it('parses with the format of a plugin that `format` selects', () => {
-		const parsed = { descriptor: { filename: 'custom' }, errors: [] } as unknown as SFCParseResult;
+		const parsed = emptyResult();
 		const custom = { ir: { formats: { custom: { parse: () => parsed } } } };
 
 		const selected = createIRPipeline(ts, withPlugins({ custom }, { format: 'custom' }));
@@ -160,13 +185,44 @@ describe('createIRPipeline', () => {
 		expect(notSelected.parse('/project/App.vue', '')?.result).not.toBe(parsed);
 	});
 
-	it('falls back to the SFC format for a format that nothing provides', () => {
+	it('reads no file for a format that nothing provides', () => {
 		const pipeline = createIRPipeline(ts, withPlugins({}, { format: 'custom' }));
 		expect(pipeline.errors).toEqual([
-			{ message: `No format 'custom' is built in or provided by a plugin; 'sfc' is used instead.` },
+			{ message: `No format 'custom' is built in or provided by a plugin; no file is read.` },
 		]);
-		expect(pipeline.parse('/project/App.vue', '<template><div/></template>')?.result.descriptor.template)
-			.toBeTruthy();
+		expect(pipeline.parse('/project/App.vue', '<template><div/></template>')).toBeUndefined();
+	});
+
+	it('throws on a block that a format gives no `lang`', () => {
+		const custom = {
+			ir: {
+				formats: {
+					custom: {
+						parse: () => ({ ...emptyResult(), template: { content: '<div/>', offset: 0 } }),
+					},
+				},
+			},
+		};
+		const options = withPlugins({ custom }, { format: 'custom' });
+		const source = createVueSource(ts, options, createIRPipeline(ts, options), '/project/App.vue', createSnapshot(''));
+		expect(() => source.ir.template!.lang).toThrow(`The format gave the block 'template' no \`lang\`.`);
+	});
+
+	it('updates with the format of a plugin whatever the errors of its result', () => {
+		const error = { code: 0, message: 'error' } as CompilerDOM.CompilerError;
+		const updated = { ...emptyResult(), comments: ['updated'] };
+		const custom = {
+			ir: { formats: { custom: { parse: () => ({ ...emptyResult(), errors: [error] }), update: () => updated } } },
+		};
+		const options = withPlugins({ custom }, { format: 'custom' });
+		const source = createVueSource(ts, options, createIRPipeline(ts, options), '/project/App.vue', createSnapshot('a'));
+		expect(source.ir.errors).toEqual([error]);
+
+		source.update({
+			...createSnapshot('ab'),
+			getChangeRange: () => ({ span: { start: 1, length: 0 }, newLength: 1 }),
+		});
+		expect(source.ir.comments).toEqual(['updated']);
 	});
 
 	it('applies the template compiler options of the plugins in order', () => {

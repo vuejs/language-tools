@@ -5,7 +5,7 @@ import { getNodeText, getStartEnd, isStringLiteralLike } from '../typescript/nod
 import { collectBindingIdentifiers } from './bindingPatterns';
 import { getClosestMultiLineCommentRange, parseBindings } from './scriptBindings';
 
-const tsCheckRE = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
+const tsCheckRE = /^\/\/(?:\s*@ts-(?:no)?check(?:$|\s)|\/\s*<reference\s)/;
 
 export interface CallExpressionRange {
 	callExp: TextRange;

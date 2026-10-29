@@ -23,7 +23,7 @@ export function tsCodeSink(
 				out.push(...generateSfcBlockSection(block, start, end, marker as VueCodeMarker));
 			}
 			else {
-				out.push([block.content.slice(start, end), block.name, start, marker]);
+				out.push([block.content.slice(start, end), block, start, marker]);
 			}
 		},
 		segment: segment => out.push(segment),
@@ -45,7 +45,7 @@ export interface BlockRewrite {
 
 /** A rewrite of the content of `block`, with the script edits of the codegen plugins applied. */
 export function createBlockRewrite(block: IRScript | IRScriptSetup, scriptEdits: readonly ScriptEdit[]): BlockRewrite {
-	const rewrite = createSourceRewrite<TsCodeData>(block.name, block.content);
+	const rewrite = createSourceRewrite<TsCodeData>(block, block.content);
 	const removals: [number, number][] = [];
 	for (const edit of scriptEdits) {
 		if (edit.block !== block) {
@@ -70,7 +70,7 @@ export function createBlockRewrite(block: IRScript | IRScriptSetup, scriptEdits:
 		},
 		*generateEmptyCopy() {
 			if (!rendersSource(block.content.length, removals)) {
-				yield ['', block.name, 0, { features: scriptFeatures }];
+				yield ['', block, 0, { features: scriptFeatures }];
 			}
 		},
 	};

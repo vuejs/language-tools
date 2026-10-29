@@ -1,4 +1,4 @@
-import { allFeatures, completionFeatures, type Mapping, navigationFeatures } from '@vue/language-core';
+import { allFeatures, completionFeatures, navigationFeatures, type SpanMapSegment } from '@vue/language-core';
 import { fnv1a } from '../hash';
 import { SpanMapKind, type SpanMapping } from '../protocol';
 
@@ -21,7 +21,7 @@ interface IntervalNode {
 }
 
 export function toSpanMappings(
-	mappings: readonly Mapping[],
+	segments: readonly SpanMapSegment[],
 	generatedText: string,
 	originalText: string,
 	languageFeatures = true,
@@ -29,9 +29,10 @@ export function toSpanMappings(
 	const candidates: Candidate[] = [];
 	const fills: Candidate[] = [];
 
-	for (const [generatedStart, generatedLength, originalStart, originalLength, kind, data] of mappings) {
-		const generatedEnd = generatedStart + generatedLength;
-		const originalEnd = originalStart + originalLength;
+	for (const segment of segments) {
+		const { virtualStart: generatedStart, virtualEnd: generatedEnd, originalStart, originalEnd, kind } = segment;
+		const generatedLength = generatedEnd - generatedStart;
+		const originalLength = originalEnd - originalStart;
 		if (
 			generatedStart < 0
 			|| originalStart < 0
@@ -43,7 +44,7 @@ export function toSpanMappings(
 		const verbatim = kind === SpanMapKind.Verbatim
 			&& generatedLength === originalLength
 			&& generatedText.slice(generatedStart, generatedEnd) === originalText.slice(originalStart, originalEnd);
-		const sourceFeatures = data & allFeatures;
+		const sourceFeatures = (segment.features ?? allFeatures) & allFeatures;
 		let features = languageFeatures ? sourceFeatures : 0;
 		if (generatedLength === 0) {
 			// Zero-length spans only serve as navigation anchors (e.g. the synthetic

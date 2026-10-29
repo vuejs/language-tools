@@ -1,9 +1,7 @@
-import type { Mapping, SpanMapKind } from '@volar/language-core';
+import type { SpanMapKind, SpanMapSegment } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
-import type { SFCParseResult } from '@vue/compiler-sfc';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 
-export type { SFCParseResult } from '@vue/compiler-sfc';
 /** The node types of the TypeScript 7 AST API, for packages that do not resolve `typescript` to it. */
 export type { ts };
 
@@ -49,7 +47,7 @@ export interface ResolvedVuePlugin {
 	module: unknown;
 }
 
-/** The `kind` and `features` of the protocol `Mapping` a generated segment maps by, which the protocol has no object type for. */
+/** The `kind` and `features` of the `SpanMapSegment` a generated segment maps by. */
 export interface VueCodeMarker {
 	/** `SpanMapFeature` bits. */
 	features: number;
@@ -57,12 +55,18 @@ export interface VueCodeMarker {
 	kind?: SpanMapKind;
 }
 
-/** A segment of code: plain text, or text that maps from an offset of a source by its `data`. */
+/** An IR block, whose offsets are relative to its content, or `undefined` for the offsets of the file. */
+export type CodeSource = IRBlock | undefined;
+
+/**
+ * A segment of code: plain text, or text that maps by its `data` from `sourceOffset` of `source`, an IR block, or
+ * of the file when `source` is `undefined`.
+ */
 export type CodeSegment<Data> =
 	| string
 	| [
 		text: string,
-		source: string | undefined,
+		source: CodeSource,
 		sourceOffset: number,
 		data: Data,
 	];
@@ -139,11 +143,66 @@ export interface TextChange {
 	newText: string;
 }
 
-/** Reads a file into SFC blocks. */
+/** Reads a file into its blocks. */
 export interface VueFormat {
-	parse(fileName: string, content: string): SFCParseResult | undefined;
-	/** Updates `old` in place for `change`, or returns `undefined` to have the file parsed again. */
-	update?(old: SFCParseResult, change: TextChange): SFCParseResult | undefined;
+	parse(fileName: string, content: string): VueFormatResult | undefined;
+	/**
+	 * The result for `change`, which keeps the objects of `old` for the blocks that `change` leaves as they are and
+	 * does not modify `old`, or `undefined` to have the file parsed again.
+	 */
+	update?(old: VueFormatResult, change: TextChange): VueFormatResult | undefined;
+}
+
+/** The blocks of a file as its format reads them, at offsets of the file. */
+export interface VueFormatResult {
+	/** The top-level comments of the file. */
+	comments: string[];
+	/** Why the file is not read as written; the language service reports every one. */
+	errors: CompilerDOM.CompilerError[];
+	template: VueFormatBlock | undefined;
+	script: VueFormatScript | undefined;
+	scriptSetup: VueFormatScriptSetup | undefined;
+	styles: VueFormatStyle[];
+	customBlocks: VueFormatCustomBlock[];
+	/** Whether the file is a Vapor component. */
+	vapor?: boolean;
+}
+
+/** A block of a file: its `content`, at `offset` in the file. */
+export interface VueFormatBlock {
+	/** The text of the block, which a format may blank out in places that are not part of the block. */
+	content: string;
+	/** The offset of `content` in the file. */
+	offset: number;
+	lang: string;
+	/**
+	 * The range of the element that the block is written as, from its start tag to its end tag, if it is one, like
+	 * the blocks of an SFC.
+	 */
+	element?: VueFormatElement;
+}
+
+export interface VueFormatElement {
+	start: number;
+	end: number;
+}
+
+export interface VueFormatScript extends VueFormatBlock {
+	src?: IRAttr;
+}
+
+export interface VueFormatScriptSetup extends VueFormatBlock {
+	generic?: IRAttr;
+}
+
+export interface VueFormatStyle extends VueFormatBlock {
+	src?: IRAttr;
+	module?: IRAttr;
+	scoped?: boolean;
+}
+
+export interface VueFormatCustomBlock extends VueFormatBlock {
+	type: string;
 }
 
 /** The AST of a template block. */
@@ -163,7 +222,7 @@ export interface TemplateCompiler {
 /** How the IR of a Vue file is built: its format, and the compiler of each block language. */
 export interface IRPipeline {
 	/** The SFC blocks of a file, and the format that read them. */
-	parse(fileName: string, content: string): { result: SFCParseResult; format: VueFormat } | undefined;
+	parse(fileName: string, content: string): { result: VueFormatResult; format: VueFormat } | undefined;
 	/** The AST of a template block, and the compiler that compiled it. */
 	compileTemplate(
 		lang: string,
@@ -200,8 +259,8 @@ export interface VuePluginContext {
  */
 export interface TemplateHTML {
 	html: string;
-	/** From ranges of `html` (generated) to ranges of the template (source). */
-	mappings: Mapping[];
+	/** From ranges of `html` (virtual) to ranges of the template (original). */
+	mappings: SpanMapSegment[];
 	/**
 	 * Whether an error of the compiler, at offsets of `html`, comes from the conversion rather than the template, so
 	 * that it is not reported.
@@ -232,27 +291,26 @@ export interface VuePluginError {
 export interface IR {
 	content: string;
 	comments: string[];
+	/** The `errors` of the format. */
+	errors: readonly CompilerDOM.CompilerError[];
 	template: IRTemplate | undefined;
 	script: IRScript | undefined;
 	scriptSetup: IRScriptSetup | undefined;
 	styles: readonly IRStyle[];
 	customBlocks: readonly IRCustomBlock[];
+	/** The `vapor` of the format. */
+	vapor: boolean;
 }
 
+/** An attribute without a value, or the value at its offset in the file. */
 export type IRAttr = true | {
 	text: string;
 	offset: number;
 };
 
-export interface IRBlock {
+export interface IRBlock extends Omit<VueFormatBlock, 'element'> {
 	name: string;
-	start: number;
-	end: number;
-	startTagEnd: number;
-	endTagStart: number;
-	lang: string;
-	content: string;
-	attrs: Record<string, string | true>;
+	element: VueFormatElement | undefined;
 }
 
 export interface IRTemplate extends IRBlock {
@@ -287,20 +345,6 @@ export interface IRStyle extends IRBlock {
 
 export interface IRCustomBlock extends IRBlock {
 	type: string;
-}
-
-declare module '@vue/compiler-sfc' {
-	interface SFCBlock {
-		__src?: IRAttr;
-	}
-
-	interface SFCScriptBlock {
-		__generic?: IRAttr;
-	}
-
-	interface SFCStyleBlock {
-		__module?: IRAttr;
-	}
 }
 
 export interface TextRange<Node extends ts.Node = ts.Node> {

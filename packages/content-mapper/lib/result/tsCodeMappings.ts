@@ -1,4 +1,4 @@
-import { isCompletionEnabled, type Mapping, SpanMapKind } from '@volar/language-core';
+import { isCompletionEnabled, SpanMapKind, type SpanMapSegment } from '@volar/language-core';
 import type { VueCodeMarker } from '@vue/language-core';
 import { isSynthesizedIgnore, OpenRanges, type TsCode } from '../codegen/tsCode';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../protocol';
@@ -10,38 +10,45 @@ interface Entry {
 	info: VueCodeMarker;
 }
 
-export function buildMappings(chunks: TsCode[]): Mapping[] {
+export function buildMappings(chunks: TsCode[]): SpanMapSegment[] {
 	return toItems(chunks).flatMap(item => isGroup(item) ? fromGroup(item) : [toMapping(item)]);
 }
 
-function fromGroup(group: Entry[]): Mapping[] {
+function fromGroup(group: Entry[]): SpanMapSegment[] {
 	const first = group[0]!;
 	const last = group[group.length - 1]!;
-	const atom: Mapping = [
-		first.generatedStart,
-		last.generatedStart + last.length - first.generatedStart,
-		first.sourceStart,
-		last.sourceStart + last.length - first.sourceStart,
-		isContiguous(group) ? SpanMapKind.Verbatim : SpanMapKind.Atom,
-		first.info.features,
-	];
+	const atom = {
+		virtualStart: first.generatedStart,
+		virtualEnd: last.generatedStart + last.length,
+		originalStart: first.sourceStart,
+		originalEnd: last.sourceStart + last.length,
+		kind: isContiguous(group) ? SpanMapKind.Verbatim : SpanMapKind.Atom,
+		features: first.info.features,
+	};
 	const content = group.length === 3 ? group[1]! : undefined;
 	if (
 		content
 		&& !first.length
 		&& !last.length
-		&& content.sourceStart === atom[2]
-		&& content.length === atom[3]
+		&& content.sourceStart === atom.originalStart
+		&& content.length === atom.originalEnd - atom.originalStart
 		&& isCompletionEnabled(content.info.features)
 	) {
-		atom[5] = 0;
+		atom.features = 0;
 		return [atom, toMapping(content)];
 	}
 	return [atom];
 }
 
-function toMapping({ generatedStart, length, sourceStart, info }: Entry): Mapping {
-	return [generatedStart, length, sourceStart, length, info.kind ?? SpanMapKind.Verbatim, info.features];
+function toMapping({ generatedStart, length, sourceStart, info }: Entry): SpanMapSegment {
+	return {
+		virtualStart: generatedStart,
+		virtualEnd: generatedStart + length,
+		originalStart: sourceStart,
+		originalEnd: sourceStart + length,
+		kind: info.kind ?? SpanMapKind.Verbatim,
+		features: info.features,
+	};
 }
 
 /**

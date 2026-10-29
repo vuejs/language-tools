@@ -65,7 +65,7 @@ export function* generateSlotOutlet(
 			}
 
 			const boundary = yield* Boundary.start(
-				'template',
+				options.template,
 				nameProp.loc.start.offset,
 				nameProp.loc.end.offset,
 				{ features: 0 },
@@ -76,14 +76,14 @@ export function* generateSlotOutlet(
 		}
 		else {
 			const boundary = yield* Boundary.start(
-				'template',
+				options.template,
 				startTagOffset,
 				startTagEndOffset,
 				{ features: 0 },
 			);
 			yield `${options.slotsAssignName ?? names.slots}[`;
 			const boundary2 = yield* Boundary.start(
-				'template',
+				options.template,
 				startTagOffset,
 				startTagEndOffset,
 				{ features: 0 },
@@ -96,7 +96,7 @@ export function* generateSlotOutlet(
 		yield `)${endOfLine}`;
 		yield `${slotVar}(`;
 		const boundary = yield* Boundary.start(
-			'template',
+			options.template,
 			startTagOffset,
 			startTagEndOffset,
 			{ features: 0 },

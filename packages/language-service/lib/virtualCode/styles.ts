@@ -13,7 +13,7 @@ export function getStyleDocuments(ir: IR): EmbeddedDocument[] {
 					'(',
 					[
 						binding.text,
-						style.name,
+						style,
 						binding.offset,
 						{ features: allFeatures },
 					],
@@ -27,7 +27,7 @@ export function getStyleDocuments(ir: IR): EmbeddedDocument[] {
 			lang: style.lang,
 			content: [[
 				style.content,
-				style.name,
+				style,
 				0,
 				{ features: allFeatures },
 			]],

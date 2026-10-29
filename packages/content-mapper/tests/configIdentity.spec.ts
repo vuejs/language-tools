@@ -149,7 +149,7 @@ test('plugins that fail to load are reported as option diagnostics', () => {
 		},
 		{
 			path: ['format'],
-			messageText: `No format 'custom' is built in or provided by a plugin; 'sfc' is used instead.`,
+			messageText: `No format 'custom' is built in or provided by a plugin; no file is read.`,
 			code: OptionDiagnosticCode.InvalidOptionType,
 		},
 	]);

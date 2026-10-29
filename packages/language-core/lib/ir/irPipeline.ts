@@ -45,17 +45,19 @@ export function createIRPipeline(
 			},
 		};
 	}
-	let format = builtInFormats[vueCompilerOptions.format] ?? plugins.formats[vueCompilerOptions.format];
+	const format = builtInFormats[vueCompilerOptions.format] ?? plugins.formats[vueCompilerOptions.format];
 	if (!format) {
 		errors.push({
-			message: `No format '${vueCompilerOptions.format}' is built in or provided by a plugin; 'sfc' is used instead.`,
+			message: `No format '${vueCompilerOptions.format}' is built in or provided by a plugin; no file is read.`,
 		});
-		format = sfcParser;
 	}
 
 	return {
 		errors,
 		parse(fileName, content) {
+			if (!format) {
+				return;
+			}
 			const result = format.parse(fileName, content);
 			if (result) {
 				return { result, format };

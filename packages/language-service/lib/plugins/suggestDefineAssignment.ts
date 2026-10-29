@@ -31,21 +31,17 @@ export function create(): LanguageServicePlugin {
 
 					const map = context.language.maps.get(info.code, info.script);
 
-					let sourceOffset: number | undefined;
-					for (const [offset] of map.toSourceLocation(document.offsetAt(position))) {
-						sourceOffset = offset;
-						break;
-					}
+					const sourceOffset = map.virtualToOriginalPositions(document.offsetAt(position))[0]?.position;
 					if (
 						sourceOffset === undefined
-						|| sourceOffset < scriptSetup.startTagEnd
-						|| sourceOffset > scriptSetup.endTagStart
+						|| sourceOffset < scriptSetup.offset
+						|| sourceOffset > scriptSetup.offset + scriptSetup.content.length
 					) {
 						return;
 					}
 
 					const { ts } = info.root;
-					const node = ts.getTouchingPropertyName(scriptSetup.ast, sourceOffset - scriptSetup.startTagEnd);
+					const node = ts.getTouchingPropertyName(scriptSetup.ast, sourceOffset - scriptSetup.offset);
 					if (isStringLiteralLike(ts, node)) {
 						return;
 					}
@@ -82,11 +78,7 @@ export function create(): LanguageServicePlugin {
 							return;
 						}
 
-						let generatedOffset;
-						for (const [offset] of map.toGeneratedLocation(scriptSetup!.startTagEnd + exp.start)) {
-							generatedOffset = offset;
-							break;
-						}
+						const generatedOffset = map.originalToVirtualPositions(scriptSetup!.offset + exp.start)[0]?.position;
 						if (generatedOffset === undefined) {
 							return;
 						}

@@ -1,4 +1,4 @@
-import { SourceMap } from '@volar/language-core';
+import { SpanMap } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { TemplateHTML } from '../types';
 import { compileTemplate } from './compileTemplate';
@@ -31,7 +31,7 @@ export function compileTemplateHTML(
 		}
 	}
 
-	const map = new SourceMap(mappings);
+	const map = new SpanMap(mappings);
 	const sourceOffsets = new Map<CompilerDOM.Position, number>();
 	for (const loc of locs) {
 		for (const position of [loc.start, loc.end]) {
@@ -81,8 +81,8 @@ export function compileTemplateHTML(
 
 	function toSourceOffset(htmlOffset: number) {
 		let offset = -1;
-		for (const [sourceOffset] of map.toSourceLocation(htmlOffset)) {
-			offset = Math.max(offset, sourceOffset);
+		for (const { position } of map.virtualToOriginalPositions(htmlOffset)) {
+			offset = Math.max(offset, position);
 		}
 		return offset;
 	}

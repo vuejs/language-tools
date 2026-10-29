@@ -87,8 +87,7 @@ describe('pug template compiler', () => {
 		]);
 	});
 
-	// the end of a self-closing element in the HTML maps to the start of the pug element
-	it.fails('gives warnings at the offsets of the pug source', () => {
+	it('gives warnings at the offsets of the pug source', () => {
 		// the compiler only warns of deprecations in compat mode
 		const warned = `div\n  em(v-if="a" v-for="n in b")`;
 		const { warnings } = compile(warned, { compatConfig: { MODE: 2 } });
@@ -107,8 +106,8 @@ describe('pug template compiler', () => {
 		expect(compile(source).errors).toEqual([]);
 	});
 
-	// #118 with CRLF line ends: the lexer offsets of a multiline attribute drop its name from the HTML
-	it.fails('keeps the name of a multiline attribute with CRLF line ends', () => {
+	// #118 with CRLF line ends
+	it('keeps the name of a multiline attribute with CRLF line ends', () => {
 		const source = ['div(', `  :class="[ \\`, `    'a', \\`, `  ]"`, ') Foo'].join('\r\n');
 		const div = element(compile(source).ast, 'div');
 		expect(div.props.map(prop => prop.name)).toEqual(['bind']);
@@ -124,14 +123,14 @@ describe('pug template compiler', () => {
 		expect(compile(`table: tr: td: input(v-model="name")`).errors).toEqual([]);
 	});
 
-	// #1767: the end of a class literal maps one past the literal
-	it.fails('gives a class literal the range of its name', () => {
+	// #1767: the value of a class literal is `.foo`, its `.` in place of the opening quote
+	it('gives a class literal the range of its name', () => {
 		const source = `.foo\ndiv.bar`;
 		const ranges = compile(source).ast.children.map(child => {
 			const { loc } = ((child as CompilerDOM.ElementNode).props[0] as CompilerDOM.AttributeNode).value!;
 			return [loc.start.offset, loc.end.offset];
 		});
-		expect(ranges).toEqual([[1, 4], [9, 12]]);
+		expect(ranges).toEqual([[0, 4], [8, 12]]);
 	});
 
 	it('gives an offset of several sources the greatest', () => {

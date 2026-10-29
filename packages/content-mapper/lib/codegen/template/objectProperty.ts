@@ -44,22 +44,22 @@ export function* generateObjectProperty(
 	}
 	else if (shouldCamelize) {
 		if (identifierRE.test(camelize(code))) {
-			yield* generateCamelized(code, 'template', offset, features);
+			yield* generateCamelized(code, options.template, offset, features);
 		}
 		else {
-			const boundary = yield* Boundary.start('template', offset, offset + code.length, features);
+			const boundary = yield* Boundary.start(options.template, offset, offset + code.length, features);
 			yield `'`;
-			yield* generateCamelized(code, 'template', offset);
+			yield* generateCamelized(code, options.template, offset);
 			yield `'`;
 			yield boundary.end();
 		}
 	}
 	else {
 		if (identifierRE.test(code)) {
-			yield [code, 'template', offset, features];
+			yield [code, options.template, offset, features];
 		}
 		else {
-			yield* generateStringLiteralKey(code, offset, features);
+			yield* generateStringLiteralKey(code, options.template, offset, features);
 		}
 	}
 }

@@ -1,7 +1,6 @@
 import type { IScriptSnapshot } from '@volar/language-core';
-import type { SFCParseResult } from '@vue/compiler-sfc';
 import { computed, signal } from 'alien-signals';
-import type { IR, IRPipeline, TypeScript, VueCompilerOptions, VueFormat } from '../types';
+import type { IR, IRPipeline, TypeScript, VueCompilerOptions, VueFormat, VueFormatResult } from '../types';
 import { useIR } from './reactiveIR';
 import { createScriptAnalysis, type ScriptAnalysis } from './scriptAnalysis';
 
@@ -27,13 +26,10 @@ export class VueSource {
 		(): IScriptSnapshot;
 		(newSnapshot: IScriptSnapshot): void;
 	};
-	private _parsedSfcResult: () => ReturnType<typeof this.parseSfc>;
+	private _formatResult: () => ReturnType<typeof this.parse>;
 
 	get snapshot() {
 		return this._snapshot();
-	}
-	get vueSfc() {
-		return this._parsedSfcResult()?.result;
 	}
 
 	constructor(
@@ -44,13 +40,13 @@ export class VueSource {
 		snapshot: IScriptSnapshot,
 	) {
 		this._snapshot = signal(snapshot);
-		this._parsedSfcResult = computed(lastResult => this.parseSfc(pipeline, lastResult));
+		this._formatResult = computed(lastResult => this.parse(pipeline, lastResult));
 		this.ir = useIR(
 			ts,
 			pipeline,
 			fileName,
 			this._snapshot,
-			() => this._parsedSfcResult()?.result,
+			() => this._formatResult()?.result,
 		);
 		this.analysis = createScriptAnalysis(ts, vueCompilerOptions, fileName, this.ir);
 	}
@@ -59,32 +55,26 @@ export class VueSource {
 		this._snapshot(newSnapshot);
 	}
 
-	private parseSfc(
+	private parse(
 		pipeline: IRPipeline,
 		lastResult?: {
 			snapshot: IScriptSnapshot;
-			result: SFCParseResult;
+			result: VueFormatResult;
 			format: VueFormat;
 		},
 	) {
 		const snapshot = this.snapshot;
 
-		if (lastResult?.format.update && !lastResult.result.errors.length) {
+		if (lastResult?.format.update) {
 			const change = snapshot.getChangeRange(lastResult.snapshot);
 			if (change) {
-				const newSfc = lastResult.format.update(lastResult.result, {
+				const newResult = lastResult.format.update(lastResult.result, {
 					start: change.span.start,
 					end: change.span.start + change.span.length,
 					newText: snapshot.getText(change.span.start, change.span.start + change.newLength),
 				});
-				if (newSfc) {
-					// force dirty
-					newSfc.descriptor = JSON.parse(JSON.stringify(newSfc.descriptor));
-					return {
-						snapshot,
-						format: lastResult.format,
-						result: newSfc,
-					};
+				if (newResult) {
+					return { snapshot, format: lastResult.format, result: newResult };
 				}
 			}
 		}

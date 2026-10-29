@@ -33,15 +33,15 @@ export function* generateStyleScopedClassReference(
 ): Generator<TsCode> {
 	if (!className) {
 		yield `/** @type {${typeAliasRef(names.StyleScopedClasses, scriptLang)}['`;
-		yield ['', 'template', offset, { features: completionFeatures }];
+		yield ['', block, offset, { features: completionFeatures }];
 		yield `']} */${endOfLine}`;
 		return;
 	}
 
 	yield `/** @type {${typeAliasRef(names.StyleScopedClasses, scriptLang)}[`;
-	const ignore = yield* Boundary.start(block.name, 0, 0, synthesizedIgnore);
+	const ignore = yield* Boundary.start(block, 0, 0, synthesizedIgnore);
 	const boundary = yield* Boundary.start(
-		block.name,
+		block,
 		fullStart,
 		offset + className.length,
 		{ features: navigationFeatures | completionFeatures, kind },
@@ -49,7 +49,7 @@ export function* generateStyleScopedClassReference(
 	yield `'`;
 	yield* generateEscaped(
 		className,
-		block.name,
+		block,
 		offset,
 		classNameEscapeRE,
 	);

@@ -3,6 +3,7 @@ import {
 	completionFeatures,
 	directiveCommentRE,
 	type IRBlock,
+	type IRTemplate,
 	type TemplateBlockScope,
 	type TemplateBlockScopeOwner,
 	type TemplateScope,
@@ -15,7 +16,18 @@ import { asType, endOfLine, isTsLang, newLine, typeAliasRef } from '../writers';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
-export function createTemplateCodegenContext(scriptLang: string, templateScope: TemplateScope) {
+export function createTemplateCodegenContext(
+	scriptLang: string,
+	templateScope: TemplateScope,
+	template: IRTemplate | undefined,
+) {
+	function getTemplate() {
+		if (!template) {
+			throw new Error('A directive comment is read from the template, which this codegen has none of.');
+		}
+		return template;
+	}
+
 	// directive comments ---------------------------------------------------------
 
 	const stack: {
@@ -110,7 +122,7 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 		const ignore = info?.diagnosticDirectives?.find(directive => directive[4] === DiagnosticDirectivePolicy.Ignore);
 		for (const directive of info?.diagnosticDirectives ?? []) {
 			yield* generateDiagnosticDirectiveComment(directive);
-			const boundary = yield* Boundary.start('template', directive[0], directive[0], directive);
+			const boundary = yield* Boundary.start(getTemplate(), directive[0], directive[0], directive);
 			// an expectation alongside an ignore stays empty
 			if (ignore && directive !== ignore) {
 				yield boundary.end();
@@ -137,7 +149,7 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 
 	function* generateDiagnosticDirectiveComment(directive: DiagnosticDirectiveMapping): Generator<TsCode> {
 		// an empty mapping at the directive comment, which Volar's own features see
-		yield ['', 'template', directive[0], { features: 0 }];
+		yield ['', getTemplate(), directive[0], { features: 0 }];
 	}
 
 	function exit() {
@@ -167,7 +179,7 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 		) {
 			const ignore = info.diagnosticDirectives!.find(directive => directive[4] === DiagnosticDirectivePolicy.Ignore)!;
 			reopenedInfo = info;
-			reopenedBoundary = yield* Boundary.start('template', ignore[0], ignore[0], ignore);
+			reopenedBoundary = yield* Boundary.start(getTemplate(), ignore[0], ignore[0], ignore);
 		}
 		yield code;
 	}
@@ -232,7 +244,7 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 	}
 
 	const blockScopes: TemplateBlockScope[] = [];
-	const memberFeatures = new Map<string, Map<number, VueCodeMarker>>();
+	const memberFeatures = new Map<IRBlock, Map<number, VueCodeMarker>>();
 
 	function enterBlockScope(owner: TemplateBlockScopeOwner) {
 		const scope = templateScope.blockScopes.get(owner);
@@ -248,9 +260,9 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 
 	/** The features of the code of a reference, which its member in the block scope maps with for completion. */
 	function setMemberFeatures(block: IRBlock, offset: number, features: VueCodeMarker) {
-		let blockFeatures = memberFeatures.get(block.name);
+		let blockFeatures = memberFeatures.get(block);
 		if (!blockFeatures) {
-			memberFeatures.set(block.name, blockFeatures = new Map());
+			memberFeatures.set(block, blockFeatures = new Map());
 		}
 		if (!blockFeatures.has(offset)) {
 			blockFeatures.set(offset, features);
@@ -301,6 +313,10 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 
 	// Direct references preserve editor links to the script bindings behind synthetic wrappers.
 	const bindingReferences: TsCode[] = [];
+
+	function accessBinding(name: string) {
+		accessLog.push(name);
+	}
 
 	// conditions -----------------------------------------------------------------
 
@@ -393,6 +409,7 @@ export function createTemplateCodegenContext(scriptLang: string, templateScope: 
 		setMemberFeatures,
 		accessLog,
 		bindingReferences,
+		accessBinding,
 		conditions,
 		generateConditionGuards,
 		hoistVars,

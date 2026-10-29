@@ -8,8 +8,6 @@ export const enum BindingFlag {
 	// Bindings re-asserted per closure by the template codegen (imports, `let`/`var`).
 	Variable,
 	Const = 1 << 1,
-	// `let`/`var` without an initializer; reading these may raise TS2454.
-	Uninitialized = 1 << 2,
 }
 
 export function parseBindings(
@@ -22,11 +20,7 @@ export function parseBindings(
 		if (ts.isVariableStatement(node)) {
 			const isConst = !!(node.declarationList.flags & ts.NodeFlags.Const);
 			for (const decl of node.declarationList.declarations) {
-				const flags = isConst
-					? BindingFlag.None
-					: decl.initializer
-					? BindingFlag.Variable
-					: BindingFlag.Variable | BindingFlag.Uninitialized;
+				const flags = isConst ? BindingFlag.None : BindingFlag.Variable;
 				for (const { start, end } of collectBindingRanges(ts, decl.name, ast)) {
 					bindings.set(ast.text.slice(start, end), flags);
 				}

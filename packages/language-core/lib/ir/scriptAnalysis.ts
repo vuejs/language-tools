@@ -108,9 +108,7 @@ export function createScriptAnalysis(
 		);
 	});
 
-	const getIsVapor = computed(() =>
-		getResolvedOptions().vapor || !!(ir.scriptSetup?.attrs.vapor || ir.template?.attrs.vapor)
-	);
+	const getIsVapor = computed(() => getResolvedOptions().vapor || ir.vapor);
 
 	/** The names that `<script setup>` alone declares, without the ones of `<script>`. */
 	const getScriptSetupBindingNames = computedSet(() => new Set(getScriptSetupRanges()?.bindings.keys()));
