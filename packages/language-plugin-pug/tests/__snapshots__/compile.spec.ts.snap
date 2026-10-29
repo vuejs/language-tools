@@ -224,12 +224,12 @@ exports[`pug template compiler > gives the locations of "div\\n  p(v-if)" 1`] = 
     [
       "root.children.0.children.0.loc",
       6,
-      6,
+      13,
     ],
     [
       "root.children.0.children.0.branches.0.loc",
       6,
-      6,
+      13,
     ],
     [
       "root.children.0.loc",

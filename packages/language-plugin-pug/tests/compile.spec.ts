@@ -87,8 +87,7 @@ describe('pug template compiler', () => {
 		]);
 	});
 
-	// the end of a self-closing element in the HTML maps to the start of the pug element
-	it.fails('gives warnings at the offsets of the pug source', () => {
+	it('gives warnings at the offsets of the pug source', () => {
 		// the compiler only warns of deprecations in compat mode
 		const warned = `div\n  em(v-if="a" v-for="n in b")`;
 		const { warnings } = compile(warned, { compatConfig: { MODE: 2 } });

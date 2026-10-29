@@ -139,14 +139,14 @@ function parse(pugCode: string) {
 			]);
 
 			const selfClosing = node.block.nodes.length === 0;
-			addStartTag(node, selfClosing);
+			const startTagEnd = addStartTag(node, selfClosing);
 			if (!selfClosing) {
 				visitNode(node.block, next, parent);
 				addEndTag(node, next, parent);
 			}
 			codes.push([
 				'',
-				pugTagRange.start,
+				selfClosing ? startTagEnd : pugTagRange.start,
 			]);
 		}
 		else if (node.type === 'Text') {
@@ -157,6 +157,7 @@ function parse(pugCode: string) {
 		}
 	}
 
+	/** Returns the end of the start tag in the pug code. */
 	function addStartTag(node: TagNode, selfClosing: boolean) {
 		codes.push([
 			'',
@@ -164,11 +165,13 @@ function parse(pugCode: string) {
 		]);
 		codes.push('<');
 		const tagRange = getDocRange(node.line, node.column, node.name.length);
+		let end = tagRange.start;
 		if (pugCode.substring(tagRange.start, tagRange.end) === node.name) {
 			codes.push([
 				node.name,
 				tagRange.start,
 			]);
+			end = tagRange.end;
 		}
 		else {
 			codes.push(node.name);
@@ -199,6 +202,7 @@ function parse(pugCode: string) {
 					// `'foo'` of `.foo`: the opening quote is the `.`, and the closing quote has no source
 					codes.push([attr.val.slice(0, -1), offset]);
 					codes.push([attr.val.slice(-1), offset + 1 + literalName.length, 0]);
+					end = Math.max(end, offset + 1 + literalName.length);
 				}
 				else {
 					codes.push([attr.val, offset]);
@@ -213,6 +217,7 @@ function parse(pugCode: string) {
 				attrsBlock.text,
 				attrsBlock.offset,
 			]);
+			end = Math.max(end, attrsBlock.end);
 		}
 
 		if (selfClosing) {
@@ -221,6 +226,7 @@ function parse(pugCode: string) {
 		else {
 			codes.push('>');
 		}
+		return end;
 	}
 
 	function addEndTag(node: TagNode, next: Node | undefined, parent: Node | undefined) {
@@ -267,7 +273,7 @@ function parse(pugCode: string) {
 	}
 
 	function collectAttrsBlocks(tokens: pugLex.Token[]) {
-		const blocks = new Map<number, { offset: number; text: string }>();
+		const blocks = new Map<number, { offset: number; end: number; text: string }>();
 
 		for (let i = 0; i < tokens.length; i++) {
 			const token = tokens[i]!;
@@ -337,6 +343,7 @@ function parse(pugCode: string) {
 					else if (attrToken.type === 'end-attributes') {
 						blocks.set(getDocOffset(tagStart.loc.start.line, tagStart.loc.start.column), {
 							offset: getDocOffset(token.loc.end.line, token.loc.end.column),
+							end: getDocOffset(attrToken.loc.end.line, attrToken.loc.end.column),
 							text,
 						});
 						break;
