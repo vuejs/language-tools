@@ -30,6 +30,11 @@ export interface VueCodeInformation extends CodeInformation {
 	__propsCompletion?: boolean;
 	__shorthandExpression?: 'html' | 'js';
 	__combineToken?: symbol;
+	/**
+	 * Turn a combined start/end boundary pair into one mapping that covers
+	 * the whole range between them.
+	 */
+	__combineRange?: boolean;
 }
 
 export type Code = Segment<VueCodeInformation>;
