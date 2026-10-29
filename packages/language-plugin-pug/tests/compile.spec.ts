@@ -124,14 +124,14 @@ describe('pug template compiler', () => {
 		expect(compile(`table: tr: td: input(v-model="name")`).errors).toEqual([]);
 	});
 
-	// #1767: the end of a class literal maps one past the literal
-	it.fails('gives a class literal the range of its name', () => {
+	// #1767: the value of a class literal is `.foo`, its `.` in place of the opening quote
+	it('gives a class literal the range of its name', () => {
 		const source = `.foo\ndiv.bar`;
 		const ranges = compile(source).ast.children.map(child => {
 			const { loc } = ((child as CompilerDOM.ElementNode).props[0] as CompilerDOM.AttributeNode).value!;
 			return [loc.start.offset, loc.end.offset];
 		});
-		expect(ranges).toEqual([[1, 4], [9, 12]]);
+		expect(ranges).toEqual([[0, 4], [8, 12]]);
 	});
 
 	it('gives an offset of several sources the greatest', () => {

@@ -1,6 +1,9 @@
 import { type Mapping, SpanMapKind } from '@volar/source-map';
-/** Generated HTML: plain text, or text copied from an offset of the pug code. */
-export type PugCode = string | [text: string, offset: number];
+/**
+ * Generated HTML: plain text, or text copied from an offset of the pug code, of the text's length or of
+ * `sourceLength`.
+ */
+export type PugCode = string | [text: string, offset: number, sourceLength?: number];
 
 export function buildMappings(chunks: PugCode[]) {
 	let length = 0;
@@ -10,7 +13,14 @@ export function buildMappings(chunks: PugCode[]) {
 			length += segment.length;
 		}
 		else {
-			mappings.push([length, segment[0].length, segment[1], segment[0].length, SpanMapKind.Verbatim, 0]);
+			mappings.push([
+				length,
+				segment[0].length,
+				segment[1],
+				segment[2] ?? segment[0].length,
+				SpanMapKind.Verbatim,
+				0,
+			]);
 			length += segment[0].length;
 		}
 	}

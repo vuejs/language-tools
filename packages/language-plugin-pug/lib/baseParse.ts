@@ -190,10 +190,19 @@ function parse(pugCode: string) {
 			}
 			if (typeof attr.val !== 'boolean') {
 				codes.push('=');
-				codes.push([
-					attr.val,
-					getDocOffset(attr.line, attr.column),
-				]);
+				const offset = getDocOffset(attr.line, attr.column);
+				const literalName = attr.val.slice(1, -1);
+				if (
+					(attr.name === 'class' || attr.name === 'id')
+					&& pugCode.slice(offset + 1, offset + 1 + literalName.length) === literalName
+				) {
+					// `'foo'` of `.foo`: the opening quote is the `.`, and the closing quote has no source
+					codes.push([attr.val.slice(0, -1), offset]);
+					codes.push([attr.val.slice(-1), offset + 1 + literalName.length, 0]);
+				}
+				else {
+					codes.push([attr.val, offset]);
+				}
 			}
 		}
 
