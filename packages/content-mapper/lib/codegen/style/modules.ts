@@ -45,7 +45,7 @@ export function* generateStyleModules(
 				if (!text) {
 					yield [
 						`$style`,
-						'main',
+						undefined,
 						offset,
 						{ features: 0 },
 					];
@@ -53,20 +53,20 @@ export function* generateStyleModules(
 				else if (identifierRE.test(text)) {
 					yield [
 						text,
-						'main',
+						undefined,
 						offset,
 						{ features: navigationFeatures },
 					];
 				}
 				else {
 					const boundary = yield* Boundary.start(
-						'main',
+						undefined,
 						offset,
 						offset + text.length,
 						{ features: navigationFeatures },
 					);
 					yield `'`;
-					yield [text, 'main', offset, undefined];
+					yield [text, undefined, offset, undefined];
 					yield `'`;
 					yield boundary.end();
 				}
@@ -81,7 +81,7 @@ export function* generateStyleModules(
 			}
 			for (const className of style.classNames) {
 				yield* generateClassProperty(
-					style.name,
+					style,
 					className.text,
 					className.offset,
 					'string',

@@ -55,12 +55,18 @@ export interface VueCodeMarker {
 	kind?: SpanMapKind;
 }
 
-/** A segment of code: plain text, or text that maps from an offset of a source by its `data`. */
+/** An IR block, whose offsets are relative to its content, or `undefined` for the offsets of the file. */
+export type CodeSource = IRBlock | undefined;
+
+/**
+ * A segment of code: plain text, or text that maps by its `data` from `sourceOffset` of `source`, an IR block, or
+ * of the file when `source` is `undefined`.
+ */
 export type CodeSegment<Data> =
 	| string
 	| [
 		text: string,
-		source: string | undefined,
+		source: CodeSource,
 		sourceOffset: number,
 		data: Data,
 	];

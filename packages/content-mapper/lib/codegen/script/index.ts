@@ -1,5 +1,6 @@
 import { SpanMapFeature } from '@volar/language-core';
 import {
+	type CodeSource,
 	type IRBlock,
 	type IRScript,
 	type IRScriptSetup,
@@ -87,8 +88,8 @@ function* generateNavigableExport(code: string): Generator<TsCode> {
 	// keep the synthetic exports navigable: go-to-definition on
 	// `import Foo from './Foo.vue'` targets the whole statement, which maps to the SFC top;
 	// a rename reaching it would insert the new name there
-	const ignore = yield* Boundary.start('main', 0, 0, synthesizedIgnore);
-	const boundary = yield* Boundary.start('main', 0, 0, { features: navigationFeatures & ~SpanMapFeature.Rename });
+	const ignore = yield* Boundary.start(undefined, 0, 0, synthesizedIgnore);
+	const boundary = yield* Boundary.start(undefined, 0, 0, { features: navigationFeatures & ~SpanMapFeature.Rename });
 	yield code;
 	yield boundary.end();
 	yield ignore.end();
@@ -122,13 +123,13 @@ function* generateWorker(
 
 		yield `import ${names.src} from `;
 		const boundary = yield* Boundary.start(
-			'main',
+			undefined,
 			script.src.offset,
 			script.src.offset + script.src.text.length,
 			src !== script.src.text ? { features: scriptFeatures & ~SpanMapFeature.Rename } : { features: scriptFeatures },
 		);
 		yield `'`;
-		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, undefined];
+		yield [src.slice(0, script.src.text.length), undefined, script.src.offset, undefined];
 		yield src.slice(script.src.text.length);
 		yield `'`;
 		yield boundary.end();
@@ -378,15 +379,15 @@ function* generateGlobalTypesReference(
 function* generateComponentDeclareEqual(block: IRBlock, name: string): Generator<TsCode> {
 	if (block.element) {
 		const tagNameStart = block.element.start + 1;
-		yield* generateExportDeclareEqual('main', name, tagNameStart, tagNameStart + 'script'.length);
+		yield* generateExportDeclareEqual(undefined, name, tagNameStart, tagNameStart + 'script'.length);
 	}
 	else {
-		yield* generateExportDeclareEqual('main', name, block.offset, block.offset);
+		yield* generateExportDeclareEqual(undefined, name, block.offset, block.offset);
 	}
 }
 
 export function* generateExportDeclareEqual(
-	source: string,
+	source: CodeSource,
 	name: string,
 	start: number,
 	end: number,

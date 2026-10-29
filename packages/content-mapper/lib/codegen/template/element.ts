@@ -100,11 +100,11 @@ export function* generateComponent(
 			yield* generateIdentifier(
 				options,
 				ctx,
-				generateCamelized(camelizedTag, 'template', startTagOffset, {
+				generateCamelized(camelizedTag, options.template, startTagOffset, {
 					features: semanticFeatures | navigationFeatures,
 				}),
 				ctx.getExpression(options.template, startTagOffset, matchedBinding).references[0]!,
-				'template',
+				options.template,
 				startTagOffset,
 				startTagOffset + tag.length,
 			);
@@ -113,11 +113,11 @@ export function* generateComponent(
 				yield* generateIdentifier(
 					options,
 					ctx,
-					generateCamelized(camelizedTag, 'template', endTagOffset, {
+					generateCamelized(camelizedTag, options.template, endTagOffset, {
 						features: semanticFeatures | navigationFeatures,
 					}),
 					ctx.getExpression(options.template, endTagOffset, matchedBinding).references[0]!,
-					'template',
+					options.template,
 					endTagOffset,
 					endTagOffset + tag.length,
 				);
@@ -138,6 +138,7 @@ export function* generateComponent(
 				yield `>[`;
 				yield* generateStringLiteralKey(
 					tag,
+					options.template,
 					startTagOffset,
 					{ features: semanticFeatures },
 				);
@@ -153,14 +154,14 @@ export function* generateComponent(
 					}
 					for (const name of new Set([tag, capitalize(tag)])) {
 						yield ` | typeof ${options.setupBindings.has(camelize(name)) ? '' : `${names.components}.`}`;
-						const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
-						yield* generateCamelized(name, 'template', offset, { features: navigationFeatures });
+						const ignore = yield* Boundary.start(options.template, 0, 0, synthesizedIgnore);
+						yield* generateCamelized(name, options.template, offset, { features: navigationFeatures });
 						yield ignore.end();
 					}
 					if (tag.includes('-')) {
 						yield ` | typeof ${names.components}[`;
-						const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
-						yield* generateStringLiteralKey(tag, offset, { features: navigationFeatures });
+						const ignore = yield* Boundary.start(options.template, 0, 0, synthesizedIgnore);
+						yield* generateStringLiteralKey(tag, options.template, offset, { features: navigationFeatures });
 						yield ignore.end();
 						yield `]`;
 					}
@@ -210,20 +211,20 @@ export function* generateComponent(
 	yield propsStr;
 	yield `}))${endOfLine}`;
 
-	yield* generateExportDeclareEqual(options.template.name, vnodeVar, node.loc.start.offset, node.loc.end.offset);
+	yield* generateExportDeclareEqual(options.template, vnodeVar, node.loc.start.offset, node.loc.end.offset);
 	yield functionalVar;
 
 	const commentInfo = ctx.getCommentInfo();
 	if (commentInfo.generic) {
 		const { content, offset } = commentInfo.generic;
 		const boundary = yield* Boundary.start(
-			'template',
+			options.template,
 			offset,
 			offset + content.length,
 			{ features: 0 },
 		);
 		yield `<`;
-		yield [content, 'template', offset, { features: scriptFeatures }];
+		yield [content, options.template, offset, { features: scriptFeatures }];
 		yield `>`;
 		yield boundary.end();
 	}
@@ -231,10 +232,12 @@ export function* generateComponent(
 	const shouldInheritAttrs = hasVBindAttrs(options, ctx, node);
 
 	yield `(`;
-	const boundary2 = yield* Boundary.start('template', startTagOffset, startTagOffset + tag.length, { features: 0 });
+	const boundary2 = yield* Boundary.start(options.template, startTagOffset, startTagOffset + tag.length, {
+		features: 0,
+	});
 	if (shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes) {
 		// the props the fallthrough attributes supply are reported missing at the start of the object
-		const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
+		const ignore = yield* Boundary.start(options.template, 0, 0, synthesizedIgnore);
 		yield `{`;
 		yield ignore.end();
 	}
@@ -349,7 +352,7 @@ export function* generateElement(
 	}
 	yield `)(`;
 	const boundary = yield* Boundary.start(
-		'template',
+		options.template,
 		startTagOffset,
 		startTagOffset + node.tag.length,
 		{ features: 0 },
@@ -408,7 +411,7 @@ export function* generateFragment(
 	if (node.props.length) {
 		yield `${names.asFunctionalElement0}(${names.intrinsics}.template)(`;
 		const boundary = yield* Boundary.start(
-			'template',
+			options.template,
 			startTagOffset,
 			startTagOffset + node.tag.length,
 			{ features: 0 },

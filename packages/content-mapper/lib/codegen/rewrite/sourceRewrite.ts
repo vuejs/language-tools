@@ -3,6 +3,9 @@ import type { CodeSegment } from '@vue/language-core';
 /** A segment of generated code that maps to a source. */
 export type MappedSegment<Data> = Exclude<CodeSegment<Data>, string>;
 
+/** The source of a rewrite, which its mapped segments map from. */
+export type RewriteSource = MappedSegment<unknown>[1];
+
 /** Generated code: eager text, or a function that is called at most once, and only if the code renders. */
 export type RewriteCode<Data> = string | (() => Iterable<CodeSegment<Data> | RewriteSlice<Data>>);
 
@@ -55,14 +58,14 @@ export interface RewriteSlice<Data> {
  * moves text, by nested cuts, so edits never conflict. The first render freezes the edits.
  */
 export interface SourceRewrite<Data> {
-	readonly source: string;
+	readonly source: RewriteSource;
 	readonly text: string;
 	readonly core: CoreRewriteWriter<Data>;
 	/** The writer of `rank`, a non-negative integer. A higher rank sits outside a lower one, and core outside all. */
 	writer(rank: number): RewriteWriter<Data>;
 }
 
-export function createSourceRewrite<Data>(source: string, text: string): SourceRewrite<Data> {
+export function createSourceRewrite<Data>(source: RewriteSource, text: string): SourceRewrite<Data> {
 	return new Rewrite<Data>(source, text);
 }
 
@@ -167,7 +170,7 @@ class Rewrite<Data> implements SourceRewrite<Data> {
 	firstEmpty: Cut<Data> | undefined;
 	frozen = false;
 
-	constructor(readonly source: string, readonly text: string) {
+	constructor(readonly source: RewriteSource, readonly text: string) {
 		const core = this.createWriter(coreRank) as CoreRewriteWriter<Data>;
 		core.cut = (start, end, { data, placeholder }) => {
 			this.check(start, end);

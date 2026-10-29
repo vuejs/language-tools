@@ -1,5 +1,6 @@
 import { SpanMapFeature, SpanMapKind } from '@volar/language-core';
 import {
+	type CodeSource,
 	completionFeatures,
 	type IRBlock,
 	type TemplateReference,
@@ -53,7 +54,7 @@ export function* generateInterpolation(
 				withoutRename(
 					generateNonIdentifierCode(
 						code.slice(prevEnd, offset),
-						block.name,
+						block,
 						start + prevEnd,
 						features,
 						prevEnd > 0,
@@ -72,23 +73,23 @@ export function* generateInterpolation(
 
 		const identifierFeatures = member ? featuresWithoutCompletion : features;
 		if (local || (isShorthand && options.setupConsts.has(name))) {
-			yield [name, block.name, start + offset, identifierFeatures];
+			yield [name, block, start + offset, identifierFeatures];
 			continue;
 		}
 		const marker = isShorthand ? { ...identifierFeatures, kind: SpanMapKind.Atom } : identifierFeatures;
 		if (isShorthand) {
-			yield [name, block.name, start + offset, marker];
+			yield [name, block, start + offset, marker];
 			yield `: `;
 		}
 
-		const codes: TsCode[] = [[name, block.name, start + offset, marker]];
+		const codes: TsCode[] = [[name, block, start + offset, marker]];
 
 		yield* generateIdentifier(
 			options,
 			ctx,
 			codes,
 			reference,
-			block.name,
+			block,
 			start + offset,
 			start + offset + name.length,
 		);
@@ -99,7 +100,7 @@ export function* generateInterpolation(
 			withoutRename(
 				generateNonIdentifierCode(
 					code.slice(prevEnd),
-					block.name,
+					block,
 					start + prevEnd,
 					features,
 					prevEnd > 0,
@@ -119,7 +120,7 @@ export function* generateInterpolation(
 
 /** The parts of the source `segments` of an expression at `start` out of the ranges of `omit`. */
 function* omitRanges(
-	segments: Generator<[string, string, number, VueCodeMarker]>,
+	segments: Generator<[string, CodeSource, number, VueCodeMarker]>,
 	start: number,
 	omit: readonly (readonly [start: number, end: number])[],
 ): Generator<TsCode> {
@@ -143,10 +144,10 @@ function* omitRanges(
 
 /** The parts of the source `segments` of an expression at `start`, without rename in the ranges of `ranges`. */
 function* withoutRename(
-	segments: Generator<[string, string, number, VueCodeMarker]>,
+	segments: Generator<[string, CodeSource, number, VueCodeMarker]>,
 	start: number,
 	ranges: readonly (readonly [start: number, end: number])[],
-): Generator<[string, string, number, VueCodeMarker]> {
+): Generator<[string, CodeSource, number, VueCodeMarker]> {
 	for (const segment of segments) {
 		const [text, source, offset, data] = segment;
 		const end = offset + text.length;
@@ -184,11 +185,11 @@ function* withoutRename(
  */
 function* generateNonIdentifierCode(
 	code: string,
-	source: string,
+	source: CodeSource,
 	offset: number,
 	data: VueCodeMarker,
 	shouldCut = true,
-): Generator<[string, string, number, VueCodeMarker]> {
+): Generator<[string, CodeSource, number, VueCodeMarker]> {
 	if (!code.length) {
 		return;
 	}
@@ -230,7 +231,7 @@ export function* generateIdentifier(
 	ctx: TemplateCodegenContext,
 	codes: Iterable<TsCode>,
 	{ name, local, inTypeQuery, isNewOperand }: TemplateReference,
-	source: string,
+	source: CodeSource,
 	start: number,
 	end: number,
 ): Generator<TsCode> {

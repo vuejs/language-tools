@@ -1,5 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import {
+	type CodeSource,
 	getModelPropName,
 	isCompoundExpression,
 	navigationFeatures,
@@ -134,9 +135,10 @@ export function* generateElementEvents(
 			const argsType = `${names.EventArgs}<${eventType}, '${propName}'>`;
 			if (prop.name === 'on') {
 				yield `/** @type {typeof ${emitsVar}.`;
-				const ignore = yield* Boundary.start(source, 0, 0, synthesizedIgnore);
+				const ignore = yield* Boundary.start(options.template, 0, 0, synthesizedIgnore);
 				yield* generateEventArg(
 					source,
+					options.template,
 					offset!,
 					emitPrefix.slice(0, -1),
 					{ features: navigationFeatures },
@@ -145,7 +147,7 @@ export function* generateElementEvents(
 				yield `} */${newLine}`;
 				// in JS, the JSDoc above types the property, and fails to parse for a non-identifier name
 				const emitArgName = getEventArgName(source, emitPrefix.slice(0, -1));
-				yield* generateEventArg(source, offset!, propPrefix.slice(0, -1));
+				yield* generateEventArg(source, options.template, offset!, propPrefix.slice(0, -1));
 				yield `: `;
 				yield* generateEventExpression(
 					options,
@@ -171,6 +173,7 @@ export function* generateElementEvents(
 
 export function* generateEventArg(
 	name: string,
+	source: CodeSource,
 	start: number,
 	directive = 'on',
 	features?: VueCodeMarker,
@@ -180,16 +183,16 @@ export function* generateEventArg(
 	if (directive.length) {
 		name = capitalize(name);
 	}
-	const boundary = yield* Boundary.start('template', start, start + name.length, features);
+	const boundary = yield* Boundary.start(source, start, start + name.length, features);
 	if (identifierRE.test(camelize(name))) {
 		yield directive;
-		yield* generateCamelized(name, 'template', start);
+		yield* generateCamelized(name, source, start);
 		yield boundary.end();
 	}
 	else {
 		yield `'`;
 		yield directive;
-		yield* generateCamelized(name, 'template', start);
+		yield* generateCamelized(name, source, start);
 		yield `'`;
 		yield boundary.end();
 	}

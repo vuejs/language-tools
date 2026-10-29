@@ -37,7 +37,7 @@ export function* generateVSlot(
 		}
 		else {
 			const boundary = yield* Boundary.start(
-				'template',
+				options.template,
 				slotDir.loc.start.offset,
 				slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
 				{ features: semanticFeatures | navigationFeatures },
@@ -50,9 +50,9 @@ export function* generateVSlot(
 		yield `const { `;
 		// #932: reference for implicit default slot, anchored at the element's `<`
 		// because a mapped range may not contain the element's other mappings
-		const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
+		const ignore = yield* Boundary.start(options.template, 0, 0, synthesizedIgnore);
 		const boundary = yield* Boundary.start(
-			'template',
+			options.template,
 			node.loc.start.offset,
 			node.loc.start.offset + 1,
 			{ features: navigationFeatures },
@@ -85,7 +85,7 @@ export function* generateVSlot(
 				yield `/** @type {NonNullable<typeof ${ctxVar}['slots']>['`;
 				yield [
 					'',
-					'template',
+					options.template,
 					slotDir.loc.start.offset + (
 						slotDir.loc.source.startsWith('#')
 							? '#'.length
@@ -144,7 +144,7 @@ function* generateSlotParameters(
 	if (types.some(t => t)) {
 		yield `, `;
 		const boundary = yield* Boundary.start(
-			'template',
+			options.template,
 			exp.loc.start.offset,
 			exp.loc.end.offset,
 			{ features: 0 },

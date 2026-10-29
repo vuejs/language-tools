@@ -2,6 +2,7 @@ import { SpanMapKind } from '@volar/language-core';
 import { expect, test } from 'vitest';
 import { buildMappings } from '../lib/mappings/codeMappings';
 import { navigationFeatures } from '../lib/mappings/features';
+import type { IRBlock } from '../lib/types';
 
 test('maps each segment with a marker by itself', () => {
 	expect(buildMappings([
@@ -9,7 +10,7 @@ test('maps each segment with a marker by itself', () => {
 		['abc', undefined, 20, { features: navigationFeatures }],
 		'\n\n',
 		['', undefined, 40, { features: 0 }],
-		['de', 'template', 5, { features: 0, kind: SpanMapKind.Atom }],
+		['de', { name: 'template', offset: 0 } as IRBlock, 5, { features: 0, kind: SpanMapKind.Atom }],
 	])).toEqual([
 		{
 			virtualStart: 11,

@@ -85,13 +85,13 @@ export function* generateGeneric(
 	yield `(`;
 	if (typeof generic === 'object') {
 		const boundary = yield* Boundary.start(
-			'main',
+			undefined,
 			generic.offset,
 			generic.offset + generic.text.length,
 			{ features: 0 },
 		);
 		yield `<`;
-		yield [generic.text, 'main', generic.offset, { features: scriptFeatures }];
+		yield [generic.text, undefined, generic.offset, { features: scriptFeatures }];
 		if (!generic.text.trimEnd().endsWith(`,`)) {
 			yield `,`;
 		}
@@ -348,7 +348,7 @@ function addTransforms(
 			core.insertAfter(callExp.end, function*() {
 				if (isTsLang(options.scriptLang)) {
 					yield ` as ${type}[`;
-					const boundary = yield* Boundary.start(scriptSetup.name, exp.start, exp.end, { features: 0 });
+					const boundary = yield* Boundary.start(scriptSetup, exp.start, exp.end, { features: 0 });
 					yield `'$style'`;
 					yield boundary.end();
 					yield `])`;
@@ -619,10 +619,10 @@ function* generateModelProp(
 	}
 
 	if (defineModel.name) {
-		const ignore = yield* Boundary.start(scriptSetup.name, 0, 0, synthesizedIgnore);
+		const ignore = yield* Boundary.start(scriptSetup, 0, 0, synthesizedIgnore);
 		yield* generateCamelized(
 			getRangeText(scriptSetup, defineModel.name),
-			scriptSetup.name,
+			scriptSetup,
 			defineModel.name.start,
 			{ features: navigationFeatures },
 		);

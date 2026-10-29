@@ -41,7 +41,7 @@ export interface TemplateCodegenOptions {
 export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
-	const ctx = createTemplateCodegenContext(options.scriptLang, options.templateScope);
+	const ctx = createTemplateCodegenContext(options.scriptLang, options.templateScope, options.template);
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: TsCode[] = [];
 	for (const code of codeGenerator) {
@@ -130,7 +130,7 @@ function* generateSlotsType(
 		}
 		for (const slot of ctx.slots) {
 			yield `${newLine}& { `;
-			const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
+			const ignore = yield* Boundary.start(options.template, 0, 0, synthesizedIgnore);
 			if (slot.name && slot.offset !== undefined) {
 				yield* generateObjectProperty(
 					options,
@@ -142,7 +142,7 @@ function* generateSlotsType(
 			}
 			else {
 				const boundary = yield* Boundary.start(
-					'template',
+					options.template,
 					...slot.tagRange,
 					{ features: navigationFeatures },
 				);
@@ -202,7 +202,7 @@ function* generateTemplateRefsType(
 					yield ` | `;
 				}
 				yield `{ `;
-				const ignore = yield* Boundary.start('template', 0, 0, synthesizedIgnore);
+				const ignore = yield* Boundary.start(options.template, 0, 0, synthesizedIgnore);
 				yield* generateObjectProperty(
 					options,
 					ctx,

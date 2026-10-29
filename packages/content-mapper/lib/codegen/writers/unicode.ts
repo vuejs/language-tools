@@ -1,14 +1,19 @@
-import type { VueCodeMarker } from '@vue/language-core';
+import type { CodeSource, VueCodeMarker } from '@vue/language-core';
 import { Boundary, type TsCode } from '../tsCode';
 
-export function* generateUnicode(code: string, offset: number, features: VueCodeMarker): Generator<TsCode> {
+export function* generateUnicode(
+	code: string,
+	source: CodeSource,
+	offset: number,
+	features: VueCodeMarker,
+): Generator<TsCode> {
 	if (needToUnicode(code)) {
-		const boundary = yield* Boundary.start('template', offset, offset + code.length, features);
+		const boundary = yield* Boundary.start(source, offset, offset + code.length, features);
 		yield toUnicode(code);
 		yield boundary.end();
 	}
 	else {
-		yield [code, 'template', offset, features];
+		yield [code, source, offset, features];
 	}
 }
 

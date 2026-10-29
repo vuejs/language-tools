@@ -28,7 +28,7 @@ export function* generateStyleScopedClasses(
 			for (const className of style.classNames) {
 				if (!visited.has(className.text)) {
 					visited.add(className.text);
-					yield* generateClassProperty(style.name, className.text, className.offset, 'boolean');
+					yield* generateClassProperty(style, className.text, className.offset, 'boolean');
 				}
 				else {
 					deferredGenerates.push(

@@ -29,7 +29,7 @@ export function* generateElementDirectives(
 		}
 		if (options.isVapor && !isBuiltInDirective(prop.name)) {
 			const boundary = yield* Boundary.start(
-				'template',
+				options.template,
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				{ features: 0 },
@@ -52,7 +52,7 @@ export function* generateElementDirectives(
 				asType(`import('${options.vueCompilerOptions.lib}').ObjectDirective`, options.scriptLang)
 			})${endOfLine}`;
 			const boundary = yield* Boundary.start(
-				'template',
+				options.template,
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				{ features: 0 },
@@ -80,7 +80,7 @@ function* generateDirectiveName(
 	const name = camelize(rawName);
 	const startOffset = prop.loc.start.offset;
 	const endOffset = startOffset + rawName.length;
-	const nameCodes = generateCamelized(rawName, 'template', startOffset, {
+	const nameCodes = generateCamelized(rawName, options.template, startOffset, {
 		features: semanticFeatures | navigationFeatures,
 	});
 	// Like `@vue/compiler-sfc`, a directive refers to the setup binding of its name;
@@ -91,13 +91,13 @@ function* generateDirectiveName(
 			ctx,
 			nameCodes,
 			ctx.getExpression(options.template, startOffset, name).references[0]!,
-			'template',
+			options.template,
 			startOffset,
 			endOffset,
 		);
 		return;
 	}
-	const boundary = yield* Boundary.start('template', startOffset, endOffset, { features: 0 });
+	const boundary = yield* Boundary.start(options.template, startOffset, endOffset, { features: 0 });
 	const optionKey = options.optionDirectives.get(name);
 	// A directive that resolves to a listed key of the `directives` option is read by that key: a type that renames the
 	// keys into the template names would be a key-remapping mapped type, whose properties TypeScript links to no
@@ -107,10 +107,10 @@ function* generateDirectiveName(
 		yield names.directivesOption;
 		const quoted = !identifierRE.test(optionKey);
 		yield quoted ? `[` : `.`;
-		const key = yield* Boundary.start('template', startOffset, endOffset, {
+		const key = yield* Boundary.start(options.template, startOffset, endOffset, {
 			features: semanticFeatures | navigationFeatures,
 		});
-		yield [quoted ? `'${optionKey}'` : optionKey, 'template', startOffset, undefined];
+		yield [quoted ? `'${optionKey}'` : optionKey, options.template, startOffset, undefined];
 		yield key.end();
 		if (quoted) {
 			yield `]`;
@@ -121,7 +121,7 @@ function* generateDirectiveName(
 	yield names.directives;
 	yield `.`;
 	const builtIn = isBuiltInDirective(prop.name);
-	const ignore = builtIn ? yield* Boundary.start('template', 0, 0, synthesizedIgnore) : undefined;
+	const ignore = builtIn ? yield* Boundary.start(options.template, 0, 0, synthesizedIgnore) : undefined;
 	yield* nameCodes;
 	if (ignore) {
 		yield ignore.end();
@@ -143,7 +143,7 @@ function* generateArg(
 		const startOffset = arg.loc.start.offset + arg.loc.source.indexOf(arg.content);
 		if (asBindingProperty) {
 			const boundary = yield* Boundary.start(
-				'template',
+				options.template,
 				startOffset,
 				startOffset + arg.content.length,
 				{ features: 0 },
@@ -155,6 +155,7 @@ function* generateArg(
 		if (arg.isStatic) {
 			yield* generateStringLiteralKey(
 				arg.content,
+				options.template,
 				startOffset,
 				{ features: scriptFeatures },
 			);
@@ -189,7 +190,7 @@ export function* generateModifiers(
 	if (modifiers.length) {
 		if (asBindingProperty) {
 			const boundary = yield* Boundary.start(
-				'template',
+				options.template,
 				modifiers[0]!.loc.start.offset - 1,
 				modifiers.at(-1)!.loc.end.offset,
 				{ features: 0 },
@@ -225,7 +226,7 @@ function* generateValue(
 	const { exp } = prop;
 	if (exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const boundary = yield* Boundary.start(
-			'template',
+			options.template,
 			exp.loc.start.offset,
 			exp.loc.end.offset,
 			{ features: 0 },

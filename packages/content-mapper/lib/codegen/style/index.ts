@@ -27,7 +27,7 @@ export interface StyleCodegenOptions {
 export { generate as generateStyle };
 
 function generate(options: StyleCodegenOptions) {
-	const ctx = createTemplateCodegenContext(options.scriptLang, options.templateScope);
+	const ctx = createTemplateCodegenContext(options.scriptLang, options.templateScope, undefined);
 	const codes: TsCode[] = [...generateWorker(options, ctx)];
 	return { ...ctx, codes };
 }

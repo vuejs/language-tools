@@ -308,7 +308,7 @@ function* generateCode(blocks: Set<IRBlock>, code: VueCodegenCode | undefined): 
 		else if ('code' in segment) {
 			const { block, start, end, features } = segment;
 			if (blocks.has(block) && isRange(block, start, end) && typeof features === 'number') {
-				const boundary = yield* Boundary.start(block.name, start, end, { features });
+				const boundary = yield* Boundary.start(block, start, end, { features });
 				yield* generateCode(blocks, segment.code);
 				yield boundary.end();
 			}
@@ -324,7 +324,7 @@ function* generateCode(blocks: Set<IRBlock>, code: VueCodegenCode | undefined): 
 				&& typeof features === 'number'
 				&& block.content.slice(offset, offset + text.length) === text
 			) {
-				yield [text, block.name, offset, { features }];
+				yield [text, block, offset, { features }];
 			}
 			else {
 				yield text;
