@@ -1,37 +1,100 @@
 {
 	"comments": {
-		"blockComment": ["<!--", "-->"]
+		"blockComment": [
+			"<!--",
+			"-->"
+		]
 	},
-	"brackets": [
-		// html
-		["<!--", "-->"],
-		["{", "}"],
-		["(", ")"]
-	],
 	"autoClosingPairs": [
-		// html
-		{ "open": "{", "close": "}" },
-		{ "open": "[", "close": "]" },
-		{ "open": "(", "close": ")" },
-		{ "open": "'", "close": "'" },
-		{ "open": "\"", "close": "\"" },
-		{ "open": "<!--", "close": "-->", "notIn": ["comment", "string"] },
-		// javascript
-		{ "open": "`", "close": "`", "notIn": ["string", "comment"] },
-		{ "open": "/**", "close": " */", "notIn": ["string"] }
+		{
+			"open": "{",
+			"close": "}"
+		},
+		{
+			"open": "[",
+			"close": "]"
+		},
+		{
+			"open": "(",
+			"close": ")"
+		},
+		{
+			"open": "\"",
+			"close": "\""
+		},
+		{
+			"open": "'",
+			"close": "'"
+		},
+		{
+			"open": "<!--",
+			"close": "-->",
+			"notIn": [
+				"comment",
+				"string"
+			]
+		},
+		{
+			"open": "`",
+			"close": "`",
+			"notIn": [
+				"string",
+				"comment"
+			]
+		},
+		{
+			"open": "/**",
+			"close": " */",
+			"notIn": [
+				"string"
+			]
+		}
 	],
-	// #1437
-	"autoCloseBefore": ";:.,=}])><`'\" \n\t",
 	"surroundingPairs": [
-		// html
-		{ "open": "'", "close": "'" },
-		{ "open": "\"", "close": "\"" },
-		{ "open": "{", "close": "}" },
-		{ "open": "[", "close": "]" },
-		{ "open": "(", "close": ")" },
-		{ "open": "<", "close": ">" },
-		// javascript
-		["`", "`"]
+		[
+			"\"",
+			"\""
+		],
+		[
+			"'",
+			"'"
+		],
+		[
+			"{",
+			"}"
+		],
+		[
+			"[",
+			"]"
+		],
+		[
+			"(",
+			")"
+		],
+		[
+			"<",
+			">"
+		],
+		[
+			"`",
+			"`"
+		]
+	],
+	"autoCloseBefore": ";:.,=})]><`\"' \n\t",
+	"wordPattern": "(-?\\d*\\.\\d\\w*)|([^\\`\\~\\!\\@\\$\\^\\&\\*\\(\\)\\=\\+\\[\\{\\]\\}\\\\\\|\\;\\:\\'\\\"\\,\\.\\<\\>\\/\\s]+)",
+	"brackets": [
+		[
+			"<!--",
+			"-->"
+		],
+		[
+			"{",
+			"}"
+		],
+		[
+			"(",
+			")"
+		]
 	],
 	"colorizedBracketPairs": [],
 	"folding": {
@@ -40,21 +103,23 @@
 			"end": "^\\s*<!--\\s*#endregion\\b.*-->"
 		}
 	},
-	"wordPattern": "(-?\\d*\\.\\d\\w*)|([^\\`\\~\\!\\@\\$\\^\\&\\*\\(\\)\\=\\+\\[\\{\\]\\}\\\\\\|\\;\\:\\'\\\"\\,\\.\\<\\>\\/\\s]+)",
 	"onEnterRules": [
 		{
 			"beforeText": {
-				"pattern": "<(?!(?:area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr|script|style))([_:\\w][_:\\w-.\\d]*)(?:(?:[^'\"/>]|\"[^\"]*\"|'[^']*')*?(?!\\/)>)[^<]*$",
+				"pattern": "<(?!(?:area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr|script|style))([a-zA-Z][A-Za-z0-9_:.\\-]*)(?:(?:[^\"'/>]|\"[^\"]*\"|'[^']*')*?(?!/)>)[^<]*$",
 				"flags": "i"
 			},
-			"afterText": { "pattern": "^<\\/([_:\\w][_:\\w-.\\d]*)\\s*>", "flags": "i" },
+			"afterText": {
+				"pattern": "^</([a-zA-Z][A-Za-z0-9_:.\\-]*)\\s*>",
+				"flags": "i"
+			},
 			"action": {
 				"indent": "indentOutdent"
 			}
 		},
 		{
 			"beforeText": {
-				"pattern": "<(?!(?:area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr|script|style))([_:\\w][_:\\w-.\\d]*)(?:(?:[^'\"/>]|\"[^\"]*\"|'[^']*')*?(?!\\/)>)[^<]*$",
+				"pattern": "<(?!(?:area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr|script|style))([a-zA-Z][A-Za-z0-9_:.\\-]*)(?:(?:[^\"'/>]|\"[^\"]*\"|'[^']*')*?(?!/)>)[^<]*$",
 				"flags": "i"
 			},
 			"action": {
@@ -63,7 +128,7 @@
 		}
 	],
 	"indentationRules": {
-		"increaseIndentPattern": "<(?!\\?|(?:area|base|br|col|frame|hr|html|img|input|keygen|link|menuitem|meta|param|source|track|wbr|script|style)\\b|[^>]*\\/>)([-_\\.A-Za-z0-9]+)(?=\\s|>)\\b[^>]*>(?!.*<\\/\\1>)|<!--(?!.*-->)|\\{[^}\"']*$",
-		"decreaseIndentPattern": "^\\s*(<\\/(?!html)[-_\\.A-Za-z0-9]+\\b[^>]*>|-->|\\})"
+		"increaseIndentPattern": "<(?!\\?|(?:area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr|script|style)\\b|[^>]*/>)([A-Za-z0-9_:.\\-]+)(?=\\s|>)\\b[^>]*>(?!.*</\\1>)|<!--(?!.*-->)|\\{[^}\"']*$",
+		"decreaseIndentPattern": "^\\s*(</[A-Za-z0-9_:.\\-]+\\b[^>]*>|-->|\\})"
 	}
 }
