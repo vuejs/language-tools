@@ -249,6 +249,7 @@ export function* generateEventExpression(
 
 			yield* generateReasserts(options, ctx, accessMark);
 			yield* ctx.generateConditionGuards();
+			yield* ctx.exitBlockScope();
 
 			if (isSingleExpression(options.typescript, ast)) {
 				yield `return (`;
@@ -259,7 +260,6 @@ export function* generateEventExpression(
 				yield* codes;
 			}
 			yield endOfLine;
-			yield* ctx.exitBlockScope();
 			yield `}`;
 		}
 		else {
