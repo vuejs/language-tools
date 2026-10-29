@@ -116,6 +116,19 @@ function useCodegen(
 		});
 	});
 
+	// Imports and `let`/`var` read only inside template functions are re-asserted there instead.
+	const getTopLevelDotValueBindings = computed(() => {
+		const topLevelAccesses = new Set([
+			...getGeneratedTemplate()?.topLevelAccesses ?? [],
+			...getGeneratedStyle()?.topLevelAccesses ?? [],
+		]);
+		return new Set(
+			[...getDotValueBindings()].filter(name =>
+				!((getBindingFlags().get(name) ?? 0) & BindingFlag.Variable) || topLevelAccesses.has(name)
+			),
+		);
+	});
+
 	const getGeneratedScript = computed(() => {
 		return generateScript({
 			vueCompilerOptions: getResolvedOptions(),
@@ -128,7 +141,7 @@ function useCodegen(
 			localComponents: getLocalComponents(),
 			localDirectives: getLocalDirectives(),
 			unlistedOptionDirectives: getOptionDirectives().unlisted,
-			dotValueBindings: getDotValueBindings(),
+			dotValueBindings: getTopLevelDotValueBindings(),
 			scopeBindings: getScopeBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),

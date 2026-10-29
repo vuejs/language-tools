@@ -4,12 +4,16 @@ import {
 	completionFeatures,
 	type IRBlock,
 	type TemplateReference,
+	type TypeScript,
 	type VueCodeMarker,
 	type VueCompilerOptions,
 } from '@vue/language-core';
+import { getStartEnd } from '@vue/language-core/lib/typescript/nodes';
+import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAST';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { names } from '../names';
 import { Boundary, type TsCode } from '../tsCode';
-import { getRefBrandArgument } from '../writers';
+import { endOfLine, getRefBrandArgument, newLine } from '../writers';
 import type { TemplateCodegenContext } from './context';
 
 /**
@@ -18,7 +22,10 @@ import type { TemplateCodegenContext } from './context';
  * `renamedElsewhere` (sorted and disjoint too) takes no rename, which another copy of the same source takes.
  */
 export function* generateInterpolation(
-	options: IdentifierOptions,
+	options: IdentifierOptions & {
+		typescript?: TypeScript;
+		reassertBindings?: Set<string>;
+	},
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
 	features: VueCodeMarker,
@@ -39,8 +46,84 @@ export function* generateInterpolation(
 		features: features.features & ~completionFeatures,
 	};
 
+	// Assertion narrowing does not flow into functions for imports and `let`/`var`
+	// bindings (TS limitation), so each function body re-asserts the ones it reads.
+	// Bodies are buffered until their end, when those reads are known.
+	const references = ctx.getExpression(block, start, code).references;
+	const bodies = options.typescript && options.reassertBindings?.size
+			&& references.some(({ name, local }) => !local && options.reassertBindings!.has(name))
+		? collectFunctionBodies(options.typescript, getTypeScriptAST(options.typescript, block, prefix + code + suffix))
+			.map(body => ({ ...body, start: body.start - prefix.length, end: body.end - prefix.length }))
+		: [];
+	// Exits precede enters at the same offset; the stable sort keeps the inner exit and the outer enter first.
+	const marks = [
+		...bodies.map(body => ({ offset: body.end, body, enter: false })).reverse(),
+		...bodies.map(body => ({ offset: body.start, body, enter: true })),
+	].sort((a, b) => a.offset - b.offset);
+	const frames: { isBlock: boolean; codes: TsCode[]; reasserts: Set<string> }[] = [];
+	let markIndex = 0;
+
+	function* write(codes: Iterable<TsCode>): Generator<TsCode> {
+		if (frames.length) {
+			frames[frames.length - 1]!.codes.push(...codes);
+		}
+		else {
+			yield* codes;
+		}
+	}
+
+	function* generateSourceCode(from: number, to: number): Generator<TsCode> {
+		yield* write(omitRanges(
+			withoutRename(
+				generateNonIdentifierCode(code.slice(from, to), block, start + from, features, from > 0),
+				start,
+				renamedElsewhere,
+			),
+			start,
+			omit,
+		));
+	}
+
+	function* generateCodeUntil(from: number, end: number): Generator<TsCode> {
+		while (markIndex < marks.length && marks[markIndex]!.offset <= end) {
+			const { offset, body, enter } = marks[markIndex++]!;
+			yield* generateSourceCode(from, offset);
+			from = offset;
+			if (enter) {
+				ctx.enterFunction();
+				frames.push({ isBlock: body.isBlock, codes: [], reasserts: new Set() });
+			}
+			else {
+				ctx.exitFunction();
+				yield* write(generateFunctionBody(frames.pop()!));
+			}
+		}
+		yield* generateSourceCode(from, end);
+	}
+
+	function* generateFunctionBody({ isBlock, codes, reasserts }: typeof frames[number]): Generator<TsCode> {
+		if (!reasserts.size) {
+			yield* codes;
+			return;
+		}
+		yield isBlock ? newLine : `{${newLine}`;
+		for (const name of reasserts) {
+			yield `${names.withDotValue}(${name}, ${
+				getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
+			})${endOfLine}`;
+		}
+		if (isBlock) {
+			yield* codes;
+		}
+		else {
+			yield `return (`;
+			yield* codes;
+			yield `)${endOfLine}}`;
+		}
+	}
+
 	let prevEnd = 0;
-	for (const reference of ctx.getExpression(block, start, code).references) {
+	for (const reference of references) {
 		const { name, offset, isShorthand, local, member } = reference;
 		const omitted = omit.some(([omitStart, omitEnd]) => omitStart <= offset && offset < omitEnd);
 		if (member && !omitted) {
@@ -49,23 +132,7 @@ export function* generateInterpolation(
 		if (local && !member) {
 			continue;
 		}
-		if (prevEnd < offset) {
-			yield* omitRanges(
-				withoutRename(
-					generateNonIdentifierCode(
-						code.slice(prevEnd, offset),
-						block,
-						start + prevEnd,
-						features,
-						prevEnd > 0,
-					),
-					start,
-					renamedElsewhere,
-				),
-				start,
-				omit,
-			);
-		}
+		yield* generateCodeUntil(prevEnd, offset);
 		prevEnd = offset + name.length;
 		if (omitted) {
 			continue;
@@ -73,18 +140,26 @@ export function* generateInterpolation(
 
 		const identifierFeatures = member ? featuresWithoutCompletion : features;
 		if (local || (isShorthand && options.setupConsts.has(name))) {
-			yield [name, block, start + offset, identifierFeatures];
+			yield* write([[name, block, start + offset, identifierFeatures]]);
 			continue;
 		}
 		const marker = isShorthand ? { ...identifierFeatures, kind: SpanMapKind.Atom } : identifierFeatures;
 		if (isShorthand) {
-			yield [name, block, start + offset, marker];
-			yield `: `;
+			yield* write([[name, block, start + offset, marker], `: `]);
+		}
+
+		if (
+			frames.length
+			&& options.reassertBindings!.has(name)
+			&& !options.setupConsts.has(name)
+			&& !options.setupRefs.has(name)
+		) {
+			frames[frames.length - 1]!.reasserts.add(name);
 		}
 
 		const codes: TsCode[] = [[name, block, start + offset, marker]];
 
-		yield* generateIdentifier(
+		yield* write(generateIdentifier(
 			options,
 			ctx,
 			codes,
@@ -92,30 +167,40 @@ export function* generateInterpolation(
 			block,
 			start + offset,
 			start + offset + name.length,
-		);
+		));
 	}
 
-	if (prevEnd < code.length) {
-		yield* omitRanges(
-			withoutRename(
-				generateNonIdentifierCode(
-					code.slice(prevEnd),
-					block,
-					start + prevEnd,
-					features,
-					prevEnd > 0,
-				),
-				start,
-				renamedElsewhere,
-			),
-			start,
-			omit,
-		);
-	}
+	yield* generateCodeUntil(prevEnd, code.length);
 
 	if (suffix) {
 		yield suffix;
 	}
+}
+
+// Bodies in pre-order; a block body spans between its braces.
+function collectFunctionBodies(ts: TypeScript, ast: ts.SourceFile) {
+	const bodies: { start: number; end: number; isBlock: boolean }[] = [];
+	ast.forEachChild(function visit(node): undefined {
+		if (
+			(ts.isArrowFunction(node)
+				|| ts.isFunctionExpression(node)
+				|| ts.isFunctionDeclaration(node)
+				|| ts.isMethodDeclaration(node)
+				|| ts.isGetAccessorDeclaration(node)
+				|| ts.isSetAccessorDeclaration(node)
+				|| ts.isConstructorDeclaration(node)
+				|| ts.isClassStaticBlockDeclaration(node))
+			&& node.body
+		) {
+			const { start, end } = getStartEnd(node.body, ast);
+			const isBlock = ts.isBlock(node.body);
+			if (!isBlock || node.body.statements.length) {
+				bodies.push({ start: isBlock ? start + 1 : start, end: isBlock ? end - 1 : end, isBlock });
+			}
+		}
+		node.forEachChild(visit);
+	});
+	return bodies;
 }
 
 /** The parts of the source `segments` of an expression at `start` out of the ranges of `omit`. */
@@ -251,7 +336,7 @@ export function* generateIdentifier(
 		yield boundary.end();
 	}
 	else if (options.setupBindings.has(name)) {
-		ctx.accessLog.push(name);
+		ctx.accessBinding(name);
 		if (inTypeQuery || options.dotValueBindings.has(name)) {
 			yield* codes;
 			yield `.`;

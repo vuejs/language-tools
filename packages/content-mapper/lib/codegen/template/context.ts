@@ -311,6 +311,25 @@ export function createTemplateCodegenContext(
 	// event-handler closures slice from a mark to find the names accessed within their body.
 	const accessLog: string[] = [];
 
+	// Setup bindings read outside the generated functions that re-assert their bindings.
+	const topLevelAccesses = new Set<string>();
+	let functionDepth = 0;
+
+	function enterFunction() {
+		functionDepth++;
+	}
+
+	function exitFunction() {
+		functionDepth--;
+	}
+
+	function accessBinding(name: string) {
+		accessLog.push(name);
+		if (!functionDepth) {
+			topLevelAccesses.add(name);
+		}
+	}
+
 	// conditions -----------------------------------------------------------------
 
 	// Active branch conditions with the names each accessed; the guards are
@@ -401,6 +420,10 @@ export function createTemplateCodegenContext(
 		isDeclared,
 		setMemberFeatures,
 		accessLog,
+		topLevelAccesses,
+		enterFunction,
+		exitFunction,
+		accessBinding,
 		conditions,
 		generateConditionGuards,
 		hoistVars,
