@@ -1,3 +1,4 @@
+import * as CompilerDOM from '@vue/compiler-dom';
 import { expect, test } from 'vitest';
 import { petiteVueParser } from '../lib/formats/petiteVue';
 import { sfcParser } from '../lib/formats/sfc';
@@ -50,6 +51,15 @@ test('updates the blocks that an edit changes and keeps the others', () => {
 	expect(updated.scriptSetup).not.toBe(sfc.scriptSetup);
 	expect(updated.styles[0]).not.toBe(sfc.styles[0]);
 	expect(sfcParser.update!(sfc, { start, end: start + 1, newText: '1' })).toBe(sfc);
+});
+
+test('leaves the errors in the content of the template of an SFC to the template compiler', () => {
+	const content = `<template><div></template>\n<style>`;
+	const errors = sfcParser.parse('/a.vue', content)!.errors;
+
+	expect(errors.map(error => [error.code, error.loc!.start.offset])).toEqual([
+		[CompilerDOM.ErrorCodes.X_MISSING_END_TAG, content.indexOf('<style>')],
+	]);
 });
 
 test('reads a VitePress file as a template over the file and its blocks at the offsets of the file', () => {

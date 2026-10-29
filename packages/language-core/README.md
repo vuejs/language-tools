@@ -128,7 +128,7 @@ export const ir: VuePluginModule['ir'] = ({ config, vueCompilerOptions }) => ({
       // `element` range only for a block written as an element, like the blocks of an SFC. Every block sets its
       // `lang`; the IR has no default language, and reading the `lang` of a block without one throws.
       parse(fileName, content) { /* return a VueFormatResult */ },
-      update(oldResult, { start, end, newText }) { /* optional: update oldResult in place, or return undefined */ },
+      update(oldResult, { start, end, newText }) { /* optional: return a new result that keeps the objects of oldResult for the untouched blocks (oldResult itself for an edit that changes nothing) without changing oldResult, or undefined to parse the file again */ },
     },
   },
   // Template languages, by the `lang` of `<template>`: the HTML of `source`, and the span map segments

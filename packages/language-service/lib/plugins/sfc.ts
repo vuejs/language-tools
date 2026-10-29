@@ -97,33 +97,20 @@ export function create(): LanguageServicePlugin {
 
 					const { ir } = info.root;
 					const originalResult = await htmlServiceInstance.provideDiagnostics?.(document, token);
-					const sfcErrors: Diagnostic[] = [];
-					const { template } = ir;
-
-					// the template compiler reports the errors in the content of a template element
-					const templateStart = template?.element ? template.offset : Infinity;
-					const templateEnd = template?.element ? template.offset + template.content.length : -Infinity;
-
-					for (const error of ir.errors) {
-						const start = error.loc?.start.offset ?? 0;
-						const end = error.loc?.end.offset ?? 0;
-						if (end < templateStart || start >= templateEnd) {
-							sfcErrors.push({
-								range: {
-									start: document.positionAt(start),
-									end: document.positionAt(end),
-								},
-								severity: 1 satisfies typeof DiagnosticSeverity.Error,
-								code: error.code,
-								source: 'vue',
-								message: error.message,
-							});
-						}
-					}
+					const formatErrors = ir.errors.map((error): Diagnostic => ({
+						range: {
+							start: document.positionAt(error.loc?.start.offset ?? 0),
+							end: document.positionAt(error.loc?.end.offset ?? 0),
+						},
+						severity: 1 satisfies typeof DiagnosticSeverity.Error,
+						code: error.code,
+						source: 'vue',
+						message: error.message,
+					}));
 
 					return [
 						...originalResult ?? [],
-						...sfcErrors,
+						...formatErrors,
 					];
 				},
 

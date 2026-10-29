@@ -18,6 +18,13 @@ export const sfcParser: VueFormat = {
 				}
 			}
 		}
+		if (template) {
+			// the template compiler reports the errors in the content of the template
+			const templateEnd = template.offset + template.content.length;
+			sfc.errors = sfc.errors.filter(error =>
+				(error.loc?.end.offset ?? 0) < template.offset || (error.loc?.start.offset ?? 0) >= templateEnd
+			);
+		}
 		return sfc;
 	},
 

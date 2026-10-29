@@ -151,7 +151,7 @@ export interface VueFormat {
 export interface VueFormatResult {
 	/** The top-level comments of the file. */
 	comments: string[];
-	/** Why the file is not read as written. */
+	/** Why the file is not read as written; the language service reports every one. */
 	errors: CompilerDOM.CompilerError[];
 	template: VueFormatBlock | undefined;
 	script: VueFormatScript | undefined;
