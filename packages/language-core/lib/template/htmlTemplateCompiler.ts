@@ -27,14 +27,7 @@ export const htmlTemplateCompiler: TemplateCompiler = {
 			addedSuffix = true;
 		}
 
-		const ast = compileTemplate(template, options);
-
-		return {
-			ast,
-			code: '',
-			preamble: '',
-			__addedSuffix: addedSuffix,
-		};
+		return { ast: compileTemplate(template, options), addedSuffix };
 	},
 
 	update(oldResult, change) {
@@ -42,8 +35,7 @@ export const htmlTemplateCompiler: TemplateCompiler = {
 			+ change.newText
 			+ oldResult.ast.source.slice(change.end);
 
-		// @ts-expect-error
-		if (oldResult.__addedSuffix) {
+		if (oldResult.addedSuffix) {
 			const originalTemplate = newSource.slice(0, -1); // remove added '>'
 			if (!shouldAddSuffixRE.test(originalTemplate)) {
 				return undefined;

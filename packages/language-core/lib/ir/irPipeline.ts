@@ -4,17 +4,9 @@ import { vitePressParser } from '../formats/vitepress';
 import { loadIRPlugins } from '../options/plugins';
 import { compileScript } from '../script/compileScript';
 import { compileStyle } from '../style/compileStyle';
-import { compileTemplate } from '../template/compileTemplate';
+import { compileTemplateHTML } from '../template/compileTemplateHTML';
 import { htmlTemplateCompiler } from '../template/htmlTemplateCompiler';
-import type {
-	IRPipeline,
-	TemplateCompiler,
-	TypeScript,
-	VueCompilerOptions,
-	VueFormat,
-	VuePluginError,
-	VueTemplateCompilerHost,
-} from '../types';
+import type { IRPipeline, TemplateCompiler, TypeScript, VueCompilerOptions, VueFormat, VuePluginError } from '../types';
 
 const builtInFormats: Record<string, VueFormat> = {
 	sfc: sfcParser,
@@ -26,8 +18,6 @@ const builtInTemplateCompilers: Record<string, TemplateCompiler> = {
 	html: htmlTemplateCompiler,
 	md: htmlTemplateCompiler,
 };
-
-const templateCompilerHost: VueTemplateCompilerHost = { compileTemplate };
 
 /**
  * How the IR of the Vue files of `vueCompilerOptions` is built: the format of `vueCompilerOptions.format`, the
@@ -45,9 +35,14 @@ export function createIRPipeline(
 	const errors = [...plugins.errors];
 	const templateCompilers: Record<string, TemplateCompiler> = { ...builtInTemplateCompilers };
 	for (const lang in plugins.templateCompilers) {
-		const compile = plugins.templateCompilers[lang]!;
+		const toHTML = plugins.templateCompilers[lang]!;
 		templateCompilers[lang] = {
-			compile: (template, options) => compile(template, options, templateCompilerHost),
+			compile(template, options) {
+				const converted = toHTML(template);
+				if (converted) {
+					return { ast: compileTemplateHTML(converted, options) };
+				}
+			},
 		};
 	}
 	let format = builtInFormats[vueCompilerOptions.format] ?? plugins.formats[vueCompilerOptions.format];

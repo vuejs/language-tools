@@ -50,7 +50,7 @@ const handleClick = () => console.log('clicked')
 
 ## Features
 
-This plugin exports `ir.templateCompilers.pug` (see [Plugins](../language-core#plugins)), which compiles Pug to HTML and then into the template AST with the host's `compileTemplate`. It is needed wherever the IR of a Pug template is built: by `@vue/content-mapper` for type checking, and by the language server for the features that read the template AST.
+This plugin exports `ir.templateCompilers.pug` (see [Plugins](../language-core#plugins)), which converts Pug to HTML with mappings to the Pug source; the host compiles the HTML into the template AST at the offsets of the Pug source. It drops the duplicate attribute error of a class literal next to a `class` attribute (`.foo(class="bar")`), which Pug merges. It is needed wherever the IR of a Pug template is built: by `@vue/content-mapper` for type checking, and by the language server for the features that read the template AST.
 
 The language server's syntax features of Pug templates are built in and work without this plugin.
 

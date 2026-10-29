@@ -14,6 +14,7 @@ import type {
 	IRStyle,
 	IRTemplate,
 	TemplateCompiler,
+	TemplateCompileResult,
 	TypeScript,
 } from '../types';
 import { computedArray, reactiveArray } from './signals';
@@ -197,7 +198,7 @@ export function useIR(
 			template: string;
 			errors: CompilerDOM.CompilerError[];
 			warnings: CompilerDOM.CompilerError[];
-			result?: CompilerDOM.CodegenResult;
+			result?: TemplateCompileResult;
 			compiler?: TemplateCompiler;
 		}>(lastResult => {
 			if (lastResult?.template === base.content) {

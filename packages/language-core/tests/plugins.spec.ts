@@ -1,3 +1,4 @@
+import * as CompilerDOM from '@vue/compiler-dom';
 import { describe, expect, it } from 'vitest';
 import { createIRPipeline } from '../lib/ir/irPipeline';
 import { getDefaultCompilerOptions } from '../lib/options/compilerOptions';
@@ -20,13 +21,15 @@ function withPlugins(modules: Record<string, unknown>, options: Partial<VueCompi
 	};
 }
 
-const pugAst = (tag: string) => ({ ast: { tag }, code: '', preamble: '' }) as any;
+const toHTML = (tag: string) => ({ html: `<${tag}/>`, mappings: [] });
+const firstTag = (result: ReturnType<ReturnType<typeof createIRPipeline>['compileTemplate']>) =>
+	(result?.result.ast.children[0] as { tag?: string } | undefined)?.tag;
 
 describe('createIRPipeline', () => {
 	it.each([
 		['a function', () => ({ version: 4 })],
 		['an array of functions', [() => ({ version: 4 })]],
-		['an object with a version', { version: 4, compileSFCTemplate: () => pugAst('legacy') }],
+		['an object with a version', { version: 4, compileSFCTemplate: () => toHTML('legacy') }],
 	])('rejects a legacy export of %s', (_, module) => {
 		const pipeline = createIRPipeline(ts, withPlugins({ legacy: module }));
 		expect(pipeline.errors).toEqual([{ plugin: 'legacy', message: legacyMessage }]);
@@ -40,15 +43,74 @@ describe('createIRPipeline', () => {
 				pug: {
 					ir: {
 						templateCompilers: {
-							pug: (source: string, _options: unknown, host: { compileTemplate: unknown }) =>
-								typeof host.compileTemplate === 'function' ? pugAst(source) : undefined,
+							pug: (source: string) => toHTML(source),
 						},
 					},
 				},
 			}),
 		);
 		expect(pipeline.errors).toEqual([]);
-		expect(pipeline.compileTemplate('pug', 'div', {})?.result).toEqual(pugAst('div'));
+		expect(firstTag(pipeline.compileTemplate('pug', 'div', {}))).toBe('div');
+	});
+
+	it('gives the AST of the HTML of a template language the offsets of the template', () => {
+		const html = '<div>x</div><i></i><p v-if></p>';
+		const errors: [number, number][] = [];
+		const ignored: number[] = [];
+		const pipeline = createIRPipeline(
+			ts,
+			withPlugins({
+				lang: {
+					ir: {
+						templateCompilers: {
+							lang: () => ({
+								html,
+								mappings: [
+									[0, 5, 0, 5, 0, 0], // `<div>`
+									[5, 1, 10, 1, 0, 0], // `x`
+									[19, 12, 30, 12, 0, 0], // `<p v-if></p>`
+								],
+								ignoreError: error => {
+									ignored.push(error.code);
+									return false;
+								},
+							}),
+						},
+					},
+				},
+			}),
+		);
+		const ast = pipeline.compileTemplate('lang', '', {
+			onError: error => errors.push([error.loc!.start.offset, error.loc!.end.offset]),
+		})!.result.ast;
+		const [div, i] = ast.children as [CompilerDOM.ElementNode, CompilerDOM.ElementNode];
+		// an offset of several sources: the end of `<div>` and the start of `x`
+		expect([div.children[0]!.loc.start.offset, div.children[0]!.loc.end.offset]).toEqual([10, 11]);
+		// a location of which only the start has a source
+		expect([div.loc.start.offset, div.loc.end.offset]).toEqual([-1, -1]);
+		// a location of no source
+		expect([i.loc.start.offset, i.loc.end.offset]).toEqual([-1, -1]);
+		// an error at the offsets of the template
+		expect(ignored).toEqual([CompilerDOM.ErrorCodes.X_V_IF_NO_EXPRESSION]);
+		expect(errors).toEqual([[33, 37]]);
+	});
+
+	it('does not report an error that the template language ignores', () => {
+		const errors: unknown[] = [];
+		const pipeline = createIRPipeline(
+			ts,
+			withPlugins({
+				lang: {
+					ir: {
+						templateCompilers: {
+							lang: () => ({ html: '<p v-if></p>', mappings: [], ignoreError: () => true }),
+						},
+					},
+				},
+			}),
+		);
+		pipeline.compileTemplate('lang', '', { onError: error => errors.push(error) });
+		expect(errors).toEqual([]);
 	});
 
 	it('rejects a template language or format that is built in', () => {
@@ -57,7 +119,7 @@ describe('createIRPipeline', () => {
 			withPlugins({
 				html: {
 					ir: {
-						templateCompilers: { html: () => pugAst('html') },
+						templateCompilers: { html: () => toHTML('html') },
 						formats: { sfc: { parse: () => undefined } },
 					},
 				},
@@ -76,14 +138,14 @@ describe('createIRPipeline', () => {
 		const pipeline = createIRPipeline(
 			ts,
 			withPlugins({
-				first: { ir: { templateCompilers: { pug: () => pugAst('first') } } },
-				second: { ir: { templateCompilers: { pug: () => pugAst('second') } } },
+				first: { ir: { templateCompilers: { pug: () => toHTML('first') } } },
+				second: { ir: { templateCompilers: { pug: () => toHTML('second') } } },
 			}),
 		);
 		expect(pipeline.errors).toEqual([
 			{ plugin: 'second', message: `The template compiler 'pug' is already provided by 'first'.` },
 		]);
-		expect(pipeline.compileTemplate('pug', 'div', {})?.result).toEqual(pugAst('first'));
+		expect(firstTag(pipeline.compileTemplate('pug', 'div', {}))).toBe('first');
 	});
 
 	it('parses with the format of a plugin that `format` selects', () => {

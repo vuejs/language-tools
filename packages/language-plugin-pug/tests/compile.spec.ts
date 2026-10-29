@@ -87,7 +87,7 @@ describe('pug template compiler', () => {
 		]);
 	});
 
-	// the location of a warning is remapped when it is reported and again with the AST
+	// the end of a self-closing element in the HTML maps to the start of the pug element
 	it.fails('gives warnings at the offsets of the pug source', () => {
 		// the compiler only warns of deprecations in compat mode
 		const warned = `div\n  em(v-if="a" v-for="n in b")`;

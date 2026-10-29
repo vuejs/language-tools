@@ -1,4 +1,4 @@
-import type { SpanMapKind } from '@volar/language-core';
+import type { Mapping, SpanMapKind } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
@@ -146,11 +146,18 @@ export interface VueFormat {
 	update?(old: SFCParseResult, change: TextChange): SFCParseResult | undefined;
 }
 
+/** The AST of a template block. */
+export interface TemplateCompileResult {
+	ast: CompilerDOM.RootNode;
+	/** Whether the compiler appended `>` to the template to close a tag that it ends in. */
+	addedSuffix?: boolean;
+}
+
 /** Compiles the content of a template block of one language. */
 export interface TemplateCompiler {
-	compile(template: string, options: CompilerDOM.CompilerOptions): CompilerDOM.CodegenResult | undefined;
+	compile(template: string, options: CompilerDOM.CompilerOptions): TemplateCompileResult | undefined;
 	/** Updates `old` in place for `change`, or returns `undefined` to have the template compiled again. */
-	update?(old: CompilerDOM.CodegenResult, change: TextChange): CompilerDOM.CodegenResult | undefined;
+	update?(old: TemplateCompileResult, change: TextChange): TemplateCompileResult | undefined;
 }
 
 /** How the IR of a Vue file is built: its format, and the compiler of each block language. */
@@ -162,7 +169,7 @@ export interface IRPipeline {
 		lang: string,
 		template: string,
 		options: CompilerDOM.CompilerOptions,
-	): { result: CompilerDOM.CodegenResult; compiler: TemplateCompiler } | undefined;
+	): { result: TemplateCompileResult; compiler: TemplateCompiler } | undefined;
 	compileScript(lang: string, script: string): ts.SourceFile | undefined;
 	compileStyle(lang: string, style: string): Pick<IRStyle, 'bindings' | 'classNames'>;
 }
@@ -184,10 +191,22 @@ export interface VuePluginContext {
 	vueCompilerOptions: Readonly<VueCompilerOptions>;
 }
 
-/** What the host gives a template compiler of a plugin. */
-export interface VueTemplateCompilerHost {
-	/** Compiles HTML into the AST that the IR of a template holds. */
-	compileTemplate: (source: string, options: CompilerDOM.CompilerOptions) => CompilerDOM.RootNode;
+/**
+ * The HTML that a template language converts a template to. The host compiles `html`, and gives every location of
+ * the AST and of the compiler's errors and warnings the offsets of the template that `mappings` give:
+ * - an offset of `html` that several mappings cover gets the greatest of their template offsets;
+ * - an offset that no mapping covers has no source and gets -1, which consumers skip rather than move to an offset nearby;
+ * - a location of which only one end has a source has none: both of its ends get -1.
+ */
+export interface TemplateHTML {
+	html: string;
+	/** From ranges of `html` (generated) to ranges of the template (source). */
+	mappings: Mapping[];
+	/**
+	 * Whether an error of the compiler, at offsets of `html`, comes from the conversion rather than the template, so
+	 * that it is not reported.
+	 */
+	ignoreError?(error: CompilerDOM.CompilerError): boolean;
 }
 
 /**
@@ -197,15 +216,8 @@ export interface VueTemplateCompilerHost {
 export interface VueIRPlugin {
 	/** Formats that `vueCompilerOptions.format` selects by name, besides the built-in 'sfc', 'vitepress' and 'petite-vue'. */
 	formats?: Record<string, VueFormat>;
-	/** Compilers of template languages, besides the built-in 'html' and 'md'. */
-	templateCompilers?: Record<
-		string,
-		(
-			source: string,
-			options: CompilerDOM.CompilerOptions,
-			host: VueTemplateCompilerHost,
-		) => CompilerDOM.CodegenResult | undefined
-	>;
+	/** Converters of template languages to HTML, besides the built-in 'html' and 'md'. */
+	templateCompilers?: Record<string, (source: string) => TemplateHTML | undefined>;
 	/** Applied in `plugins` order to the options of every template compiler. */
 	resolveTemplateCompilerOptions?(options: CompilerDOM.CompilerOptions): CompilerDOM.CompilerOptions;
 }

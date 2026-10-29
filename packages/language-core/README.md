@@ -128,11 +128,11 @@ export const ir: VuePluginModule['ir'] = ({ config, vueCompilerOptions }) => ({
       update(oldResult, { start, end, newText }) { /* optional: update oldResult in place, or return undefined */ },
     },
   },
-  // Template languages, by the `lang` of `<template>`.
+  // Template languages, by the `lang` of `<template>`: the HTML of `source`, and the mappings
+  // from ranges of the HTML to ranges of `source`.
   templateCompilers: {
-    'my-lang'(source, options, { compileTemplate }) {
-      // Turn `source` into HTML, compile it with `compileTemplate(html, options)`,
-      // and map the offsets of the AST back to `source`.
+    'my-lang'(source) {
+      return { html: toHTML(source), mappings: toMappings(source) };
     },
   },
   // Applied in `plugins` order to the options of every template compiler.
@@ -145,6 +145,7 @@ export const ir: VuePluginModule['ir'] = ({ config, vueCompilerOptions }) => ({
 `ir` is a `VueIRPlugin` or a function of the entry's `config` and the resolved `vueCompilerOptions` that returns one. The `codegen` export contributes to the TS code that `@vue/content-mapper` generates. It is defined and read by that package alone (`VueCodegenExport`, see [Codegen plugins](../content-mapper#codegen-plugins)); the language server and vue-component-meta never load it.
 
 - A format or template language belongs to the one plugin that provides its key. Providing a built-in key (`sfc`, `vitepress`, `petite-vue`, `html`, `md`) or a key of an earlier plugin is a load error, and that key of the plugin is not used.
+- A template language only converts to HTML (`TemplateHTML`). The host compiles the HTML and gives every location of the AST, and of the compiler's errors and warnings, the offsets of `source`: an HTML offset that several mappings cover gets the greatest source offset, one that no mapping covers gets -1 (no source), and a location of which only one end has a source gets -1 at both ends. `ignoreError` drops compiler errors that come from the conversion rather than the template.
 - Script and style blocks are always read by the built-in compilers: the script AST is a TypeScript `SourceFile`, and the style scanner does not depend on the style language.
 - The embedded documents of the language service are built in, including the document of a `pug` template, so a plugin has no part in them.
 - A module that exports a function, an array, or an object with `version` is a `VueLanguagePlugin` of v3 and fails to load with: "VueLanguagePlugin functions are no longer supported; export `{ ir: … }` (see language-core README)".

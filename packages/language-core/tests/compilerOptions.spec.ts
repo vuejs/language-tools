@@ -21,11 +21,7 @@ function writePluginPackage(rootDir: string, tag: string) {
 		path.join(packageDir, 'index.js'),
 		`exports.ir = {
 			templateCompilers: {
-				pug: () => ({
-					ast: { tag: ${JSON.stringify(tag)} },
-					code: '',
-					preamble: '',
-				}),
+				pug: () => ({ html: ${JSON.stringify(`<${tag}/>`)}, mappings: [] }),
 			},
 		};`,
 	);
@@ -82,11 +78,8 @@ describe('CompilerOptionsResolver', () => {
 			fs.realpathSync(path.join(clientDir, 'node_modules', PLUGIN_NAME, 'index.js')),
 		);
 
-		expect(createIRPipeline(ts, vueCompilerOptions).compileTemplate('pug', '', {})?.result).toEqual({
-			ast: { tag: 'client' },
-			code: '',
-			preamble: '',
-		});
+		expect(createIRPipeline(ts, vueCompilerOptions).compileTemplate('pug', '', {})?.result.ast.children[0])
+			.toMatchObject({ tag: 'client' });
 	});
 
 	it('drops every plugin inherited from the extended configs', () => {
