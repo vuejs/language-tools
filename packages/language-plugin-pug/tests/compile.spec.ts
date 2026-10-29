@@ -100,7 +100,7 @@ describe('pug template compiler', () => {
 	// #5099
 	it('does not report a class attribute that duplicates a class literal', () => {
 		const source = `div.foo(class="bar")`;
-		const htmlErrors: number[] = [];
+		const htmlErrors: (number | string)[] = [];
 		CompilerDOM.parse(baseParse(source).htmlCode, { onError: error => htmlErrors.push(error.code) });
 		expect(htmlErrors).toEqual([CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE]);
 

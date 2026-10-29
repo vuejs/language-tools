@@ -56,7 +56,7 @@ describe('createIRPipeline', () => {
 	it('gives the AST of the HTML of a template language the offsets of the template', () => {
 		const html = '<div>x</div><i></i><p v-if></p>';
 		const errors: [number, number][] = [];
-		const ignored: number[] = [];
+		const ignored: (number | string)[] = [];
 		const pipeline = createIRPipeline(
 			ts,
 			withPlugins({
@@ -70,7 +70,7 @@ describe('createIRPipeline', () => {
 									[5, 1, 10, 1, 0, 0], // `x`
 									[19, 12, 30, 12, 0, 0], // `<p v-if></p>`
 								],
-								ignoreError: error => {
+								ignoreError: (error: CompilerDOM.CompilerError) => {
 									ignored.push(error.code);
 									return false;
 								},
