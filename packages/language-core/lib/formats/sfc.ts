@@ -8,13 +8,12 @@ export const sfcParser: VueFormat = {
 		for (const error of sfc.errors) {
 			// Handle 'Element is missing end tag.' error, see #4893
 			if (
-				error.code === 24 && template && error.loc
-				&& template.start <= error.loc.start.offset && error.loc.start.offset < template.startTagEnd
+				error.code === 24 && template?.element && error.loc
+				&& template.element.start <= error.loc.start.offset && error.loc.start.offset < template.offset
 			) {
 				const endTagOffset = template.content.lastIndexOf('<');
 				const endTagText = template.content.slice(endTagOffset).trimEnd();
 				if ('</template>'.startsWith(endTagText)) {
-					template.endTagStart = template.startTagEnd + endTagOffset;
 					template.content = template.content.slice(0, endTagOffset);
 				}
 			}
@@ -24,16 +23,18 @@ export const sfcParser: VueFormat = {
 
 	update(sfc, change) {
 		const blocks = getBlocks(sfc);
-		const hit = blocks.find(([block]) => change.start >= block.startTagEnd && change.end <= block.endTagStart);
+		const hit = blocks.find(([block]) =>
+			change.start >= block.offset && change.end <= block.offset + block.content.length
+		);
 		if (!hit) {
 			return;
 		}
 		const [hitBlock, tag] = hit;
 
 		const oldContent = hitBlock.content;
-		const newContent = hitBlock.content = oldContent.slice(0, change.start - hitBlock.startTagEnd)
+		const newContent = hitBlock.content = oldContent.slice(0, change.start - hitBlock.offset)
 			+ change.newText
-			+ oldContent.slice(change.end - hitBlock.startTagEnd);
+			+ oldContent.slice(change.end - hitBlock.offset);
 
 		// #3449
 		const endTagRE = new RegExp(`</\\s*${tag}\\s*>`);
@@ -52,10 +53,11 @@ export const sfcParser: VueFormat = {
 		};
 
 		for (const [block] of blocks) {
-			block.start = shiftStart(block.start);
-			block.startTagEnd = shiftStart(block.startTagEnd);
-			block.endTagStart = shiftEnd(block.endTagStart);
-			block.end = shiftEnd(block.end);
+			block.offset = shiftStart(block.offset);
+			if (block.element) {
+				block.element.start = shiftStart(block.element.start);
+				block.element.end = shiftEnd(block.element.end);
+			}
 		}
 		shiftAttr(sfc.script?.src);
 		shiftAttr(sfc.scriptSetup?.generic);

@@ -15,6 +15,7 @@ import type {
 	TemplateCompileResult,
 	TypeScript,
 	VueFormatBlock,
+	VueFormatElement,
 	VueFormatResult,
 } from '../types';
 import { computedArray, reactiveArray } from './signals';
@@ -109,10 +110,8 @@ export function useIR(
 				content: '',
 				lang: 'ts',
 				name: '',
-				start: 0,
-				end: 0,
-				startTagEnd: 0,
-				endTagStart: 0,
+				offset: 0,
+				element: undefined,
 				generic: undefined,
 				genericOffset: 0,
 				attrs: {},
@@ -220,7 +219,7 @@ export function useIR(
 				const change = getUntrackedSnapshot().getChangeRange(lastResult.snapshot);
 				if (change) {
 					const pausedSub = setActiveSub(undefined);
-					const templateOffset = base.startTagEnd;
+					const templateOffset = base.offset;
 					setActiveSub(pausedSub);
 
 					const newText = getUntrackedSnapshot().getText(change.span.start, change.span.start + change.newLength);
@@ -305,10 +304,13 @@ export function useIR(
 		const getLang = computed(() => getBlock().lang ?? defaultLang);
 		const getAttrs = computed(() => getBlock().attrs); // TODO: computed it
 		const getContent = computed(() => getBlock().content);
-		const getStartTagEnd = computed(() => getBlock().startTagEnd);
-		const getEndTagStart = computed(() => getBlock().endTagStart);
-		const getStart = computed(() => getBlock().start);
-		const getEnd = computed(() => getBlock().end);
+		const getOffset = computed(() => getBlock().offset);
+		const getElement = computed<VueFormatElement | undefined>(oldElement => {
+			const element = getBlock().element;
+			return element && oldElement?.start === element.start && oldElement.end === element.end
+				? oldElement
+				: element;
+		});
 		return {
 			name,
 			get lang() {
@@ -320,17 +322,11 @@ export function useIR(
 			get content() {
 				return getContent();
 			},
-			get startTagEnd() {
-				return getStartTagEnd();
+			get offset() {
+				return getOffset();
 			},
-			get endTagStart() {
-				return getEndTagStart();
-			},
-			get start() {
-				return getStart();
-			},
-			get end() {
-				return getEnd();
+			get element() {
+				return getElement();
 			},
 		};
 	}

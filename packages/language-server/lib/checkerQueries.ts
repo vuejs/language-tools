@@ -144,7 +144,7 @@ async function getOptionNames(
 	ts: TypeScript,
 	checker: Checker,
 	sourceFile: SourceFile,
-	block: { startTagEnd: number } | undefined,
+	block: { offset: number } | undefined,
 	range: TextRange | undefined,
 ) {
 	if (!block || !range) {
@@ -154,7 +154,7 @@ async function getOptionNames(
 		ts,
 		checker,
 		sourceFile,
-		block.startTagEnd + range.start,
+		block.offset + range.start,
 		range.end - range.start,
 	);
 	return type ? (await type.getProperties()).map(symbol => symbol.name) : [];
@@ -221,7 +221,7 @@ function getSetupScopeNode(ts: TypeScript, sourceFile: SourceFile, { ir }: VueVi
 			continue;
 		}
 		for (const statement of [...block.ast.statements].reverse()) {
-			const offset = block.startTagEnd + getStartEnd(statement, block.ast).start;
+			const offset = block.offset + getStartEnd(statement, block.ast).start;
 			const [position] = toCheckedPositions(sourceFile, offset, ts.SpanMapFeature.Definition);
 			if (position !== undefined) {
 				return getNodeAt(sourceFile, position, false);
@@ -377,7 +377,7 @@ export function getElementAt(template: IRTemplate | undefined, position: number)
 
 /** The offset in a Vue file's source text of the tag name of `element`, or its last segment for `<Foo.Bar>`. */
 export function getTagNameOffset(template: IRTemplate, element: ElementNode) {
-	return template.startTagEnd + getElementTagOffsets(element, template)[0] + element.tag.lastIndexOf('.') + 1;
+	return template.offset + getElementTagOffsets(element, template)[0] + element.tag.lastIndexOf('.') + 1;
 }
 
 /**
@@ -397,7 +397,7 @@ export async function collectExtractProps(
 		return [];
 	}
 	for (const { name, offset, model } of scriptAnalysis.getTemplateScope().contextAccesses) {
-		const sourceOffset = ir.template.startTagEnd + offset;
+		const sourceOffset = ir.template.offset + offset;
 		if (sourceOffset < start || sourceOffset >= end) {
 			continue;
 		}
@@ -532,7 +532,7 @@ export async function getComponentSlots(
 	for (
 		const position of toCheckedPositions(
 			sourceFile,
-			scriptSetup.startTagEnd + defineSlots.exp.start,
+			scriptSetup.offset + defineSlots.exp.start,
 			ts.SpanMapFeature.Definition,
 		)
 	) {

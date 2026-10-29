@@ -372,11 +372,17 @@ function* generateGlobalTypesReference(
 	}
 }
 
-// The component declaration has no source of its own: map it to the tag name of its block,
-// so that its declaration emit errors (e.g. a private type of a generic component) report there.
+// The component declaration has no source of its own: map it to the tag name of its block, or to the start of a
+// block that is not an element, so that its declaration emit errors (e.g. a private type of a generic component)
+// report there.
 function* generateComponentDeclareEqual(block: IRBlock, name: string): Generator<TsCode> {
-	const tagNameStart = block.start + 1;
-	yield* generateExportDeclareEqual('main', name, tagNameStart, tagNameStart + 'script'.length);
+	if (block.element) {
+		const tagNameStart = block.element.start + 1;
+		yield* generateExportDeclareEqual('main', name, tagNameStart, tagNameStart + 'script'.length);
+	}
+	else {
+		yield* generateExportDeclareEqual('main', name, block.offset, block.offset);
+	}
 }
 
 export function* generateExportDeclareEqual(

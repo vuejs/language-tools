@@ -112,7 +112,7 @@ export function create(
 							constructTag('script', ['setup', 'lang="ts"'], scriptInitialIndent, generateNewScriptContents()),
 						);
 					}
-					if (ir.template.startTagEnd > script.startTagEnd) {
+					if (ir.template.offset > script.offset) {
 						newFileTags = newFileTags.reverse();
 					}
 
@@ -130,12 +130,12 @@ export function create(
 						{
 							range: lastImportNode
 								? {
-									start: sfcDocument.positionAt(script.startTagEnd + lastImportNode.end),
-									end: sfcDocument.positionAt(script.startTagEnd + lastImportNode.end),
+									start: sfcDocument.positionAt(script.offset + lastImportNode.end),
+									end: sfcDocument.positionAt(script.offset + lastImportNode.end),
 								}
 								: {
-									start: sfcDocument.positionAt(script.startTagEnd),
-									end: sfcDocument.positionAt(script.startTagEnd),
+									start: sfcDocument.positionAt(script.offset),
+									end: sfcDocument.positionAt(script.offset),
 								},
 							newText: `\nimport ${newName} from './${newName}.vue'`,
 						},
@@ -146,8 +146,8 @@ export function create(
 						if (edit) {
 							sfcEdits.push({
 								range: {
-									start: sfcDocument.positionAt(ir.script.startTagEnd + edit.range.start),
-									end: sfcDocument.positionAt(ir.script.startTagEnd + edit.range.end),
+									start: sfcDocument.positionAt(ir.script.offset + edit.range.start),
+									end: sfcDocument.positionAt(ir.script.offset + edit.range.end),
 								},
 								newText: edit.newText,
 							});

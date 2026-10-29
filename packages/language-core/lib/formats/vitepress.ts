@@ -13,7 +13,7 @@ const angleBracketRE = /<[^\s:]*:\S*>/g;
 /**
  * Treats a file as VitePress markdown: frontmatter, fenced code blocks and code snippet imports
  * are blanked, `<script>` / `<style>` blocks are lifted out of the template, and the remaining
- * markdown becomes the template, a block without tags over the whole file.
+ * markdown becomes the template, over the whole file.
  */
 export const vitePressParser: VueFormat = {
 	parse(_fileName, content) {
@@ -54,14 +54,7 @@ export const vitePressParser: VueFormat = {
 		}
 
 		const sfc = parse(blocksText);
-		sfc.template = {
-			start: 0,
-			end: content.length,
-			startTagEnd: 0,
-			endTagStart: content.length,
-			content,
-			attrs: {},
-		};
+		sfc.template = { content, offset: 0, attrs: {} };
 		return sfc;
 	},
 };

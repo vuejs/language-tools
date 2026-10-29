@@ -82,15 +82,15 @@ export function parse(source: string): VueFormatResult {
 }
 
 function createBlock(node: CompilerDOM.ElementNode, source: string): VueFormatBlock {
-	let startTagEnd: number;
-	let endTagStart: number;
+	let contentStart: number;
+	let contentEnd: number;
 	if (node.children.length) {
-		startTagEnd = node.children[0]!.loc.start.offset;
-		endTagStart = node.children[node.children.length - 1]!.loc.end.offset;
+		contentStart = node.children[0]!.loc.start.offset;
+		contentEnd = node.children[node.children.length - 1]!.loc.end.offset;
 	}
 	else {
 		const offset = node.loc.source.indexOf(`</`);
-		startTagEnd = endTagStart = offset > -1 ? node.loc.start.offset + offset : node.loc.end.offset;
+		contentStart = contentEnd = offset > -1 ? node.loc.start.offset + offset : node.loc.end.offset;
 	}
 	const attrs: Record<string, string | true> = {};
 	let lang: string | undefined;
@@ -103,13 +103,11 @@ function createBlock(node: CompilerDOM.ElementNode, source: string): VueFormatBl
 		}
 	}
 	return {
-		start: node.loc.start.offset,
-		end: node.loc.end.offset,
-		startTagEnd,
-		endTagStart,
+		content: source.slice(contentStart, contentEnd),
+		offset: contentStart,
 		lang,
-		content: source.slice(startTagEnd, endTagStart),
 		attrs,
+		element: { start: node.loc.start.offset, end: node.loc.end.offset },
 	};
 }
 

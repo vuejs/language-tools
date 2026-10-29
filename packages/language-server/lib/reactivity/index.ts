@@ -80,8 +80,8 @@ export function createReactivityAnalyzer(getSymbolIds: SymbolIdResolver) {
 			let scriptText = text.replace(/[^\r\n]/g, ' ');
 			for (const block of [ir.script, ir.scriptSetup]) {
 				if (block) {
-					scriptText = scriptText.slice(0, block.startTagEnd) + block.content
-						+ scriptText.slice(block.startTagEnd + block.content.length);
+					scriptText = scriptText.slice(0, block.offset) + block.content
+						+ scriptText.slice(block.offset + block.content.length);
 				}
 			}
 			return analyzeText(virtualCode.ts, fileName, text, `${fileName}.${getScriptLang(ir)}`, scriptText, offset);
@@ -150,13 +150,13 @@ export function getInterpolationRanges(virtualCode: VueVirtualCode) {
 	if (ir.template?.ast) {
 		for (const node of forEachInterpolationNode(ir.template.ast)) {
 			const [content, start] = parseInterpolationNode(node, ir.template.content);
-			const offset = ir.template.startTagEnd + start;
+			const offset = ir.template.offset + start;
 			ranges.push([offset, offset + content.length]);
 		}
 	}
 	for (const style of ir.styles) {
 		for (const binding of style.bindings) {
-			const offset = style.startTagEnd + binding.offset;
+			const offset = style.offset + binding.offset;
 			ranges.push([offset, offset + binding.text.length]);
 		}
 	}

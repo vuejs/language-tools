@@ -51,7 +51,7 @@ const msg = 'Hello'
 </script>
 `);
 
-// result.template: { start, startTagEnd, endTagStart, end, lang, content, attrs }
+// result.template: { content, offset, lang, attrs, element: { start, end } }
 // result.scriptSetup
 // result.styles
 // result.errors
@@ -124,8 +124,8 @@ export const ir: VuePluginModule['ir'] = ({ config, vueCompilerOptions }) => ({
   // Formats that `format` selects by name.
   formats: {
     'my-format': {
-      // The blocks of the file at its offsets (`VueFormatResult`); a block without tags, like a template over
-      // the whole file, has `start === startTagEnd` and `endTagStart === end`.
+      // The blocks of the file (`VueFormatResult`): each block's `content` at its `offset` in the file, and the
+      // `element` range only for a block written as an element, like the blocks of an SFC.
       parse(fileName, content) { /* return a VueFormatResult */ },
       update(oldResult, { start, end, newText }) { /* optional: update oldResult in place, or return undefined */ },
     },

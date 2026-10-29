@@ -67,7 +67,7 @@ export function create(): LanguageServicePlugin {
 							continue;
 						}
 
-						const hintOffset = block.startTagEnd + hint.offset;
+						const hintOffset = block.offset + hint.offset;
 						if (hintOffset < start || hintOffset >= end) {
 							continue;
 						}

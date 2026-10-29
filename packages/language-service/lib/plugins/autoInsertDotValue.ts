@@ -33,13 +33,13 @@ export function create(
 					const { ir } = info.root;
 					const offset = document.offsetAt(selection);
 					const block = [ir.script, ir.scriptSetup].find(block =>
-						block && offset >= block.startTagEnd && offset <= block.endTagStart
+						block && offset >= block.offset && offset <= block.offset + block.content.length
 					);
 					if (!block) {
 						return;
 					}
 
-					if (shouldSkip(info.root.ts, block.ast, offset - block.startTagEnd, false)) {
+					if (shouldSkip(info.root.ts, block.ast, offset - block.offset, false)) {
 						return;
 					}
 

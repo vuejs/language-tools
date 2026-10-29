@@ -5,10 +5,11 @@ import { vitePressParser } from '../lib/formats/vitepress';
 import type { VueFormatBlock } from '../lib/types';
 
 function tags(content: string, block: VueFormatBlock | undefined) {
-	return block && [
-		content.slice(block.start, block.startTagEnd),
-		content.slice(block.startTagEnd, block.endTagStart),
-		content.slice(block.endTagStart, block.end),
+	expect(content.slice(block!.offset, block!.offset + block!.content.length)).toBe(block!.content);
+	return [
+		content.slice(block!.element!.start, block!.offset),
+		block!.content,
+		content.slice(block!.offset + block!.content.length, block!.element!.end),
 	];
 }
 
@@ -44,12 +45,14 @@ test('shifts the offsets of the blocks after an edit', () => {
 	expect(updated).toEqual(sfcParser.parse('/a.vue', newContent));
 });
 
-test('reads a VitePress file as a template without tags and its blocks at the offsets of the file', () => {
+test('reads a VitePress file as a template over the file and its blocks at the offsets of the file', () => {
 	const content =
 		`# {{ title }}\n\n<script setup lang="ts">\nconst title = 1;\n</script>\n\n<style scoped>a {}</style>\n`;
 	const sfc = vitePressParser.parse('/a.md', content)!;
 
-	expect(sfc.template).toMatchObject({ start: 0, startTagEnd: 0, endTagStart: content.length, end: content.length });
+	expect(sfc.template).toMatchObject({ offset: 0 });
+	expect(sfc.template!.element).toBeUndefined();
+	expect(sfc.template!.content).toHaveLength(content.length);
 	expect(sfc.template!.content.slice(0, 13)).toBe('# {{ title }}');
 	expect(sfc.template!.content).not.toContain('const title');
 	expect(tags(content, sfc.scriptSetup)).toEqual(['<script setup lang="ts">', '\nconst title = 1;\n', '</script>']);
@@ -57,11 +60,13 @@ test('reads a VitePress file as a template without tags and its blocks at the of
 	expect(sfc.styles[0]!.scoped).toBe(true);
 });
 
-test('reads a petite-vue page as a template without tags and its blocks at the offsets of the file', () => {
+test('reads a petite-vue page as a template over the file and its blocks at the offsets of the file', () => {
 	const content = `<div v-scope>{{ a }}</div>\n<script type="module">const a = 1;</script>\n<style></style>\n`;
 	const sfc = petiteVueParser.parse('/a.html', content)!;
 
-	expect(sfc.template).toMatchObject({ start: 0, startTagEnd: 0, endTagStart: content.length, end: content.length });
+	expect(sfc.template).toMatchObject({ offset: 0 });
+	expect(sfc.template!.element).toBeUndefined();
+	expect(sfc.template!.content).toHaveLength(content.length);
 	expect(tags(content, sfc.scriptSetup)).toEqual(['<script type="module">', 'const a = 1;', '</script>']);
 	expect(tags(content, sfc.styles[0])).toEqual(['<style>', '', '</style>']);
 });

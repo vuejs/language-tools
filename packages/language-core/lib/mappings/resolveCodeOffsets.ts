@@ -34,7 +34,7 @@ export function resolveCodeOffsets<Data>(ir: IR, codes: readonly CodeSegment<Dat
 		return [
 			segment[0],
 			undefined,
-			segment[2] + block.startTagEnd,
+			segment[2] + block.offset,
 			segment[3],
 		];
 	});

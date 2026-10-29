@@ -27,7 +27,7 @@ export function create(
 					const tag = getComponentTagAt(template, offset);
 					const fixes = await getImportFixes(
 						info.root.fileName,
-						template.startTagEnd + offset,
+						template.offset + offset,
 						tag?.element.loc.start.offset,
 					);
 					if (!fixes?.length) {

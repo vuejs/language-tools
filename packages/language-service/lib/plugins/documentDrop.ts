@@ -65,8 +65,8 @@ export function create(
 						if (edit) {
 							sfcEdits.push({
 								range: {
-									start: sfcDocument.positionAt(ir.script.startTagEnd + edit.range.start),
-									end: sfcDocument.positionAt(ir.script.startTagEnd + edit.range.end),
+									start: sfcDocument.positionAt(ir.script.offset + edit.range.start),
+									end: sfcDocument.positionAt(ir.script.offset + edit.range.end),
 								},
 								newText: edit.newText,
 							});

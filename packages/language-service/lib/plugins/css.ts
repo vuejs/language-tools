@@ -62,7 +62,7 @@ export function create({ isRenamedByTypeScript }: import('../requests').Requests
 					return false;
 				}
 
-				return !!await isRenamedByTypeScript(info.root.fileName, block.startTagEnd + document.offsetAt(position));
+				return !!await isRenamedByTypeScript(info.root.fileName, block.offset + document.offsetAt(position));
 			}
 
 			function worker<T>(

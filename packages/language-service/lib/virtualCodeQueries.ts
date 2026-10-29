@@ -18,16 +18,19 @@ export function placeScriptImportEdits(root: VueVirtualCode, edits: readonly Tex
 		return [{ pos: 0, end: 0, newText: `<script setup lang="ts">\n${imports}\n</script>\n\n` }];
 	}
 	if (!block.content.trim()) {
-		const pos = block.startTagEnd;
+		const pos = block.offset;
 		return [{ pos, end: pos, newText: `\n${imports}${/^\r?\n/.test(block.content) ? '' : '\n'}` }];
 	}
 	return edits;
 }
 
-/** The script block that the file has; the IR fills in an empty `scriptSetup` without tags for a file without one. */
+/**
+ * The script element that the file has, to add imports to; the IR fills in an empty `scriptSetup` that is not an
+ * element for a file without script.
+ */
 export function getWrittenScript(ir: IR) {
 	const block = ir.scriptSetup ?? ir.script;
-	return block && block.start < block.startTagEnd ? block : undefined;
+	return block?.element ? block : undefined;
 }
 
 export function resolveEmbeddedCode(

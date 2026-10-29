@@ -34,14 +34,14 @@ export function create(): LanguageServicePlugin {
 					const sourceOffset = map.virtualToOriginalPositions(document.offsetAt(position))[0]?.position;
 					if (
 						sourceOffset === undefined
-						|| sourceOffset < scriptSetup.startTagEnd
-						|| sourceOffset > scriptSetup.endTagStart
+						|| sourceOffset < scriptSetup.offset
+						|| sourceOffset > scriptSetup.offset + scriptSetup.content.length
 					) {
 						return;
 					}
 
 					const { ts } = info.root;
-					const node = ts.getTouchingPropertyName(scriptSetup.ast, sourceOffset - scriptSetup.startTagEnd);
+					const node = ts.getTouchingPropertyName(scriptSetup.ast, sourceOffset - scriptSetup.offset);
 					if (isStringLiteralLike(ts, node)) {
 						return;
 					}
@@ -78,7 +78,7 @@ export function create(): LanguageServicePlugin {
 							return;
 						}
 
-						const generatedOffset = map.originalToVirtualPositions(scriptSetup!.startTagEnd + exp.start)[0]?.position;
+						const generatedOffset = map.originalToVirtualPositions(scriptSetup!.offset + exp.start)[0]?.position;
 						if (generatedOffset === undefined) {
 							return;
 						}
