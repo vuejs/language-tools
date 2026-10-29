@@ -234,6 +234,9 @@ importers:
       '@vue/language-core':
         specifier: workspace:*
         version: link:../language-core
+      '@vue/language-plugin-pug':
+        specifier: workspace:*
+        version: link:../language-plugin-pug
       '@vue/shared':
         specifier: ^3.5.0
         version: 3.5.40
@@ -362,9 +365,6 @@ importers:
       '@volar/language-service':
         specifier: workspace:*
         version: link:../../../volar.js/packages/language-service
-      '@vue/language-plugin-pug':
-        specifier: workspace:*
-        version: link:../../../packages/language-plugin-pug
       volar-service-html:
         specifier: workspace:*
         version: link:../html
@@ -378,6 +378,9 @@ importers:
       '@types/node':
         specifier: latest
         version: 26.6.5
+      '@vue/language-plugin-pug':
+        specifier: workspace:*
+        version: link:../../../packages/language-plugin-pug
 
   services/packages/pug-beautify:
     dependencies:

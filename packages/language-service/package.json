@@ -22,6 +22,7 @@
 		"@volar/language-service": "workspace:*",
 		"@vue/compiler-dom": "^3.5.0",
 		"@vue/language-core": "workspace:*",
+		"@vue/language-plugin-pug": "workspace:*",
 		"@vue/shared": "^3.5.0",
 		"alien-signals": "^3.2.1",
 		"path-browserify": "^1.0.1",
