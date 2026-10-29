@@ -1,9 +1,9 @@
 import type { CodeInformation } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
-import type { SFCParseResult } from '@vue/compiler-sfc';
 import type { Segment } from 'muggle-string';
 import type * as ts from 'typescript';
 import type { VueEmbeddedCode } from './virtualCode/embeddedCodes';
+import type { RawIRAttr, RawIRParseResult } from './virtualCode/rawIr';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
@@ -90,7 +90,7 @@ export interface VueCompilerOptions {
 	>;
 }
 
-export const validVersions = [2, 2.1, 2.2] as const;
+export const validVersions = [3] as const;
 
 export interface VueLanguagePluginReturn {
 	version: typeof validVersions[number];
@@ -99,26 +99,30 @@ export interface VueLanguagePluginReturn {
 	requiredCompilerOptions?: string[];
 	getLanguageId?(fileName: string): string | undefined;
 	isValidFile?(fileName: string, languageId: string): boolean;
-	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
-	parseSFC2?(fileName: string, languageId: string, content: string): SFCParseResult | undefined;
+	parseSFC?(
+		fileName: string,
+		languageId: string,
+		content: string,
+		options: CompilerDOM.CompilerOptions,
+	): RawIRParseResult | undefined;
 	updateSFC?(
-		oldResult: SFCParseResult,
+		oldResult: RawIRParseResult,
 		textChange: { start: number; end: number; newText: string },
-	): SFCParseResult | undefined;
+	): RawIRParseResult | undefined;
 	resolveTemplateCompilerOptions?(options: CompilerDOM.CompilerOptions): CompilerDOM.CompilerOptions;
 	compileSFCScript?(lang: string, script: string): ts.SourceFile | undefined;
 	compileSFCTemplate?(
 		lang: string,
 		template: string,
 		options: CompilerDOM.CompilerOptions,
-	): CompilerDOM.CodegenResult | undefined;
+	): CompilerDOM.RootNode | undefined;
 	compileSFCStyle?(lang: string, style: string):
 		| Pick<IRStyle, 'imports' | 'bindings' | 'classNames'>
 		| undefined;
 	updateSFCTemplate?(
-		oldResult: CompilerDOM.CodegenResult,
+		oldAst: CompilerDOM.RootNode,
 		textChange: { start: number; end: number; newText: string },
-	): CompilerDOM.CodegenResult | undefined;
+	): CompilerDOM.RootNode | undefined;
 	getEmbeddedCodes?(fileName: string, ir: IR): { id: string; lang: string }[];
 	resolveEmbeddedCode?(fileName: string, ir: IR, embeddedFile: VueEmbeddedCode): void;
 }
@@ -139,27 +143,24 @@ export type VueLanguagePlugin<T extends Record<string, any> = {}> = (
 export interface IR {
 	content: string;
 	comments: string[];
+	/** Alias for the first template block. */
 	template: IRTemplate | undefined;
 	script: IRScript | undefined;
 	scriptSetup: IRScriptSetup | undefined;
+	templates: readonly IRTemplate[];
 	styles: readonly IRStyle[];
 	customBlocks: readonly IRCustomBlock[];
 }
-
-export type IRAttr = true | {
-	text: string;
-	offset: number;
-};
 
 export interface IRBlock {
 	name: string;
 	start: number;
 	end: number;
-	startTagEnd: number;
-	endTagStart: number;
+	innerStart: number;
+	innerEnd: number;
 	lang: string;
 	content: string;
-	attrs: Record<string, string | true>;
+	attrs: Record<string, RawIRAttr>;
 }
 
 export interface IRTemplate extends IRBlock {
@@ -169,18 +170,18 @@ export interface IRTemplate extends IRBlock {
 }
 
 export interface IRScript extends IRBlock {
-	src: IRAttr | undefined;
+	src: RawIRAttr | undefined;
 	ast: ts.SourceFile;
 }
 
 export interface IRScriptSetup extends IRBlock {
-	generic: IRAttr | undefined;
+	generic: RawIRAttr | undefined;
 	ast: ts.SourceFile;
 }
 
 export interface IRStyle extends IRBlock {
-	src: IRAttr | undefined;
-	module: IRAttr | undefined;
+	src: RawIRAttr | undefined;
+	module: RawIRAttr | undefined;
 	scoped: boolean;
 	imports: {
 		text: string;
@@ -198,20 +199,6 @@ export interface IRStyle extends IRBlock {
 
 export interface IRCustomBlock extends IRBlock {
 	type: string;
-}
-
-declare module '@vue/compiler-sfc' {
-	interface SFCBlock {
-		__src?: IRAttr;
-	}
-
-	interface SFCScriptBlock {
-		__generic?: IRAttr;
-	}
-
-	interface SFCStyleBlock {
-		__module?: IRAttr;
-	}
 }
 
 export interface TextRange<Node extends ts.Node = ts.Node> {

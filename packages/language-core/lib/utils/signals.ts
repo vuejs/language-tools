@@ -1,33 +1,50 @@
 import { computed } from 'alien-signals';
 
+interface ReactiveArrayItem<O> {
+	active: boolean;
+	get: () => O;
+}
+
 export function reactiveArray<I, O>(
 	getArr: () => I[],
 	getGetter: (item: () => I, index: number) => () => O,
 ) {
 	const arr = computed(getArr);
 	const length = computed(() => arr().length);
-	const keys = computed(
-		() => {
+	const keys = computed(() => Array.from({ length: length() }, (_, i) => String(i)));
+
+	const items = computed<ReactiveArrayItem<O>[]>(
+		prevs => {
+			prevs ??= [];
 			const l = length();
-			const keys = new Array<string>(l);
-			for (let i = 0; i < l; i++) {
-				keys.push(String(i));
+			if (prevs.length === l) {
+				return prevs;
 			}
-			return keys;
-		},
-	);
-	const items = computed<(() => O)[]>(
-		array => {
-			array ??= [];
-			while (array.length < length()) {
-				const index = array.length;
-				const item = computed(() => arr()[index]!);
-				array.push(computed(getGetter(item, index)));
+			const items = prevs.slice(0, l);
+			for (let i = l; i < prevs.length; i++) {
+				prevs[i]!.active = false;
 			}
-			if (array.length > length()) {
-				array.length = length();
+			while (items.length < l) {
+				const index = items.length;
+				let last = arr()[index]!;
+				const item: ReactiveArrayItem<O> = {
+					active: true,
+					get: computed(getGetter(
+						computed(() => {
+							if (item.active) {
+								const current = arr();
+								if (index < current.length) {
+									last = current[index]!;
+								}
+							}
+							return last;
+						}),
+						index,
+					)),
+				};
+				items.push(item);
 			}
-			return array;
+			return items;
 		},
 	);
 
@@ -37,7 +54,7 @@ export function reactiveArray<I, O>(
 				return length();
 			}
 			if (typeof p === 'string' && !isNaN(Number(p))) {
-				return items()[Number(p)]?.();
+				return items()[Number(p)]?.get();
 			}
 			return Reflect.get(items(), p, receiver);
 		},

@@ -23,19 +23,19 @@ export function useEmbeddedCodes(
 ) {
 	const getNameToBlockMap = computed(() => {
 		const blocks: Record<string, IRBlock> = {};
-		if (ir.template) {
-			blocks[ir.template.name] = ir.template;
-		}
 		if (ir.script) {
-			blocks[ir.script.name] = ir.script;
+			blocks.script = ir.script;
 		}
 		if (ir.scriptSetup) {
-			blocks[ir.scriptSetup.name] = ir.scriptSetup;
+			blocks.scriptSetup = ir.scriptSetup;
 		}
-		for (const block of ir.styles) {
-			blocks[block.name] = block;
-		}
-		for (const block of ir.customBlocks) {
+		for (
+			const block of [
+				...ir.templates,
+				...ir.styles,
+				...ir.customBlocks,
+			]
+		) {
 			blocks[block.name] = block;
 		}
 		return blocks;
@@ -46,8 +46,7 @@ export function useEmbeddedCodes(
 		const result: VirtualCode[] = [];
 		const idToCodeMap = new Map<string, VirtualCode>();
 		const virtualCodes = pluginsResult
-			.map(getPluginResult => getPluginResult())
-			.flat()
+			.flatMap(getPluginResult => getPluginResult())
 			.map(
 				({ code, snapshot, mappings }) => {
 					const virtualCode: VirtualCode = {
@@ -181,7 +180,7 @@ export function useEmbeddedCodes(
 			return [
 				segment[0],
 				undefined,
-				segment[2] + block.startTagEnd,
+				segment[2] + block.innerStart,
 				segment[3],
 			];
 		}));
@@ -238,19 +237,14 @@ function fullDiffTextChangeRange(oldText: string, newText: string): ts.TextChang
 function resolveCommonLanguageId(lang: string) {
 	switch (lang) {
 		case 'js':
-			return 'javascript';
 		case 'cjs':
-			return 'javascript';
 		case 'mjs':
 			return 'javascript';
 		case 'ts':
-			return 'typescript';
 		case 'cts':
-			return 'typescript';
 		case 'mts':
 			return 'typescript';
 		case 'jsx':
-			return 'javascriptreact';
 		case 'tsx':
 			return 'typescriptreact';
 		case 'pug':

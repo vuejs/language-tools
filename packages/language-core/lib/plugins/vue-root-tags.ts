@@ -4,7 +4,7 @@ import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
 	return {
-		version: 2.2,
+		version: 3,
 
 		getEmbeddedCodes() {
 			return [{
@@ -33,21 +33,21 @@ const plugin: VueLanguagePlugin = () => {
 					replaceSourceRange(
 						embeddedFile.content,
 						undefined,
-						block.startTagEnd,
-						block.endTagStart,
+						block.innerStart,
+						block.innerEnd,
 						ir.content.slice(
-							block.startTagEnd,
-							block.startTagEnd + offset,
+							block.innerStart,
+							block.innerStart + offset,
 						),
 						[
 							'',
 							undefined,
-							block.startTagEnd + offset,
+							block.innerStart + offset,
 							codeFeatures.structure,
 						],
 						ir.content.slice(
-							block.startTagEnd + offset,
-							block.endTagStart,
+							block.innerStart + offset,
+							block.innerEnd,
 						),
 					);
 				}
