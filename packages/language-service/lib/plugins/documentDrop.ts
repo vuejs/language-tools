@@ -4,7 +4,7 @@ import { hyphenate } from '@vue/shared';
 import { URI } from 'vscode-uri';
 import { getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { embeddedCodeIds } from '../virtualCode';
-import { placeScriptImportEdits, resolveEmbeddedCode } from '../virtualCodeQueries';
+import { getWrittenScript, placeScriptImportEdits, resolveEmbeddedCode } from '../virtualCodeQueries';
 import { createAddComponentToOptionEdit } from './extractFile';
 
 export function create(
@@ -37,9 +37,7 @@ export function create(
 					}
 
 					const { ir } = info.root;
-					// The IR fills in an empty `scriptSetup` for an SFC without script.
-					const descriptor = info.root.vueSfc?.descriptor;
-					if (!descriptor?.scriptSetup && !descriptor?.script) {
+					if (!getWrittenScript(ir)) {
 						return;
 					}
 

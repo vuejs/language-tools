@@ -1,5 +1,5 @@
 import type { LanguageServiceContext, SourceScript } from '@volar/language-service';
-import { forEachElementNode, type IRTemplate } from '@vue/language-core';
+import { forEachElementNode, type IR, type IRTemplate } from '@vue/language-core';
 import { URI } from 'vscode-uri';
 import type { TextEdit } from './requests';
 import type { VueVirtualCode } from './virtualCode';
@@ -9,20 +9,25 @@ import type { VueVirtualCode } from './virtualCode';
  * picks maps to nothing in the SFC, so the imports go into a new `<script setup>` or the empty block.
  */
 export function placeScriptImportEdits(root: VueVirtualCode, edits: readonly TextEdit[] | null | undefined) {
-	const descriptor = root.vueSfc?.descriptor;
-	if (!edits?.length || !descriptor) {
+	if (!edits?.length) {
 		return edits;
 	}
 	const imports = edits.map(edit => edit.newText.trim()).filter(Boolean).join('\n');
-	const block = descriptor.scriptSetup ?? descriptor.script;
+	const block = getWrittenScript(root.ir);
 	if (!block) {
 		return [{ pos: 0, end: 0, newText: `<script setup lang="ts">\n${imports}\n</script>\n\n` }];
 	}
 	if (!block.content.trim()) {
-		const pos = block.loc.start.offset;
+		const pos = block.startTagEnd;
 		return [{ pos, end: pos, newText: `\n${imports}${/^\r?\n/.test(block.content) ? '' : '\n'}` }];
 	}
 	return edits;
+}
+
+/** The script block that the file has; the IR fills in an empty `scriptSetup` without tags for a file without one. */
+export function getWrittenScript(ir: IR) {
+	const block = ir.scriptSetup ?? ir.script;
+	return block && block.start < block.startTagEnd ? block : undefined;
 }
 
 export function resolveEmbeddedCode(

@@ -94,11 +94,7 @@ export function create(): LanguageServicePlugin {
 						return [];
 					}
 
-					const { vueSfc, ir } = info.root;
-					if (!vueSfc) {
-						return;
-					}
-
+					const { ir } = info.root;
 					const originalResult = await htmlServiceInstance.provideDiagnostics?.(document, token);
 					const sfcErrors: Diagnostic[] = [];
 					const { template } = ir;
@@ -108,22 +104,20 @@ export function create(): LanguageServicePlugin {
 						endTagStart = -Infinity,
 					} = template ?? {};
 
-					for (const error of vueSfc.errors) {
-						if ('code' in error) {
-							const start = error.loc?.start.offset ?? 0;
-							const end = error.loc?.end.offset ?? 0;
-							if (end < startTagEnd || start >= endTagStart) {
-								sfcErrors.push({
-									range: {
-										start: document.positionAt(start),
-										end: document.positionAt(end),
-									},
-									severity: 1 satisfies typeof DiagnosticSeverity.Error,
-									code: error.code,
-									source: 'vue',
-									message: error.message,
-								});
-							}
+					for (const error of ir.errors) {
+						const start = error.loc?.start.offset ?? 0;
+						const end = error.loc?.end.offset ?? 0;
+						if (end < startTagEnd || start >= endTagStart) {
+							sfcErrors.push({
+								range: {
+									start: document.positionAt(start),
+									end: document.positionAt(end),
+								},
+								severity: 1 satisfies typeof DiagnosticSeverity.Error,
+								code: error.code,
+								source: 'vue',
+								message: error.message,
+							});
 						}
 					}
 

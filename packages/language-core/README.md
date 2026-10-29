@@ -37,7 +37,7 @@ The Volar language plugin that adds the embedded documents of the language servi
 
 ### `parse`
 
-Parses Vue SFC source code and returns an `SFCParseResult`.
+Reads the blocks of Vue SFC source code into a `VueFormatResult`, at the offsets of the source.
 
 ```typescript
 import { parse } from '@vue/language-core';
@@ -51,9 +51,9 @@ const msg = 'Hello'
 </script>
 `);
 
-// result.descriptor.template
-// result.descriptor.scriptSetup
-// result.descriptor.styles
+// result.template: { start, startTagEnd, endTagStart, end, lang, content, attrs }
+// result.scriptSetup
+// result.styles
 // result.errors
 ```
 
@@ -124,7 +124,9 @@ export const ir: VuePluginModule['ir'] = ({ config, vueCompilerOptions }) => ({
   // Formats that `format` selects by name.
   formats: {
     'my-format': {
-      parse(fileName, content) { /* return an SFCParseResult */ },
+      // The blocks of the file at its offsets (`VueFormatResult`); a block without tags, like a template over
+      // the whole file, has `start === startTagEnd` and `endTagStart === end`.
+      parse(fileName, content) { /* return a VueFormatResult */ },
       update(oldResult, { start, end, newText }) { /* optional: update oldResult in place, or return undefined */ },
     },
   },

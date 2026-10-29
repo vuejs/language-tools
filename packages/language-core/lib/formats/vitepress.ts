@@ -1,7 +1,4 @@
-import { SpanMap } from '@volar/language-core';
-import type { SFCBlock } from '@vue/compiler-sfc';
-import { buildMappings } from '../mappings/codeMappings';
-import { type Code, codeToString, type VueFormat } from '../types';
+import type { VueFormat } from '../types';
 import { parse } from './parseSfc';
 
 const frontmatterRE = /^---[\s\S]*?\n---(?:\r?\n|$)/;
@@ -16,8 +13,7 @@ const angleBracketRE = /<[^\s:]*:\S*>/g;
 /**
  * Treats a file as VitePress markdown: frontmatter, fenced code blocks and code snippet imports
  * are blanked, `<script>` / `<style>` blocks are lifted out of the template, and the remaining
- * markdown becomes the template. The SFC block offsets are mapped back to the markdown source, so
- * everything downstream stays in original file coordinates.
+ * markdown becomes the template, a block without tags over the whole file.
  */
 export const vitePressParser: VueFormat = {
 	parse(_fileName, content) {
@@ -39,14 +35,14 @@ export const vitePressParser: VueFormat = {
 			}
 		}
 
-		const codes: Code[] = [];
+		// The `<script>` / `<style>` blocks at their offsets, with the rest of the file blanked, read as an SFC
+		let blocksText = ' '.repeat(content.length);
 
 		for (const { 0: text, index } of content.matchAll(sfcBlockRE)) {
 			if (ambiguousRanges.some(([start, end]) => index >= start && index < end)) {
 				continue;
 			}
-			codes.push([text, undefined, index, { features: 0 }]);
-			codes.push('\n\n');
+			blocksText = blocksText.slice(0, index) + text + blocksText.slice(index + text.length);
 			content = content.slice(0, index) + ' '.repeat(text.length) + content.slice(index + text.length);
 		}
 
@@ -57,38 +53,15 @@ export const vitePressParser: VueFormat = {
 			content = content.slice(0, start) + ' '.repeat(end - start) + content.slice(end);
 		}
 
-		codes.push('<template>\n');
-		codes.push([content, undefined, 0, { features: 0 }]);
-		codes.push('\n</template>');
-
-		const mappings = buildMappings(codes);
-		const mapper = new SpanMap(mappings);
-		const sfc = parse(codeToString(codes));
-
-		for (
-			const block of [
-				sfc.descriptor.template,
-				sfc.descriptor.script,
-				sfc.descriptor.scriptSetup,
-				...sfc.descriptor.styles,
-				...sfc.descriptor.customBlocks,
-			]
-		) {
-			if (block) {
-				transformRange(block);
-			}
-		}
-
+		const sfc = parse(blocksText);
+		sfc.template = {
+			start: 0,
+			end: content.length,
+			startTagEnd: 0,
+			endTagStart: content.length,
+			content,
+			attrs: {},
+		};
 		return sfc;
-
-		function transformRange(block: SFCBlock) {
-			const { start, end } = block.loc;
-			const startOffset = start.offset;
-			const endOffset = end.offset;
-			start.offset = -1;
-			end.offset = -1;
-			start.offset = mapper.virtualToOriginalPositions(startOffset)[0]?.position ?? -1;
-			end.offset = mapper.virtualToOriginalPositions(endOffset)[0]?.position ?? -1;
-		}
 	},
 };

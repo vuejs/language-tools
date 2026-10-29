@@ -13,14 +13,8 @@ export function getRootTagsDocument(ir: IR): EmbeddedDocument {
 			...ir.customBlocks,
 		]
 	) {
-		// a block out of the file (the template of a VitePress file) or within an earlier one (a `<script>` in the
-		// template of an HTML file) adds nothing
-		if (
-			block
-			&& 0 <= block.startTagEnd && block.startTagEnd <= block.endTagStart
-			&& block.endTagStart <= ir.content.length
-			&& blocks.every(other => block.endTagStart <= other.startTagEnd || block.startTagEnd >= other.endTagStart)
-		) {
+		// a block without tags (the template of a VitePress or petite-vue file) adds nothing
+		if (block && block.start < block.startTagEnd) {
 			blocks.push(block);
 		}
 	}

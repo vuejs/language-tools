@@ -42,7 +42,7 @@ test('each source owns the analysis of its options', () => {
 test('the IR pipeline compiles each kind of block with its built-in compiler', () => {
 	const pipeline = createIRPipeline(ts, getDefaultCompilerOptions());
 
-	expect(pipeline.parse(fileName, before)?.result.descriptor.scriptSetup?.content).toBe('const before = 1;');
+	expect(pipeline.parse(fileName, before)?.result.scriptSetup?.content).toBe('const before = 1;');
 	expect(pipeline.compileTemplate('html', '<div></div>', {})?.result.ast.children).toHaveLength(1);
 	expect(pipeline.compileTemplate('pug', 'div', {})).toBeUndefined();
 	expect(pipeline.compileScript('ts', 'let a;')?.statements).toHaveLength(1);

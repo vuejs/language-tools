@@ -3,7 +3,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { describe, expect, it } from 'vitest';
 import { createIRPipeline } from '../lib/ir/irPipeline';
 import { getDefaultCompilerOptions } from '../lib/options/compilerOptions';
-import type { SFCParseResult, VueCompilerOptions } from '../lib/types';
+import type { VueCompilerOptions, VueFormatResult } from '../lib/types';
 import { ts } from './typescript';
 
 const legacyMessage =
@@ -142,7 +142,7 @@ describe('createIRPipeline', () => {
 			{ plugin: 'html', message: `The template compiler 'html' is built in and cannot be replaced.` },
 		]);
 		expect(pipeline.compileTemplate('html', '<div/>', {})?.result.ast?.children[0]).toMatchObject({ tag: 'div' });
-		expect(pipeline.parse('/project/App.vue', '<template><div/></template>')?.result.descriptor.template)
+		expect(pipeline.parse('/project/App.vue', '<template><div/></template>')?.result.template)
 			.toBeTruthy();
 	});
 
@@ -161,7 +161,15 @@ describe('createIRPipeline', () => {
 	});
 
 	it('parses with the format of a plugin that `format` selects', () => {
-		const parsed = { descriptor: { filename: 'custom' }, errors: [] } as unknown as SFCParseResult;
+		const parsed: VueFormatResult = {
+			comments: [],
+			errors: [],
+			template: undefined,
+			script: undefined,
+			scriptSetup: undefined,
+			styles: [],
+			customBlocks: [],
+		};
 		const custom = { ir: { formats: { custom: { parse: () => parsed } } } };
 
 		const selected = createIRPipeline(ts, withPlugins({ custom }, { format: 'custom' }));
@@ -177,7 +185,7 @@ describe('createIRPipeline', () => {
 		expect(pipeline.errors).toEqual([
 			{ message: `No format 'custom' is built in or provided by a plugin; 'sfc' is used instead.` },
 		]);
-		expect(pipeline.parse('/project/App.vue', '<template><div/></template>')?.result.descriptor.template)
+		expect(pipeline.parse('/project/App.vue', '<template><div/></template>')?.result.template)
 			.toBeTruthy();
 	});
 

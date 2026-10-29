@@ -39,9 +39,6 @@ export class VueVirtualCode implements VirtualCode {
 	get snapshot() {
 		return this.source.snapshot;
 	}
-	get vueSfc() {
-		return this.source.vueSfc;
-	}
 	get ir() {
 		return this.source.ir;
 	}
