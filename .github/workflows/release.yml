@@ -27,6 +27,11 @@
 # publishes the version in lerna.json, provided the branch HEAD carries its
 # `vX.Y.Z` tag. pnpm skips packages whose version is already on npm, and the
 # marketplaces skip an extension version they already have.
+#
+# Only the lerna.json packages are published. Before anything is versioned, the
+# job stops if a published package depends on another workspace package, such
+# as one of a git submodule, that is not on npm at its exact version released
+# from the checked out commit: pnpm rewrites `workspace:*` to that version.
 
 name: release
 
@@ -95,6 +100,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Check the workspace dependencies outside this release
+        run: node .github/scripts/check-workspace-deps.mjs
+
       - run: pnpm run build
 
       - name: Publish
@@ -124,7 +132,7 @@ jobs:
               --sync-workspace-lock \
               --yes
           fi
-          pnpm -r publish --tag "$DIST_TAG" --no-git-checks
+          pnpm -r --filter './packages/**' --filter './extensions/**' publish --tag "$DIST_TAG" --no-git-checks
           published="$(node -p "require('./lerna.json').version")"
           echo "version=$published" >> "$GITHUB_OUTPUT"
           if previous="$(git describe --tags --abbrev=0 --match 'v*' "v$published^" 2>/dev/null)"; then
