@@ -169,11 +169,11 @@ jobs:
           if [[ -n "$PREVIOUS" ]]; then
             commits="$COMMITS commit"
             (( COMMITS == 1 )) || commits+=s
-            since="$commits since \`$PREVIOUS\` ([diff]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/v$PREVIOUS...v$VERSION), [run]($RUN_URL))"
+            links="[$commits]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/v$PREVIOUS...v$VERSION), [run]($RUN_URL)"
           else
-            since="[run]($RUN_URL)"
+            links="[run]($RUN_URL)"
           fi
-          body="\`$VERSION\` is on npm with dist-tag \`alpha\`: $since."
+          body="\`$VERSION\` is on npm with dist-tag \`alpha\` ($links)."
           for pr in $prs; do
             gh api "repos/$GITHUB_REPOSITORY/issues/$pr/comments" -f body="$body" --jq '.html_url'
           done
