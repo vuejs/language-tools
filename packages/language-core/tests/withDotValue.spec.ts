@@ -53,7 +53,6 @@ let count = 1;
 `)).toMatchInlineSnapshot(`
   "__VLS_withDotValue(count, {} as import('vue').Ref<unknown>);
   __VLS_withDotValue(rows, {} as import('vue').Ref<unknown>);
-  __VLS_withDotValue(SOME_CONST, {} as import('vue').Ref<unknown>);
   if (count.value) {
   __VLS_asFunctionalElement1(__VLS_intrinsics.div)({
   });
