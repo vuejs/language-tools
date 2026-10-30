@@ -1,24 +1,8 @@
-import {
-	type IRTemplate,
-	type TemplateScope,
-	type TypeScript,
-	type VueCodeMarker,
-	type VueCompilerOptions,
-} from '@vue/language-core';
+import { type IRTemplate, type TemplateScope, type TypeScript, type VueCompilerOptions } from '@vue/language-core';
 import type { TsCode } from '../tsCode';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import type { ElementSlots } from './element';
-import { generateObjectProperty } from './objectProperty';
 import { generateTemplateChild } from './templateChild';
-
-/** A key at `offset` of the template, which the template generates as an object property in its own scope. */
-export interface TemplateKey {
-	key: string;
-	offset: number;
-	features: VueCodeMarker;
-}
-
-export type TemplateCode = TsCode | TemplateKey;
 
 /** What the traversal of the template collects, as plain data. */
 export interface TemplateFacts {
@@ -43,7 +27,7 @@ export interface TemplateFacts {
 /** Code at the end of the template, and the names of the types that it declares. */
 export interface TemplateEnd {
 	types?: readonly string[];
-	codes: readonly TemplateCode[];
+	codes: readonly TsCode[];
 }
 
 /** The hooks of the template. */
@@ -106,10 +90,6 @@ function getFacts(ctx: TemplateCodegenContext): TemplateFacts {
 	};
 }
 
-function isTemplateKey(code: TemplateCode): code is TemplateKey {
-	return typeof code === 'object' && 'key' in code;
-}
-
 function* generateWorker(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
@@ -140,14 +120,7 @@ function* generateWorker(
 		for (const type of end?.types ?? []) {
 			ctx.generatedTypes.add(type);
 		}
-		for (const code of end?.codes ?? []) {
-			if (isTemplateKey(code)) {
-				yield* generateObjectProperty(options, ctx, code.key, code.offset, code.features);
-			}
-			else {
-				yield code;
-			}
-		}
+		yield* end?.codes ?? [];
 	}
 
 	yield* ctx.exitBlockScope();

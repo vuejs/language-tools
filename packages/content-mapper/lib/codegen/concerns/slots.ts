@@ -1,9 +1,9 @@
 import { getScriptLang, navigationFeatures } from '@vue/language-core';
 import type { CodegenConcern, CodegenConcernFile } from '../concern';
 import { names } from '../names';
-import type { TemplateCode } from '../template';
 import { Boundary, synthesizedIgnore } from '../tsCode';
 import { generateTypeAlias, newLine } from '../writers';
+import { generatePropertyKey } from '../writers/stringLiteralKey';
 
 /** The type of the slots that the template renders, unless `defineSlots` declares them. */
 export function createSlotsConcern({ ir, analysis, getTemplateTypes }: CodegenConcernFile): CodegenConcern {
@@ -19,7 +19,7 @@ export function createSlotsConcern({ ir, analysis, getTemplateTypes }: CodegenCo
 			const template = ir.template;
 			return {
 				types: [names.Slots],
-				codes: [...generateTypeAlias(names.Slots, getScriptLang(ir), function*(): Generator<TemplateCode> {
+				codes: [...generateTypeAlias(names.Slots, getScriptLang(ir), function*() {
 					yield `{}`;
 					for (const { expVar, propsVar } of dynamicSlots) {
 						yield `${newLine}& { [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${propsVar}) => any }`;
@@ -28,7 +28,7 @@ export function createSlotsConcern({ ir, analysis, getTemplateTypes }: CodegenCo
 						yield `${newLine}& { `;
 						const ignore = yield* Boundary.start(template, 0, 0, synthesizedIgnore);
 						if (slot.name && slot.offset !== undefined) {
-							yield { key: slot.name, offset: slot.offset, features: { features: navigationFeatures } };
+							yield* generatePropertyKey(slot.name, template, slot.offset, { features: navigationFeatures });
 						}
 						else {
 							const boundary = yield* Boundary.start(template, ...slot.tagRange, { features: navigationFeatures });

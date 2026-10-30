@@ -1,10 +1,10 @@
 import type { VueCodeMarker } from '@vue/language-core';
 import { camelize } from '@vue/shared';
 import { names } from '../names';
-import { Boundary, mapped, type TsCode } from '../tsCode';
+import { Boundary, type TsCode } from '../tsCode';
 import { identifierRE } from '../writers';
 import { generateCamelized } from '../writers/camelized';
-import { generateStringLiteralKey } from '../writers/stringLiteralKey';
+import { generatePropertyKey } from '../writers/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -55,11 +55,6 @@ export function* generateObjectProperty(
 		}
 	}
 	else {
-		if (identifierRE.test(code)) {
-			yield mapped(code, options.template, offset, features);
-		}
-		else {
-			yield* generateStringLiteralKey(code, options.template, offset, features);
-		}
+		yield* generatePropertyKey(code, options.template, offset, features);
 	}
 }

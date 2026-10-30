@@ -2,9 +2,9 @@ import { completionFeatures, getScriptLang, navigationFeatures, type ScriptSetup
 import type { CodegenConcern, CodegenConcernFile } from '../concern';
 import { names } from '../names';
 import type { BlockWriter } from '../rewrite/blockRewrite';
-import type { TemplateCode } from '../template';
 import { Boundary, synthesizedIgnore } from '../tsCode';
 import { asType, generateTypeAlias, isTsLang, newLine, typeAliasRef } from '../writers';
+import { generatePropertyKey } from '../writers/stringLiteralKey';
 
 /**
  * The types of the template refs: their type at the end of the template, which the component exposes as `$refs`, and
@@ -25,7 +25,7 @@ export function createRefsConcern({ ir, analysis, getTemplateTypes }: CodegenCon
 			const template = ir.template;
 			return {
 				types: [names.TemplateRefs],
-				codes: [...generateTypeAlias(names.TemplateRefs, getScriptLang(ir), function*(): Generator<TemplateCode> {
+				codes: [...generateTypeAlias(names.TemplateRefs, getScriptLang(ir), function*() {
 					yield `{}`;
 					for (const [name, refs] of templateRefs) {
 						yield `${newLine}& `;
@@ -39,7 +39,7 @@ export function createRefsConcern({ ir, analysis, getTemplateTypes }: CodegenCon
 							}
 							yield `{ `;
 							const ignore = yield* Boundary.start(template, 0, 0, synthesizedIgnore);
-							yield { key: name, offset, features: { features: navigationFeatures } };
+							yield* generatePropertyKey(name, template, offset, { features: navigationFeatures });
 							yield ignore.end();
 							yield `: ${typeExp} }`;
 						}
