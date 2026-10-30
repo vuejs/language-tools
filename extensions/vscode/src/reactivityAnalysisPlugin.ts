@@ -4,10 +4,10 @@ import { createAnalyzer } from 'laplacenoma';
 import rulesVue from 'laplacenoma/rules/vue';
 import type * as ts from 'typescript';
 
-let currentVersion = -1;
-let currentFileName = '';
-let currentSnapshot: ts.IScriptSnapshot | undefined;
-let languageService: ts.LanguageService | undefined;
+// The single-file host reads scripts through the `language` it was decorated with, which in turn
+// reads them through that project's host. Reusing one service across projects would make tsserver
+// attach every analyzed file to the first project, so keep one service per project.
+const languageServices = new WeakMap<Language<string>, ReturnType<typeof createSingleFileLanguageService>>();
 
 const analyzer = createAnalyzer({ rules: rulesVue });
 const plugin: ts.server.PluginModuleFactory = ({ typescript: ts }) => {
@@ -61,29 +61,17 @@ function getReactivityAnalysis(
 		return;
 	}
 
-	if (currentSnapshot !== sourceScript.snapshot || currentFileName !== sourceScript.id) {
-		currentSnapshot = sourceScript.snapshot;
-		currentFileName = sourceScript.id;
-		currentVersion++;
+	let service = languageServices.get(language);
+	if (!service) {
+		languageServices.set(language, service = createSingleFileLanguageService(ts, language));
 	}
-	if (!languageService) {
-		const languageServiceHost: ts.LanguageServiceHost = {
-			getProjectVersion: () => currentVersion.toString(),
-			getScriptVersion: () => currentVersion.toString(),
-			getScriptFileNames: () => [currentFileName],
-			getScriptSnapshot: fileName => fileName === currentFileName ? currentSnapshot : undefined,
-			getCompilationSettings: () => ({ allowJs: true, allowNonTsExtensions: true }),
-			getCurrentDirectory: () => '',
-			getDefaultLibFileName: () => '',
-			readFile: () => undefined,
-			fileExists: fileName => fileName === currentFileName,
-		};
-		decorateLanguageServiceHost(ts, language, languageServiceHost);
-		const proxied = createProxyLanguageService(ts.createLanguageService(languageServiceHost));
-		proxied.initialize(language);
-		languageService = proxied.proxy;
+	if (service.snapshot !== sourceScript.snapshot || service.fileName !== sourceScript.id) {
+		service.snapshot = sourceScript.snapshot;
+		service.fileName = sourceScript.id;
+		service.version++;
 	}
 
+	const { languageService } = service;
 	const sourceFile = languageService.getProgram()!.getSourceFile(sourceScript.id)!;
 	const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(
 		sourceScript.generated.root,
@@ -103,6 +91,32 @@ function getReactivityAnalysis(
 		languageService,
 		toSourceRange,
 	});
+}
+
+function createSingleFileLanguageService(
+	ts: typeof import('typescript'),
+	language: Language<string>,
+) {
+	const state = {
+		version: -1,
+		fileName: '',
+		snapshot: undefined as ts.IScriptSnapshot | undefined,
+	};
+	const languageServiceHost: ts.LanguageServiceHost = {
+		getProjectVersion: () => state.version.toString(),
+		getScriptVersion: () => state.version.toString(),
+		getScriptFileNames: () => [state.fileName],
+		getScriptSnapshot: fileName => fileName === state.fileName ? state.snapshot : undefined,
+		getCompilationSettings: () => ({ allowJs: true, allowNonTsExtensions: true }),
+		getCurrentDirectory: () => '',
+		getDefaultLibFileName: () => '',
+		readFile: () => undefined,
+		fileExists: fileName => fileName === state.fileName,
+	};
+	decorateLanguageServiceHost(ts, language, languageServiceHost);
+	const proxied = createProxyLanguageService(ts.createLanguageService(languageServiceHost));
+	proxied.initialize(language);
+	return Object.assign(state, { languageService: proxied.proxy });
 }
 
 function getInterpolationRanges(
