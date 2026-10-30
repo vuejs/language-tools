@@ -24,7 +24,7 @@ packages:
   - services/packages/pug-beautify
   # the muggle-string submodule (branch next); the release workflow does not publish it
   - muggle-string
-  # the muggle-pug submodule (branch main); the release workflow does not publish it
+  # the muggle-pug submodule (branch master); the release workflow does not publish it
   - muggle-pug
 
 allowBuilds:
