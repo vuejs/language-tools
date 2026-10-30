@@ -137,7 +137,6 @@ function* generateWorker(
 	}
 	yield* ctx.generateHoistVariables(options.scriptLang);
 	yield* generateSlotsType(options, ctx);
-	yield* generateInheritedAttrsType(options, ctx);
 
 	const facts = getFacts(ctx);
 	for (const generateTemplateEnd of options.generateTemplateEnd) {
@@ -200,23 +199,5 @@ function* generateSlotsType(
 			yield ignore.end();
 			yield `?: (props: typeof ${slot.propsVar}) => any }`;
 		}
-	});
-}
-
-function* generateInheritedAttrsType(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-): Generator<TsCode> {
-	if (!ctx.inheritedAttrVars.size) {
-		return;
-	}
-	ctx.generatedTypes.add(names.InheritedAttrs);
-
-	const type = [...ctx.inheritedAttrVars].map(name => `typeof ${name}`).join(` & `);
-
-	yield* generateTypeAlias(names.InheritedAttrs, options.scriptLang, function*() {
-		yield options.vueCompilerOptions.checkRequiredFallthroughAttributes
-			? type
-			: `Partial<${type}>`;
 	});
 }

@@ -11,6 +11,11 @@ import { getExposeTypes } from './scriptSetup';
 export interface ComponentSlots {
 	/** Options of the component, after its props, e.g. `__typeEl: …`. */
 	componentOptions: string[];
+	/**
+	 * Object types of the props that the component takes besides those that it declares, e.g. the attributes that
+	 * fall through to its root; the keys of its emit props are omitted from them.
+	 */
+	fallthroughProps: string[];
 }
 
 export function* generateComponent(
@@ -129,9 +134,8 @@ function* generateTypePropsOption(
 	ctx: ScriptCodegenContext,
 	hasEmitsOption: boolean,
 ): Generator<string> {
-	if (options.templateTypes.has(names.InheritedAttrs)) {
-		const attrsType = getInheritedAttrsType(options, hasEmitsOption);
-		yield asType(attrsType, options.scriptLang);
+	for (const type of options.slots.fallthroughProps) {
+		yield asType(omitEmitProps(options, type, hasEmitsOption), options.scriptLang);
 	}
 	if (ctx.generatedTypes.has(names.PublicProps)) {
 		yield asType(typeAliasRef(names.PublicProps, options.scriptLang), options.scriptLang);
@@ -146,10 +150,9 @@ function* generateRuntimePropsOption(
 	hasEmitsOption: boolean,
 	hasTypeProps: boolean,
 ): Generator<string | TsCode[]> {
-	if (!hasTypeProps && options.templateTypes.has(names.InheritedAttrs)) {
-		const attrsType = getInheritedAttrsType(options, hasEmitsOption);
+	for (const type of hasTypeProps ? [] : options.slots.fallthroughProps) {
 		const propsType = ctx.localTypes.TypePropsToOption(
-			`${names.PickNotAny}<${ctx.localTypes.OmitIndexSignature(attrsType)}, {}>`,
+			`${names.PickNotAny}<${ctx.localTypes.OmitIndexSignature(omitEmitProps(options, type, hasEmitsOption))}, {}>`,
 		);
 		yield asType(propsType, options.scriptLang);
 	}
@@ -185,9 +188,6 @@ function* generateRuntimePropsOption(
 	}
 }
 
-function getInheritedAttrsType(options: ScriptCodegenOptions, hasEmitsOption: boolean) {
-	const inheritedAttrs = typeAliasRef(names.InheritedAttrs, options.scriptLang);
-	return hasEmitsOption
-		? `Omit<${inheritedAttrs}, keyof ${typeAliasRef(names.EmitProps, options.scriptLang)}>`
-		: inheritedAttrs;
+function omitEmitProps(options: ScriptCodegenOptions, type: string, hasEmitsOption: boolean) {
+	return hasEmitsOption ? `Omit<${type}, keyof ${typeAliasRef(names.EmitProps, options.scriptLang)}>` : type;
 }

@@ -58,6 +58,7 @@ export function mergeSlots(concerns: readonly CodegenConcern[]): MergedSlots {
 		templateExports: listSlot('templateExports'),
 		templateExportValues: listSlot('templateExportValues'),
 		componentOptions: listSlot('componentOptions'),
+		fallthroughProps: listSlot('fallthroughProps'),
 		exposedInstanceTypes: listSlot('exposedInstanceTypes'),
 		elementEnd: mapSlot('elementEnd'),
 		renamedElsewhere: mapSlot('renamedElsewhere'),

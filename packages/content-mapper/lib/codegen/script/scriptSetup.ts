@@ -149,9 +149,8 @@ export function* generateGeneric(
 	if (emitProps) {
 		propTypes.push(emitProps);
 	}
-	if (options.templateTypes.has(names.InheritedAttrs)) {
-		const inheritedAttrs = typeAliasRef(names.InheritedAttrs, scriptLang);
-		propTypes.push(emitProps ? `Omit<${inheritedAttrs}, keyof ${emitProps}>` : inheritedAttrs);
+	for (const type of options.slots.fallthroughProps) {
+		propTypes.push(emitProps ? `Omit<${type}, keyof ${emitProps}>` : type);
 	}
 
 	yield `return {} as {${newLine}`;
