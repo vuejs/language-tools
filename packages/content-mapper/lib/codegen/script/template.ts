@@ -25,7 +25,7 @@ export interface TemplateFunctionSlots {
 	templateContext: (string | TsCode[])[];
 	/** Code in the template function, before the code of the template. */
 	templateBody: TsCode[];
-	/** Type aliases that the template function declares, returned to setup and the export after those of the template. */
+	/** Type aliases that the template function declares, returned to setup and the export. */
 	templateExports: string[];
 	/** Variables that the template function declares, returned to setup and the export after its type aliases. */
 	templateExportValues: string[];
@@ -46,12 +46,7 @@ export function* generateTemplate(
 	// it reads take their render-time types, not the narrowing at the end of setup.
 	// The types setup and the export need from it are passed out through its return type.
 	const { scriptLang } = options;
-	const exportedTypes = [
-		...[names.Slots].filter(name =>
-			options.templateTypes.has(name) && !(name === names.Slots && options.scriptSetupRanges?.defineSlots)
-		),
-		...options.slots.templateExports,
-	];
+	const exportedTypes = options.slots.templateExports;
 	yield `const ${names.template} = () => {${newLine}`;
 
 	for (const name of options.dotValueBindings) {

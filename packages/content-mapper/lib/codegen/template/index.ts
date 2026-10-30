@@ -1,14 +1,11 @@
 import {
 	type IRTemplate,
-	navigationFeatures,
 	type TemplateScope,
 	type TypeScript,
 	type VueCodeMarker,
 	type VueCompilerOptions,
 } from '@vue/language-core';
-import { names } from '../names';
-import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
-import { generateTypeAlias, newLine } from '../writers';
+import type { TsCode } from '../tsCode';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import type { ElementSlots } from './element';
 import { generateObjectProperty } from './objectProperty';
@@ -136,7 +133,6 @@ function* generateWorker(
 		yield* generateTemplateChild(options, ctx, template.ast);
 	}
 	yield* ctx.generateHoistVariables(options.scriptLang);
-	yield* generateSlotsType(options, ctx);
 
 	const facts = getFacts(ctx);
 	for (const generateTemplateEnd of options.generateTemplateEnd) {
@@ -155,49 +151,4 @@ function* generateWorker(
 	}
 
 	yield* ctx.exitBlockScope();
-}
-
-function* generateSlotsType(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-): Generator<TsCode> {
-	if (options.hasDefineSlots) {
-		ctx.generatedTypes.add(names.Slots);
-		return;
-	}
-	if (!ctx.slots.length && !ctx.dynamicSlots.length) {
-		return;
-	}
-	ctx.generatedTypes.add(names.Slots);
-
-	yield* generateTypeAlias(names.Slots, options.scriptLang, function*() {
-		yield `{}`;
-		for (const { expVar, propsVar } of ctx.dynamicSlots) {
-			yield `${newLine}& { [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${propsVar}) => any }`;
-		}
-		for (const slot of ctx.slots) {
-			yield `${newLine}& { `;
-			const ignore = yield* Boundary.start(options.template, 0, 0, synthesizedIgnore);
-			if (slot.name && slot.offset !== undefined) {
-				yield* generateObjectProperty(
-					options,
-					ctx,
-					slot.name,
-					slot.offset,
-					{ features: navigationFeatures },
-				);
-			}
-			else {
-				const boundary = yield* Boundary.start(
-					options.template,
-					...slot.tagRange,
-					{ features: navigationFeatures },
-				);
-				yield `default`;
-				yield boundary.end();
-			}
-			yield ignore.end();
-			yield `?: (props: typeof ${slot.propsVar}) => any }`;
-		}
-	});
 }

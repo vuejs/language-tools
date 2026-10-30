@@ -6,6 +6,7 @@ import { createDollarsConcern } from './concerns/dollars';
 import { createInheritedAttrsConcern } from './concerns/inheritedAttrs';
 import { createRefsConcern } from './concerns/refs';
 import { createRootElConcern } from './concerns/rootEl';
+import { createSlotsConcern } from './concerns/slots';
 import { type CodegenPlugin, getContributions } from './plugin';
 import { generateScript } from './script';
 import { createStyleConcern } from './style';
@@ -20,6 +21,7 @@ export interface ServiceScript {
 
 /** The concerns of the built-in codegen, in the order that their code takes in each slot. */
 const concernFactories: readonly CodegenConcernFactory[] = [
+	createSlotsConcern,
 	createInheritedAttrsConcern,
 	createRefsConcern,
 	createRootElConcern,
