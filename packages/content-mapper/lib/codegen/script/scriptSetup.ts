@@ -46,18 +46,36 @@ export interface ScriptSetupCopies {
 }
 
 /**
- * The copies of `<script setup>` of `blockRewrite`, with the transforms of Vue. The imports
- * and the body are top-level cuts of one rewrite; an empty block has a zero-width body, which renders its inserts.
+ * The copies of `<script setup>` of `blockRewrite`, with the transforms of Vue. With `bodyAtRoot`, the body follows
+ * the imports and the macros at module scope, so one cut copies the whole block, with the macros inserted after the
+ * imports, and the imports render it all. Otherwise the imports and the body are top-level cuts of one rewrite; an
+ * empty block has a zero-width body, which renders its inserts.
  */
 export function createScriptSetupCopies(
 	options: ScriptCodegenOptions,
 	blockRewrite: BlockRewrite,
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
+	bodyAtRoot: boolean,
 ): ScriptSetupCopies {
 	const { core } = blockRewrite.rewrite;
 	const importSectionEnd = getImportSectionEnd(scriptSetupRanges);
 	const { length } = scriptSetup.content;
+	if (bodyAtRoot) {
+		const whole = core.cut(0, length, { data: { features: scriptFeatures } });
+		addTransforms(options, core, scriptSetupRanges);
+		const macros = [...generateMacros(options)];
+		if (macros.length) {
+			core.insertAfter(importSectionEnd, macros);
+		}
+		return {
+			*generateImports() {
+				yield generateBlockAnchor(scriptSetup);
+				yield* blockRewrite.render(whole);
+			},
+			*generateBody() {},
+		};
+	}
 	const imports = importSectionEnd > 0
 		? core.cut(0, importSectionEnd, { data: { features: scriptFeatures } })
 		: undefined;
@@ -220,7 +238,7 @@ export function* generateSetupFunction(
 // virtual files, where type-only declarations are syntax errors. Imports hoist,
 // so this can be emitted after all user content: leading directives stay ahead
 // of any statement, and the import-section/content junction stays intact.
-export function* generateMacros(options: ScriptCodegenOptions): Generator<TsCode> {
+export function* generateMacros(options: ScriptCodegenOptions): Generator<string> {
 	if (options.vueCompilerOptions.target >= 3.3) {
 		const scriptSetup = options.scriptSetup;
 		const scriptSetupRanges = options.scriptSetupRanges;

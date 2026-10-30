@@ -175,7 +175,7 @@ function* generateWorker(
 	}
 	// <script> + <script setup>
 	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
-		const copies = createScriptSetupCopies(options, rewrites.scriptSetup!, scriptSetup, scriptSetupRanges);
+		const copies = createScriptSetupCopies(options, rewrites.scriptSetup!, scriptSetup, scriptSetupRanges, false);
 		yield* copies.generateImports();
 
 		// <script>
@@ -233,11 +233,17 @@ function* generateWorker(
 	}
 	// only <script setup>
 	else if (scriptSetup && scriptSetupRanges) {
-		const copies = createScriptSetupCopies(options, rewrites.scriptSetup!, scriptSetup, scriptSetupRanges);
+		const copies = createScriptSetupCopies(
+			options,
+			rewrites.scriptSetup!,
+			scriptSetup,
+			scriptSetupRanges,
+			!scriptSetup.generic,
+		);
 		yield* copies.generateImports();
-		yield* generateMacros(options);
 
 		if (scriptSetup.generic) {
+			yield* generateMacros(options);
 			yield* generateComponentDeclareEqual(options.ir, scriptSetup, names.export);
 			yield* generateGeneric(
 				options,
