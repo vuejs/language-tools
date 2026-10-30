@@ -362,33 +362,15 @@ export function createTemplateCodegenContext(
 		}
 	}
 
-	// template refs --------------------------------------------------------------
-
-	const templateRefs = new Map<string, { typeExp: string; offset: number }[]>();
-
-	function addTemplateRef(name: string, typeExp: string, offset: number) {
-		let refs = templateRefs.get(name);
-		if (!refs) {
-			templateRefs.set(name, refs = []);
-		}
-		refs.push({ typeExp, offset });
-	}
-
 	// others ---------------------------------------------------------------------
 
 	const components: (() => string)[] = [];
-	const dollarVars = new Set<string>();
+	// the `$` variable is the template's, which the code of the styles does not see
+	const dollarVars: ReadonlySet<string> = template ? templateScope.dollarVars : new Set();
 	const generatedTypes = new Set<string>();
 	const inheritedAttrVars = new Set<string>();
-	const singleRootElTypes = new Set<string>();
-	const singleRootNodes = new Set<CompilerDOM.ElementNode | null>();
-	const slots: {
-		name: string;
-		offset?: number;
-		tagRange: [number, number];
-		propsVar: string;
-	}[] = [];
-	const dynamicSlots: { expVar: string; propsVar: string }[] = [];
+	const componentInstanceVars = new Map<CompilerDOM.ElementNode, { instanceVar: string; hoistedVar?: string }>();
+	const slotVars = new Map<CompilerDOM.ElementNode, { propsVar: string; expVar?: string }>();
 
 	return {
 		getCommentInfo,
@@ -411,16 +393,11 @@ export function createTemplateCodegenContext(
 		hoistVars,
 		getHoistVariable,
 		generateHoistVariables,
-		templateRefs,
-		addTemplateRef,
 		components,
 		dollarVars,
 		generatedTypes,
 		inheritedAttrVars,
-		singleRootElTypes,
-		singleRootNodes,
-		slots,
-		dynamicSlots,
-		inVFor: false,
+		componentInstanceVars,
+		slotVars,
 	};
 }

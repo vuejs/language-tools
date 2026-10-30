@@ -21,6 +21,8 @@ import type { ScriptCodegenOptions } from './index';
 export interface TemplateFunctionSlots {
 	/** The names of the types that the code in the template function declares. */
 	templateTypes: string[];
+	/** Code at the end of the template, in its scope. */
+	templateEnd: TsCode[];
 	/** Object types spread into the template context, after the component instance. */
 	templateContext: (string | readonly TsCode[])[];
 	/** Code in the template function, before the code of the template. */
@@ -55,6 +57,8 @@ export function* generateTemplate(
 
 	yield* options.slots.templateBody;
 	yield* options.templateCodes;
+	yield* options.slots.templateEnd;
+	yield* options.templateScopeEnd;
 
 	yield `return {${newLine}`;
 	for (const name of exportedTypes) {

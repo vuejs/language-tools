@@ -128,12 +128,7 @@ export function* generateSlotOutlet(
 			nameProp?.type === CompilerDOM.NodeTypes.ATTRIBUTE
 			&& nameProp.value
 		) {
-			ctx.slots.push({
-				name: nameProp.value.content,
-				offset: nameProp.loc.start.offset + nameProp.loc.source.indexOf(nameProp.value.content, nameProp.name.length),
-				tagRange: [startTagOffset, startTagOffset + node.tag.length],
-				propsVar: ctx.getHoistVariable(propsVar),
-			});
+			ctx.slotVars.set(node, { propsVar: ctx.getHoistVariable(propsVar) });
 		}
 		else if (
 			nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -153,17 +148,13 @@ export function* generateSlotOutlet(
 				nameProp.exp.loc.start.offset,
 			);
 			yield `)${endOfLine}`;
-			ctx.dynamicSlots.push({
+			ctx.slotVars.set(node, {
 				expVar: ctx.getHoistVariable(expVar),
 				propsVar: ctx.getHoistVariable(propsVar),
 			});
 		}
 		else {
-			ctx.slots.push({
-				name: 'default',
-				tagRange: [startTagOffset, startTagEndOffset],
-				propsVar: ctx.getHoistVariable(propsVar),
-			});
+			ctx.slotVars.set(node, { propsVar: ctx.getHoistVariable(propsVar) });
 		}
 	}
 	yield* ctx.generateDiagnosticDirectiveEnd();

@@ -4,18 +4,21 @@ import type { ModuleSlots } from './script';
 import type { ComponentSlots } from './script/component';
 import type { ScriptSetupHooks, ScriptSetupSlots } from './script/scriptSetup';
 import type { TemplateFunctionSlots } from './script/template';
-import type { TemplateHooks } from './template';
+import type { TemplateVars } from './template';
 import type { ElementSlots } from './template/element';
 
 /**
- * What a concern of the built-in codegen reads: the same as a codegen plugin, and the names of the types that the
- * template function declares.
+ * What a concern of the built-in codegen reads: the same as a codegen plugin, the variables of the template, and
+ * the names of the types that the template function declares.
  */
 export interface CodegenConcernFile {
 	ts: TypeScript;
 	fileName: string;
 	ir: IR;
 	analysis: ScriptAnalysis;
+	/** The variables that the code of the template declares for its nodes, without a template `undefined`. */
+	getTemplateVars(): TemplateVars | undefined;
+	/** The names of the types that the template function declares. */
 	getTemplateTypes(): ReadonlySet<string>;
 }
 
@@ -29,8 +32,7 @@ export type CodegenSlots = ModuleSlots & TemplateFunctionSlots & ComponentSlots 
  */
 export type CodegenConcern =
 	& { readonly [K in keyof CodegenSlots]?: () => CodegenSlots[K] }
-	& ScriptSetupHooks
-	& TemplateHooks;
+	& ScriptSetupHooks;
 
 export type CodegenConcernFactory = (file: CodegenConcernFile) => CodegenConcern;
 
@@ -53,6 +55,7 @@ export function mergeSlots(concerns: readonly CodegenConcern[]): MergedSlots {
 	return {
 		moduleEnd: listSlot('moduleEnd'),
 		templateTypes: listSlot('templateTypes'),
+		templateEnd: listSlot('templateEnd'),
 		templateContext: listSlot('templateContext'),
 		templateBody: listSlot('templateBody'),
 		templateExports: listSlot('templateExports'),

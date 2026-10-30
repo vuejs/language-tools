@@ -38,8 +38,10 @@ export interface ScriptCodegenOptions {
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	/** The names of the types that the code in the template function declares. */
 	templateTypes: Set<string>;
-	/** The code of the template. */
-	templateCodes: TsCode[];
+	/** The code of the template, in its scope. */
+	templateCodes: readonly TsCode[];
+	/** The code that ends the scope of the template. */
+	templateScopeEnd: readonly TsCode[];
 	/** What the concerns of the built-in codegen write into the slots of the module and the template function. */
 	slots: Readonly<ModuleSlots & Omit<TemplateFunctionSlots, 'templateTypes'> & ComponentSlots & ScriptSetupSlots>;
 	/** The rewrites of `<script setup>` of the concerns of the built-in codegen. */

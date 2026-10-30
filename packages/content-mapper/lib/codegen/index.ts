@@ -80,11 +80,15 @@ function useCodegen(
 
 	const getCodegenContributions = computed(() => getContributions(plugins, { ts, fileName, ir, analysis }));
 
-	const getTemplateTypes = computed((): ReadonlySet<string> => new Set(getGeneratedTemplate()?.generatedTypes));
-	const concerns = concernFactories.map(create => create({ ts, fileName, ir, analysis, getTemplateTypes }));
+	const getTemplateVars = () => getGeneratedTemplate()?.vars;
+	const getTemplateTypes = computed((): ReadonlySet<string> =>
+		new Set([...getGeneratedTemplate()?.generatedTypes ?? [], ...slots.templateTypes()])
+	);
+	const concerns = concernFactories.map(create =>
+		create({ ts, fileName, ir, analysis, getTemplateVars, getTemplateTypes })
+	);
 	const slots = mergeSlots(concerns);
 	const rewriteScriptSetup = concerns.flatMap(({ rewriteScriptSetup }) => rewriteScriptSetup ?? []);
-	const generateTemplateEnd = concerns.flatMap(({ generateTemplateEnd }) => generateTemplateEnd ?? []);
 
 	const hasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
@@ -119,7 +123,6 @@ function useCodegen(
 			inheritAttrs: getInheritAttrs(),
 			templateScope: getTemplateScope(),
 			slots: { elementEnd: slots.elementEnd(), renamedElsewhere: slots.renamedElsewhere() },
-			generateTemplateEnd,
 		});
 	});
 
@@ -138,15 +141,14 @@ function useCodegen(
 			scopeBindings: getScopeBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
-			templateTypes: new Set([
-				...getGeneratedTemplate()?.generatedTypes ?? [],
-				...slots.templateTypes(),
-			]),
+			templateTypes: new Set(getTemplateTypes()),
 			templateCodes: getGeneratedTemplate()?.codes ?? [],
+			templateScopeEnd: getGeneratedTemplate()?.scopeEnd ?? [],
 			slots: {
 				moduleEnd: slots.moduleEnd(),
 				templateContext: slots.templateContext(),
 				templateBody: slots.templateBody(),
+				templateEnd: slots.templateEnd(),
 				templateExports: slots.templateExports(),
 				templateExportValues: slots.templateExportValues(),
 				componentOptions: slots.componentOptions(),

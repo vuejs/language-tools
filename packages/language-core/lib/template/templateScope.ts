@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, isBuiltInDirective } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import { hyphenateTag } from '../names';
 import { collectBindingNames } from '../script/bindingPatterns';
 import type { IR, IRBlock, IRStyle, IRTemplate, TypeScript, VueCompilerOptions } from '../types';
 import { getNodeText, getStartEnd } from '../typescript/nodes';
@@ -95,6 +96,21 @@ export type TemplateBlockScopeOwner =
 
 export type TemplateScope = ReturnType<typeof collectTemplateScope>;
 
+/** An element with a static `ref`: the name of the ref, its offset, and whether a `v-for` repeats the element. */
+export interface TemplateRef {
+	node: CompilerDOM.ElementNode;
+	offset: number;
+	inVFor: boolean;
+}
+
+/** A slot outlet with a static name, or the default one: the offset of the name, and the range of the tag name. */
+export interface TemplateSlot {
+	node: CompilerDOM.ElementNode;
+	name: string;
+	offset?: number;
+	tagRange: [start: number, end: number];
+}
+
 export interface TemplateScopeOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	isVapor: boolean;
@@ -155,9 +171,13 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 	const ctx = { scopes, scope: () => openScope(new Scope()) };
 	const dollarVars = new Set<string>();
 	const commentBuffer: CompilerDOM.CommentNode[] = [];
-	const slotNames: (readonly [name: string, offset: number])[] = [];
-	const templateRefs = new Map<string, number[]>();
+	const templateRefs = new Map<string, TemplateRef[]>();
+	const slots: TemplateSlot[] = [];
+	const dynamicSlots: CompilerDOM.ElementNode[] = [];
+	const singleRootNodes = new Set<CompilerDOM.ElementNode | null>();
+	const rootElements: CompilerDOM.ElementNode[] = [];
 	let components = 0;
+	let vForDepth = 0;
 
 	if (ir.template) {
 		const template = ir.template;
@@ -181,23 +201,10 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 			dollarVars.add('$el');
 		}
 		if (template.ast) {
+			for (const node of collectSingleRootNodes(vueCompilerOptions, template.ast.children)) {
+				singleRootNodes.add(node);
+			}
 			visitTemplateChild(template, isVapor, template.ast);
-		}
-		if (!hasDefineSlots) {
-			for (const [name, offset] of slotNames) {
-				visitObjectProperty(template, name, offset);
-			}
-		}
-		if (
-			vueCompilerOptions.inferTemplateDollarRefs
-			|| vueCompilerOptions.inferComponentDollarRefs
-			|| setupRefs.size
-		) {
-			for (const [name, offsets] of templateRefs) {
-				for (const offset of offsets) {
-					visitObjectProperty(template, name, offset);
-				}
-			}
 		}
 		closeBlockScope(scope, template);
 	}
@@ -221,6 +228,21 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		dotValueBindings,
 		expressions: expressions as ReadonlyMap<IRBlock, ReadonlyMap<number, TemplateExpression>>,
 		blockScopes: blockScopes as ReadonlyMap<TemplateBlockScopeOwner, TemplateBlockScope>,
+		/** The `$` names that the template reads from the variable of the code generation rather than the context. */
+		dollarVars: dollarVars as ReadonlySet<string>,
+		/** The elements with a static `ref`, by the name of the ref, in template order. */
+		templateRefs: templateRefs as ReadonlyMap<string, readonly TemplateRef[]>,
+		/** Without `defineSlots`: the slot outlets with a static name or the default one, in template order. */
+		slots: slots as readonly TemplateSlot[],
+		/** Without `defineSlots`: the slot outlets with a dynamic name, in template order. */
+		dynamicSlots: dynamicSlots as readonly CompilerDOM.ElementNode[],
+		/**
+		 * The roots of a template with a single root in each branch of its root `v-if`, and of fallthrough components;
+		 * `null` when a root is not an element.
+		 */
+		singleRootNodes: singleRootNodes as ReadonlySet<CompilerDOM.ElementNode | null>,
+		/** The single roots that are elements rather than fallthrough components, in template order. */
+		rootElements: rootElements as readonly CompilerDOM.ElementNode[],
 	};
 
 	function openScope<T extends Scope>(scope: T) {
@@ -524,6 +546,9 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		visitElementEvents(template, node);
 		visitElementDirectives(template, isVapor, node);
 		visitTemplateRef(node);
+		if (singleRootNodes.has(node) && !vueCompilerOptions.fallthroughComponentNames.includes(hyphenateTag(node.tag))) {
+			rootElements.push(node);
+		}
 		const slotDir = node.props.find(CompilerDOM.isVSlot);
 		if (slotDir || node.children.length) {
 			visitVSlot(template, isVapor, node, slotDir);
@@ -535,11 +560,11 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		const templateRef = getTemplateRef(node);
 		if (templateRef) {
 			const [name, offset] = templateRef;
-			let offsets = templateRefs.get(name);
-			if (!offsets) {
-				templateRefs.set(name, offsets = []);
+			let refs = templateRefs.get(name);
+			if (!refs) {
+				templateRefs.set(name, refs = []);
 			}
-			offsets.push(offset);
+			refs.push({ node, offset, inVFor: vForDepth > 0 });
 		}
 	}
 
@@ -552,6 +577,9 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		visitElementProps(template, node, node.props, true);
 		visitElementDirectives(template, isVapor, node);
 		visitTemplateRef(node);
+		if (singleRootNodes.has(node)) {
+			rootElements.push(node);
+		}
 		for (const child of node.children) {
 			visitTemplateChild(template, isVapor, child);
 		}
@@ -590,11 +618,15 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		}
 		else {
 			visitElementProps(template, node, props, false);
+			const [startTagOffset] = getElementTagOffsets(node, template);
+			const tagRange: [number, number] = [startTagOffset, startTagOffset + node.tag.length];
 			if (nameProp?.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
-				slotNames.push([
-					nameProp.value.content,
-					nameProp.loc.start.offset + nameProp.loc.source.indexOf(nameProp.value.content, nameProp.name.length),
-				]);
+				slots.push({
+					node,
+					name: nameProp.value.content,
+					offset: nameProp.loc.start.offset + nameProp.loc.source.indexOf(nameProp.value.content, nameProp.name.length),
+					tagRange,
+				});
 			}
 			else if (
 				nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -604,6 +636,10 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 					inlayHints.push(createVBindShorthandInlayHintInfo(nameProp.exp.loc, 'name'));
 				}
 				visitInterpolation(template, nameProp.exp.content, nameProp.exp.loc.start.offset);
+				dynamicSlots.push(node);
+			}
+			else {
+				slots.push({ node, name: 'default', tagRange });
 			}
 		}
 		for (const child of node.children) {
@@ -650,9 +686,11 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 		for (const [start, end] of defaultInitializerRanges) {
 			visitInterpolation(template, leftExpressionText!.slice(start, end), leftExpressionRange!.start + start);
 		}
+		vForDepth++;
 		for (const child of node.children) {
 			visitTemplateChild(template, isVapor, child, false, true);
 		}
+		vForDepth--;
 		closeBlockScope(scope, node);
 	}
 
@@ -946,4 +984,43 @@ export function createVBindShorthandInlayHintInfo(
 			'[More info](https://github.com/vuejs/core/pull/9451)',
 		].join('\n\n'),
 	};
+}
+
+function* collectSingleRootNodes(
+	vueCompilerOptions: VueCompilerOptions,
+	children: CompilerDOM.TemplateChildNode[],
+	treatTemplateAsFragment = false,
+): Generator<CompilerDOM.ElementNode | null> {
+	// Exclude the effect of comments on the root node
+	children = children.filter(node => node.type !== CompilerDOM.NodeTypes.COMMENT);
+
+	if (children.length !== 1) {
+		// "null" is used to determine whether the component is not always has a single root
+		if (children.length > 1) {
+			yield null;
+		}
+		return;
+	}
+
+	const child = children[0]!;
+	if (child.type === CompilerDOM.NodeTypes.IF) {
+		for (const branch of child.branches) {
+			yield* collectSingleRootNodes(vueCompilerOptions, branch.children, true);
+		}
+		return;
+	}
+	else if (child.type !== CompilerDOM.NodeTypes.ELEMENT) {
+		return;
+	}
+
+	if (child.tagType === CompilerDOM.ElementTypes.TEMPLATE && treatTemplateAsFragment) {
+		yield* collectSingleRootNodes(vueCompilerOptions, child.children);
+		return;
+	}
+	yield child;
+
+	const tag = hyphenateTag(child.tag);
+	if (vueCompilerOptions.fallthroughComponentNames.includes(tag)) {
+		yield* collectSingleRootNodes(vueCompilerOptions, child.children);
+	}
 }

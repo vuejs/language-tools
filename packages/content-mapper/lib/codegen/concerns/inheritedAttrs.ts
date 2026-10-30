@@ -4,21 +4,19 @@ import { names } from '../names';
 import { generateTypeAlias, typeAliasRef } from '../writers';
 
 /** The type of the attributes that fall through to the root of the template, which the component takes as props. */
-export function createInheritedAttrsConcern({ ir, analysis, getTemplateTypes }: CodegenConcernFile): CodegenConcern {
-	const hasInheritedAttrs = () => getTemplateTypes().has(names.InheritedAttrs);
+export function createInheritedAttrsConcern({ ir, analysis, getTemplateVars }: CodegenConcernFile): CodegenConcern {
+	const hasInheritedAttrs = () => !!getTemplateVars()?.inheritedAttrVars.size;
 	return {
-		generateTemplateEnd({ inheritedAttrVars }) {
-			if (!inheritedAttrVars.size) {
-				return;
+		templateTypes: () => hasInheritedAttrs() ? [names.InheritedAttrs] : [],
+		templateEnd: () => {
+			if (!hasInheritedAttrs()) {
+				return [];
 			}
-			const type = [...inheritedAttrVars].map(name => `typeof ${name}`).join(` & `);
+			const type = [...getTemplateVars()!.inheritedAttrVars].map(name => `typeof ${name}`).join(` & `);
 			const { checkRequiredFallthroughAttributes } = analysis.getResolvedOptions();
-			return {
-				types: [names.InheritedAttrs],
-				codes: [...generateTypeAlias(names.InheritedAttrs, getScriptLang(ir), function*() {
-					yield checkRequiredFallthroughAttributes ? type : `Partial<${type}>`;
-				})],
-			};
+			return [...generateTypeAlias(names.InheritedAttrs, getScriptLang(ir), function*() {
+				yield checkRequiredFallthroughAttributes ? type : `Partial<${type}>`;
+			})];
 		},
 		templateExports: () => hasInheritedAttrs() ? [names.InheritedAttrs] : [],
 		fallthroughProps: () => hasInheritedAttrs() ? [typeAliasRef(names.InheritedAttrs, getScriptLang(ir))] : [],

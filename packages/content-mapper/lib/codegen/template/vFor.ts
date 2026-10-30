@@ -82,12 +82,9 @@ export function* generateVFor(
 	}
 	yield `) {${newLine}`;
 
-	const { inVFor } = ctx;
-	ctx.inVFor = true;
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child, false, true);
 	}
-	ctx.inVFor = inVFor;
 
 	yield* ctx.exitBlockScope();
 	yield `}${newLine}`;
