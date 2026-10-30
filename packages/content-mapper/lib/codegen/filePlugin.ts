@@ -61,6 +61,7 @@ export function mergeSlots(plugins: readonly FilePlugin[]): MergedSlots {
 		templateEnd: listSlot('templateEnd'),
 		templateContext: listSlot('templateContext'),
 		templateBody: listSlot('templateBody'),
+		templateBindingReferences: listSlot('templateBindingReferences'),
 		templateExports: listSlot('templateExports'),
 		templateExportValues: listSlot('templateExportValues'),
 		componentOptions: listSlot('componentOptions'),

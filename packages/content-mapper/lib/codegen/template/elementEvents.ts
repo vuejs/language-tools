@@ -14,7 +14,7 @@ import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { names } from '../names';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
-import { endOfLine, generateTypedVar, getRefBrandArgument, identifierRE, isTsLang, newLine } from '../writers';
+import { endOfLine, generateTypedVar, identifierRE, isTsLang, newLine } from '../writers';
 import { generateCamelized } from '../writers/camelized';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -240,14 +240,12 @@ export function* generateEventExpression(
 		if (isCompound) {
 			ctx.enterBlockScope(prop);
 
-			const accessMark = ctx.accessLog.length;
 			const codes = [...interpolation];
 
 			yield* generateEventParameter(options, argsType);
 			// consume $event to avoid TS6133 when the expression doesn't use it
 			yield `void $event${endOfLine}`;
 
-			yield* generateReasserts(options, ctx, accessMark);
 			yield* ctx.generateConditionGuards();
 			yield* ctx.exitBlockScope();
 
@@ -278,7 +276,6 @@ export function* generateModelEventExpression(
 	argsType: string,
 ): Generator<TsCode> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		const accessMark = ctx.accessLog.length;
 		const codes = [...generateInterpolation(
 			options,
 			ctx,
@@ -288,7 +285,6 @@ export function* generateModelEventExpression(
 			prop.exp.loc.start.offset,
 		)];
 		yield* generateEventParameter(options, argsType);
-		yield* generateReasserts(options, ctx, accessMark);
 		yield* ctx.generateConditionGuards();
 		const boundary = yield* Boundary.start(
 			options.template,
@@ -305,34 +301,6 @@ export function* generateModelEventExpression(
 	}
 	else {
 		yield `() => {}`;
-	}
-}
-
-// Assertion narrowing does not flow into nested closures for imports and
-// `let`/`var` bindings (TS limitation), so re-assert those bindings at closure tops.
-function* generateReasserts(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-	accessMark: number,
-): Generator<TsCode> {
-	const reasserts = new Set<string>();
-	const collect = (name: string) => {
-		if (options.reassertBindings.has(name) && !ctx.isDeclared(name)) {
-			reasserts.add(name);
-		}
-	};
-	for (const name of ctx.accessLog.slice(accessMark)) {
-		collect(name);
-	}
-	for (const condition of ctx.conditions) {
-		for (const name of condition.accesses) {
-			collect(name);
-		}
-	}
-	for (const name of reasserts) {
-		yield `${names.withDotValue}(${name}, ${
-			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
-		})${endOfLine}`;
 	}
 }
 

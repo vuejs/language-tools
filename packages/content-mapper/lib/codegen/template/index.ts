@@ -31,8 +31,6 @@ export interface TemplateCodegenOptions {
 	// Bindings narrowed at least once anywhere in the template/styles; every
 	// access of these is emitted with `.value`.
 	dotValueBindings: Set<string>;
-	// The subset of `dotValueBindings` re-asserted at closure tops (imports, `let`/`var`).
-	reassertBindings: Set<string>;
 	hasDefineSlots?: boolean;
 	propsAssignName?: string;
 	slotsAssignName?: string;
@@ -61,7 +59,13 @@ function generate(options: TemplateCodegenOptions) {
 		slotVars: ctx.slotVars,
 		inheritedAttrVars: ctx.inheritedAttrVars,
 	};
-	return { codes, scopeEnd, generatedTypes: ctx.generatedTypes as ReadonlySet<string>, vars };
+	return {
+		codes,
+		scopeEnd,
+		bindingReferences: ctx.bindingReferences,
+		generatedTypes: ctx.generatedTypes as ReadonlySet<string>,
+		vars,
+	};
 }
 
 function* generateWorker(

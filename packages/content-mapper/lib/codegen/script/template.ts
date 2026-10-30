@@ -30,6 +30,8 @@ export interface TemplateFunctionSlots {
 	templateContext: (readonly TsCode[])[];
 	/** Code in the template function, before the code of the template. */
 	templateBody: TsCode[];
+	/** Type queries linking reads of shadowed setup bindings, before the template function. */
+	templateBindingReferences: TsCode[];
 	/** Type aliases that the template function declares, returned to setup and the export. */
 	templateExports: string[];
 	/** Variables that the template function declares, returned to setup and the export after its type aliases. */
@@ -52,10 +54,24 @@ export function* generateTemplate(
 	// The types setup and the export need from it are passed out through its return type.
 	const { scriptLang } = options;
 	const exportedTypes = options.slots.templateExports;
-	yield `const ${names.template} = () => {${newLine}`;
+	yield* options.slots.templateBindingReferences;
+	yield* options.templateBindingReferences;
 
-	for (const name of options.dotValueBindings) {
-		yield `${names.withDotValue}(${name}, ${getRefBrandArgument(options.vueCompilerOptions, scriptLang)})${endOfLine}`;
+	// Bindings the template narrows are read through `.value` wrappers. The wrappers keep the
+	// binding names, which diagnostics show, so they are created before the shadowing scope.
+	const dotValueBindings = [...options.dotValueBindings];
+	if (dotValueBindings.length) {
+		yield `const ${names.dotValueBindings} = () => ({${newLine}`;
+		for (const name of dotValueBindings) {
+			yield `${name}: ${names.withDotValue}(${name}, ${
+				getRefBrandArgument(options.vueCompilerOptions, scriptLang)
+			}),${newLine}`;
+		}
+		yield `})${endOfLine}`;
+	}
+	yield `const ${names.template} = () => {${newLine}`;
+	if (dotValueBindings.length) {
+		yield `const { ${dotValueBindings.join(`, `)} } = ${names.dotValueBindings}()${endOfLine}`;
 	}
 
 	yield* options.slots.templateBody;

@@ -311,6 +311,9 @@ export function createTemplateCodegenContext(
 	// event-handler closures slice from a mark to find the names accessed within their body.
 	const accessLog: string[] = [];
 
+	// Direct references preserve editor links to the script bindings behind synthetic wrappers.
+	const bindingReferences: TsCode[] = [];
+
 	function accessBinding(name: string) {
 		accessLog.push(name);
 	}
@@ -318,12 +321,17 @@ export function createTemplateCodegenContext(
 	// conditions -----------------------------------------------------------------
 
 	// Active branch conditions with the names each accessed; the guards are
-	// replayed inside inline-handler closures.
-	const conditions: { text: string; accesses: string[] }[] = [];
+	// replayed inside inline-handler closures. Closures keep the narrowing of the
+	// block-scope locals, which are `const`, but not of their properties.
+	const conditions: { text: string; accesses: string[]; readsLocalProperty: boolean }[] = [];
 
 	function* generateConditionGuards() {
 		for (const condition of conditions) {
-			if (condition.accesses.length && condition.accesses.every(isDeclared)) {
+			if (
+				!condition.readsLocalProperty
+				&& condition.accesses.length
+				&& condition.accesses.every(isDeclared)
+			) {
 				continue;
 			}
 			yield `if (!${condition.text}) throw 0${endOfLine}`;
@@ -387,6 +395,7 @@ export function createTemplateCodegenContext(
 		isDeclared,
 		setMemberFeatures,
 		accessLog,
+		bindingReferences,
 		accessBinding,
 		conditions,
 		generateConditionGuards,

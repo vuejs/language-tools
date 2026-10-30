@@ -7,6 +7,9 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateTemplateChild } from './templateChild';
 
+// The start of a property read of the preceding identifier: `.`, `?.`, `[` or `!.`.
+const propertyAccessRE = /^\s*(?:!\s*)*(?:\??\.|\[)/;
+
 export function* generateVIf(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
@@ -30,19 +33,27 @@ export function* generateVIf(
 		let addedBlockCondition = false;
 
 		if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+			const { content, loc } = branch.condition;
 			const accessMark = ctx.accessLog.length;
 			const codes = [...generateInterpolation(
 				options,
 				ctx,
 				options.template,
 				{ features: scriptFeatures },
-				branch.condition.content,
-				branch.condition.loc.start.offset,
+				content,
+				loc.start.offset,
 				`(`,
 				`)`,
 			)];
 			yield* codes;
-			ctx.conditions.push({ text: codeToString(codes), accesses: ctx.accessLog.slice(accessMark) });
+			const { references } = ctx.getExpression(options.template, loc.start.offset, content);
+			ctx.conditions.push({
+				text: codeToString(codes),
+				accesses: ctx.accessLog.slice(accessMark),
+				readsLocalProperty: references.some(({ name, offset, local, member }) =>
+					local && member && propertyAccessRE.test(content.slice(offset + name.length))
+				),
+			});
 			addedBlockCondition = true;
 			yield ` `;
 		}

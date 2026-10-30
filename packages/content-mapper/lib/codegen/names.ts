@@ -8,6 +8,7 @@ const raw = {
 	defaults: '',
 	directives: '',
 	directivesOption: '',
+	dotValueBindings: '',
 	dollars: '',
 	emit: '',
 	exposed: '',

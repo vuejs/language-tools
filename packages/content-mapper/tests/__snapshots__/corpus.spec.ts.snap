@@ -68,6 +68,7 @@ exports[`content mapper full corpus 1`] = `
   Property 'foo' is missing in type '{ bar: number; }' but required in type '{ readonly foo: string; readonly bar?: number | undefined; }'.",
   "test-workspace/tsc/_failed_requiredProps/main.vue(8,3): error TS2345: Argument of type '{ bar: number; }' is not assignable to parameter of type '{ readonly foo: string; readonly bar?: number | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps'.
   Property 'foo' is missing in type '{ bar: number; }' but required in type '{ readonly foo: string; readonly bar?: number | undefined; }'.",
+  "test-workspace/tsc/_failed_templateNarrowing/main.vue(7,5): error TS18048: 'maybe.value' is possibly 'undefined'.",
   "test-workspace/tsc/_failed_vueIgnoreScope/main.vue(18,4): error TS2741: Property 'foo' is missing in type '{}' but required in type '{ foo: string; }'.",
   "test-workspace/tsc/_failed_vueIgnoreScope/main.vue(19,6): error TS2339: Property 'notExist' does not exist on type 'ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}, {}, string, {}, {}, {}, string, ComponentProvideOptions>, ... 4 more ..., any>'.",
   "test-workspace/tsc/_failed_vueIgnoreScope/main.vue(24,4): error TS2741: Property 'foo' is missing in type '{}' but required in type '{ foo: string; }'.",

@@ -4,16 +4,12 @@ import {
 	completionFeatures,
 	type IRBlock,
 	type TemplateReference,
-	type TypeScript,
 	type VueCodeMarker,
 	type VueCompilerOptions,
 } from '@vue/language-core';
-import { getStartEnd } from '@vue/language-core/lib/typescript/nodes';
-import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAST';
-import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { names } from '../names';
 import { Boundary, mapped, type MappedPiece, type TsCode } from '../tsCode';
-import { endOfLine, getRefBrandArgument, newLine } from '../writers';
+import { getRefBrandArgument, isTsLang } from '../writers';
 import type { TemplateCodegenContext } from './context';
 
 /**
@@ -22,10 +18,7 @@ import type { TemplateCodegenContext } from './context';
  * `renamedElsewhere` (sorted and disjoint too) takes no rename, which another copy of the same source takes.
  */
 export function* generateInterpolation(
-	options: IdentifierOptions & {
-		typescript?: TypeScript;
-		reassertBindings?: Set<string>;
-	},
+	options: IdentifierOptions,
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
 	features: VueCodeMarker,
@@ -46,108 +39,28 @@ export function* generateInterpolation(
 		features: features.features & ~completionFeatures,
 	};
 
-	// Assertion narrowing does not flow into functions for imports and `let`/`var`
-	// bindings (TS limitation), so each function body re-asserts the ones it reads.
-	// Parameter defaults run before the body, so each one that reads such a binding
-	// re-asserts it in an immediately invoked arrow, whose flow stays in the function.
-	// Bodies are buffered until their end, when those reads are known.
-	const references = ctx.getExpression(block, start, code).references;
-	const bodies = options.typescript && options.reassertBindings?.size
-			&& references.some(({ name, local }) => !local && options.reassertBindings!.has(name))
-		? collectFunctionBodies(options.typescript, getTypeScriptAST(options.typescript, block, prefix + code + suffix))
-			.map(body => ({ ...body, start: body.start - prefix.length, end: body.end - prefix.length }))
-		: [];
-	// Exits precede enters at the same offset; the stable sort keeps the inner exit and the outer enter first.
-	const marks = [
-		...bodies.map(body => ({ offset: body.end, body, enter: false })).reverse(),
-		...bodies.map(body => ({ offset: body.start, body, enter: true })),
-	].sort((a, b) => a.offset - b.offset);
-	const frames: { body: typeof bodies[number]; codes: TsCode[]; reasserts: Set<string> }[] = [];
-	let markIndex = 0;
-
-	function* write(codes: Iterable<TsCode>): Generator<TsCode> {
-		if (frames.length) {
-			frames[frames.length - 1]!.codes.push(...codes);
-		}
-		else {
-			yield* codes;
-		}
-	}
-
-	function* generateSourceCode(from: number, to: number): Generator<TsCode> {
-		yield* write(omitRanges(
-			withoutRename(
-				generateNonIdentifierCode(code.slice(from, to), block, start + from, features, from > 0),
+	function* generateCodeUntil(from: number, to: number): Generator<TsCode> {
+		if (from < to) {
+			yield* omitRanges(
+				withoutRename(
+					generateNonIdentifierCode(code.slice(from, to), block, start + from, features, from > 0),
+					start,
+					renamedElsewhere,
+				),
 				start,
-				renamedElsewhere,
-			),
-			start,
-			omit,
-		));
-	}
-
-	function* generateCodeUntil(from: number, end: number): Generator<TsCode> {
-		while (markIndex < marks.length && marks[markIndex]!.offset <= end) {
-			const { offset, body, enter } = marks[markIndex++]!;
-			yield* generateSourceCode(from, offset);
-			from = offset;
-			if (enter) {
-				frames.push({ body, codes: [], reasserts: new Set() });
-			}
-			else {
-				yield* write(generateFunctionBody(frames.pop()!));
-			}
-		}
-		yield* generateSourceCode(from, end);
-	}
-
-	function* generateFunctionBody({ body, codes, reasserts }: typeof frames[number]): Generator<TsCode> {
-		if (!reasserts.size) {
-			yield* codes;
-			return;
-		}
-		if (body.kind === 'block') {
-			yield newLine;
-			yield* generateReasserts(reasserts);
-			yield* codes;
-			return;
-		}
-		// Diagnostics reported on the generated call, or on the `return` keyword (where TS reports
-		// return type mismatches), map back to the original expression.
-		if (body.kind === 'parameter') {
-			const boundary = yield* Boundary.start(block, start + body.start, start + body.end, { features: 0 });
-			yield `(() => {${newLine}`;
-			yield* generateReasserts(reasserts);
-			yield `return (`;
-			yield* codes;
-			yield `)${endOfLine}})()`;
-			yield boundary.end();
-		}
-		else {
-			yield `{${newLine}`;
-			yield* generateReasserts(reasserts);
-			const boundary = yield* Boundary.start(block, start + body.start, start + body.end, { features: 0 });
-			yield `return`;
-			yield boundary.end();
-			yield ` (`;
-			yield* codes;
-			yield `)${endOfLine}}`;
-		}
-	}
-
-	function* generateReasserts(reasserts: Set<string>): Generator<TsCode> {
-		for (const name of reasserts) {
-			yield `${names.withDotValue}(${name}, ${
-				getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
-			})${endOfLine}`;
+				omit,
+			);
 		}
 	}
 
 	let prevEnd = 0;
-	for (const reference of references) {
+	for (const reference of ctx.getExpression(block, start, code).references) {
 		const { name, offset, isShorthand, local, member } = reference;
 		const omitted = omit.some(([omitStart, omitEnd]) => omitStart <= offset && offset < omitEnd);
 		if (member && !omitted) {
+			if (local) {
+				ctx.accessLog.push(name);
+			}
 			ctx.setMemberFeatures(block, start + offset, memberFeatures);
 		}
 		if (local && !member) {
@@ -161,26 +74,18 @@ export function* generateInterpolation(
 
 		const identifierFeatures = member ? featuresWithoutCompletion : features;
 		if (local || (isShorthand && options.setupConsts.has(name))) {
-			yield* write([mapped(name, block, start + offset, identifierFeatures)]);
+			yield mapped(name, block, start + offset, identifierFeatures);
 			continue;
 		}
 		const marker = isShorthand ? { ...identifierFeatures, kind: SpanMapKind.Atom } : identifierFeatures;
 		if (isShorthand) {
-			yield* write([mapped(name, block, start + offset, marker), `: `]);
-		}
-
-		if (
-			frames.length
-			&& options.reassertBindings!.has(name)
-			&& !options.setupConsts.has(name)
-			&& !options.setupRefs.has(name)
-		) {
-			frames[frames.length - 1]!.reasserts.add(name);
+			yield mapped(name, block, start + offset, marker);
+			yield `: `;
 		}
 
 		const codes: TsCode[] = [mapped(name, block, start + offset, marker)];
 
-		yield* write(generateIdentifier(
+		yield* generateIdentifier(
 			options,
 			ctx,
 			codes,
@@ -188,7 +93,7 @@ export function* generateInterpolation(
 			block,
 			start + offset,
 			start + offset + name.length,
-		));
+		);
 	}
 
 	yield* generateCodeUntil(prevEnd, code.length);
@@ -196,98 +101,6 @@ export function* generateInterpolation(
 	if (suffix) {
 		yield suffix;
 	}
-}
-
-// Function scopes in pre-order: the expressions a parameter list evaluates, then the body.
-// A block body spans from after its directive prologue to its closing brace.
-function collectFunctionBodies(ts: TypeScript, ast: ts.SourceFile) {
-	const bodies: { start: number; end: number; kind: 'block' | 'expression' | 'parameter' }[] = [];
-	const pushParameterExpression = (node: ts.Expression) => {
-		const { start, end } = getStartEnd(node, ast);
-		bodies.push({ start, end, kind: 'parameter' });
-		visit(node);
-	};
-	const visitBinding = (name: ts.BindingName) => {
-		if (ts.isIdentifier(name)) {
-			return;
-		}
-		for (const element of name.elements) {
-			if (!ts.isBindingElement(element)) {
-				continue;
-			}
-			if (element.propertyName && ts.isComputedPropertyName(element.propertyName)) {
-				pushParameterExpression(element.propertyName.expression);
-			}
-			if (element.name) {
-				visitBinding(element.name);
-			}
-			if (element.initializer) {
-				pushParameterExpression(element.initializer);
-			}
-		}
-	};
-	function visit(node: ts.Node): undefined {
-		if (
-			(ts.isArrowFunction(node)
-				|| ts.isFunctionExpression(node)
-				|| ts.isFunctionDeclaration(node)
-				|| ts.isMethodDeclaration(node)
-				|| ts.isGetAccessorDeclaration(node)
-				|| ts.isSetAccessorDeclaration(node)
-				|| ts.isConstructorDeclaration(node)
-				|| ts.isClassStaticBlockDeclaration(node))
-			&& node.body
-		) {
-			if (!ts.isClassStaticBlockDeclaration(node)) {
-				for (const modifier of node.modifiers ?? []) {
-					visit(modifier);
-				}
-				if (!ts.isArrowFunction(node) && !ts.isConstructorDeclaration(node) && node.name) {
-					visit(node.name);
-				}
-				for (const typeParameter of node.typeParameters ?? []) {
-					visit(typeParameter);
-				}
-				for (const parameter of node.parameters) {
-					for (const modifier of parameter.modifiers ?? []) {
-						visit(modifier);
-					}
-					visitBinding(parameter.name);
-					if (parameter.type) {
-						visit(parameter.type);
-					}
-					if (parameter.initializer) {
-						pushParameterExpression(parameter.initializer);
-					}
-				}
-				if (node.type) {
-					visit(node.type);
-				}
-			}
-			const { start, end } = getStartEnd(node.body, ast);
-			if (ts.isBlock(node.body)) {
-				const statements = node.body.statements;
-				const prologue = statements.findIndex(statement =>
-					!ts.isExpressionStatement(statement) || !ts.isStringLiteral(statement.expression)
-				);
-				if (prologue !== -1) {
-					bodies.push({
-						start: prologue ? statements[prologue - 1]!.end : start + 1,
-						end: end - 1,
-						kind: 'block',
-					});
-				}
-			}
-			else {
-				bodies.push({ start, end, kind: 'expression' });
-			}
-			visit(node.body);
-			return;
-		}
-		node.forEachChild(visit);
-	}
-	ast.forEachChild(visit);
-	return bodies;
 }
 
 /** The parts of the source `pieces` of an expression at `start` out of the ranges of `omit`. */
@@ -415,15 +228,15 @@ export function* generateIdentifier(
 	else if (options.setupBindings.has(name)) {
 		ctx.accessBinding(name);
 		if (inTypeQuery || options.dotValueBindings.has(name)) {
-			yield* codes;
-			yield `.`;
-			const boundary = yield* Boundary.start(
-				source,
-				start,
-				end,
-				{ features: 0 },
+			// The template reads a wrapper that shadows the binding. A type query outside
+			// the template function links the source to the binding without reading it.
+			ctx.bindingReferences.push(
+				...isTsLang(options.scriptLang)
+					? [`void ({} as unknown as typeof `, ...codes, `);\n`]
+					: [`void /** @type {typeof `, ...codes, `} */ (/** @type {unknown} */ ({}));\n`],
 			);
-			yield `value`;
+			const boundary = yield* Boundary.start(source, start, end, { features: 0 });
+			yield `${name}.value`;
 			yield boundary.end();
 		}
 		else {

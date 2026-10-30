@@ -100,6 +100,7 @@ export function createStylePlugin({ ts, ir, analysis }: BuiltinPluginFile): File
 		name: 'vue:style',
 		templateTypes: () => [...getGeneratedStyle()?.generatedTypes ?? []],
 		templateBody: () => getGeneratedStyle()?.codes ?? [],
+		templateBindingReferences: () => getGeneratedStyle()?.bindingReferences ?? [],
 		templateContext: () => hasStyleModules() ? [[typeAliasRef(names.StyleModules, getScriptLang(ir))]] : [],
 		templateExports: () => hasStyleModules() ? [names.StyleModules] : [],
 		declarations: () => [...generateStyleModuleImports(ir)],
