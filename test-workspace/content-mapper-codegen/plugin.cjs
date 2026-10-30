@@ -5,11 +5,9 @@ const path = require('node:path');
 exports.codegen = ({ config }) => ({ second, third })[config.order] ?? first;
 
 const first = {
-	contribute({ ts, fileName, ir }) {
+	rewrite({ ts, fileName, ir }, writers) {
 		const name = path.basename(fileName, '.vue');
-		const scriptEdits = [];
-		const declarations = [];
-		for (const block of [ir.script, ir.scriptSetup]) {
+		for (const [block, writer] of [[ir.script, writers.script], [ir.scriptSetup, writers.scriptSetup]]) {
 			if (block) {
 				// `useFoo()` → `useFoo<number>()`
 				block.ast.forEachChild(function visit(node) {
@@ -17,7 +15,7 @@ const first = {
 						ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'useFoo'
 						&& !node.typeArguments
 					) {
-						scriptEdits.push({ block, insertAfter: node.expression.end, code: ['<number>'] });
+						writer.insertAfter(node.expression.end, '<number>');
 					}
 					node.forEachChild(visit);
 				});
@@ -26,39 +24,38 @@ const first = {
 		if (name === 'WrapDefault') {
 			// `export default { … }` → `export default withWrapped({ … })`
 			const { expression } = ir.script.ast.statements.find(ts.isExportAssignment);
-			scriptEdits.push(
-				{ block: ir.script, insertBefore: expression.getStart(ir.script.ast), code: ['withWrapped('] },
-				{ block: ir.script, insertAfter: expression.end, code: [')'] },
-			);
-			declarations.push(['declare function withWrapped(options: object): { props: { wrapped: NumberConstructor } };']);
+			writers.script.insertBefore(expression.getStart(ir.script.ast), 'withWrapped(');
+			writers.script.insertAfter(expression.end, ')');
 		}
 		if (name === 'EndInsert') {
-			scriptEdits.push({
-				block: ir.script,
-				insertBefore: ir.script.content.length,
-				code: ['\nexport const tail = 1;'],
-			});
+			writers.script.insertBefore(ir.script.content.length, '\nexport const tail = 1;');
 		}
 		if (name === 'SlotsAlias') {
 			// `defineSlots<T>()` → `defineSlots<WithExtra<T>>()`
 			const [{ expression: call }] = ir.scriptSetup.ast.statements;
 			const [type] = call.typeArguments;
-			scriptEdits.push(
-				{ block: ir.scriptSetup, insertBefore: type.getStart(ir.scriptSetup.ast), code: ['WithExtra<'] },
-				{ block: ir.scriptSetup, insertAfter: type.end, code: ['>'] },
-			);
-			declarations.push(['type WithExtra<T> = T & { extra(props: { n: number }): any };']);
+			writers.scriptSetup.insertBefore(type.getStart(ir.scriptSetup.ast), 'WithExtra<');
+			writers.scriptSetup.insertAfter(type.end, '>');
 		}
 		if (name === 'EmptySetup') {
 			// the same name as the `<script>` binding, which only the scope of the `<script setup>` body can declare
-			scriptEdits.push({ block: ir.scriptSetup, insertBefore: 0, code: ["const s = 'setup';"] });
+			writers.scriptSetup.insertBefore(0, "const s = 'setup';");
+		}
+	},
+	generate({ ts, fileName, ir }) {
+		const name = path.basename(fileName, '.vue');
+		const declarations = [];
+		if (name === 'WrapDefault') {
+			declarations.push(['declare function withWrapped(options: object): { props: { wrapped: NumberConstructor } };']);
+		}
+		if (name === 'SlotsAlias') {
+			declarations.push(['type WithExtra<T> = T & { extra(props: { n: number }): any };']);
 		}
 		if (name === 'Declarations') {
 			declarations.push(["declare const $l: (key: 'a') => string;"]);
 		}
 		const isChild = name.startsWith('Props') && name !== 'PropsParent';
 		return {
-			scriptEdits,
 			templateContext: name.startsWith('TemplateContext') ? [['{ $foo: number }']] : [],
 			props: isChild ? [['{ contributed?: number }']] : [],
 			emits: isChild ? [['{ contributed: [value: number] }']] : [],
@@ -78,7 +75,7 @@ const first = {
 };
 
 const second = {
-	contribute({ ts, fileName, ir }) {
+	generate({ ts, fileName, ir }) {
 		const name = path.basename(fileName, '.vue');
 		return {
 			elements: name.startsWith('Elements') ? ['{ div: HTMLSpanElement }'] : undefined,
@@ -97,7 +94,7 @@ const second = {
 };
 
 const third = {
-	contribute({ ts, fileName, ir }) {
+	generate({ ts, fileName, ir }) {
 		return {
 			exports: {
 				docComment: path.basename(fileName, '.vue') === 'DocComment' ? getDocComment(ts, ir.scriptSetup, 1) : undefined,

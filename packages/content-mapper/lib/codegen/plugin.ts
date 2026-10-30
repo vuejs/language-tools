@@ -16,12 +16,16 @@ import { identifierRE } from './writers';
 /** The `codegen` export of a `plugins` entry's module. */
 export type VueCodegenExport = VueCodegenPlugin | ((ctx: VuePluginContext) => VueCodegenPlugin);
 
+/**
+ * A codegen plugin. For each file, the `rewrite` of every plugin runs first, in `plugins` order, then the `generate` of
+ * every plugin. Both must be pure functions of `file` and the plugin context: no file system, no environment, no cache
+ * shared across projects.
+ */
 export interface VueCodegenPlugin {
-	/**
-	 * What the plugin adds to the TS code of one file. Re-run when what it reads changes. It must be a pure function of
-	 * `file` and the plugin context: no file system, no environment, no cache shared across projects.
-	 */
-	contribute(file: VueCodegenFile): VueCodegenContribution | undefined;
+	/** Edits the user's code of `<script>` and `<script setup>` through the writer of each block. */
+	rewrite?(file: VueCodegenFile, writers: VueCodegenWriters): void;
+	/** What the plugin adds to the slots of the TS code of the file. */
+	generate?(file: VueCodegenFile): VueCodegenSlots | undefined;
 }
 
 export interface VueCodegenFile {
@@ -42,33 +46,26 @@ export type VueCodegenPiece = Piece<IRBlock, { features: number }>;
 
 export type VueCodegenCode = readonly VueCodegenPiece[];
 
-/** `code` right before the text of `block` that starts at `insertBefore`; it goes wherever that text goes. */
-export interface VueCodegenScriptInsertBefore {
-	block: IRScript | IRScriptSetup;
-	insertBefore: number;
-	code: VueCodegenCode;
+/** The writers of the script blocks of the file, for one plugin. */
+export interface VueCodegenWriters {
+	script: VueCodegenWriter | undefined;
+	scriptSetup: VueCodegenWriter | undefined;
 }
 
-/** `code` right after the text of `block` that ends at `insertAfter`; it goes wherever that text goes. */
-export interface VueCodegenScriptInsertAfter {
-	block: IRScript | IRScriptSetup;
-	insertAfter: number;
-	code: VueCodegenCode;
+/**
+ * Edits of the content of one script block, at offsets of the content. An edit out of the range of the block, a removal
+ * of no char, and code that is not a string are ignored.
+ */
+export interface VueCodegenWriter {
+	/** `code` right before the char at `offset`; it goes wherever that char goes. */
+	insertBefore(offset: number, code: string): void;
+	/** `code` right after the char before `offset`; it goes wherever that char goes. */
+	insertAfter(offset: number, code: string): void;
+	/** The chars of `start`..`end` are not copied. */
+	remove(start: number, end: number): void;
 }
 
-/** The text of `block` at `replace.start`..`replace.end` (not empty) is not copied; `code` takes its place. */
-export interface VueCodegenScriptReplace {
-	block: IRScript | IRScriptSetup;
-	replace: { start: number; end: number };
-	code: VueCodegenCode;
-}
-
-/** An edit of the content of `block`, at offsets of the content. */
-export type VueCodegenScriptEdit = VueCodegenScriptInsertBefore | VueCodegenScriptInsertAfter | VueCodegenScriptReplace;
-
-export interface VueCodegenContribution {
-	/** Edits of the user's code of `<script>` and `<script setup>`. */
-	scriptEdits?: readonly VueCodegenScriptEdit[];
+export interface VueCodegenSlots {
 	/** Object types spread into the template context (what template expressions and `$` names resolve against). */
 	templateContext?: readonly VueCodegenCode[];
 	/** `<script setup>` only: object types intersected into the public props, in `defineProps<…>` form. */
@@ -128,8 +125,15 @@ export function loadCodegenPlugins(
 			errors.push({ plugin: name, message: `Failed to create the \`codegen\` export: ${error}` });
 			continue;
 		}
-		if (typeof (plugin as Partial<VueCodegenPlugin> | null | undefined)?.contribute !== 'function') {
-			errors.push({ plugin: name, message: 'The `contribute` of the `codegen` export must be a function.' });
+		const { rewrite, generate } = (plugin ?? {}) as Partial<VueCodegenPlugin>;
+		if (rewrite === undefined && generate === undefined) {
+			errors.push({ plugin: name, message: 'The `codegen` export must have a `rewrite` or a `generate` function.' });
+			continue;
+		}
+		const nonFunction = ([['rewrite', rewrite], ['generate', generate]] as const)
+			.find(([, hook]) => hook !== undefined && typeof hook !== 'function');
+		if (nonFunction) {
+			errors.push({ plugin: name, message: `The \`${nonFunction[0]}\` of the \`codegen\` export must be a function.` });
 			continue;
 		}
 		plugins.push({ name, plugin: plugin as VueCodegenPlugin });
@@ -162,21 +166,21 @@ export interface CodegenContributions {
 	};
 }
 
+/** An edit that a plugin wrote through a `VueCodegenWriter`, applied to the block by its writer of the plugin's rank. */
 export type ScriptEdit =
 	& {
 		/** The index of the plugin in `plugins`: the edits of a later plugin sit outside those of an earlier one. */
 		pluginIndex: number;
 		block: IRScript | IRScriptSetup;
-		code: TsCode[];
 	}
 	& (
-		| { kind: 'insertBefore' | 'insertAfter'; offset: number }
-		| { kind: 'replace'; start: number; end: number }
+		| { kind: 'insertBefore' | 'insertAfter'; offset: number; code: string }
+		| { kind: 'remove'; start: number; end: number }
 	);
 
 /**
- * Collects what each plugin contributes to `file`, in order. An exception of `contribute` propagates. Entries that
- * are not valid for the IR of the file are dropped.
+ * Runs the `rewrite` of each plugin on `file`, then the `generate` of each, in order. An exception of a hook
+ * propagates. Edits and entries that are not valid for the IR of the file are dropped.
  */
 export function getContributions(plugins: readonly CodegenPlugin[], file: VueCodegenFile): CodegenContributions {
 	const { ir } = file;
@@ -193,18 +197,17 @@ export function getContributions(plugins: readonly CodegenPlugin[], file: VueCod
 		declarations: [],
 		exports: { names: [], default: true, docComment: undefined },
 	};
-	let isDefaultSet = false;
 	for (const [pluginIndex, { plugin }] of plugins.entries()) {
-		const contribution = plugin.contribute(file);
+		plugin.rewrite?.(file, {
+			script: ir.script && createWriter(ir.script, pluginIndex, contributions.scriptEdits),
+			scriptSetup: ir.scriptSetup && createWriter(ir.scriptSetup, pluginIndex, contributions.scriptEdits),
+		});
+	}
+	let isDefaultSet = false;
+	for (const { plugin } of plugins) {
+		const contribution = plugin.generate?.(file);
 		if (typeof contribution !== 'object' || contribution === null) {
 			continue;
-		}
-		for (const edit of toArray(contribution.scriptEdits)) {
-			const scriptEdit = toScriptEdit(ir, edit, pluginIndex);
-			if (scriptEdit) {
-				scriptEdit.code = toTsCode(blocks, edit.code);
-				contributions.scriptEdits.push(scriptEdit);
-			}
 		}
 		if (!contributions.elements && toArray(contribution.elements).length) {
 			contributions.elements = toTsCode(blocks, contribution.elements);
@@ -246,37 +249,26 @@ export function getContributions(plugins: readonly CodegenPlugin[], file: VueCod
 	return contributions;
 }
 
-/** The script edit of `edit`, if it has exactly one of its keys, with offsets in the content of a script block of `ir`. */
-function toScriptEdit(ir: IR, edit: VueCodegenScriptEdit, pluginIndex: number): ScriptEdit | undefined {
-	if (typeof edit !== 'object' || edit === null) {
-		return;
-	}
-	const { block, insertBefore, insertAfter, replace } = edit as Partial<
-		VueCodegenScriptInsertBefore & VueCodegenScriptInsertAfter & VueCodegenScriptReplace
-	>;
-	if ((block !== ir.script && block !== ir.scriptSetup) || !block) {
-		return;
-	}
-	if ([insertBefore, insertAfter, replace].filter(key => key !== undefined).length !== 1) {
-		return;
-	}
-	if (replace === undefined) {
-		const offset = insertBefore ?? insertAfter!;
-		if (isRange(block, offset, offset)) {
-			return {
-				pluginIndex,
-				block,
-				code: [],
-				kind: insertBefore !== undefined ? 'insertBefore' : 'insertAfter',
-				offset,
-			};
+/** A writer of `block` for the plugin at `pluginIndex`, which records its valid edits in `edits`. */
+function createWriter(
+	block: IRScript | IRScriptSetup,
+	pluginIndex: number,
+	edits: ScriptEdit[],
+): VueCodegenWriter {
+	const insert = (kind: 'insertBefore' | 'insertAfter') => (offset: number, code: string) => {
+		if (isRange(block, offset, offset) && typeof code === 'string') {
+			edits.push({ pluginIndex, block, kind, offset, code });
 		}
-		return;
-	}
-	const { start, end } = typeof replace === 'object' && replace !== null ? replace : { start: 0, end: 0 };
-	if (isRange(block, start, end) && start < end) {
-		return { pluginIndex, block, code: [], kind: 'replace', start, end };
-	}
+	};
+	return {
+		insertBefore: insert('insertBefore'),
+		insertAfter: insert('insertAfter'),
+		remove(start, end) {
+			if (isRange(block, start, end) && start < end) {
+				edits.push({ pluginIndex, block, kind: 'remove', start, end });
+			}
+		},
+	};
 }
 
 /** The code of `code`. A range of a block that is not the file's or out of its block keeps only its text. */

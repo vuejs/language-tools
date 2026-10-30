@@ -35,12 +35,14 @@ export function createBlockRewrite(block: IRScript | IRScriptSetup, scriptEdits:
 			continue;
 		}
 		const writer = rewrite.writer(edit.pluginIndex);
-		const code = () => edit.code;
-		if (edit.kind === 'replace') {
-			writer.replace(edit.start, edit.end, code);
-		}
-		else {
-			writer[edit.kind](edit.offset, code);
+		switch (edit.kind) {
+			case 'insertBefore':
+			case 'insertAfter':
+				writer[edit.kind](edit.offset, edit.code);
+				break;
+			case 'remove':
+				writer.replace(edit.start, edit.end, '');
+				break;
 		}
 	}
 	return {

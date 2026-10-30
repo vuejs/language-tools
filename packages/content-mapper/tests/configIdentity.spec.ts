@@ -160,12 +160,19 @@ test('codegen exports that are not codegen plugins are reported as option diagno
 		'tsconfig.json': '{}',
 		'throws.cjs': `exports.codegen = () => { throw new Error('no codegen'); };\n`,
 		'number.cjs': `exports.codegen = 1;\n`,
-		'no-contribute.cjs': `exports.codegen = { contribute: 1 };\n`,
-		'ok.cjs': `exports.codegen = ({ config }) => ({ contribute: () => config.contribution });\n`,
+		'no-hook.cjs': `exports.codegen = { contribute() {} };\n`,
+		'no-generate.cjs': `exports.codegen = { rewrite() {}, generate: 1 };\n`,
+		'ok.cjs': `exports.codegen = ({ config }) => ({ generate: () => config.contribution });\n`,
 	});
 	const opened = open(configFileName, {
 		target: 3.5,
-		plugins: ['./throws.cjs', './number.cjs', './no-contribute.cjs', { name: './ok.cjs', contribution: {} }],
+		plugins: [
+			'./throws.cjs',
+			'./number.cjs',
+			'./no-hook.cjs',
+			'./no-generate.cjs',
+			{ name: './ok.cjs', contribution: {} },
+		],
 	});
 	expect(opened.optionDiagnostics).toEqual([
 		{
@@ -180,7 +187,12 @@ test('codegen exports that are not codegen plugins are reported as option diagno
 		},
 		{
 			path: ['plugins', 2],
-			messageText: `Plugin './no-contribute.cjs': The \`contribute\` of the \`codegen\` export must be a function.`,
+			messageText: `Plugin './no-hook.cjs': The \`codegen\` export must have a \`rewrite\` or a \`generate\` function.`,
+			code: OptionDiagnosticCode.InvalidPlugin,
+		},
+		{
+			path: ['plugins', 3],
+			messageText: `Plugin './no-generate.cjs': The \`generate\` of the \`codegen\` export must be a function.`,
 			code: OptionDiagnosticCode.InvalidPlugin,
 		},
 	]);

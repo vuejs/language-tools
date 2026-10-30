@@ -98,7 +98,10 @@ vue-component-meta never load it, and other Content Mappers may ignore it.
 ```js
 // my-plugin.js, listed as `{ "name": "./my-plugin.js", ...config }` in `plugins`
 exports.codegen = ctx => ({
-	contribute({ ts, fileName, ir, analysis }) {
+	rewrite({ ts, fileName, ir, analysis }, { script, scriptSetup }) {
+		scriptSetup?.insertBefore(0, '/* rewritten */');
+	},
+	generate({ ts, fileName, ir, analysis }) {
 		return {
 			templateContext: [['{ $foo: number }']],
 		};
@@ -108,15 +111,19 @@ exports.codegen = ctx => ({
 
 `codegen` is a `VueCodegenExport`: a `VueCodegenPlugin`, or a function of the entry's `config` and
 the resolved `vueCompilerOptions` that returns one. Options of the plugin come from its entry's
-`config`. A `codegen` that is neither an object nor a function, a factory that throws, and a
-`contribute` that is not a function are reported as option diagnostics at the `plugins` entry.
+`config`. A `codegen` that is neither an object nor a function, a factory that throws, a plugin with
+neither `rewrite` nor `generate`, and a hook that is not a function are reported as option
+diagnostics at the `plugins` entry.
 
-`contribute(file)` runs for each file and returns a `VueCodegenContribution`. `file` holds the
-TS 7.1 AST API that parsed the scripts (`ts`), the IR, and its analysis (resolved options, with SFC
-comment options, and script ranges). Walk ASTs with `node.forEachChild`. An exception of
-`contribute` fails the transform of the file.
+A plugin has two optional hooks, which run for each file: first the `rewrite` of every plugin, in
+`plugins` order, then the `generate` of every plugin. `rewrite(file, writers)` edits the user's code
+of the script blocks; `generate(file)` returns `VueCodegenSlots`, the code that the plugin adds to
+the slots of the generated code. Both see the same `file`, not the result of another hook. `file`
+holds the TS 7.1 AST API that parsed the scripts (`ts`), the IR, and its analysis (resolved options,
+with SFC comment options, and script ranges). Walk ASTs with `node.forEachChild`. An exception of a
+hook fails the transform of the file.
 
-`contribute` must be a pure function of `file` and the plugin's context: no file system, no
+Hooks must be pure functions of `file` and the plugin's context: no file system, no
 environment, no cache shared across projects. The mapper hashes the plugin's entry file, its package's
 `name@version` and the entry config into the project identity, so nothing else is tracked. Data from
 elsewhere reaches TypeScript through type imports (`import('…')`), which TypeScript resolves and
@@ -129,33 +136,31 @@ the text of the block; with `text`, the text maps to the range as a whole (e.g. 
 there). A range of a block that is not the file's or out of its block keeps only its `text`, unmapped.
 Plugins never see generated names or offsets.
 
-| Key | Where the mapper places it | What its code can reference |
+| Slot | Where the mapper places it | What its code can reference |
 |---|---|---|
-| `scriptEdits` | Edits of the user's code of `<script>` and `<script setup>`, wherever the mapper copies it: `{ block, insertBefore: offset, code }`, `{ block, insertAfter: offset, code }` or `{ block, replace: { start, end }, code }` | the scope of the block |
 | `templateContext` | Object types spread last into the template context | the setup scope of a script setup component, else the module scope |
 | `props`, `emits`, `expose` | `<script setup>` only: object types intersected into the public props (`defineProps<…>` form), the emits (`defineEmits<…>` form) and what the component exposes | the setup scope |
 | `elements` | The tag → element type map of native elements, which replaces the DOM one in the file | the module scope |
 | `declarations` | Statements at module scope, after the user's code | the module scope |
 | `exports` | `names`: named exports of the component. `default: false`: no synthetic default export (a user `export default` in `<script>` stays). `docComment`: the range of a doc comment (one block comment) of a script block, copied onto the exports of the component | — |
 
-Plugins combine in `plugins` order. Arrays and `exports.names` are concatenated, and names are
+Slots combine in `plugins` order. Arrays and `exports.names` are concatenated, and names are
 de-duplicated. For `elements`, `exports.default` and `exports.docComment`, the first plugin that sets
 one wins. Invalid entries, such as a block that is not the file's or a range out of its block, are
 dropped.
 
-Script edits never conflict. `insertBefore: offset` attaches code to the char at `offset` (at the
-end of the block, to the end of the block), `insertAfter: offset` to the char before `offset` (at
-the start of the block, to the start of the block), and the code goes wherever the mapper copies
-that char. `replace` removes the chars of `start..end` (at least one) and puts its code in the place
-of the char at `start`. Removals of several edits are united, and the inserted code of every edit
-stays. When the mapper moves a range of the user's code (e.g. the type argument of `defineProps`
-into a type alias), the inserts attached to its chars move with it, and the code of a replace that
-spans parts copied to different places stays at `start`. At one char, the code nests: a later plugin
-sits outside an earlier one, and the mapper outside all. So inserts before the char come outermost
-first, then the code of replaces and the inserts after the char come innermost first. The edits of
-one plugin at one place keep their order. An
-edit out of the range of its block, a replace that removes no char, and an entry that is not
-exactly one of the three shapes are dropped. The start of each script block always maps one empty
+`writers.script` and `writers.scriptSetup` are the writers of the plugin for the file's script
+blocks (`undefined` without the block), at offsets of the block's content. Inserted code is a plain
+string, which maps nowhere. Edits never conflict. `insertBefore(offset, code)` attaches code to the
+char at `offset` (at the end of the block, to the end of the block), `insertAfter(offset, code)` to
+the char before `offset` (at the start of the block, to the start of the block), and the code goes
+wherever the mapper copies that char. `remove(start, end)` drops the chars of `start..end`; the code
+attached to them stays. Removals of several plugins are united. When the mapper moves a range of the
+user's code (e.g. the type argument of `defineProps` into a type alias), the inserts attached to its
+chars move with it. At one char, the code nests: a later plugin sits outside an earlier one, and the
+mapper outside all. So inserts before the char come outermost first, and inserts after the char come
+innermost first. The edits of one plugin at one place keep their order. An edit out of the range of
+its block, a removal of no char, and code that is not a string are ignored. The start of each script block always maps one empty
 position, so that an edit of the generated code there (e.g. an auto import) maps back even when all
 its chars are removed.
 
