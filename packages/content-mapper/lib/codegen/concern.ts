@@ -1,7 +1,8 @@
 import type { IR, ScriptAnalysis, TypeScript } from '@vue/language-core';
 import { computed } from 'alien-signals';
 import type { ModuleSlots } from './script';
-import type { ScriptSetupHooks } from './script/scriptSetup';
+import type { ComponentSlots } from './script/component';
+import type { ScriptSetupHooks, ScriptSetupSlots } from './script/scriptSetup';
 import type { TemplateFunctionSlots } from './script/template';
 import type { TemplateHooks } from './template';
 import type { ElementSlots } from './template/element';
@@ -19,7 +20,7 @@ export interface CodegenConcernFile {
 }
 
 /** The slots that the owners of the generated code declare, by name. */
-export type CodegenSlots = ModuleSlots & TemplateFunctionSlots & ElementSlots;
+export type CodegenSlots = ModuleSlots & TemplateFunctionSlots & ComponentSlots & ScriptSetupSlots & ElementSlots;
 
 /**
  * A concern of the built-in codegen, e.g. style. It writes its code into the slots that the owners of the generated
@@ -56,6 +57,8 @@ export function mergeSlots(concerns: readonly CodegenConcern[]): MergedSlots {
 		templateBody: listSlot('templateBody'),
 		templateExports: listSlot('templateExports'),
 		templateExportValues: listSlot('templateExportValues'),
+		componentOptions: listSlot('componentOptions'),
+		exposedInstanceTypes: listSlot('exposedInstanceTypes'),
 		elementEnd: mapSlot('elementEnd'),
 		renamedElsewhere: mapSlot('renamedElsewhere'),
 	};

@@ -16,6 +16,7 @@ import type { CodegenContributions, ScriptEdit } from '../plugin';
 import { createBlockRewrite, generateBlockAnchor } from '../rewrite/blockRewrite';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine } from '../writers';
+import type { ComponentSlots } from './component';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import {
 	createScriptSetupCopies,
@@ -23,6 +24,7 @@ import {
 	generateMacros,
 	generateSetupFunction,
 	type ScriptSetupHooks,
+	type ScriptSetupSlots,
 } from './scriptSetup';
 import { generateTemplate, type TemplateFunctionSlots } from './template';
 
@@ -39,7 +41,7 @@ export interface ScriptCodegenOptions {
 	/** The code of the template. */
 	templateCodes: TsCode[];
 	/** What the concerns of the built-in codegen write into the slots of the module and the template function. */
-	slots: Readonly<ModuleSlots & Omit<TemplateFunctionSlots, 'templateTypes'>>;
+	slots: Readonly<ModuleSlots & Omit<TemplateFunctionSlots, 'templateTypes'> & ComponentSlots & ScriptSetupSlots>;
 	/** The rewrites of `<script setup>` of the concerns of the built-in codegen. */
 	rewriteScriptSetup: readonly NonNullable<ScriptSetupHooks['rewriteScriptSetup']>[];
 	setupBindings: Set<string>;

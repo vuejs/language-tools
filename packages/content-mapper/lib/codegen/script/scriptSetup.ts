@@ -31,6 +31,12 @@ import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 import { getEmitTypes } from './template';
 
+/** The slots of `<script setup>`. */
+export interface ScriptSetupSlots {
+	/** Object types intersected into what a generic component exposes, after the types of its `defineExpose`. */
+	exposedInstanceTypes: string[];
+}
+
 /** The hooks of `<script setup>`. */
 export interface ScriptSetupHooks {
 	/** Edits the user's code of `<script setup>`, after the transforms of the macros, with the core writer. */
@@ -176,11 +182,8 @@ export function* generateGeneric(
 	) {
 		yield ` & { $refs: ${typeAliasRef(names.TemplateRefs, scriptLang)}; }`;
 	}
-	if (
-		options.vueCompilerOptions.inferComponentDollarEl
-		&& options.templateTypes.has(names.RootEl)
-	) {
-		yield ` & { $el: ${typeAliasRef(names.RootEl, scriptLang)}; }`;
+	for (const type of options.slots.exposedInstanceTypes) {
+		yield ` & ${type}`;
 	}
 	yield `) => void${endOfLine}`;
 	yield `	attrs: any${endOfLine}`;

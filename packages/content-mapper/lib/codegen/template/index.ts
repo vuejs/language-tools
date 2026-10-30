@@ -139,7 +139,6 @@ function* generateWorker(
 	yield* generateSlotsType(options, ctx);
 	yield* generateInheritedAttrsType(options, ctx);
 	yield* generateTemplateRefsType(options, ctx);
-	yield* generateRootElType(options, ctx);
 
 	const facts = getFacts(ctx);
 	for (const generateTemplateEnd of options.generateTemplateEnd) {
@@ -266,22 +265,6 @@ function* generateTemplateRefsType(
 			if (refs.length >= 2) {
 				yield `)`;
 			}
-		}
-	});
-}
-
-function* generateRootElType(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-): Generator<TsCode> {
-	if (!ctx.singleRootElTypes.size || ctx.singleRootNodes.has(null)) {
-		return;
-	}
-	ctx.generatedTypes.add(names.RootEl);
-
-	yield* generateTypeAlias(names.RootEl, options.scriptLang, function*() {
-		for (const type of ctx.singleRootElTypes) {
-			yield `${newLine}| ${type}`;
 		}
 	});
 }

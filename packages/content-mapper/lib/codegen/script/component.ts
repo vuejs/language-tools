@@ -7,6 +7,12 @@ import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 import { getExposeTypes } from './scriptSetup';
 
+/** The slots of the options of a script setup component. */
+export interface ComponentSlots {
+	/** Options of the component, after its props, e.g. `__typeEl: …`. */
+	componentOptions: string[];
+}
+
 export function* generateComponent(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
@@ -35,12 +41,8 @@ export function* generateComponent(
 	) {
 		yield `__typeRefs: ${asType(typeAliasRef(names.TemplateRefs, options.scriptLang), options.scriptLang)},${newLine}`;
 	}
-	if (
-		options.vueCompilerOptions.target >= 3.5
-		&& options.vueCompilerOptions.inferComponentDollarEl
-		&& options.templateTypes.has(names.RootEl)
-	) {
-		yield `__typeEl: ${asType(typeAliasRef(names.RootEl, options.scriptLang), options.scriptLang)},${newLine}`;
+	for (const option of options.slots.componentOptions) {
+		yield `${option},${newLine}`;
 	}
 	yield `})`;
 }
