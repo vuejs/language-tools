@@ -10,7 +10,8 @@ import {
 } from '@vue/language-core';
 import type { CoreRewriteWriter, RewriteSlice } from 'muggle-string';
 import { names } from '../names';
-import { createBlockRewrite, type TsCodeData } from '../rewrite/blockRewrite';
+import type { TsCodeData } from '../piece';
+import { createBlockRewrite } from '../rewrite/blockRewrite';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import {
 	asType,

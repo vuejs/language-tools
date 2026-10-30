@@ -5,40 +5,15 @@ import {
 	scriptFeatures,
 	type VueCodeMarker,
 } from '@vue/language-core';
-import { createSourceRewrite, type RewriteSink, type RewriteSlice, type SourceRewrite } from 'muggle-string';
+import { createSourceRewrite, type RewriteSlice, type SourceRewrite } from 'muggle-string';
+import { generatePiece, pieceSink, type TsCodeData, type TsPiece } from '../piece';
 import type { ScriptEdit } from '../plugin';
 import type { TsCode } from '../tsCode';
 import { generateSfcBlockSection } from '../writers';
 
-/** The data of a segment of generated TypeScript code. */
-export type TsCodeData = Exclude<TsCode, string>[3];
-
-/**
- * The sink that appends to `out` the code of a slice of a rewrite of `block`, whose cuts have the marker of their
- * copy of the user's code as data. `terminate` adds the terminator of a truncated copy (#3632).
- */
-export function tsCodeSink(
-	block: IRScript | IRScriptSetup,
-	out: TsCode[],
-	terminate = true,
-): RewriteSink<CodeSource, TsCodeData> {
-	return {
-		text: text => out.push(text),
-		source: (_, start, end, marker) => {
-			if (terminate) {
-				out.push(...generateSfcBlockSection(block, start, end, marker as VueCodeMarker));
-			}
-			else {
-				out.push([block.content.slice(start, end), block, start, marker]);
-			}
-		},
-		segment: segment => out.push(segment),
-	};
-}
-
 export interface BlockRewrite {
 	rewrite: SourceRewrite<CodeSource, TsCodeData>;
-	/** The code of `slice`. */
+	/** The code of `slice`. `terminate` adds the terminator of a truncated copy of the block (#3632). */
 	render(slice: RewriteSlice<CodeSource, TsCodeData>, terminate?: boolean): TsCode[];
 	/**
 	 * If the block renders no source chars (it is empty, or plugins removed all of it), one empty copy of it, so that
@@ -69,9 +44,18 @@ export function createBlockRewrite(block: IRScript | IRScriptSetup, scriptEdits:
 	}
 	return {
 		rewrite,
-		render(slice, terminate) {
+		render(slice, terminate = true) {
+			const pieces: TsPiece[] = [];
+			slice.render(pieceSink(pieces));
 			const out: TsCode[] = [];
-			slice.render(tsCodeSink(block, out, terminate));
+			for (const piece of pieces) {
+				if (terminate && typeof piece === 'object' && piece.text === undefined) {
+					out.push(...generateSfcBlockSection(block, piece.start, piece.end, piece.data as VueCodeMarker));
+				}
+				else {
+					out.push(...generatePiece(piece));
+				}
+			}
 			return out;
 		},
 		*generateEmptyCopy() {
