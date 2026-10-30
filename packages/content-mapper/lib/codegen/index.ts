@@ -2,6 +2,7 @@ import { getScriptLang, type IR, type ScriptAnalysis, type TypeScript, type VueS
 import { BindingFlag } from '@vue/language-core/lib/script/scriptBindings';
 import { computed } from 'alien-signals';
 import { type CodegenConcernFactory, mergeSlots } from './concern';
+import { createDollarsConcern } from './concerns/dollars';
 import { type CodegenPlugin, getContributions } from './plugin';
 import { generateScript } from './script';
 import { createStyleConcern } from './style';
@@ -15,7 +16,7 @@ export interface ServiceScript {
 }
 
 /** The concerns of the built-in codegen, in the order that their code takes in each slot. */
-const concernFactories: readonly CodegenConcernFactory[] = [createStyleConcern];
+const concernFactories: readonly CodegenConcernFactory[] = [createDollarsConcern, createStyleConcern];
 
 export function generateServiceScript(
 	ts: TypeScript,
@@ -136,6 +137,7 @@ function useCodegen(
 				templateContext: slots.templateContext(),
 				templateBody: slots.templateBody(),
 				templateExports: slots.templateExports(),
+				templateExportValues: slots.templateExportValues(),
 			},
 			rewriteScriptSetup,
 			scriptEdits: getCodegenContributions().scriptEdits,

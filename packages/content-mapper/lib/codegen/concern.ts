@@ -55,6 +55,7 @@ export function mergeSlots(concerns: readonly CodegenConcern[]): MergedSlots {
 		templateContext: listSlot('templateContext'),
 		templateBody: listSlot('templateBody'),
 		templateExports: listSlot('templateExports'),
+		templateExportValues: listSlot('templateExportValues'),
 		elementEnd: mapSlot('elementEnd'),
 		renamedElsewhere: mapSlot('renamedElsewhere'),
 	};

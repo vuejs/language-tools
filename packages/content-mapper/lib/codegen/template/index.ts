@@ -8,7 +8,7 @@ import {
 } from '@vue/language-core';
 import { names } from '../names';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
-import { endOfLine, generateTypeAlias, generateTypedVar, newLine, typeAliasRef } from '../writers';
+import { generateTypeAlias, newLine } from '../writers';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import type { ElementSlots } from './element';
 import { generateObjectProperty } from './objectProperty';
@@ -140,35 +140,6 @@ function* generateWorker(
 	yield* generateInheritedAttrsType(options, ctx);
 	yield* generateTemplateRefsType(options, ctx);
 	yield* generateRootElType(options, ctx);
-
-	if (ctx.dollarVars.size) {
-		ctx.generatedTypes.add(names.dollars);
-		yield* generateTypedVar('var', names.dollars, options.scriptLang, function*() {
-			yield `{${newLine}`;
-			if (ctx.dollarVars.has('$slots')) {
-				const type = ctx.generatedTypes.has(names.Slots) ? typeAliasRef(names.Slots, options.scriptLang) : `{}`;
-				yield `$slots: ${type}${endOfLine}`;
-			}
-			if (ctx.dollarVars.has('$attrs')) {
-				yield `$attrs: import('${vueCompilerOptions.lib}').ComponentPublicInstance['$attrs']`;
-				if (ctx.generatedTypes.has(names.InheritedAttrs)) {
-					yield ` & ${typeAliasRef(names.InheritedAttrs, options.scriptLang)}`;
-				}
-				yield endOfLine;
-			}
-			if (ctx.dollarVars.has('$refs')) {
-				const type = ctx.generatedTypes.has(names.TemplateRefs)
-					? typeAliasRef(names.TemplateRefs, options.scriptLang)
-					: `{}`;
-				yield `$refs: ${type}${endOfLine}`;
-			}
-			if (ctx.dollarVars.has('$el')) {
-				const type = ctx.generatedTypes.has(names.RootEl) ? typeAliasRef(names.RootEl, options.scriptLang) : `any`;
-				yield `$el: ${type}${endOfLine}`;
-			}
-			yield `} & { [K in keyof import('${vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }`;
-		});
-	}
 
 	const facts = getFacts(ctx);
 	for (const generateTemplateEnd of options.generateTemplateEnd) {

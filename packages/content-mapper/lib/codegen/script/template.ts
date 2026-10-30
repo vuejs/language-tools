@@ -27,6 +27,8 @@ export interface TemplateFunctionSlots {
 	templateBody: TsCode[];
 	/** Type aliases that the template function declares, returned to setup and the export after those of the template. */
 	templateExports: string[];
+	/** Variables that the template function declares, returned to setup and the export after its type aliases. */
+	templateExportValues: string[];
 }
 
 export function* generateTemplate(
@@ -63,8 +65,8 @@ export function* generateTemplate(
 	for (const name of exportedTypes) {
 		yield `${name}: ${asType(typeAliasRef(name, scriptLang), scriptLang)},${newLine}`;
 	}
-	if (options.templateTypes.has(names.dollars)) {
-		yield `${names.dollars},${newLine}`;
+	for (const name of options.slots.templateExportValues) {
+		yield `${name},${newLine}`;
 	}
 	yield `}${endOfLine}`;
 	yield `}${endOfLine}`;
@@ -85,11 +87,11 @@ export function* generateTemplate(
 			used.push(...exportedTypes);
 		}
 	}
-	if (options.templateTypes.has(names.dollars)) {
-		yield* generateTypedVar('let', names.dollars, scriptLang, function*() {
-			yield `${returnType}['${names.dollars}']`;
+	for (const name of options.slots.templateExportValues) {
+		yield* generateTypedVar('let', name, scriptLang, function*() {
+			yield `${returnType}['${name}']`;
 		});
-		used.push(names.dollars);
+		used.push(name);
 	}
 	yield `void [${used.join(`, `)}]${endOfLine}`;
 }

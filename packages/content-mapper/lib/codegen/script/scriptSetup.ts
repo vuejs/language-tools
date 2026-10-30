@@ -332,20 +332,6 @@ function addTransforms(
 			core.insertBefore(callExp.start, `const ${names.exposed} = {}${endOfLine}`);
 		}
 	}
-	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
-		for (const { callExp } of scriptSetupRanges.useAttrs) {
-			const type = `typeof ${names.dollars}.$attrs`;
-			core.insertBefore(callExp.start, isTsLang(options.scriptLang) ? `(` : `/** @type {${type}} */ (`);
-			core.insertAfter(callExp.end, isTsLang(options.scriptLang) ? ` as ${type})` : `)`);
-		}
-	}
-	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
-		for (const { callExp } of scriptSetupRanges.useSlots) {
-			const type = `typeof ${names.dollars}.$slots`;
-			core.insertBefore(callExp.start, isTsLang(options.scriptLang) ? `(` : `/** @type {${type}} */ (`);
-			core.insertAfter(callExp.end, isTsLang(options.scriptLang) ? ` as ${type})` : `)`);
-		}
-	}
 	for (const { callExp, arg } of scriptSetupRanges.useTemplateRef) {
 		// the argument is copied as a reference into the cast, and is `any` at the call
 		const name = arg && cutReference(core, arg, asType('any', options.scriptLang));
