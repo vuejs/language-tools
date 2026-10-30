@@ -47,7 +47,7 @@ export interface VueCodegenFile {
  * there; `text` maps to the range char by char when it is as long as the range, and as a whole otherwise (e.g. a
  * diagnostic reported there).
  */
-export type VueCodegenPiece = Piece<IRBlock, VueCodegenData>;
+export type VueCodegenPiece = Piece<{ source: IRBlock; data: VueCodegenData }>;
 
 export interface VueCodegenData {
 	features: number;
