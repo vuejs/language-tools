@@ -1,4 +1,4 @@
-import type { SpanMapKind, SpanMapSegment } from '@volar/language-core';
+import type { SpanMapKind } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { Piece } from 'muggle-string';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
@@ -251,18 +251,17 @@ export interface VuePluginContext {
 }
 
 /**
- * The HTML that a template language converts a template to. The host compiles `html`, and gives every location of
- * the AST and of the compiler's errors and warnings the offsets of the template that `mappings` give:
- * - an offset of `html` that several mappings cover gets the greatest of their template offsets;
- * - an offset that no mapping covers has no source and gets -1, which consumers skip rather than move to an offset nearby;
+ * The HTML that a template language converts a template to, as pieces of the template. The host compiles their text,
+ * and gives every location of the AST and of the compiler's errors and warnings the offsets of the template that the
+ * ranges give, an offset into a range the offset of the template as far into it, up to its end:
+ * - an offset of the HTML that several ranges cover gets the greatest of their template offsets;
+ * - an offset that no range covers has no source and gets -1, which consumers skip rather than move to an offset nearby;
  * - a location of which only one end has a source has none: both of its ends get -1.
  */
 export interface TemplateHTML {
-	html: string;
-	/** From ranges of `html` (virtual) to ranges of the template (original). */
-	mappings: SpanMapSegment[];
+	pieces: Piece[];
 	/**
-	 * Whether an error of the compiler, at offsets of `html`, comes from the conversion rather than the template, so
+	 * Whether an error of the compiler, at offsets of the HTML, comes from the conversion rather than the template, so
 	 * that it is not reported.
 	 */
 	ignoreError?(error: CompilerDOM.CompilerError): boolean;

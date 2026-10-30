@@ -40,7 +40,7 @@ export function createIRPipeline(
 			compile(template, options) {
 				const converted = toHTML(template);
 				if (converted) {
-					return { ast: compileTemplateHTML(converted, options) };
+					return { ast: compileTemplateHTML(converted, template, options) };
 				}
 			},
 		};

@@ -1,7 +1,6 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { VueIRPlugin } from '@vue/language-core';
 import { parse } from 'muggle-pug';
-import { buildMappings } from './lib/pugMappings';
 
 const classRE = /^class\s*=/;
 
@@ -10,8 +9,7 @@ export const ir: VueIRPlugin = {
 		pug(template) {
 			const { htmlCode: html, pieces } = parse(template);
 			return {
-				html,
-				mappings: buildMappings(pieces),
+				pieces,
 				// #5099: a class literal and a class attribute are two class attributes of the HTML
 				ignoreError: error =>
 					error.code === 2 satisfies CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE
