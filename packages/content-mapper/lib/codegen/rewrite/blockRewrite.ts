@@ -31,17 +31,20 @@ export function createBlockRewrite(block: ScriptBlock): BlockRewrite {
 	return {
 		rewrite,
 		render(slice, terminate = true) {
-			const pieces = slice.pieces([]);
-			if (!terminate) {
-				return pieces;
-			}
 			const out: TsCode[] = [];
-			for (const piece of pieces) {
-				out.push(piece);
-				if (typeof piece !== 'string' && piece.source === block && piece.text === undefined) {
-					out.push(...generateTerminator(block, piece.start, piece.end));
-				}
-			}
+			slice.render({
+				text: text => out.push(text),
+				range: (source, start, end, data, text) => {
+					if (text !== undefined) {
+						out.push({ source, start, end, data, text });
+						return;
+					}
+					out.push({ source, start, end, data });
+					if (terminate && source === block) {
+						out.push(...generateTerminator(block, start, end));
+					}
+				},
+			});
 			return out;
 		},
 	};

@@ -319,7 +319,7 @@ function checkInsert(plugin: string, blocks: Set<IRBlock>, code: VueCodegenInser
 }
 
 function isSlice(code: VueCodegenInsert): code is VueCodegenSlice {
-	return typeof code === 'object' && code !== null && typeof (code as VueCodegenSlice).pieces === 'function';
+	return typeof code === 'object' && code !== null && typeof (code as VueCodegenSlice).render === 'function';
 }
 
 /** `code`, which throws if a piece of it is not text or a range of a block of the file mapped with features. */
