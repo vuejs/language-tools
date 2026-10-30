@@ -108,8 +108,8 @@ The built-in formats:
 | `fallthroughAttributes` | `boolean` | `false` | Enable type inference for fallthrough attributes. |
 | `checkRequiredFallthroughAttributes` | `boolean` | `false` | Check required fallthrough attributes. |
 | `jsxSlots` | `boolean` | `false` | Use JSX-style slots types. |
-| `dataAttributes` | `string[]` | `[]` | Allowed data-* attribute patterns. |
-| `htmlAttributes` | `string[]` | `['aria-*']` | Allowed HTML attribute patterns. |
+| `dataAttributes` | `string[]` | `[]` | Attribute patterns skipped from prop checks on any tag (e.g. `data-*`). |
+| `htmlAttributes` | `string[]` | `['aria-*']` | Attribute patterns skipped from prop checks on components/slots (still checked on native elements). Also controls camelization. |
 | `resolveStyleClassNames` | `boolean \| 'scoped'` | `'scoped'` | Resolve class names in styles. |
 
 ## Plugins
