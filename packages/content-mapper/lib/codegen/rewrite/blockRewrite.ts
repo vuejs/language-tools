@@ -32,18 +32,11 @@ export function createBlockRewrite(block: ScriptBlock): BlockRewrite {
 		rewrite,
 		render(slice, terminate = true) {
 			const out: TsCode[] = [];
-			slice.render({
-				text: text => out.push(text),
-				range: (source, start, end, data, text) => {
-					if (text !== undefined) {
-						out.push({ source, start, end, data, text });
-						return;
-					}
-					out.push({ source, start, end, data });
-					if (terminate && source === block) {
-						out.push(...generateTerminator(block, start, end));
-					}
-				},
+			slice.render(piece => {
+				out.push(piece);
+				if (terminate && typeof piece !== 'string' && piece.text === undefined && piece.source === block) {
+					out.push(...generateTerminator(block, piece.start, piece.end));
+				}
 			});
 			return out;
 		},
