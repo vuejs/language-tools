@@ -67,8 +67,6 @@ const first = {
 				names: ['NamedExport', 'NoDefault', 'ExportsScript', 'DocComment'].includes(name) ? [name] : [],
 				// `ExportsScript` keeps its own `export default`
 				default: name === 'NoDefault' || name === 'ExportsScript' ? false : undefined,
-				// not one block comment, so a later plugin's comment is used
-				docComment: name === 'DocComment' ? getDocComment(ts, ir.scriptSetup, 0, 'const'.length) : undefined,
 			},
 		};
 	},
@@ -80,9 +78,9 @@ const second = {
 		return {
 			elements: name.startsWith('Elements') ? ['{ div: HTMLSpanElement }'] : undefined,
 			exports: {
-				// `NamedExport` again, and a name that is not an identifier
+				// `NamedExport` again
 				names: name === 'NamedExport'
-					? ['NamedExport', 'SecondExport', 'not-an-identifier']
+					? ['NamedExport', 'SecondExport']
 					: name === 'DocComment'
 					? ['DocComment']
 					: [],
@@ -103,9 +101,9 @@ const third = {
 	},
 };
 
-// the JSDoc of the `index`th statement of `block`, and `extra` chars after it
-function getDocComment(ts, block, index, extra = 0) {
+// the JSDoc of the `index`th statement of `block`
+function getDocComment(ts, block, index) {
 	const statement = block?.ast.statements[index];
 	const [doc] = statement ? ts.getJSDocCommentsAndTags(statement) : [];
-	return doc && { block, start: doc.getStart(block.ast), end: doc.end + extra };
+	return doc && { block, start: doc.getStart(block.ast), end: doc.end };
 }

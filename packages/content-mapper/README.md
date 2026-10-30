@@ -147,7 +147,7 @@ range of a block of the file throws. Plugins never see generated names or offset
 
 Slots combine in `plugins` order, after the code of the built-in plugins. Arrays and `exports.names` are concatenated, and names are
 de-duplicated. For `elements`, `exports.default` and `exports.docComment`, the first plugin that sets
-one wins. Other invalid entries, such as a doc comment out of its block, are dropped.
+one wins. Slots that are not valid, such as a doc comment out of its block, throw.
 
 `writers.script` and `writers.scriptSetup` are the writers of the plugin for the file's script
 blocks (`undefined` without the block), at offsets of the block's content. Inserted code is

@@ -189,8 +189,8 @@ export function rewriteScripts(plugins: readonly FilePlugin[], ir: IR, rewrites:
 }
 
 /**
- * `plugin` for `file`. Its `generate` runs once, when a slot is first read; an exception of it propagates, and so does
- * a piece that is not valid for the IR of the file. Other entries that are not valid for the IR of the file are dropped.
+ * `plugin` for `file`. Its `generate` runs once, when a slot is first read; an exception of it propagates, and slots
+ * that are not valid for the IR of the file throw.
  */
 export function createFilePlugin({ name, plugin }: CodegenPlugin, file: VueCodegenFile): FilePlugin {
 	const getSlots = computed(() => getSlotsOf(name, file.ir, plugin.generate?.(file)));
@@ -223,42 +223,57 @@ function getSlotsOf(plugin: string, ir: IR, contribution: VueCodegenSlots | unde
 		declarations: [],
 		exports: [],
 	};
-	if (typeof contribution !== 'object' || contribution === null) {
+	if (contribution === undefined) {
 		return slots;
 	}
-	if (toArray(contribution.elements).length) {
-		slots.elements.push(checkCode(plugin, blocks, contribution.elements!));
+	if (typeof contribution !== 'object' || contribution === null) {
+		throw invalid(plugin, 'slots that are not an object');
+	}
+	const elements = toArray(plugin, 'elements', contribution.elements);
+	if (elements.length) {
+		slots.elements.push(checkCode(plugin, blocks, elements));
 	}
 	for (const key of ['templateContext', 'props', 'emits', 'expose', 'declarations'] as const) {
-		for (const type of toArray(contribution[key])) {
+		for (const type of toArray(plugin, key, contribution[key])) {
 			slots[key].push(checkCode(plugin, blocks, type));
 		}
 	}
-	const { exports } = contribution;
-	if (typeof exports === 'object' && exports !== null) {
-		slots.exports.push(getExportsOf(ir, exports));
+	if (contribution.exports !== undefined) {
+		slots.exports.push(getExportsOf(plugin, ir, contribution.exports));
 	}
 	return slots;
 }
 
-function getExportsOf(ir: IR, exports: NonNullable<VueCodegenSlots['exports']>): ComponentExports {
-	const names = toArray(exports.names).filter(name => typeof name === 'string' && identifierRE.test(name));
-	let docComment: string | undefined;
-	if (typeof exports.docComment === 'object' && exports.docComment) {
-		const { block, start, end } = exports.docComment;
-		if ((block === ir.script || block === ir.scriptSetup) && block && isRange(block, start, end)) {
-			const text = block.content.slice(start, end);
-			// one block comment, so that it can't end the generated code's own comments or add code
-			if (/^\/\*(?:[^*]|\*(?!\/))*\*\/$/.test(text)) {
-				docComment = text;
-			}
+function getExportsOf(plugin: string, ir: IR, exports: NonNullable<VueCodegenSlots['exports']>): ComponentExports {
+	if (typeof exports !== 'object' || exports === null) {
+		throw invalid(plugin, 'exports that are not an object');
+	}
+	const names = toArray(plugin, 'exports.names', exports.names);
+	for (const name of names) {
+		if (typeof name !== 'string' || !identifierRE.test(name)) {
+			throw invalid(plugin, `the export name ${JSON.stringify(name)}, which is not an identifier`);
 		}
 	}
-	return {
-		names,
-		default: typeof exports.default === 'boolean' ? exports.default : undefined,
-		docComment,
-	};
+	if (exports.default !== undefined && typeof exports.default !== 'boolean') {
+		throw invalid(plugin, 'an `exports.default` that is not a boolean');
+	}
+	let docComment: string | undefined;
+	if (exports.docComment !== undefined) {
+		const { block, start, end } = exports.docComment ?? {};
+		const text = (block === ir.script || block === ir.scriptSetup) && block && isRange(block, start, end)
+			? block.content.slice(start, end)
+			: undefined;
+		// one block comment, so that it can't end the generated code's own comments or add code
+		if (text === undefined || !/^\/\*(?:[^*]|\*(?!\/))*\*\/$/.test(text)) {
+			throw invalid(plugin, 'a doc comment that is not one block comment of a script block');
+		}
+		docComment = text;
+	}
+	return { names, default: exports.default, docComment };
+}
+
+function invalid(plugin: string, what: string) {
+	return new TypeError(`The codegen plugin '${plugin}' gave ${what}.`);
 }
 
 function getBlocks(ir: IR): Set<IRBlock> {
@@ -309,7 +324,7 @@ function isSlice(code: VueCodegenInsert): code is VueCodegenSlice {
 
 /** `code`, which throws if a piece of it is not text or a range of a block of the file mapped with features. */
 function checkCode(plugin: string, blocks: Set<IRBlock>, code: VueCodegenCode): VueCodegenCode {
-	for (const piece of toArray(code)) {
+	for (const piece of toArray(plugin, 'code', code)) {
 		checkPiece(plugin, blocks, piece);
 	}
 	return code;
@@ -323,9 +338,7 @@ function checkPiece(plugin: string, blocks: Set<IRBlock>, piece: VueCodegenPiece
 		&& isRange(piece.source, piece.start, piece.end) && typeof piece.data?.features === 'number'
 		&& (piece.text === undefined || typeof piece.text === 'string');
 	if (!isPiece) {
-		throw new TypeError(
-			`The codegen plugin '${plugin}' gave a piece that is not text or a range of a block of the file.`,
-		);
+		throw invalid(plugin, 'a piece that is not text or a range of a block of the file');
 	}
 }
 
@@ -334,6 +347,13 @@ function isRange(block: IRBlock, start: unknown, end: unknown): boolean {
 		&& 0 <= (start as number) && (start as number) <= (end as number) && (end as number) <= block.content.length;
 }
 
-function toArray<T>(value: readonly T[] | undefined): readonly T[] {
-	return Array.isArray(value) ? value : [];
+/** `value`, an array, or none for `undefined`. */
+function toArray<T>(plugin: string, key: string, value: readonly T[] | undefined): readonly T[] {
+	if (value === undefined) {
+		return [];
+	}
+	if (!Array.isArray(value)) {
+		throw invalid(plugin, `a \`${key}\` that is not an array`);
+	}
+	return value;
 }

@@ -70,6 +70,35 @@ test('rejects an edit of a plugin that is not valid for its block', () => {
 	}
 });
 
+test('exports what the plugins set, and rejects exports that are not valid', () => {
+	const content = `<script setup lang="ts">\n/** Doc. */\nconst a = 1;\n</script>\n`;
+	const { text } = generateWith(
+		content,
+		plugin({
+			generate: ({ ir }) => ({
+				exports: {
+					names: ['Foo'],
+					docComment: { block: ir.scriptSetup!, ...rangeOf(ir.scriptSetup!, '/** Doc. */') },
+				},
+			}),
+		}),
+	);
+	expect(text).toContain('/** Doc. */\nconst Foo = ');
+	const invalid: ((file: VueCodegenFile) => unknown)[] = [
+		() => 1,
+		() => ({ exports: 1 }),
+		() => ({ exports: { names: ['not a name'] } }),
+		() => ({ exports: { names: 'Foo' } }),
+		() => ({ exports: { default: 'no' } }),
+		() => ({ declarations: 'declare const x: 1' }),
+		({ ir }) => ({ exports: { docComment: { block: ir.scriptSetup!, ...rangeOf(ir.scriptSetup!, 'const a') } } }),
+		({ ir }) => ({ exports: { docComment: { block: ir.scriptSetup!, start: 0, end: 1000 } } }),
+	];
+	for (const generate of invalid) {
+		expect(() => generateWith(content, plugin({ generate: generate as never }))).toThrow(`'test-plugin'`);
+	}
+});
+
 test('inserts the pieces of a plugin, mapped to their ranges', () => {
 	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
 	const { text, mappings } = generateWith(
