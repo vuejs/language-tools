@@ -1,5 +1,6 @@
 import type { SpanMapKind, SpanMapSegment } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
+import type { Piece } from 'muggle-string';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 
 /** The node types of the TypeScript 7 AST API, for packages that do not resolve `typescript` to it. */
@@ -63,7 +64,7 @@ export type CodeSource = IR | IRBlock;
  * range without `text` is a copy of the content of `source` there. `text` maps to the range char by char when it is as
  * long as the range, and as a whole otherwise.
  */
-export type CodePiece<Data> = string | { source: CodeSource; start: number; end: number; data: Data; text?: string };
+export type CodePiece<Data> = Piece<{ source: CodeSource; data: Data }>;
 
 /** The text of `piece`. */
 export function pieceText(piece: CodePiece<unknown>): string {

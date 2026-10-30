@@ -185,6 +185,9 @@ importers:
       alien-signals:
         specifier: ^3.2.1
         version: 3.2.1
+      muggle-string:
+        specifier: workspace:*
+        version: link:../../muggle-string
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
