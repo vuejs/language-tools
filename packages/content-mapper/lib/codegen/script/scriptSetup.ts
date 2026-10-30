@@ -11,7 +11,7 @@ import {
 import type { CoreRewriteWriter, RewriteSlice } from 'muggle-string';
 import { names } from '../names';
 import type { TsCodeData } from '../piece';
-import { createBlockRewrite } from '../rewrite/blockRewrite';
+import { createBlockRewrite, generateBlockAnchor } from '../rewrite/blockRewrite';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import {
 	asType,
@@ -59,7 +59,7 @@ export function createScriptSetupCopies(
 	addTransforms(options, scriptSetup, core, scriptSetupRanges);
 	return {
 		*generateImports() {
-			yield* blockRewrite.generateEmptyCopy();
+			yield* generateBlockAnchor(scriptSetup);
 			if (imports) {
 				yield* blockRewrite.render(imports, false);
 			}

@@ -14,7 +14,7 @@ import {
 import * as path from 'path-browserify';
 import { names } from '../names';
 import type { CodegenContributions, ScriptEdit } from '../plugin';
-import { createBlockRewrite } from '../rewrite/blockRewrite';
+import { createBlockRewrite, generateBlockAnchor } from '../rewrite/blockRewrite';
 import { generateStyleModuleImports } from '../style/modules';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine } from '../writers';
@@ -320,7 +320,7 @@ function* generateScriptWithExportDefault(
 		? core.cut(exportDefault.end, script.content.length, { data: { features: scriptFeatures } })
 		: undefined;
 
-	yield* blockRewrite.generateEmptyCopy();
+	yield* generateBlockAnchor(script);
 	yield* blockRewrite.render(head);
 	yield endOfLine;
 	if (templateGenerator) {
@@ -344,7 +344,7 @@ function* generateScriptWithExportDefault(
 function* generateWholeScript(script: IRScript, scriptEdits: readonly ScriptEdit[]): Generator<TsCode> {
 	const blockRewrite = createBlockRewrite(script, scriptEdits);
 	const whole = blockRewrite.rewrite.core.cut(0, script.content.length, { data: { features: scriptFeatures } });
-	yield* blockRewrite.generateEmptyCopy();
+	yield* generateBlockAnchor(script);
 	yield* blockRewrite.render(whole);
 }
 
