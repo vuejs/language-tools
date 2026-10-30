@@ -32,9 +32,9 @@
 # job stops if a published package depends on another workspace package, such
 # as one of a git submodule, that is not on npm at its exact version released
 # from the checked out commit: pnpm rewrites `workspace:*` to that version.
-# @volar/*, volar-service-* and muggle-string come from the volar.js, services and
-# muggle-string submodules, so release them from their repositories first and
-# point the submodules at those release commits.
+# @volar/*, volar-service-*, muggle-string and muggle-pug come from the volar.js,
+# services, muggle-string and muggle-pug submodules, so release them from their
+# repositories first and point the submodules at those release commits.
 
 name: release
 

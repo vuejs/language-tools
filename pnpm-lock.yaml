@@ -19,6 +19,7 @@ overrides:
   volar-service-pug-beautify: workspace:*
   '@vue/language-plugin-pug': workspace:*
   muggle-string: workspace:*
+  muggle-pug: workspace:*
 
 importers:
 
@@ -81,6 +82,31 @@ importers:
       vscode-tmlanguage-snapshot:
         specifier: latest
         version: 2.0.0
+
+  muggle-pug:
+    dependencies:
+      muggle-string:
+        specifier: workspace:*
+        version: link:../muggle-string
+      pug-lexer:
+        specifier: ^5.0.1
+        version: 5.0.1
+      pug-parser:
+        specifier: ^6.0.0
+        version: 6.0.0
+    devDependencies:
+      '@types/node':
+        specifier: ^26.0.1
+        version: 26.6.5
+      '@vue/compiler-dom':
+        specifier: ^3.5.0
+        version: 3.5.40
+      typescript:
+        specifier: 7.1.0-beta
+        version: 7.1.0-beta
+      vitest:
+        specifier: latest
+        version: 5.0.5(@types/node@26.6.5)(vite@8.1.5(@types/node@26.6.5)(yaml@2.9.1))
 
   muggle-string:
     devDependencies:

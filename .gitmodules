@@ -10,3 +10,7 @@
 	path = muggle-string
 	url = https://github.com/johnsoncodehk/muggle-string.git
 	branch = next
+[submodule "muggle-pug"]
+	path = muggle-pug
+	url = https://github.com/johnsoncodehk/muggle-pug.git
+	branch = main
