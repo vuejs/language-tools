@@ -1,8 +1,8 @@
 import { SpanMapKind, type SpanMapSegment } from '@volar/source-map';
-import type { PugPiece } from 'muggle-pug';
+import type { PugParseResult } from 'muggle-pug';
 
 /** The mappings from the HTML of `pieces` to the pug code. */
-export function buildMappings(pieces: PugPiece[]) {
+export function buildMappings(pieces: PugParseResult['pieces']) {
 	let length = 0;
 	const mappings: SpanMapSegment[] = [];
 	for (const piece of pieces) {

@@ -84,6 +84,9 @@ importers:
 
   muggle-pug:
     dependencies:
+      muggle-string:
+        specifier: workspace:*
+        version: link:../muggle-string
       pug-lexer:
         specifier: ^5.0.1
         version: 5.0.1
