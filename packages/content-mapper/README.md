@@ -151,13 +151,13 @@ one wins. Slots that are not valid, such as a doc comment out of its block, thro
 
 `writers.script` and `writers.scriptSetup` are the writers of the plugin for the file's script
 blocks (`undefined` without the block), at offsets of the block's content. Inserted code is
-`VueCodegenCode`, slices, or arrays of them. Edits never conflict. `insertBefore(offset, code)` attaches code to the
+`VueCodegenCode`, slices, or arrays of them. Inserts and removals never conflict. `insertBefore(offset, code)` attaches code to the
 char at `offset` (at the end of the block, to the end of the block), `insertAfter(offset, code)` to
 the char before `offset` (at the start of the block, to the start of the block), and the code goes
 wherever the mapper copies that char. `remove(start, end)` drops the chars of `start..end`; the code
 attached to them stays. Removals of several plugins are united. `cut(start, end, options?)` returns a slice of
 the chars of `start..end` with all the edits in them, which renders where it is inserted, exactly
-once, and nowhere if it is not; the cuts of all plugins and the mapper are nested or disjoint. Its chars map
+once, and nowhere if it is not; the cuts of all plugins and the mapper nest or are disjoint, and a cut that partly overlaps another one throws, since no output can render the shared chars once in both slices. Its chars map
 with `options.features` (`scriptFeatures` by default), and `options.placeholder` takes their place where
 they are cut from. When the mapper moves a range of the
 user's code (e.g. the type argument of `defineProps` into a type alias), the inserts attached to its

@@ -39,11 +39,18 @@ Plugins that changed the generated TypeScript move to `codegen`. Each one drops 
 | fusion-php | `templateContext`, with the variable names as ranges of the `<php>` block. |
 | server-block-nuxt | `declarations`: the content of the block as one range. |
 
+Codegen plugins that ran against earlier v4 alphas see three changes:
+
+- **breaking:** `templateContext` types are spread before the props and emits of the component, so a prop wins over a context key of the same name; they were spread last, and the context key won.
+- **breaking:** at one char, the inserts of a plugin's `rewrite` sit outside those of the built-in transforms (`useTemplateRef`, `useCssModule`, `useAttrs`, `useSlots`), so code that wraps those calls wraps the transformed call; the built-in transforms were outermost.
+- **breaking:** every slot of `generate` that is not valid throws and names the plugin, failing the transform of the file: an export name that is not an identifier, a doc comment that is not one block comment of a script block, and a slot value that is not an array. They were dropped silently.
+
 Unsupported: wrapping the template (layout slots of dxup), changing the shape of the component (`define-generic` of vue-macros; use `generic="…"`), template expressions in custom blocks, and intersecting a type into the default export.
 
 ### Language core
 
 - **breaking:** `@vue/language-core` no longer exports `isFunctionLikeDeclaration` and `isTypeAssertionExpression`; use `ts.isFunctionLikeDeclaration` and `ts.isTypeAssertion` of TS 7.1.
+- **breaking:** a `CodePiece` is text or a range of a `CodeSource`, which is the IR (for offsets of the file) or one of its blocks. Pieces with `source: undefined` and file offsets become `{ source: ir, start, end, … }`, and `resolveCodeOffsets` returns `source: ir` for them.
 
 ### Content Mapper
 
