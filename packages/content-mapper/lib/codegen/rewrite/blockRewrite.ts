@@ -50,11 +50,15 @@ export function createBlockRewrite(block: IRScript | IRScriptSetup, scriptEdits:
 			slice.render(pieceSink(pieces));
 			const out: TsCode[] = [];
 			for (const piece of pieces) {
-				if (terminate && typeof piece === 'object' && piece.text === undefined) {
+				if (typeof piece === 'string' || piece.text === undefined && !terminate) {
+					out.push(...generatePiece(piece));
+				}
+				else if (piece.text === undefined) {
 					out.push(...generateSfcBlockSection(block, piece.start, piece.end, piece.data as VueCodeMarker));
 				}
 				else {
-					out.push(...generatePiece(piece));
+					// a segment of the code of an edit, which maps as it was given
+					out.push([piece.text, piece.source, piece.start, piece.data]);
 				}
 			}
 			return out;

@@ -25,7 +25,10 @@ export function pieceSink<Source, Data>(out: Piece<Source, Data>[]): RewriteSink
 	};
 }
 
-/** The code of `piece`. A range whose text is not as long as the range maps as a whole, by a boundary around it. */
+/**
+ * The code of `piece`. A range with a text that is not the source text there maps as a whole, by a boundary around
+ * the text.
+ */
 export function* generatePiece(piece: TsPiece): Generator<TsCode> {
 	if (typeof piece === 'string') {
 		if (piece) {
@@ -34,8 +37,9 @@ export function* generatePiece(piece: TsPiece): Generator<TsCode> {
 		return;
 	}
 	const { source, start, end, data } = piece;
-	const text = piece.text ?? source!.content.slice(start, end);
-	if (text.length === end - start || data === undefined || !('features' in data)) {
+	const copy = source?.content.slice(start, end);
+	const text = piece.text ?? copy!;
+	if (text === copy || data === undefined || !('features' in data)) {
 		yield [text, source, start, data];
 		return;
 	}

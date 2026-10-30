@@ -122,13 +122,12 @@ environment, no cache shared across projects. The mapper hashes the plugin's ent
 elsewhere reaches TypeScript through type imports (`import('…')`), which TypeScript resolves and
 watches.
 
-Code is written as `VueCodegenCode`: an array of plain strings, which map nowhere and report no
-diagnostics, `VueCodegenSourceText`s (`{ text, block, offset, features }`, text copied from a block,
-mapped there with the given features, e.g. `scriptFeatures`), and `VueCodegenSourceSpan`s
-(`{ code, block, start, end, features }`, code mapped as a whole to a range, e.g. to report a
-diagnostic there). A `SourceText` whose text is not the text of its block at `offset`, and a
-`SourceSpan` out of the range of its block, keep their text but do not map. Plugins never see
-generated names or offsets.
+Code is written as `VueCodegenCode`, an array of `VueCodegenPiece`s: plain strings, which map nowhere
+and report no diagnostics, and ranges `{ source, start, end, data: { features }, text? }` of a block
+`source`, mapped there with the given features (e.g. `scriptFeatures`). A range without `text` copies
+the text of the block; with `text`, the text maps to the range as a whole (e.g. to report a diagnostic
+there). A range of a block that is not the file's or out of its block keeps only its `text`, unmapped.
+Plugins never see generated names or offsets.
 
 | Key | Where the mapper places it | What its code can reference |
 |---|---|---|
@@ -156,8 +155,9 @@ sits outside an earlier one, and the mapper outside all. So inserts before the c
 first, then the code of replaces and the inserts after the char come innermost first. The edits of
 one plugin at one place keep their order. An
 edit out of the range of its block, a replace that removes no char, and an entry that is not
-exactly one of the three shapes are dropped. A block whose chars are all removed still maps one
-empty position, so that an edit of the generated code there (e.g. an auto import) maps back.
+exactly one of the three shapes are dropped. The start of each script block always maps one empty
+position, so that an edit of the generated code there (e.g. an auto import) maps back even when all
+its chars are removed.
 
 Unsupported, since they would need generated structure that a contribution cannot reach without
 depending on generated names: wrapping the template (e.g. checking its root as the default slot of

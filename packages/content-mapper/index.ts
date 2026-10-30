@@ -3,13 +3,12 @@ export type {
 	VueCodegenContribution,
 	VueCodegenExport,
 	VueCodegenFile,
+	VueCodegenPiece,
 	VueCodegenPlugin,
 	VueCodegenScriptEdit,
 	VueCodegenScriptInsertAfter,
 	VueCodegenScriptInsertBefore,
 	VueCodegenScriptReplace,
-	VueCodegenSourceSpan,
-	VueCodegenSourceText,
 } from './lib/codegen/plugin';
 export * from './lib/mapper/contentMapper';
 export * from './lib/mapper/mapperOptions';

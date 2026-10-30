@@ -27,7 +27,7 @@ function rangeOf(block: IRScript | IRScriptSetup, text: string) {
 	return { start, end: start + text.length };
 }
 
-test('applies the script edits of plugins, mapping the source text that they copy', () => {
+test('applies the script edits of plugins, mapping the source ranges that they copy', () => {
 	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
 	const { text, mappings } = generateWith(
 		content,
@@ -39,10 +39,20 @@ test('applies the script edits of plugins, mapping the source text that they cop
 					{
 						block,
 						replace: call,
-						code: ['wrap(', { text: 'useFoo()', block, offset: call.start, features: scriptFeatures }, ')'],
+						code: ['wrap(', { source: block, ...call, data: { features: scriptFeatures } }, ')'],
 					},
-					// not the source text at its offset, so it does not map
-					{ block, insertAfter: call.end, code: [{ text: ' as X', block, offset: 0, features: scriptFeatures }] },
+					// out of the content of the block, so its text does not map
+					{
+						block,
+						insertAfter: call.end,
+						code: [{
+							source: block,
+							start: 0,
+							end: block.content.length + 1,
+							data: { features: scriptFeatures },
+							text: ' as X',
+						}],
+					},
 					// out of the content of the block
 					{ block, replace: { start: 0, end: block.content.length + 1 }, code: ['dropped'] },
 					// removes no char
@@ -66,6 +76,33 @@ test('applies the script edits of plugins, mapping the source text that they cop
 	expect(
 		mappings.some(({ virtualStart, virtualEnd }) => virtualStart <= unmapped && unmapped < virtualEnd),
 	).toBe(false);
+});
+
+test('maps a range of a plugin with its own text as a whole to the range', () => {
+	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
+	const { text, mappings } = generateWith(
+		content,
+		plugin(({ ir }) => {
+			const block = ir.scriptSetup!;
+			const call = rangeOf(block, 'useFoo');
+			return {
+				declarations: [[`declare const x: `, {
+					source: block,
+					...call,
+					data: { features: scriptFeatures },
+					text: 'number',
+				}, `;`]],
+			};
+		}),
+	);
+	const generated = text.indexOf('declare const x: number;') + 'declare const x: '.length;
+	expect(mappings).toContainEqual(expect.objectContaining({
+		virtualStart: generated,
+		virtualEnd: generated + 'number'.length,
+		originalStart: content.indexOf('useFoo'),
+		originalEnd: content.indexOf('useFoo') + 'useFoo'.length,
+		kind: SpanMapKind.Atom,
+	}));
 });
 
 const defineProps = `<script setup lang="ts">\nconst props = defineProps<{ a: string }>();\n</script>\n`;

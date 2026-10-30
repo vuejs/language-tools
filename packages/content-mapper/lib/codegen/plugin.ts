@@ -9,7 +9,8 @@ import type {
 	VuePluginContext,
 	VuePluginError,
 } from '@vue/language-core';
-import { Boundary, type TsCode } from './tsCode';
+import { generatePiece, type Piece } from './piece';
+import type { TsCode } from './tsCode';
 import { identifierRE } from './writers';
 
 /** The `codegen` export of a `plugins` entry's module. */
@@ -32,25 +33,14 @@ export interface VueCodegenFile {
 	analysis: ScriptAnalysis;
 }
 
-/** Code added by a contribution: plain text, which maps nowhere and never reports diagnostics, or text that maps to a source. */
-export type VueCodegenCode = readonly (string | VueCodegenSourceText | VueCodegenSourceSpan)[];
+/**
+ * A piece of code added by a contribution: plain text, which maps nowhere and never reports diagnostics, or the range
+ * `start`..`end` of `source`, an IR block, mapped with `data.features`. A range without `text` copies the block's text
+ * there; with `text`, the text maps to the range as a whole (e.g. a diagnostic reported there).
+ */
+export type VueCodegenPiece = Piece<IRBlock, { features: number }>;
 
-/** `text` copied from `block` at `offset`; it must equal `block.content.slice(offset, offset + text.length)`. */
-export interface VueCodegenSourceText {
-	text: string;
-	block: IRBlock;
-	offset: number;
-	features: number;
-}
-
-/** Generated `code` that maps as a whole to `start`..`end` of `block` (e.g. a diagnostic reported there). */
-export interface VueCodegenSourceSpan {
-	code: readonly (string | VueCodegenSourceText)[];
-	block: IRBlock;
-	start: number;
-	end: number;
-	features: number;
-}
+export type VueCodegenCode = readonly VueCodegenPiece[];
 
 /** `code` right before the text of `block` that starts at `insertBefore`; it goes wherever that text goes. */
 export interface VueCodegenScriptInsertBefore {
@@ -289,48 +279,24 @@ function toScriptEdit(ir: IR, edit: VueCodegenScriptEdit, pluginIndex: number): 
 	}
 }
 
-/**
- * The code of `code`. A `SourceText` whose text is not the text of the source at its offset, and a `SourceSpan` out of
- * the range of its source, keep their text but do not map.
- */
+/** The code of `code`. A range of a block that is not the file's or out of its block keeps only its text. */
 function toTsCode(blocks: Set<IRBlock>, code: VueCodegenCode | undefined): TsCode[] {
-	return [...generateCode(blocks, code)];
-}
-
-function* generateCode(blocks: Set<IRBlock>, code: VueCodegenCode | undefined): Generator<TsCode> {
-	for (const segment of toArray(code)) {
-		if (typeof segment === 'string') {
-			yield segment;
+	const codes: TsCode[] = [];
+	for (const piece of toArray(code)) {
+		if (typeof piece === 'string') {
+			codes.push(...generatePiece(piece));
 		}
-		else if (typeof segment !== 'object' || segment === null) {
-			continue;
-		}
-		else if ('code' in segment) {
-			const { block, start, end, features } = segment;
-			if (blocks.has(block) && isRange(block, start, end) && typeof features === 'number') {
-				const boundary = yield* Boundary.start(block, start, end, { features });
-				yield* generateCode(blocks, segment.code);
-				yield boundary.end();
+		else if (typeof piece === 'object' && piece !== null) {
+			const { source, start, end, data, text } = piece;
+			if (blocks.has(source) && isRange(source, start, end) && typeof data?.features === 'number') {
+				codes.push(...generatePiece({ source, start, end, data: { features: data.features }, text }));
 			}
-			else {
-				yield* generateCode(blocks, segment.code);
-			}
-		}
-		else if (typeof segment.text === 'string') {
-			const { text, block, offset, features } = segment;
-			if (
-				blocks.has(block)
-				&& isRange(block, offset, offset + text.length)
-				&& typeof features === 'number'
-				&& block.content.slice(offset, offset + text.length) === text
-			) {
-				yield [text, block, offset, { features }];
-			}
-			else {
-				yield text;
+			else if (typeof text === 'string') {
+				codes.push(...generatePiece(text));
 			}
 		}
 	}
+	return codes;
 }
 
 function isRange(block: IRBlock, start: unknown, end: unknown): boolean {
