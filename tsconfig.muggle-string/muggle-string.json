@@ -1,0 +1,12 @@
+{
+	// Type-checks the muggle-string submodule with the repo's TypeScript 7 and muggle-string's own options, emitting only declarations for project references.
+	// Its runtime JS is emitted by `npm run build:muggle-string` (TypeScript 7.1), as muggle-string publishes it.
+	"extends": "../muggle-string/tsconfig.json",
+	"compilerOptions": {
+		"composite": true,
+		"rootDir": "../muggle-string/src",
+		"emitDeclarationOnly": true,
+		"declarationDir": "../node_modules/.muggle-string-types",
+		"tsBuildInfoFile": "../node_modules/.muggle-string-types.tsbuildinfo"
+	}
+}

@@ -17,6 +17,7 @@
 		{ "path": "./tsconfig.services/json.json" },
 		{ "path": "./tsconfig.services/pug.json" },
 		{ "path": "./tsconfig.services/pug-beautify.json" },
+		{ "path": "./tsconfig.muggle-string/muggle-string.json" },
 		{ "path": "./extensions/vscode/tsconfig.json" },
 		{ "path": "./packages/component-meta/tsconfig.json" },
 		{ "path": "./packages/component-type-helpers/tsconfig.json" },
