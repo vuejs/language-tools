@@ -1,8 +1,14 @@
-import { type IRScript, type IRScriptSetup, scriptFeatures, type VueCodeMarker } from '@vue/language-core';
+import {
+	type CodeSource,
+	type IRScript,
+	type IRScriptSetup,
+	scriptFeatures,
+	type VueCodeMarker,
+} from '@vue/language-core';
+import { createSourceRewrite, type RewriteSink, type RewriteSlice, type SourceRewrite } from 'muggle-string';
 import type { ScriptEdit } from '../plugin';
 import type { TsCode } from '../tsCode';
 import { generateSfcBlockSection } from '../writers';
-import { createSourceRewrite, type RewriteSink, type RewriteSlice, type SourceRewrite } from './sourceRewrite';
 
 /** The data of a segment of generated TypeScript code. */
 export type TsCodeData = Exclude<TsCode, string>[3];
@@ -15,7 +21,7 @@ export function tsCodeSink(
 	block: IRScript | IRScriptSetup,
 	out: TsCode[],
 	terminate = true,
-): RewriteSink<TsCodeData> {
+): RewriteSink<CodeSource, TsCodeData> {
 	return {
 		text: text => out.push(text),
 		source: (_, start, end, marker) => {
@@ -31,9 +37,9 @@ export function tsCodeSink(
 }
 
 export interface BlockRewrite {
-	rewrite: SourceRewrite<TsCodeData>;
+	rewrite: SourceRewrite<CodeSource, TsCodeData>;
 	/** The code of `slice`. */
-	render(slice: RewriteSlice<TsCodeData>, terminate?: boolean): TsCode[];
+	render(slice: RewriteSlice<CodeSource, TsCodeData>, terminate?: boolean): TsCode[];
 	/**
 	 * If the block renders no source chars (it is empty, or plugins removed all of it), one empty copy of it, so that
 	 * an edit of the generated code there (e.g. an auto import) maps back into the block. TS 7.1 places an import at
@@ -45,7 +51,7 @@ export interface BlockRewrite {
 
 /** A rewrite of the content of `block`, with the script edits of the codegen plugins applied. */
 export function createBlockRewrite(block: IRScript | IRScriptSetup, scriptEdits: readonly ScriptEdit[]): BlockRewrite {
-	const rewrite = createSourceRewrite<TsCodeData>(block, block.content);
+	const rewrite = createSourceRewrite<CodeSource, TsCodeData>(block, block.content);
 	const removals: [number, number][] = [];
 	for (const edit of scriptEdits) {
 		if (edit.block !== block) {

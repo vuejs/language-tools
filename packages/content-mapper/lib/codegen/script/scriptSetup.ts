@@ -1,4 +1,5 @@
 import {
+	type CodeSource,
 	completionFeatures,
 	getDefineModelPropName,
 	type IRScriptSetup,
@@ -7,9 +8,9 @@ import {
 	type ScriptSetupRanges,
 	type TextRange,
 } from '@vue/language-core';
+import type { CoreRewriteWriter, RewriteSlice } from 'muggle-string';
 import { names } from '../names';
 import { createBlockRewrite, type TsCodeData } from '../rewrite/blockRewrite';
-import type { CoreRewriteWriter, RewriteSlice } from '../rewrite/sourceRewrite';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import {
 	asType,
@@ -263,7 +264,7 @@ export function* generateMacros(options: ScriptCodegenOptions): Generator<TsCode
 function addTransforms(
 	options: ScriptCodegenOptions,
 	scriptSetup: IRScriptSetup,
-	core: CoreRewriteWriter<TsCodeData>,
+	core: CoreRewriteWriter<CodeSource, TsCodeData>,
 	scriptSetupRanges: ScriptSetupRanges,
 ) {
 	const runtimeDefineProps = scriptSetupRanges.defineProps?.typeArg ? undefined : scriptSetupRanges.defineProps;
@@ -387,12 +388,12 @@ function addTransforms(
 }
 
 /** The user's code at `range`, which `placeholder` takes the place of; it maps as script code where it is placed. */
-function cutScriptCode(core: CoreRewriteWriter<TsCodeData>, range: TextRange, placeholder: string) {
+function cutScriptCode(core: CoreRewriteWriter<CodeSource, TsCodeData>, range: TextRange, placeholder: string) {
 	return core.cut(range.start, range.end, { data: { features: scriptFeatures }, placeholder });
 }
 
 /** The user's code at `range`, which `placeholder` takes the place of; it maps as a reference where it is placed. */
-function cutReference(core: CoreRewriteWriter<TsCodeData>, range: TextRange, placeholder: string) {
+function cutReference(core: CoreRewriteWriter<CodeSource, TsCodeData>, range: TextRange, placeholder: string) {
 	return core.cut(range.start, range.end, { data: { features: navigationFeatures | completionFeatures }, placeholder });
 }
 
@@ -402,7 +403,7 @@ function cutReference(core: CoreRewriteWriter<TsCodeData>, range: TextRange, pla
  * after the statement, for a name that is not an identifier), and the alias goes with what takes its place.
  */
 function addDefineWithTypeTransforms(
-	core: CoreRewriteWriter<TsCodeData>,
+	core: CoreRewriteWriter<CodeSource, TsCodeData>,
 	statement: TextRange,
 	callExp: TextRange,
 	typeArg: TextRange | undefined,
@@ -410,7 +411,7 @@ function addDefineWithTypeTransforms(
 	defaultName: string,
 	typeName: string,
 ) {
-	const alias: (string | RewriteSlice<TsCodeData>)[] = typeArg
+	const alias: (string | RewriteSlice<CodeSource, TsCodeData>)[] = typeArg
 		? [`type ${typeName} = `, cutScriptCode(core, typeArg, typeName), endOfLine]
 		: [];
 	if (name && identifierRE.test(name)) {
@@ -424,7 +425,7 @@ function addDefineWithTypeTransforms(
 		core.insertBefore(statement.start, () => declaration);
 		return;
 	}
-	let prefix: RewriteSlice<TsCodeData> | undefined;
+	let prefix: RewriteSlice<CodeSource, TsCodeData> | undefined;
 	if (statement.start < callExp.start) {
 		prefix = core.cut(statement.start, callExp.start, {
 			data: { features: scriptFeatures },

@@ -36,6 +36,7 @@
 		"@vue/language-core": "workspace:*",
 		"@vue/shared": "^3.5.0",
 		"alien-signals": "^3.2.1",
+		"muggle-string": "workspace:*",
 		"path-browserify": "^1.0.1"
 	},
 	"devDependencies": {
