@@ -1,7 +1,7 @@
 import { SpanMapKind, type SpanMapSegment } from '@volar/language-core';
 import { completionFeatures, type IRBlock, navigationFeatures, type VueCodeMarker } from '@vue/language-core';
 import { expect, test } from 'vitest';
-import { type CodeBoundary, synthesizedIgnore, type TsCode } from '../lib/codegen/tsCode';
+import { type CodeBoundary, mapped, synthesizedIgnore, type TsCode } from '../lib/codegen/tsCode';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../lib/protocol';
 import { buildDiagnosticDirectives, buildMappings } from '../lib/result/tsCodeMappings';
 
@@ -32,11 +32,11 @@ function seg(
 test('merges a boundary-wrapped token into one atom', () => {
 	expect(buildMappings([
 		'-'.repeat(10),
-		['', template, 20, start(navigation)],
+		mapped('', template, 20, start(navigation)),
 		`'`,
-		['a-b', template, 20, undefined],
+		mapped('a-b', template, 20, undefined),
 		`'`,
-		['', template, 23, end],
+		mapped('', template, 23, end),
 	])).toEqual([
 		seg(10, 5, 20, 3, SpanMapKind.Atom, navigation.features),
 	]);
@@ -45,11 +45,11 @@ test('merges a boundary-wrapped token into one atom', () => {
 test('keeps the content of a boundary-wrapped completion token separate', () => {
 	expect(buildMappings([
 		'-'.repeat(10),
-		['', template, 20, start(navigationAndCompletion)],
+		mapped('', template, 20, start(navigationAndCompletion)),
 		`'`,
-		['ab', template, 20, undefined],
+		mapped('ab', template, 20, undefined),
 		`'`,
-		['', template, 22, end],
+		mapped('', template, 22, end),
 	])).toEqual([
 		seg(10, 4, 20, 2, SpanMapKind.Atom, 0),
 		seg(11, 2, 20, 2, SpanMapKind.Verbatim, navigationAndCompletion.features),
@@ -59,23 +59,23 @@ test('keeps the content of a boundary-wrapped completion token separate', () => 
 test('keeps an empty boundary-wrapped completion token as a point', () => {
 	expect(buildMappings([
 		'-'.repeat(10),
-		['', template, 20, start(navigationAndCompletion)],
+		mapped('', template, 20, start(navigationAndCompletion)),
 		`'`,
-		['', template, 20, undefined],
+		mapped('', template, 20, undefined),
 		`'`,
-		['', template, 20, end],
+		mapped('', template, 20, end),
 	])).toEqual([
 		seg(10, 2, 20, 0, SpanMapKind.Atom, 0),
 		seg(11, 0, 20, 0, SpanMapKind.Verbatim, navigationAndCompletion.features),
 	]);
 });
 
-test('merges camelized segments into one atom', () => {
+test('merges camelized pieces into one atom', () => {
 	expect(buildMappings([
-		['', template, 0, start(navigation)],
-		['v', template, 0, undefined],
-		['Once', template, 2, undefined],
-		['', template, 6, end],
+		mapped('', template, 0, start(navigation)),
+		mapped('v', template, 0, undefined),
+		mapped('Once', template, 2, undefined),
+		mapped('', template, 6, end),
 	])).toEqual([
 		seg(0, 5, 0, 6, SpanMapKind.Atom, navigation.features),
 	]);
@@ -83,45 +83,45 @@ test('merges camelized segments into one atom', () => {
 
 test('merges a verbatim copy into one verbatim span', () => {
 	expect(buildMappings([
-		['', template, 0, start(navigation)],
-		['a', template, 0, undefined],
-		['bc', template, 1, undefined],
-		['', template, 3, end],
+		mapped('', template, 0, start(navigation)),
+		mapped('a', template, 0, undefined),
+		mapped('bc', template, 1, undefined),
+		mapped('', template, 3, end),
 	])).toEqual([
 		seg(0, 3, 0, 3, SpanMapKind.Verbatim, navigation.features),
 	]);
 });
 
-test('pairs boundaries by nesting and maps a segment without data as part of the innermost one', () => {
+test('pairs boundaries by nesting and maps a piece without data as part of the innermost one', () => {
 	// generated: (a.b)   original: a-b
 	expect(buildMappings([
-		['', template, 0, start(none)],
+		mapped('', template, 0, start(none)),
 		'(',
-		['', template, 0, start(navigation)],
-		['a', template, 0, undefined],
+		mapped('', template, 0, start(navigation)),
+		mapped('a', template, 0, undefined),
 		'.',
-		['b', template, 2, undefined],
-		['', template, 3, end],
+		mapped('b', template, 2, undefined),
+		mapped('', template, 3, end),
 		')',
-		['', template, 3, end],
+		mapped('', template, 3, end),
 	])).toEqual([
 		seg(0, 5, 0, 3, SpanMapKind.Atom, none.features),
 		seg(1, 3, 0, 3, SpanMapKind.Atom, navigation.features),
 	]);
 });
 
-test('rejects unbalanced boundaries and segments without data outside of them', () => {
-	expect(() => buildMappings([['', template, 0, start(none)]])).toThrow();
-	expect(() => buildMappings([['', template, 0, end]])).toThrow();
-	expect(() => buildMappings([['a', template, 0, undefined]])).toThrow();
+test('rejects unbalanced boundaries and pieces without data outside of them', () => {
+	expect(() => buildMappings([mapped('', template, 0, start(none))])).toThrow();
+	expect(() => buildMappings([mapped('', template, 0, end)])).toThrow();
+	expect(() => buildMappings([mapped('a', template, 0, undefined)])).toThrow();
 });
 
-test('maps a segment by the kind written in its data, verbatim if omitted', () => {
+test('maps a piece by the kind written in its data, verbatim if omitted', () => {
 	expect(buildMappings([
 		'{',
-		['a', template, 1, navigation],
+		mapped('a', template, 1, navigation),
 		': ',
-		['a', template, 1, { ...navigation, kind: SpanMapKind.Atom }],
+		mapped('a', template, 1, { ...navigation, kind: SpanMapKind.Atom }),
 		'}',
 	])).toEqual([
 		seg(1, 1, 1, 1, SpanMapKind.Verbatim, navigation.features),
@@ -129,13 +129,13 @@ test('maps a segment by the kind written in its data, verbatim if omitted', () =
 	]);
 });
 
-test('lets segments inside a feature-less boundary stay individual', () => {
+test('lets pieces inside a feature-less boundary stay individual', () => {
 	expect(buildMappings([
-		['', template, 0, start(none)],
+		mapped('', template, 0, start(none)),
 		'{a: ',
-		['b', template, 2, navigation],
+		mapped('b', template, 2, navigation),
 		'}',
-		['', template, 1, end],
+		mapped('', template, 1, end),
 	])).toEqual([
 		seg(0, 6, 0, 1, SpanMapKind.Atom, none.features),
 		seg(4, 1, 2, 1, SpanMapKind.Verbatim, navigation.features),
@@ -145,9 +145,9 @@ test('lets segments inside a feature-less boundary stay individual', () => {
 test('keeps diagnostic directives out of the mappings', () => {
 	const directive: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Ignore];
 	const chunks: TsCode[] = [
-		['', template, 5, start(directive)],
-		['abc', template, 5, none],
-		['', template, 5, end],
+		mapped('', template, 5, start(directive)),
+		mapped('abc', template, 5, none),
+		mapped('', template, 5, end),
 	];
 	expect(buildMappings(chunks)).toEqual([
 		seg(0, 3, 5, 3, SpanMapKind.Verbatim, none.features),
@@ -161,9 +161,9 @@ test('takes the original start of a directive from the source offset of its star
 	const directive: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Expect];
 	expect(buildDiagnosticDirectives([
 		'-'.repeat(10),
-		['', undefined, 105, start(directive)],
+		mapped('', undefined, 105, start(directive)),
 		'abc',
-		['', undefined, 105, end],
+		mapped('', undefined, 105, end),
 	])).toEqual([
 		[105, 3, 10, 13, DiagnosticDirectivePolicy.Expect],
 	]);
@@ -173,13 +173,13 @@ test('keeps an empty expectation and drops empty ignores', () => {
 	const ignore: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Ignore];
 	const expectation: DiagnosticDirectiveMapping = [9, 3, 0, 0, DiagnosticDirectivePolicy.Expect];
 	expect(buildDiagnosticDirectives([
-		['', template, 5, start(ignore)],
-		['', template, 9, start(expectation)],
-		['', template, 9, end],
+		mapped('', template, 5, start(ignore)),
+		mapped('', template, 9, start(expectation)),
+		mapped('', template, 9, end),
 		'abc',
-		['', template, 5, end],
-		['', template, 5, start(ignore)],
-		['', template, 5, end],
+		mapped('', template, 5, end),
+		mapped('', template, 5, start(ignore)),
+		mapped('', template, 5, end),
 	])).toEqual([
 		[9, 3, 0, 0, DiagnosticDirectivePolicy.Expect],
 		[5, 3, 0, 3, DiagnosticDirectivePolicy.Ignore],
@@ -189,17 +189,17 @@ test('keeps an empty expectation and drops empty ignores', () => {
 test('pairs directive and mapping boundaries by nesting', () => {
 	const directive: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Ignore];
 	const chunks: TsCode[] = [
-		['', template, 5, start(directive)],
-		['', template, 0, start(navigation)],
-		['a', template, 0, undefined],
+		mapped('', template, 5, start(directive)),
+		mapped('', template, 0, start(navigation)),
+		mapped('a', template, 0, undefined),
 		'.',
-		['', template, 2, end],
-		['b', template, 2, none],
-		['', template, 5, end],
+		mapped('', template, 2, end),
+		mapped('b', template, 2, none),
+		mapped('', template, 5, end),
 		'-',
-		['', template, 5, start(directive)],
+		mapped('', template, 5, start(directive)),
 		'de',
-		['', template, 5, end],
+		mapped('', template, 5, end),
 	];
 	expect(buildMappings(chunks)).toEqual([
 		seg(0, 2, 0, 2, SpanMapKind.Atom, navigation.features),
@@ -213,28 +213,28 @@ test('pairs directive and mapping boundaries by nesting', () => {
 
 test('ignores diagnostics in the ranges of ignore directives without an original range', () => {
 	expect(buildDiagnosticDirectives([
-		['', template, 0, start(synthesizedIgnore)],
-		['ab', template, 0, navigation],
-		['', template, 0, end],
-		['cd', template, 2, navigation],
-		['', template, 0, start(synthesizedIgnore)],
-		['', template, 4, none],
-		['', template, 0, end],
+		mapped('', template, 0, start(synthesizedIgnore)),
+		mapped('ab', template, 0, navigation),
+		mapped('', template, 0, end),
+		mapped('cd', template, 2, navigation),
+		mapped('', template, 0, start(synthesizedIgnore)),
+		mapped('', template, 4, none),
+		mapped('', template, 0, end),
 	])).toEqual(toIgnores([0, 2]));
 });
 
 test('merges ignore directives without an original range and leaves explicit directives their ranges', () => {
 	const expectation: DiagnosticDirectiveMapping = [7, 2, 0, 0, DiagnosticDirectivePolicy.Expect];
 	expect(buildDiagnosticDirectives([
-		['', template, 0, start(synthesizedIgnore)],
+		mapped('', template, 0, start(synthesizedIgnore)),
 		'ab',
-		['', template, 0, start(synthesizedIgnore)],
+		mapped('', template, 0, start(synthesizedIgnore)),
 		'cd',
-		['', template, 7, start(expectation)],
+		mapped('', template, 7, start(expectation)),
 		'ef',
-		['', template, 7, end],
-		['', template, 0, end],
-		['', template, 0, end],
+		mapped('', template, 7, end),
+		mapped('', template, 0, end),
+		mapped('', template, 0, end),
 	])).toEqual([
 		[0, 0, 0, 4, DiagnosticDirectivePolicy.Ignore],
 		[7, 2, 4, 6, DiagnosticDirectivePolicy.Expect],
@@ -244,13 +244,13 @@ test('merges ignore directives without an original range and leaves explicit dir
 test('leaves the ranges of explicit directives to them', () => {
 	const expectation: DiagnosticDirectiveMapping = [7, 2, 0, 0, DiagnosticDirectivePolicy.Expect];
 	expect(buildDiagnosticDirectives([
-		['', template, 0, start(synthesizedIgnore)],
-		['ab', template, 0, navigation],
-		['', template, 7, start(expectation)],
-		['cd', template, 2, navigation],
-		['', template, 7, end],
-		['ef', template, 4, navigation],
-		['', template, 0, end],
+		mapped('', template, 0, start(synthesizedIgnore)),
+		mapped('ab', template, 0, navigation),
+		mapped('', template, 7, start(expectation)),
+		mapped('cd', template, 2, navigation),
+		mapped('', template, 7, end),
+		mapped('ef', template, 4, navigation),
+		mapped('', template, 0, end),
 	])).toEqual([
 		[0, 0, 0, 2, DiagnosticDirectivePolicy.Ignore],
 		[7, 2, 2, 4, DiagnosticDirectivePolicy.Expect],

@@ -4,13 +4,19 @@ import { buildMappings } from '../lib/mappings/codeMappings';
 import { navigationFeatures } from '../lib/mappings/features';
 import type { IRBlock } from '../lib/types';
 
-test('maps each segment with a marker by itself', () => {
+test('maps each piece with a marker by itself', () => {
 	expect(buildMappings([
 		'<template>\n',
-		['abc', undefined, 20, { features: navigationFeatures }],
+		{ source: undefined, start: 20, end: 23, data: { features: navigationFeatures }, text: 'abc' },
 		'\n\n',
-		['', undefined, 40, { features: 0 }],
-		['de', { name: 'template', offset: 0 } as IRBlock, 5, { features: 0, kind: SpanMapKind.Atom }],
+		{ source: undefined, start: 40, end: 40, data: { features: 0 }, text: '' },
+		{
+			source: { name: 'template', offset: 0 } as IRBlock,
+			start: 5,
+			end: 7,
+			data: { features: 0, kind: SpanMapKind.Atom },
+			text: 'de',
+		},
 	])).toEqual([
 		{
 			virtualStart: 11,

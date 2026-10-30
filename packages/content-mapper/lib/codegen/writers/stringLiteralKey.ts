@@ -1,5 +1,5 @@
 import type { CodeSource, VueCodeMarker } from '@vue/language-core';
-import { Boundary, type TsCode } from '../tsCode';
+import { Boundary, mapped, type TsCode } from '../tsCode';
 
 export function* generateStringLiteralKey(
 	code: string,
@@ -9,7 +9,7 @@ export function* generateStringLiteralKey(
 ): Generator<TsCode> {
 	const boundary = yield* Boundary.start(source, offset, offset + code.length, features);
 	yield `'`;
-	yield [code, source, offset, undefined];
+	yield mapped(code, source, offset, undefined);
 	yield `'`;
 	yield boundary.end();
 }

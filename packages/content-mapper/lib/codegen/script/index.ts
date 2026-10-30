@@ -14,7 +14,7 @@ import * as path from 'path-browserify';
 import { names } from '../names';
 import type { CodegenContributions, ScriptEdit } from '../plugin';
 import { createBlockRewrite, generateBlockAnchor } from '../rewrite/blockRewrite';
-import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
+import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine } from '../writers';
 import type { ComponentSlots } from './component';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
@@ -55,17 +55,17 @@ export interface ScriptCodegenOptions {
 	/** The script edits of the codegen plugins. */
 	scriptEdits: readonly ScriptEdit[];
 	/** The object types that the codegen plugins spread into the template context. */
-	templateContext: readonly TsCode[][];
+	templateContext: readonly (readonly TsCode[])[];
 	/** The object types that the codegen plugins intersect into the public props of a script setup component. */
-	props: readonly TsCode[][];
+	props: readonly (readonly TsCode[])[];
 	/** The object types of events that the codegen plugins intersect into the emits of a script setup component. */
-	emits: readonly TsCode[][];
+	emits: readonly (readonly TsCode[])[];
 	/** The object types that the codegen plugins intersect into what a script setup component exposes. */
-	expose: readonly TsCode[][];
+	expose: readonly (readonly TsCode[])[];
 	/** The tag → element type map of native elements that a codegen plugin replaces the DOM one with. */
 	elements: readonly TsCode[] | undefined;
 	/** The statements that the codegen plugins add at module scope. */
-	declarations: readonly TsCode[][];
+	declarations: readonly (readonly TsCode[])[];
 	/** The named exports, synthetic default export and doc comment of the component, as the codegen plugins set them. */
 	exports: Readonly<CodegenContributions['exports']>;
 }
@@ -146,7 +146,7 @@ function* generateWorker(
 			src !== script.src.text ? { features: scriptFeatures & ~SpanMapFeature.Rename } : { features: scriptFeatures },
 		);
 		yield `'`;
-		yield [src.slice(0, script.src.text.length), undefined, script.src.offset, undefined];
+		yield mapped(src.slice(0, script.src.text.length), undefined, script.src.offset, undefined);
 		yield src.slice(script.src.text.length);
 		yield `'`;
 		yield boundary.end();
@@ -337,7 +337,7 @@ function* generateScriptWithExportDefault(
 		? core.cut(exportDefault.end, script.content.length, { data: { features: scriptFeatures } })
 		: undefined;
 
-	yield* generateBlockAnchor(script);
+	yield generateBlockAnchor(script);
 	yield* blockRewrite.render(head);
 	yield endOfLine;
 	if (templateGenerator) {
@@ -361,7 +361,7 @@ function* generateScriptWithExportDefault(
 function* generateWholeScript(script: IRScript, scriptEdits: readonly ScriptEdit[]): Generator<TsCode> {
 	const blockRewrite = createBlockRewrite(script, scriptEdits);
 	const whole = blockRewrite.rewrite.core.cut(0, script.content.length, { data: { features: scriptFeatures } });
-	yield* generateBlockAnchor(script);
+	yield generateBlockAnchor(script);
 	yield* blockRewrite.render(whole);
 }
 

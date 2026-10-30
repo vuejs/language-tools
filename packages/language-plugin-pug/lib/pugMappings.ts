@@ -1,25 +1,26 @@
 import { SpanMapKind, type SpanMapSegment } from '@volar/source-map';
-import type { PugSegment } from 'muggle-pug';
+import type { PugPiece } from 'muggle-pug';
 
-/** The mappings from the HTML of `segments` to the pug code. */
-export function buildMappings(segments: PugSegment[]) {
+/** The mappings from the HTML of `pieces` to the pug code. */
+export function buildMappings(pieces: PugPiece[]) {
 	let length = 0;
 	const mappings: SpanMapSegment[] = [];
-	for (const segment of segments) {
-		if (typeof segment === 'string') {
-			length += segment.length;
+	for (const piece of pieces) {
+		if (typeof piece === 'string') {
+			length += piece.length;
+			continue;
 		}
-		else {
-			mappings.push({
-				virtualStart: length,
-				virtualEnd: length + segment[0].length,
-				originalStart: segment[2],
-				originalEnd: segment[2] + segment[3],
-				kind: SpanMapKind.Verbatim,
-				features: 0,
-			});
-			length += segment[0].length;
-		}
+		const { start, end } = piece;
+		const htmlLength = piece.text?.length ?? end - start;
+		mappings.push({
+			virtualStart: length,
+			virtualEnd: length + htmlLength,
+			originalStart: start,
+			originalEnd: end,
+			kind: SpanMapKind.Verbatim,
+			features: 0,
+		});
+		length += htmlLength;
 	}
 	return mappings;
 }

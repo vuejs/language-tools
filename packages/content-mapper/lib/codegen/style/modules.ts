@@ -1,7 +1,7 @@
 import { type IRStyle, navigationFeatures } from '@vue/language-core';
 import { names } from '../names';
 import type { TemplateCodegenContext } from '../template/context';
-import { Boundary, type TsCode } from '../tsCode';
+import { Boundary, mapped, type TsCode } from '../tsCode';
 import { endOfLine, generateTypeAlias, identifierRE, newLine } from '../writers';
 import type { StyleCodegenOptions } from '.';
 import { generateClassProperty, generateStyleSrc } from './common';
@@ -43,20 +43,10 @@ export function* generateStyleModules(
 			else {
 				const { text, offset } = style.module!;
 				if (!text) {
-					yield [
-						`$style`,
-						undefined,
-						offset,
-						{ features: 0 },
-					];
+					yield mapped(`$style`, undefined, offset, { features: 0 });
 				}
 				else if (identifierRE.test(text)) {
-					yield [
-						text,
-						undefined,
-						offset,
-						{ features: navigationFeatures },
-					];
+					yield mapped(text, undefined, offset, { features: navigationFeatures });
 				}
 				else {
 					const boundary = yield* Boundary.start(
@@ -66,7 +56,7 @@ export function* generateStyleModules(
 						{ features: navigationFeatures },
 					);
 					yield `'`;
-					yield [text, undefined, offset, undefined];
+					yield mapped(text, undefined, offset, undefined);
 					yield `'`;
 					yield boundary.end();
 				}

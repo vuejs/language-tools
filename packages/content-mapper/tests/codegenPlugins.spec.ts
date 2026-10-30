@@ -64,7 +64,7 @@ test('applies the rewrites of plugins, mapping the source ranges that they keep'
 	).toBe(false);
 });
 
-test('maps a range of a plugin without text as a copy, and drops the mapping of a range out of its block', () => {
+test('maps a range of a plugin without text as a copy', () => {
 	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
 	const { text, mappings } = generateWith(
 		content,
@@ -76,25 +76,39 @@ test('maps a range of a plugin without text as a copy, and drops the mapping of 
 					declarations: [[
 						'declare const x: typeof ',
 						{ source: block, ...call, data: { features: scriptFeatures } },
-						', y: ',
-						{ source: block, start: 0, end: block.content.length + 1, data: { features: scriptFeatures }, text: 'Y' },
 						';',
 					]],
 				};
 			},
 		}),
 	);
-	expect(text).toContain('declare const x: typeof useFoo, y: Y;');
+	expect(text).toContain('declare const x: typeof useFoo;');
 	const copied = text.indexOf('declare const x: typeof ') + 'declare const x: typeof '.length;
-	expect(
-		mappings.some(({ virtualStart, originalStart }) =>
-			virtualStart === copied && originalStart === content.indexOf('useFoo')
-		),
-	).toBe(true);
-	const unmapped = text.indexOf(', y: Y') + ', y: '.length;
-	expect(
-		mappings.some(({ virtualStart, virtualEnd }) => virtualStart <= unmapped && unmapped < virtualEnd),
-	).toBe(false);
+	expect(mappings).toContainEqual(expect.objectContaining({
+		virtualStart: copied,
+		virtualEnd: copied + 'useFoo'.length,
+		originalStart: content.indexOf('useFoo'),
+		kind: SpanMapKind.Verbatim,
+	}));
+});
+
+test('rejects a range of a plugin out of its block', () => {
+	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
+	expect(() =>
+		generateWith(
+			content,
+			plugin({
+				generate({ ir }) {
+					const block = ir.scriptSetup!;
+					return {
+						declarations: [[
+							{ source: block, start: 0, end: block.content.length + 1, data: { features: scriptFeatures }, text: 'Y' },
+						]],
+					};
+				},
+			}),
+		)
+	).toThrow(TypeError);
 });
 
 test('maps a range of a plugin with its own text as a whole to the range', () => {
@@ -110,16 +124,16 @@ test('maps a range of a plugin with its own text as a whole to the range', () =>
 						source: block,
 						...call,
 						data: { features: scriptFeatures },
-						text: 'number',
+						text: 'number[]',
 					}, `;`]],
 				};
 			},
 		}),
 	);
-	const generated = text.indexOf('declare const x: number;') + 'declare const x: '.length;
+	const generated = text.indexOf('declare const x: number[];') + 'declare const x: '.length;
 	expect(mappings).toContainEqual(expect.objectContaining({
 		virtualStart: generated,
-		virtualEnd: generated + 'number'.length,
+		virtualEnd: generated + 'number[]'.length,
 		originalStart: content.indexOf('useFoo'),
 		originalEnd: content.indexOf('useFoo') + 'useFoo'.length,
 		kind: SpanMapKind.Atom,

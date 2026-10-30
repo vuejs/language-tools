@@ -13,7 +13,7 @@ import {
 import { camelize, capitalize } from '@vue/shared';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
-import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
+import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import { endOfLine, generateTypedVar, identifierRE, newLine, typeAliasRef } from '../writers';
 import { generateCamelized } from '../writers/camelized';
 import { generateStringLiteralKey } from '../writers/stringLiteralKey';
@@ -234,7 +234,7 @@ export function* generateComponent(
 			{ features: 0 },
 		);
 		yield `<`;
-		yield [content, options.template, offset, { features: scriptFeatures }];
+		yield mapped(content, options.template, offset, { features: scriptFeatures });
 		yield `>`;
 		yield boundary.end();
 	}

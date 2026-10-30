@@ -1,9 +1,9 @@
 import { expect, test } from 'vitest';
 import { resolveCodeOffsets } from '../lib/mappings/resolveCodeOffsets';
-import type { CodeSegment, IR, IRBlock, VueCodeMarker } from '../lib/types';
+import type { CodePiece, IR, IRBlock, VueCodeMarker } from '../lib/types';
 
-function block(name: string, offset: number) {
-	return { name, offset } as IRBlock;
+function block(name: string, offset: number, content = 'abcdefgh') {
+	return { name, offset, content } as IRBlock;
 }
 
 const template = block('template', 10);
@@ -19,34 +19,34 @@ const ir = {
 	customBlocks: [customBlock],
 } as unknown as IR;
 
-type Segment = CodeSegment<VueCodeMarker | undefined>;
+type Piece = CodePiece<VueCodeMarker | undefined>;
 
 const marker = { features: 1 };
 
-test('rebases the segments of IR blocks to file offsets', () => {
+test('rebases the pieces of IR blocks to file offsets, and a copy takes the text of its block', () => {
 	expect(resolveCodeOffsets<VueCodeMarker | undefined>(ir, [
 		'text',
-		['a', template, 1, marker],
-		['b', scriptSetup, 2, undefined],
-		['c', style, 3, marker],
-		['d', customBlock, 4, marker],
-	])).toEqual<Segment[]>([
+		{ source: template, start: 1, end: 2, data: marker },
+		{ source: scriptSetup, start: 2, end: 3, data: undefined, text: 'x' },
+		{ source: style, start: 3, end: 3, data: marker },
+		{ source: customBlock, start: 4, end: 6, data: marker, text: 'y' },
+	])).toEqual<Piece[]>([
 		'text',
-		['a', undefined, 11, marker],
-		['b', undefined, 102, undefined],
-		['c', undefined, 203, marker],
-		['d', undefined, 304, marker],
+		{ source: undefined, start: 11, end: 12, data: marker, text: 'b' },
+		{ source: undefined, start: 102, end: 103, data: undefined, text: 'x' },
+		{ source: undefined, start: 203, end: 203, data: marker, text: '' },
+		{ source: undefined, start: 304, end: 306, data: marker, text: 'y' },
 	]);
 });
 
-test('keeps the segments that map by file offsets', () => {
-	const sourceless: Segment = ['s', undefined, 7, marker];
+test('keeps the pieces that map by file offsets', () => {
+	const sourceless: Piece = { source: undefined, start: 7, end: 8, data: marker, text: 's' };
 	expect(resolveCodeOffsets(ir, [sourceless])[0]).toBe(sourceless);
 });
 
-test('throws on a segment of a block that is not a block of the IR', () => {
-	const unknown: Segment = ['u', block('template', 10), 6, marker];
+test('throws on a piece of a block that is not a block of the IR', () => {
+	const unknown: Piece = { source: block('template', 10), start: 6, end: 7, data: marker };
 	expect(() => resolveCodeOffsets(ir, [unknown])).toThrow(
-		`A segment maps from the block 'template', which is not a block of the IR.`,
+		`A piece maps from the block 'template', which is not a block of the IR.`,
 	);
 });

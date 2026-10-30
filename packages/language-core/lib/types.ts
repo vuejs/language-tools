@@ -59,29 +59,37 @@ export interface VueCodeMarker {
 export type CodeSource = IRBlock | undefined;
 
 /**
- * A segment of code: plain text, or text that maps by its `data` from `sourceOffset` of `source`, an IR block, or
- * of the file when `source` is `undefined`.
+ * A piece of code: new text, which maps nowhere, or the range `start`..`end` of `source`, an IR block, or of the file
+ * when `source` is `undefined`, which maps by its `data`. A range of a block without `text` is a copy of the block's
+ * content there. `text` maps to the range char by char when it is as long as the range, and as a whole otherwise.
  */
-export type CodeSegment<Data> =
+export type CodePiece<Data> =
 	| string
-	| [
-		text: string,
-		source: CodeSource,
-		sourceOffset: number,
-		data: Data,
-	];
+	| { source: IRBlock; start: number; end: number; data: Data; text?: string }
+	| { source: undefined; start: number; end: number; data: Data; text: string };
+
+/** The text of `piece`. */
+export function pieceText(piece: CodePiece<unknown>): string {
+	if (typeof piece === 'string') {
+		return piece;
+	}
+	if (piece.source === undefined) {
+		return piece.text;
+	}
+	return piece.text ?? piece.source.content.slice(piece.start, piece.end);
+}
 
 /** The text of `codes`. */
-export function codeToString(codes: readonly CodeSegment<unknown>[]): string {
+export function codeToString(codes: readonly CodePiece<unknown>[]): string {
 	let text = '';
 	for (const code of codes) {
-		text += typeof code === 'string' ? code : code[0];
+		text += pieceText(code);
 	}
 	return text;
 }
 
-/** A segment of an embedded document, which maps by its own marker alone. */
-export type Code = CodeSegment<VueCodeMarker>;
+/** A piece of an embedded document, which maps by its own marker alone. */
+export type Code = CodePiece<VueCodeMarker>;
 
 export interface VueCompilerOptions {
 	target: number;

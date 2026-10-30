@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '@vue/language-core';
 import { camelize, isBuiltInDirective } from '@vue/shared';
 import { names } from '../names';
-import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
+import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, endOfLine, identifierRE, newLine } from '../writers';
 import { generateCamelized } from '../writers/camelized';
 import { generateStringLiteralKey } from '../writers/stringLiteralKey';
@@ -110,7 +110,7 @@ function* generateDirectiveName(
 		const key = yield* Boundary.start(options.template, startOffset, endOffset, {
 			features: semanticFeatures | navigationFeatures,
 		});
-		yield [quoted ? `'${optionKey}'` : optionKey, options.template, startOffset, undefined];
+		yield mapped(quoted ? `'${optionKey}'` : optionKey, options.template, startOffset, undefined);
 		yield key.end();
 		if (quoted) {
 			yield `]`;

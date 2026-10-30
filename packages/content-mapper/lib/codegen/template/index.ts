@@ -107,7 +107,7 @@ function getFacts(ctx: TemplateCodegenContext): TemplateFacts {
 }
 
 function isTemplateKey(code: TemplateCode): code is TemplateKey {
-	return typeof code === 'object' && !Array.isArray(code);
+	return typeof code === 'object' && 'key' in code;
 }
 
 function* generateWorker(

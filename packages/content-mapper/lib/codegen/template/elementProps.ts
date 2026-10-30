@@ -12,7 +12,7 @@ import {
 } from '@vue/language-core';
 import { camelize } from '@vue/shared';
 import { names } from '../names';
-import { Boundary, type TsCode } from '../tsCode';
+import { Boundary, mapped, type TsCode } from '../tsCode';
 import { asType, identifierRE, newLine } from '../writers';
 import { generateCamelized } from '../writers/camelized';
 import { generateUnicode } from '../writers/unicode';
@@ -209,7 +209,7 @@ export function* generateElementProps(
 			if (prefix === '.' || prefix === '#') {
 				// Pug shorthand syntax
 				for (const char of prop.name) {
-					yield [char, options.template, prop.loc.start.offset, features];
+					yield mapped(char, options.template, prop.loc.start.offset, features);
 				}
 			}
 			else {

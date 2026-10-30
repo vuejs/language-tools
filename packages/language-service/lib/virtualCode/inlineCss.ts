@@ -27,7 +27,13 @@ function* generate(template: IRTemplate, templateAst: NonNullable<CompilerDOM.Ro
 			) {
 				yield `x { `;
 				const [content, offset] = normalizeAttributeValue(prop.value);
-				yield [content, template, offset, { features: scriptFeatures }];
+				yield {
+					source: template,
+					start: offset,
+					end: offset + content.length,
+					data: { features: scriptFeatures },
+					text: content,
+				};
 				yield ` }\n`;
 			}
 		}

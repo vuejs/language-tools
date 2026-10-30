@@ -10,7 +10,7 @@ export function* generateIntersectMerge(...codes: TsCode[]): Generator<TsCode> {
 }
 
 /** Spreads the expressions, each a string or the codes it generates. */
-export function* generateSpreadMerge(...exps: (string | TsCode[])[]): Generator<TsCode> {
+export function* generateSpreadMerge(...exps: (string | readonly TsCode[])[]): Generator<TsCode> {
 	if (exps.length <= 1) {
 		yield* exps.flat();
 	}

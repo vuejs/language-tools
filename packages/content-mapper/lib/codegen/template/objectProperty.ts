@@ -1,7 +1,7 @@
 import type { VueCodeMarker } from '@vue/language-core';
 import { camelize } from '@vue/shared';
 import { names } from '../names';
-import { Boundary, type TsCode } from '../tsCode';
+import { Boundary, mapped, type TsCode } from '../tsCode';
 import { identifierRE } from '../writers';
 import { generateCamelized } from '../writers/camelized';
 import { generateStringLiteralKey } from '../writers/stringLiteralKey';
@@ -56,7 +56,7 @@ export function* generateObjectProperty(
 	}
 	else {
 		if (identifierRE.test(code)) {
-			yield [code, options.template, offset, features];
+			yield mapped(code, options.template, offset, features);
 		}
 		else {
 			yield* generateStringLiteralKey(code, options.template, offset, features);

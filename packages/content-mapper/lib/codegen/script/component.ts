@@ -72,7 +72,7 @@ function* generateEmitsOption(
 function* generateTypeEmitsOption(
 	options: ScriptCodegenOptions,
 	scriptSetupRanges: ScriptSetupRanges,
-): Generator<string | TsCode[]> {
+): Generator<string | readonly TsCode[]> {
 	if (scriptSetupRanges.defineModel.length) {
 		yield typeAliasRef(names.ModelEmit, options.scriptLang);
 	}
@@ -85,7 +85,7 @@ function* generateTypeEmitsOption(
 function* generateRuntimeEmitsOption(
 	options: ScriptCodegenOptions,
 	scriptSetupRanges: ScriptSetupRanges,
-): Generator<string | TsCode[]> {
+): Generator<string | readonly TsCode[]> {
 	if (scriptSetupRanges.defineModel.length) {
 		yield asType(`${names.NormalizeEmits}<typeof ${names.modelEmit}>`, options.scriptLang);
 	}
@@ -149,7 +149,7 @@ function* generateRuntimePropsOption(
 	scriptSetupRanges: ScriptSetupRanges,
 	hasEmitsOption: boolean,
 	hasTypeProps: boolean,
-): Generator<string | TsCode[]> {
+): Generator<string | readonly TsCode[]> {
 	for (const type of hasTypeProps ? [] : options.slots.fallthroughProps) {
 		const propsType = ctx.localTypes.TypePropsToOption(
 			`${names.PickNotAny}<${ctx.localTypes.OmitIndexSignature(omitEmitProps(options, type, hasEmitsOption))}, {}>`,

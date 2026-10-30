@@ -1,14 +1,7 @@
-import {
-	type CodeSource,
-	completionFeatures,
-	getScriptLang,
-	navigationFeatures,
-	type ScriptSetupRanges,
-} from '@vue/language-core';
-import type { CoreRewriteWriter } from 'muggle-string';
+import { completionFeatures, getScriptLang, navigationFeatures, type ScriptSetupRanges } from '@vue/language-core';
 import type { CodegenConcern, CodegenConcernFile } from '../concern';
 import { names } from '../names';
-import type { TsCodeData } from '../piece';
+import type { BlockWriter } from '../rewrite/blockRewrite';
 import type { TemplateCode } from '../template';
 import { Boundary, synthesizedIgnore } from '../tsCode';
 import { asType, generateTypeAlias, isTsLang, newLine, typeAliasRef } from '../writers';
@@ -80,7 +73,7 @@ export function createRefsConcern({ ir, analysis, getTemplateTypes }: CodegenCon
 
 /** Casts each `useTemplateRef()` call of `<script setup>` to a ref of the type of its template ref. */
 function rewriteUseTemplateRef(
-	core: CoreRewriteWriter<CodeSource, TsCodeData>,
+	core: BlockWriter,
 	scriptSetupRanges: ScriptSetupRanges,
 	scriptLang: string,
 	lib: string,
@@ -97,10 +90,10 @@ function rewriteUseTemplateRef(
 		const shallowRef = `Readonly<import('${lib}').ShallowRef<`;
 		if (isTsLang(scriptLang)) {
 			core.insertBefore(callExp.start, `(`);
-			core.insertAfter(callExp.end, () => [` as ${shallowRef}`, ...refType, ` | null>>)`]);
+			core.insertAfter(callExp.end, [` as ${shallowRef}`, ...refType, ` | null>>)`]);
 		}
 		else {
-			core.insertBefore(callExp.start, () => [`/** @type {${shallowRef}`, ...refType, ` | null>>} */ (`]);
+			core.insertBefore(callExp.start, [`/** @type {${shallowRef}`, ...refType, ` | null>>} */ (`]);
 			core.insertAfter(callExp.end, `)`);
 		}
 	}

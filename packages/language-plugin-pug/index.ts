@@ -8,10 +8,10 @@ const classRE = /^class\s*=/;
 export const ir: VueIRPlugin = {
 	templateCompilers: {
 		pug(template) {
-			const { htmlCode: html, segments } = parse(template);
+			const { htmlCode: html, pieces } = parse(template);
 			return {
 				html,
-				mappings: buildMappings(segments),
+				mappings: buildMappings(pieces),
 				// #5099: a class literal and a class attribute are two class attributes of the HTML
 				ignoreError: error =>
 					error.code === 2 satisfies CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE

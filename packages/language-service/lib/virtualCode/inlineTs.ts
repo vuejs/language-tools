@@ -223,12 +223,13 @@ function parse(ts: TypeScript, ir: IR) {
 		const id = embeddedCodeIds.templateInlineTsPrefix + i++;
 		result.set(id, [
 			wrapper[0],
-			[
-				code,
-				template,
-				offset,
-				{ features: SpanMapFeature.Formatting },
-			],
+			{
+				source: template,
+				start: offset,
+				end: offset + code.length,
+				data: { features: SpanMapFeature.Formatting },
+				text: code,
+			},
 			wrapper[1],
 		]);
 	}

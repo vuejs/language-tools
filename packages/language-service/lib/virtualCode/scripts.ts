@@ -27,11 +27,11 @@ function getScriptDocument(id: string, script: IRScript | IRScriptSetup): Embedd
 	return {
 		id,
 		lang: script.lang,
-		content: [[
-			script.content,
-			script,
-			0,
-			{ features: structureFeatures | SpanMapFeature.Formatting | completionFeatures },
-		]],
+		content: [{
+			source: script,
+			start: 0,
+			end: script.content.length,
+			data: { features: structureFeatures | SpanMapFeature.Formatting | completionFeatures },
+		}],
 	};
 }

@@ -1,5 +1,4 @@
 import {
-	type CodeSource,
 	getDefineModelPropName,
 	type IRScriptSetup,
 	navigationFeatures,
@@ -7,11 +6,9 @@ import {
 	type ScriptSetupRanges,
 	type TextRange,
 } from '@vue/language-core';
-import type { CoreRewriteWriter, RewriteSlice } from 'muggle-string';
 import { names } from '../names';
-import type { TsCodeData } from '../piece';
-import { createBlockRewrite, generateBlockAnchor } from '../rewrite/blockRewrite';
-import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
+import { type BlockSlice, type BlockWriter, createBlockRewrite, generateBlockAnchor } from '../rewrite/blockRewrite';
+import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import {
 	asType,
 	endOfLine,
@@ -39,7 +36,7 @@ export interface ScriptSetupSlots {
 /** The hooks of `<script setup>`. */
 export interface ScriptSetupHooks {
 	/** Edits the user's code of `<script setup>`, after the transforms of the macros, with the core writer. */
-	rewriteScriptSetup?(core: CoreRewriteWriter<CodeSource, TsCodeData>, scriptSetup: IRScriptSetup): void;
+	rewriteScriptSetup?(core: BlockWriter, scriptSetup: IRScriptSetup): void;
 }
 
 /** The copies of the user's code of `<script setup>`: its imports at module scope, and its body in the setup function. */
@@ -73,7 +70,7 @@ export function createScriptSetupCopies(
 	}
 	return {
 		*generateImports() {
-			yield* generateBlockAnchor(scriptSetup);
+			yield generateBlockAnchor(scriptSetup);
 			if (imports) {
 				yield* blockRewrite.render(imports, false);
 			}
@@ -107,7 +104,7 @@ export function* generateGeneric(
 			{ features: 0 },
 		);
 		yield `<`;
-		yield [generic.text, undefined, generic.offset, { features: scriptFeatures }];
+		yield mapped(generic.text, undefined, generic.offset, { features: scriptFeatures });
 		if (!generic.text.trimEnd().endsWith(`,`)) {
 			yield `,`;
 		}
@@ -268,18 +265,18 @@ export function* generateMacros(options: ScriptCodegenOptions): Generator<TsCode
 
 function addTransforms(
 	options: ScriptCodegenOptions,
-	core: CoreRewriteWriter<CodeSource, TsCodeData>,
+	core: BlockWriter,
 	scriptSetupRanges: ScriptSetupRanges,
 ) {
 	const runtimeDefineProps = scriptSetupRanges.defineProps?.typeArg ? undefined : scriptSetupRanges.defineProps;
 	if (runtimeDefineProps && scriptSetupRanges.defineModel.some(({ defaultPropsArg }) => defaultPropsArg)) {
 		// the parameter of `default` may have the name of the props, which `typeof` in its own annotation would refer to
-		core.insertAfter(runtimeDefineProps.statement.end, function*() {
-			yield newLine;
-			yield* generateTypeAlias(names.RuntimeProps, options.scriptLang, function*() {
+		core.insertAfter(runtimeDefineProps.statement.end, [
+			newLine,
+			...generateTypeAlias(names.RuntimeProps, options.scriptLang, function*() {
 				yield `typeof ${runtimeDefineProps.name ?? names.props}`;
-			});
-		});
+			}),
+		]);
 	}
 	const defaultPropsType = scriptSetupRanges.defineProps?.typeArg
 		? names.Props
@@ -317,11 +314,11 @@ function addTransforms(
 		const { callExp, arg, typeArg } = scriptSetupRanges.defineExpose;
 		if (typeArg) {
 			const type = cutScriptCode(core, typeArg, `typeof ${names.exposed}`);
-			core.insertBefore(callExp.start, () => [`let ${names.exposed}!: `, type, endOfLine]);
+			core.insertBefore(callExp.start, [`let ${names.exposed}!: `, type, endOfLine]);
 		}
 		else if (arg) {
 			const value = cutScriptCode(core, arg, names.exposed);
-			core.insertBefore(callExp.start, () => [`const ${names.exposed} = `, value, endOfLine]);
+			core.insertBefore(callExp.start, [`const ${names.exposed} = `, value, endOfLine]);
 		}
 		else {
 			core.insertBefore(callExp.start, `const ${names.exposed} = {}${endOfLine}`);
@@ -330,7 +327,7 @@ function addTransforms(
 }
 
 /** The user's code at `range`, which `placeholder` takes the place of; it maps as script code where it is placed. */
-function cutScriptCode(core: CoreRewriteWriter<CodeSource, TsCodeData>, range: TextRange, placeholder: string) {
+function cutScriptCode(core: BlockWriter, range: TextRange, placeholder: string) {
 	return core.cut(range.start, range.end, { data: { features: scriptFeatures }, placeholder });
 }
 
@@ -340,7 +337,7 @@ function cutScriptCode(core: CoreRewriteWriter<CodeSource, TsCodeData>, range: T
  * after the statement, for a name that is not an identifier), and the alias goes with what takes its place.
  */
 function addDefineWithTypeTransforms(
-	core: CoreRewriteWriter<CodeSource, TsCodeData>,
+	core: BlockWriter,
 	statement: TextRange,
 	callExp: TextRange,
 	typeArg: TextRange | undefined,
@@ -348,31 +345,31 @@ function addDefineWithTypeTransforms(
 	defaultName: string,
 	typeName: string,
 ) {
-	const alias: (string | RewriteSlice<CodeSource, TsCodeData>)[] = typeArg
+	const alias: (string | BlockSlice)[] = typeArg
 		? [`type ${typeName} = `, cutScriptCode(core, typeArg, typeName), endOfLine]
 		: [];
 	if (name && identifierRE.test(name)) {
 		if (alias.length) {
-			core.insertBefore(statement.start, () => alias);
+			core.insertBefore(statement.start, alias);
 		}
 		return;
 	}
 	const declaration = [...alias, `const ${defaultName} = `];
 	if (!name && statement.start === callExp.start && statement.end === callExp.end) {
-		core.insertBefore(statement.start, () => declaration);
+		core.insertBefore(statement.start, declaration);
 		return;
 	}
-	let prefix: RewriteSlice<CodeSource, TsCodeData> | undefined;
+	let prefix: BlockSlice | undefined;
 	if (statement.start < callExp.start) {
 		prefix = core.cut(statement.start, callExp.start, {
 			data: { features: scriptFeatures },
-			placeholder: () => declaration,
+			placeholder: declaration,
 		});
 	}
 	else {
-		core.insertBefore(statement.start, () => declaration);
+		core.insertBefore(statement.start, declaration);
 	}
-	core.insertAfter(name ? statement.end : callExp.end, () => [endOfLine, ...prefix ? [prefix] : [], defaultName]);
+	core.insertAfter(name ? statement.end : callExp.end, [endOfLine, ...prefix ? [prefix] : [], defaultName]);
 }
 
 function* generatePublicProps(
@@ -429,7 +426,7 @@ function* generatePublicProps(
 		ctx.propDefaults = { props, defaults };
 	}
 
-	const propTypes: (string | TsCode[])[] = [];
+	const propTypes: (string | readonly TsCode[])[] = [];
 	if (options.vueCompilerOptions.jsxSlots && hasSlotsType(options)) {
 		propTypes.push(ctx.localTypes.PropsChildren(typeAliasRef(names.Slots, options.scriptLang)));
 	}
@@ -458,7 +455,7 @@ function* generatePublicProps(
 export function getExposeTypes(
 	options: ScriptCodegenOptions,
 	scriptSetupRanges: ScriptSetupRanges,
-): (string | TsCode[])[] {
+): (string | readonly TsCode[])[] {
 	return [
 		...scriptSetupRanges.defineExpose ? [`typeof ${names.exposed}`] : [],
 		...options.expose,

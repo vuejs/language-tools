@@ -9,8 +9,6 @@ import type {
 	VuePluginContext,
 	VuePluginError,
 } from '@vue/language-core';
-import { generatePiece, type Piece } from './piece';
-import type { TsCode } from './tsCode';
 import { identifierRE } from './writers';
 
 /** The `codegen` export of a `plugins` entry's module. */
@@ -40,9 +38,12 @@ export interface VueCodegenFile {
 /**
  * A piece of code added by a contribution: plain text, which maps nowhere and never reports diagnostics, or the range
  * `start`..`end` of `source`, an IR block, mapped with `data.features`. A range without `text` copies the block's text
- * there; with `text`, the text maps to the range as a whole (e.g. a diagnostic reported there).
+ * there; `text` maps to the range char by char when it is as long as the range, and as a whole otherwise (e.g. a
+ * diagnostic reported there).
  */
-export type VueCodegenPiece = Piece<IRBlock, { features: number }>;
+export type VueCodegenPiece =
+	| string
+	| { source: IRBlock; start: number; end: number; data: { features: number }; text?: string };
 
 export type VueCodegenCode = readonly VueCodegenPiece[];
 
@@ -141,21 +142,21 @@ export function loadCodegenPlugins(
 	return { plugins, errors };
 }
 
-/** The contributions of the codegen plugins to one file, combined in `plugins` order and turned into code. */
+/** The contributions of the codegen plugins to one file, combined in `plugins` order. */
 export interface CodegenContributions {
 	scriptEdits: ScriptEdit[];
 	/** Object types spread into the template context. */
-	templateContext: TsCode[][];
+	templateContext: VueCodegenCode[];
 	/** Object types intersected into the public props of a script setup component. */
-	props: TsCode[][];
+	props: VueCodegenCode[];
 	/** Object types of events intersected into the emits of a script setup component. */
-	emits: TsCode[][];
+	emits: VueCodegenCode[];
 	/** Object types intersected into what a script setup component exposes. */
-	expose: TsCode[][];
+	expose: VueCodegenCode[];
 	/** The tag → element type map of native elements, of the first plugin that sets one. */
-	elements: TsCode[] | undefined;
+	elements: VueCodegenCode | undefined;
 	/** Statements at module scope. */
-	declarations: TsCode[][];
+	declarations: VueCodegenCode[];
 	exports: {
 		/** Named exports of the component, de-duplicated. */
 		names: string[];
@@ -180,7 +181,8 @@ export type ScriptEdit =
 
 /**
  * Runs the `rewrite` of each plugin on `file`, then the `generate` of each, in order. An exception of a hook
- * propagates. Edits and entries that are not valid for the IR of the file are dropped.
+ * propagates, and so does a piece that is not valid for the IR of the file. Edits that are not valid for the IR of the
+ * file are dropped.
  */
 export function getContributions(plugins: readonly CodegenPlugin[], file: VueCodegenFile): CodegenContributions {
 	const { ir } = file;
@@ -204,17 +206,17 @@ export function getContributions(plugins: readonly CodegenPlugin[], file: VueCod
 		});
 	}
 	let isDefaultSet = false;
-	for (const { plugin } of plugins) {
+	for (const { name, plugin } of plugins) {
 		const contribution = plugin.generate?.(file);
 		if (typeof contribution !== 'object' || contribution === null) {
 			continue;
 		}
 		if (!contributions.elements && toArray(contribution.elements).length) {
-			contributions.elements = toTsCode(blocks, contribution.elements);
+			contributions.elements = checkCode(name, blocks, contribution.elements!);
 		}
 		for (const key of ['templateContext', 'props', 'emits', 'expose', 'declarations'] as const) {
 			for (const type of toArray(contribution[key])) {
-				contributions[key].push(toTsCode(blocks, type));
+				contributions[key].push(checkCode(name, blocks, type));
 			}
 		}
 		const { exports } = contribution;
@@ -271,24 +273,22 @@ function createWriter(
 	};
 }
 
-/** The code of `code`. A range of a block that is not the file's or out of its block keeps only its text. */
-function toTsCode(blocks: Set<IRBlock>, code: VueCodegenCode | undefined): TsCode[] {
-	const codes: TsCode[] = [];
+/** `code`, which throws if a piece of it is not text or a range of a block of the file mapped with features. */
+function checkCode(plugin: string, blocks: Set<IRBlock>, code: VueCodegenCode): VueCodegenCode {
 	for (const piece of toArray(code)) {
 		if (typeof piece === 'string') {
-			codes.push(...generatePiece(piece));
+			continue;
 		}
-		else if (typeof piece === 'object' && piece !== null) {
-			const { source, start, end, data, text } = piece;
-			if (blocks.has(source) && isRange(source, start, end) && typeof data?.features === 'number') {
-				codes.push(...generatePiece({ source, start, end, data: { features: data.features }, text }));
-			}
-			else if (typeof text === 'string') {
-				codes.push(...generatePiece(text));
-			}
+		const isPiece = typeof piece === 'object' && piece !== null && blocks.has(piece.source)
+			&& isRange(piece.source, piece.start, piece.end) && typeof piece.data?.features === 'number'
+			&& (piece.text === undefined || typeof piece.text === 'string');
+		if (!isPiece) {
+			throw new TypeError(
+				`The codegen plugin '${plugin}' gave a piece that is not text or a range of a block of the file.`,
+			);
 		}
 	}
-	return codes;
+	return code;
 }
 
 function isRange(block: IRBlock, start: unknown, end: unknown): boolean {

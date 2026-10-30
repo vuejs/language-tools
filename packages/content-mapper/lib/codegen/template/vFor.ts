@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { parseVForAliases, scriptFeatures } from '@vue/language-core';
 import { names } from '../names';
-import type { TsCode } from '../tsCode';
+import { mapped, type TsCode } from '../tsCode';
 import { asType, endOfLine, newLine } from '../writers';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -48,12 +48,12 @@ export function* generateVFor(
 		let lastOffset = 0;
 		for (const [start, end] of defaultInitializerRanges) {
 			if (start > lastOffset) {
-				yield [
+				yield mapped(
 					leftExpressionText.slice(lastOffset, start),
 					options.template,
 					leftExpressionRange.start + lastOffset,
 					{ features: scriptFeatures },
-				];
+				);
 			}
 			yield* generateInterpolation(
 				options,
@@ -66,12 +66,9 @@ export function* generateVFor(
 			lastOffset = end;
 		}
 		if (lastOffset < leftExpressionText.length) {
-			yield [
-				leftExpressionText.slice(lastOffset),
-				options.template,
-				leftExpressionRange.start + lastOffset,
-				{ features: scriptFeatures },
-			];
+			yield mapped(leftExpressionText.slice(lastOffset), options.template, leftExpressionRange.start + lastOffset, {
+				features: scriptFeatures,
+			});
 		}
 	}
 	yield `] of `;

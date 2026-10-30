@@ -8,7 +8,7 @@ import {
 	type TypeScript,
 } from '@vue/language-core';
 import { names } from '../names';
-import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
+import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import { endOfLine, typeAliasRef } from '../writers';
 import { generateEscaped } from '../writers/escaped';
 
@@ -35,7 +35,7 @@ export function* generateStyleScopedClassReference(
 ): Generator<TsCode> {
 	if (!className) {
 		yield `/** @type {${typeAliasRef(names.StyleScopedClasses, scriptLang)}['`;
-		yield ['', block, offset, { features: completionFeatures }];
+		yield mapped('', block, offset, { features: completionFeatures });
 		yield `']} */${endOfLine}`;
 		return;
 	}

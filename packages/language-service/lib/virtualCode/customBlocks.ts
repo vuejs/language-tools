@@ -6,11 +6,6 @@ export function getCustomBlockDocuments(ir: IR): EmbeddedDocument[] {
 	return ir.customBlocks.map((customBlock, i) => ({
 		id: embeddedCodeIds.customBlockPrefix + i,
 		lang: customBlock.lang,
-		content: [[
-			customBlock.content,
-			customBlock,
-			0,
-			{ features: allFeatures },
-		]],
+		content: [{ source: customBlock, start: 0, end: customBlock.content.length, data: { features: allFeatures } }],
 	}));
 }

@@ -1,6 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import {
-	type CodeSource,
 	completionFeatures,
 	forEachElementNode,
 	forEachPropStyleScopedClassReference,
@@ -10,17 +9,17 @@ import {
 	navigationFeatures,
 	scriptFeatures,
 	type TemplateScope,
+	type TextRange,
 	type TypeScript,
 	type VueCompilerOptions,
 } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { CoreRewriteWriter } from 'muggle-string';
 import type { CodegenConcern, CodegenConcernFile } from '../concern';
 import { names } from '../names';
-import type { TsCodeData } from '../piece';
+import type { BlockWriter } from '../rewrite/blockRewrite';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
-import { Boundary, type TsCode } from '../tsCode';
+import { Boundary, type CodeBoundary, type MappedPiece, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, typeAliasRef } from '../writers';
 import { generateStyleModuleImports, generateStyleModules } from './modules';
 import { generateStyleScopedClasses } from './scopedClassNames';
@@ -153,7 +152,7 @@ function* generateCssVars(
 
 /** Casts each `useCssModule()` call of `<script setup>` to the type of its CSS module. */
 function rewriteUseCssModule(
-	core: CoreRewriteWriter<CodeSource, TsCodeData>,
+	core: BlockWriter,
 	scriptSetup: IRScriptSetup,
 	calls: NonNullable<ReturnType<CodegenConcernFile['analysis']['getScriptSetupRanges']>>['useCssModule'],
 	scriptLang: string,
@@ -169,27 +168,34 @@ function rewriteUseCssModule(
 			});
 			if (isTsLang(scriptLang)) {
 				core.insertBefore(callExp.start, `(`);
-				core.insertAfter(callExp.end, () => [` as Omit<${type}, '$style'>[`, name, `])`]);
+				core.insertAfter(callExp.end, [` as Omit<${type}, '$style'>[`, name, `])`]);
 			}
 			else {
-				core.insertBefore(callExp.start, () => [`/** @type {Omit<${type}, '$style'>[`, name, `]} */ (`]);
+				core.insertBefore(callExp.start, [`/** @type {Omit<${type}, '$style'>[`, name, `]} */ (`]);
 				core.insertAfter(callExp.end, `)`);
 			}
 		}
 		else {
 			core.insertBefore(callExp.start, isTsLang(scriptLang) ? `(` : `/** @type {${type}['$style']} */ (`);
-			core.insertAfter(callExp.end, function*() {
-				if (isTsLang(scriptLang)) {
-					yield ` as ${type}[`;
-					const boundary = yield* Boundary.start(scriptSetup, exp.start, exp.end, { features: 0 });
-					yield `'$style'`;
-					yield boundary.end();
-					yield `])`;
-				}
-				else {
-					yield `)`;
-				}
-			});
+			core.insertAfter(
+				callExp.end,
+				isTsLang(scriptLang)
+					? [...generateStyleKeyCast(scriptSetup, exp, type)]
+					: `)`,
+			);
 		}
 	}
+}
+
+/** ` as T['$style'])`, whose key maps to the `useCssModule()` call without features. */
+function* generateStyleKeyCast(
+	scriptSetup: IRScriptSetup,
+	exp: TextRange,
+	type: string,
+): Generator<string | MappedPiece<CodeBoundary, IRScriptSetup>> {
+	yield ` as ${type}[`;
+	const boundary = yield* Boundary.start(scriptSetup, exp.start, exp.end, { features: 0 });
+	yield `'$style'`;
+	yield boundary.end();
+	yield `])`;
 }

@@ -24,7 +24,13 @@ export function getRootTagsDocument(ir: IR): EmbeddedDocument {
 	for (const block of blocks) {
 		const contentEnd = block.offset + block.content.length;
 		if (start < block.offset) {
-			content.push([ir.content.slice(start, block.offset), undefined, start, { features: allFeatures }]);
+			content.push({
+				source: undefined,
+				start,
+				end: block.offset,
+				data: { features: allFeatures },
+				text: ir.content.slice(start, block.offset),
+			});
 		}
 		// fix folding range end position failed to mapping
 		const marker = block.offset
@@ -32,14 +38,20 @@ export function getRootTagsDocument(ir: IR): EmbeddedDocument {
 		if (block.offset < marker) {
 			content.push(ir.content.slice(block.offset, marker));
 		}
-		content.push(['', undefined, marker, { features: structureFeatures }]);
+		content.push({ source: undefined, start: marker, end: marker, data: { features: structureFeatures }, text: '' });
 		if (marker < contentEnd) {
 			content.push(ir.content.slice(marker, contentEnd));
 		}
 		start = contentEnd;
 	}
 	if (start < ir.content.length || !blocks.length) {
-		content.push([ir.content.slice(start), undefined, start, { features: allFeatures }]);
+		content.push({
+			source: undefined,
+			start,
+			end: ir.content.length,
+			data: { features: allFeatures },
+			text: ir.content.slice(start),
+		});
 	}
 	return { id: embeddedCodeIds.rootTags, lang: rootTagsLanguageId, content };
 }

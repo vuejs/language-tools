@@ -1,6 +1,6 @@
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { synthesizedIgnore, type TsCode } from '../lib/codegen/tsCode';
+import { mapped, synthesizedIgnore, type TsCode } from '../lib/codegen/tsCode';
 import {
 	type DiagnosticDirectiveMapping,
 	DiagnosticDirectivePolicy,
@@ -48,9 +48,9 @@ test('ignores synthesized virtual regions without overlapping explicit directive
 	const expectation: DiagnosticDirectiveMapping = [0, 1, 5, 7, DiagnosticDirectivePolicy.Expect];
 	const chunks: TsCode[] = [
 		'01234',
-		['', undefined, 0, { start: [0, 1, 0, 0, DiagnosticDirectivePolicy.Expect] }],
+		mapped('', undefined, 0, { start: [0, 1, 0, 0, DiagnosticDirectivePolicy.Expect] }),
 		'56',
-		['', undefined, 0, { end: true }],
+		mapped('', undefined, 0, { end: true }),
 		'789',
 	];
 
@@ -69,9 +69,9 @@ test('merges synthesized ignores with the ignores of mapped regions', () => {
 	];
 	const chunks: TsCode[] = [
 		'0123',
-		['', undefined, 0, { start: synthesizedIgnore }],
+		mapped('', undefined, 0, { start: synthesizedIgnore }),
 		'45',
-		['', undefined, 0, { end: true }],
+		mapped('', undefined, 0, { end: true }),
 	];
 
 	expect(buildDiagnosticDirectives(chunks, getUnmappedRanges(6, mappings))).toEqual([

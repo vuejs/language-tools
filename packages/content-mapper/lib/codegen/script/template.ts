@@ -22,7 +22,7 @@ export interface TemplateFunctionSlots {
 	/** The names of the types that the code in the template function declares. */
 	templateTypes: string[];
 	/** Object types spread into the template context, after the component instance. */
-	templateContext: (string | TsCode[])[];
+	templateContext: (string | readonly TsCode[])[];
 	/** Code in the template function, before the code of the template. */
 	templateBody: TsCode[];
 	/** Type aliases that the template function declares, returned to setup and the export. */
@@ -96,7 +96,7 @@ function* generateTemplateCtx(
 	selfType: string | undefined,
 ): Generator<TsCode> {
 	const { vueCompilerOptions, scriptSetupRanges, scriptLang, templateContext, slots } = options;
-	const exps: (string | TsCode[])[] = [];
+	const exps: (string | readonly TsCode[])[] = [];
 	const emitTypes = getEmitTypes(options);
 	const propTypes: string[] = [];
 
@@ -145,8 +145,8 @@ function* generateTemplateCtx(
 /** The types of the emit functions of a script setup component, which the codegen plugins add events to. */
 export function getEmitTypes(
 	{ scriptSetupRanges, emits }: ScriptCodegenOptions,
-): (string | TsCode[])[] {
-	const emitTypes: (string | TsCode[])[] = [];
+): (string | readonly TsCode[])[] {
+	const emitTypes: (string | readonly TsCode[])[] = [];
 	if (!scriptSetupRanges) {
 		return emitTypes;
 	}

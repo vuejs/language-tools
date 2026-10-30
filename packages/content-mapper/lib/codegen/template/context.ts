@@ -11,7 +11,7 @@ import {
 } from '@vue/language-core';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../../protocol';
 import { names } from '../names';
-import { Boundary, isSynthesizedIgnore, OpenRanges, type TsCode } from '../tsCode';
+import { Boundary, isSynthesizedIgnore, mapped, OpenRanges, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine, typeAliasRef } from '../writers';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
@@ -149,7 +149,7 @@ export function createTemplateCodegenContext(
 
 	function* generateDiagnosticDirectiveComment(directive: DiagnosticDirectiveMapping): Generator<TsCode> {
 		// an empty mapping at the directive comment, which Volar's own features see
-		yield ['', getTemplate(), directive[0], { features: 0 }];
+		yield mapped('', getTemplate(), directive[0], { features: 0 });
 	}
 
 	function exit() {
@@ -187,12 +187,12 @@ export function createTemplateCodegenContext(
 	const openRanges = new OpenRanges<VueCodeMarker>();
 	let synthesizedIgnores = 0;
 
-	/** The data of a segment, or of the mapping range it bounds or maps as part of. */
+	/** The data of a piece, or of the mapping range it bounds or maps as part of. */
 	function getMarker(code: TsCode) {
 		if (typeof code === 'string') {
 			return;
 		}
-		const data = code[3];
+		const { data } = code;
 		if (data === undefined) {
 			return openRanges.mapping;
 		}
@@ -296,9 +296,9 @@ export function createTemplateCodegenContext(
 			// identifier map around `constructor`, which resolves on any object without being listed, instead of a
 			// name the scope may not have.
 			yield `${names.scope}.`;
-			yield [``, block, offset, features!];
+			yield mapped(``, block, offset, features!);
 			yield `constructor`;
-			yield [``, block, offset + sourceName.length, features!];
+			yield mapped(``, block, offset + sourceName.length, features!);
 			yield `,`;
 		}
 		yield `]${endOfLine}`;
