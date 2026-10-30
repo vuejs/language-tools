@@ -1,3 +1,4 @@
+import { scriptFeatures } from '@vue/language-core';
 import { readFileIfExists } from '@vue/language-core/lib/options/readFileIfExists';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -72,8 +73,9 @@ test('every mapping of the workspace maps its chars to the right source chars', 
 		const seen = new Set<string>();
 		let previousStart = 0;
 		let coveredEnd = 0;
+		let previous: (typeof mappings)[number] | undefined;
 		for (const mapping of mappings) {
-			const [virtualStart, virtualLength, originalStart, originalLength, kind] = mapping;
+			const [virtualStart, virtualLength, originalStart, originalLength, kind, features] = mapping;
 			const key = mapping.join();
 			checked++;
 			if (seen.has(key)) {
@@ -104,6 +106,18 @@ test('every mapping of the workspace maps its chars to the right source chars', 
 			) {
 				report(`verbatim mapping ${key} does not copy its source`);
 			}
+			// a copy of script code is one cut unless something is placed between its parts
+			if (
+				kind === SpanMapKind.Verbatim
+				&& features === scriptFeatures
+				&& previous?.[4] === SpanMapKind.Verbatim
+				&& previous[5] === features
+				&& previous[0] + previous[1] === virtualStart
+				&& previous[2] + previous[3] === originalStart
+			) {
+				report(`mapping ${key} continues the previous one`);
+			}
+			previous = mapping;
 		}
 	}
 
