@@ -58,7 +58,7 @@ export function createScriptSetupCopies(
 	scriptSetupRanges: ScriptSetupRanges,
 	bodyAtRoot: boolean,
 ): ScriptSetupCopies {
-	const { core } = blockRewrite.rewrite;
+	const core = blockRewrite.rewrite;
 	const importSectionEnd = getImportSectionEnd(scriptSetupRanges);
 	const { length } = scriptSetup.content;
 	if (bodyAtRoot) {

@@ -349,7 +349,7 @@ function* generateScriptWithExportDefault(
 	}
 
 	// the head is the code up to the end of the default export, with the exported expression cut out of it
-	const { core } = blockRewrite.rewrite;
+	const core = blockRewrite.rewrite;
 	const head = core.cut(0, exportDefault.end, { data: { features: scriptFeatures } });
 	const exported = core.cut(expression.start, expression.end, {
 		data: { features: scriptFeatures },
@@ -381,7 +381,7 @@ function* generateScriptWithExportDefault(
 }
 
 function* generateWholeScript(script: IRScript, blockRewrite: BlockRewrite): Generator<TsCode> {
-	const whole = blockRewrite.rewrite.core.cut(0, script.content.length, { data: { features: scriptFeatures } });
+	const whole = blockRewrite.rewrite.cut(0, script.content.length, { data: { features: scriptFeatures } });
 	yield generateBlockAnchor(script);
 	yield* blockRewrite.render(whole);
 }
