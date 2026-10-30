@@ -1,5 +1,5 @@
 import { getScriptLang } from '@vue/language-core';
-import type { CodegenConcern, CodegenConcernFile } from '../concern';
+import type { BuiltinPluginFile, FilePlugin } from '../filePlugin';
 import { names } from '../names';
 import type { TsCode } from '../tsCode';
 import { endOfLine, generateTypedVar, isTsLang, newLine, typeAliasRef } from '../writers';
@@ -8,11 +8,12 @@ import { endOfLine, generateTypedVar, isTsLang, newLine, typeAliasRef } from '..
  * The `$` names that the template reads (`$slots`, `$attrs`, `$refs`, `$el`): their variable at the end of the template,
  * which the template function returns, and the types of `useAttrs()` and `useSlots()` that it infers.
  */
-export function createDollarsConcern(
-	{ ir, analysis, getTemplateVars, getTemplateTypes }: CodegenConcernFile,
-): CodegenConcern {
+export function createDollarsPlugin(
+	{ ir, analysis, getTemplateVars, getTemplateTypes }: BuiltinPluginFile,
+): FilePlugin {
 	const hasDollars = () => !!getTemplateVars() && !!analysis.getTemplateScope().dollarVars.size;
 	return {
+		name: 'vue:dollars',
 		templateTypes: () => hasDollars() ? [names.dollars] : [],
 		templateEnd: () => {
 			if (!hasDollars()) {
@@ -47,9 +48,9 @@ export function createDollarsConcern(
 			})];
 		},
 		templateExportValues: () => hasDollars() ? [names.dollars] : [],
-		rewriteScriptSetup(core) {
+		rewrite({ scriptSetup }) {
 			const scriptSetupRanges = analysis.getScriptSetupRanges();
-			if (!scriptSetupRanges) {
+			if (!scriptSetup || !scriptSetupRanges) {
 				return;
 			}
 			const vueCompilerOptions = analysis.getResolvedOptions();
@@ -64,8 +65,8 @@ export function createDollarsConcern(
 			];
 			for (const [{ callExp }, name] of casts) {
 				const type = `typeof ${names.dollars}.${name}`;
-				core.insertBefore(callExp.start, isTs ? `(` : `/** @type {${type}} */ (`);
-				core.insertAfter(callExp.end, isTs ? ` as ${type})` : `)`);
+				scriptSetup.insertBefore(callExp.start, isTs ? `(` : `/** @type {${type}} */ (`);
+				scriptSetup.insertAfter(callExp.end, isTs ? ` as ${type})` : `)`);
 			}
 		},
 	};

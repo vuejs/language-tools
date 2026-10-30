@@ -1,13 +1,13 @@
 import { getScriptLang, navigationFeatures } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { CodegenConcern, CodegenConcernFile } from '../concern';
+import type { BuiltinPluginFile, FilePlugin } from '../filePlugin';
 import { names } from '../names';
 import { Boundary, synthesizedIgnore } from '../tsCode';
 import { generateTypeAlias, newLine } from '../writers';
 import { generatePropertyKey } from '../writers/stringLiteralKey';
 
 /** The type of the slots that the template renders, unless `defineSlots` declares them. */
-export function createSlotsConcern({ ir, analysis, getTemplateVars }: CodegenConcernFile): CodegenConcern {
+export function createSlotsPlugin({ ir, analysis, getTemplateVars }: BuiltinPluginFile): FilePlugin {
 	const hasDefineSlots = () => !!analysis.getScriptSetupRanges()?.defineSlots;
 	const getTemplateSlots = computed(() => {
 		const { slots, dynamicSlots } = analysis.getTemplateScope();
@@ -17,6 +17,7 @@ export function createSlotsConcern({ ir, analysis, getTemplateVars }: CodegenCon
 		}
 	});
 	return {
+		name: 'vue:slots',
 		// with `defineSlots`, the template function declares the type of the slots that it reads
 		templateTypes: () => getTemplateVars() && (hasDefineSlots() || getTemplateSlots()) ? [names.Slots] : [],
 		templateEnd: () => {

@@ -29,14 +29,14 @@ import { getEmitTypes } from './template';
 
 /** The slots of `<script setup>`. */
 export interface ScriptSetupSlots {
+	/** Object types intersected into the public props, in `defineProps<…>` form. */
+	props: (readonly TsCode[])[];
+	/** Object types `{ event: [args] }` intersected into the emits, in `defineEmits<…>` form. */
+	emits: (readonly TsCode[])[];
+	/** Object types intersected into what the component exposes, in `defineExpose` form. */
+	expose: (readonly TsCode[])[];
 	/** Object types intersected into what a generic component exposes, after the types of its `defineExpose`. */
 	exposedInstanceTypes: string[];
-}
-
-/** The hooks of `<script setup>`. */
-export interface ScriptSetupHooks {
-	/** Edits the user's code of `<script setup>`, after the transforms of the macros, with the core writer. */
-	rewriteScriptSetup?(core: BlockWriter, scriptSetup: IRScriptSetup): void;
 }
 
 /** The copies of the user's code of `<script setup>`: its imports at module scope, and its body in the setup function. */
@@ -65,9 +65,6 @@ export function createScriptSetupCopies(
 		? core.cut(importSectionEnd, length, { data: { features: scriptFeatures } })
 		: undefined;
 	addTransforms(options, core, scriptSetupRanges);
-	for (const rewrite of options.rewriteScriptSetup) {
-		rewrite(core, scriptSetup);
-	}
 	return {
 		*generateImports() {
 			yield generateBlockAnchor(scriptSetup);
@@ -436,12 +433,12 @@ function* generatePublicProps(
 	if (scriptSetupRanges.defineModel.length) {
 		propTypes.push(typeAliasRef(names.ModelProps, options.scriptLang));
 	}
-	propTypes.push(...options.props);
+	propTypes.push(...options.slots.props);
 	const target = options.vueCompilerOptions.target;
 	const used = !!scriptSetup.generic
 		|| target < 3.6
 		|| (target >= 3.5 && !scriptSetupRanges.defineProps?.arg)
-		|| !!options.props.length
+		|| !!options.slots.props.length
 		|| !!scriptSetupRanges.defineModel.length;
 	if (propTypes.length && used) {
 		yield* generateTypeAlias(names.PublicProps, options.scriptLang, function*() {
@@ -458,7 +455,7 @@ export function getExposeTypes(
 ): (string | readonly TsCode[])[] {
 	return [
 		...scriptSetupRanges.defineExpose ? [`typeof ${names.exposed}`] : [],
-		...options.expose,
+		...options.slots.expose,
 	];
 }
 

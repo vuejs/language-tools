@@ -10,12 +10,10 @@ import { generateClassProperty, generateStyleSrc } from './common';
  * `<style module src>` is typed by an ordinary import of the src, so whatever types that module
  * (a CSS content mapper, an ambient declaration) types the CSS module; Vue does not read the file.
  */
-export function* generateStyleModuleImports(styles: readonly IRStyle[]): Generator<TsCode> {
+export function* generateStyleModuleImports(styles: readonly IRStyle[]): Generator<TsCode[]> {
 	for (const style of styles) {
 		if (style.module && typeof style.src === 'object') {
-			yield `import ${getStyleModuleImportName(style)} from `;
-			yield* generateStyleSrc(style.src);
-			yield endOfLine;
+			yield [`import ${getStyleModuleImportName(style)} from `, ...generateStyleSrc(style.src), `;`];
 		}
 	}
 }

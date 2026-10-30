@@ -1,8 +1,8 @@
 import { completionFeatures, getScriptLang, navigationFeatures, type ScriptSetupRanges } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { CodegenConcern, CodegenConcernFile } from '../concern';
+import type { BuiltinPluginFile, FilePlugin } from '../filePlugin';
 import { names } from '../names';
-import type { BlockWriter } from '../rewrite/blockRewrite';
+import type { VueCodegenWriter } from '../plugin';
 import { Boundary, synthesizedIgnore } from '../tsCode';
 import { asType, generateTypeAlias, isTsLang, newLine, typeAliasRef } from '../writers';
 import { generatePropertyKey } from '../writers/stringLiteralKey';
@@ -11,7 +11,7 @@ import { generatePropertyKey } from '../writers/stringLiteralKey';
  * The types of the template refs: their type at the end of the template, which the component exposes as `$refs`, and
  * the types of `useTemplateRef()`.
  */
-export function createRefsConcern({ ir, analysis, getTemplateVars }: CodegenConcernFile): CodegenConcern {
+export function createRefsPlugin({ ir, analysis, getTemplateVars }: BuiltinPluginFile): FilePlugin {
 	const getTemplateRefs = computed(() => {
 		const { templateRefs } = analysis.getTemplateScope();
 		const { inferTemplateDollarRefs, inferComponentDollarRefs } = analysis.getResolvedOptions();
@@ -26,6 +26,7 @@ export function createRefsConcern({ ir, analysis, getTemplateVars }: CodegenConc
 	});
 	const hasTemplateRefs = () => !!getTemplateRefs();
 	return {
+		name: 'vue:refs',
 		templateTypes: () => hasTemplateRefs() ? [names.TemplateRefs] : [],
 		templateEnd: () => {
 			const refs = getTemplateRefs();
@@ -77,10 +78,10 @@ export function createRefsConcern({ ir, analysis, getTemplateVars }: CodegenConc
 			analysis.getResolvedOptions().inferComponentDollarRefs && hasTemplateRefs()
 				? [`{ $refs: ${typeAliasRef(names.TemplateRefs, getScriptLang(ir))}; }`]
 				: [],
-		rewriteScriptSetup(core) {
+		rewrite({ scriptSetup }) {
 			const scriptSetupRanges = analysis.getScriptSetupRanges();
-			if (scriptSetupRanges) {
-				rewriteUseTemplateRef(core, scriptSetupRanges, getScriptLang(ir), analysis.getResolvedOptions().lib);
+			if (scriptSetup && scriptSetupRanges) {
+				rewriteUseTemplateRef(scriptSetup, scriptSetupRanges, getScriptLang(ir), analysis.getResolvedOptions().lib);
 			}
 		},
 	};
@@ -88,15 +89,15 @@ export function createRefsConcern({ ir, analysis, getTemplateVars }: CodegenConc
 
 /** Casts each `useTemplateRef()` call of `<script setup>` to a ref of the type of its template ref. */
 function rewriteUseTemplateRef(
-	core: BlockWriter,
+	writer: VueCodegenWriter,
 	scriptSetupRanges: ScriptSetupRanges,
 	scriptLang: string,
 	lib: string,
 ) {
 	for (const { callExp, arg } of scriptSetupRanges.useTemplateRef) {
 		// the argument is copied as a reference into the cast, and is `any` at the call
-		const name = arg && core.cut(arg.start, arg.end, {
-			data: { features: navigationFeatures | completionFeatures },
+		const name = arg && writer.cut(arg.start, arg.end, {
+			features: navigationFeatures | completionFeatures,
 			placeholder: asType('any', scriptLang),
 		});
 		const refType = name
@@ -104,12 +105,12 @@ function rewriteUseTemplateRef(
 			: [`unknown`];
 		const shallowRef = `Readonly<import('${lib}').ShallowRef<`;
 		if (isTsLang(scriptLang)) {
-			core.insertBefore(callExp.start, `(`);
-			core.insertAfter(callExp.end, [` as ${shallowRef}`, ...refType, ` | null>>)`]);
+			writer.insertBefore(callExp.start, `(`);
+			writer.insertAfter(callExp.end, [` as ${shallowRef}`, ...refType, ` | null>>)`]);
 		}
 		else {
-			core.insertBefore(callExp.start, [`/** @type {${shallowRef}`, ...refType, ` | null>>} */ (`]);
-			core.insertAfter(callExp.end, `)`);
+			writer.insertBefore(callExp.start, [`/** @type {${shallowRef}`, ...refType, ` | null>>} */ (`]);
+			writer.insertAfter(callExp.end, `)`);
 		}
 	}
 }

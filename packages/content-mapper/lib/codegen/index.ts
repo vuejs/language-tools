@@ -1,15 +1,15 @@
 import { getScriptLang, type IR, type ScriptAnalysis, type TypeScript, type VueSource } from '@vue/language-core';
 import { BindingFlag } from '@vue/language-core/lib/script/scriptBindings';
 import { computed } from 'alien-signals';
-import { type CodegenConcernFactory, mergeSlots } from './concern';
-import { createDollarsConcern } from './concerns/dollars';
-import { createInheritedAttrsConcern } from './concerns/inheritedAttrs';
-import { createRefsConcern } from './concerns/refs';
-import { createRootElConcern } from './concerns/rootEl';
-import { createSlotsConcern } from './concerns/slots';
-import { type CodegenPlugin, getContributions, rewriteScripts } from './plugin';
+import { type BuiltinPluginFactory, mergeSlots } from './filePlugin';
+import { type CodegenPlugin, createFilePlugin, rewriteScripts } from './plugin';
+import { createDollarsPlugin } from './plugins/dollars';
+import { createInheritedAttrsPlugin } from './plugins/inheritedAttrs';
+import { createRefsPlugin } from './plugins/refs';
+import { createRootElPlugin } from './plugins/rootEl';
+import { createSlotsPlugin } from './plugins/slots';
 import { generateScript } from './script';
-import { createStyleConcern } from './style';
+import { createStylePlugin } from './style';
 import { generateTemplate } from './template';
 import type { TsCode } from './tsCode';
 
@@ -19,14 +19,14 @@ export interface ServiceScript {
 	codes: TsCode[];
 }
 
-/** The concerns of the built-in codegen, in the order that their code takes in each slot. */
-const concernFactories: readonly CodegenConcernFactory[] = [
-	createSlotsConcern,
-	createInheritedAttrsConcern,
-	createRefsConcern,
-	createRootElConcern,
-	createDollarsConcern,
-	createStyleConcern,
+/** The built-in codegen plugins, in the order that their code takes in each slot, before the other plugins. */
+const builtinPlugins: readonly BuiltinPluginFactory[] = [
+	createSlotsPlugin,
+	createInheritedAttrsPlugin,
+	createRefsPlugin,
+	createRootElPlugin,
+	createDollarsPlugin,
+	createStylePlugin,
 ];
 
 export function generateServiceScript(
@@ -78,17 +78,15 @@ function useCodegen(
 		getComponentName,
 	} = analysis;
 
-	const getCodegenContributions = computed(() => getContributions(plugins, { ts, fileName, ir, analysis }));
-
 	const getTemplateVars = () => getGeneratedTemplate()?.vars;
 	const getTemplateTypes = computed((): ReadonlySet<string> =>
 		new Set([...getGeneratedTemplate()?.generatedTypes ?? [], ...slots.templateTypes()])
 	);
-	const concerns = concernFactories.map(create =>
-		create({ ts, fileName, ir, analysis, getTemplateVars, getTemplateTypes })
-	);
-	const slots = mergeSlots(concerns);
-	const rewriteScriptSetup = concerns.flatMap(({ rewriteScriptSetup }) => rewriteScriptSetup ?? []);
+	const filePlugins = [
+		...builtinPlugins.map(create => create({ ts, fileName, ir, analysis, getTemplateVars, getTemplateTypes })),
+		...plugins.map(plugin => createFilePlugin(plugin, { ts, fileName, ir, analysis })),
+	];
+	const slots = mergeSlots(filePlugins);
 
 	const hasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
@@ -145,7 +143,9 @@ function useCodegen(
 			templateCodes: getGeneratedTemplate()?.codes ?? [],
 			templateScopeEnd: getGeneratedTemplate()?.scopeEnd ?? [],
 			slots: {
-				moduleEnd: slots.moduleEnd(),
+				declarations: slots.declarations(),
+				elements: slots.elements(),
+				exports: slots.exports(),
 				templateContext: slots.templateContext(),
 				templateBody: slots.templateBody(),
 				templateEnd: slots.templateEnd(),
@@ -153,17 +153,12 @@ function useCodegen(
 				templateExportValues: slots.templateExportValues(),
 				componentOptions: slots.componentOptions(),
 				fallthroughProps: slots.fallthroughProps(),
+				props: slots.props(),
+				emits: slots.emits(),
+				expose: slots.expose(),
 				exposedInstanceTypes: slots.exposedInstanceTypes(),
 			},
-			rewriteScriptSetup,
-			rewriteScripts: rewrites => rewriteScripts(plugins, { ts, fileName, ir, analysis }, rewrites),
-			templateContext: getCodegenContributions().templateContext,
-			props: getCodegenContributions().props,
-			emits: getCodegenContributions().emits,
-			expose: getCodegenContributions().expose,
-			elements: getCodegenContributions().elements,
-			declarations: getCodegenContributions().declarations,
-			exports: getCodegenContributions().exports,
+			rewriteScripts: rewrites => rewriteScripts(filePlugins, ir, rewrites),
 		});
 	});
 

@@ -12,7 +12,7 @@ import {
 } from '@vue/language-core';
 import * as path from 'path-browserify';
 import { names } from '../names';
-import type { CodegenContributions, ScriptRewrites } from '../plugin';
+import type { ScriptRewrites } from '../plugin';
 import { type BlockRewrite, createBlockRewrite, generateBlockAnchor } from '../rewrite/blockRewrite';
 import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine } from '../writers';
@@ -23,7 +23,6 @@ import {
 	generateGeneric,
 	generateMacros,
 	generateSetupFunction,
-	type ScriptSetupHooks,
 	type ScriptSetupSlots,
 } from './scriptSetup';
 import { generateTemplate, type TemplateFunctionSlots } from './template';
@@ -42,10 +41,8 @@ export interface ScriptCodegenOptions {
 	templateCodes: readonly TsCode[];
 	/** The code that ends the scope of the template. */
 	templateScopeEnd: readonly TsCode[];
-	/** What the concerns of the built-in codegen write into the slots of the module and the template function. */
+	/** What the codegen plugins write into the slots of the module, the template function and the component. */
 	slots: Readonly<ModuleSlots & Omit<TemplateFunctionSlots, 'templateTypes'> & ComponentSlots & ScriptSetupSlots>;
-	/** The rewrites of `<script setup>` of the concerns of the built-in codegen. */
-	rewriteScriptSetup: readonly NonNullable<ScriptSetupHooks['rewriteScriptSetup']>[];
 	setupBindings: Set<string>;
 	localComponents: Set<string>;
 	localDirectives: Set<string>;
@@ -56,34 +53,32 @@ export interface ScriptCodegenOptions {
 	scopeBindings: Set<string>;
 	/** Runs the rewrites of the codegen plugins on the rewrites of the script blocks. */
 	rewriteScripts(rewrites: ScriptRewrites): void;
-	/** The object types that the codegen plugins spread into the template context. */
-	templateContext: readonly (readonly TsCode[])[];
-	/** The object types that the codegen plugins intersect into the public props of a script setup component. */
-	props: readonly (readonly TsCode[])[];
-	/** The object types of events that the codegen plugins intersect into the emits of a script setup component. */
-	emits: readonly (readonly TsCode[])[];
-	/** The object types that the codegen plugins intersect into what a script setup component exposes. */
-	expose: readonly (readonly TsCode[])[];
-	/** The tag → element type map of native elements that a codegen plugin replaces the DOM one with. */
-	elements: readonly TsCode[] | undefined;
-	/** The statements that the codegen plugins add at module scope. */
-	declarations: readonly (readonly TsCode[])[];
-	/** The named exports, synthetic default export and doc comment of the component, as the codegen plugins set them. */
-	exports: Readonly<CodegenContributions['exports']>;
 }
 
 /** The slots of the module. */
 export interface ModuleSlots {
-	/** Statements at the end of the module, after the user's code and the declarations of the codegen plugins. */
-	moduleEnd: TsCode[];
+	/** Statements at module scope, after the user's code. */
+	declarations: (readonly TsCode[])[];
+	/** Tag → element type maps of native elements; the first replaces the DOM one in this file. */
+	elements: (readonly TsCode[])[];
+	/** The exports of the component that each plugin sets. */
+	exports: ComponentExports[];
+}
+
+/** The exports of the component that a plugin sets. */
+export interface ComponentExports {
+	/** Named exports of the component. */
+	names?: readonly string[];
+	/** `false` drops the synthetic default export; the first plugin that sets it decides. */
+	default?: boolean;
+	/** The text of a doc comment of the component, copied onto its exports; the first plugin that sets it decides. */
+	docComment?: string;
 }
 
 export { generate as generateScript };
 
-function* generateSyntheticDefaultExport(
-	{ exports }: ScriptCodegenOptions,
-	exportedExpression: string,
-): Generator<TsCode> {
+function* generateSyntheticDefaultExport(options: ScriptCodegenOptions, exportedExpression: string): Generator<TsCode> {
+	const exports = getExports(options);
 	if (!exports.default) {
 		return;
 	}
@@ -93,7 +88,8 @@ function* generateSyntheticDefaultExport(
 	yield* generateNavigableExport(`export default ${exportedExpression};`);
 }
 
-function* generateNamedExports({ exports }: ScriptCodegenOptions, exportedExpression: string): Generator<TsCode> {
+function* generateNamedExports(options: ScriptCodegenOptions, exportedExpression: string): Generator<TsCode> {
+	const exports = getExports(options);
 	for (const exportName of exports.names) {
 		if (exports.docComment !== undefined) {
 			yield exports.docComment + newLine;
@@ -101,6 +97,15 @@ function* generateNamedExports({ exports }: ScriptCodegenOptions, exportedExpres
 		// `export { … }` rather than `export const`, so that no emitted `export` line names a `__VLS_` declaration
 		yield* generateNavigableExport(`const ${exportName} = ${exportedExpression};${newLine}export { ${exportName} };`);
 	}
+}
+
+/** The exports of the component that the codegen plugins set, combined in their order. */
+function getExports({ slots }: ScriptCodegenOptions) {
+	return {
+		names: [...new Set(slots.exports.flatMap(exports => exports.names ?? []))],
+		default: slots.exports.find(exports => exports.default !== undefined)?.default ?? true,
+		docComment: slots.exports.find(exports => exports.docComment !== undefined)?.docComment,
+	};
 }
 
 function* generateNavigableExport(code: string): Generator<TsCode> {
@@ -285,12 +290,12 @@ function* generateWorker(
 
 	yield* generateNamedExports(options, exportExpression);
 	yield* ctx.localTypes.generate();
-	yield* generatePluginDeclarations(options);
 	// after the user's code, which may start with `/// <reference>` or `// @ts-nocheck`
-	yield* options.slots.moduleEnd;
+	yield* generateDeclarations(options);
 }
 
-function* generatePluginDeclarations({ elements, declarations, scriptLang }: ScriptCodegenOptions): Generator<TsCode> {
+function* generateDeclarations({ slots, scriptLang }: ScriptCodegenOptions): Generator<TsCode> {
+	const [elements] = slots.elements;
 	// the element types that the template reads by `names.Elements`, as a module type that shadows the global one
 	if (elements) {
 		if (isTsLang(scriptLang)) {
@@ -304,7 +309,7 @@ function* generatePluginDeclarations({ elements, declarations, scriptLang }: Scr
 			yield `} ${names.Elements} */${newLine}`;
 		}
 	}
-	for (const declaration of declarations) {
+	for (const declaration of slots.declarations) {
 		yield* declaration;
 		yield newLine;
 	}

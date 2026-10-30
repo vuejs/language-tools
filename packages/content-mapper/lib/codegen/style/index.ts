@@ -8,18 +8,19 @@ import {
 	type IRStyle,
 	navigationFeatures,
 	scriptFeatures,
+	type ScriptSetupRanges,
 	type TemplateScope,
 	type TextRange,
 	type TypeScript,
 	type VueCompilerOptions,
 } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { CodegenConcern, CodegenConcernFile } from '../concern';
+import type { BuiltinPluginFile, FilePlugin } from '../filePlugin';
 import { names } from '../names';
-import type { BlockWriter } from '../rewrite/blockRewrite';
+import type { VueCodegenPiece, VueCodegenWriter } from '../plugin';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
-import { Boundary, type CodeBoundary, type MappedPiece, type TsCode } from '../tsCode';
+import type { TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, typeAliasRef } from '../writers';
 import { generateStyleModuleImports, generateStyleModules } from './modules';
 import { generateStyleScopedClasses } from './scopedClassNames';
@@ -38,10 +39,10 @@ export interface StyleCodegenOptions {
 }
 
 /**
- * The style concern: the types of the scoped classes and the CSS modules, the expressions of `v-bind()` in CSS, the
+ * The style plugin: the types of the scoped classes and the CSS modules, the expressions of `v-bind()` in CSS, the
  * references of the template's class names to the scoped classes, and the types of `useCssModule()`.
  */
-export function createStyleConcern({ ts, ir, analysis }: CodegenConcernFile): CodegenConcern {
+export function createStylePlugin({ ts, ir, analysis }: BuiltinPluginFile): FilePlugin {
 	const getGeneratedStyle = computed(() => {
 		if (!ir.styles.length) {
 			return;
@@ -93,20 +94,24 @@ export function createStyleConcern({ ts, ir, analysis }: CodegenConcernFile): Co
 	});
 
 	return {
+		name: 'vue:style',
 		templateTypes: () => [...getGeneratedStyle()?.generatedTypes ?? []],
 		templateBody: () => getGeneratedStyle()?.codes ?? [],
-		templateContext: () =>
-			hasStyleModules()
-				? [asType(typeAliasRef(names.StyleModules, getScriptLang(ir)), getScriptLang(ir))]
-				: [],
+		templateContext: () => hasStyleModules() ? [[typeAliasRef(names.StyleModules, getScriptLang(ir))]] : [],
 		templateExports: () => hasStyleModules() ? [names.StyleModules] : [],
-		moduleEnd: () => [...generateStyleModuleImports(ir.styles)],
+		declarations: () => [...generateStyleModuleImports(ir.styles)],
 		elementEnd: getElementEnd,
 		renamedElsewhere: getRenamedElsewhere,
-		rewriteScriptSetup(core, scriptSetup) {
+		rewrite({ scriptSetup }) {
 			const scriptSetupRanges = analysis.getScriptSetupRanges();
-			if (scriptSetupRanges) {
-				rewriteUseCssModule(core, scriptSetup, scriptSetupRanges.useCssModule, getScriptLang(ir), hasStyleModules());
+			if (scriptSetup && scriptSetupRanges) {
+				rewriteUseCssModule(
+					scriptSetup,
+					ir.scriptSetup!,
+					scriptSetupRanges.useCssModule,
+					getScriptLang(ir),
+					hasStyleModules(),
+				);
 			}
 		},
 	};
@@ -152,9 +157,9 @@ function* generateCssVars(
 
 /** Casts each `useCssModule()` call of `<script setup>` to the type of its CSS module. */
 function rewriteUseCssModule(
-	core: BlockWriter,
+	writer: VueCodegenWriter,
 	scriptSetup: IRScriptSetup,
-	calls: NonNullable<ReturnType<CodegenConcernFile['analysis']['getScriptSetupRanges']>>['useCssModule'],
+	calls: ScriptSetupRanges['useCssModule'],
 	scriptLang: string,
 	hasStyleModules: boolean,
 ) {
@@ -162,40 +167,32 @@ function rewriteUseCssModule(
 	for (const { callExp, exp, arg } of calls) {
 		if (arg) {
 			// the argument is copied as a reference into the cast, and is `any` at the call
-			const name = core.cut(arg.start, arg.end, {
-				data: { features: navigationFeatures | completionFeatures },
+			const name = writer.cut(arg.start, arg.end, {
+				features: navigationFeatures | completionFeatures,
 				placeholder: asType('any', scriptLang),
 			});
 			if (isTsLang(scriptLang)) {
-				core.insertBefore(callExp.start, `(`);
-				core.insertAfter(callExp.end, [` as Omit<${type}, '$style'>[`, name, `])`]);
+				writer.insertBefore(callExp.start, `(`);
+				writer.insertAfter(callExp.end, [` as Omit<${type}, '$style'>[`, name, `])`]);
 			}
 			else {
-				core.insertBefore(callExp.start, [`/** @type {Omit<${type}, '$style'>[`, name, `]} */ (`]);
-				core.insertAfter(callExp.end, `)`);
+				writer.insertBefore(callExp.start, [`/** @type {Omit<${type}, '$style'>[`, name, `]} */ (`]);
+				writer.insertAfter(callExp.end, `)`);
 			}
 		}
 		else {
-			core.insertBefore(callExp.start, isTsLang(scriptLang) ? `(` : `/** @type {${type}['$style']} */ (`);
-			core.insertAfter(
+			writer.insertBefore(callExp.start, isTsLang(scriptLang) ? `(` : `/** @type {${type}['$style']} */ (`);
+			writer.insertAfter(
 				callExp.end,
 				isTsLang(scriptLang)
-					? [...generateStyleKeyCast(scriptSetup, exp, type)]
+					? [` as ${type}[`, styleKey(scriptSetup, exp), `])`]
 					: `)`,
 			);
 		}
 	}
 }
 
-/** ` as T['$style'])`, whose key maps to the `useCssModule()` call without features. */
-function* generateStyleKeyCast(
-	scriptSetup: IRScriptSetup,
-	exp: TextRange,
-	type: string,
-): Generator<string | MappedPiece<CodeBoundary, IRScriptSetup>> {
-	yield ` as ${type}[`;
-	const boundary = yield* Boundary.start(scriptSetup, exp.start, exp.end, { features: 0 });
-	yield `'$style'`;
-	yield boundary.end();
-	yield `])`;
+/** The key `'$style'`, which maps as a whole to the `useCssModule()` call without features. */
+function styleKey(scriptSetup: IRScriptSetup, exp: TextRange): VueCodegenPiece {
+	return { source: scriptSetup, start: exp.start, end: exp.end, data: { features: 0 }, text: `'$style'` };
 }

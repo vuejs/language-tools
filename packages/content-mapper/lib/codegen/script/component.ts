@@ -26,7 +26,7 @@ export function* generateComponent(
 ): Generator<TsCode> {
 	yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 
-	if (options.expose.length) {
+	if (options.slots.expose.length) {
 		yield `setup: () => (`;
 		yield* asTypeCode(intersectTypes(getExposeTypes(options, scriptSetupRanges)), options.scriptLang);
 		yield `),${newLine}`;
@@ -79,7 +79,7 @@ function* generateTypeEmitsOption(
 	if (scriptSetupRanges.defineEmits?.typeArg) {
 		yield names.Emit;
 	}
-	yield* options.emits;
+	yield* options.slots.emits;
 }
 
 function* generateRuntimeEmitsOption(
@@ -95,7 +95,7 @@ function* generateRuntimeEmitsOption(
 			options.scriptLang,
 		);
 	}
-	for (const type of options.emits) {
+	for (const type of options.slots.emits) {
 		yield asTypeCode([`${names.NormalizeEmits}<${names.ShortEmits}<`, ...type, `>>`], options.scriptLang);
 	}
 }
@@ -163,7 +163,7 @@ function* generateRuntimePropsOption(
 		&& ctx.generatedTypes.has(names.PublicProps)
 		&& (
 			options.vueCompilerOptions.target < 3.6
-			|| ((options.props.length || scriptSetupRanges.defineModel.length) && scriptSetupRanges.defineProps?.arg)
+			|| ((options.slots.props.length || scriptSetupRanges.defineModel.length) && scriptSetupRanges.defineProps?.arg)
 		)
 	) {
 		yield asType(

@@ -117,6 +117,25 @@ test('moves the code that a plugin cuts to where it inserts the cut, with the ed
 	}));
 });
 
+test('leaves the placeholder of a cut where its chars are cut from, and maps them with its features', () => {
+	const content = `<script setup lang="ts">\nconst a = useFoo('a');\n</script>\n`;
+	const { text, mappings } = generateWith(
+		content,
+		rewriteSetup((writer, block) => {
+			const arg = rangeOf(block, `'a'`);
+			const call = rangeOf(block, `useFoo('a')`);
+			const cut = writer.cut(arg.start, arg.end, { features: 0, placeholder: 'any' });
+			writer.insertAfter(call.end, [' as Foo[', cut, ']']);
+		}),
+	);
+	expect(text).toContain(`const a = useFoo(any) as Foo['a'];`);
+	expect(mappings).toContainEqual(expect.objectContaining({
+		virtualStart: text.indexOf(`'a'`),
+		originalStart: content.indexOf(`'a'`),
+		features: 0,
+	}));
+});
+
 test('maps a range of a plugin without text as a copy', () => {
 	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
 	const { text, mappings } = generateWith(

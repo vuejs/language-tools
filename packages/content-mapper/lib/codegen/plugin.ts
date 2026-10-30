@@ -10,17 +10,20 @@ import {
 	type VuePluginContext,
 	type VuePluginError,
 } from '@vue/language-core';
+import { computed } from 'alien-signals';
 import type { Piece, RewriteCode, RewriteSlice } from 'muggle-string';
+import type { CodegenSlots, FilePlugin } from './filePlugin';
 import type { BlockRewrite, BlockWriter } from './rewrite/blockRewrite';
+import type { ComponentExports } from './script';
 import { identifierRE } from './writers';
 
 /** The `codegen` export of a `plugins` entry's module. */
 export type VueCodegenExport = VueCodegenPlugin | ((ctx: VuePluginContext) => VueCodegenPlugin);
 
 /**
- * A codegen plugin. For each file, the `rewrite` of every plugin runs in `plugins` order, and so does the `generate` of
- * every plugin. Both must be pure functions of `file` and the plugin context: no file system, no environment, no cache
- * shared across projects.
+ * A codegen plugin. For each file, the `rewrite` of every plugin runs in `plugins` order, after those of the built-in
+ * plugins, and so does the `generate` of every plugin. Both must be pure functions of `file` and the plugin context: no
+ * file system, no environment, no cache shared across projects.
  */
 export interface VueCodegenPlugin {
 	/** Edits the user's code of `<script>` and `<script setup>` through the writer of each block. */
@@ -79,7 +82,14 @@ export interface VueCodegenWriter {
 	 * The chars of `start`..`end`, with the edits of all writers in them, rendered where the slice is inserted, exactly
 	 * once; nowhere if it is not. The cuts of all writers are nested or disjoint.
 	 */
-	cut(start: number, end: number): VueCodegenSlice;
+	cut(start: number, end: number, options?: VueCodegenCutOptions): VueCodegenSlice;
+}
+
+export interface VueCodegenCutOptions {
+	/** The features that the chars of the slice map with; `scriptFeatures` by default. */
+	features?: number;
+	/** Code that takes the place of the chars where they are cut from. */
+	placeholder?: VueCodegenInsert;
 }
 
 export interface VueCodegenSlots {
@@ -158,30 +168,6 @@ export function loadCodegenPlugins(
 	return { plugins, errors };
 }
 
-/** The contributions of the codegen plugins to one file, combined in `plugins` order. */
-export interface CodegenContributions {
-	/** Object types spread into the template context. */
-	templateContext: VueCodegenCode[];
-	/** Object types intersected into the public props of a script setup component. */
-	props: VueCodegenCode[];
-	/** Object types of events intersected into the emits of a script setup component. */
-	emits: VueCodegenCode[];
-	/** Object types intersected into what a script setup component exposes. */
-	expose: VueCodegenCode[];
-	/** The tag → element type map of native elements, of the first plugin that sets one. */
-	elements: VueCodegenCode | undefined;
-	/** Statements at module scope. */
-	declarations: VueCodegenCode[];
-	exports: {
-		/** Named exports of the component, de-duplicated. */
-		names: string[];
-		/** Whether the synthetic default export is kept, of the first plugin that sets it. */
-		default: boolean;
-		/** The text of a doc comment of the component, of the first plugin that sets a valid one. */
-		docComment: string | undefined;
-	};
-}
-
 /** The rewrites of the script blocks of a file. */
 export interface ScriptRewrites {
 	script: BlockRewrite | undefined;
@@ -189,13 +175,13 @@ export interface ScriptRewrites {
 }
 
 /**
- * Runs the `rewrite` of each plugin on `file`, in order, with its writers of `rewrites`. An exception of a hook
+ * Runs the `rewrite` of each plugin of the file, in order, with its writers of `rewrites`. An exception of a hook
  * propagates, and so does an edit that is not valid for the IR of the file.
  */
-export function rewriteScripts(plugins: readonly CodegenPlugin[], file: VueCodegenFile, rewrites: ScriptRewrites) {
-	const blocks = getBlocks(file.ir);
-	for (const [rank, { name, plugin }] of plugins.entries()) {
-		plugin.rewrite?.(file, {
+export function rewriteScripts(plugins: readonly FilePlugin[], ir: IR, rewrites: ScriptRewrites) {
+	const blocks = getBlocks(ir);
+	for (const [rank, { name, rewrite }] of plugins.entries()) {
+		rewrite?.({
 			script: rewrites.script && createWriter(name, blocks, rewrites.script.rewrite.writer(rank)),
 			scriptSetup: rewrites.scriptSetup && createWriter(name, blocks, rewrites.scriptSetup.rewrite.writer(rank)),
 		});
@@ -203,65 +189,76 @@ export function rewriteScripts(plugins: readonly CodegenPlugin[], file: VueCodeg
 }
 
 /**
- * Runs the `generate` of each plugin on `file`, in order. An exception of a hook propagates, and so does a piece that
- * is not valid for the IR of the file. Other entries that are not valid for the IR of the file are dropped.
+ * `plugin` for `file`. Its `generate` runs once, when a slot is first read; an exception of it propagates, and so does
+ * a piece that is not valid for the IR of the file. Other entries that are not valid for the IR of the file are dropped.
  */
-export function getContributions(plugins: readonly CodegenPlugin[], file: VueCodegenFile): CodegenContributions {
-	const { ir } = file;
+export function createFilePlugin({ name, plugin }: CodegenPlugin, file: VueCodegenFile): FilePlugin {
+	const getSlots = computed(() => getSlotsOf(name, file.ir, plugin.generate?.(file)));
+	return {
+		name,
+		rewrite: plugin.rewrite && (writers => plugin.rewrite!(file, writers)),
+		templateContext: () => getSlots().templateContext,
+		props: () => getSlots().props,
+		emits: () => getSlots().emits,
+		expose: () => getSlots().expose,
+		elements: () => getSlots().elements,
+		declarations: () => getSlots().declarations,
+		exports: () => getSlots().exports,
+	};
+}
+
+type PublicSlots = Pick<
+	CodegenSlots,
+	'templateContext' | 'props' | 'emits' | 'expose' | 'elements' | 'declarations' | 'exports'
+>;
+
+function getSlotsOf(plugin: string, ir: IR, contribution: VueCodegenSlots | undefined): PublicSlots {
 	const blocks = getBlocks(ir);
-	const contributions: CodegenContributions = {
+	const slots: PublicSlots = {
 		templateContext: [],
 		props: [],
 		emits: [],
 		expose: [],
-		elements: undefined,
+		elements: [],
 		declarations: [],
-		exports: { names: [], default: true, docComment: undefined },
+		exports: [],
 	};
-	let isDefaultSet = false;
-	for (const { name, plugin } of plugins) {
-		const contribution = plugin.generate?.(file);
-		if (typeof contribution !== 'object' || contribution === null) {
-			continue;
+	if (typeof contribution !== 'object' || contribution === null) {
+		return slots;
+	}
+	if (toArray(contribution.elements).length) {
+		slots.elements.push(checkCode(plugin, blocks, contribution.elements!));
+	}
+	for (const key of ['templateContext', 'props', 'emits', 'expose', 'declarations'] as const) {
+		for (const type of toArray(contribution[key])) {
+			slots[key].push(checkCode(plugin, blocks, type));
 		}
-		if (!contributions.elements && toArray(contribution.elements).length) {
-			contributions.elements = checkCode(name, blocks, contribution.elements!);
-		}
-		for (const key of ['templateContext', 'props', 'emits', 'expose', 'declarations'] as const) {
-			for (const type of toArray(contribution[key])) {
-				contributions[key].push(checkCode(name, blocks, type));
-			}
-		}
-		const { exports } = contribution;
-		if (typeof exports !== 'object' || exports === null) {
-			continue;
-		}
-		for (const exportName of toArray(exports.names)) {
-			if (
-				typeof exportName === 'string' && identifierRE.test(exportName)
-				&& !contributions.exports.names.includes(exportName)
-			) {
-				contributions.exports.names.push(exportName);
-			}
-		}
-		if (!isDefaultSet && typeof exports.default === 'boolean') {
-			isDefaultSet = true;
-			contributions.exports.default = exports.default;
-		}
-		if (
-			contributions.exports.docComment === undefined && typeof exports.docComment === 'object' && exports.docComment
-		) {
-			const { block, start, end } = exports.docComment;
-			if ((block === ir.script || block === ir.scriptSetup) && block && isRange(block, start, end)) {
-				const text = block.content.slice(start, end);
-				// one block comment, so that it can't end the generated code's own comments or add code
-				if (/^\/\*(?:[^*]|\*(?!\/))*\*\/$/.test(text)) {
-					contributions.exports.docComment = text;
-				}
+	}
+	const { exports } = contribution;
+	if (typeof exports === 'object' && exports !== null) {
+		slots.exports.push(getExportsOf(ir, exports));
+	}
+	return slots;
+}
+
+function getExportsOf(ir: IR, exports: NonNullable<VueCodegenSlots['exports']>): ComponentExports {
+	const names = toArray(exports.names).filter(name => typeof name === 'string' && identifierRE.test(name));
+	let docComment: string | undefined;
+	if (typeof exports.docComment === 'object' && exports.docComment) {
+		const { block, start, end } = exports.docComment;
+		if ((block === ir.script || block === ir.scriptSetup) && block && isRange(block, start, end)) {
+			const text = block.content.slice(start, end);
+			// one block comment, so that it can't end the generated code's own comments or add code
+			if (/^\/\*(?:[^*]|\*(?!\/))*\*\/$/.test(text)) {
+				docComment = text;
 			}
 		}
 	}
-	return contributions;
+	return {
+		names,
+		default: typeof exports.default === 'boolean' ? exports.default : undefined,
+		docComment,
+	};
 }
 
 function getBlocks(ir: IR): Set<IRBlock> {
@@ -280,9 +277,15 @@ function createWriter(plugin: string, blocks: Set<IRBlock>, writer: BlockWriter)
 		remove(start, end) {
 			writer.replace(start, end, '');
 		},
-		cut(start, end) {
+		cut(start, end, { features = scriptFeatures, placeholder }: VueCodegenCutOptions = {}) {
+			if (!Number.isInteger(features)) {
+				throw new TypeError(`The codegen plugin '${plugin}' cut with features that are not an integer.`);
+			}
 			// the data of the kept pieces only, which the slice does not let the plugin read
-			return writer.cut(start, end, { data: { features: scriptFeatures } }) as VueCodegenSlice;
+			return writer.cut(start, end, {
+				data: { features },
+				placeholder: placeholder === undefined ? undefined : checkInsert(plugin, blocks, placeholder),
+			}) as VueCodegenSlice;
 		},
 	};
 }

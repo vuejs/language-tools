@@ -23,8 +23,11 @@ export interface TemplateFunctionSlots {
 	templateTypes: string[];
 	/** Code at the end of the template, in its scope. */
 	templateEnd: TsCode[];
-	/** Object types spread into the template context, after the component instance. */
-	templateContext: (string | readonly TsCode[])[];
+	/**
+	 * Object types spread into the template context (what template expressions and `$` names resolve against), after
+	 * the component instance.
+	 */
+	templateContext: (readonly TsCode[])[];
 	/** Code in the template function, before the code of the template. */
 	templateBody: TsCode[];
 	/** Type aliases that the template function declares, returned to setup and the export. */
@@ -99,7 +102,7 @@ function* generateTemplateCtx(
 	options: ScriptCodegenOptions,
 	selfType: string | undefined,
 ): Generator<TsCode> {
-	const { vueCompilerOptions, scriptSetupRanges, scriptLang, templateContext, slots } = options;
+	const { vueCompilerOptions, scriptSetupRanges, scriptLang, slots } = options;
 	const exps: (string | readonly TsCode[])[] = [];
 	const emitTypes = getEmitTypes(options);
 	const propTypes: string[] = [];
@@ -113,7 +116,9 @@ function* generateTemplateCtx(
 	else {
 		exps.push(asType(`import('${vueCompilerOptions.lib}').ComponentPublicInstance`, scriptLang));
 	}
-	exps.push(...slots.templateContext);
+	for (const type of slots.templateContext) {
+		exps.push(asTypeCode(type, scriptLang));
+	}
 
 	if (emitTypes.length) {
 		yield* generateTypeAlias(names.EmitProps, scriptLang, function*() {
@@ -137,9 +142,6 @@ function* generateTemplateCtx(
 		exps.push(asType(`{ $props: ${propTypes.join(` & `)} }`, scriptLang));
 		exps.push(asType(propTypes.join(` & `), scriptLang));
 	}
-	for (const type of templateContext) {
-		exps.push(asTypeCode(type, scriptLang));
-	}
 
 	yield `const ${names.ctx} = `;
 	yield* generateSpreadMerge(...exps);
@@ -148,7 +150,7 @@ function* generateTemplateCtx(
 
 /** The types of the emit functions of a script setup component, which the codegen plugins add events to. */
 export function getEmitTypes(
-	{ scriptSetupRanges, emits }: ScriptCodegenOptions,
+	{ scriptSetupRanges, slots }: ScriptCodegenOptions,
 ): (string | readonly TsCode[])[] {
 	const emitTypes: (string | readonly TsCode[])[] = [];
 	if (!scriptSetupRanges) {
@@ -160,7 +162,7 @@ export function getEmitTypes(
 	if (scriptSetupRanges.defineModel.length) {
 		emitTypes.push(`typeof ${names.modelEmit}`);
 	}
-	for (const type of emits) {
+	for (const type of slots.emits) {
 		emitTypes.push([`${names.ShortEmits}<`, ...type, `>`]);
 	}
 	return emitTypes;

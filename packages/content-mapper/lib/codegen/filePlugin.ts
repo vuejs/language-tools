@@ -1,21 +1,17 @@
-import type { IR, ScriptAnalysis, TypeScript } from '@vue/language-core';
 import { computed } from 'alien-signals';
+import type { VueCodegenFile, VueCodegenWriters } from './plugin';
 import type { ModuleSlots } from './script';
 import type { ComponentSlots } from './script/component';
-import type { ScriptSetupHooks, ScriptSetupSlots } from './script/scriptSetup';
+import type { ScriptSetupSlots } from './script/scriptSetup';
 import type { TemplateFunctionSlots } from './script/template';
 import type { TemplateVars } from './template';
 import type { ElementSlots } from './template/element';
 
 /**
- * What a concern of the built-in codegen reads: the same as a codegen plugin, the variables of the template, and
- * the names of the types that the template function declares.
+ * What a built-in codegen plugin reads: the same as a codegen plugin, the variables of the template, and the names of
+ * the types that the template function declares.
  */
-export interface CodegenConcernFile {
-	ts: TypeScript;
-	fileName: string;
-	ir: IR;
-	analysis: ScriptAnalysis;
+export interface BuiltinPluginFile extends VueCodegenFile {
 	/** The variables that the code of the template declares for its nodes, without a template `undefined`. */
 	getTemplateVars(): TemplateVars | undefined;
 	/** The names of the types that the template function declares. */
@@ -26,34 +22,41 @@ export interface CodegenConcernFile {
 export type CodegenSlots = ModuleSlots & TemplateFunctionSlots & ComponentSlots & ScriptSetupSlots & ElementSlots;
 
 /**
- * A concern of the built-in codegen, e.g. style. It writes its code into the slots that the owners of the generated
- * code declare, and through the hooks that they call, and knows neither their code nor the other concerns. Each slot
- * is read lazily, so that an owner depends only on the slots that it reads.
+ * A codegen plugin, built-in or of `vueCompilerOptions.plugins`, for one file. It edits the user's code of the script
+ * blocks through its writers, and writes its code into the slots that the owners of the generated code declare; it
+ * knows neither their code nor the other plugins. Each slot is read lazily, so that an owner depends only on the slots
+ * that it reads.
  */
-export type CodegenConcern =
-	& { readonly [K in keyof CodegenSlots]?: () => CodegenSlots[K] }
-	& ScriptSetupHooks;
+export type FilePlugin =
+	& {
+		/** The name in the errors of its edits. */
+		readonly name: string;
+		rewrite?(writers: VueCodegenWriters): void;
+	}
+	& { readonly [K in keyof CodegenSlots]?: () => CodegenSlots[K] };
 
-export type CodegenConcernFactory = (file: CodegenConcernFile) => CodegenConcern;
+export type BuiltinPluginFactory = (file: BuiltinPluginFile) => FilePlugin;
 
-/** The slots of `concerns`, each the contributions in the order of `concerns`. */
+/** The slots of `plugins`, each the contributions in the order of `plugins`. */
 export type MergedSlots = { readonly [K in keyof CodegenSlots]: () => CodegenSlots[K] };
 
-export function mergeSlots(concerns: readonly CodegenConcern[]): MergedSlots {
+export function mergeSlots(plugins: readonly FilePlugin[]): MergedSlots {
 	const listSlot = <K extends keyof CodegenSlots>(key: K) =>
-		computed(() => concerns.flatMap(concern => (concern[key]?.() ?? []) as unknown[])) as () => CodegenSlots[K];
+		computed(() => plugins.flatMap(plugin => (plugin[key]?.() ?? []) as unknown[])) as () => CodegenSlots[K];
 	const mapSlot = <K extends keyof CodegenSlots>(key: K) =>
 		computed(() => {
 			const merged = new Map<unknown, unknown[]>();
-			for (const concern of concerns) {
-				for (const [node, values] of (concern[key]?.() ?? new Map()) as Map<unknown, unknown[]>) {
+			for (const plugin of plugins) {
+				for (const [node, values] of (plugin[key]?.() ?? new Map()) as Map<unknown, unknown[]>) {
 					merged.set(node, [...merged.get(node) ?? [], ...values]);
 				}
 			}
 			return merged;
 		}) as () => CodegenSlots[K];
 	return {
-		moduleEnd: listSlot('moduleEnd'),
+		declarations: listSlot('declarations'),
+		elements: listSlot('elements'),
+		exports: listSlot('exports'),
 		templateTypes: listSlot('templateTypes'),
 		templateEnd: listSlot('templateEnd'),
 		templateContext: listSlot('templateContext'),
@@ -62,6 +65,9 @@ export function mergeSlots(concerns: readonly CodegenConcern[]): MergedSlots {
 		templateExportValues: listSlot('templateExportValues'),
 		componentOptions: listSlot('componentOptions'),
 		fallthroughProps: listSlot('fallthroughProps'),
+		props: listSlot('props'),
+		emits: listSlot('emits'),
+		expose: listSlot('expose'),
 		exposedInstanceTypes: listSlot('exposedInstanceTypes'),
 		elementEnd: mapSlot('elementEnd'),
 		renamedElsewhere: mapSlot('renamedElsewhere'),

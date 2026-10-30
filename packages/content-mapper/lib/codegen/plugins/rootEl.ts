@@ -1,11 +1,11 @@
 import { getScriptLang } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { CodegenConcern, CodegenConcernFile } from '../concern';
+import type { BuiltinPluginFile, FilePlugin } from '../filePlugin';
 import { names } from '../names';
 import { asType, generateTypeAlias, newLine, typeAliasRef } from '../writers';
 
 /** The type of the root element of the template, which the component exposes as `$el`. */
-export function createRootElConcern({ ir, analysis, getTemplateVars }: CodegenConcernFile): CodegenConcern {
+export function createRootElPlugin({ ir, analysis, getTemplateVars }: BuiltinPluginFile): FilePlugin {
 	/** The types of the root elements of a template with a single root element in each branch. */
 	const getRootElTypes = computed(() => {
 		const { rootElements, singleRootNodes, dollarVars } = analysis.getTemplateScope();
@@ -26,6 +26,7 @@ export function createRootElConcern({ ir, analysis, getTemplateVars }: CodegenCo
 	});
 	const hasRootEl = () => !!getRootElTypes();
 	return {
+		name: 'vue:root-el',
 		templateTypes: () => hasRootEl() ? [names.RootEl] : [],
 		templateEnd: () => {
 			const types = getRootElTypes();

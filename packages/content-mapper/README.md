@@ -115,8 +115,9 @@ the resolved `vueCompilerOptions` that returns one. Options of the plugin come f
 neither `rewrite` nor `generate`, and a hook that is not a function are reported as option
 diagnostics at the `plugins` entry.
 
-A plugin has two optional hooks, which run for each file, each in `plugins` order: the `rewrite` of
-every plugin and the `generate` of every plugin. `rewrite(file, writers)` edits the user's code
+A plugin has two optional hooks, which run for each file, each in `plugins` order after the built-in
+plugins of the mapper (style, template refs, slots, `$` names): the `rewrite` of every plugin and the
+`generate` of every plugin. `rewrite(file, writers)` edits the user's code
 of the script blocks; `generate(file)` returns `VueCodegenSlots`, the code that the plugin adds to
 the slots of the generated code. Both see the same `file`, not the result of another hook. `file`
 holds the TS 7.1 AST API that parsed the scripts (`ts`), the IR, and its analysis (resolved options,
@@ -138,13 +139,13 @@ range of a block of the file throws. Plugins never see generated names or offset
 
 | Slot | Where the mapper places it | What its code can reference |
 |---|---|---|
-| `templateContext` | Object types spread last into the template context | the setup scope of a script setup component, else the module scope |
+| `templateContext` | Object types spread into the template context, after the component instance and before its props and emits | the setup scope of a script setup component, else the module scope |
 | `props`, `emits`, `expose` | `<script setup>` only: object types intersected into the public props (`defineProps<…>` form), the emits (`defineEmits<…>` form) and what the component exposes | the setup scope |
 | `elements` | The tag → element type map of native elements, which replaces the DOM one in the file | the module scope |
 | `declarations` | Statements at module scope, after the user's code | the module scope |
 | `exports` | `names`: named exports of the component. `default: false`: no synthetic default export (a user `export default` in `<script>` stays). `docComment`: the range of a doc comment (one block comment) of a script block, copied onto the exports of the component | — |
 
-Slots combine in `plugins` order. Arrays and `exports.names` are concatenated, and names are
+Slots combine in `plugins` order, after the code of the built-in plugins. Arrays and `exports.names` are concatenated, and names are
 de-duplicated. For `elements`, `exports.default` and `exports.docComment`, the first plugin that sets
 one wins. Other invalid entries, such as a doc comment out of its block, are dropped.
 
@@ -154,9 +155,11 @@ blocks (`undefined` without the block), at offsets of the block's content. Inser
 char at `offset` (at the end of the block, to the end of the block), `insertAfter(offset, code)` to
 the char before `offset` (at the start of the block, to the start of the block), and the code goes
 wherever the mapper copies that char. `remove(start, end)` drops the chars of `start..end`; the code
-attached to them stays. Removals of several plugins are united. `cut(start, end)` returns a slice of
+attached to them stays. Removals of several plugins are united. `cut(start, end, options?)` returns a slice of
 the chars of `start..end` with all the edits in them, which renders where it is inserted, exactly
-once, and nowhere if it is not; the cuts of all plugins and the mapper are nested or disjoint. When the mapper moves a range of the
+once, and nowhere if it is not; the cuts of all plugins and the mapper are nested or disjoint. Its chars map
+with `options.features` (`scriptFeatures` by default), and `options.placeholder` takes their place where
+they are cut from. When the mapper moves a range of the
 user's code (e.g. the type argument of `defineProps` into a type alias), the inserts attached to its
 chars move with it. At one char, the code nests: a later plugin sits outside an earlier one, and the
 mapper outside all. So inserts before the char come outermost first, and inserts after the char come
