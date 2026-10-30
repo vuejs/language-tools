@@ -354,8 +354,9 @@ function getShouldCamelize(
 
 /**
  * `dataAttributes` always skip the props object (any tag).
- * `htmlAttributes` skip only on components/slots so native elements still check
- * against HTML/SVG/ARIA attribute types (fixes #6318).
+ * `htmlAttributes` skip only on components so native elements still check
+ * against HTML/SVG/ARIA types, and typed slot props (e.g. ariaDescribedby) keep working
+ * (fixes #6318; see #6084).
  */
 function shouldSkipUnknownPropCheck(
 	options: TemplateCodegenOptions,
@@ -367,8 +368,8 @@ function shouldSkipUnknownPropCheck(
 	}
 	return (
 		node.tagType === CompilerDOM.ElementTypes.COMPONENT
-		|| node.tagType === CompilerDOM.ElementTypes.SLOT
-	) && options.vueCompilerOptions.isHtmlAttribute(propName);
+		&& options.vueCompilerOptions.isHtmlAttribute(propName)
+	);
 }
 
 function getPropsCodeFeatures(): VueCodeMarker {

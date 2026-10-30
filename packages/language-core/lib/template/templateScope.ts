@@ -712,8 +712,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 					propName === undefined
 					|| vueCompilerOptions.isDataAttribute(propName)
 					|| (
-						(node.tagType === CompilerDOM.ElementTypes.COMPONENT
-							|| node.tagType === CompilerDOM.ElementTypes.SLOT)
+						node.tagType === CompilerDOM.ElementTypes.COMPONENT
 						&& vueCompilerOptions.isHtmlAttribute(propName)
 					)
 				) {
@@ -739,8 +738,7 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 				if (
 					vueCompilerOptions.isDataAttribute(prop.name)
 					|| (
-						(node.tagType === CompilerDOM.ElementTypes.COMPONENT
-							|| node.tagType === CompilerDOM.ElementTypes.SLOT)
+						node.tagType === CompilerDOM.ElementTypes.COMPONENT
 						&& vueCompilerOptions.isHtmlAttribute(prop.name)
 					)
 				) {
