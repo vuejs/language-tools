@@ -4,7 +4,7 @@ import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { endOfLine, isTsLang, newLine } from '../utils';
+import { asType, endOfLine, isTsLang, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 
@@ -301,9 +301,11 @@ export function createTemplateCodegenContext() {
 					yield `, `;
 				}
 				first = false;
+				yield `${hoistVar} = `;
+				// In JS, use the type without reading a possibly unassigned conditional variable.
 				yield isTs
-					? `${hoistVar} = ${originalVar}!`
-					: `${hoistVar} = ${names.nonNull}(${originalVar})`;
+					? `${originalVar}!`
+					: `${names.nonNull}(${asType(`typeof ${originalVar}`, scriptLang)})`;
 			}
 			yield endOfLine;
 		}
