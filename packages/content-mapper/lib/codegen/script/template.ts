@@ -47,7 +47,7 @@ export function* generateTemplate(
 	// The types setup and the export need from it are passed out through its return type.
 	const { scriptLang } = options;
 	const exportedTypes = [
-		...[names.Slots, names.InheritedAttrs, names.TemplateRefs].filter(name =>
+		...[names.Slots, names.InheritedAttrs].filter(name =>
 			options.templateTypes.has(name) && !(name === names.Slots && options.scriptSetupRanges?.defineSlots)
 		),
 		...options.slots.templateExports,

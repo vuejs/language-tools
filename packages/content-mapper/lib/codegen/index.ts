@@ -3,6 +3,7 @@ import { BindingFlag } from '@vue/language-core/lib/script/scriptBindings';
 import { computed } from 'alien-signals';
 import { type CodegenConcernFactory, mergeSlots } from './concern';
 import { createDollarsConcern } from './concerns/dollars';
+import { createRefsConcern } from './concerns/refs';
 import { createRootElConcern } from './concerns/rootEl';
 import { type CodegenPlugin, getContributions } from './plugin';
 import { generateScript } from './script';
@@ -18,6 +19,7 @@ export interface ServiceScript {
 
 /** The concerns of the built-in codegen, in the order that their code takes in each slot. */
 const concernFactories: readonly CodegenConcernFactory[] = [
+	createRefsConcern,
 	createRootElConcern,
 	createDollarsConcern,
 	createStyleConcern,

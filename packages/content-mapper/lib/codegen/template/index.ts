@@ -138,7 +138,6 @@ function* generateWorker(
 	yield* ctx.generateHoistVariables(options.scriptLang);
 	yield* generateSlotsType(options, ctx);
 	yield* generateInheritedAttrsType(options, ctx);
-	yield* generateTemplateRefsType(options, ctx);
 
 	const facts = getFacts(ctx);
 	for (const generateTemplateEnd of options.generateTemplateEnd) {
@@ -219,52 +218,5 @@ function* generateInheritedAttrsType(
 		yield options.vueCompilerOptions.checkRequiredFallthroughAttributes
 			? type
 			: `Partial<${type}>`;
-	});
-}
-
-function* generateTemplateRefsType(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-): Generator<TsCode> {
-	if (
-		!ctx.templateRefs.size
-		|| !(
-			options.vueCompilerOptions.inferTemplateDollarRefs
-			|| options.vueCompilerOptions.inferComponentDollarRefs
-			|| options.setupRefs.size
-		)
-	) {
-		return;
-	}
-	ctx.generatedTypes.add(names.TemplateRefs);
-
-	yield* generateTypeAlias(names.TemplateRefs, options.scriptLang, function*() {
-		yield `{}`;
-		for (const [name, refs] of ctx.templateRefs) {
-			yield `${newLine}& `;
-			if (refs.length >= 2) {
-				yield `(`;
-			}
-			for (let i = 0; i < refs.length; i++) {
-				const { typeExp, offset } = refs[i]!;
-				if (i) {
-					yield ` | `;
-				}
-				yield `{ `;
-				const ignore = yield* Boundary.start(options.template, 0, 0, synthesizedIgnore);
-				yield* generateObjectProperty(
-					options,
-					ctx,
-					name,
-					offset,
-					{ features: navigationFeatures },
-				);
-				yield ignore.end();
-				yield `: ${typeExp} }`;
-			}
-			if (refs.length >= 2) {
-				yield `)`;
-			}
-		}
 	});
 }

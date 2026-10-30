@@ -34,13 +34,6 @@ export function* generateComponent(
 	yield* emitOptionCodes;
 	yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length);
 
-	if (
-		options.vueCompilerOptions.target >= 3.5
-		&& options.vueCompilerOptions.inferComponentDollarRefs
-		&& options.templateTypes.has(names.TemplateRefs)
-	) {
-		yield `__typeRefs: ${asType(typeAliasRef(names.TemplateRefs, options.scriptLang), options.scriptLang)},${newLine}`;
-	}
 	for (const option of options.slots.componentOptions) {
 		yield `${option},${newLine}`;
 	}

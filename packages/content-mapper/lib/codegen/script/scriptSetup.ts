@@ -1,6 +1,5 @@
 import {
 	type CodeSource,
-	completionFeatures,
 	getDefineModelPropName,
 	type IRScriptSetup,
 	navigationFeatures,
@@ -176,12 +175,6 @@ export function* generateGeneric(
 	else {
 		yield `{}`;
 	}
-	if (
-		options.vueCompilerOptions.inferComponentDollarRefs
-		&& options.templateTypes.has(names.TemplateRefs)
-	) {
-		yield ` & { $refs: ${typeAliasRef(names.TemplateRefs, scriptLang)}; }`;
-	}
 	for (const type of options.slots.exposedInstanceTypes) {
 		yield ` & ${type}`;
 	}
@@ -335,32 +328,11 @@ function addTransforms(
 			core.insertBefore(callExp.start, `const ${names.exposed} = {}${endOfLine}`);
 		}
 	}
-	for (const { callExp, arg } of scriptSetupRanges.useTemplateRef) {
-		// the argument is copied as a reference into the cast, and is `any` at the call
-		const name = arg && cutReference(core, arg, asType('any', options.scriptLang));
-		const refType = name
-			? [typeAliasRef(names.TemplateRefs, options.scriptLang), `[`, name, `]`]
-			: [`unknown`];
-		const shallowRef = `Readonly<import('${options.vueCompilerOptions.lib}').ShallowRef<`;
-		if (isTsLang(options.scriptLang)) {
-			core.insertBefore(callExp.start, `(`);
-			core.insertAfter(callExp.end, () => [` as ${shallowRef}`, ...refType, ` | null>>)`]);
-		}
-		else {
-			core.insertBefore(callExp.start, () => [`/** @type {${shallowRef}`, ...refType, ` | null>>} */ (`]);
-			core.insertAfter(callExp.end, `)`);
-		}
-	}
 }
 
 /** The user's code at `range`, which `placeholder` takes the place of; it maps as script code where it is placed. */
 function cutScriptCode(core: CoreRewriteWriter<CodeSource, TsCodeData>, range: TextRange, placeholder: string) {
 	return core.cut(range.start, range.end, { data: { features: scriptFeatures }, placeholder });
-}
-
-/** The user's code at `range`, which `placeholder` takes the place of; it maps as a reference where it is placed. */
-function cutReference(core: CoreRewriteWriter<CodeSource, TsCodeData>, range: TextRange, placeholder: string) {
-	return core.cut(range.start, range.end, { data: { features: navigationFeatures | completionFeatures }, placeholder });
 }
 
 /**
