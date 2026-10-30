@@ -1,5 +1,5 @@
 import type { VueCodeMarker } from '@vue/language-core';
-import type { TsCode } from '../tsCode';
+import { mapped, type TsCode } from '../tsCode';
 import { identifierRE } from '../writers';
 import { generateStringLiteralKey } from '../writers/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
@@ -25,7 +25,7 @@ export function* generatePropertyAccess(
 	}
 	else if (identifierRE.test(code)) {
 		yield `.`;
-		yield [code, options.template, offset, features];
+		yield mapped(code, options.template, offset, features);
 	}
 	else {
 		yield `[`;

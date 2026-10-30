@@ -1,8 +1,8 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { createIRPipeline, getDefaultCompilerOptions, type TypeScript } from '@vue/language-core';
+import { parse } from 'muggle-pug';
 import { describe, expect, it } from 'vitest';
 import * as pug from '../index';
-import { baseParse } from '../lib/baseParse';
 
 function compile(source: string, options: CompilerDOM.CompilerOptions = {}) {
 	const pipeline = createIRPipeline({} as TypeScript, {
@@ -100,7 +100,7 @@ describe('pug template compiler', () => {
 	it('does not report a class attribute that duplicates a class literal', () => {
 		const source = `div.foo(class="bar")`;
 		const htmlErrors: (number | string)[] = [];
-		CompilerDOM.parse(baseParse(source).htmlCode, { onError: error => htmlErrors.push(error.code) });
+		CompilerDOM.parse(parse(source).htmlCode, { onError: error => htmlErrors.push(error.code) });
 		expect(htmlErrors).toEqual([CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE]);
 
 		expect(compile(source).errors).toEqual([]);

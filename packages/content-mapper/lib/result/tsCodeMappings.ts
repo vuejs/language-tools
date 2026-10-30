@@ -1,5 +1,5 @@
 import { isCompletionEnabled, SpanMapKind, type SpanMapSegment } from '@volar/language-core';
-import type { VueCodeMarker } from '@vue/language-core';
+import { pieceText, type VueCodeMarker } from '@vue/language-core';
 import { isSynthesizedIgnore, OpenRanges, type TsCode } from '../codegen/tsCode';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../protocol';
 
@@ -52,8 +52,8 @@ function toMapping({ generatedStart, length, sourceStart, info }: Entry): SpanMa
 }
 
 /**
- * The diagnostic directives of the code, with the virtual ranges their bounding segments enclose; the source
- * offset of the segments is the original start, as it is relative to the file here. The generated code whose
+ * The diagnostic directives of the code, with the virtual ranges their bounding pieces enclose; the source
+ * offset of the pieces is the original start, as it is relative to the file here. The generated code whose
  * diagnostics are ignored, the ranges of synthesized ignores and the `unmapped` ranges, is covered outside of the
  * explicit directives by ignore directives without an original range.
  */
@@ -87,17 +87,17 @@ function collectDiagnosticDirectives(chunks: TsCode[]) {
 	const directives: DiagnosticDirectiveMapping[] = [];
 	const ranges = new OpenRanges<VueCodeMarker>();
 	let generatedStart = 0;
-	for (const segment of chunks) {
-		if (typeof segment === 'string') {
-			generatedStart += segment.length;
+	for (const piece of chunks) {
+		if (typeof piece === 'string') {
+			generatedStart += piece.length;
 			continue;
 		}
-		const data = segment[3];
+		const { data } = piece;
 		if (data && 'start' in data) {
 			if (Array.isArray(data.start)) {
 				const [, originalLength, , , policy] = data.start;
 				const directive: DiagnosticDirectiveMapping = [
-					segment[2],
+					piece.start,
 					originalLength,
 					generatedStart,
 					generatedStart,
@@ -116,7 +116,7 @@ function collectDiagnosticDirectives(chunks: TsCode[]) {
 				directive[3] = generatedStart;
 			}
 		}
-		generatedStart += segment[0].length;
+		generatedStart += pieceText(piece).length;
 	}
 	return directives;
 }
@@ -140,25 +140,26 @@ function checkExplicitDiagnosticDirectives(directives: DiagnosticDirectiveMappin
 }
 
 /**
- * The segments mapping themselves, and the bounded ranges as groups of their bounds and the segments without
- * data they enclose, which carry the data of the range.
+ * The pieces mapping themselves, and the bounded ranges as groups of their bounds and the pieces without data they
+ * enclose, which carry the data of the range. A piece whose text is not as long as its range bounds the range itself.
  */
 function toItems(chunks: TsCode[]) {
 	const items: (Entry | Entry[])[] = [];
 	const ranges = new OpenRanges<Entry[]>();
 	let generatedStart = 0;
-	for (const segment of chunks) {
-		if (typeof segment === 'string') {
-			generatedStart += segment.length;
+	for (const piece of chunks) {
+		if (typeof piece === 'string') {
+			generatedStart += piece.length;
 			continue;
 		}
-		const [text, , sourceStart, data] = segment;
+		const { length } = pieceText(piece);
+		const { start: sourceStart, end: sourceEnd, data } = piece;
 		if (data === undefined) {
 			const range = ranges.mapping;
 			if (!range) {
 				throw new Error(`Vue generated segment without data outside of a boundary at ${generatedStart}`);
 			}
-			range.push({ generatedStart, length: text.length, sourceStart, info: range[0]!.info });
+			range.push({ generatedStart, length, sourceStart, info: range[0]!.info });
 		}
 		else if ('start' in data) {
 			if (Array.isArray(data.start)) {
@@ -177,10 +178,16 @@ function toItems(chunks: TsCode[]) {
 			}
 			closed.mapping?.push({ generatedStart, length: 0, sourceStart, info: closed.mapping[0]!.info });
 		}
-		else {
-			items.push({ generatedStart, length: text.length, sourceStart, info: data });
+		else if (length === sourceEnd - sourceStart) {
+			items.push({ generatedStart, length, sourceStart, info: data });
 		}
-		generatedStart += text.length;
+		else {
+			items.push([
+				{ generatedStart, length: 0, sourceStart, info: data },
+				{ generatedStart: generatedStart + length, length: 0, sourceStart: sourceEnd, info: data },
+			]);
+		}
+		generatedStart += length;
 	}
 	if (ranges.size) {
 		throw new Error(`Vue boundaries are not closed at the end of the code`);

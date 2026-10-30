@@ -1,14 +1,19 @@
 import { SpanMapKind } from '@volar/language-core';
 import { type IRScript, type IRScriptSetup, scriptFeatures } from '@vue/language-core';
 import { expect, test } from 'vitest';
-import type { CodegenPlugin, VueCodegenContribution, VueCodegenFile } from '../lib/codegen/plugin';
+import type { CodegenPlugin, VueCodegenFile, VueCodegenPlugin, VueCodegenWriter } from '../lib/codegen/plugin';
 import { generate } from './utils';
 
-function plugin(
-	contribute: (file: VueCodegenFile) => VueCodegenContribution | undefined,
-	name = 'test-plugin',
+function plugin(hooks: VueCodegenPlugin, name = 'test-plugin'): CodegenPlugin {
+	return { name, plugin: hooks };
+}
+
+/** A plugin that rewrites the `<script setup>` of the file. */
+function rewriteSetup(
+	rewrite: (writer: VueCodegenWriter, block: IRScriptSetup, file: VueCodegenFile) => void,
+	name?: string,
 ): CodegenPlugin {
-	return { name, plugin: { contribute } };
+	return plugin({ rewrite: (file, { scriptSetup }) => rewrite(scriptSetup!, file.ir.scriptSetup!, file) }, name);
 }
 
 function generateWith(content: string, ...plugins: CodegenPlugin[]) {
@@ -27,45 +32,213 @@ function rangeOf(block: IRScript | IRScriptSetup, text: string) {
 	return { start, end: start + text.length };
 }
 
-test('applies the script edits of plugins, mapping the source text that they copy', () => {
+test('applies the rewrites of plugins, mapping the source ranges that they keep', () => {
 	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
 	const { text, mappings } = generateWith(
 		content,
-		plugin(({ ir }) => {
-			const block = ir.scriptSetup!;
+		rewriteSetup((writer, block) => {
 			const call = rangeOf(block, 'useFoo()');
-			return {
-				scriptEdits: [
-					{
-						block,
-						replace: call,
-						code: ['wrap(', { text: 'useFoo()', block, offset: call.start, features: scriptFeatures }, ')'],
-					},
-					// not the source text at its offset, so it does not map
-					{ block, insertAfter: call.end, code: [{ text: ' as X', block, offset: 0, features: scriptFeatures }] },
-					// out of the content of the block
-					{ block, replace: { start: 0, end: block.content.length + 1 }, code: ['dropped'] },
-					// removes no char
-					{ block, replace: { start: call.start, end: call.start }, code: ['dropped'] },
-					// not exactly one edit
-					{ block, insertBefore: call.start, insertAfter: call.start, code: ['dropped'] } as never,
-					{ block, code: ['dropped'] } as never,
-				],
-			};
+			writer.insertBefore(call.start, 'wrap(');
+			writer.insertAfter(call.end, ')');
+			writer.insertAfter(call.end, ' as X');
 		}),
 	);
 	expect(text).toContain('const a = wrap(useFoo()) as X;');
-	expect(text).not.toContain('dropped');
 	const copied = text.indexOf('useFoo()');
 	expect(
 		mappings.some(({ virtualStart, originalStart }) =>
 			virtualStart === copied && originalStart === content.indexOf('useFoo()')
 		),
 	).toBe(true);
-	const unmapped = text.indexOf(' as X');
+	const inserted = text.indexOf(' as X');
 	expect(
-		mappings.some(({ virtualStart, virtualEnd }) => virtualStart <= unmapped && unmapped < virtualEnd),
+		mappings.some(({ virtualStart, virtualEnd }) => virtualStart <= inserted && inserted < virtualEnd),
 	).toBe(false);
+});
+
+test('rejects an edit of a plugin that is not valid for its block', () => {
+	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
+	const edits: ((writer: VueCodegenWriter, block: IRScriptSetup) => void)[] = [
+		(writer, block) => writer.insertBefore(block.content.length + 1, 'x'),
+		(writer, block) => writer.remove(0, block.content.length + 1),
+		writer => writer.remove(1, 1),
+		writer => writer.insertBefore(0, [{ text: 'x' }] as never),
+		(writer, block) => writer.insertBefore(0, { source: block, start: 0, end: 1, data: {} } as never),
+	];
+	for (const edit of edits) {
+		expect(() => generateWith(content, rewriteSetup(edit))).toThrow();
+	}
+});
+
+test('exports what the plugins set, and rejects exports that are not valid', () => {
+	const content = `<script setup lang="ts">\n/** Doc. */\nconst a = 1;\n</script>\n`;
+	const { text } = generateWith(
+		content,
+		plugin({
+			generate: ({ ir }) => ({
+				exports: {
+					names: ['Foo'],
+					docComment: { block: ir.scriptSetup!, ...rangeOf(ir.scriptSetup!, '/** Doc. */') },
+				},
+			}),
+		}),
+	);
+	expect(text).toContain('/** Doc. */\nconst Foo = ');
+	const invalid: ((file: VueCodegenFile) => unknown)[] = [
+		() => 1,
+		() => ({ exports: 1 }),
+		() => ({ exports: { names: ['not a name'] } }),
+		() => ({ exports: { names: 'Foo' } }),
+		() => ({ exports: { default: 'no' } }),
+		() => ({ declarations: 'declare const x: 1' }),
+		({ ir }) => ({ exports: { docComment: { block: ir.scriptSetup!, ...rangeOf(ir.scriptSetup!, 'const a') } } }),
+		({ ir }) => ({ exports: { docComment: { block: ir.scriptSetup!, start: 0, end: 1000 } } }),
+	];
+	for (const generate of invalid) {
+		expect(() => generateWith(content, plugin({ generate: generate as never }))).toThrow(`'test-plugin'`);
+	}
+});
+
+test('inserts the pieces of a plugin, mapped to their ranges', () => {
+	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
+	const { text, mappings } = generateWith(
+		content,
+		rewriteSetup((writer, block) => {
+			const call = rangeOf(block, 'useFoo');
+			writer.insertBefore(call.start, [
+				'wrap(',
+				{ source: block, ...call, data: { features: scriptFeatures } },
+				') || ',
+			]);
+		}),
+	);
+	expect(text).toContain('const a = wrap(useFoo) || useFoo();');
+	const copied = text.indexOf('wrap(') + 'wrap('.length;
+	expect(mappings).toContainEqual(expect.objectContaining({
+		virtualStart: copied,
+		virtualEnd: copied + 'useFoo'.length,
+		originalStart: content.indexOf('useFoo'),
+		kind: SpanMapKind.Verbatim,
+	}));
+});
+
+test('moves the code that a plugin cuts to where it inserts the cut, with the edits in it', () => {
+	const content = `<script setup lang="ts">\nconst a = useFoo();\nconst b = 1;\n</script>\n`;
+	const { text, mappings } = generateWith(
+		content,
+		rewriteSetup((writer, block) => {
+			const statement = rangeOf(block, 'const a = useFoo();');
+			const call = rangeOf(block, 'useFoo');
+			writer.insertBefore(call.start, 'wrap.');
+			const cut = writer.cut(statement.start, statement.end);
+			writer.insertAfter(block.content.length, ['/* moved */ ', cut]);
+			writer.cut(rangeOf(block, 'const b').start, rangeOf(block, 'const b').end);
+		}),
+	);
+	expect(text).toContain('/* moved */ const a = wrap.useFoo();');
+	expect(text).not.toContain('const b');
+	expect(text.indexOf(' = 1;')).toBeLessThan(text.indexOf('/* moved */'));
+	const moved = text.indexOf('/* moved */ ') + '/* moved */ '.length;
+	expect(mappings).toContainEqual(expect.objectContaining({
+		virtualStart: moved,
+		originalStart: content.indexOf('const a'),
+		kind: SpanMapKind.Verbatim,
+	}));
+});
+
+test('leaves the placeholder of a cut where its chars are cut from, and maps them with its features', () => {
+	const content = `<script setup lang="ts">\nconst a = useFoo('a');\n</script>\n`;
+	const { text, mappings } = generateWith(
+		content,
+		rewriteSetup((writer, block) => {
+			const arg = rangeOf(block, `'a'`);
+			const call = rangeOf(block, `useFoo('a')`);
+			const cut = writer.cut(arg.start, arg.end, { features: 0, placeholder: 'any' });
+			writer.insertAfter(call.end, [' as Foo[', cut, ']']);
+		}),
+	);
+	expect(text).toContain(`const a = useFoo(any) as Foo['a'];`);
+	expect(mappings).toContainEqual(expect.objectContaining({
+		virtualStart: text.indexOf(`'a'`),
+		originalStart: content.indexOf(`'a'`),
+		features: 0,
+	}));
+});
+
+test('maps a range of a plugin without text as a copy', () => {
+	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
+	const { text, mappings } = generateWith(
+		content,
+		plugin({
+			generate({ ir }) {
+				const block = ir.scriptSetup!;
+				const call = rangeOf(block, 'useFoo');
+				return {
+					declarations: [[
+						'declare const x: typeof ',
+						{ source: block, ...call, data: { features: scriptFeatures } },
+						';',
+					]],
+				};
+			},
+		}),
+	);
+	expect(text).toContain('declare const x: typeof useFoo;');
+	const copied = text.indexOf('declare const x: typeof ') + 'declare const x: typeof '.length;
+	expect(mappings).toContainEqual(expect.objectContaining({
+		virtualStart: copied,
+		virtualEnd: copied + 'useFoo'.length,
+		originalStart: content.indexOf('useFoo'),
+		kind: SpanMapKind.Verbatim,
+	}));
+});
+
+test('rejects a range of a plugin out of its block', () => {
+	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
+	expect(() =>
+		generateWith(
+			content,
+			plugin({
+				generate({ ir }) {
+					const block = ir.scriptSetup!;
+					return {
+						declarations: [[
+							{ source: block, start: 0, end: block.content.length + 1, data: { features: scriptFeatures }, text: 'Y' },
+						]],
+					};
+				},
+			}),
+		)
+	).toThrow(TypeError);
+});
+
+test('maps a range of a plugin with its own text as a whole to the range', () => {
+	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
+	const { text, mappings } = generateWith(
+		content,
+		plugin({
+			generate({ ir }) {
+				const block = ir.scriptSetup!;
+				const call = rangeOf(block, 'useFoo');
+				return {
+					declarations: [[`declare const x: `, {
+						source: block,
+						...call,
+						data: { features: scriptFeatures },
+						text: 'number[]',
+					}, `;`]],
+				};
+			},
+		}),
+	);
+	const generated = text.indexOf('declare const x: number[];') + 'declare const x: '.length;
+	expect(mappings).toContainEqual(expect.objectContaining({
+		virtualStart: generated,
+		virtualEnd: generated + 'number[]'.length,
+		originalStart: content.indexOf('useFoo'),
+		originalEnd: content.indexOf('useFoo') + 'useFoo'.length,
+		kind: SpanMapKind.Atom,
+	}));
 });
 
 const defineProps = `<script setup lang="ts">\nconst props = defineProps<{ a: string }>();\n</script>\n`;
@@ -73,16 +246,10 @@ const defineProps = `<script setup lang="ts">\nconst props = defineProps<{ a: st
 test('keeps an insert of a plugin after the start of a type argument that Vue moves at the call', () => {
 	const { text } = generateWith(
 		defineProps,
-		plugin(({ ir }) => {
-			const block = ir.scriptSetup!;
+		rewriteSetup((writer, block) => {
 			const { start } = rangeOf(block, '{ a: string }');
-			return {
-				scriptEdits: [{ block, insertAfter: start, code: ['/* a */'] }, {
-					block,
-					insertAfter: start,
-					code: ['/* b */'],
-				}],
-			};
+			writer.insertAfter(start, '/* a */');
+			writer.insertAfter(start, '/* b */');
 		}),
 	);
 	expect(text).toContain('type __VLS_Props = { a: string };\nconst props = defineProps</* a *//* b */__VLS_Props>();');
@@ -91,48 +258,48 @@ test('keeps an insert of a plugin after the start of a type argument that Vue mo
 test('moves an insert of a plugin before the start of a type argument with it', () => {
 	const { text } = generateWith(
 		defineProps,
-		plugin(({ ir }) => {
-			const block = ir.scriptSetup!;
+		rewriteSetup((writer, block) => {
 			const { start, end } = rangeOf(block, '{ a: string }');
-			return {
-				scriptEdits: [{ block, insertBefore: start, code: ['Wrap<'] }, { block, insertAfter: end, code: ['>'] }],
-			};
+			writer.insertBefore(start, 'Wrap<');
+			writer.insertAfter(end, '>');
 		}),
 	);
 	expect(text).toContain('type __VLS_Props = Wrap<{ a: string }>;\nconst props = defineProps<__VLS_Props>();');
 });
 
-test('applies a script edit of a plugin inside a range that Vue moves to the moved code', () => {
+test('applies a rewrite of a plugin inside a range that Vue moves to the moved code', () => {
 	const { text } = generateWith(
 		defineProps,
-		plugin(({ ir }) => {
-			const block = ir.scriptSetup!;
-			return { scriptEdits: [{ block, replace: rangeOf(block, 'string'), code: ['number'] }] };
+		rewriteSetup((writer, block) => {
+			const { start, end } = rangeOf(block, 'string');
+			writer.remove(start, end);
+			writer.insertBefore(start, 'number');
 		}),
 	);
 	expect(text).toContain('type __VLS_Props = { a: number };\nconst props = defineProps<__VLS_Props>();');
 });
 
-test('applies nested replaces of two plugins, each code at the start of its range, in either plugin order', () => {
+test('unites nested removals of two plugins and keeps the inserts of both, in either plugin order', () => {
 	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
-	const first = plugin(({ ir }) => {
-		const block = ir.scriptSetup!;
-		return { scriptEdits: [{ block, replace: rangeOf(block, 'useFoo()'), code: ['first()'] }] };
-	}, 'first');
-	const second = plugin(({ ir }) => {
-		const block = ir.scriptSetup!;
-		return { scriptEdits: [{ block, replace: rangeOf(block, 'Foo'), code: ['Second'] }] };
-	}, 'second');
+	const replace = (text: string, code: string, name: string) =>
+		rewriteSetup((writer, block) => {
+			const { start, end } = rangeOf(block, text);
+			writer.remove(start, end);
+			writer.insertBefore(start, code);
+		}, name);
+	const first = replace('useFoo()', 'first()', 'first');
+	const second = replace('Foo', 'Second', 'second');
 	expect(generateWith(content, first, second).text).toContain('const a = first()Second;');
 	expect(generateWith(content, second, first).text).toContain('const a = first()Second;');
 });
 
-test('splits a replace of a plugin across the imports and the body of `<script setup>`', () => {
+test('splits a removal of a plugin across the imports and the body of `<script setup>`', () => {
 	const { text } = generateWith(
 		`<script lang="ts">\nexport const s = 1;\n</script>\n<script setup lang="ts">\nimport { a } from 'a';\nconst b = a;\n</script>\n`,
-		plugin(({ ir }) => {
-			const block = ir.scriptSetup!;
-			return { scriptEdits: [{ block, replace: rangeOf(block, `'a';\nconst`), code: [`'b'; let`] }] };
+		rewriteSetup((writer, block) => {
+			const { start, end } = rangeOf(block, `'a';\nconst`);
+			writer.remove(start, end);
+			writer.insertBefore(start, `'b'; let`);
 		}),
 	);
 	expect(text).toContain(`import { a } from 'b'; let\n`);
@@ -143,10 +310,7 @@ test('maps a `<script setup>` whose code a plugin removes by one empty copy', ()
 	const content = `<script setup lang="ts">\nconst a = 1;\n</script>\n`;
 	const { text, mappings } = generateWith(
 		content,
-		plugin(({ ir }) => {
-			const block = ir.scriptSetup!;
-			return { scriptEdits: [{ block, replace: { start: 0, end: block.content.length }, code: [] }] };
-		}),
+		rewriteSetup((writer, block) => writer.remove(0, block.content.length)),
 	);
 	expect(text).not.toContain('const a = 1;');
 	expect(
@@ -157,13 +321,29 @@ test('maps a `<script setup>` whose code a plugin removes by one empty copy', ()
 	).toHaveLength(1);
 });
 
-test('propagates an exception of contribute', () => {
-	expect(() =>
-		generateWith(
-			`<script setup lang="ts">\nconst a = 1;\n</script>\n`,
-			plugin(() => {
-				throw new Error('contribute failed');
-			}),
-		)
-	).toThrow('contribute failed');
+test('runs each hook of the plugins once, in plugin order', () => {
+	const calls: string[] = [];
+	const traced = (name: string) =>
+		plugin({
+			rewrite: () => void calls.push(`${name}.rewrite`),
+			generate: () => void calls.push(`${name}.generate`),
+		}, name);
+	generateWith(`<script setup lang="ts">\nconst a = 1;\n</script>\n`, traced('first'), traced('second'));
+	expect(calls.filter(call => call.endsWith('.rewrite'))).toEqual(['first.rewrite', 'second.rewrite']);
+	expect(calls.filter(call => call.endsWith('.generate'))).toEqual(['first.generate', 'second.generate']);
+});
+
+test('propagates an exception of a hook', () => {
+	for (const hook of ['rewrite', 'generate'] as const) {
+		expect(() =>
+			generateWith(
+				`<script setup lang="ts">\nconst a = 1;\n</script>\n`,
+				plugin({
+					[hook]() {
+						throw new Error(`${hook} failed`);
+					},
+				}),
+			)
+		).toThrow(`${hook} failed`);
+	}
 });

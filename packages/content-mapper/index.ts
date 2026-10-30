@@ -1,15 +1,12 @@
 export type {
 	VueCodegenCode,
-	VueCodegenContribution,
 	VueCodegenExport,
 	VueCodegenFile,
+	VueCodegenPiece,
 	VueCodegenPlugin,
-	VueCodegenScriptEdit,
-	VueCodegenScriptInsertAfter,
-	VueCodegenScriptInsertBefore,
-	VueCodegenScriptReplace,
-	VueCodegenSourceSpan,
-	VueCodegenSourceText,
+	VueCodegenSlots,
+	VueCodegenWriter,
+	VueCodegenWriters,
 } from './lib/codegen/plugin';
 export * from './lib/mapper/contentMapper';
 export * from './lib/mapper/mapperOptions';

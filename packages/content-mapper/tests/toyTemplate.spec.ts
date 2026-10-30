@@ -4,7 +4,7 @@ import { expect, test } from 'vitest';
 import { normalizeCompilerOutput, repositoryRoot, runTsc } from './utils';
 
 /**
- * `toy.cjs` exports only `ir.templateCompilers.toy`, `(source) => ({ html, mappings })`: the shape that a template
+ * `toy.cjs` exports only `ir.templateCompilers.toy`, `(source) => ({ pieces })`: the shape that a template
  * language such as NMBL or Fumi needs to load. `Toy.vue` and `Html.vue` have the same template, a line each.
  */
 const fixtureDir = path.join(repositoryRoot, 'test-workspace/content-mapper-toy');

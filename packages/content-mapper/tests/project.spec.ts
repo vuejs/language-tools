@@ -465,31 +465,31 @@ test('propagates an exception thrown by the codegen instead of returning an empt
 	}
 });
 
-test('propagates an exception thrown by the contribute of a codegen plugin', () => {
+test('propagates an exception thrown by a hook of a codegen plugin', () => {
 	const workspace = createWorkspace();
 	const configFileName = path.join(workspace, 'tsconfig.json');
 	fs.writeFileSync(configFileName, JSON.stringify({ compilerOptions: { strict: true } }));
 	fs.writeFileSync(
 		pluginEntry(workspace),
-		`exports.codegen = { contribute() { throw new Error('contribute failed'); } };\n`,
+		`exports.codegen = { generate() { throw new Error('generate failed'); } };\n`,
 	);
 	try {
 		openProject({
 			configFileName,
-			projectHandle: 'contribute-exception-project',
+			projectHandle: 'hook-exception-project',
 			compilerOptions: {},
 			options: { plugins: ['vue-test-plugin'] },
 		});
 		expect(() =>
 			transformVue({
-				projectHandle: 'contribute-exception-project',
+				projectHandle: 'hook-exception-project',
 				fileName: path.join(workspace, 'App.vue'),
 				content: `<script setup lang="ts">const msg = '';</script>\n`,
 			})
-		).toThrow('contribute failed');
+		).toThrow('generate failed');
 	}
 	finally {
-		closeProject('contribute-exception-project');
+		closeProject('hook-exception-project');
 		fs.rmSync(workspace, { recursive: true, force: true });
 	}
 });

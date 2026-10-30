@@ -1,25 +1,24 @@
 import { SpanMapKind, type SpanMapSegment } from '@volar/language-core';
-import type { Code } from '../types';
+import { type Code, pieceText } from '../types';
 
-/** One span map segment per code segment with a marker, over the segment's text at its source offset. */
+/** One span map segment per piece with a marker, from the piece's text to its range. */
 export function buildMappings(chunks: Code[]): SpanMapSegment[] {
 	const mappings: SpanMapSegment[] = [];
 	let generatedStart = 0;
-	for (const segment of chunks) {
-		if (typeof segment === 'string') {
-			generatedStart += segment.length;
-			continue;
+	for (const piece of chunks) {
+		const { length } = pieceText(piece);
+		if (typeof piece !== 'string') {
+			const { start, end, data } = piece;
+			mappings.push({
+				virtualStart: generatedStart,
+				virtualEnd: generatedStart + length,
+				originalStart: start,
+				originalEnd: end,
+				kind: data.kind ?? (length === end - start ? SpanMapKind.Verbatim : SpanMapKind.Atom),
+				features: data.features,
+			});
 		}
-		const [text, , sourceStart, marker] = segment;
-		mappings.push({
-			virtualStart: generatedStart,
-			virtualEnd: generatedStart + text.length,
-			originalStart: sourceStart,
-			originalEnd: sourceStart + text.length,
-			kind: marker.kind ?? SpanMapKind.Verbatim,
-			features: marker.features,
-		});
-		generatedStart += text.length;
+		generatedStart += length;
 	}
 	return mappings;
 }

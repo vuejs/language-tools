@@ -1,13 +1,30 @@
-import { SpanMap } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { TemplateHTML } from '../types';
 import { compileTemplate } from './compileTemplate';
 
 /** Compiles the HTML of a template language into an AST at the offsets of the template (see `TemplateHTML`). */
 export function compileTemplateHTML(
-	{ html, mappings, ignoreError }: TemplateHTML,
+	{ pieces, ignoreError }: TemplateHTML,
+	template: string,
 	options: CompilerDOM.CompilerOptions,
 ): CompilerDOM.RootNode {
+	let html = '';
+	/** The greatest template offset of each offset of `html`, if a range covers it. */
+	const templateOffsets: number[] = [];
+	for (const piece of pieces) {
+		if (typeof piece === 'string') {
+			html += piece;
+			continue;
+		}
+		const text = piece.text ?? template.slice(piece.start, piece.end);
+		for (let i = 0; i <= text.length; i++) {
+			const offset = Math.min(piece.start + i, piece.end);
+			if ((templateOffsets[html.length + i] ?? -1) < offset) {
+				templateOffsets[html.length + i] = offset;
+			}
+		}
+		html += text;
+	}
 	const errors: CompilerDOM.CompilerError[] = [];
 	const warnings: CompilerDOM.CompilerError[] = [];
 	const ast = compileTemplate(html, {
@@ -31,12 +48,11 @@ export function compileTemplateHTML(
 		}
 	}
 
-	const map = new SpanMap(mappings);
 	const sourceOffsets = new Map<CompilerDOM.Position, number>();
 	for (const loc of locs) {
 		for (const position of [loc.start, loc.end]) {
 			if (!sourceOffsets.has(position)) {
-				sourceOffsets.set(position, toSourceOffset(position.offset));
+				sourceOffsets.set(position, templateOffsets[position.offset] ?? -1);
 			}
 		}
 	}
@@ -77,14 +93,6 @@ export function compileTemplateHTML(
 				collectLocs(value);
 			}
 		}
-	}
-
-	function toSourceOffset(htmlOffset: number) {
-		let offset = -1;
-		for (const { position } of map.virtualToOriginalPositions(htmlOffset)) {
-			offset = Math.max(offset, position);
-		}
-		return offset;
 	}
 }
 

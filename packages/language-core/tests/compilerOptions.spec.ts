@@ -21,7 +21,7 @@ function writePluginPackage(rootDir: string, tag: string) {
 		path.join(packageDir, 'index.js'),
 		`exports.ir = {
 			templateCompilers: {
-				pug: () => ({ html: ${JSON.stringify(`<${tag}/>`)}, mappings: [] }),
+				pug: () => ({ pieces: [${JSON.stringify(`<${tag}/>`)}] }),
 			},
 		};`,
 	);

@@ -9,6 +9,6 @@ export function getTemplateDocument(ir: IR): EmbeddedDocument | undefined {
 	return {
 		id: embeddedCodeIds.template,
 		lang: ir.template.lang,
-		content: [[ir.template.content, ir.template, 0, { features: allFeatures }]],
+		content: [{ source: ir.template, start: 0, end: ir.template.content.length, data: { features: allFeatures } }],
 	};
 }

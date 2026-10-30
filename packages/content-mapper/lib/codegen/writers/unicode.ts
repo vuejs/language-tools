@@ -1,5 +1,5 @@
 import type { CodeSource, VueCodeMarker } from '@vue/language-core';
-import { Boundary, type TsCode } from '../tsCode';
+import { Boundary, mapped, type TsCode } from '../tsCode';
 
 export function* generateUnicode(
 	code: string,
@@ -13,7 +13,7 @@ export function* generateUnicode(
 		yield boundary.end();
 	}
 	else {
-		yield [code, source, offset, features];
+		yield mapped(code, source, offset, features);
 	}
 }
 

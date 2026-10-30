@@ -1,16 +1,19 @@
-import {
-	type IRTemplate,
-	navigationFeatures,
-	type TemplateScope,
-	type TypeScript,
-	type VueCompilerOptions,
-} from '@vue/language-core';
-import { names } from '../names';
-import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
-import { endOfLine, generateTypeAlias, generateTypedVar, newLine, typeAliasRef } from '../writers';
+import type * as CompilerDOM from '@vue/compiler-dom';
+import type { IRTemplate, TemplateScope, TypeScript, VueCompilerOptions } from '@vue/language-core';
+import type { TsCode } from '../tsCode';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
-import { generateObjectProperty } from './objectProperty';
+import type { ElementSlots } from './element';
 import { generateTemplateChild } from './templateChild';
+
+/** The variables that the code of the template declares for its nodes, as the code at its end reads them. */
+export interface TemplateVars {
+	/** The instances of the components with a ref or a single root, and the hoisted one of a component with a ref. */
+	componentInstanceVars: ReadonlyMap<CompilerDOM.ElementNode, { instanceVar: string; hoistedVar?: string }>;
+	/** The props of the slot outlets without `defineSlots`, and the name of one with a dynamic name, hoisted. */
+	slotVars: ReadonlyMap<CompilerDOM.ElementNode, { propsVar: string; expVar?: string }>;
+	/** The variables whose types the attributes that fall through to the root take. */
+	inheritedAttrVars: ReadonlySet<string>;
+}
 
 export interface TemplateCodegenOptions {
 	typescript: TypeScript;
@@ -34,203 +37,45 @@ export interface TemplateCodegenOptions {
 	inheritAttrs: boolean;
 	componentName: string;
 	templateScope: TemplateScope;
+	slots: ElementSlots;
 }
 
 export { generate as generateTemplate };
 
+/**
+ * The code of the template, in the scope of the template, and the code that ends the scope: the code at the end of
+ * the template goes between them.
+ */
 function generate(options: TemplateCodegenOptions) {
 	const ctx = createTemplateCodegenContext(options.scriptLang, options.templateScope, options.template);
-	const codeGenerator = generateWorker(options, ctx);
 	const codes: TsCode[] = [];
-	for (const code of codeGenerator) {
+	for (const code of generateWorker(options, ctx)) {
 		codes.push(...ctx.generateWithDiagnosticDirectiveRanges(code));
 	}
 	codes.push(...ctx.generateDiagnosticDirectiveRangesEnd());
-	return { ...ctx, codes };
+	const scopeEnd = [...ctx.exitBlockScope()];
+	const vars: TemplateVars = {
+		componentInstanceVars: ctx.componentInstanceVars,
+		slotVars: ctx.slotVars,
+		inheritedAttrVars: ctx.inheritedAttrVars,
+	};
+	return {
+		codes,
+		scopeEnd,
+		bindingReferences: ctx.bindingReferences,
+		generatedTypes: ctx.generatedTypes as ReadonlySet<string>,
+		vars,
+	};
 }
 
 function* generateWorker(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<TsCode> {
-	const { vueCompilerOptions, template } = options;
-
+	const { template } = options;
 	ctx.enterBlockScope(template);
-	if (vueCompilerOptions.inferTemplateDollarSlots) {
-		ctx.dollarVars.add('$slots');
-	}
-	if (vueCompilerOptions.inferTemplateDollarAttrs) {
-		ctx.dollarVars.add('$attrs');
-	}
-	if (vueCompilerOptions.inferTemplateDollarRefs) {
-		ctx.dollarVars.add('$refs');
-	}
-	if (vueCompilerOptions.inferTemplateDollarEl) {
-		ctx.dollarVars.add('$el');
-	}
 	if (template.ast) {
 		yield* generateTemplateChild(options, ctx, template.ast);
 	}
 	yield* ctx.generateHoistVariables(options.scriptLang);
-	yield* generateSlotsType(options, ctx);
-	yield* generateInheritedAttrsType(options, ctx);
-	yield* generateTemplateRefsType(options, ctx);
-	yield* generateRootElType(options, ctx);
-
-	if (ctx.dollarVars.size) {
-		ctx.generatedTypes.add(names.dollars);
-		yield* generateTypedVar('var', names.dollars, options.scriptLang, function*() {
-			yield `{${newLine}`;
-			if (ctx.dollarVars.has('$slots')) {
-				const type = ctx.generatedTypes.has(names.Slots) ? typeAliasRef(names.Slots, options.scriptLang) : `{}`;
-				yield `$slots: ${type}${endOfLine}`;
-			}
-			if (ctx.dollarVars.has('$attrs')) {
-				yield `$attrs: import('${vueCompilerOptions.lib}').ComponentPublicInstance['$attrs']`;
-				if (ctx.generatedTypes.has(names.InheritedAttrs)) {
-					yield ` & ${typeAliasRef(names.InheritedAttrs, options.scriptLang)}`;
-				}
-				yield endOfLine;
-			}
-			if (ctx.dollarVars.has('$refs')) {
-				const type = ctx.generatedTypes.has(names.TemplateRefs)
-					? typeAliasRef(names.TemplateRefs, options.scriptLang)
-					: `{}`;
-				yield `$refs: ${type}${endOfLine}`;
-			}
-			if (ctx.dollarVars.has('$el')) {
-				const type = ctx.generatedTypes.has(names.RootEl) ? typeAliasRef(names.RootEl, options.scriptLang) : `any`;
-				yield `$el: ${type}${endOfLine}`;
-			}
-			yield `} & { [K in keyof import('${vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }`;
-		});
-	}
-
-	yield* ctx.exitBlockScope();
-}
-
-function* generateSlotsType(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-): Generator<TsCode> {
-	if (options.hasDefineSlots) {
-		ctx.generatedTypes.add(names.Slots);
-		return;
-	}
-	if (!ctx.slots.length && !ctx.dynamicSlots.length) {
-		return;
-	}
-	ctx.generatedTypes.add(names.Slots);
-
-	yield* generateTypeAlias(names.Slots, options.scriptLang, function*() {
-		yield `{}`;
-		for (const { expVar, propsVar } of ctx.dynamicSlots) {
-			yield `${newLine}& { [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${propsVar}) => any }`;
-		}
-		for (const slot of ctx.slots) {
-			yield `${newLine}& { `;
-			const ignore = yield* Boundary.start(options.template, 0, 0, synthesizedIgnore);
-			if (slot.name && slot.offset !== undefined) {
-				yield* generateObjectProperty(
-					options,
-					ctx,
-					slot.name,
-					slot.offset,
-					{ features: navigationFeatures },
-				);
-			}
-			else {
-				const boundary = yield* Boundary.start(
-					options.template,
-					...slot.tagRange,
-					{ features: navigationFeatures },
-				);
-				yield `default`;
-				yield boundary.end();
-			}
-			yield ignore.end();
-			yield `?: (props: typeof ${slot.propsVar}) => any }`;
-		}
-	});
-}
-
-function* generateInheritedAttrsType(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-): Generator<TsCode> {
-	if (!ctx.inheritedAttrVars.size) {
-		return;
-	}
-	ctx.generatedTypes.add(names.InheritedAttrs);
-
-	const type = [...ctx.inheritedAttrVars].map(name => `typeof ${name}`).join(` & `);
-
-	yield* generateTypeAlias(names.InheritedAttrs, options.scriptLang, function*() {
-		yield options.vueCompilerOptions.checkRequiredFallthroughAttributes
-			? type
-			: `Partial<${type}>`;
-	});
-}
-
-function* generateTemplateRefsType(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-): Generator<TsCode> {
-	if (
-		!ctx.templateRefs.size
-		|| !(
-			options.vueCompilerOptions.inferTemplateDollarRefs
-			|| options.vueCompilerOptions.inferComponentDollarRefs
-			|| options.setupRefs.size
-		)
-	) {
-		return;
-	}
-	ctx.generatedTypes.add(names.TemplateRefs);
-
-	yield* generateTypeAlias(names.TemplateRefs, options.scriptLang, function*() {
-		yield `{}`;
-		for (const [name, refs] of ctx.templateRefs) {
-			yield `${newLine}& `;
-			if (refs.length >= 2) {
-				yield `(`;
-			}
-			for (let i = 0; i < refs.length; i++) {
-				const { typeExp, offset } = refs[i]!;
-				if (i) {
-					yield ` | `;
-				}
-				yield `{ `;
-				const ignore = yield* Boundary.start(options.template, 0, 0, synthesizedIgnore);
-				yield* generateObjectProperty(
-					options,
-					ctx,
-					name,
-					offset,
-					{ features: navigationFeatures },
-				);
-				yield ignore.end();
-				yield `: ${typeExp} }`;
-			}
-			if (refs.length >= 2) {
-				yield `)`;
-			}
-		}
-	});
-}
-
-function* generateRootElType(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-): Generator<TsCode> {
-	if (!ctx.singleRootElTypes.size || ctx.singleRootNodes.has(null)) {
-		return;
-	}
-	ctx.generatedTypes.add(names.RootEl);
-
-	yield* generateTypeAlias(names.RootEl, options.scriptLang, function*() {
-		for (const type of ctx.singleRootElTypes) {
-			yield `${newLine}| ${type}`;
-		}
-	});
 }

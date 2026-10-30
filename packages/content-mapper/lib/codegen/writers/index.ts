@@ -1,5 +1,5 @@
 import type { IRScript, IRScriptSetup, VueCodeMarker, VueCompilerOptions } from '@vue/language-core';
-import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
+import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
@@ -29,12 +29,12 @@ export function asTypeCode(type: readonly TsCode[], lang: string): TsCode[] {
 }
 
 // `let name!: T;` in TS; `var name = /** @type {T} */ ({});` in JS.
-export function* generateTypedVar(
+export function* generateTypedVar<T = never>(
 	kind: 'let' | 'var',
 	name: string,
 	lang: string,
-	type: () => Generator<TsCode>,
-): Generator<TsCode> {
+	type: () => Generator<string | T>,
+): Generator<string | T> {
 	if (isTsLang(lang)) {
 		yield `${kind} ${name}!: `;
 		yield* type();
@@ -50,11 +50,11 @@ export function* generateTypedVar(
 // `type name = T;` in TS; `var name = /** @type {T} */ ({});` in JS, where every
 // top-level `@typedef` is an export of the module and would leak into the emitted
 // declarations. Refer to the alias through `typeAliasRef`.
-export function* generateTypeAlias(
+export function* generateTypeAlias<T = never>(
 	name: string,
 	lang: string,
-	type: () => Generator<TsCode>,
-): Generator<TsCode> {
+	type: () => Generator<string | T>,
+): Generator<string | T> {
 	if (isTsLang(lang)) {
 		yield `type ${name} = `;
 		yield* type();
@@ -83,23 +83,25 @@ export function* generateSfcBlockSection(
 	features: VueCodeMarker,
 	ignoreDiagnostics = false,
 ): Generator<TsCode> {
-	const text = block.content.slice(start, end);
 	const ignore = ignoreDiagnostics ? yield* Boundary.start(block, 0, 0, synthesizedIgnore) : undefined;
-	yield [text, block, start, features];
+	yield { source: block, start, end, data: features };
 	if (ignore) {
 		yield ignore.end();
 	}
+	yield* generateTerminator(block, start, end);
+}
 
-	// #3632
+/** The terminator of the copy of `start`..`end` of `block`, if a parse error of the block shows it is truncated (#3632). */
+export function* generateTerminator(block: IRScript | IRScriptSetup, start: number, end: number): Generator<TsCode> {
 	if ('parseDiagnostics' in block.ast) {
-		const textEnd = text.trimEnd().length;
+		const textEnd = block.content.slice(start, end).trimEnd().length;
 		for (const diag of block.ast.parseDiagnostics as { start: number; length: number }[]) {
 			const diagStart = diag.start;
 			const diagEnd = diag.start + diag.length;
 			if (diagStart >= textEnd && diagEnd <= end) {
 				// map the synthesized terminator to the end of the section, so that
 				// truncation parse errors resolve back to the original block
-				yield [';', block, end, { features: 0 }];
+				yield mapped(';', block, end, { features: 0 });
 				yield newLine;
 				break;
 			}

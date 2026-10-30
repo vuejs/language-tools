@@ -1,7 +1,7 @@
-import { type IRStyle, navigationFeatures } from '@vue/language-core';
+import { type IR, type IRStyle, navigationFeatures } from '@vue/language-core';
 import { names } from '../names';
 import type { TemplateCodegenContext } from '../template/context';
-import { Boundary, type TsCode } from '../tsCode';
+import { Boundary, mapped, type TsCode } from '../tsCode';
 import { endOfLine, generateTypeAlias, identifierRE, newLine } from '../writers';
 import type { StyleCodegenOptions } from '.';
 import { generateClassProperty, generateStyleSrc } from './common';
@@ -10,12 +10,10 @@ import { generateClassProperty, generateStyleSrc } from './common';
  * `<style module src>` is typed by an ordinary import of the src, so whatever types that module
  * (a CSS content mapper, an ambient declaration) types the CSS module; Vue does not read the file.
  */
-export function* generateStyleModuleImports(styles: readonly IRStyle[]): Generator<TsCode> {
-	for (const style of styles) {
+export function* generateStyleModuleImports(ir: IR): Generator<TsCode[]> {
+	for (const style of ir.styles) {
 		if (style.module && typeof style.src === 'object') {
-			yield `import ${getStyleModuleImportName(style)} from `;
-			yield* generateStyleSrc(style.src);
-			yield endOfLine;
+			yield [`import ${getStyleModuleImportName(style)} from `, ...generateStyleSrc(ir, style.src), `;`];
 		}
 	}
 }
@@ -25,7 +23,7 @@ function getStyleModuleImportName(style: IRStyle) {
 }
 
 export function* generateStyleModules(
-	{ vueCompilerOptions, styles, scriptLang }: StyleCodegenOptions,
+	{ ir, vueCompilerOptions, styles, scriptLang }: StyleCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<TsCode> {
 	const styleModules = styles.filter(style => style.module);
@@ -43,30 +41,20 @@ export function* generateStyleModules(
 			else {
 				const { text, offset } = style.module!;
 				if (!text) {
-					yield [
-						`$style`,
-						undefined,
-						offset,
-						{ features: 0 },
-					];
+					yield mapped(`$style`, ir, offset, { features: 0 });
 				}
 				else if (identifierRE.test(text)) {
-					yield [
-						text,
-						undefined,
-						offset,
-						{ features: navigationFeatures },
-					];
+					yield mapped(text, ir, offset, { features: navigationFeatures });
 				}
 				else {
 					const boundary = yield* Boundary.start(
-						undefined,
+						ir,
 						offset,
 						offset + text.length,
 						{ features: navigationFeatures },
 					);
 					yield `'`;
-					yield [text, undefined, offset, undefined];
+					yield mapped(text, ir, offset, undefined);
 					yield `'`;
 					yield boundary.end();
 				}

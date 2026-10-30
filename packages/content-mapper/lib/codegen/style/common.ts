@@ -1,6 +1,6 @@
 import { SpanMapFeature } from '@volar/language-core';
-import { type CodeSource, type IRAttr, navigationFeatures } from '@vue/language-core';
-import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
+import { type CodeSource, type IR, type IRAttr, navigationFeatures } from '@vue/language-core';
+import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import { identifierRE, newLine } from '../writers';
 
 /** The features whose results span a quoted name without its quotes. */
@@ -16,7 +16,7 @@ export function* generateClassProperty(
 	const start = offset + 1;
 	// An unquoted name maps verbatim, so it can be both a definition and renamed.
 	if (identifierRE.test(className)) {
-		yield* generateMember(source, [[className, source, start, { features: navigationFeatures }]], propertyType);
+		yield* generateMember(source, [mapped(className, source, start, { features: navigationFeatures })], propertyType);
 		return;
 	}
 	// TypeScript gives a definition the span of the quoted name and a reference the span inside the quotes; as a
@@ -32,7 +32,7 @@ export function* generateClassProperty(
 	yield* generateMember(source, generateQuotedDefinition(source, className, start), propertyType);
 	yield* generateMember(source, [
 		`'`,
-		[className, source, start, { features: navigationFeatures & quotedNameFeatures }],
+		mapped(className, source, start, { features: navigationFeatures & quotedNameFeatures }),
 		`'`,
 	], propertyType);
 }
@@ -42,7 +42,7 @@ function* generateQuotedDefinition(source: CodeSource, className: string, start:
 		features: navigationFeatures & ~quotedNameFeatures,
 	});
 	yield `'`;
-	yield [className, source, start, undefined];
+	yield mapped(className, source, start, undefined);
 	yield `'`;
 	yield boundary.end();
 }
@@ -56,15 +56,15 @@ function* generateMember(source: CodeSource, name: Iterable<TsCode>, propertyTyp
 	yield ` }`;
 }
 
-export function* generateStyleSrc(src: Exclude<IRAttr, true>): Generator<TsCode> {
+export function* generateStyleSrc(ir: IR, src: Exclude<IRAttr, true>): Generator<TsCode> {
 	const boundary = yield* Boundary.start(
-		undefined,
+		ir,
 		src.offset,
 		src.offset + src.text.length,
 		{ features: navigationFeatures },
 	);
 	yield `'`;
-	yield [src.text, undefined, src.offset, undefined];
+	yield mapped(src.text, ir, src.offset, undefined);
 	yield `'`;
 	yield boundary.end();
 }

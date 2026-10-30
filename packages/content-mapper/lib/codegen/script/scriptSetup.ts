@@ -1,5 +1,4 @@
 import {
-	completionFeatures,
 	getDefineModelPropName,
 	type IRScriptSetup,
 	navigationFeatures,
@@ -8,9 +7,8 @@ import {
 	type TextRange,
 } from '@vue/language-core';
 import { names } from '../names';
-import { createBlockRewrite, type TsCodeData } from '../rewrite/blockRewrite';
-import type { CoreRewriteWriter, RewriteSlice } from '../rewrite/sourceRewrite';
-import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
+import { type BlockRewrite, type BlockSlice, type BlockWriter, generateBlockAnchor } from '../rewrite/blockRewrite';
+import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import {
 	asType,
 	endOfLine,
@@ -29,6 +27,18 @@ import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 import { getEmitTypes } from './template';
 
+/** The slots of `<script setup>`. */
+export interface ScriptSetupSlots {
+	/** Object types intersected into the public props, in `defineProps<…>` form. */
+	props: (readonly TsCode[])[];
+	/** Object types `{ event: [args] }` intersected into the emits, in `defineEmits<…>` form. */
+	emits: (readonly TsCode[])[];
+	/** Object types intersected into what the component exposes, in `defineExpose` form. */
+	expose: (readonly TsCode[])[];
+	/** Object types intersected into what a generic component exposes, after the types of its `defineExpose`. */
+	exposedInstanceTypes: string[];
+}
+
 /** The copies of the user's code of `<script setup>`: its imports at module scope, and its body in the setup function. */
 export interface ScriptSetupCopies {
 	generateImports(): Generator<TsCode>;
@@ -36,28 +46,46 @@ export interface ScriptSetupCopies {
 }
 
 /**
- * The copies of `<script setup>`, with the transforms of Vue and the script edits of the codegen plugins. The imports
- * and the body are top-level cuts of one rewrite; an empty block has a zero-width body, which renders its inserts.
+ * The copies of `<script setup>` of `blockRewrite`, with the transforms of Vue. With `bodyAtRoot`, the body follows
+ * the imports and the macros at module scope, so one cut copies the whole block, with the macros inserted after the
+ * imports, and the imports render it all. Otherwise the imports and the body are top-level cuts of one rewrite; an
+ * empty block has a zero-width body, which renders its inserts.
  */
 export function createScriptSetupCopies(
 	options: ScriptCodegenOptions,
+	blockRewrite: BlockRewrite,
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
+	bodyAtRoot: boolean,
 ): ScriptSetupCopies {
-	const blockRewrite = createBlockRewrite(scriptSetup, options.scriptEdits);
-	const { core } = blockRewrite.rewrite;
+	const core = blockRewrite.rewrite;
 	const importSectionEnd = getImportSectionEnd(scriptSetupRanges);
 	const { length } = scriptSetup.content;
+	if (bodyAtRoot) {
+		const whole = core.cut(0, length, { data: { features: scriptFeatures } });
+		addTransforms(options, core, scriptSetupRanges);
+		const macros = [...generateMacros(options)];
+		if (macros.length) {
+			core.insertAfter(importSectionEnd, macros);
+		}
+		return {
+			*generateImports() {
+				yield generateBlockAnchor(scriptSetup);
+				yield* blockRewrite.render(whole);
+			},
+			*generateBody() {},
+		};
+	}
 	const imports = importSectionEnd > 0
 		? core.cut(0, importSectionEnd, { data: { features: scriptFeatures } })
 		: undefined;
 	const body = importSectionEnd < length || !length
 		? core.cut(importSectionEnd, length, { data: { features: scriptFeatures } })
 		: undefined;
-	addTransforms(options, scriptSetup, core, scriptSetupRanges);
+	addTransforms(options, core, scriptSetupRanges);
 	return {
 		*generateImports() {
-			yield* blockRewrite.generateEmptyCopy();
+			yield generateBlockAnchor(scriptSetup);
 			if (imports) {
 				yield* blockRewrite.render(imports, false);
 			}
@@ -85,13 +113,13 @@ export function* generateGeneric(
 	yield `(`;
 	if (typeof generic === 'object') {
 		const boundary = yield* Boundary.start(
-			undefined,
+			options.ir,
 			generic.offset,
 			generic.offset + generic.text.length,
 			{ features: 0 },
 		);
 		yield `<`;
-		yield [generic.text, undefined, generic.offset, { features: scriptFeatures }];
+		yield mapped(generic.text, options.ir, generic.offset, { features: scriptFeatures });
 		if (!generic.text.trimEnd().endsWith(`,`)) {
 			yield `,`;
 		}
@@ -133,9 +161,8 @@ export function* generateGeneric(
 	if (emitProps) {
 		propTypes.push(emitProps);
 	}
-	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
-		const inheritedAttrs = typeAliasRef(names.InheritedAttrs, scriptLang);
-		propTypes.push(emitProps ? `Omit<${inheritedAttrs}, keyof ${emitProps}>` : inheritedAttrs);
+	for (const type of options.slots.fallthroughProps) {
+		propTypes.push(emitProps ? `Omit<${type}, keyof ${emitProps}>` : type);
 	}
 
 	yield `return {} as {${newLine}`;
@@ -159,17 +186,8 @@ export function* generateGeneric(
 	else {
 		yield `{}`;
 	}
-	if (
-		options.vueCompilerOptions.inferComponentDollarRefs
-		&& options.templateAndStyleTypes.has(names.TemplateRefs)
-	) {
-		yield ` & { $refs: ${typeAliasRef(names.TemplateRefs, scriptLang)}; }`;
-	}
-	if (
-		options.vueCompilerOptions.inferComponentDollarEl
-		&& options.templateAndStyleTypes.has(names.RootEl)
-	) {
-		yield ` & { $el: ${typeAliasRef(names.RootEl, scriptLang)}; }`;
+	for (const type of options.slots.exposedInstanceTypes) {
+		yield ` & ${type}`;
 	}
 	yield `) => void${endOfLine}`;
 	yield `	attrs: any${endOfLine}`;
@@ -220,7 +238,7 @@ export function* generateSetupFunction(
 // virtual files, where type-only declarations are syntax errors. Imports hoist,
 // so this can be emitted after all user content: leading directives stay ahead
 // of any statement, and the import-section/content junction stays intact.
-export function* generateMacros(options: ScriptCodegenOptions): Generator<TsCode> {
+export function* generateMacros(options: ScriptCodegenOptions): Generator<string> {
 	if (options.vueCompilerOptions.target >= 3.3) {
 		const scriptSetup = options.scriptSetup;
 		const scriptSetupRanges = options.scriptSetupRanges;
@@ -262,19 +280,18 @@ export function* generateMacros(options: ScriptCodegenOptions): Generator<TsCode
 
 function addTransforms(
 	options: ScriptCodegenOptions,
-	scriptSetup: IRScriptSetup,
-	core: CoreRewriteWriter<TsCodeData>,
+	core: BlockWriter,
 	scriptSetupRanges: ScriptSetupRanges,
 ) {
 	const runtimeDefineProps = scriptSetupRanges.defineProps?.typeArg ? undefined : scriptSetupRanges.defineProps;
 	if (runtimeDefineProps && scriptSetupRanges.defineModel.some(({ defaultPropsArg }) => defaultPropsArg)) {
 		// the parameter of `default` may have the name of the props, which `typeof` in its own annotation would refer to
-		core.insertAfter(runtimeDefineProps.statement.end, function*() {
-			yield newLine;
-			yield* generateTypeAlias(names.RuntimeProps, options.scriptLang, function*() {
+		core.insertAfter(runtimeDefineProps.statement.end, [
+			newLine,
+			...generateTypeAlias(names.RuntimeProps, options.scriptLang, function*() {
 				yield `typeof ${runtimeDefineProps.name ?? names.props}`;
-			});
-		});
+			}),
+		]);
 	}
 	const defaultPropsType = scriptSetupRanges.defineProps?.typeArg
 		? names.Props
@@ -312,88 +329,21 @@ function addTransforms(
 		const { callExp, arg, typeArg } = scriptSetupRanges.defineExpose;
 		if (typeArg) {
 			const type = cutScriptCode(core, typeArg, `typeof ${names.exposed}`);
-			core.insertBefore(callExp.start, () => [`let ${names.exposed}!: `, type, endOfLine]);
+			core.insertBefore(callExp.start, [`let ${names.exposed}!: `, type, endOfLine]);
 		}
 		else if (arg) {
 			const value = cutScriptCode(core, arg, names.exposed);
-			core.insertBefore(callExp.start, () => [`const ${names.exposed} = `, value, endOfLine]);
+			core.insertBefore(callExp.start, [`const ${names.exposed} = `, value, endOfLine]);
 		}
 		else {
 			core.insertBefore(callExp.start, `const ${names.exposed} = {}${endOfLine}`);
 		}
 	}
-	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
-		for (const { callExp } of scriptSetupRanges.useAttrs) {
-			const type = `typeof ${names.dollars}.$attrs`;
-			core.insertBefore(callExp.start, isTsLang(options.scriptLang) ? `(` : `/** @type {${type}} */ (`);
-			core.insertAfter(callExp.end, isTsLang(options.scriptLang) ? ` as ${type})` : `)`);
-		}
-	}
-	for (const { callExp, exp, arg } of scriptSetupRanges.useCssModule) {
-		const type = options.templateAndStyleTypes.has(names.StyleModules)
-			? typeAliasRef(names.StyleModules, options.scriptLang)
-			: `{}`;
-		if (arg) {
-			// the argument is copied as a reference into the cast, and is `any` at the call
-			const name = cutReference(core, arg, asType('any', options.scriptLang));
-			if (isTsLang(options.scriptLang)) {
-				core.insertBefore(callExp.start, `(`);
-				core.insertAfter(callExp.end, () => [` as Omit<${type}, '$style'>[`, name, `])`]);
-			}
-			else {
-				core.insertBefore(callExp.start, () => [`/** @type {Omit<${type}, '$style'>[`, name, `]} */ (`]);
-				core.insertAfter(callExp.end, `)`);
-			}
-		}
-		else {
-			core.insertBefore(callExp.start, isTsLang(options.scriptLang) ? `(` : `/** @type {${type}['$style']} */ (`);
-			core.insertAfter(callExp.end, function*() {
-				if (isTsLang(options.scriptLang)) {
-					yield ` as ${type}[`;
-					const boundary = yield* Boundary.start(scriptSetup, exp.start, exp.end, { features: 0 });
-					yield `'$style'`;
-					yield boundary.end();
-					yield `])`;
-				}
-				else {
-					yield `)`;
-				}
-			});
-		}
-	}
-	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
-		for (const { callExp } of scriptSetupRanges.useSlots) {
-			const type = `typeof ${names.dollars}.$slots`;
-			core.insertBefore(callExp.start, isTsLang(options.scriptLang) ? `(` : `/** @type {${type}} */ (`);
-			core.insertAfter(callExp.end, isTsLang(options.scriptLang) ? ` as ${type})` : `)`);
-		}
-	}
-	for (const { callExp, arg } of scriptSetupRanges.useTemplateRef) {
-		// the argument is copied as a reference into the cast, and is `any` at the call
-		const name = arg && cutReference(core, arg, asType('any', options.scriptLang));
-		const refType = name
-			? [typeAliasRef(names.TemplateRefs, options.scriptLang), `[`, name, `]`]
-			: [`unknown`];
-		const shallowRef = `Readonly<import('${options.vueCompilerOptions.lib}').ShallowRef<`;
-		if (isTsLang(options.scriptLang)) {
-			core.insertBefore(callExp.start, `(`);
-			core.insertAfter(callExp.end, () => [` as ${shallowRef}`, ...refType, ` | null>>)`]);
-		}
-		else {
-			core.insertBefore(callExp.start, () => [`/** @type {${shallowRef}`, ...refType, ` | null>>} */ (`]);
-			core.insertAfter(callExp.end, `)`);
-		}
-	}
 }
 
 /** The user's code at `range`, which `placeholder` takes the place of; it maps as script code where it is placed. */
-function cutScriptCode(core: CoreRewriteWriter<TsCodeData>, range: TextRange, placeholder: string) {
+function cutScriptCode(core: BlockWriter, range: TextRange, placeholder: string) {
 	return core.cut(range.start, range.end, { data: { features: scriptFeatures }, placeholder });
-}
-
-/** The user's code at `range`, which `placeholder` takes the place of; it maps as a reference where it is placed. */
-function cutReference(core: CoreRewriteWriter<TsCodeData>, range: TextRange, placeholder: string) {
-	return core.cut(range.start, range.end, { data: { features: navigationFeatures | completionFeatures }, placeholder });
 }
 
 /**
@@ -402,7 +352,7 @@ function cutReference(core: CoreRewriteWriter<TsCodeData>, range: TextRange, pla
  * after the statement, for a name that is not an identifier), and the alias goes with what takes its place.
  */
 function addDefineWithTypeTransforms(
-	core: CoreRewriteWriter<TsCodeData>,
+	core: BlockWriter,
 	statement: TextRange,
 	callExp: TextRange,
 	typeArg: TextRange | undefined,
@@ -410,31 +360,31 @@ function addDefineWithTypeTransforms(
 	defaultName: string,
 	typeName: string,
 ) {
-	const alias: (string | RewriteSlice<TsCodeData>)[] = typeArg
+	const alias: (string | BlockSlice)[] = typeArg
 		? [`type ${typeName} = `, cutScriptCode(core, typeArg, typeName), endOfLine]
 		: [];
 	if (name && identifierRE.test(name)) {
 		if (alias.length) {
-			core.insertBefore(statement.start, () => alias);
+			core.insertBefore(statement.start, alias);
 		}
 		return;
 	}
 	const declaration = [...alias, `const ${defaultName} = `];
 	if (!name && statement.start === callExp.start && statement.end === callExp.end) {
-		core.insertBefore(statement.start, () => declaration);
+		core.insertBefore(statement.start, declaration);
 		return;
 	}
-	let prefix: RewriteSlice<TsCodeData> | undefined;
+	let prefix: BlockSlice | undefined;
 	if (statement.start < callExp.start) {
 		prefix = core.cut(statement.start, callExp.start, {
 			data: { features: scriptFeatures },
-			placeholder: () => declaration,
+			placeholder: declaration,
 		});
 	}
 	else {
-		core.insertBefore(statement.start, () => declaration);
+		core.insertBefore(statement.start, declaration);
 	}
-	core.insertAfter(name ? statement.end : callExp.end, () => [endOfLine, ...prefix ? [prefix] : [], defaultName]);
+	core.insertAfter(name ? statement.end : callExp.end, [endOfLine, ...prefix ? [prefix] : [], defaultName]);
 }
 
 function* generatePublicProps(
@@ -491,7 +441,7 @@ function* generatePublicProps(
 		ctx.propDefaults = { props, defaults };
 	}
 
-	const propTypes: (string | TsCode[])[] = [];
+	const propTypes: (string | readonly TsCode[])[] = [];
 	if (options.vueCompilerOptions.jsxSlots && hasSlotsType(options)) {
 		propTypes.push(ctx.localTypes.PropsChildren(typeAliasRef(names.Slots, options.scriptLang)));
 	}
@@ -501,12 +451,12 @@ function* generatePublicProps(
 	if (scriptSetupRanges.defineModel.length) {
 		propTypes.push(typeAliasRef(names.ModelProps, options.scriptLang));
 	}
-	propTypes.push(...options.props);
+	propTypes.push(...options.slots.props);
 	const target = options.vueCompilerOptions.target;
 	const used = !!scriptSetup.generic
 		|| target < 3.6
 		|| (target >= 3.5 && !scriptSetupRanges.defineProps?.arg)
-		|| !!options.props.length
+		|| !!options.slots.props.length
 		|| !!scriptSetupRanges.defineModel.length;
 	if (propTypes.length && used) {
 		yield* generateTypeAlias(names.PublicProps, options.scriptLang, function*() {
@@ -520,17 +470,17 @@ function* generatePublicProps(
 export function getExposeTypes(
 	options: ScriptCodegenOptions,
 	scriptSetupRanges: ScriptSetupRanges,
-): (string | TsCode[])[] {
+): (string | readonly TsCode[])[] {
 	return [
 		...scriptSetupRanges.defineExpose ? [`typeof ${names.exposed}`] : [],
-		...options.expose,
+		...options.slots.expose,
 	];
 }
 
 function hasSlotsType(options: ScriptCodegenOptions): boolean {
 	return !!(
 		options.scriptSetupRanges?.defineSlots
-		|| options.templateAndStyleTypes.has(names.Slots)
+		|| options.templateTypes.has(names.Slots)
 	);
 }
 

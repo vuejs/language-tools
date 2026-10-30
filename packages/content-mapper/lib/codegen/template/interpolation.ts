@@ -8,7 +8,7 @@ import {
 	type VueCompilerOptions,
 } from '@vue/language-core';
 import { names } from '../names';
-import { Boundary, type TsCode } from '../tsCode';
+import { Boundary, mapped, type MappedPiece, type TsCode } from '../tsCode';
 import { getRefBrandArgument, isTsLang } from '../writers';
 import type { TemplateCodegenContext } from './context';
 
@@ -74,16 +74,16 @@ export function* generateInterpolation(
 
 		const identifierFeatures = member ? featuresWithoutCompletion : features;
 		if (local || (isShorthand && options.setupConsts.has(name))) {
-			yield [name, block, start + offset, identifierFeatures];
+			yield mapped(name, block, start + offset, identifierFeatures);
 			continue;
 		}
 		const marker = isShorthand ? { ...identifierFeatures, kind: SpanMapKind.Atom } : identifierFeatures;
 		if (isShorthand) {
-			yield [name, block, start + offset, marker];
+			yield mapped(name, block, start + offset, marker);
 			yield `: `;
 		}
 
-		const codes: TsCode[] = [[name, block, start + offset, marker]];
+		const codes: TsCode[] = [mapped(name, block, start + offset, marker)];
 
 		yield* generateIdentifier(
 			options,
@@ -103,39 +103,36 @@ export function* generateInterpolation(
 	}
 }
 
-/** The parts of the source `segments` of an expression at `start` out of the ranges of `omit`. */
+/** The parts of the source `pieces` of an expression at `start` out of the ranges of `omit`. */
 function* omitRanges(
-	segments: Generator<[string, CodeSource, number, VueCodeMarker]>,
+	pieces: Generator<MappedPiece<VueCodeMarker>>,
 	start: number,
 	omit: readonly (readonly [start: number, end: number])[],
 ): Generator<TsCode> {
-	for (const [text, source, offset, data] of segments) {
-		const end = offset + text.length;
+	for (const { text, source, start: offset, end, data } of pieces) {
 		let kept = offset;
 		for (const [omitStart, omitEnd] of omit) {
 			if (start + omitEnd <= kept || start + omitStart >= end) {
 				continue;
 			}
 			if (kept < start + omitStart) {
-				yield [text.slice(kept - offset, start + omitStart - offset), source, kept, data];
+				yield mapped(text.slice(kept - offset, start + omitStart - offset), source, kept, data);
 			}
 			kept = start + omitEnd;
 		}
 		if (kept < end) {
-			yield [text.slice(kept - offset), source, kept, data];
+			yield mapped(text.slice(kept - offset), source, kept, data);
 		}
 	}
 }
 
-/** The parts of the source `segments` of an expression at `start`, without rename in the ranges of `ranges`. */
+/** The parts of the source `pieces` of an expression at `start`, without rename in the ranges of `ranges`. */
 function* withoutRename(
-	segments: Generator<[string, CodeSource, number, VueCodeMarker]>,
+	pieces: Generator<MappedPiece<VueCodeMarker>>,
 	start: number,
 	ranges: readonly (readonly [start: number, end: number])[],
-): Generator<[string, CodeSource, number, VueCodeMarker]> {
-	for (const segment of segments) {
-		const [text, source, offset, data] = segment;
-		const end = offset + text.length;
+): Generator<MappedPiece<VueCodeMarker>> {
+	for (const { text, source, start: offset, end, data } of pieces) {
 		let kept = offset;
 		for (const [rangeStart, rangeEnd] of ranges) {
 			const from = Math.max(start + rangeStart, kept);
@@ -144,18 +141,16 @@ function* withoutRename(
 				continue;
 			}
 			if (kept < from) {
-				yield [text.slice(kept - offset, from - offset), source, kept, data];
+				yield mapped(text.slice(kept - offset, from - offset), source, kept, data);
 			}
-			yield [
-				text.slice(from - offset, to - offset),
-				source,
-				from,
-				{ ...data, features: data.features & ~SpanMapFeature.Rename },
-			];
+			yield mapped(text.slice(from - offset, to - offset), source, from, {
+				...data,
+				features: data.features & ~SpanMapFeature.Rename,
+			});
 			kept = to;
 		}
 		if (kept < end) {
-			yield [text.slice(kept - offset), source, kept, data];
+			yield mapped(text.slice(kept - offset), source, kept, data);
 		}
 	}
 }
@@ -174,22 +169,17 @@ function* generateNonIdentifierCode(
 	offset: number,
 	data: VueCodeMarker,
 	shouldCut = true,
-): Generator<[string, CodeSource, number, VueCodeMarker]> {
+): Generator<MappedPiece<VueCodeMarker>> {
 	if (!code.length) {
 		return;
 	}
 	if (!shouldCut) {
-		yield [code, source, offset, data];
+		yield mapped(code, source, offset, data);
 		return;
 	}
-	yield [
-		code.slice(0, 1),
-		source,
-		offset,
-		{ features: 0 },
-	];
+	yield mapped(code.slice(0, 1), source, offset, { features: 0 });
 	if (code.length > 1) {
-		yield [code.slice(1), source, offset + 1, data];
+		yield mapped(code.slice(1), source, offset + 1, data);
 	}
 }
 

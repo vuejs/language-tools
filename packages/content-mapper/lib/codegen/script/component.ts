@@ -7,6 +7,17 @@ import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 import { getExposeTypes } from './scriptSetup';
 
+/** The slots of the options of a script setup component. */
+export interface ComponentSlots {
+	/** Options of the component, after its props, e.g. `__typeEl: …`. */
+	componentOptions: string[];
+	/**
+	 * Object types of the props that the component takes besides those that it declares, e.g. the attributes that
+	 * fall through to its root; the keys of its emit props are omitted from them.
+	 */
+	fallthroughProps: string[];
+}
+
 export function* generateComponent(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
@@ -15,7 +26,7 @@ export function* generateComponent(
 ): Generator<TsCode> {
 	yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 
-	if (options.expose.length) {
+	if (options.slots.expose.length) {
 		yield `setup: () => (`;
 		yield* asTypeCode(intersectTypes(getExposeTypes(options, scriptSetupRanges)), options.scriptLang);
 		yield `),${newLine}`;
@@ -28,19 +39,8 @@ export function* generateComponent(
 	yield* emitOptionCodes;
 	yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length);
 
-	if (
-		options.vueCompilerOptions.target >= 3.5
-		&& options.vueCompilerOptions.inferComponentDollarRefs
-		&& options.templateAndStyleTypes.has(names.TemplateRefs)
-	) {
-		yield `__typeRefs: ${asType(typeAliasRef(names.TemplateRefs, options.scriptLang), options.scriptLang)},${newLine}`;
-	}
-	if (
-		options.vueCompilerOptions.target >= 3.5
-		&& options.vueCompilerOptions.inferComponentDollarEl
-		&& options.templateAndStyleTypes.has(names.RootEl)
-	) {
-		yield `__typeEl: ${asType(typeAliasRef(names.RootEl, options.scriptLang), options.scriptLang)},${newLine}`;
+	for (const option of options.slots.componentOptions) {
+		yield `${option},${newLine}`;
 	}
 	yield `})`;
 }
@@ -72,20 +72,20 @@ function* generateEmitsOption(
 function* generateTypeEmitsOption(
 	options: ScriptCodegenOptions,
 	scriptSetupRanges: ScriptSetupRanges,
-): Generator<string | TsCode[]> {
+): Generator<string | readonly TsCode[]> {
 	if (scriptSetupRanges.defineModel.length) {
 		yield typeAliasRef(names.ModelEmit, options.scriptLang);
 	}
 	if (scriptSetupRanges.defineEmits?.typeArg) {
 		yield names.Emit;
 	}
-	yield* options.emits;
+	yield* options.slots.emits;
 }
 
 function* generateRuntimeEmitsOption(
 	options: ScriptCodegenOptions,
 	scriptSetupRanges: ScriptSetupRanges,
-): Generator<string | TsCode[]> {
+): Generator<string | readonly TsCode[]> {
 	if (scriptSetupRanges.defineModel.length) {
 		yield asType(`${names.NormalizeEmits}<typeof ${names.modelEmit}>`, options.scriptLang);
 	}
@@ -95,7 +95,7 @@ function* generateRuntimeEmitsOption(
 			options.scriptLang,
 		);
 	}
-	for (const type of options.emits) {
+	for (const type of options.slots.emits) {
 		yield asTypeCode([`${names.NormalizeEmits}<${names.ShortEmits}<`, ...type, `>>`], options.scriptLang);
 	}
 }
@@ -134,9 +134,8 @@ function* generateTypePropsOption(
 	ctx: ScriptCodegenContext,
 	hasEmitsOption: boolean,
 ): Generator<string> {
-	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
-		const attrsType = getInheritedAttrsType(options, hasEmitsOption);
-		yield asType(attrsType, options.scriptLang);
+	for (const type of options.slots.fallthroughProps) {
+		yield asType(omitEmitProps(options, type, hasEmitsOption), options.scriptLang);
 	}
 	if (ctx.generatedTypes.has(names.PublicProps)) {
 		yield asType(typeAliasRef(names.PublicProps, options.scriptLang), options.scriptLang);
@@ -150,11 +149,10 @@ function* generateRuntimePropsOption(
 	scriptSetupRanges: ScriptSetupRanges,
 	hasEmitsOption: boolean,
 	hasTypeProps: boolean,
-): Generator<string | TsCode[]> {
-	if (!hasTypeProps && options.templateAndStyleTypes.has(names.InheritedAttrs)) {
-		const attrsType = getInheritedAttrsType(options, hasEmitsOption);
+): Generator<string | readonly TsCode[]> {
+	for (const type of hasTypeProps ? [] : options.slots.fallthroughProps) {
 		const propsType = ctx.localTypes.TypePropsToOption(
-			`${names.PickNotAny}<${ctx.localTypes.OmitIndexSignature(attrsType)}, {}>`,
+			`${names.PickNotAny}<${ctx.localTypes.OmitIndexSignature(omitEmitProps(options, type, hasEmitsOption))}, {}>`,
 		);
 		yield asType(propsType, options.scriptLang);
 	}
@@ -165,7 +163,7 @@ function* generateRuntimePropsOption(
 		&& ctx.generatedTypes.has(names.PublicProps)
 		&& (
 			options.vueCompilerOptions.target < 3.6
-			|| ((options.props.length || scriptSetupRanges.defineModel.length) && scriptSetupRanges.defineProps?.arg)
+			|| ((options.slots.props.length || scriptSetupRanges.defineModel.length) && scriptSetupRanges.defineProps?.arg)
 		)
 	) {
 		yield asType(
@@ -190,9 +188,6 @@ function* generateRuntimePropsOption(
 	}
 }
 
-function getInheritedAttrsType(options: ScriptCodegenOptions, hasEmitsOption: boolean) {
-	const inheritedAttrs = typeAliasRef(names.InheritedAttrs, options.scriptLang);
-	return hasEmitsOption
-		? `Omit<${inheritedAttrs}, keyof ${typeAliasRef(names.EmitProps, options.scriptLang)}>`
-		: inheritedAttrs;
+function omitEmitProps(options: ScriptCodegenOptions, type: string, hasEmitsOption: boolean) {
+	return hasEmitsOption ? `Omit<${type}, keyof ${typeAliasRef(names.EmitProps, options.scriptLang)}>` : type;
 }

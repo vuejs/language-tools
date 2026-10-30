@@ -1,5 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { hyphenateTag, parseInterpolationNode, scriptFeatures } from '@vue/language-core';
+import { parseInterpolationNode, scriptFeatures } from '@vue/language-core';
 import type { TsCode } from '../tsCode';
 import { endOfLine } from '../writers';
 import type { TemplateCodegenContext } from './context';
@@ -26,9 +26,6 @@ export function* generateTemplateChild(
 	}
 
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
-		for (const item of collectSingleRootNodes(options, node.children)) {
-			ctx.singleRootNodes.add(item);
-		}
 		for (const child of node.children) {
 			yield* generateTemplateChild(options, ctx, child);
 		}
@@ -88,44 +85,5 @@ export function* generateTemplateChild(
 	if (enterNode) {
 		yield* ctx.generateDiagnosticDirectiveEnd();
 		ctx.exit();
-	}
-}
-
-function* collectSingleRootNodes(
-	options: TemplateCodegenOptions,
-	children: CompilerDOM.TemplateChildNode[],
-	treatTemplateAsFragment = false,
-): Generator<CompilerDOM.ElementNode | null> {
-	// Exclude the effect of comments on the root node
-	children = children.filter(node => node.type !== CompilerDOM.NodeTypes.COMMENT);
-
-	if (children.length !== 1) {
-		// "null" is used to determine whether the component is not always has a single root
-		if (children.length > 1) {
-			yield null;
-		}
-		return;
-	}
-
-	const child = children[0]!;
-	if (child.type === CompilerDOM.NodeTypes.IF) {
-		for (const branch of child.branches) {
-			yield* collectSingleRootNodes(options, branch.children, true);
-		}
-		return;
-	}
-	else if (child.type !== CompilerDOM.NodeTypes.ELEMENT) {
-		return;
-	}
-
-	if (child.tagType === CompilerDOM.ElementTypes.TEMPLATE && treatTemplateAsFragment) {
-		yield* collectSingleRootNodes(options, child.children);
-		return;
-	}
-	yield child;
-
-	const tag = hyphenateTag(child.tag);
-	if (options.vueCompilerOptions.fallthroughComponentNames.includes(tag)) {
-		yield* collectSingleRootNodes(options, child.children);
 	}
 }

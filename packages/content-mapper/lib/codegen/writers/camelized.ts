@@ -1,6 +1,6 @@
 import type { CodeSource, VueCodeMarker } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
-import { Boundary, type TsCode } from '../tsCode';
+import { Boundary, mapped, type TsCode } from '../tsCode';
 
 /** Without features, the parts map only as part of the enclosing boundary. */
 export function* generateCamelized(
@@ -18,7 +18,7 @@ export function* generateCamelized(
 	}
 	if (!features) {
 		for (const [text, offset] of parts) {
-			yield [text, source, offset, undefined];
+			yield mapped(text, source, offset, undefined);
 		}
 	}
 	else if (parts.length > 1) {
@@ -26,13 +26,13 @@ export function* generateCamelized(
 		const [lastText, lastOffset] = parts.at(-1)!;
 		const boundary = yield* Boundary.start(source, start, lastOffset + lastText.length, features);
 		for (const [text, offset] of parts) {
-			yield [text, source, offset, undefined];
+			yield mapped(text, source, offset, undefined);
 		}
 		yield boundary.end();
 	}
 	else {
 		for (const [text, offset] of parts) {
-			yield [text, source, offset, features];
+			yield mapped(text, source, offset, features);
 		}
 	}
 }

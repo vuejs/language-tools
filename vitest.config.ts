@@ -5,6 +5,6 @@ export default defineConfig({
 		testTimeout: 60_000,
 		fileParallelism: false,
 		isolate: false,
-		exclude: [...configDefaults.exclude, 'volar.js/**', 'services/**'],
+		exclude: [...configDefaults.exclude, 'volar.js/**', 'services/**', 'muggle-string/**', 'muggle-pug/**'],
 	},
 });

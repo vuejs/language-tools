@@ -1,16 +1,38 @@
-import type { CodeSegment, CodeSource, VueCodeMarker } from '@vue/language-core';
+import type { CodePiece, CodeSource, VueCodeMarker } from '@vue/language-core';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../protocol';
 
 /**
- * The data of an empty segment bounding a range of generated code. A start carries what the range is: the span
- * from its source offset to the one of its end, which the enclosed segments without data map only as part of,
+ * The data of an empty piece bounding a range of generated code. A start carries what the range is: the span
+ * from its source offset to the one of its end, which the enclosed pieces without data map only as part of,
  * or a diagnostic directive covering the range, whose original start is the source offset of the start.
  * An end closes the innermost open range.
  */
 export type CodeBoundary = { start: VueCodeMarker | DiagnosticDirectiveMapping } | { end: true };
 
-/** A segment of generated TypeScript code. */
-export type TsCode = CodeSegment<VueCodeMarker | CodeBoundary | undefined>;
+/** The data of a piece of generated TypeScript code. */
+export type TsCodeData = VueCodeMarker | CodeBoundary | undefined;
+
+/** A piece of generated TypeScript code. */
+export type TsCode = CodePiece<TsCodeData>;
+
+/** A piece whose `text` maps char by char from `start`. */
+export interface MappedPiece<Data extends TsCodeData, Source extends CodeSource = CodeSource> {
+	source: Source;
+	start: number;
+	end: number;
+	data: Data;
+	text: string;
+}
+
+/** `text`, which maps by `data` char by char from `offset` of `source`. */
+export function mapped<Data extends TsCodeData, Source extends CodeSource>(
+	text: string,
+	source: Source,
+	offset: number,
+	data: Data,
+): MappedPiece<Data, Source> {
+	return { source, start: offset, end: offset + text.length, data, text };
+}
 
 const end: CodeBoundary = Object.freeze({ end: true as const });
 
@@ -24,25 +46,25 @@ export function isSynthesizedIgnore(directive: DiagnosticDirectiveMapping) {
 	return directive[4] === DiagnosticDirectivePolicy.Ignore && directive[1] === 0;
 }
 
-/** A range of generated code, bounded by empty segments that pair by nesting. */
-export class Boundary {
+/** A range of generated code, bounded by empty pieces that pair by nesting. */
+export class Boundary<Source extends CodeSource = CodeSource> {
 	private constructor(
-		private source: CodeSource,
+		private source: Source,
 		private endOffset: number,
 	) {}
 
-	static *start(
-		source: CodeSource,
+	static *start<Source extends CodeSource>(
+		source: Source,
 		start: number,
 		end: number,
 		data: VueCodeMarker | DiagnosticDirectiveMapping,
-	): Generator<TsCode, Boundary> {
-		yield [``, source, start, { start: data }];
+	): Generator<MappedPiece<CodeBoundary, Source>, Boundary<Source>> {
+		yield mapped(``, source, start, { start: data });
 		return new Boundary(source, end);
 	}
 
-	end(): TsCode {
-		return [``, this.source, this.endOffset, end];
+	end(): MappedPiece<CodeBoundary, Source> {
+		return mapped(``, this.source, this.endOffset, end);
 	}
 }
 

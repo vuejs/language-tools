@@ -1,4 +1,3 @@
-import { SpanMapKind, type SpanMapSegment } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { describe, expect, it } from 'vitest';
 import { createIRPipeline } from '../lib/ir/irPipeline';
@@ -9,17 +8,6 @@ import { createSnapshot, ts } from './typescript';
 
 const legacyMessage =
 	'VueLanguagePlugin functions are no longer supported; export `{ ir: … }` (see language-core README)';
-
-function segment(virtualStart: number, length: number, originalStart: number): SpanMapSegment {
-	return {
-		virtualStart,
-		virtualEnd: virtualStart + length,
-		originalStart,
-		originalEnd: originalStart + length,
-		kind: SpanMapKind.Verbatim,
-		features: 0,
-	};
-}
 
 function withPlugins(modules: Record<string, unknown>, options: Partial<VueCompilerOptions> = {}): VueCompilerOptions {
 	return {
@@ -46,7 +34,7 @@ function emptyResult(): VueFormatResult {
 	};
 }
 
-const toHTML = (tag: string) => ({ html: `<${tag}/>`, mappings: [] });
+const toHTML = (tag: string) => ({ pieces: [`<${tag}/>`] });
 const firstTag = (result: ReturnType<ReturnType<typeof createIRPipeline>['compileTemplate']>) =>
 	(result?.result.ast.children[0] as { tag?: string } | undefined)?.tag;
 
@@ -79,7 +67,6 @@ describe('createIRPipeline', () => {
 	});
 
 	it('gives the AST of the HTML of a template language the offsets of the template', () => {
-		const html = '<div>x</div><i></i><p v-if></p>';
 		const errors: [number, number][] = [];
 		const ignored: (number | string)[] = [];
 		const pipeline = createIRPipeline(
@@ -89,11 +76,11 @@ describe('createIRPipeline', () => {
 					ir: {
 						templateCompilers: {
 							lang: () => ({
-								html,
-								mappings: [
-									segment(0, 5, 0), // `<div>`
-									segment(5, 1, 10), // `x`
-									segment(19, 12, 30), // `<p v-if></p>`
+								pieces: [
+									{ start: 0, end: 5, text: '<div>' },
+									{ start: 10, end: 11, text: 'x' },
+									'</div><i></i>',
+									{ start: 30, end: 42, text: '<p v-if></p>' },
 								],
 								ignoreError: (error: CompilerDOM.CompilerError) => {
 									ignored.push(error.code);
@@ -128,7 +115,7 @@ describe('createIRPipeline', () => {
 				lang: {
 					ir: {
 						templateCompilers: {
-							lang: () => ({ html: '<p v-if></p>', mappings: [], ignoreError: () => true }),
+							lang: () => ({ pieces: ['<p v-if></p>'], ignoreError: () => true }),
 						},
 					},
 				},

@@ -28,10 +28,13 @@
 # `vX.Y.Z` tag. pnpm skips packages whose version is already on npm, and the
 # marketplaces skip an extension version they already have.
 #
-# @volar/* and volar-service-* come from the volar.js and services submodules as
-# workspace packages. They are not published here: pnpm rewrites `workspace:*` to
-# the submodules' exact versions, so the job stops unless those versions are
-# already on npm.
+# Only the lerna.json packages are published. Before anything is versioned, the
+# job stops if a published package depends on another workspace package, such
+# as one of a git submodule, that is not on npm at its exact version released
+# from the checked out commit: pnpm rewrites `workspace:*` to that version.
+# @volar/*, volar-service-*, muggle-string and muggle-pug come from the volar.js,
+# services, muggle-string and muggle-pug submodules, so release them from their
+# repositories first and point the submodules at those release commits.
 
 name: release
 
@@ -61,6 +64,8 @@ jobs:
       id-token: write # npm trusted publishing / provenance
     outputs:
       version: ${{ steps.publish.outputs.version }}
+      previous: ${{ steps.publish.outputs.previous }}
+      commits: ${{ steps.publish.outputs.commits }}
     steps:
       - name: Validate inputs
         env:
@@ -99,18 +104,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Check the submodule packages are on npm
-        run: |
-          pnpm -r --filter './volar.js/**' --filter './services/**' exec node -e '
-            const { name, version } = require("./package.json");
-            const { execFileSync } = require("child_process");
-            try {
-              execFileSync("npm", ["view", `${name}@${version}`, "version"], { stdio: "pipe" });
-            } catch {
-              console.log(`::error::${name}@${version} from a submodule is not on npm; publish it from its repository first`);
-              process.exit(1);
-            }
-          '
+      - name: Check the workspace dependencies outside this release
+        run: node .github/scripts/check-workspace-deps.mjs
 
       - run: pnpm run build
 
@@ -141,9 +136,13 @@ jobs:
               --sync-workspace-lock \
               --yes
           fi
-          pnpm -r --filter '!./volar.js/**' --filter '!./services/**' publish --tag "$DIST_TAG" --no-git-checks
+          pnpm -r --filter './packages/**' --filter './extensions/**' publish --tag "$DIST_TAG" --no-git-checks
           published="$(node -p "require('./lerna.json').version")"
           echo "version=$published" >> "$GITHUB_OUTPUT"
+          if previous="$(git describe --tags --abbrev=0 --match 'v*' "v$published^" 2>/dev/null)"; then
+            echo "previous=${previous#v}" >> "$GITHUB_OUTPUT"
+            echo "commits=$(git rev-list --count "$previous..v$published^")" >> "$GITHUB_OUTPUT"
+          fi
           echo "Published \`$published\` with dist-tag \`$DIST_TAG\`." >> "$GITHUB_STEP_SUMMARY"
 
   comment-alpha:
@@ -158,6 +157,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           HEAD: ${{ github.repository_owner }}:${{ github.ref_name }}
           VERSION: ${{ needs.release.outputs.version }}
+          PREVIOUS: ${{ needs.release.outputs.previous }}
+          COMMITS: ${{ needs.release.outputs.commits }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           if [[ -z "$VERSION" ]]; then
@@ -169,14 +170,14 @@ jobs:
             echo "No open pull request has the head $HEAD; nothing to comment on."
             exit 0
           fi
-          fence='```'
-          body="Published \`$VERSION\` to npm with dist-tag \`alpha\` ([release run]($RUN_URL)).
-
-          ${fence}sh
-          npm i @vue/language-server@$VERSION
-          ${fence}
-
-          Every public package of this repository is published at \`$VERSION\`."
+          if [[ -n "$PREVIOUS" ]]; then
+            commits="$COMMITS commit"
+            (( COMMITS == 1 )) || commits+=s
+            links="[$commits]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/v$PREVIOUS...v$VERSION), [run]($RUN_URL)"
+          else
+            links="[run]($RUN_URL)"
+          fi
+          body="\`$VERSION\` is on npm with dist-tag \`alpha\` ($links)."
           for pr in $prs; do
             gh api "repos/$GITHUB_REPOSITORY/issues/$pr/comments" -f body="$body" --jq '.html_url'
           done

@@ -17,6 +17,27 @@ import {
 import { generateSpreadMerge } from '../writers/merge';
 import type { ScriptCodegenOptions } from './index';
 
+/** The slots of the template function, and of the template context that it reads. */
+export interface TemplateFunctionSlots {
+	/** The names of the types that the code in the template function declares. */
+	templateTypes: string[];
+	/** Code at the end of the template, in its scope. */
+	templateEnd: TsCode[];
+	/**
+	 * Object types spread into the template context (what template expressions and `$` names resolve against), after
+	 * the component instance.
+	 */
+	templateContext: (readonly TsCode[])[];
+	/** Code in the template function, before the code of the template. */
+	templateBody: TsCode[];
+	/** Type queries linking reads of shadowed setup bindings, before the template function. */
+	templateBindingReferences: TsCode[];
+	/** Type aliases that the template function declares, returned to setup and the export. */
+	templateExports: string[];
+	/** Variables that the template function declares, returned to setup and the export after its type aliases. */
+	templateExportValues: string[];
+}
+
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	selfType?: string,
@@ -32,11 +53,9 @@ export function* generateTemplate(
 	// it reads take their render-time types, not the narrowing at the end of setup.
 	// The types setup and the export need from it are passed out through its return type.
 	const { scriptLang } = options;
-	const exportedTypes = [names.Slots, names.InheritedAttrs, names.TemplateRefs, names.RootEl, names.StyleModules]
-		.filter(name =>
-			options.templateAndStyleTypes.has(name) && !(name === names.Slots && options.scriptSetupRanges?.defineSlots)
-		);
-	yield* options.templateAndStyleBindingReferences;
+	const exportedTypes = options.slots.templateExports;
+	yield* options.slots.templateBindingReferences;
+	yield* options.templateBindingReferences;
 
 	// Bindings the template narrows are read through `.value` wrappers. The wrappers keep the
 	// binding names, which diagnostics show, so they are created before the shadowing scope.
@@ -55,16 +74,17 @@ export function* generateTemplate(
 		yield `const { ${dotValueBindings.join(`, `)} } = ${names.dotValueBindings}()${endOfLine}`;
 	}
 
-	if (options.templateAndStyleCodes.length) {
-		yield* options.templateAndStyleCodes;
-	}
+	yield* options.slots.templateBody;
+	yield* options.templateCodes;
+	yield* options.slots.templateEnd;
+	yield* options.templateScopeEnd;
 
 	yield `return {${newLine}`;
 	for (const name of exportedTypes) {
 		yield `${name}: ${asType(typeAliasRef(name, scriptLang), scriptLang)},${newLine}`;
 	}
-	if (options.templateAndStyleTypes.has(names.dollars)) {
-		yield `${names.dollars},${newLine}`;
+	for (const name of options.slots.templateExportValues) {
+		yield `${name},${newLine}`;
 	}
 	yield `}${endOfLine}`;
 	yield `}${endOfLine}`;
@@ -85,11 +105,11 @@ export function* generateTemplate(
 			used.push(...exportedTypes);
 		}
 	}
-	if (options.templateAndStyleTypes.has(names.dollars)) {
-		yield* generateTypedVar('let', names.dollars, scriptLang, function*() {
-			yield `${returnType}['${names.dollars}']`;
+	for (const name of options.slots.templateExportValues) {
+		yield* generateTypedVar('let', name, scriptLang, function*() {
+			yield `${returnType}['${name}']`;
 		});
-		used.push(names.dollars);
+		used.push(name);
 	}
 	yield `void [${used.join(`, `)}]${endOfLine}`;
 }
@@ -98,8 +118,8 @@ function* generateTemplateCtx(
 	options: ScriptCodegenOptions,
 	selfType: string | undefined,
 ): Generator<TsCode> {
-	const { vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, scriptLang, templateContext } = options;
-	const exps: (string | TsCode[])[] = [];
+	const { vueCompilerOptions, scriptSetupRanges, scriptLang, slots } = options;
+	const exps: (string | readonly TsCode[])[] = [];
 	const emitTypes = getEmitTypes(options);
 	const propTypes: string[] = [];
 
@@ -112,8 +132,8 @@ function* generateTemplateCtx(
 	else {
 		exps.push(asType(`import('${vueCompilerOptions.lib}').ComponentPublicInstance`, scriptLang));
 	}
-	if (templateAndStyleTypes.has(names.StyleModules)) {
-		exps.push(asType(typeAliasRef(names.StyleModules, scriptLang), scriptLang));
+	for (const type of slots.templateContext) {
+		exps.push(asTypeCode(type, scriptLang));
 	}
 
 	if (emitTypes.length) {
@@ -138,9 +158,6 @@ function* generateTemplateCtx(
 		exps.push(asType(`{ $props: ${propTypes.join(` & `)} }`, scriptLang));
 		exps.push(asType(propTypes.join(` & `), scriptLang));
 	}
-	for (const type of templateContext) {
-		exps.push(asTypeCode(type, scriptLang));
-	}
 
 	yield `const ${names.ctx} = `;
 	yield* generateSpreadMerge(...exps);
@@ -149,9 +166,9 @@ function* generateTemplateCtx(
 
 /** The types of the emit functions of a script setup component, which the codegen plugins add events to. */
 export function getEmitTypes(
-	{ scriptSetupRanges, emits }: ScriptCodegenOptions,
-): (string | TsCode[])[] {
-	const emitTypes: (string | TsCode[])[] = [];
+	{ scriptSetupRanges, slots }: ScriptCodegenOptions,
+): (string | readonly TsCode[])[] {
+	const emitTypes: (string | readonly TsCode[])[] = [];
 	if (!scriptSetupRanges) {
 		return emitTypes;
 	}
@@ -161,7 +178,7 @@ export function getEmitTypes(
 	if (scriptSetupRanges.defineModel.length) {
 		emitTypes.push(`typeof ${names.modelEmit}`);
 	}
-	for (const type of emits) {
+	for (const type of slots.emits) {
 		emitTypes.push([`${names.ShortEmits}<`, ...type, `>`]);
 	}
 	return emitTypes;
@@ -251,9 +268,9 @@ function* generateTemplateDirectives(
 }
 
 function* generateTemplateScope(
-	{ vueCompilerOptions, templateAndStyleTypes, scopeBindings, scriptLang }: ScriptCodegenOptions,
+	{ vueCompilerOptions, templateTypes, scopeBindings, scriptLang }: ScriptCodegenOptions,
 ): Generator<TsCode> {
-	if (!templateAndStyleTypes.has(names.Scope)) {
+	if (!templateTypes.has(names.Scope)) {
 		return;
 	}
 	yield* generateTypeAlias(names.Scope, scriptLang, function*() {

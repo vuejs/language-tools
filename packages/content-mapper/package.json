@@ -1,6 +1,6 @@
 {
 	"name": "@vue/content-mapper",
-	"version": "4.0.0-alpha.1",
+	"version": "4.0.0-alpha.2",
 	"license": "MIT",
 	"files": [
 		"*.d.ts",
@@ -36,6 +36,7 @@
 		"@vue/language-core": "workspace:*",
 		"@vue/shared": "^3.5.0",
 		"alien-signals": "^3.2.1",
+		"muggle-string": "workspace:*",
 		"path-browserify": "^1.0.1"
 	},
 	"devDependencies": {

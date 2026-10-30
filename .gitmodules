@@ -5,4 +5,12 @@
 [submodule "services"]
 	path = services
 	url = https://github.com/volarjs/services.git
-	branch = cursor/volar-3-mappings-39dc
+	branch = cursor/muggle-pug-0c97
+[submodule "muggle-string"]
+	path = muggle-string
+	url = https://github.com/johnsoncodehk/muggle-string.git
+	branch = next
+[submodule "muggle-pug"]
+	path = muggle-pug
+	url = https://github.com/johnsoncodehk/muggle-pug.git
+	branch = master

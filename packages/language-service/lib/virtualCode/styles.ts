@@ -11,12 +11,13 @@ export function getStyleDocuments(ir: IR): EmbeddedDocument[] {
 			for (const binding of style.bindings) {
 				content.push(
 					'(',
-					[
-						binding.text,
-						style,
-						binding.offset,
-						{ features: allFeatures },
-					],
+					{
+						source: style,
+						start: binding.offset,
+						end: binding.offset + binding.text.length,
+						data: { features: allFeatures },
+						text: binding.text,
+					},
 					');\n',
 				);
 			}
@@ -25,12 +26,7 @@ export function getStyleDocuments(ir: IR): EmbeddedDocument[] {
 		return {
 			id,
 			lang: style.lang,
-			content: [[
-				style.content,
-				style,
-				0,
-				{ features: allFeatures },
-			]],
+			content: [{ source: style, start: 0, end: style.content.length, data: { features: allFeatures } }],
 			children,
 		};
 	});

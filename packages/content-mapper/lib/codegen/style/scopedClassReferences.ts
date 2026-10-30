@@ -5,17 +5,19 @@ import {
 	forEachStyleScopedClassReference,
 	type IRBlock,
 	navigationFeatures,
+	type TypeScript,
 } from '@vue/language-core';
 import { names } from '../names';
-import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
+import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import { endOfLine, typeAliasRef } from '../writers';
 import { generateEscaped } from '../writers/escaped';
-import type { TemplateCodegenOptions } from './index';
 
 const classNameEscapeRE = /([\\'])/;
 
 export function* generateStyleScopedClassReferences(
-	{ template, typescript: ts, scriptLang }: TemplateCodegenOptions,
+	ts: TypeScript,
+	template: IRBlock,
+	scriptLang: string,
 	node: CompilerDOM.ElementNode,
 ): Generator<TsCode> {
 	for (const [className, offset, fullStart, kind] of forEachStyleScopedClassReference(ts, template, node)) {
@@ -33,7 +35,7 @@ export function* generateStyleScopedClassReference(
 ): Generator<TsCode> {
 	if (!className) {
 		yield `/** @type {${typeAliasRef(names.StyleScopedClasses, scriptLang)}['`;
-		yield ['', block, offset, { features: completionFeatures }];
+		yield mapped('', block, offset, { features: completionFeatures });
 		yield `']} */${endOfLine}`;
 		return;
 	}

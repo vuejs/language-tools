@@ -1,7 +1,6 @@
 // A template language of one element a line: `tag attrs` or `tag attrs | text`, as `<tag attrs>text</tag>`.
 function toy(source) {
-	let html = '';
-	const mappings = [];
+	const pieces = [];
 	let lineStart = 0;
 	for (const line of source.split('\n')) {
 		const start = lineStart + line.length - line.trimStart().length;
@@ -12,32 +11,14 @@ function toy(source) {
 		}
 		const bar = source.indexOf(' | ', start);
 		const headEnd = bar !== -1 && bar < end ? bar : end;
-		const head = source.slice(start, headEnd);
-		const tag = head.split(' ')[0];
-		mappings.push(segment(html.length, start, 0));
-		html += '<';
-		mappings.push(segment(html.length, start, head.length));
-		html += head + '>';
+		const tag = source.slice(start, headEnd).split(' ')[0];
+		pieces.push({ start, end: start }, '<', { start, end: headEnd }, '>');
 		if (headEnd < end) {
-			const textStart = headEnd + 3;
-			mappings.push(segment(html.length, textStart, end - textStart));
-			html += source.slice(textStart, end);
+			pieces.push({ start: headEnd + 3, end });
 		}
-		html += `</${tag}>`;
-		mappings.push(segment(html.length, end, 0));
+		pieces.push(`</${tag}>`, { start: end, end });
 	}
-	return { html, mappings };
-}
-
-function segment(virtualStart, originalStart, length) {
-	return {
-		virtualStart,
-		virtualEnd: virtualStart + length,
-		originalStart,
-		originalEnd: originalStart + length,
-		kind: 0,
-		features: 0,
-	};
+	return { pieces };
 }
 
 module.exports = { ir: { templateCompilers: { toy } } };

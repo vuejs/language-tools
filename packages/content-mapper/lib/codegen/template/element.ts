@@ -5,7 +5,6 @@ import {
 	getComponentIsBinding,
 	getElementTagOffsets,
 	getTemplateRef,
-	hyphenateTag,
 	navigationFeatures,
 	scriptFeatures,
 	semanticFeatures,
@@ -13,7 +12,7 @@ import {
 import { camelize, capitalize } from '@vue/shared';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
-import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
+import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import { endOfLine, generateTypedVar, identifierRE, newLine, typeAliasRef } from '../writers';
 import { generateCamelized } from '../writers/camelized';
 import { generateStringLiteralKey } from '../writers/stringLiteralKey';
@@ -24,9 +23,19 @@ import { type FailedPropExpressions, generateElementProps } from './elementProps
 import type { TemplateCodegenOptions } from './index';
 import { generateIdentifier, generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
-import { generateStyleScopedClassReferences } from './scopedClassReferences';
 import { generateTemplateChild } from './templateChild';
 import { generateVSlot } from './vSlot';
+
+/** The slots of the code of the elements of the template. */
+export interface ElementSlots {
+	/** Code after the props of a component or a native element, before its children. */
+	elementEnd: Map<CompilerDOM.ElementNode, TsCode[]>;
+	/**
+	 * Ranges of the expression of a bound prop, at template offsets, whose code out of references takes no rename, as
+	 * another copy of the same source takes it.
+	 */
+	renamedElsewhere: Map<CompilerDOM.DirectiveNode, [start: number, end: number][]>;
+}
 
 export function* generateComponent(
 	options: TemplateCodegenOptions,
@@ -224,12 +233,12 @@ export function* generateComponent(
 			{ features: 0 },
 		);
 		yield `<`;
-		yield [content, options.template, offset, { features: scriptFeatures }];
+		yield mapped(content, options.template, offset, { features: scriptFeatures });
 		yield `>`;
 		yield boundary.end();
 	}
 
-	const shouldInheritAttrs = hasVBindAttrs(options, ctx, node);
+	const shouldInheritAttrs = hasVBindAttrs(options, node);
 
 	yield `(`;
 	const boundary2 = yield* Boundary.start(options.template, startTagOffset, startTagOffset + tag.length, {
@@ -262,30 +271,23 @@ export function* generateComponent(
 	);
 	yield* generateElementDirectives(options, ctx, node);
 
-	const templateRef = getTemplateRef(node);
-	const isSingleRoot = ctx.singleRootNodes.has(node)
-		&& !options.vueCompilerOptions.fallthroughComponentNames.includes(hyphenateTag(tag));
-	const inferRootEl = ctx.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl;
-	const inferTemplateRefs = options.vueCompilerOptions.inferTemplateDollarRefs
+	const hasTemplateRef = !!getTemplateRef(node) && (
+		options.vueCompilerOptions.inferTemplateDollarRefs
 		|| options.vueCompilerOptions.inferComponentDollarRefs
-		|| options.setupRefs.size > 0;
+		|| options.setupRefs.size > 0
+	);
+	const isRootEl = options.templateScope.rootElements.includes(node)
+		&& (options.templateScope.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl);
 
-	if ((templateRef && inferTemplateRefs) || (isSingleRoot && inferRootEl)) {
-		const componentInstanceVar = ctx.getInternalVariable();
-		yield* generateTypedVar('var', componentInstanceVar, options.scriptLang, function*() {
+	if (hasTemplateRef || isRootEl) {
+		const instanceVar = ctx.getInternalVariable();
+		yield* generateTypedVar('var', instanceVar, options.scriptLang, function*() {
 			yield `Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0]`;
 		});
-
-		if (templateRef && inferTemplateRefs) {
-			let typeExp = `typeof ${ctx.getHoistVariable(componentInstanceVar)} | null`;
-			if (ctx.inVFor) {
-				typeExp = `(${typeExp})[]`;
-			}
-			ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
-		}
-		if (isSingleRoot && inferRootEl) {
-			ctx.singleRootElTypes.add(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
-		}
+		ctx.componentInstanceVars.set(node, {
+			instanceVar,
+			hoistedVar: hasTemplateRef ? ctx.getHoistVariable(instanceVar) : undefined,
+		});
 	}
 
 	if (shouldInheritAttrs) {
@@ -299,7 +301,7 @@ export function* generateComponent(
 		}
 	}
 
-	yield* generateStyleScopedClassReferences(options, node);
+	yield* options.slots.elementEnd.get(node) ?? [];
 
 	const slotDir = node.props.find(CompilerDOM.isVSlot);
 	const hasSlots = !!slotDir || node.children.length > 0;
@@ -373,25 +375,11 @@ export function* generateElement(
 	yield* generateFailedExpressions(options, ctx, failedPropExps);
 	yield* generateElementDirectives(options, ctx, node);
 
-	const templateRef = getTemplateRef(node);
-	if (templateRef) {
-		let typeExp = `${names.Elements}['${node.tag}']`;
-		if (ctx.inVFor) {
-			typeExp += `[]`;
-		}
-		ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
-	}
-	if (
-		ctx.singleRootNodes.has(node) && (ctx.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl)
-	) {
-		ctx.singleRootElTypes.add(`${names.Elements}['${node.tag}']`);
-	}
-
-	if (hasVBindAttrs(options, ctx, node)) {
+	if (hasVBindAttrs(options, node)) {
 		ctx.inheritedAttrVars.add(`${names.intrinsics}.${node.tag}`);
 	}
 
-	yield* generateStyleScopedClassReferences(options, node);
+	yield* options.slots.elementEnd.get(node) ?? [];
 
 	yield* ctx.generateDiagnosticDirectiveEnd();
 	for (const child of node.children) {
@@ -458,13 +446,9 @@ function* generateFailedExpressions(
 	}
 }
 
-function hasVBindAttrs(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
-) {
+function hasVBindAttrs(options: TemplateCodegenOptions, node: CompilerDOM.ElementNode) {
 	return options.vueCompilerOptions.fallthroughAttributes && (
-		(options.inheritAttrs && ctx.singleRootNodes.has(node))
+		(options.inheritAttrs && options.templateScope.singleRootNodes.has(node))
 		|| node.props.some(prop =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& prop.name === 'bind'

@@ -1,10 +1,10 @@
 import { SpanMapFeature } from '@volar/language-core';
 import {
 	type CodeSource,
+	type IR,
 	type IRBlock,
 	type IRScript,
 	type IRScriptSetup,
-	type IRStyle,
 	navigationFeatures,
 	scriptFeatures,
 	type ScriptRanges,
@@ -13,28 +13,40 @@ import {
 } from '@vue/language-core';
 import * as path from 'path-browserify';
 import { names } from '../names';
-import type { CodegenContributions, ScriptEdit } from '../plugin';
-import { createBlockRewrite } from '../rewrite/blockRewrite';
-import { generateStyleModuleImports } from '../style/modules';
-import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
+import type { ScriptRewrites } from '../plugin';
+import { type BlockRewrite, createBlockRewrite, generateBlockAnchor } from '../rewrite/blockRewrite';
+import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine } from '../writers';
+import type { ComponentSlots } from './component';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
-import { createScriptSetupCopies, generateGeneric, generateMacros, generateSetupFunction } from './scriptSetup';
-import { generateTemplate } from './template';
+import {
+	createScriptSetupCopies,
+	generateGeneric,
+	generateMacros,
+	generateSetupFunction,
+	type ScriptSetupSlots,
+} from './scriptSetup';
+import { generateTemplate, type TemplateFunctionSlots } from './template';
 
 export interface ScriptCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
+	ir: IR;
 	script: IRScript | undefined;
 	scriptSetup: IRScriptSetup | undefined;
-	styles: readonly IRStyle[];
 	fileName: string;
 	scriptLang: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
-	templateAndStyleTypes: Set<string>;
-	templateAndStyleCodes: TsCode[];
-	/** Type queries that link template and style reads of shadowed bindings back to the setup bindings. */
-	templateAndStyleBindingReferences: TsCode[];
+	/** The names of the types that the code in the template function declares. */
+	templateTypes: Set<string>;
+	/** The code of the template, in its scope. */
+	templateCodes: readonly TsCode[];
+	/** Type queries that link template reads of shadowed bindings back to the setup bindings. */
+	templateBindingReferences: readonly TsCode[];
+	/** The code that ends the scope of the template. */
+	templateScopeEnd: readonly TsCode[];
+	/** What the codegen plugins write into the slots of the module, the template function and the component. */
+	slots: Readonly<ModuleSlots & Omit<TemplateFunctionSlots, 'templateTypes'> & ComponentSlots & ScriptSetupSlots>;
 	setupBindings: Set<string>;
 	localComponents: Set<string>;
 	localDirectives: Set<string>;
@@ -43,55 +55,72 @@ export interface ScriptCodegenOptions {
 	dotValueBindings: Set<string>;
 	/** Setup bindings that template and style expressions reference. */
 	scopeBindings: Set<string>;
-	/** The script edits of the codegen plugins. */
-	scriptEdits: readonly ScriptEdit[];
-	/** The object types that the codegen plugins spread into the template context. */
-	templateContext: readonly TsCode[][];
-	/** The object types that the codegen plugins intersect into the public props of a script setup component. */
-	props: readonly TsCode[][];
-	/** The object types of events that the codegen plugins intersect into the emits of a script setup component. */
-	emits: readonly TsCode[][];
-	/** The object types that the codegen plugins intersect into what a script setup component exposes. */
-	expose: readonly TsCode[][];
-	/** The tag → element type map of native elements that a codegen plugin replaces the DOM one with. */
-	elements: readonly TsCode[] | undefined;
-	/** The statements that the codegen plugins add at module scope. */
-	declarations: readonly TsCode[][];
-	/** The named exports, synthetic default export and doc comment of the component, as the codegen plugins set them. */
-	exports: Readonly<CodegenContributions['exports']>;
+	/** Runs the rewrites of the codegen plugins on the rewrites of the script blocks. */
+	rewriteScripts(rewrites: ScriptRewrites): void;
+}
+
+/** The slots of the module. */
+export interface ModuleSlots {
+	/** Statements at module scope, after the user's code. */
+	declarations: (readonly TsCode[])[];
+	/** Tag → element type maps of native elements; the first replaces the DOM one in this file. */
+	elements: (readonly TsCode[])[];
+	/** The exports of the component that each plugin sets. */
+	exports: ComponentExports[];
+}
+
+/** The exports of the component that a plugin sets. */
+export interface ComponentExports {
+	/** Named exports of the component. */
+	names?: readonly string[];
+	/** `false` drops the synthetic default export; the first plugin that sets it decides. */
+	default?: boolean;
+	/** The text of a doc comment of the component, copied onto its exports; the first plugin that sets it decides. */
+	docComment?: string;
 }
 
 export { generate as generateScript };
 
-function* generateSyntheticDefaultExport(
-	{ exports }: ScriptCodegenOptions,
-	exportedExpression: string,
-): Generator<TsCode> {
+function* generateSyntheticDefaultExport(options: ScriptCodegenOptions, exportedExpression: string): Generator<TsCode> {
+	const exports = getExports(options);
 	if (!exports.default) {
 		return;
 	}
 	if (exports.docComment !== undefined) {
 		yield exports.docComment + newLine;
 	}
-	yield* generateNavigableExport(`export default ${exportedExpression};`);
+	yield* generateNavigableExport(options.ir, `export default ${exportedExpression};`);
 }
 
-function* generateNamedExports({ exports }: ScriptCodegenOptions, exportedExpression: string): Generator<TsCode> {
+function* generateNamedExports(options: ScriptCodegenOptions, exportedExpression: string): Generator<TsCode> {
+	const exports = getExports(options);
 	for (const exportName of exports.names) {
 		if (exports.docComment !== undefined) {
 			yield exports.docComment + newLine;
 		}
 		// `export { … }` rather than `export const`, so that no emitted `export` line names a `__VLS_` declaration
-		yield* generateNavigableExport(`const ${exportName} = ${exportedExpression};${newLine}export { ${exportName} };`);
+		yield* generateNavigableExport(
+			options.ir,
+			`const ${exportName} = ${exportedExpression};${newLine}export { ${exportName} };`,
+		);
 	}
 }
 
-function* generateNavigableExport(code: string): Generator<TsCode> {
+/** The exports of the component that the codegen plugins set, combined in their order. */
+function getExports({ slots }: ScriptCodegenOptions) {
+	return {
+		names: [...new Set(slots.exports.flatMap(exports => exports.names ?? []))],
+		default: slots.exports.find(exports => exports.default !== undefined)?.default ?? true,
+		docComment: slots.exports.find(exports => exports.docComment !== undefined)?.docComment,
+	};
+}
+
+function* generateNavigableExport(ir: IR, code: string): Generator<TsCode> {
 	// keep the synthetic exports navigable: go-to-definition on
 	// `import Foo from './Foo.vue'` targets the whole statement, which maps to the SFC top;
 	// a rename reaching it would insert the new name there
-	const ignore = yield* Boundary.start(undefined, 0, 0, synthesizedIgnore);
-	const boundary = yield* Boundary.start(undefined, 0, 0, { features: navigationFeatures & ~SpanMapFeature.Rename });
+	const ignore = yield* Boundary.start(ir, 0, 0, synthesizedIgnore);
+	const boundary = yield* Boundary.start(ir, 0, 0, { features: navigationFeatures & ~SpanMapFeature.Rename });
 	yield code;
 	yield boundary.end();
 	yield ignore.end();
@@ -110,6 +139,11 @@ function* generateWorker(
 ): Generator<TsCode> {
 	const { script, scriptRanges, scriptSetup, scriptSetupRanges, vueCompilerOptions, fileName } = options;
 	let exportExpression = asType(`typeof ${names.export}`, options.scriptLang);
+	const rewrites: ScriptRewrites = {
+		script: script && createBlockRewrite(script),
+		scriptSetup: scriptSetup && createBlockRewrite(scriptSetup),
+	};
+	options.rewriteScripts(rewrites);
 
 	yield* generateGlobalTypesReference(vueCompilerOptions, fileName);
 
@@ -125,13 +159,13 @@ function* generateWorker(
 
 		yield `import ${names.src} from `;
 		const boundary = yield* Boundary.start(
-			undefined,
+			options.ir,
 			script.src.offset,
 			script.src.offset + script.src.text.length,
 			src !== script.src.text ? { features: scriptFeatures & ~SpanMapFeature.Rename } : { features: scriptFeatures },
 		);
 		yield `'`;
-		yield [src.slice(0, script.src.text.length), undefined, script.src.offset, undefined];
+		yield mapped(src.slice(0, script.src.text.length), options.ir, script.src.offset, undefined);
 		yield src.slice(script.src.text.length);
 		yield `'`;
 		yield boundary.end();
@@ -143,7 +177,7 @@ function* generateWorker(
 	}
 	// <script> + <script setup>
 	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
-		const copies = createScriptSetupCopies(options, scriptSetup, scriptSetupRanges);
+		const copies = createScriptSetupCopies(options, rewrites.scriptSetup!, scriptSetup, scriptSetupRanges, false);
 		yield* copies.generateImports();
 
 		// <script>
@@ -152,22 +186,22 @@ function* generateWorker(
 		if (exportDefault) {
 			yield* generateScriptWithExportDefault(
 				script,
-				options.scriptEdits,
+				rewrites.script!,
 				scriptRanges,
 				exportDefault,
-				vueCompilerOptions,
+				options,
 				selfType = names.self,
 				exportExpression,
 			);
 		}
 		else {
-			yield* generateWholeScript(script, options.scriptEdits);
+			yield* generateWholeScript(script, rewrites.script!);
 			yield* generateSyntheticDefaultExport(options, exportExpression);
 		}
 
 		// <script setup>
 		yield* generateMacros(options);
-		yield* generateComponentDeclareEqual(scriptSetup, names.export);
+		yield* generateComponentDeclareEqual(options.ir, scriptSetup, names.export);
 		if (scriptSetup.generic) {
 			yield* generateGeneric(
 				options,
@@ -201,12 +235,18 @@ function* generateWorker(
 	}
 	// only <script setup>
 	else if (scriptSetup && scriptSetupRanges) {
-		const copies = createScriptSetupCopies(options, scriptSetup, scriptSetupRanges);
+		const copies = createScriptSetupCopies(
+			options,
+			rewrites.scriptSetup!,
+			scriptSetup,
+			scriptSetupRanges,
+			!scriptSetup.generic,
+		);
 		yield* copies.generateImports();
-		yield* generateMacros(options);
 
 		if (scriptSetup.generic) {
-			yield* generateComponentDeclareEqual(scriptSetup, names.export);
+			yield* generateMacros(options);
+			yield* generateComponentDeclareEqual(options.ir, scriptSetup, names.export);
 			yield* generateGeneric(
 				options,
 				ctx,
@@ -232,7 +272,7 @@ function* generateWorker(
 				scriptSetupRanges,
 				copies,
 				generateTemplate(options),
-				generateComponentDeclareEqual(scriptSetup, names.export),
+				generateComponentDeclareEqual(options.ir, scriptSetup, names.export),
 			);
 		}
 		yield* generateSyntheticDefaultExport(options, exportExpression);
@@ -243,18 +283,18 @@ function* generateWorker(
 		if (exportDefault) {
 			yield* generateScriptWithExportDefault(
 				script,
-				options.scriptEdits,
+				rewrites.script!,
 				scriptRanges,
 				exportDefault,
-				vueCompilerOptions,
+				options,
 				names.export,
 				exportExpression,
 				generateTemplate(options, names.export),
 			);
 		}
 		else {
-			yield* generateWholeScript(script, options.scriptEdits);
-			yield* generateComponentDeclareEqual(script, names.export);
+			yield* generateWholeScript(script, rewrites.script!);
+			yield* generateComponentDeclareEqual(options.ir, script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 			yield* generateTemplate(options, names.export);
 			yield* generateSyntheticDefaultExport(options, exportExpression);
@@ -263,12 +303,12 @@ function* generateWorker(
 
 	yield* generateNamedExports(options, exportExpression);
 	yield* ctx.localTypes.generate();
-	yield* generatePluginDeclarations(options);
 	// after the user's code, which may start with `/// <reference>` or `// @ts-nocheck`
-	yield* generateStyleModuleImports(options.styles);
+	yield* generateDeclarations(options);
 }
 
-function* generatePluginDeclarations({ elements, declarations, scriptLang }: ScriptCodegenOptions): Generator<TsCode> {
+function* generateDeclarations({ slots, scriptLang }: ScriptCodegenOptions): Generator<TsCode> {
+	const [elements] = slots.elements;
 	// the element types that the template reads by `names.Elements`, as a module type that shadows the global one
 	if (elements) {
 		if (isTsLang(scriptLang)) {
@@ -282,7 +322,7 @@ function* generatePluginDeclarations({ elements, declarations, scriptLang }: Scr
 			yield `} ${names.Elements} */${newLine}`;
 		}
 	}
-	for (const declaration of declarations) {
+	for (const declaration of slots.declarations) {
 		yield* declaration;
 		yield newLine;
 	}
@@ -290,10 +330,10 @@ function* generatePluginDeclarations({ elements, declarations, scriptLang }: Scr
 
 function* generateScriptWithExportDefault(
 	script: IRScript,
-	scriptEdits: readonly ScriptEdit[],
+	blockRewrite: BlockRewrite,
 	scriptRanges: ScriptRanges,
 	exportDefault: NonNullable<ScriptRanges['exportDefault']>,
-	vueCompilerOptions: VueCompilerOptions,
+	{ ir, vueCompilerOptions }: ScriptCodegenOptions,
 	varName: string,
 	exportExpression: string,
 	templateGenerator?: Generator<TsCode>,
@@ -311,8 +351,7 @@ function* generateScriptWithExportDefault(
 	}
 
 	// the head is the code up to the end of the default export, with the exported expression cut out of it
-	const blockRewrite = createBlockRewrite(script, scriptEdits);
-	const { core } = blockRewrite.rewrite;
+	const core = blockRewrite.rewrite;
 	const head = core.cut(0, exportDefault.end, { data: { features: scriptFeatures } });
 	const exported = core.cut(expression.start, expression.end, {
 		data: { features: scriptFeatures },
@@ -322,13 +361,13 @@ function* generateScriptWithExportDefault(
 		? core.cut(exportDefault.end, script.content.length, { data: { features: scriptFeatures } })
 		: undefined;
 
-	yield* blockRewrite.generateEmptyCopy();
+	yield generateBlockAnchor(script);
 	yield* blockRewrite.render(head);
 	yield endOfLine;
 	if (templateGenerator) {
 		yield* templateGenerator;
 	}
-	yield* generateComponentDeclareEqual(script, varName);
+	yield* generateComponentDeclareEqual(ir, script, varName);
 	if (wrapLeft && wrapRight) {
 		yield wrapLeft;
 		yield* blockRewrite.render(exported);
@@ -343,10 +382,9 @@ function* generateScriptWithExportDefault(
 	}
 }
 
-function* generateWholeScript(script: IRScript, scriptEdits: readonly ScriptEdit[]): Generator<TsCode> {
-	const blockRewrite = createBlockRewrite(script, scriptEdits);
-	const whole = blockRewrite.rewrite.core.cut(0, script.content.length, { data: { features: scriptFeatures } });
-	yield* blockRewrite.generateEmptyCopy();
+function* generateWholeScript(script: IRScript, blockRewrite: BlockRewrite): Generator<TsCode> {
+	const whole = blockRewrite.rewrite.cut(0, script.content.length, { data: { features: scriptFeatures } });
+	yield generateBlockAnchor(script);
 	yield* blockRewrite.render(whole);
 }
 
@@ -378,13 +416,13 @@ function* generateGlobalTypesReference(
 // The component declaration has no source of its own: map it to the tag name of its block, or to the start of a
 // block that is not an element, so that its declaration emit errors (e.g. a private type of a generic component)
 // report there.
-function* generateComponentDeclareEqual(block: IRBlock, name: string): Generator<TsCode> {
+function* generateComponentDeclareEqual(ir: IR, block: IRBlock, name: string): Generator<TsCode> {
 	if (block.element) {
 		const tagNameStart = block.element.start + 1;
-		yield* generateExportDeclareEqual(undefined, name, tagNameStart, tagNameStart + 'script'.length);
+		yield* generateExportDeclareEqual(ir, name, tagNameStart, tagNameStart + 'script'.length);
 	}
 	else {
-		yield* generateExportDeclareEqual(undefined, name, block.offset, block.offset);
+		yield* generateExportDeclareEqual(ir, name, block.offset, block.offset);
 	}
 }
 

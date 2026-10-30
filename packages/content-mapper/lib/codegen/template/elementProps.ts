@@ -1,7 +1,6 @@
 import { SpanMapKind } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import {
-	forEachPropStyleScopedClassReference,
 	getModelPropName,
 	hyphenateAttr,
 	type IRTemplate,
@@ -13,7 +12,7 @@ import {
 } from '@vue/language-core';
 import { camelize } from '@vue/shared';
 import { names } from '../names';
-import { Boundary, type TsCode } from '../tsCode';
+import { Boundary, mapped, type TsCode } from '../tsCode';
 import { asType, identifierRE, newLine } from '../writers';
 import { generateCamelized } from '../writers/camelized';
 import { generateUnicode } from '../writers/unicode';
@@ -210,7 +209,7 @@ export function* generateElementProps(
 			if (prefix === '.' || prefix === '#') {
 				// Pug shorthand syntax
 				for (const char of prop.name) {
-					yield [char, options.template, prop.loc.start.offset, features];
+					yield mapped(char, options.template, prop.loc.start.offset, features);
 				}
 			}
 			else {
@@ -288,12 +287,8 @@ export function* generatePropExp(
 			`(`,
 			`)`,
 			[],
-			// a class name renames through its reference to the style classes; the chars around it share its offsets
-			[...forEachPropStyleScopedClassReference(options.typescript, options.template, prop)]
-				.map(([className, offset]) => {
-					const start = offset - exp.loc.start.offset;
-					return [start - 1, start + className.length + 1] as const;
-				})
+			(options.slots.renamedElsewhere.get(prop) ?? [])
+				.map(([start, end]) => [start - exp.loc.start.offset, end - exp.loc.start.offset] as const)
 				.sort((a, b) => a[0] - b[0]),
 		);
 	}

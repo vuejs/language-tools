@@ -1,5 +1,6 @@
-import type { SpanMapKind, SpanMapSegment } from '@volar/language-core';
+import type { SpanMapKind } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
+import type { Piece } from 'muggle-string';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 
 /** The node types of the TypeScript 7 AST API, for packages that do not resolve `typescript` to it. */
@@ -55,33 +56,32 @@ export interface VueCodeMarker {
 	kind?: SpanMapKind;
 }
 
-/** An IR block, whose offsets are relative to its content, or `undefined` for the offsets of the file. */
-export type CodeSource = IRBlock | undefined;
+/** The IR of the file, at offsets of the file, or one of its blocks, at offsets of the block's content. */
+export type CodeSource = IR | IRBlock;
 
 /**
- * A segment of code: plain text, or text that maps by its `data` from `sourceOffset` of `source`, an IR block, or
- * of the file when `source` is `undefined`.
+ * A piece of code: new text, which maps nowhere, or the range `start`..`end` of `source`, which maps by its `data`. A
+ * range without `text` is a copy of the content of `source` there. `text` maps to the range char by char when it is as
+ * long as the range, and as a whole otherwise.
  */
-export type CodeSegment<Data> =
-	| string
-	| [
-		text: string,
-		source: CodeSource,
-		sourceOffset: number,
-		data: Data,
-	];
+export type CodePiece<Data> = Piece<{ source: CodeSource; data: Data }>;
+
+/** The text of `piece`. */
+export function pieceText(piece: CodePiece<unknown>): string {
+	return typeof piece === 'string' ? piece : piece.text ?? piece.source.content.slice(piece.start, piece.end);
+}
 
 /** The text of `codes`. */
-export function codeToString(codes: readonly CodeSegment<unknown>[]): string {
+export function codeToString(codes: readonly CodePiece<unknown>[]): string {
 	let text = '';
 	for (const code of codes) {
-		text += typeof code === 'string' ? code : code[0];
+		text += pieceText(code);
 	}
 	return text;
 }
 
-/** A segment of an embedded document, which maps by its own marker alone. */
-export type Code = CodeSegment<VueCodeMarker>;
+/** A piece of an embedded document, which maps by its own marker alone. */
+export type Code = CodePiece<VueCodeMarker>;
 
 export interface VueCompilerOptions {
 	target: number;
@@ -251,18 +251,17 @@ export interface VuePluginContext {
 }
 
 /**
- * The HTML that a template language converts a template to. The host compiles `html`, and gives every location of
- * the AST and of the compiler's errors and warnings the offsets of the template that `mappings` give:
- * - an offset of `html` that several mappings cover gets the greatest of their template offsets;
- * - an offset that no mapping covers has no source and gets -1, which consumers skip rather than move to an offset nearby;
+ * The HTML that a template language converts a template to, as pieces of the template. The host compiles their text,
+ * and gives every location of the AST and of the compiler's errors and warnings the offsets of the template that the
+ * ranges give, an offset into a range the offset of the template as far into it, up to its end:
+ * - an offset of the HTML that several ranges cover gets the greatest of their template offsets;
+ * - an offset that no range covers has no source and gets -1, which consumers skip rather than move to an offset nearby;
  * - a location of which only one end has a source has none: both of its ends get -1.
  */
 export interface TemplateHTML {
-	html: string;
-	/** From ranges of `html` (virtual) to ranges of the template (original). */
-	mappings: SpanMapSegment[];
+	pieces: Piece[];
 	/**
-	 * Whether an error of the compiler, at offsets of `html`, comes from the conversion rather than the template, so
+	 * Whether an error of the compiler, at offsets of the HTML, comes from the conversion rather than the template, so
 	 * that it is not reported.
 	 */
 	ignoreError?(error: CompilerDOM.CompilerError): boolean;

@@ -3,7 +3,7 @@ import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeature
 import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAST';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { names } from '../names';
-import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
+import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import { endOfLine, isTsLang, newLine } from '../writers';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -83,7 +83,7 @@ export function* generateVSlot(
 		if (isStatic && !slotDir.arg) {
 			if (slotDir.loc.source.startsWith('#') || slotDir.loc.source.startsWith('v-slot:')) {
 				yield `/** @type {NonNullable<typeof ${ctxVar}['slots']>['`;
-				yield [
+				yield mapped(
 					'',
 					options.template,
 					slotDir.loc.start.offset + (
@@ -92,7 +92,7 @@ export function* generateVSlot(
 							: 'v-slot:'.length
 					),
 					{ features: completionFeatures },
-				];
+				);
 				yield `']} */${endOfLine}`;
 			}
 		}
