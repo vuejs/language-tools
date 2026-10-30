@@ -31,6 +31,12 @@ import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 import { getEmitTypes } from './template';
 
+/** The hooks of `<script setup>`. */
+export interface ScriptSetupHooks {
+	/** Edits the user's code of `<script setup>`, after the transforms of the macros, with the core writer. */
+	rewriteScriptSetup?(core: CoreRewriteWriter<CodeSource, TsCodeData>, scriptSetup: IRScriptSetup): void;
+}
+
 /** The copies of the user's code of `<script setup>`: its imports at module scope, and its body in the setup function. */
 export interface ScriptSetupCopies {
 	generateImports(): Generator<TsCode>;

@@ -29,12 +29,12 @@ export function asTypeCode(type: readonly TsCode[], lang: string): TsCode[] {
 }
 
 // `let name!: T;` in TS; `var name = /** @type {T} */ ({});` in JS.
-export function* generateTypedVar(
+export function* generateTypedVar<T = never>(
 	kind: 'let' | 'var',
 	name: string,
 	lang: string,
-	type: () => Generator<TsCode>,
-): Generator<TsCode> {
+	type: () => Generator<TsCode | T>,
+): Generator<TsCode | T> {
 	if (isTsLang(lang)) {
 		yield `${kind} ${name}!: `;
 		yield* type();
@@ -50,11 +50,11 @@ export function* generateTypedVar(
 // `type name = T;` in TS; `var name = /** @type {T} */ ({});` in JS, where every
 // top-level `@typedef` is an export of the module and would leak into the emitted
 // declarations. Refer to the alias through `typeAliasRef`.
-export function* generateTypeAlias(
+export function* generateTypeAlias<T = never>(
 	name: string,
 	lang: string,
-	type: () => Generator<TsCode>,
-): Generator<TsCode> {
+	type: () => Generator<TsCode | T>,
+): Generator<TsCode | T> {
 	if (isTsLang(lang)) {
 		yield `type ${name} = `;
 		yield* type();

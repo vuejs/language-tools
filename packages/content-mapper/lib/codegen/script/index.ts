@@ -11,14 +11,19 @@ import {
 	type VueCompilerOptions,
 } from '@vue/language-core';
 import * as path from 'path-browserify';
-import type { CodegenConcern } from '../concern';
 import { names } from '../names';
 import type { CodegenContributions, ScriptEdit } from '../plugin';
 import { createBlockRewrite, generateBlockAnchor } from '../rewrite/blockRewrite';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine } from '../writers';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
-import { createScriptSetupCopies, generateGeneric, generateMacros, generateSetupFunction } from './scriptSetup';
+import {
+	createScriptSetupCopies,
+	generateGeneric,
+	generateMacros,
+	generateSetupFunction,
+	type ScriptSetupHooks,
+} from './scriptSetup';
 import { generateTemplate, type TemplateFunctionSlots } from './template';
 
 export interface ScriptCodegenOptions {
@@ -36,7 +41,7 @@ export interface ScriptCodegenOptions {
 	/** What the concerns of the built-in codegen write into the slots of the module and the template function. */
 	slots: Readonly<ModuleSlots & Omit<TemplateFunctionSlots, 'templateTypes'>>;
 	/** The rewrites of `<script setup>` of the concerns of the built-in codegen. */
-	rewriteScriptSetup: readonly NonNullable<CodegenConcern['rewriteScriptSetup']>[];
+	rewriteScriptSetup: readonly NonNullable<ScriptSetupHooks['rewriteScriptSetup']>[];
 	setupBindings: Set<string>;
 	localComponents: Set<string>;
 	localDirectives: Set<string>;

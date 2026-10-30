@@ -68,9 +68,11 @@ function useCodegen(
 
 	const getCodegenContributions = computed(() => getContributions(plugins, { ts, fileName, ir, analysis }));
 
-	const concerns = concernFactories.map(create => create({ ts, fileName, ir, analysis }));
+	const getTemplateTypes = computed((): ReadonlySet<string> => new Set(getGeneratedTemplate()?.generatedTypes));
+	const concerns = concernFactories.map(create => create({ ts, fileName, ir, analysis, getTemplateTypes }));
 	const slots = mergeSlots(concerns);
 	const rewriteScriptSetup = concerns.flatMap(({ rewriteScriptSetup }) => rewriteScriptSetup ?? []);
+	const generateTemplateEnd = concerns.flatMap(({ generateTemplateEnd }) => generateTemplateEnd ?? []);
 
 	const hasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
@@ -105,6 +107,7 @@ function useCodegen(
 			inheritAttrs: getInheritAttrs(),
 			templateScope: getTemplateScope(),
 			slots: { elementEnd: slots.elementEnd(), renamedElsewhere: slots.renamedElsewhere() },
+			generateTemplateEnd,
 		});
 	});
 

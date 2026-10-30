@@ -1,17 +1,21 @@
-import type { CodeSource, IR, IRScriptSetup, ScriptAnalysis, TypeScript } from '@vue/language-core';
+import type { IR, ScriptAnalysis, TypeScript } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { CoreRewriteWriter } from 'muggle-string';
-import type { TsCodeData } from './piece';
 import type { ModuleSlots } from './script';
+import type { ScriptSetupHooks } from './script/scriptSetup';
 import type { TemplateFunctionSlots } from './script/template';
+import type { TemplateHooks } from './template';
 import type { ElementSlots } from './template/element';
 
-/** What a concern of the built-in codegen reads: the same as a codegen plugin. */
+/**
+ * What a concern of the built-in codegen reads: the same as a codegen plugin, and the names of the types that the
+ * template function declares.
+ */
 export interface CodegenConcernFile {
 	ts: TypeScript;
 	fileName: string;
 	ir: IR;
 	analysis: ScriptAnalysis;
+	getTemplateTypes(): ReadonlySet<string>;
 }
 
 /** The slots that the owners of the generated code declare, by name. */
@@ -19,15 +23,13 @@ export type CodegenSlots = ModuleSlots & TemplateFunctionSlots & ElementSlots;
 
 /**
  * A concern of the built-in codegen, e.g. style. It writes its code into the slots that the owners of the generated
- * code declare, and knows neither their code nor the other concerns. Each slot is read lazily, so that an owner
- * depends only on the slots that it reads.
+ * code declare, and through the hooks that they call, and knows neither their code nor the other concerns. Each slot
+ * is read lazily, so that an owner depends only on the slots that it reads.
  */
 export type CodegenConcern =
 	& { readonly [K in keyof CodegenSlots]?: () => CodegenSlots[K] }
-	& {
-		/** Edits the user's code of `<script setup>`, after the transforms of the macros, with the core writer. */
-		rewriteScriptSetup?(core: CoreRewriteWriter<CodeSource, TsCodeData>, scriptSetup: IRScriptSetup): void;
-	};
+	& ScriptSetupHooks
+	& TemplateHooks;
 
 export type CodegenConcernFactory = (file: CodegenConcernFile) => CodegenConcern;
 
