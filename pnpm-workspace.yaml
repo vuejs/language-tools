@@ -49,8 +49,6 @@ overrides:
   volar-service-json: workspace:*
   volar-service-pug: workspace:*
   volar-service-pug-beautify: workspace:*
-  # volar-service-pug feeds its baseParse mappings to @volar/language-service, so both must share one format
-  '@vue/language-plugin-pug': workspace:*
   # every package that depends on muggle-string, in or outside the workspace, resolves it to the submodule, so there is one copy
   muggle-string: workspace:*
   # every package that depends on muggle-pug, in or outside the workspace, resolves it to the submodule, so there is one copy

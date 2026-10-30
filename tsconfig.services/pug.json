@@ -11,6 +11,6 @@
 	"references": [
 		{ "path": "../tsconfig.volar/language-service.json" },
 		{ "path": "./html.json" },
-		{ "path": "../packages/language-plugin-pug/tsconfig.json" }
+		{ "path": "../tsconfig.muggle-pug/muggle-pug.json" }
 	]
 }

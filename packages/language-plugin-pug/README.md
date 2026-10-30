@@ -56,15 +56,15 @@ The language server's syntax features of Pug templates are built in and work wit
 
 ## How it Works
 
-1. Uses `pug-lexer` to convert Pug syntax into tokens. A template whose every line is indented, which Vue dedents but Pug rejects, is read as the children of a `template` tag that is left out of the result
-2. Uses `pug-parser` to parse tokens into an AST
-3. Traverses the AST to generate HTML while building a source map
-4. Compiles the HTML with the `compileTemplate` that the host passes
-5. Maps the offsets of the AST, errors and warnings back to the original Pug code via the source map
+1. [`muggle-pug`](https://github.com/johnsoncodehk/muggle-pug) compiles the Pug code to HTML segments that copy the Pug code, with `pug-lexer` and `pug-parser`. A template whose every line is indented, which Vue dedents but Pug rejects, is read as the children of a `template` tag that is left out of the result
+2. Builds the mappings from the HTML to the Pug code from the segments
+3. Compiles the HTML with the `compileTemplate` that the host passes
+4. Maps the offsets of the AST, errors and warnings back to the original Pug code via the mappings
 
 ## Related Packages
 
 - [`@vue/language-core`](../language-core) - Core module
+- [`muggle-pug`](https://github.com/johnsoncodehk/muggle-pug) - Pug to HTML segments
 
 ## License
 

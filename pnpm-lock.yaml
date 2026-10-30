@@ -17,7 +17,6 @@ overrides:
   volar-service-json: workspace:*
   volar-service-pug: workspace:*
   volar-service-pug-beautify: workspace:*
-  '@vue/language-plugin-pug': workspace:*
   muggle-string: workspace:*
   muggle-pug: workspace:*
 
@@ -214,15 +213,9 @@ importers:
       '@volar/source-map':
         specifier: workspace:*
         version: link:../../volar.js/packages/source-map
-      pug-lexer:
-        specifier: ^5.0.1
-        version: 5.0.1
-      pug-parser:
-        specifier: ^6.0.0
-        version: 6.0.0
-      vscode-languageserver-textdocument:
-        specifier: ^1.0.12
-        version: 1.0.12
+      muggle-pug:
+        specifier: workspace:*
+        version: link:../../muggle-pug
     devDependencies:
       '@types/node':
         specifier: ^26.0.1
@@ -276,9 +269,6 @@ importers:
       '@vue/language-core':
         specifier: workspace:*
         version: link:../language-core
-      '@vue/language-plugin-pug':
-        specifier: workspace:*
-        version: link:../language-plugin-pug
       '@vue/shared':
         specifier: ^3.5.0
         version: 3.5.40
@@ -407,6 +397,9 @@ importers:
       '@volar/language-service':
         specifier: workspace:*
         version: link:../../../volar.js/packages/language-service
+      muggle-pug:
+        specifier: workspace:*
+        version: link:../../../muggle-pug
       volar-service-html:
         specifier: workspace:*
         version: link:../html
@@ -420,9 +413,6 @@ importers:
       '@types/node':
         specifier: latest
         version: 26.6.5
-      '@vue/language-plugin-pug':
-        specifier: workspace:*
-        version: link:../../../packages/language-plugin-pug
 
   services/packages/pug-beautify:
     dependencies:

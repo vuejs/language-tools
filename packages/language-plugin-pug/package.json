@@ -16,9 +16,7 @@
 	},
 	"dependencies": {
 		"@volar/source-map": "workspace:*",
-		"pug-lexer": "^5.0.1",
-		"pug-parser": "^6.0.0",
-		"vscode-languageserver-textdocument": "^1.0.12"
+		"muggle-pug": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/node": "^26.0.1",

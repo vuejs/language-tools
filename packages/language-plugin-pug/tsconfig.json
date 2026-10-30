@@ -7,6 +7,7 @@
 	},
 	"references": [
 		{ "path": "../../tsconfig.volar/source-map.json" },
+		{ "path": "../../tsconfig.muggle-pug/muggle-pug.json" },
 		{ "path": "../language-core/tsconfig.json" }
 	],
 	"include": ["*", "lib/**/*"],

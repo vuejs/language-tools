@@ -5,7 +5,7 @@
 [submodule "services"]
 	path = services
 	url = https://github.com/volarjs/services.git
-	branch = cursor/span-map-pug-scanner-35cc
+	branch = cursor/muggle-pug-0c97
 [submodule "muggle-string"]
 	path = muggle-string
 	url = https://github.com/johnsoncodehk/muggle-string.git
