@@ -1,17 +1,16 @@
-import { type IRScript, type IRScriptSetup, scriptFeatures } from '@vue/language-core';
+import { type IRBlock, type IRScript, type IRScriptSetup, scriptFeatures } from '@vue/language-core';
 import { createSourceRewrite, type RewriteSlice, type RewriteWriter, type SourceRewrite } from 'muggle-string';
-import type { ScriptEdit } from '../plugin';
 import type { TsCode, TsCodeData } from '../tsCode';
 import { generateTerminator } from '../writers';
 
 export type ScriptBlock = IRScript | IRScriptSetup;
 
-export type BlockWriter = RewriteWriter<ScriptBlock, TsCodeData>;
+export type BlockWriter = RewriteWriter<IRBlock, TsCodeData>;
 
-export type BlockSlice = RewriteSlice<ScriptBlock, TsCodeData>;
+export type BlockSlice = RewriteSlice<IRBlock, TsCodeData>;
 
 export interface BlockRewrite {
-	rewrite: SourceRewrite<ScriptBlock, TsCodeData>;
+	rewrite: SourceRewrite<IRBlock, TsCodeData>;
 	/** The code of `slice`. `terminate` adds the terminator of a truncated copy of the block (#3632). */
 	render(slice: BlockSlice, terminate?: boolean): TsCode[];
 }
@@ -26,24 +25,9 @@ export function generateBlockAnchor(block: ScriptBlock): TsCode {
 	return { source: block, start: 0, end: 0, data: { features: scriptFeatures } };
 }
 
-/** A rewrite of the content of `block`, with the script edits of the codegen plugins applied. */
-export function createBlockRewrite(block: ScriptBlock, scriptEdits: readonly ScriptEdit[]): BlockRewrite {
-	const rewrite = createSourceRewrite<ScriptBlock, TsCodeData>(block, block.content);
-	for (const edit of scriptEdits) {
-		if (edit.block !== block) {
-			continue;
-		}
-		const writer = rewrite.writer(edit.pluginIndex);
-		switch (edit.kind) {
-			case 'insertBefore':
-			case 'insertAfter':
-				writer[edit.kind](edit.offset, edit.code);
-				break;
-			case 'remove':
-				writer.replace(edit.start, edit.end, '');
-				break;
-		}
-	}
+/** A rewrite of the content of `block`. */
+export function createBlockRewrite(block: ScriptBlock): BlockRewrite {
+	const rewrite = createSourceRewrite<IRBlock, TsCodeData>(block, block.content);
 	return {
 		rewrite,
 		render(slice, terminate = true) {

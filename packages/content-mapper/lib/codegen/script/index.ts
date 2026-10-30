@@ -12,8 +12,8 @@ import {
 } from '@vue/language-core';
 import * as path from 'path-browserify';
 import { names } from '../names';
-import type { CodegenContributions, ScriptEdit } from '../plugin';
-import { createBlockRewrite, generateBlockAnchor } from '../rewrite/blockRewrite';
+import type { CodegenContributions, ScriptRewrites } from '../plugin';
+import { type BlockRewrite, createBlockRewrite, generateBlockAnchor } from '../rewrite/blockRewrite';
 import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine } from '../writers';
 import type { ComponentSlots } from './component';
@@ -52,8 +52,8 @@ export interface ScriptCodegenOptions {
 	dotValueBindings: Set<string>;
 	/** Setup bindings that template and style expressions reference. */
 	scopeBindings: Set<string>;
-	/** The script edits of the codegen plugins. */
-	scriptEdits: readonly ScriptEdit[];
+	/** Runs the rewrites of the codegen plugins on the rewrites of the script blocks. */
+	rewriteScripts(rewrites: ScriptRewrites): void;
 	/** The object types that the codegen plugins spread into the template context. */
 	templateContext: readonly (readonly TsCode[])[];
 	/** The object types that the codegen plugins intersect into the public props of a script setup component. */
@@ -125,6 +125,11 @@ function* generateWorker(
 ): Generator<TsCode> {
 	const { script, scriptRanges, scriptSetup, scriptSetupRanges, vueCompilerOptions, fileName } = options;
 	let exportExpression = asType(`typeof ${names.export}`, options.scriptLang);
+	const rewrites: ScriptRewrites = {
+		script: script && createBlockRewrite(script),
+		scriptSetup: scriptSetup && createBlockRewrite(scriptSetup),
+	};
+	options.rewriteScripts(rewrites);
 
 	yield* generateGlobalTypesReference(vueCompilerOptions, fileName);
 
@@ -158,7 +163,7 @@ function* generateWorker(
 	}
 	// <script> + <script setup>
 	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
-		const copies = createScriptSetupCopies(options, scriptSetup, scriptSetupRanges);
+		const copies = createScriptSetupCopies(options, rewrites.scriptSetup!, scriptSetup, scriptSetupRanges);
 		yield* copies.generateImports();
 
 		// <script>
@@ -167,7 +172,7 @@ function* generateWorker(
 		if (exportDefault) {
 			yield* generateScriptWithExportDefault(
 				script,
-				options.scriptEdits,
+				rewrites.script!,
 				scriptRanges,
 				exportDefault,
 				vueCompilerOptions,
@@ -176,7 +181,7 @@ function* generateWorker(
 			);
 		}
 		else {
-			yield* generateWholeScript(script, options.scriptEdits);
+			yield* generateWholeScript(script, rewrites.script!);
 			yield* generateSyntheticDefaultExport(options, exportExpression);
 		}
 
@@ -216,7 +221,7 @@ function* generateWorker(
 	}
 	// only <script setup>
 	else if (scriptSetup && scriptSetupRanges) {
-		const copies = createScriptSetupCopies(options, scriptSetup, scriptSetupRanges);
+		const copies = createScriptSetupCopies(options, rewrites.scriptSetup!, scriptSetup, scriptSetupRanges);
 		yield* copies.generateImports();
 		yield* generateMacros(options);
 
@@ -258,7 +263,7 @@ function* generateWorker(
 		if (exportDefault) {
 			yield* generateScriptWithExportDefault(
 				script,
-				options.scriptEdits,
+				rewrites.script!,
 				scriptRanges,
 				exportDefault,
 				vueCompilerOptions,
@@ -268,7 +273,7 @@ function* generateWorker(
 			);
 		}
 		else {
-			yield* generateWholeScript(script, options.scriptEdits);
+			yield* generateWholeScript(script, rewrites.script!);
 			yield* generateComponentDeclareEqual(script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 			yield* generateTemplate(options, names.export);
@@ -305,7 +310,7 @@ function* generatePluginDeclarations({ elements, declarations, scriptLang }: Scr
 
 function* generateScriptWithExportDefault(
 	script: IRScript,
-	scriptEdits: readonly ScriptEdit[],
+	blockRewrite: BlockRewrite,
 	scriptRanges: ScriptRanges,
 	exportDefault: NonNullable<ScriptRanges['exportDefault']>,
 	vueCompilerOptions: VueCompilerOptions,
@@ -326,7 +331,6 @@ function* generateScriptWithExportDefault(
 	}
 
 	// the head is the code up to the end of the default export, with the exported expression cut out of it
-	const blockRewrite = createBlockRewrite(script, scriptEdits);
 	const { core } = blockRewrite.rewrite;
 	const head = core.cut(0, exportDefault.end, { data: { features: scriptFeatures } });
 	const exported = core.cut(expression.start, expression.end, {
@@ -358,8 +362,7 @@ function* generateScriptWithExportDefault(
 	}
 }
 
-function* generateWholeScript(script: IRScript, scriptEdits: readonly ScriptEdit[]): Generator<TsCode> {
-	const blockRewrite = createBlockRewrite(script, scriptEdits);
+function* generateWholeScript(script: IRScript, blockRewrite: BlockRewrite): Generator<TsCode> {
 	const whole = blockRewrite.rewrite.core.cut(0, script.content.length, { data: { features: scriptFeatures } });
 	yield generateBlockAnchor(script);
 	yield* blockRewrite.render(whole);

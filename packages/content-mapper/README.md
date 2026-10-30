@@ -115,8 +115,8 @@ the resolved `vueCompilerOptions` that returns one. Options of the plugin come f
 neither `rewrite` nor `generate`, and a hook that is not a function are reported as option
 diagnostics at the `plugins` entry.
 
-A plugin has two optional hooks, which run for each file: first the `rewrite` of every plugin, in
-`plugins` order, then the `generate` of every plugin. `rewrite(file, writers)` edits the user's code
+A plugin has two optional hooks, which run for each file, each in `plugins` order: the `rewrite` of
+every plugin and the `generate` of every plugin. `rewrite(file, writers)` edits the user's code
 of the script blocks; `generate(file)` returns `VueCodegenSlots`, the code that the plugin adds to
 the slots of the generated code. Both see the same `file`, not the result of another hook. `file`
 holds the TS 7.1 AST API that parsed the scripts (`ts`), the IR, and its analysis (resolved options,
@@ -132,9 +132,9 @@ watches.
 Code is written as `VueCodegenCode`, an array of `VueCodegenPiece`s: plain strings, which map nowhere
 and report no diagnostics, and ranges `{ source, start, end, data: { features }, text? }` of a block
 `source`, mapped there with the given features (e.g. `scriptFeatures`). A range without `text` copies
-the text of the block; with `text`, the text maps to the range as a whole (e.g. to report a diagnostic
-there). A range of a block that is not the file's or out of its block keeps only its `text`, unmapped.
-Plugins never see generated names or offsets.
+the text of the block; with `text`, the text maps to the range char by char when it is as long as the
+range, and as a whole otherwise (e.g. to report a diagnostic there). A piece that is not text or a
+range of a block of the file throws. Plugins never see generated names or offsets.
 
 | Slot | Where the mapper places it | What its code can reference |
 |---|---|---|
@@ -146,21 +146,22 @@ Plugins never see generated names or offsets.
 
 Slots combine in `plugins` order. Arrays and `exports.names` are concatenated, and names are
 de-duplicated. For `elements`, `exports.default` and `exports.docComment`, the first plugin that sets
-one wins. Invalid entries, such as a block that is not the file's or a range out of its block, are
-dropped.
+one wins. Other invalid entries, such as a doc comment out of its block, are dropped.
 
 `writers.script` and `writers.scriptSetup` are the writers of the plugin for the file's script
-blocks (`undefined` without the block), at offsets of the block's content. Inserted code is a plain
-string, which maps nowhere. Edits never conflict. `insertBefore(offset, code)` attaches code to the
+blocks (`undefined` without the block), at offsets of the block's content. Inserted code is
+`VueCodegenCode`, slices, or arrays of them. Edits never conflict. `insertBefore(offset, code)` attaches code to the
 char at `offset` (at the end of the block, to the end of the block), `insertAfter(offset, code)` to
 the char before `offset` (at the start of the block, to the start of the block), and the code goes
 wherever the mapper copies that char. `remove(start, end)` drops the chars of `start..end`; the code
-attached to them stays. Removals of several plugins are united. When the mapper moves a range of the
+attached to them stays. Removals of several plugins are united. `cut(start, end)` returns a slice of
+the chars of `start..end` with all the edits in them, which renders where it is inserted, exactly
+once, and nowhere if it is not; the cuts of all plugins and the mapper are nested or disjoint. When the mapper moves a range of the
 user's code (e.g. the type argument of `defineProps` into a type alias), the inserts attached to its
 chars move with it. At one char, the code nests: a later plugin sits outside an earlier one, and the
 mapper outside all. So inserts before the char come outermost first, and inserts after the char come
 innermost first. The edits of one plugin at one place keep their order. An edit out of the range of
-its block, a removal of no char, and code that is not a string are ignored. The start of each script block always maps one empty
+its block, a removal of no char, and code that is not valid throw. The start of each script block always maps one empty
 position, so that an edit of the generated code there (e.g. an auto import) maps back even when all
 its chars are removed.
 

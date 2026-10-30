@@ -7,7 +7,7 @@ import { createInheritedAttrsConcern } from './concerns/inheritedAttrs';
 import { createRefsConcern } from './concerns/refs';
 import { createRootElConcern } from './concerns/rootEl';
 import { createSlotsConcern } from './concerns/slots';
-import { type CodegenPlugin, getContributions } from './plugin';
+import { type CodegenPlugin, getContributions, rewriteScripts } from './plugin';
 import { generateScript } from './script';
 import { createStyleConcern } from './style';
 import { generateTemplate } from './template';
@@ -154,7 +154,7 @@ function useCodegen(
 				exposedInstanceTypes: slots.exposedInstanceTypes(),
 			},
 			rewriteScriptSetup,
-			scriptEdits: getCodegenContributions().scriptEdits,
+			rewriteScripts: rewrites => rewriteScripts(plugins, { ts, fileName, ir, analysis }, rewrites),
 			templateContext: getCodegenContributions().templateContext,
 			props: getCodegenContributions().props,
 			emits: getCodegenContributions().emits,

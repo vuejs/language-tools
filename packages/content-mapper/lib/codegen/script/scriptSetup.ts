@@ -7,7 +7,7 @@ import {
 	type TextRange,
 } from '@vue/language-core';
 import { names } from '../names';
-import { type BlockSlice, type BlockWriter, createBlockRewrite, generateBlockAnchor } from '../rewrite/blockRewrite';
+import { type BlockRewrite, type BlockSlice, type BlockWriter, generateBlockAnchor } from '../rewrite/blockRewrite';
 import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import {
 	asType,
@@ -46,15 +46,15 @@ export interface ScriptSetupCopies {
 }
 
 /**
- * The copies of `<script setup>`, with the transforms of Vue and the script edits of the codegen plugins. The imports
+ * The copies of `<script setup>` of `blockRewrite`, with the transforms of Vue. The imports
  * and the body are top-level cuts of one rewrite; an empty block has a zero-width body, which renders its inserts.
  */
 export function createScriptSetupCopies(
 	options: ScriptCodegenOptions,
+	blockRewrite: BlockRewrite,
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 ): ScriptSetupCopies {
-	const blockRewrite = createBlockRewrite(scriptSetup, options.scriptEdits);
 	const { core } = blockRewrite.rewrite;
 	const importSectionEnd = getImportSectionEnd(scriptSetupRanges);
 	const { length } = scriptSetup.content;

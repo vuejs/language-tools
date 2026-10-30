@@ -41,17 +41,9 @@ test('applies the rewrites of plugins, mapping the source ranges that they keep'
 			writer.insertBefore(call.start, 'wrap(');
 			writer.insertAfter(call.end, ')');
 			writer.insertAfter(call.end, ' as X');
-			// out of the content of the block
-			writer.insertBefore(block.content.length + 1, 'dropped');
-			writer.remove(0, block.content.length + 1);
-			// removes no char
-			writer.remove(call.start, call.start);
-			// not a string
-			writer.insertBefore(call.start, ['dropped'] as never);
 		}),
 	);
 	expect(text).toContain('const a = wrap(useFoo()) as X;');
-	expect(text).not.toContain('dropped');
 	const copied = text.indexOf('useFoo()');
 	expect(
 		mappings.some(({ virtualStart, originalStart }) =>
@@ -62,6 +54,67 @@ test('applies the rewrites of plugins, mapping the source ranges that they keep'
 	expect(
 		mappings.some(({ virtualStart, virtualEnd }) => virtualStart <= inserted && inserted < virtualEnd),
 	).toBe(false);
+});
+
+test('rejects an edit of a plugin that is not valid for its block', () => {
+	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
+	const edits: ((writer: VueCodegenWriter, block: IRScriptSetup) => void)[] = [
+		(writer, block) => writer.insertBefore(block.content.length + 1, 'x'),
+		(writer, block) => writer.remove(0, block.content.length + 1),
+		writer => writer.remove(1, 1),
+		writer => writer.insertBefore(0, [{ text: 'x' }] as never),
+		(writer, block) => writer.insertBefore(0, { source: block, start: 0, end: 1, data: {} } as never),
+	];
+	for (const edit of edits) {
+		expect(() => generateWith(content, rewriteSetup(edit))).toThrow();
+	}
+});
+
+test('inserts the pieces of a plugin, mapped to their ranges', () => {
+	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
+	const { text, mappings } = generateWith(
+		content,
+		rewriteSetup((writer, block) => {
+			const call = rangeOf(block, 'useFoo');
+			writer.insertBefore(call.start, [
+				'wrap(',
+				{ source: block, ...call, data: { features: scriptFeatures } },
+				') || ',
+			]);
+		}),
+	);
+	expect(text).toContain('const a = wrap(useFoo) || useFoo();');
+	const copied = text.indexOf('wrap(') + 'wrap('.length;
+	expect(mappings).toContainEqual(expect.objectContaining({
+		virtualStart: copied,
+		virtualEnd: copied + 'useFoo'.length,
+		originalStart: content.indexOf('useFoo'),
+		kind: SpanMapKind.Verbatim,
+	}));
+});
+
+test('moves the code that a plugin cuts to where it inserts the cut, with the edits in it', () => {
+	const content = `<script setup lang="ts">\nconst a = useFoo();\nconst b = 1;\n</script>\n`;
+	const { text, mappings } = generateWith(
+		content,
+		rewriteSetup((writer, block) => {
+			const statement = rangeOf(block, 'const a = useFoo();');
+			const call = rangeOf(block, 'useFoo');
+			writer.insertBefore(call.start, 'wrap.');
+			const cut = writer.cut(statement.start, statement.end);
+			writer.insertAfter(block.content.length, ['/* moved */ ', cut]);
+			writer.cut(rangeOf(block, 'const b').start, rangeOf(block, 'const b').end);
+		}),
+	);
+	expect(text).toContain('/* moved */ const a = wrap.useFoo();');
+	expect(text).not.toContain('const b');
+	expect(text.indexOf(' = 1;')).toBeLessThan(text.indexOf('/* moved */'));
+	const moved = text.indexOf('/* moved */ ') + '/* moved */ '.length;
+	expect(mappings).toContainEqual(expect.objectContaining({
+		virtualStart: moved,
+		originalStart: content.indexOf('const a'),
+		kind: SpanMapKind.Verbatim,
+	}));
 });
 
 test('maps a range of a plugin without text as a copy', () => {
@@ -220,7 +273,7 @@ test('maps a `<script setup>` whose code a plugin removes by one empty copy', ()
 	).toHaveLength(1);
 });
 
-test('runs the rewrites of all plugins before any generate', () => {
+test('runs each hook of the plugins once, in plugin order', () => {
 	const calls: string[] = [];
 	const traced = (name: string) =>
 		plugin({
@@ -228,7 +281,8 @@ test('runs the rewrites of all plugins before any generate', () => {
 			generate: () => void calls.push(`${name}.generate`),
 		}, name);
 	generateWith(`<script setup lang="ts">\nconst a = 1;\n</script>\n`, traced('first'), traced('second'));
-	expect(calls).toEqual(['first.rewrite', 'second.rewrite', 'first.generate', 'second.generate']);
+	expect(calls.filter(call => call.endsWith('.rewrite'))).toEqual(['first.rewrite', 'second.rewrite']);
+	expect(calls.filter(call => call.endsWith('.generate'))).toEqual(['first.generate', 'second.generate']);
 });
 
 test('propagates an exception of a hook', () => {
