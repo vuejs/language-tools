@@ -17,6 +17,18 @@ import {
 import { generateSpreadMerge } from '../writers/merge';
 import type { ScriptCodegenOptions } from './index';
 
+/** The slots of the template function, and of the template context that it reads. */
+export interface TemplateFunctionSlots {
+	/** The names of the types that the code in the template function declares. */
+	templateTypes: string[];
+	/** Object types spread into the template context, after the component instance. */
+	templateContext: (string | TsCode[])[];
+	/** Code in the template function, before the code of the template. */
+	templateBody: TsCode[];
+	/** Type aliases that the template function declares, returned to setup and the export after those of the template. */
+	templateExports: string[];
+}
+
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	selfType?: string,
@@ -32,25 +44,26 @@ export function* generateTemplate(
 	// it reads take their render-time types, not the narrowing at the end of setup.
 	// The types setup and the export need from it are passed out through its return type.
 	const { scriptLang } = options;
-	const exportedTypes = [names.Slots, names.InheritedAttrs, names.TemplateRefs, names.RootEl, names.StyleModules]
-		.filter(name =>
-			options.templateAndStyleTypes.has(name) && !(name === names.Slots && options.scriptSetupRanges?.defineSlots)
-		);
+	const exportedTypes = [
+		...[names.Slots, names.InheritedAttrs, names.TemplateRefs, names.RootEl].filter(name =>
+			options.templateTypes.has(name) && !(name === names.Slots && options.scriptSetupRanges?.defineSlots)
+		),
+		...options.slots.templateExports,
+	];
 	yield `const ${names.template} = () => {${newLine}`;
 
 	for (const name of options.dotValueBindings) {
 		yield `${names.withDotValue}(${name}, ${getRefBrandArgument(options.vueCompilerOptions, scriptLang)})${endOfLine}`;
 	}
 
-	if (options.templateAndStyleCodes.length) {
-		yield* options.templateAndStyleCodes;
-	}
+	yield* options.slots.templateBody;
+	yield* options.templateCodes;
 
 	yield `return {${newLine}`;
 	for (const name of exportedTypes) {
 		yield `${name}: ${asType(typeAliasRef(name, scriptLang), scriptLang)},${newLine}`;
 	}
-	if (options.templateAndStyleTypes.has(names.dollars)) {
+	if (options.templateTypes.has(names.dollars)) {
 		yield `${names.dollars},${newLine}`;
 	}
 	yield `}${endOfLine}`;
@@ -72,7 +85,7 @@ export function* generateTemplate(
 			used.push(...exportedTypes);
 		}
 	}
-	if (options.templateAndStyleTypes.has(names.dollars)) {
+	if (options.templateTypes.has(names.dollars)) {
 		yield* generateTypedVar('let', names.dollars, scriptLang, function*() {
 			yield `${returnType}['${names.dollars}']`;
 		});
@@ -85,7 +98,7 @@ function* generateTemplateCtx(
 	options: ScriptCodegenOptions,
 	selfType: string | undefined,
 ): Generator<TsCode> {
-	const { vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, scriptLang, templateContext } = options;
+	const { vueCompilerOptions, scriptSetupRanges, scriptLang, templateContext, slots } = options;
 	const exps: (string | TsCode[])[] = [];
 	const emitTypes = getEmitTypes(options);
 	const propTypes: string[] = [];
@@ -99,9 +112,7 @@ function* generateTemplateCtx(
 	else {
 		exps.push(asType(`import('${vueCompilerOptions.lib}').ComponentPublicInstance`, scriptLang));
 	}
-	if (templateAndStyleTypes.has(names.StyleModules)) {
-		exps.push(asType(typeAliasRef(names.StyleModules, scriptLang), scriptLang));
-	}
+	exps.push(...slots.templateContext);
 
 	if (emitTypes.length) {
 		yield* generateTypeAlias(names.EmitProps, scriptLang, function*() {
@@ -238,9 +249,9 @@ function* generateTemplateDirectives(
 }
 
 function* generateTemplateScope(
-	{ vueCompilerOptions, templateAndStyleTypes, scopeBindings, scriptLang }: ScriptCodegenOptions,
+	{ vueCompilerOptions, templateTypes, scopeBindings, scriptLang }: ScriptCodegenOptions,
 ): Generator<TsCode> {
-	if (!templateAndStyleTypes.has(names.Scope)) {
+	if (!templateTypes.has(names.Scope)) {
 		return;
 	}
 	yield* generateTypeAlias(names.Scope, scriptLang, function*() {

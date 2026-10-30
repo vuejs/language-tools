@@ -56,7 +56,10 @@ export function createScriptSetupCopies(
 	const body = importSectionEnd < length || !length
 		? core.cut(importSectionEnd, length, { data: { features: scriptFeatures } })
 		: undefined;
-	addTransforms(options, scriptSetup, core, scriptSetupRanges);
+	addTransforms(options, core, scriptSetupRanges);
+	for (const rewrite of options.rewriteScriptSetup) {
+		rewrite(core, scriptSetup);
+	}
 	return {
 		*generateImports() {
 			yield* generateBlockAnchor(scriptSetup);
@@ -135,7 +138,7 @@ export function* generateGeneric(
 	if (emitProps) {
 		propTypes.push(emitProps);
 	}
-	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
+	if (options.templateTypes.has(names.InheritedAttrs)) {
 		const inheritedAttrs = typeAliasRef(names.InheritedAttrs, scriptLang);
 		propTypes.push(emitProps ? `Omit<${inheritedAttrs}, keyof ${emitProps}>` : inheritedAttrs);
 	}
@@ -163,13 +166,13 @@ export function* generateGeneric(
 	}
 	if (
 		options.vueCompilerOptions.inferComponentDollarRefs
-		&& options.templateAndStyleTypes.has(names.TemplateRefs)
+		&& options.templateTypes.has(names.TemplateRefs)
 	) {
 		yield ` & { $refs: ${typeAliasRef(names.TemplateRefs, scriptLang)}; }`;
 	}
 	if (
 		options.vueCompilerOptions.inferComponentDollarEl
-		&& options.templateAndStyleTypes.has(names.RootEl)
+		&& options.templateTypes.has(names.RootEl)
 	) {
 		yield ` & { $el: ${typeAliasRef(names.RootEl, scriptLang)}; }`;
 	}
@@ -264,7 +267,6 @@ export function* generateMacros(options: ScriptCodegenOptions): Generator<TsCode
 
 function addTransforms(
 	options: ScriptCodegenOptions,
-	scriptSetup: IRScriptSetup,
 	core: CoreRewriteWriter<CodeSource, TsCodeData>,
 	scriptSetupRanges: ScriptSetupRanges,
 ) {
@@ -329,38 +331,6 @@ function addTransforms(
 			const type = `typeof ${names.dollars}.$attrs`;
 			core.insertBefore(callExp.start, isTsLang(options.scriptLang) ? `(` : `/** @type {${type}} */ (`);
 			core.insertAfter(callExp.end, isTsLang(options.scriptLang) ? ` as ${type})` : `)`);
-		}
-	}
-	for (const { callExp, exp, arg } of scriptSetupRanges.useCssModule) {
-		const type = options.templateAndStyleTypes.has(names.StyleModules)
-			? typeAliasRef(names.StyleModules, options.scriptLang)
-			: `{}`;
-		if (arg) {
-			// the argument is copied as a reference into the cast, and is `any` at the call
-			const name = cutReference(core, arg, asType('any', options.scriptLang));
-			if (isTsLang(options.scriptLang)) {
-				core.insertBefore(callExp.start, `(`);
-				core.insertAfter(callExp.end, () => [` as Omit<${type}, '$style'>[`, name, `])`]);
-			}
-			else {
-				core.insertBefore(callExp.start, () => [`/** @type {Omit<${type}, '$style'>[`, name, `]} */ (`]);
-				core.insertAfter(callExp.end, `)`);
-			}
-		}
-		else {
-			core.insertBefore(callExp.start, isTsLang(options.scriptLang) ? `(` : `/** @type {${type}['$style']} */ (`);
-			core.insertAfter(callExp.end, function*() {
-				if (isTsLang(options.scriptLang)) {
-					yield ` as ${type}[`;
-					const boundary = yield* Boundary.start(scriptSetup, exp.start, exp.end, { features: 0 });
-					yield `'$style'`;
-					yield boundary.end();
-					yield `])`;
-				}
-				else {
-					yield `)`;
-				}
-			});
 		}
 	}
 	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
@@ -532,7 +502,7 @@ export function getExposeTypes(
 function hasSlotsType(options: ScriptCodegenOptions): boolean {
 	return !!(
 		options.scriptSetupRanges?.defineSlots
-		|| options.templateAndStyleTypes.has(names.Slots)
+		|| options.templateTypes.has(names.Slots)
 	);
 }
 

@@ -4,7 +4,6 @@ import {
 	type IRBlock,
 	type IRScript,
 	type IRScriptSetup,
-	type IRStyle,
 	navigationFeatures,
 	scriptFeatures,
 	type ScriptRanges,
@@ -12,27 +11,32 @@ import {
 	type VueCompilerOptions,
 } from '@vue/language-core';
 import * as path from 'path-browserify';
+import type { CodegenConcern } from '../concern';
 import { names } from '../names';
 import type { CodegenContributions, ScriptEdit } from '../plugin';
 import { createBlockRewrite, generateBlockAnchor } from '../rewrite/blockRewrite';
-import { generateStyleModuleImports } from '../style/modules';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine } from '../writers';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { createScriptSetupCopies, generateGeneric, generateMacros, generateSetupFunction } from './scriptSetup';
-import { generateTemplate } from './template';
+import { generateTemplate, type TemplateFunctionSlots } from './template';
 
 export interface ScriptCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	script: IRScript | undefined;
 	scriptSetup: IRScriptSetup | undefined;
-	styles: readonly IRStyle[];
 	fileName: string;
 	scriptLang: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
-	templateAndStyleTypes: Set<string>;
-	templateAndStyleCodes: TsCode[];
+	/** The names of the types that the code in the template function declares. */
+	templateTypes: Set<string>;
+	/** The code of the template. */
+	templateCodes: TsCode[];
+	/** What the concerns of the built-in codegen write into the slots of the module and the template function. */
+	slots: Readonly<ModuleSlots & Omit<TemplateFunctionSlots, 'templateTypes'>>;
+	/** The rewrites of `<script setup>` of the concerns of the built-in codegen. */
+	rewriteScriptSetup: readonly NonNullable<CodegenConcern['rewriteScriptSetup']>[];
 	setupBindings: Set<string>;
 	localComponents: Set<string>;
 	localDirectives: Set<string>;
@@ -57,6 +61,12 @@ export interface ScriptCodegenOptions {
 	declarations: readonly TsCode[][];
 	/** The named exports, synthetic default export and doc comment of the component, as the codegen plugins set them. */
 	exports: Readonly<CodegenContributions['exports']>;
+}
+
+/** The slots of the module. */
+export interface ModuleSlots {
+	/** Statements at the end of the module, after the user's code and the declarations of the codegen plugins. */
+	moduleEnd: TsCode[];
 }
 
 export { generate as generateScript };
@@ -263,7 +273,7 @@ function* generateWorker(
 	yield* ctx.localTypes.generate();
 	yield* generatePluginDeclarations(options);
 	// after the user's code, which may start with `/// <reference>` or `// @ts-nocheck`
-	yield* generateStyleModuleImports(options.styles);
+	yield* options.slots.moduleEnd;
 }
 
 function* generatePluginDeclarations({ elements, declarations, scriptLang }: ScriptCodegenOptions): Generator<TsCode> {

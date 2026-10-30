@@ -31,14 +31,14 @@ export function* generateComponent(
 	if (
 		options.vueCompilerOptions.target >= 3.5
 		&& options.vueCompilerOptions.inferComponentDollarRefs
-		&& options.templateAndStyleTypes.has(names.TemplateRefs)
+		&& options.templateTypes.has(names.TemplateRefs)
 	) {
 		yield `__typeRefs: ${asType(typeAliasRef(names.TemplateRefs, options.scriptLang), options.scriptLang)},${newLine}`;
 	}
 	if (
 		options.vueCompilerOptions.target >= 3.5
 		&& options.vueCompilerOptions.inferComponentDollarEl
-		&& options.templateAndStyleTypes.has(names.RootEl)
+		&& options.templateTypes.has(names.RootEl)
 	) {
 		yield `__typeEl: ${asType(typeAliasRef(names.RootEl, options.scriptLang), options.scriptLang)},${newLine}`;
 	}
@@ -134,7 +134,7 @@ function* generateTypePropsOption(
 	ctx: ScriptCodegenContext,
 	hasEmitsOption: boolean,
 ): Generator<string> {
-	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
+	if (options.templateTypes.has(names.InheritedAttrs)) {
 		const attrsType = getInheritedAttrsType(options, hasEmitsOption);
 		yield asType(attrsType, options.scriptLang);
 	}
@@ -151,7 +151,7 @@ function* generateRuntimePropsOption(
 	hasEmitsOption: boolean,
 	hasTypeProps: boolean,
 ): Generator<string | TsCode[]> {
-	if (!hasTypeProps && options.templateAndStyleTypes.has(names.InheritedAttrs)) {
+	if (!hasTypeProps && options.templateTypes.has(names.InheritedAttrs)) {
 		const attrsType = getInheritedAttrsType(options, hasEmitsOption);
 		const propsType = ctx.localTypes.TypePropsToOption(
 			`${names.PickNotAny}<${ctx.localTypes.OmitIndexSignature(attrsType)}, {}>`,

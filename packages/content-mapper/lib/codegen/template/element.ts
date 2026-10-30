@@ -24,9 +24,19 @@ import { type FailedPropExpressions, generateElementProps } from './elementProps
 import type { TemplateCodegenOptions } from './index';
 import { generateIdentifier, generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
-import { generateStyleScopedClassReferences } from './scopedClassReferences';
 import { generateTemplateChild } from './templateChild';
 import { generateVSlot } from './vSlot';
+
+/** The slots of the code of the elements of the template. */
+export interface ElementSlots {
+	/** Code after the props of a component or a native element, before its children. */
+	elementEnd: Map<CompilerDOM.ElementNode, TsCode[]>;
+	/**
+	 * Ranges of the expression of a bound prop, at template offsets, whose code out of references takes no rename, as
+	 * another copy of the same source takes it.
+	 */
+	renamedElsewhere: Map<CompilerDOM.DirectiveNode, [start: number, end: number][]>;
+}
 
 export function* generateComponent(
 	options: TemplateCodegenOptions,
@@ -299,7 +309,7 @@ export function* generateComponent(
 		}
 	}
 
-	yield* generateStyleScopedClassReferences(options, node);
+	yield* options.slots.elementEnd.get(node) ?? [];
 
 	const slotDir = node.props.find(CompilerDOM.isVSlot);
 	const hasSlots = !!slotDir || node.children.length > 0;
@@ -391,7 +401,7 @@ export function* generateElement(
 		ctx.inheritedAttrVars.add(`${names.intrinsics}.${node.tag}`);
 	}
 
-	yield* generateStyleScopedClassReferences(options, node);
+	yield* options.slots.elementEnd.get(node) ?? [];
 
 	yield* ctx.generateDiagnosticDirectiveEnd();
 	for (const child of node.children) {

@@ -1,9 +1,10 @@
 import { getScriptLang, type IR, type ScriptAnalysis, type TypeScript, type VueSource } from '@vue/language-core';
 import { BindingFlag } from '@vue/language-core/lib/script/scriptBindings';
 import { computed } from 'alien-signals';
+import { type CodegenConcernFactory, mergeSlots } from './concern';
 import { type CodegenPlugin, getContributions } from './plugin';
 import { generateScript } from './script';
-import { generateStyle } from './style';
+import { createStyleConcern } from './style';
 import { generateTemplate } from './template';
 import type { TsCode } from './tsCode';
 
@@ -12,6 +13,9 @@ export interface ServiceScript {
 	lang: 'js' | 'jsx' | 'ts' | 'tsx';
 	codes: TsCode[];
 }
+
+/** The concerns of the built-in codegen, in the order that their code takes in each slot. */
+const concernFactories: readonly CodegenConcernFactory[] = [createStyleConcern];
 
 export function generateServiceScript(
 	ts: TypeScript,
@@ -64,6 +68,10 @@ function useCodegen(
 
 	const getCodegenContributions = computed(() => getContributions(plugins, { ts, fileName, ir, analysis }));
 
+	const concerns = concernFactories.map(create => create({ ts, fileName, ir, analysis }));
+	const slots = mergeSlots(concerns);
+	const rewriteScriptSetup = concerns.flatMap(({ rewriteScriptSetup }) => rewriteScriptSetup ?? []);
+
 	const hasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
 	const getSetupPropsAssignName = computed(() => getScriptSetupRanges()?.defineProps?.name);
@@ -96,23 +104,7 @@ function useCodegen(
 			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getInheritAttrs(),
 			templateScope: getTemplateScope(),
-		});
-	});
-
-	const getGeneratedStyle = computed(() => {
-		if (!ir.styles.length) {
-			return;
-		}
-		return generateStyle({
-			typescript: ts,
-			vueCompilerOptions: getResolvedOptions(),
-			styles: ir.styles,
-			scriptLang: getScriptLang(ir),
-			setupRefs: getSetupRefs(),
-			setupConsts: getSetupConsts(),
-			setupBindings: getSetupBindings(),
-			dotValueBindings: getDotValueBindings(),
-			templateScope: getTemplateScope(),
+			slots: { elementEnd: slots.elementEnd(), renamedElsewhere: slots.renamedElsewhere() },
 		});
 	});
 
@@ -122,7 +114,6 @@ function useCodegen(
 			fileName,
 			script: ir.script,
 			scriptSetup: ir.scriptSetup,
-			styles: ir.styles,
 			scriptLang: getScriptLang(ir),
 			setupBindings: getScriptSetupBindingNames(),
 			localComponents: getLocalComponents(),
@@ -132,14 +123,18 @@ function useCodegen(
 			scopeBindings: getScopeBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
-			templateAndStyleTypes: new Set([
+			templateTypes: new Set([
 				...getGeneratedTemplate()?.generatedTypes ?? [],
-				...getGeneratedStyle()?.generatedTypes ?? [],
+				...slots.templateTypes(),
 			]),
-			templateAndStyleCodes: [
-				...getGeneratedStyle()?.codes ?? [],
-				...getGeneratedTemplate()?.codes ?? [],
-			],
+			templateCodes: getGeneratedTemplate()?.codes ?? [],
+			slots: {
+				moduleEnd: slots.moduleEnd(),
+				templateContext: slots.templateContext(),
+				templateBody: slots.templateBody(),
+				templateExports: slots.templateExports(),
+			},
+			rewriteScriptSetup,
 			scriptEdits: getCodegenContributions().scriptEdits,
 			templateContext: getCodegenContributions().templateContext,
 			props: getCodegenContributions().props,

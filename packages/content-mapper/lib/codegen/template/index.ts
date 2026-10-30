@@ -9,6 +9,7 @@ import { names } from '../names';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { endOfLine, generateTypeAlias, generateTypedVar, newLine, typeAliasRef } from '../writers';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
+import type { ElementSlots } from './element';
 import { generateObjectProperty } from './objectProperty';
 import { generateTemplateChild } from './templateChild';
 
@@ -36,6 +37,7 @@ export interface TemplateCodegenOptions {
 	inheritAttrs: boolean;
 	componentName: string;
 	templateScope: TemplateScope;
+	slots: ElementSlots;
 }
 
 export { generate as generateTemplate };
