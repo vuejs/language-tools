@@ -13,4 +13,4 @@
 [submodule "muggle-pug"]
 	path = muggle-pug
 	url = https://github.com/johnsoncodehk/muggle-pug.git
-	branch = main
+	branch = master
