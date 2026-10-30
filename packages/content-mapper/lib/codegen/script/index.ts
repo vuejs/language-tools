@@ -1,6 +1,7 @@
 import { SpanMapFeature } from '@volar/language-core';
 import {
 	type CodeSource,
+	type IR,
 	type IRBlock,
 	type IRScript,
 	type IRScriptSetup,
@@ -29,6 +30,7 @@ import { generateTemplate, type TemplateFunctionSlots } from './template';
 
 export interface ScriptCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
+	ir: IR;
 	script: IRScript | undefined;
 	scriptSetup: IRScriptSetup | undefined;
 	fileName: string;
@@ -85,7 +87,7 @@ function* generateSyntheticDefaultExport(options: ScriptCodegenOptions, exported
 	if (exports.docComment !== undefined) {
 		yield exports.docComment + newLine;
 	}
-	yield* generateNavigableExport(`export default ${exportedExpression};`);
+	yield* generateNavigableExport(options.ir, `export default ${exportedExpression};`);
 }
 
 function* generateNamedExports(options: ScriptCodegenOptions, exportedExpression: string): Generator<TsCode> {
@@ -95,7 +97,10 @@ function* generateNamedExports(options: ScriptCodegenOptions, exportedExpression
 			yield exports.docComment + newLine;
 		}
 		// `export { … }` rather than `export const`, so that no emitted `export` line names a `__VLS_` declaration
-		yield* generateNavigableExport(`const ${exportName} = ${exportedExpression};${newLine}export { ${exportName} };`);
+		yield* generateNavigableExport(
+			options.ir,
+			`const ${exportName} = ${exportedExpression};${newLine}export { ${exportName} };`,
+		);
 	}
 }
 
@@ -108,12 +113,12 @@ function getExports({ slots }: ScriptCodegenOptions) {
 	};
 }
 
-function* generateNavigableExport(code: string): Generator<TsCode> {
+function* generateNavigableExport(ir: IR, code: string): Generator<TsCode> {
 	// keep the synthetic exports navigable: go-to-definition on
 	// `import Foo from './Foo.vue'` targets the whole statement, which maps to the SFC top;
 	// a rename reaching it would insert the new name there
-	const ignore = yield* Boundary.start(undefined, 0, 0, synthesizedIgnore);
-	const boundary = yield* Boundary.start(undefined, 0, 0, { features: navigationFeatures & ~SpanMapFeature.Rename });
+	const ignore = yield* Boundary.start(ir, 0, 0, synthesizedIgnore);
+	const boundary = yield* Boundary.start(ir, 0, 0, { features: navigationFeatures & ~SpanMapFeature.Rename });
 	yield code;
 	yield boundary.end();
 	yield ignore.end();
@@ -152,13 +157,13 @@ function* generateWorker(
 
 		yield `import ${names.src} from `;
 		const boundary = yield* Boundary.start(
-			undefined,
+			options.ir,
 			script.src.offset,
 			script.src.offset + script.src.text.length,
 			src !== script.src.text ? { features: scriptFeatures & ~SpanMapFeature.Rename } : { features: scriptFeatures },
 		);
 		yield `'`;
-		yield mapped(src.slice(0, script.src.text.length), undefined, script.src.offset, undefined);
+		yield mapped(src.slice(0, script.src.text.length), options.ir, script.src.offset, undefined);
 		yield src.slice(script.src.text.length);
 		yield `'`;
 		yield boundary.end();
@@ -182,7 +187,7 @@ function* generateWorker(
 				rewrites.script!,
 				scriptRanges,
 				exportDefault,
-				vueCompilerOptions,
+				options,
 				selfType = names.self,
 				exportExpression,
 			);
@@ -194,7 +199,7 @@ function* generateWorker(
 
 		// <script setup>
 		yield* generateMacros(options);
-		yield* generateComponentDeclareEqual(scriptSetup, names.export);
+		yield* generateComponentDeclareEqual(options.ir, scriptSetup, names.export);
 		if (scriptSetup.generic) {
 			yield* generateGeneric(
 				options,
@@ -233,7 +238,7 @@ function* generateWorker(
 		yield* generateMacros(options);
 
 		if (scriptSetup.generic) {
-			yield* generateComponentDeclareEqual(scriptSetup, names.export);
+			yield* generateComponentDeclareEqual(options.ir, scriptSetup, names.export);
 			yield* generateGeneric(
 				options,
 				ctx,
@@ -259,7 +264,7 @@ function* generateWorker(
 				scriptSetupRanges,
 				copies,
 				generateTemplate(options),
-				generateComponentDeclareEqual(scriptSetup, names.export),
+				generateComponentDeclareEqual(options.ir, scriptSetup, names.export),
 			);
 		}
 		yield* generateSyntheticDefaultExport(options, exportExpression);
@@ -273,7 +278,7 @@ function* generateWorker(
 				rewrites.script!,
 				scriptRanges,
 				exportDefault,
-				vueCompilerOptions,
+				options,
 				names.export,
 				exportExpression,
 				generateTemplate(options, names.export),
@@ -281,7 +286,7 @@ function* generateWorker(
 		}
 		else {
 			yield* generateWholeScript(script, rewrites.script!);
-			yield* generateComponentDeclareEqual(script, names.export);
+			yield* generateComponentDeclareEqual(options.ir, script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 			yield* generateTemplate(options, names.export);
 			yield* generateSyntheticDefaultExport(options, exportExpression);
@@ -320,7 +325,7 @@ function* generateScriptWithExportDefault(
 	blockRewrite: BlockRewrite,
 	scriptRanges: ScriptRanges,
 	exportDefault: NonNullable<ScriptRanges['exportDefault']>,
-	vueCompilerOptions: VueCompilerOptions,
+	{ ir, vueCompilerOptions }: ScriptCodegenOptions,
 	varName: string,
 	exportExpression: string,
 	templateGenerator?: Generator<TsCode>,
@@ -354,7 +359,7 @@ function* generateScriptWithExportDefault(
 	if (templateGenerator) {
 		yield* templateGenerator;
 	}
-	yield* generateComponentDeclareEqual(script, varName);
+	yield* generateComponentDeclareEqual(ir, script, varName);
 	if (wrapLeft && wrapRight) {
 		yield wrapLeft;
 		yield* blockRewrite.render(exported);
@@ -403,13 +408,13 @@ function* generateGlobalTypesReference(
 // The component declaration has no source of its own: map it to the tag name of its block, or to the start of a
 // block that is not an element, so that its declaration emit errors (e.g. a private type of a generic component)
 // report there.
-function* generateComponentDeclareEqual(block: IRBlock, name: string): Generator<TsCode> {
+function* generateComponentDeclareEqual(ir: IR, block: IRBlock, name: string): Generator<TsCode> {
 	if (block.element) {
 		const tagNameStart = block.element.start + 1;
-		yield* generateExportDeclareEqual(undefined, name, tagNameStart, tagNameStart + 'script'.length);
+		yield* generateExportDeclareEqual(ir, name, tagNameStart, tagNameStart + 'script'.length);
 	}
 	else {
-		yield* generateExportDeclareEqual(undefined, name, block.offset, block.offset);
+		yield* generateExportDeclareEqual(ir, name, block.offset, block.offset);
 	}
 }
 

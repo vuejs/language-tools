@@ -127,6 +127,7 @@ function useCodegen(
 	const getGeneratedScript = computed(() => {
 		return generateScript({
 			vueCompilerOptions: getResolvedOptions(),
+			ir,
 			fileName,
 			script: ir.script,
 			scriptSetup: ir.scriptSetup,

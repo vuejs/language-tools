@@ -2,14 +2,16 @@ import { SpanMapKind } from '@volar/language-core';
 import { expect, test } from 'vitest';
 import { buildMappings } from '../lib/mappings/codeMappings';
 import { navigationFeatures } from '../lib/mappings/features';
-import type { IRBlock } from '../lib/types';
+import type { IR, IRBlock } from '../lib/types';
+
+const file = {} as IR;
 
 test('maps each piece with a marker by itself', () => {
 	expect(buildMappings([
 		'<template>\n',
-		{ source: undefined, start: 20, end: 23, data: { features: navigationFeatures }, text: 'abc' },
+		{ source: file, start: 20, end: 23, data: { features: navigationFeatures }, text: 'abc' },
 		'\n\n',
-		{ source: undefined, start: 40, end: 40, data: { features: 0 }, text: '' },
+		{ source: file, start: 40, end: 40, data: { features: 0 }, text: '' },
 		{
 			source: { name: 'template', offset: 0 } as IRBlock,
 			start: 5,

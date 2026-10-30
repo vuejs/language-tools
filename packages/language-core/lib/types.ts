@@ -55,28 +55,19 @@ export interface VueCodeMarker {
 	kind?: SpanMapKind;
 }
 
-/** An IR block, whose offsets are relative to its content, or `undefined` for the offsets of the file. */
-export type CodeSource = IRBlock | undefined;
+/** The IR of the file, at offsets of the file, or one of its blocks, at offsets of the block's content. */
+export type CodeSource = IR | IRBlock;
 
 /**
- * A piece of code: new text, which maps nowhere, or the range `start`..`end` of `source`, an IR block, or of the file
- * when `source` is `undefined`, which maps by its `data`. A range of a block without `text` is a copy of the block's
- * content there. `text` maps to the range char by char when it is as long as the range, and as a whole otherwise.
+ * A piece of code: new text, which maps nowhere, or the range `start`..`end` of `source`, which maps by its `data`. A
+ * range without `text` is a copy of the content of `source` there. `text` maps to the range char by char when it is as
+ * long as the range, and as a whole otherwise.
  */
-export type CodePiece<Data> =
-	| string
-	| { source: IRBlock; start: number; end: number; data: Data; text?: string }
-	| { source: undefined; start: number; end: number; data: Data; text: string };
+export type CodePiece<Data> = string | { source: CodeSource; start: number; end: number; data: Data; text?: string };
 
 /** The text of `piece`. */
 export function pieceText(piece: CodePiece<unknown>): string {
-	if (typeof piece === 'string') {
-		return piece;
-	}
-	if (piece.source === undefined) {
-		return piece.text;
-	}
-	return piece.text ?? piece.source.content.slice(piece.start, piece.end);
+	return typeof piece === 'string' ? piece : piece.text ?? piece.source.content.slice(piece.start, piece.end);
 }
 
 /** The text of `codes`. */

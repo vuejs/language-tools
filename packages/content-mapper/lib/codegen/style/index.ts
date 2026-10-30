@@ -4,6 +4,7 @@ import {
 	forEachElementNode,
 	forEachPropStyleScopedClassReference,
 	getScriptLang,
+	type IR,
 	type IRScriptSetup,
 	type IRStyle,
 	navigationFeatures,
@@ -28,6 +29,7 @@ import { generateStyleScopedClassReferences } from './scopedClassReferences';
 
 export interface StyleCodegenOptions {
 	typescript: TypeScript;
+	ir: IR;
 	vueCompilerOptions: VueCompilerOptions;
 	styles: readonly IRStyle[];
 	scriptLang: string;
@@ -49,6 +51,7 @@ export function createStylePlugin({ ts, ir, analysis }: BuiltinPluginFile): File
 		}
 		return generateStyle({
 			typescript: ts,
+			ir,
 			vueCompilerOptions: analysis.getResolvedOptions(),
 			styles: ir.styles,
 			scriptLang: getScriptLang(ir),
@@ -99,7 +102,7 @@ export function createStylePlugin({ ts, ir, analysis }: BuiltinPluginFile): File
 		templateBody: () => getGeneratedStyle()?.codes ?? [],
 		templateContext: () => hasStyleModules() ? [[typeAliasRef(names.StyleModules, getScriptLang(ir))]] : [],
 		templateExports: () => hasStyleModules() ? [names.StyleModules] : [],
-		declarations: () => [...generateStyleModuleImports(ir.styles)],
+		declarations: () => [...generateStyleModuleImports(ir)],
 		elementEnd: getElementEnd,
 		renamedElsewhere: getRenamedElsewhere,
 		rewrite({ scriptSetup }) {

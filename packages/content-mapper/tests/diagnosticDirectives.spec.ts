@@ -1,3 +1,4 @@
+import type { IR } from '@vue/language-core';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
 import { mapped, synthesizedIgnore, type TsCode } from '../lib/codegen/tsCode';
@@ -10,6 +11,8 @@ import {
 import { getUnmappedRanges } from '../lib/result/transformResult';
 import { buildDiagnosticDirectives } from '../lib/result/tsCodeMappings';
 import { normalizeCompilerOutput, repositoryRoot, runTsc } from './utils';
+
+const file = {} as IR;
 
 test('reports an unused @vue-expect-error by the directive name the user wrote', () => {
 	const result = runTsc([
@@ -48,9 +51,9 @@ test('ignores synthesized virtual regions without overlapping explicit directive
 	const expectation: DiagnosticDirectiveMapping = [0, 1, 5, 7, DiagnosticDirectivePolicy.Expect];
 	const chunks: TsCode[] = [
 		'01234',
-		mapped('', undefined, 0, { start: [0, 1, 0, 0, DiagnosticDirectivePolicy.Expect] }),
+		mapped('', file, 0, { start: [0, 1, 0, 0, DiagnosticDirectivePolicy.Expect] }),
 		'56',
-		mapped('', undefined, 0, { end: true }),
+		mapped('', file, 0, { end: true }),
 		'789',
 	];
 
@@ -69,9 +72,9 @@ test('merges synthesized ignores with the ignores of mapped regions', () => {
 	];
 	const chunks: TsCode[] = [
 		'0123',
-		mapped('', undefined, 0, { start: synthesizedIgnore }),
+		mapped('', file, 0, { start: synthesizedIgnore }),
 		'45',
-		mapped('', undefined, 0, { end: true }),
+		mapped('', file, 0, { end: true }),
 	];
 
 	expect(buildDiagnosticDirectives(chunks, getUnmappedRanges(6, mappings))).toEqual([

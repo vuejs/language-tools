@@ -1,5 +1,5 @@
 import { SpanMapFeature } from '@volar/language-core';
-import { type CodeSource, type IRAttr, navigationFeatures } from '@vue/language-core';
+import { type CodeSource, type IR, type IRAttr, navigationFeatures } from '@vue/language-core';
 import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import { identifierRE, newLine } from '../writers';
 
@@ -56,15 +56,15 @@ function* generateMember(source: CodeSource, name: Iterable<TsCode>, propertyTyp
 	yield ` }`;
 }
 
-export function* generateStyleSrc(src: Exclude<IRAttr, true>): Generator<TsCode> {
+export function* generateStyleSrc(ir: IR, src: Exclude<IRAttr, true>): Generator<TsCode> {
 	const boundary = yield* Boundary.start(
-		undefined,
+		ir,
 		src.offset,
 		src.offset + src.text.length,
 		{ features: navigationFeatures },
 	);
 	yield `'`;
-	yield mapped(src.text, undefined, src.offset, undefined);
+	yield mapped(src.text, ir, src.offset, undefined);
 	yield `'`;
 	yield boundary.end();
 }

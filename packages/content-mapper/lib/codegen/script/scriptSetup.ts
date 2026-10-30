@@ -95,13 +95,13 @@ export function* generateGeneric(
 	yield `(`;
 	if (typeof generic === 'object') {
 		const boundary = yield* Boundary.start(
-			undefined,
+			options.ir,
 			generic.offset,
 			generic.offset + generic.text.length,
 			{ features: 0 },
 		);
 		yield `<`;
-		yield mapped(generic.text, undefined, generic.offset, { features: scriptFeatures });
+		yield mapped(generic.text, options.ir, generic.offset, { features: scriptFeatures });
 		if (!generic.text.trimEnd().endsWith(`,`)) {
 			yield `,`;
 		}

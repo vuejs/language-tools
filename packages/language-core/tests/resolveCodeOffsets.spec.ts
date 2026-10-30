@@ -32,16 +32,16 @@ test('rebases the pieces of IR blocks to file offsets, and a copy takes the text
 		{ source: customBlock, start: 4, end: 6, data: marker, text: 'y' },
 	])).toEqual<Piece[]>([
 		'text',
-		{ source: undefined, start: 11, end: 12, data: marker, text: 'b' },
-		{ source: undefined, start: 102, end: 103, data: undefined, text: 'x' },
-		{ source: undefined, start: 203, end: 203, data: marker, text: '' },
-		{ source: undefined, start: 304, end: 306, data: marker, text: 'y' },
+		{ source: ir, start: 11, end: 12, data: marker, text: 'b' },
+		{ source: ir, start: 102, end: 103, data: undefined, text: 'x' },
+		{ source: ir, start: 203, end: 203, data: marker, text: '' },
+		{ source: ir, start: 304, end: 306, data: marker, text: 'y' },
 	]);
 });
 
-test('keeps the pieces that map by file offsets', () => {
-	const sourceless: Piece = { source: undefined, start: 7, end: 8, data: marker, text: 's' };
-	expect(resolveCodeOffsets(ir, [sourceless])[0]).toBe(sourceless);
+test('keeps the pieces of the IR', () => {
+	const ofFile: Piece = { source: ir, start: 7, end: 8, data: marker };
+	expect(resolveCodeOffsets(ir, [ofFile])[0]).toBe(ofFile);
 });
 
 test('throws on a piece of a block that is not a block of the IR', () => {

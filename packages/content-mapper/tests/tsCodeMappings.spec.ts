@@ -1,9 +1,11 @@
 import { SpanMapKind, type SpanMapSegment } from '@volar/language-core';
-import { completionFeatures, type IRBlock, navigationFeatures, type VueCodeMarker } from '@vue/language-core';
+import { completionFeatures, type IR, type IRBlock, navigationFeatures, type VueCodeMarker } from '@vue/language-core';
 import { expect, test } from 'vitest';
 import { type CodeBoundary, mapped, synthesizedIgnore, type TsCode } from '../lib/codegen/tsCode';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../lib/protocol';
 import { buildDiagnosticDirectives, buildMappings } from '../lib/result/tsCodeMappings';
+
+const file = {} as IR;
 
 const navigation = { features: navigationFeatures };
 const navigationAndCompletion = { features: navigationFeatures | completionFeatures };
@@ -161,9 +163,9 @@ test('takes the original start of a directive from the source offset of its star
 	const directive: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Expect];
 	expect(buildDiagnosticDirectives([
 		'-'.repeat(10),
-		mapped('', undefined, 105, start(directive)),
+		mapped('', file, 105, start(directive)),
 		'abc',
-		mapped('', undefined, 105, end),
+		mapped('', file, 105, end),
 	])).toEqual([
 		[105, 3, 10, 13, DiagnosticDirectivePolicy.Expect],
 	]);
