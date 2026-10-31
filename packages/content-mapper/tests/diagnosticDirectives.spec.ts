@@ -81,3 +81,20 @@ test('merges synthesized ignores with the ignores of mapped regions', () => {
 		[0, 0, 2, 6, DiagnosticDirectivePolicy.Ignore],
 	]);
 });
+
+test('ignores replayed branch guards while checking source conditions and handlers', () => {
+	const result = runTsc([
+		'-p',
+		path.join(repositoryRoot, 'test-workspace/content-mapper-condition-guards/tsconfig.json'),
+		'--runExternalCode',
+		'--pretty',
+		'false',
+	]);
+	const output = normalizeCompilerOutput(result);
+	expect(result.status).toBe(2);
+	expect(output).not.toContain('/Valid.vue(');
+	expect(output).toContain("Property 'toUpperCase' does not exist on type 'number'");
+	expect(output).toContain("'__VLS_ctx.selected' is possibly 'null'");
+	expect(output).toContain("Property 'toFixed' does not exist on type 'string'");
+	expect(output).toContain('Expected 0 arguments, but got 1');
+});
