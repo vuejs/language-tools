@@ -230,8 +230,8 @@ the mapper copies that char. `replace(start, end, code)` drops the chars of `sta
 `code` in the place of the first; the code attached to them stays. Removals of several plugins are
 united. `cut(node, { data, placeholder })` returns a slice of the text of `node`, a node inside the
 AST of the block, from its start without trivia to its end, with all the edits in it, which renders
-where it is inserted or placed in a slot, exactly once; a slice that is placed nowhere deletes its
-node, and one placed twice throws (a plugin renders no slice: its `render` throws, as a render would
+where it is inserted or placed in a slot, exactly once; a slice that is placed nowhere throws, as
+`replace` removes code, and one placed twice throws (a plugin renders no slice: its `render` throws, as a render would
 freeze the edits of the plugins after it, and a writer takes only the slices that the writers of its
 plugin cut). Nodes nest or are disjoint, so the cuts of all plugins and the mapper do too. Its chars map with `data.features` (e.g.
 `scriptFeatures`), and `placeholder` takes their place where they are cut from. When the mapper

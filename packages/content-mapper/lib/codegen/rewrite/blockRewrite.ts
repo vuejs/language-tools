@@ -42,6 +42,8 @@ export interface BlockRewrite extends BlockWriter {
 	render(start: number, end: number, terminate?: boolean): TsCode[];
 	/** The code of `slice`, which the rewrite cut, placed in the generated code by itself. */
 	renderSlice(slice: BlockSlice, terminate?: boolean): TsCode[];
+	/** The slices that the writers cut and that have not rendered, which is an error once the code is generated. */
+	unrendered(): BlockSlice[];
 }
 
 /**
@@ -135,6 +137,10 @@ export function createBlockRewrite(block: ScriptBlock): BlockRewrite {
 			return collect(block, terminate, sink => rewrite.render(start, end, { features: scriptFeatures }, sink));
 		},
 		renderSlice: (slice, terminate = true) => collect(block, terminate, sink => slice.render(sink)),
+		unrendered() {
+			const made = new Set<RewriteSlice<IRBlock, TsCodeData>>(rewrite.unrendered());
+			return requests.filter(request => !request.slice || made.has(request.slice));
+		},
 	};
 }
 

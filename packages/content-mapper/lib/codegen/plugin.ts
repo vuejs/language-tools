@@ -222,7 +222,8 @@ export interface VueCodegenWriter {
 	replace(start: number, end: number, code: VueCodegenCode): void;
 	/**
 	 * The text of `node`, from its start without trivia to its end, with the edits of all writers in it: it renders
-	 * where the slice is placed, and `placeholder` takes its place; unplaced, the node is deleted.
+	 * where the slice is placed, exactly once, and `placeholder` takes its place; a slice that the generated code places
+	 * nowhere throws, as `replace` removes code.
 	 */
 	cut(node: ts.Node, options: RewriteCutOptions<IRBlock, VueCodegenData>): VueCodegenSlice;
 }

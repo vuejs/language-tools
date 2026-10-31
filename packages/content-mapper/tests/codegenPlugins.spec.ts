@@ -189,7 +189,8 @@ test('moves the code that a plugin cuts to where it inserts the cut, with the ed
 			writer.insertBefore(call.start, 'wrap.');
 			const cut = writer.cut(nodeAt(block, 'const a = useFoo();'), { data: { features: scriptFeatures } });
 			writer.insertAfter(block.content.length, ['/* moved */ ', cut]);
-			writer.cut(nodeAt(block, 'b'), { data: { features: scriptFeatures } });
+			const b = rangeOf(block, 'b');
+			writer.replace(b.start, b.end, '');
 		}),
 	);
 	expect(text).toContain('/* moved */ const a = wrap.useFoo();');
@@ -201,6 +202,15 @@ test('moves the code that a plugin cuts to where it inserts the cut, with the ed
 		originalStart: content.indexOf('const a'),
 		kind: SpanMapKind.Verbatim,
 	}));
+});
+
+test('throws for a node that a plugin cuts and places nowhere, as replace removes code', () => {
+	const content = `<script setup lang="ts">\nconst a = 1;\n</script>\n`;
+	expect(() =>
+		generateWith(content, rewriteSetup((writer, block) => {
+			writer.cut(nodeAt(block, 'a'), { data: { features: scriptFeatures } });
+		}))
+	).toThrow(`The codegen plugin 'test-plugin' cut a node that the generated code places nowhere`);
 });
 
 /** A plugin that moves the type argument of `defineProp<T>('foo')` into the props, with the edits of `edit` in it. */
@@ -243,7 +253,7 @@ test('moves the code that a plugin cuts into a slot, with the edits in it', () =
 	}
 });
 
-test('places the code of each slot of a plugin once, so that a slice in it renders, or nowhere for a slot of another shape', () => {
+test('places the code of each slot of a plugin once, so that a slice in it renders, and throws for a slot that the shape has no place for', () => {
 	const setup = `const a = 1; [/* moved */];\n`;
 	const contents = [
 		`<script setup lang="ts">\n${setup}</script>\n<template><div>{{ $attrs }}</div></template>\n`,
@@ -289,11 +299,33 @@ test('places the code of each slot of a plugin once, so that a slice in it rende
 					...slot(file, () => moved!),
 				};
 			});
-			const { text } = generate('/Comp.vue', content, vueCompilerOptions, [moving]);
 			const placed = shapes.get(slot)?.includes(index) ?? true;
-			expect(text.split('/* moved */').length, `${slot}\n${content}`).toBe(placed ? 2 : 1);
+			const run = () => generate('/Comp.vue', content, vueCompilerOptions, [moving]);
+			if (placed) {
+				expect(run().text.split('/* moved */').length, `${slot}\n${content}`).toBe(2);
+			}
+			else {
+				expect(run, `${slot}\n${content}`).toThrow(`'test-plugin'`);
+			}
 		}
 	}
+});
+
+test('moves the code that a later plugin cuts around a cut of a plugin before it, with the placeholder in it', () => {
+	const content = `<script setup lang="ts">\nconst foo = defineProp<string>('foo');\nconst b = 1;\n</script>\n`;
+	const { text } = generateWith(
+		content,
+		moveTypeArgument(),
+		rewriteSetup((writer, block) => {
+			const statement = writer.cut(nodeAt(block, `const foo = defineProp<string>('foo');`), {
+				data: { features: scriptFeatures },
+			});
+			writer.insertAfter(block.content.length, ['/* moved */ ', statement]);
+		}),
+	);
+	expect(text).toContain(`/* moved */ const foo = defineProp<any>('foo');`);
+	expect(text.indexOf('const b = 1;')).toBeLessThan(text.indexOf('/* moved */'));
+	expect(text).toContain('{ foo: string }');
 });
 
 test('places the slices of a slot of a plugin in each rewrite of its snapshot', () => {

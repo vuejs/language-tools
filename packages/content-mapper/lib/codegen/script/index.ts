@@ -135,8 +135,27 @@ function generate(options: ScriptCodegenOptions) {
 		scriptSetup: options.scriptSetup && createBlockRewrite(options.scriptSetup),
 	};
 	const slices = options.rewriteScripts(rewrites);
-	const codes = [...generateWorker(options, ctx, rewrites)];
-	return { ...ctx, codes: renderPluginSlices(codes, slices) };
+	const codes = renderPluginSlices([...generateWorker(options, ctx, rewrites)], slices);
+	checkRendered(rewrites, slices);
+	return { ...ctx, codes };
+}
+
+/**
+ * Throws if a slice has not rendered: a cut moves its node, and `replace` removes code, so that a node that no code
+ * places is an error, e.g. the code of a slot that the shape of the component has no place for.
+ */
+function checkRendered(rewrites: ScriptRewrites, slices: PluginSlices) {
+	const unrendered = new Set([...rewrites.script?.unrendered() ?? [], ...rewrites.scriptSetup?.unrendered() ?? []]);
+	for (const [pluginSlice, blockSlice] of slices) {
+		if (unrendered.delete(blockSlice)) {
+			throw new Error(
+				`The codegen plugin '${pluginSlice.plugin}' cut a node that the generated code places nowhere; replace removes code.`,
+			);
+		}
+	}
+	if (unrendered.size) {
+		throw new Error('The generated code cut a node that it places nowhere.');
+	}
 }
 
 /** `codes` with the code of each slice of a plugin in its place, once the rewrites have all their edits. */
