@@ -3,13 +3,14 @@ import type { IRTemplate, TemplateScope, TypeScript, VueCompilerOptions } from '
 import type { TsCode } from '../tsCode';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import type { ElementSlots } from './element';
+import type { SlotOutletSlots } from './slotOutlet';
 import { generateTemplateChild } from './templateChild';
 
 /** The variables that the code of the template declares for its nodes, as the code at its end reads them. */
 export interface TemplateVars {
 	/** The instances of the components with a ref or a single root, and the hoisted one of a component with a ref. */
 	componentInstanceVars: ReadonlyMap<CompilerDOM.ElementNode, { instanceVar: string; hoistedVar?: string }>;
-	/** The props of the slot outlets without `defineSlots`, and the name of one with a dynamic name, hoisted. */
+	/** The props of the slot outlets when no slots are declared, and the name of one with a dynamic name, hoisted. */
 	slotVars: ReadonlyMap<CompilerDOM.ElementNode, { propsVar: string; expVar?: string }>;
 	/** The variables whose types the attributes that fall through to the root take. */
 	inheritedAttrVars: ReadonlySet<string>;
@@ -33,13 +34,10 @@ export interface TemplateCodegenOptions {
 	dotValueBindings: Set<string>;
 	// The subset of `dotValueBindings` re-asserted at closure tops (imports, `let`/`var`).
 	reassertBindings: Set<string>;
-	hasDefineSlots?: boolean;
-	propsAssignName?: string;
-	slotsAssignName?: string;
 	inheritAttrs: boolean;
 	componentName: string;
 	templateScope: TemplateScope;
-	slots: ElementSlots;
+	slots: ElementSlots & SlotOutletSlots;
 }
 
 export { generate as generateTemplate };

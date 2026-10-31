@@ -18,7 +18,6 @@ const raw = {
 	scope: '',
 	self: '',
 	setup: '',
-	slots: '',
 	src: '',
 	template: '',
 
@@ -36,7 +35,6 @@ const raw = {
 	PublicProps: '',
 	RuntimeProps: '',
 	Scope: '',
-	Slots: '',
 	StyleScopedClasses: '',
 
 	// #region template helpers

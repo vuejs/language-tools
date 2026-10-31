@@ -7,10 +7,17 @@ import type { ComponentSlots } from './script/component';
 import type { ScriptSetupSlots } from './script/scriptSetup';
 import type { TemplateFunctionSlots } from './script/template';
 import type { ElementSlots } from './template/element';
+import type { SlotOutletSlots } from './template/slotOutlet';
 import type { TsCode } from './tsCode';
 
 /** The slots that the owners of the generated code declare, by name. */
-export type CodegenSlots = ModuleSlots & TemplateFunctionSlots & ComponentSlots & ScriptSetupSlots & ElementSlots;
+export type CodegenSlots =
+	& ModuleSlots
+	& TemplateFunctionSlots
+	& ComponentSlots
+	& ScriptSetupSlots
+	& ElementSlots
+	& SlotOutletSlots;
 
 /** A codegen plugin of a file, by the name in its errors. */
 export interface FilePlugin extends VueCodegenFilePlugin<TsCode> {
@@ -74,8 +81,9 @@ export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): Mer
 	>(
 		key: K,
 	) => computed(() => getPlugins().flatMap(plugin => (read(plugin, key) ?? []).map(toCodes)));
-	const textSlot = <K extends 'exposedInstanceTypes' | 'componentOptions' | 'fallthroughProps'>(key: K) =>
-		computed(() => getPlugins().flatMap(plugin => [...read(plugin, key) ?? []]));
+	const textSlot = <K extends 'componentSlots' | 'exposedInstanceTypes' | 'componentOptions' | 'fallthroughProps'>(
+		key: K,
+	) => computed(() => getPlugins().flatMap(plugin => [...read(plugin, key) ?? []]));
 	return {
 		templateContext: listSlot('templateContext'),
 		templateBody: computed(() => getPlugins().flatMap(plugin => (read(plugin, 'templateBody') ?? []).flatMap(toCodes))),
@@ -98,6 +106,19 @@ export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): Mer
 		emits: listSlot('emits'),
 		expose: listSlot('expose'),
 		generic: listSlot('generic'),
+		declaredSlots: computed(() => {
+			const declared = getPlugins().flatMap(plugin => {
+				const slots = read(plugin, 'declaredSlots');
+				return slots === undefined ? [] : [{ plugin: plugin.name, slots }];
+			});
+			if (declared.length > 1) {
+				throw new TypeError(
+					`The codegen plugins ${declared.map(({ plugin }) => `'${plugin}'`).join(' and ')} both declared the slots.`,
+				);
+			}
+			return declared[0]?.slots;
+		}),
+		componentSlots: textSlot('componentSlots'),
 		exposedInstanceTypes: textSlot('exposedInstanceTypes'),
 		componentOptions: textSlot('componentOptions'),
 		fallthroughProps: textSlot('fallthroughProps'),

@@ -52,7 +52,10 @@ export interface VueCodegenTemplate {
 	instanceType(node: ElementNode): string | undefined;
 	/** The type of the native element `tag`. */
 	elementType(tag: string): string;
-	/** The types of the props of the slot outlet `node`, and of its name when it is dynamic, without `defineSlots`. */
+	/**
+	 * The types of the props of the slot outlet `node`, and of its name when it is dynamic, when no plugin declares the
+	 * slots.
+	 */
 	slotOutletTypes(node: ElementNode): { props: string; name?: string } | undefined;
 	/** The type of the attributes that fall through to the root of the template, `undefined` when none do. */
 	fallthroughAttrsType(): string | undefined;
@@ -96,6 +99,17 @@ export interface VueCodegenFilePlugin<Code = VueCodegenPiece | VueCodegenSlice> 
 	 * component is generic.
 	 */
 	generic?(): readonly VueCodegenSlotCode<Code>[];
+	/**
+	 * An expression of the slots that the component declares, in the scope of setup, e.g. what `defineSlots` returns:
+	 * each slot outlet of the template is checked against it, and gives no types to infer the slots from. One plugin
+	 * of a file at most gives one.
+	 */
+	declaredSlots?(): string | undefined;
+	/**
+	 * `<script setup>` only: object types intersected into the slots of the component, in `defineSlots` form. Text, as
+	 * the mapper places them in several places.
+	 */
+	componentSlots?(): readonly string[];
 	/** Object types intersected into what a generic component exposes, after the types of its `defineExpose`. */
 	exposedInstanceTypes?(): readonly string[];
 	/** Options of the component, after its props, e.g. `__typeEl: …`. */
@@ -294,7 +308,7 @@ const codeSlots = [
 	'declarations',
 ] as const;
 
-const textSlots = ['exposedInstanceTypes', 'componentOptions', 'fallthroughProps'] as const;
+const textSlots = ['componentSlots', 'exposedInstanceTypes', 'componentOptions', 'fallthroughProps'] as const;
 
 /**
  * `filePlugin`, which `plugin` gave for a file of `ir`, whose slots throw when they give what is not valid for the
@@ -354,6 +368,15 @@ function checkFilePlugin(
 					checkSlotCodes(plugin, blocks, key, codes);
 				}
 				return elementEnd;
+			};
+		}
+		else if (key === 'declaredSlots') {
+			checked[key] = () => {
+				const slots = read();
+				if (slots !== undefined && typeof slots !== 'string') {
+					throw invalid(plugin, 'a `declaredSlots` that is not text');
+				}
+				return slots;
 			};
 		}
 		else if (key === 'exports') {

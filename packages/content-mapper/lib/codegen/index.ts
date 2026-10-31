@@ -133,12 +133,6 @@ function useCodegen(
 	});
 	const slots = mergeSlots(getFilePlugins, ir);
 
-	const hasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
-
-	const getSetupPropsAssignName = computed(() => getScriptSetupRanges()?.defineProps?.name);
-
-	const getSetupSlotsAssignName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
-
 	const getGeneratedTemplate = computed(() => {
 		if (!ir.template) {
 			return;
@@ -160,12 +154,9 @@ function useCodegen(
 			reassertBindings: new Set(
 				[...dotValueBindings].filter(name => (getBindingFlags().get(name) ?? 0) & BindingFlag.Variable),
 			),
-			hasDefineSlots: hasDefineSlots(),
-			propsAssignName: getSetupPropsAssignName(),
-			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getInheritAttrs(),
 			templateScope: getTemplateScope(),
-			slots: { elementEnd: slots.elementEnd() },
+			slots: { elementEnd: slots.elementEnd(), declaredSlots: slots.declaredSlots() },
 		});
 	});
 
@@ -203,6 +194,7 @@ function useCodegen(
 				emits: slots.emits(),
 				expose: slots.expose(),
 				generic: slots.generic(),
+				componentSlots: slots.componentSlots(),
 				exposedInstanceTypes: slots.exposedInstanceTypes(),
 			},
 			rewriteScripts: rewrites => rewriteScripts(getFilePlugins(), rewrites),

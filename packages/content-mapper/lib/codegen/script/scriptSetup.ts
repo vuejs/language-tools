@@ -39,6 +39,8 @@ export interface ScriptSetupSlots {
 	exposedInstanceTypes: string[];
 	/** Type parameters of the component, after those of its `generic` attribute; with one, the component is generic. */
 	generic: (readonly TsCode[])[];
+	/** Object types intersected into the slots of the component, e.g. what `defineSlots` declares. */
+	componentSlots: string[];
 }
 
 /** The copies of the user's code of `<script setup>`: its imports at module scope, and its body in the setup function. */
@@ -211,7 +213,7 @@ export function* generateGeneric(
 	}
 	yield `) => void${endOfLine}`;
 	yield `	attrs: any${endOfLine}`;
-	yield `	slots: ${hasSlotsType(options) ? typeAliasRef(names.Slots, scriptLang) : `{}`}${endOfLine}`;
+	yield `	slots: ${getSlotsType(options) ?? `{}`}${endOfLine}`;
 	yield `	emit: `;
 	yield* emitTypes.length ? intersectTypes(emitTypes) : [`{}`];
 	yield endOfLine;
@@ -236,13 +238,14 @@ export function* generateSetupFunction(
 	yield* body;
 
 	if (output) {
-		if (hasSlotsType(options)) {
+		const slotsType = getSlotsType(options);
+		if (slotsType) {
 			yield `const ${names.base} = `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 			yield* output;
 			yield asType(
-				ctx.localTypes.WithSlots(`typeof ${names.base}`, typeAliasRef(names.Slots, options.scriptLang)),
+				ctx.localTypes.WithSlots(`typeof ${names.base}`, slotsType),
 				options.scriptLang,
 			);
 			yield endOfLine;
@@ -339,13 +342,6 @@ function addTransforms(
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineEmits;
 		addDefineWithTypeTransforms(writer, statement, callExp, typeArg, name, names.emit, names.Emit);
 	}
-	if (scriptSetupRanges.defineSlots) {
-		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineSlots;
-		addDefineWithTypeTransforms(writer, statement, callExp, typeArg, name, names.slots, names.Slots);
-		if (!name) {
-			writer.insertAfter(statement.end, `${newLine}void ${names.slots}${endOfLine}`);
-		}
-	}
 	if (scriptSetupRanges.defineExpose) {
 		const { callExp, arg, typeArg } = scriptSetupRanges.defineExpose;
 		if (typeArg) {
@@ -384,7 +380,7 @@ function cutScriptCode(writer: BlockWriter, range: TextRange, placeholder: strin
  * `defaultName`, which the statement then reads: the statement up to the call is cut and placed after the call (or
  * after the statement, for a name that is not an identifier), and the alias goes with what takes its place.
  */
-function addDefineWithTypeTransforms(
+export function addDefineWithTypeTransforms(
 	writer: BlockWriter,
 	statement: TextRange,
 	callExp: TextRange,
@@ -492,8 +488,9 @@ function* generatePublicProps(
 	}
 
 	const propTypes: (string | readonly TsCode[])[] = [];
-	if (options.vueCompilerOptions.jsxSlots && hasSlotsType(options)) {
-		propTypes.push(ctx.localTypes.PropsChildren(typeAliasRef(names.Slots, options.scriptLang)));
+	const slotsType = getSlotsType(options);
+	if (options.vueCompilerOptions.jsxSlots && slotsType) {
+		propTypes.push(ctx.localTypes.PropsChildren(slotsType));
 	}
 	if (scriptSetupRanges.defineProps?.typeArg) {
 		propTypes.push(names.Props);
@@ -529,11 +526,8 @@ export function getExposeTypes(
 	];
 }
 
-function hasSlotsType(options: ScriptCodegenOptions): boolean {
-	return !!(
-		options.scriptSetupRanges?.defineSlots
-		|| options.slots.templateTypes.some(({ name }) => name === names.Slots)
-	);
+function getSlotsType(options: ScriptCodegenOptions): string | undefined {
+	return options.slots.componentSlots.join(` & `) || undefined;
 }
 
 function* generateModels(

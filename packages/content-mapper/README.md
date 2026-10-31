@@ -201,6 +201,8 @@ exports.codegen = ({ ts, ir }) => {
 | `elementEnd` | A map of elements of the template to code after their props, before their children | the scope of the template at the element |
 | `props`, `emits`, `expose` | `<script setup>` only: object types intersected into the props (`defineProps<…>` form), which the template reads too, the emits (`defineEmits<…>` form) and what the component exposes | the setup scope |
 | `generic` | `<script setup>` only: type parameters of the component, after those of its `generic` attribute; with one, the component is generic | the module scope |
+| `declaredSlots` | Text only: an expression of the slots that the component declares (e.g. what `defineSlots` returns), which each slot outlet of the template is checked against instead of giving types to infer the slots from | the setup scope |
+| `componentSlots` | `<script setup>` only, text only: object types intersected into the slots of the component (`defineSlots` form) | where the mapper declares the component |
 | `exposedInstanceTypes`, `componentOptions`, `fallthroughProps` | Text only: object types intersected into what a generic component exposes, options of the component after its props, and object types of the props that the component takes besides its own | where the mapper declares the component |
 | `elements` | The tag → element type map of native elements, which replaces the DOM one in the file | the module scope |
 | `declarations` | Statements at module scope, after the user's code | the module scope |
@@ -208,7 +210,8 @@ exports.codegen = ({ ts, ir }) => {
 
 Slots combine in `plugins` order, after the code of the built-in plugins. Arrays, the codes of an
 element in `elementEnd` and `exports.names` are concatenated, and names are de-duplicated. For
-`elements`, `exports.default` and `exports.docComment`, the first plugin that sets one wins. Slots
+`elements`, `exports.default` and `exports.docComment`, the first plugin that sets one wins; one
+plugin at most gives `declaredSlots`. Slots
 that are not valid, such as a doc comment out of its block or a template type that `file.name()` did
 not name, throw.
 

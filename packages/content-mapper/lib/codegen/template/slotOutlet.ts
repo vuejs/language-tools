@@ -16,11 +16,21 @@ import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateTemplateChild } from './templateChild';
 
+/** The slots of the slot outlets of the template. */
+export interface SlotOutletSlots {
+	/**
+	 * An expression of the slots that the component declares, in the scope of setup, which each slot outlet is checked
+	 * against; without one, the template declares the props of each outlet, which the slots are inferred from.
+	 */
+	declaredSlots: string | undefined;
+}
+
 export function* generateSlotOutlet(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.SlotOutletNode,
 ): Generator<TsCode> {
+	const { declaredSlots } = options.slots;
 	const [startTagOffset] = getElementTagOffsets(node, options.template);
 	const startTagEndOffset = startTagOffset + node.tag.length;
 	const propsVar = ctx.getInternalVariable();
@@ -36,7 +46,7 @@ export function* generateSlotOutlet(
 		}
 	});
 
-	if (options.hasDefineSlots) {
+	if (declaredSlots !== undefined) {
 		const slotVar = ctx.getInternalVariable();
 		yield `const ${slotVar} = ${names.asFunctionalSlot}(`;
 		if (nameProp) {
@@ -70,7 +80,7 @@ export function* generateSlotOutlet(
 				nameProp.loc.end.offset,
 				{ features: 0 },
 			);
-			yield options.slotsAssignName ?? names.slots;
+			yield declaredSlots;
 			yield* codes;
 			yield boundary.end();
 		}
@@ -81,7 +91,7 @@ export function* generateSlotOutlet(
 				startTagEndOffset,
 				{ features: 0 },
 			);
-			yield `${options.slotsAssignName ?? names.slots}[`;
+			yield `${declaredSlots}[`;
 			const boundary2 = yield* Boundary.start(
 				options.template,
 				startTagOffset,

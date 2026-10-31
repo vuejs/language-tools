@@ -534,3 +534,18 @@ test('makes the component generic over the type parameters of a plugin, after th
 	expect(generateWith(`<script setup lang="ts" generic="U">\n${props}\n</script>\n`, typeParameter).text)
 		.toContain('(<U,T extends string,>(\n');
 });
+
+test('checks the slot outlets of the template against the slots that a plugin declares, as the slots of the component', () => {
+	const content = `<script setup lang="ts">\nconst mySlots = {} as { a(props: { x: number }): any };\n</script>\n`
+		+ `<template><slot name="a" :x="1" /></template>\n`;
+	const declaring = (name?: string) =>
+		plugin(() => ({ declaredSlots: () => 'mySlots', componentSlots: () => ['typeof mySlots'] }), name);
+	const { text } = generateWith(content, declaring());
+	expect(text).toContain('__VLS_asFunctionalSlot(mySlots.a)');
+	expect(text).toContain('__VLS_WithSlots<typeof __VLS_base, typeof mySlots>');
+	expect(text).not.toContain('__VLS_Slots');
+	expect(() => generateWith(content, declaring('first'), declaring('second')))
+		.toThrow(`The codegen plugins 'first' and 'second' both declared the slots.`);
+	expect(() => generateWith(content, plugin(() => ({ declaredSlots: () => 1 as never }))))
+		.toThrow(`'test-plugin'`);
+});
