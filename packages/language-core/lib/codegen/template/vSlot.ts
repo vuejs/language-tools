@@ -126,6 +126,12 @@ function* generateSlotParameters(
 		interpolation,
 		'template',
 		startOffset + ast.text.length - `) => {}`.length,
+		startOffset + ast.text.length - ` => {}`.length,
+	);
+	replaceSourceRange(
+		interpolation,
+		'template',
+		startOffset + ast.text.length - ` => {}`.length,
 		startOffset + ast.text.length,
 	);
 
