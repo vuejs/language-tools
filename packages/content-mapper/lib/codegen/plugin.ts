@@ -4,14 +4,13 @@ import {
 	type IRScript,
 	type IRScriptSetup,
 	type ScriptAnalysis,
-	scriptFeatures,
 	type TypeScript,
 	type VueCompilerOptions,
 	type VuePluginContext,
 	type VuePluginError,
 } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { Piece, RewriteCode, RewriteSlice } from 'muggle-string';
+import type { Piece, RewriteCode, RewriteCutOptions, RewriteSlice, RewriteWriter } from 'muggle-string';
 import type { CodegenSlots, FilePlugin } from './filePlugin';
 import type { BlockRewrite, BlockWriter } from './rewrite/blockRewrite';
 import type { ComponentExports } from './script';
@@ -68,29 +67,10 @@ export interface VueCodegenWriters {
 }
 
 /**
- * Edits of the content of one script block, at offsets of the content. An edit out of the range of the block, a removal
- * of no char, and code that is not text, a range of a block of the file or a slice throw.
+ * The writer of one script block, at offsets of its content. An edit out of the range of the block, a replacement of no
+ * char, a cut without integer features, and code that is not text, a range of a block of the file or a slice throw.
  */
-export interface VueCodegenWriter {
-	/** `code` right before the char at `offset`; it goes wherever that char goes. */
-	insertBefore(offset: number, code: VueCodegenCode): void;
-	/** `code` right after the char before `offset`; it goes wherever that char goes. */
-	insertAfter(offset: number, code: VueCodegenCode): void;
-	/** The chars of `start`..`end` are not copied. */
-	remove(start: number, end: number): void;
-	/**
-	 * The chars of `start`..`end`, with the edits of all writers in them, rendered where the slice is inserted, exactly
-	 * once; nowhere if it is not. The cuts of all writers are nested or disjoint.
-	 */
-	cut(start: number, end: number, options?: VueCodegenCutOptions): VueCodegenSlice;
-}
-
-export interface VueCodegenCutOptions {
-	/** The features that the chars of the slice map with; `scriptFeatures` by default. */
-	features?: number;
-	/** Code that takes the place of the chars where they are cut from. */
-	placeholder?: VueCodegenCode;
-}
+export type VueCodegenWriter = RewriteWriter<IRBlock, VueCodegenData>;
 
 export interface VueCodegenSlots {
 	/** Object types spread into the template context (what template expressions and `$` names resolve against). */
@@ -289,16 +269,18 @@ function createWriter(plugin: string, blocks: Set<IRBlock>, writer: BlockWriter)
 		insertAfter(offset, code) {
 			writer.insertAfter(offset, checkCode(plugin, blocks, code));
 		},
-		remove(start, end) {
-			writer.replace(start, end, '');
+		replace(start, end, code) {
+			writer.replace(start, end, checkCode(plugin, blocks, code));
 		},
-		cut(start, end, { features = scriptFeatures, placeholder }: VueCodegenCutOptions = {}) {
+		cut(start, end, options) {
+			const features = (options as Partial<RewriteCutOptions<IRBlock, VueCodegenData>> | undefined)?.data?.features;
 			if (!Number.isInteger(features)) {
 				throw new TypeError(`The codegen plugin '${plugin}' cut with features that are not an integer.`);
 			}
+			const { placeholder } = options;
 			// the data of the kept pieces only, which the slice does not let the plugin read
 			return writer.cut(start, end, {
-				data: { features },
+				data: { features: features! },
 				placeholder: placeholder === undefined ? undefined : checkCode(plugin, blocks, placeholder),
 			}) as VueCodegenSlice;
 		},

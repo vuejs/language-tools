@@ -97,7 +97,7 @@ function rewriteUseTemplateRef(
 	for (const { callExp, arg } of scriptSetupRanges.useTemplateRef) {
 		// the argument is copied as a reference into the cast, and is `any` at the call
 		const name = arg && writer.cut(arg.start, arg.end, {
-			features: navigationFeatures | completionFeatures,
+			data: { features: navigationFeatures | completionFeatures },
 			placeholder: asType('any', scriptLang),
 		});
 		const refType = name

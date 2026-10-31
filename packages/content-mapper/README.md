@@ -150,21 +150,23 @@ de-duplicated. For `elements`, `exports.default` and `exports.docComment`, the f
 one wins. Slots that are not valid, such as a doc comment out of its block, throw.
 
 `writers.script` and `writers.scriptSetup` are the writers of the plugin for the file's script
-blocks (`undefined` without the block), at offsets of the block's content. Inserted code is
-`VueCodegenCode`: `VueCodegenPiece`s, slices, or arrays of them. Inserts and removals never conflict. `insertBefore(offset, code)` attaches code to the
+blocks (`undefined` without the block), at offsets of the block's content: muggle-string writers,
+`RewriteWriter<IRBlock, VueCodegenData>`. Inserted code is `VueCodegenCode`: `VueCodegenPiece`s,
+slices, or arrays of them. Inserts and replacements never conflict. `insertBefore(offset, code)` attaches code to the
 char at `offset` (at the end of the block, to the end of the block), `insertAfter(offset, code)` to
 the char before `offset` (at the start of the block, to the start of the block), and the code goes
-wherever the mapper copies that char. `remove(start, end)` drops the chars of `start..end`; the code
-attached to them stays. Removals of several plugins are united. `cut(start, end, options?)` returns a slice of
+wherever the mapper copies that char. `replace(start, end, code)` drops the chars of `start..end` and puts `code` in
+the place of the first; the code attached to them stays. Removals of several plugins are united.
+`cut(start, end, { data, placeholder })` returns a slice of
 the chars of `start..end` with all the edits in them, which renders where it is inserted, exactly
 once, and nowhere if it is not; the cuts of all plugins and the mapper nest or are disjoint, and a cut that partly overlaps another one throws, since no output can render the shared chars once in both slices. Its chars map
-with `options.features` (`scriptFeatures` by default), and `options.placeholder` takes their place where
+with `data.features` (e.g. `scriptFeatures`), and `placeholder` takes their place where
 they are cut from. When the mapper moves a range of the
 user's code (e.g. the type argument of `defineProps` into a type alias), the inserts attached to its
 chars move with it. At one char, the code nests: a later plugin sits outside an earlier one, and the
 mapper outside all. So inserts before the char come outermost first, and inserts after the char come
 innermost first. The edits of one plugin at one place keep their order. An edit out of the range of
-its block, a removal of no char, and code that is not valid throw. The start of each script block always maps one empty
+its block, a replacement of no char, a cut without integer features, and code that is not valid throw. The start of each script block always maps one empty
 position, so that an edit of the generated code there (e.g. an auto import) maps back even when all
 its chars are removed.
 

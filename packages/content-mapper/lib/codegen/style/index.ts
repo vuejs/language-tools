@@ -171,7 +171,7 @@ function rewriteUseCssModule(
 		if (arg) {
 			// the argument is copied as a reference into the cast, and is `any` at the call
 			const name = writer.cut(arg.start, arg.end, {
-				features: navigationFeatures | completionFeatures,
+				data: { features: navigationFeatures | completionFeatures },
 				placeholder: asType('any', scriptLang),
 			});
 			if (isTsLang(scriptLang)) {

@@ -60,10 +60,12 @@ test('rejects an edit of a plugin that is not valid for its block', () => {
 	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
 	const edits: ((writer: VueCodegenWriter, block: IRScriptSetup) => void)[] = [
 		(writer, block) => writer.insertBefore(block.content.length + 1, 'x'),
-		(writer, block) => writer.remove(0, block.content.length + 1),
-		writer => writer.remove(1, 1),
+		(writer, block) => writer.replace(0, block.content.length + 1, ''),
+		writer => writer.replace(1, 1, ''),
 		writer => writer.insertBefore(0, [{ text: 'x' }] as never),
 		(writer, block) => writer.insertBefore(0, { source: block, start: 0, end: 1, data: {} } as never),
+		writer => writer.cut(0, 1, {} as never),
+		writer => writer.cut(0, 1, { data: { features: 0.5 } }),
 	];
 	for (const edit of edits) {
 		expect(() => generateWith(content, rewriteSetup(edit))).toThrow();
@@ -130,9 +132,11 @@ test('moves the code that a plugin cuts to where it inserts the cut, with the ed
 			const statement = rangeOf(block, 'const a = useFoo();');
 			const call = rangeOf(block, 'useFoo');
 			writer.insertBefore(call.start, 'wrap.');
-			const cut = writer.cut(statement.start, statement.end);
+			const cut = writer.cut(statement.start, statement.end, { data: { features: scriptFeatures } });
 			writer.insertAfter(block.content.length, ['/* moved */ ', cut]);
-			writer.cut(rangeOf(block, 'const b').start, rangeOf(block, 'const b').end);
+			writer.cut(rangeOf(block, 'const b').start, rangeOf(block, 'const b').end, {
+				data: { features: scriptFeatures },
+			});
 		}),
 	);
 	expect(text).toContain('/* moved */ const a = wrap.useFoo();');
@@ -153,7 +157,7 @@ test('leaves the placeholder of a cut where its chars are cut from, and maps the
 		rewriteSetup((writer, block) => {
 			const arg = rangeOf(block, `'a'`);
 			const call = rangeOf(block, `useFoo('a')`);
-			const cut = writer.cut(arg.start, arg.end, { features: 0, placeholder: 'any' });
+			const cut = writer.cut(arg.start, arg.end, { data: { features: 0 }, placeholder: 'any' });
 			writer.insertAfter(call.end, [' as Foo[', cut, ']']);
 		}),
 	);
@@ -272,7 +276,7 @@ test('applies a rewrite of a plugin inside a range that Vue moves to the moved c
 		defineProps,
 		rewriteSetup((writer, block) => {
 			const { start, end } = rangeOf(block, 'string');
-			writer.remove(start, end);
+			writer.replace(start, end, '');
 			writer.insertBefore(start, 'number');
 		}),
 	);
@@ -284,7 +288,7 @@ test('unites nested removals of two plugins and keeps the inserts of both, in ei
 	const replace = (text: string, code: string, name: string) =>
 		rewriteSetup((writer, block) => {
 			const { start, end } = rangeOf(block, text);
-			writer.remove(start, end);
+			writer.replace(start, end, '');
 			writer.insertBefore(start, code);
 		}, name);
 	const first = replace('useFoo()', 'first()', 'first');
@@ -298,7 +302,7 @@ test('splits a removal of a plugin across the imports and the body of `<script s
 		`<script lang="ts">\nexport const s = 1;\n</script>\n<script setup lang="ts">\nimport { a } from 'a';\nconst b = a;\n</script>\n`,
 		rewriteSetup((writer, block) => {
 			const { start, end } = rangeOf(block, `'a';\nconst`);
-			writer.remove(start, end);
+			writer.replace(start, end, '');
 			writer.insertBefore(start, `'b'; let`);
 		}),
 	);
@@ -310,7 +314,7 @@ test('maps a `<script setup>` whose code a plugin removes by one empty copy', ()
 	const content = `<script setup lang="ts">\nconst a = 1;\n</script>\n`;
 	const { text, mappings } = generateWith(
 		content,
-		rewriteSetup((writer, block) => writer.remove(0, block.content.length)),
+		rewriteSetup((writer, block) => writer.replace(0, block.content.length, '')),
 	);
 	expect(text).not.toContain('const a = 1;');
 	expect(
