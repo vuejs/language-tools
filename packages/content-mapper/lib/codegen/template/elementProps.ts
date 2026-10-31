@@ -109,7 +109,7 @@ export function* generateElementProps(
 
 			if (
 				propName === undefined
-				|| options.vueCompilerOptions.isDataAttribute(propName)
+				|| shouldSkipUnknownPropCheck(options, node, propName)
 			) {
 				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
 					failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
@@ -188,7 +188,7 @@ export function* generateElementProps(
 			}
 		}
 		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
-			if (options.vueCompilerOptions.isDataAttribute(prop.name)) {
+			if (shouldSkipUnknownPropCheck(options, node, prop.name)) {
 				continue;
 			}
 
@@ -345,6 +345,26 @@ function getShouldCamelize(
 			node.tagType === CompilerDOM.ElementTypes.SLOT
 			|| !options.vueCompilerOptions.isHtmlAttribute(propName)
 		);
+}
+
+/**
+ * `dataAttributes` always skip the props object (any tag).
+ * `htmlAttributes` skip only on components so native elements still check
+ * against HTML/SVG/ARIA types, and typed slot props (e.g. ariaDescribedby) keep working
+ * (fixes #6318; see #6084).
+ */
+function shouldSkipUnknownPropCheck(
+	options: TemplateCodegenOptions,
+	node: CompilerDOM.ElementNode,
+	propName: string,
+) {
+	if (options.vueCompilerOptions.isDataAttribute(propName)) {
+		return true;
+	}
+	return (
+		node.tagType === CompilerDOM.ElementTypes.COMPONENT
+		&& options.vueCompilerOptions.isHtmlAttribute(propName)
+	);
 }
 
 function getPropsCodeFeatures(): VueCodeMarker {

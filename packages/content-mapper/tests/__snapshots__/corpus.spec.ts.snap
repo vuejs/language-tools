@@ -16,7 +16,6 @@ exports[`content mapper full corpus 1`] = `
   "test-workspace/tsc/#3718/main.vue(2,27): error TS2353: Object literal may only specify known properties, and 'onEventDoesNotExist' does not exist in type 'Partial<NonNullable<Partial<{}> & Omit<{ readonly to: string | RendererElement | null | undefined; readonly disabled?: boolean | undefined; readonly defer?: boolean | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps, undefined>>>'.",
   "test-workspace/tsc/#4646/parent.vue(15,25): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | null'.
   Type 'undefined' is not assignable to type 'string | null'.",
-  "test-workspace/tsc/#4785/main.vue(6,20): error TS2353: Object literal may only specify known properties, and ''aria-atomic'' does not exist in type 'VNodeProps & AllowedComponentProps & ComponentCustomProps & { foo: number; }'.",
   "test-workspace/tsc/#4822/main.vue(18,62): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
   Type 'undefined' is not assignable to type 'number'.",
   "test-workspace/tsc/#5840/main.vue(11,3): error TS2339: Property 'Comp' does not exist on type '{}'.",
