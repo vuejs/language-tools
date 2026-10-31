@@ -24,6 +24,7 @@ import {
 	generateGeneric,
 	generateMacros,
 	generateSetupFunction,
+	isGeneric,
 	type ScriptSetupSlots,
 } from './scriptSetup';
 import { generateTemplate, type TemplateFunctionSlots } from './template';
@@ -202,13 +203,12 @@ function* generateWorker(
 		// <script setup>
 		yield* generateMacros(options);
 		yield* generateComponentDeclareEqual(options.ir, scriptSetup, names.export);
-		if (scriptSetup.generic) {
+		if (isGeneric(options, scriptSetup)) {
 			yield* generateGeneric(
 				options,
 				ctx,
 				scriptSetup,
 				scriptSetupRanges,
-				scriptSetup.generic,
 				generateSetupFunction(
 					options,
 					ctx,
@@ -240,11 +240,11 @@ function* generateWorker(
 			rewrites.scriptSetup!,
 			scriptSetup,
 			scriptSetupRanges,
-			!scriptSetup.generic,
+			!isGeneric(options, scriptSetup),
 		);
 		yield* copies.generateImports();
 
-		if (scriptSetup.generic) {
+		if (isGeneric(options, scriptSetup)) {
 			yield* generateMacros(options);
 			yield* generateComponentDeclareEqual(options.ir, scriptSetup, names.export);
 			yield* generateGeneric(
@@ -252,7 +252,6 @@ function* generateWorker(
 				ctx,
 				scriptSetup,
 				scriptSetupRanges,
-				scriptSetup.generic,
 				generateSetupFunction(
 					options,
 					ctx,

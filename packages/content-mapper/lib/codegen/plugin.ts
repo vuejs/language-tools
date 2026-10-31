@@ -88,6 +88,11 @@ export interface VueCodegenFilePlugin<Code = VueCodegenPiece> {
 	emits?(): readonly VueCodegenSlotCode<Code>[];
 	/** `<script setup>` only: object types intersected into what the component exposes, in `defineExpose` form. */
 	expose?(): readonly VueCodegenSlotCode<Code>[];
+	/**
+	 * `<script setup>` only: type parameters of the component, after those of its `generic` attribute; with one, the
+	 * component is generic.
+	 */
+	generic?(): readonly VueCodegenSlotCode<Code>[];
 	/** Object types intersected into what a generic component exposes, after the types of its `defineExpose`. */
 	exposedInstanceTypes?(): readonly string[];
 	/** Options of the component, after its props, e.g. `__typeEl: …`. */
@@ -221,6 +226,7 @@ const codeSlots = [
 	'props',
 	'emits',
 	'expose',
+	'generic',
 	'elements',
 	'declarations',
 ] as const;

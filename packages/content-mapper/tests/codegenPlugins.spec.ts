@@ -415,3 +415,12 @@ test('writes the code of a plugin after the props of an element of the template'
 	expect(() => generateWith(content, plugin(() => ({ elementEnd: () => new Map([[{} as never, ['/* div */']]]) }))))
 		.toThrow(`'test-plugin'`);
 });
+
+test('makes the component generic over the type parameters of a plugin, after those of its attribute', () => {
+	const typeParameter = plugin(() => ({ generic: () => ['T extends string'] }));
+	const props = `const props = defineProps<{ a: T }>();`;
+	expect(generateWith(`<script setup lang="ts">\n${props}\n</script>\n`, typeParameter).text)
+		.toContain('(<T extends string,>(\n');
+	expect(generateWith(`<script setup lang="ts" generic="U">\n${props}\n</script>\n`, typeParameter).text)
+		.toContain('(<U,T extends string,>(\n');
+});

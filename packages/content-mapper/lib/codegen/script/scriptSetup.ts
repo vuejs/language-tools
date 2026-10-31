@@ -37,6 +37,8 @@ export interface ScriptSetupSlots {
 	expose: (readonly TsCode[])[];
 	/** Object types intersected into what a generic component exposes, after the types of its `defineExpose`. */
 	exposedInstanceTypes: string[];
+	/** Type parameters of the component, after those of its `generic` attribute; with one, the component is generic. */
+	generic: (readonly TsCode[])[];
 }
 
 /** The copies of the user's code of `<script setup>`: its imports at module scope, and its body in the setup function. */
@@ -102,14 +104,26 @@ function getImportSectionEnd(scriptSetupRanges: ScriptSetupRanges) {
 	return Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset);
 }
 
+/** Whether the component of `scriptSetup` is generic, by its `generic` attribute or the codegen plugins. */
+export function isGeneric(options: ScriptCodegenOptions, scriptSetup: IRScriptSetup): boolean {
+	return !!scriptSetup.generic || !!options.slots.generic.length;
+}
+
+function* generatePluginTypeParameters(options: ScriptCodegenOptions): Generator<TsCode> {
+	for (const parameter of options.slots.generic) {
+		yield* parameter;
+		yield `,`;
+	}
+}
+
 export function* generateGeneric(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
-	generic: NonNullable<IRScriptSetup['generic']>,
 	body: Iterable<TsCode>,
 ): Generator<TsCode> {
+	const { generic } = scriptSetup;
 	yield `(`;
 	if (typeof generic === 'object') {
 		const boundary = yield* Boundary.start(
@@ -123,8 +137,14 @@ export function* generateGeneric(
 		if (!generic.text.trimEnd().endsWith(`,`)) {
 			yield `,`;
 		}
+		yield* generatePluginTypeParameters(options);
 		yield `>`;
 		yield boundary.end();
+	}
+	else if (options.slots.generic.length) {
+		yield `<`;
+		yield* generatePluginTypeParameters(options);
+		yield `>`;
 	}
 	yield `(${newLine}`
 		+ `	${names.props}: NonNullable<Awaited<typeof ${names.setup}>>['props'],${newLine}`
@@ -465,7 +485,7 @@ function* generatePublicProps(
 	}
 	propTypes.push(...options.slots.props);
 	const target = options.vueCompilerOptions.target;
-	const used = !!scriptSetup.generic
+	const used = isGeneric(options, scriptSetup)
 		|| target < 3.6
 		|| (target >= 3.5 && !scriptSetupRanges.defineProps?.arg)
 		|| !!options.slots.props.length

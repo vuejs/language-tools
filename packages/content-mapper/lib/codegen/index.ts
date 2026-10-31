@@ -194,6 +194,7 @@ function useCodegen(
 				props: slots.props(),
 				emits: slots.emits(),
 				expose: slots.expose(),
+				generic: slots.generic(),
 				exposedInstanceTypes: slots.exposedInstanceTypes(),
 			},
 			rewriteScripts: rewrites => rewriteScripts(getFilePlugins(), ir, rewrites),

@@ -22,7 +22,15 @@ export type MergedSlots = { readonly [K in keyof CodegenSlots]: () => CodegenSlo
 
 export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): MergedSlots {
 	const listSlot = <
-		K extends 'templateContext' | 'templateDollars' | 'props' | 'emits' | 'expose' | 'elements' | 'declarations',
+		K extends
+			| 'templateContext'
+			| 'templateDollars'
+			| 'props'
+			| 'emits'
+			| 'expose'
+			| 'generic'
+			| 'elements'
+			| 'declarations',
 	>(
 		key: K,
 	) => computed(() => getPlugins().flatMap(plugin => (plugin[key]?.() ?? []).map(toCodes)));
@@ -49,6 +57,7 @@ export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): Mer
 		props: listSlot('props'),
 		emits: listSlot('emits'),
 		expose: listSlot('expose'),
+		generic: listSlot('generic'),
 		exposedInstanceTypes: textSlot('exposedInstanceTypes'),
 		componentOptions: textSlot('componentOptions'),
 		fallthroughProps: textSlot('fallthroughProps'),

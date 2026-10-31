@@ -57,6 +57,7 @@ const first = ({ ts, fileName, ir }) => ({
 		return declarations;
 	},
 	templateContext: () => path.basename(fileName, '.vue').startsWith('TemplateContext') ? ['{ $foo: number }'] : [],
+	generic: () => path.basename(fileName, '.vue') === 'GenericPlugin' ? ['T extends string'] : [],
 	props: () => isChild(fileName) ? ['{ contributed?: number }'] : [],
 	emits: () => isChild(fileName) ? ['{ contributed: [value: number] }'] : [],
 	// `exposedValue` is a binding of `<script setup>`
