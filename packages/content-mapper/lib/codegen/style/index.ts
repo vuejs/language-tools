@@ -20,7 +20,7 @@ import { createTemplateCodegenContext, type TemplateCodegenContext } from '../te
 import { generateInterpolation } from '../template/interpolation';
 import type { TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, typeAliasRef } from '../writers';
-import { generateStyleModuleImports, generateStyleModulesType } from './modules';
+import { generateStyleModuleImports, generateStyleModulesType, type StyleModuleImport } from './modules';
 import { generateStyleScopedClasses } from './scopedClassNames';
 import { generateStyleScopedClassReferences } from './scopedClassReferences';
 
@@ -43,6 +43,9 @@ export interface StyleCodegenOptions {
  */
 export function createStylePlugin({ ts, ir, analysis, name }: VueCodegenFile): VueCodegenFilePlugin<TsCode> {
 	const StyleModules = name('StyleModules');
+	const moduleImports = ir.styles.flatMap((style): StyleModuleImport[] =>
+		style.module && typeof style.src === 'object' ? [{ style, src: style.src, name: name(style.name) }] : []
+	);
 	const getGeneratedStyle = computed(() => {
 		if (!ir.styles.length) {
 			return;
@@ -63,7 +66,7 @@ export function createStylePlugin({ ts, ir, analysis, name }: VueCodegenFile): V
 	const getStyleModulesType = computed(() => {
 		const styleModules = ir.styles.filter(style => style.module);
 		if (styleModules.length) {
-			return [...generateStyleModulesType(ir, analysis.getResolvedOptions(), styleModules)];
+			return [...generateStyleModulesType(ir, analysis.getResolvedOptions(), styleModules, moduleImports)];
 		}
 	});
 	const hasStyleModules = () => !!getStyleModulesType();
@@ -88,7 +91,7 @@ export function createStylePlugin({ ts, ir, analysis, name }: VueCodegenFile): V
 		},
 		templateBody: () => getGeneratedStyle()?.codes ?? [],
 		templateContext: () => hasStyleModules() ? [[typeAliasRef(StyleModules, getScriptLang(ir))]] : [],
-		declarations: () => [...generateStyleModuleImports(ir)],
+		declarations: () => [...generateStyleModuleImports(ir, moduleImports)],
 		elementEnd: getElementEnd,
 		rewrite({ scriptSetup }) {
 			const scriptSetupRanges = analysis.getScriptSetupRanges();

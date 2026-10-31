@@ -549,3 +549,12 @@ test('checks the slot outlets of the template against the slots that a plugin de
 	expect(() => generateWith(content, plugin(() => ({ declaredSlots: () => 1 as never }))))
 		.toThrow(`'test-plugin'`);
 });
+
+test('names the imports of the CSS modules apart from the identifiers of the plugins', () => {
+	const names: string[] = [];
+	const { text } = generate('/Comp.vue', `<style module src="./a.module.css"></style>\n`, undefined, [
+		plugin(file => (names.push(file.name('style_0')), {})),
+	]);
+	expect(text).toContain(`import __VLS_style_0 from `);
+	expect(names).toEqual(['__VLS_style_0$1']);
+});

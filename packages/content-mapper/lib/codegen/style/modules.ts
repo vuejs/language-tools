@@ -1,4 +1,4 @@
-import { type IR, type IRStyle, navigationFeatures, type VueCompilerOptions } from '@vue/language-core';
+import { type IR, type IRAttr, type IRStyle, navigationFeatures, type VueCompilerOptions } from '@vue/language-core';
 import { names } from '../names';
 import { Boundary, mapped, type TsCode } from '../tsCode';
 import { endOfLine, identifierRE, newLine } from '../writers';
@@ -8,23 +8,28 @@ import { generateClassProperty, generateStyleSrc } from './common';
  * `<style module src>` is typed by an ordinary import of the src, so whatever types that module
  * (a CSS content mapper, an ambient declaration) types the CSS module; Vue does not read the file.
  */
-export function* generateStyleModuleImports(ir: IR): Generator<TsCode[]> {
-	for (const style of ir.styles) {
-		if (style.module && typeof style.src === 'object') {
-			yield [`import ${getStyleModuleImportName(style)} from `, ...generateStyleSrc(ir, style.src), `;`];
-		}
+export function* generateStyleModuleImports(
+	ir: IR,
+	imports: readonly StyleModuleImport[],
+): Generator<TsCode[]> {
+	for (const { name, src } of imports) {
+		yield [`import ${name} from `, ...generateStyleSrc(ir, src), `;`];
 	}
 }
 
-function getStyleModuleImportName(style: IRStyle) {
-	return `__VLS_${style.name}`;
+/** The import of the src of a CSS module, by the name that the style plugin gave it. */
+export interface StyleModuleImport {
+	style: IRStyle;
+	src: Exclude<IRAttr, true>;
+	name: string;
 }
 
-/** The type of the CSS modules of `styleModules`, by their names. */
+/** The type of the CSS modules of `styleModules`, by their names; one with a src reads its import of `imports`. */
 export function* generateStyleModulesType(
 	ir: IR,
 	vueCompilerOptions: VueCompilerOptions,
 	styleModules: readonly IRStyle[],
+	imports: readonly StyleModuleImport[],
 ): Generator<TsCode> {
 	yield `{${newLine}`;
 	for (const style of styleModules) {
@@ -57,8 +62,9 @@ export function* generateStyleModulesType(
 			yield `Record<string, string> & `;
 		}
 		yield `${names.PrettifyGlobal}<{}`;
-		if (typeof style.src === 'object') {
-			yield `${newLine} & typeof ${getStyleModuleImportName(style)}`;
+		const moduleImport = imports.find(moduleImport => moduleImport.style === style);
+		if (moduleImport) {
+			yield `${newLine} & typeof ${moduleImport.name}`;
 		}
 		for (const className of style.classNames) {
 			yield* generateClassProperty(
