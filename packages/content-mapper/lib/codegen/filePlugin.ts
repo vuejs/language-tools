@@ -65,6 +65,9 @@ function checkSlices(plugin: string, cuts: PluginEdits['cuts'], code: unknown) {
 	else if (typeof code === 'object' && code !== null && 'name' in code && 'code' in code) {
 		checkSlices(plugin, cuts, code.code);
 	}
+	else if (typeof code === 'object' && code !== null && 'type' in code) {
+		checkSlices(plugin, cuts, code.type);
+	}
 }
 
 export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): MergedSlots {
@@ -73,7 +76,6 @@ export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): Mer
 			| 'templateContext'
 			| 'templateDollars'
 			| 'props'
-			| 'emits'
 			| 'expose'
 			| 'generic'
 			| 'exposedInstanceTypes'
@@ -104,7 +106,14 @@ export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): Mer
 			return merged;
 		}),
 		props: listSlot('props'),
-		emits: listSlot('emits'),
+		emits: computed(() =>
+			getPlugins().flatMap(plugin =>
+				(read(plugin, 'emits') ?? []).map(({ type, emit }) => ({
+					type: typeof type === 'string' || type === undefined ? type : toCodes(type),
+					emit,
+				}))
+			)
+		),
 		expose: listSlot('expose'),
 		generic: listSlot('generic'),
 		declaredSlots: computed(() => {

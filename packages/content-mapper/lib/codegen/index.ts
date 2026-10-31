@@ -10,6 +10,7 @@ import {
 	type VueCodegenFile,
 	type VueCodegenTemplate,
 } from './plugin';
+import { createEmitsPlugin } from './plugins/emits';
 import { createInheritedAttrsPlugin } from './plugins/inheritedAttrs';
 import { createRefsPlugin } from './plugins/refs';
 import { createRootElPlugin } from './plugins/rootEl';
@@ -32,6 +33,7 @@ export const builtinPlugins: readonly CodegenPlugin[] = [
 	{ name: 'vue:refs', create: createRefsPlugin },
 	{ name: 'vue:root-el', create: createRootElPlugin },
 	{ name: 'vue:style', create: createStylePlugin },
+	{ name: 'vue:emits', create: createEmitsPlugin },
 ];
 
 export function generateServiceScript(

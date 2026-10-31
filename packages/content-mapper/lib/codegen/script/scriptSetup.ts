@@ -25,14 +25,14 @@ import { generateCamelized } from '../writers/camelized';
 import { generateComponent } from './component';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
-import { getEmitTypes } from './template';
+import { getComponentEmits, getPluginEmitTypes } from './template';
 
 /** The slots of `<script setup>`. */
 export interface ScriptSetupSlots {
 	/** Object types intersected into the props, in `defineProps<…>` form; the template reads them. */
 	props: (readonly TsCode[])[];
-	/** Object types `{ event: [args] }` intersected into the emits, in `defineEmits<…>` form. */
-	emits: (readonly TsCode[])[];
+	/** The emits of the component, each with its type, its emit function, or both. */
+	emits: EmitsDeclaration[];
 	/** Object types intersected into what the component exposes, in `defineExpose` form. */
 	expose: (readonly TsCode[])[];
 	/** Object types intersected into what a generic component exposes, after the types of its `defineExpose`. */
@@ -41,6 +41,13 @@ export interface ScriptSetupSlots {
 	generic: (readonly TsCode[])[];
 	/** Object types intersected into the slots of the component, e.g. what `defineSlots` declares; else any slot. */
 	componentSlots: string[];
+}
+
+export interface EmitsDeclaration {
+	/** An object type of the emits in `defineEmits<…>` form, or `{ event: [args] }` without `emit`; a string as text. */
+	type: string | readonly TsCode[] | undefined;
+	/** The type of the emit function; with one, `type` is text. */
+	emit: string | undefined;
 }
 
 /** The copies of the user's code of `<script setup>`: its imports at module scope, and its body in the setup function. */
@@ -159,7 +166,7 @@ export function* generateGeneric(
 	yield* body;
 
 	const propTypes: string[] = [];
-	const emitTypes = getEmitTypes(options);
+	const emitTypes = getComponentEmits(options).functions;
 	const { vueCompilerOptions, scriptLang } = options;
 
 	if (ctx.generatedTypes.has(names.PublicProps)) {
@@ -339,10 +346,6 @@ function addTransforms(
 		const _callExp = scriptSetupRanges.withDefaults?.callExp ?? callExp;
 		addDefineWithTypeTransforms(writer, statement, _callExp, typeArg, name, names.props, names.Props);
 	}
-	if (scriptSetupRanges.defineEmits) {
-		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineEmits;
-		addDefineWithTypeTransforms(writer, statement, callExp, typeArg, name, names.emit, names.Emit);
-	}
 	if (scriptSetupRanges.defineExpose) {
 		const { callExp, arg, typeArg } = scriptSetupRanges.defineExpose;
 		if (typeArg) {
@@ -421,15 +424,17 @@ export function addDefineWithTypeTransforms(
  * The props and the emits that the codegen plugins declare, each as one alias, which places their code once for the
  * component and the template to read.
  */
-function* generatePluginTypes({ slots, scriptLang }: ScriptCodegenOptions): Generator<TsCode> {
+function* generatePluginTypes(options: ScriptCodegenOptions): Generator<TsCode> {
+	const { slots, scriptLang } = options;
 	if (slots.props.length) {
 		yield* generateTypeAlias(names.PluginProps, scriptLang, function*() {
 			yield* intersectTypes(slots.props);
 		});
 	}
-	if (slots.emits.length) {
+	const emitTypes = getPluginEmitTypes(options);
+	if (emitTypes.length) {
 		yield* generateTypeAlias(names.PluginEmits, scriptLang, function*() {
-			yield* intersectTypes(slots.emits);
+			yield* intersectTypes(emitTypes);
 		});
 	}
 }

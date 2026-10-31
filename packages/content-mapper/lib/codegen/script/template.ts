@@ -123,7 +123,7 @@ function* generateTemplateCtx(
 ): Generator<TsCode> {
 	const { vueCompilerOptions, scriptSetupRanges, scriptLang, slots } = options;
 	const exps: (string | readonly TsCode[])[] = [];
-	const emitTypes = getEmitTypes(options);
+	const emitTypes = getComponentEmits(options).functions;
 	const propTypes: string[] = [];
 
 	if (vueCompilerOptions.globalTemplateContext) {
@@ -170,24 +170,53 @@ function* generateTemplateCtx(
 	yield endOfLine;
 }
 
-/** The types of the emit functions of a script setup component, which the codegen plugins add events to. */
-export function getEmitTypes(
-	{ scriptSetupRanges, slots, scriptLang }: ScriptCodegenOptions,
-): (string | readonly TsCode[])[] {
-	const emitTypes: (string | readonly TsCode[])[] = [];
+/** The emits of a script setup component, which the codegen plugins declare. */
+export interface ComponentEmits {
+	/** The types of the emits in `defineEmits<…>` form, when each declaration has one. */
+	types: string[] | undefined;
+	/** The types of the emit functions. */
+	functions: string[];
+}
+
+/**
+ * The emits of a script setup component, those whose type is not text as the alias of all of them, where the first of
+ * them is.
+ */
+export function getComponentEmits({ scriptSetupRanges, slots, scriptLang }: ScriptCodegenOptions): ComponentEmits {
+	const emits: ComponentEmits = { types: [], functions: [] };
 	if (!scriptSetupRanges) {
-		return emitTypes;
+		return emits;
 	}
-	if (scriptSetupRanges.defineEmits) {
-		emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}`);
-	}
+	const declarations = [...slots.emits];
 	if (scriptSetupRanges.defineModel.length) {
-		emitTypes.push(`typeof ${names.modelEmit}`);
+		declarations.push({ type: typeAliasRef(names.ModelEmit, scriptLang), emit: `typeof ${names.modelEmit}` });
 	}
-	if (slots.emits.length) {
-		emitTypes.push(`${names.ShortEmits}<${typeAliasRef(names.PluginEmits, scriptLang)}>`);
+	const pluginEmits = typeAliasRef(names.PluginEmits, scriptLang);
+	let hasPluginEmits = false;
+	for (const { type, emit } of declarations) {
+		if (typeof type === 'object') {
+			if (!hasPluginEmits) {
+				hasPluginEmits = true;
+				emits.types?.push(pluginEmits);
+				emits.functions.push(`${names.ShortEmits}<${pluginEmits}>`);
+			}
+		}
+		else {
+			if (type === undefined) {
+				emits.types = undefined;
+			}
+			else {
+				emits.types?.push(type);
+			}
+			emits.functions.push(emit ?? `${names.ShortEmits}<${type}>`);
+		}
 	}
-	return emitTypes;
+	return emits;
+}
+
+/** The types of the emits that the codegen plugins declare by types that are not text, which one alias places. */
+export function getPluginEmitTypes({ slots }: ScriptCodegenOptions): (readonly TsCode[])[] {
+	return slots.emits.flatMap(({ type }) => typeof type === 'object' ? [type] : []);
 }
 
 function* generateTemplateComponents(

@@ -9,7 +9,6 @@ const raw = {
 	directives: '',
 	directivesOption: '',
 	dollars: '',
-	emit: '',
 	exposed: '',
 	intrinsics: '',
 	modelEmit: '',
@@ -21,7 +20,6 @@ const raw = {
 	src: '',
 	template: '',
 
-	Emit: '',
 	EmitProps: '',
 	GlobalComponents: '',
 	LocalComponents: '',

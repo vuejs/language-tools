@@ -123,7 +123,7 @@ exports.codegen = ({ ts, fileName, ir, name }) => {
 
 `codegen(file, ctx)` is a `VueCodegenPlugin`. It runs for each snapshot of each file, in `plugins`
 order after the built-in plugins of the mapper (slots, fallthrough attributes, template refs, root
-element, style), and gives the `VueCodegenFilePlugin` of the file: an optional `rewrite` of the
+element, style, emits), and gives the `VueCodegenFilePlugin` of the file: an optional `rewrite` of the
 user's code, and functions that give its code in the slots of the generated code. `ctx` holds the
 entry's `config`, the options of the plugin, and the resolved `vueCompilerOptions`. `file` holds the
 TS 7.1 AST API that parsed the scripts (`ts`), `fileName`, the IR, its analysis (resolved options,
@@ -199,7 +199,8 @@ exports.codegen = ({ ts, ir }) => {
 | `templateTypes` | `{ name, code }`: type aliases at the end of the template, each by a name that `file.name()` gave the plugin, which the setup scope and the module scope read too | the scope of the template |
 | `templateDollars` | Object types intersected into the `$` names that the template reads (`$slots`, `$attrs`, `$refs`, `$el`) | the scope of the template |
 | `elementEnd` | A map of elements of the template to code after their props, before their children | the scope of the template at the element |
-| `props`, `emits`, `expose` | `<script setup>` only: object types intersected into the props (`defineProps<…>` form), which the template reads too, the emits (`defineEmits<…>` form) and what the component exposes | the setup scope |
+| `props`, `expose` | `<script setup>` only: object types intersected into the props (`defineProps<…>` form), which the template reads too, and what the component exposes | the setup scope |
+| `emits` | `<script setup>` only: `{ type?, emit? }`, emits of the component: an object type in `defineEmits<…>` form (`{ event: [args] }` without `emit`), and the type of their emit function, text only, e.g. `typeof emit` (with it, `type` is text only too). The component checks against the intersection of the types from Vue 3.5 when each has one, and else against the emit functions, which also type `$emit` | the setup scope |
 | `generic` | `<script setup>` only: type parameters of the component, after those of its `generic` attribute; with one, the component is generic | the module scope |
 | `declaredSlots` | Text only: an expression of the slots that the component declares (e.g. what `defineSlots` returns), which each slot outlet of the template is checked against instead of giving types to infer the slots from | the setup scope |
 | `componentSlots` | `<script setup>` only, text only: object types intersected into the slots of the component (`defineSlots` form); without one, the component takes any slot, as in Vue | where the mapper declares the component |

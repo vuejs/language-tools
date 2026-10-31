@@ -90,8 +90,8 @@ export interface VueCodegenFilePlugin<Code = VueCodegenPiece | VueCodegenSlice> 
 	 * too.
 	 */
 	props?(): readonly VueCodegenSlotCode<Code>[];
-	/** `<script setup>` only: object types `{ event: [args] }` intersected into the emits, in `defineEmits<…>` form. */
-	emits?(): readonly VueCodegenSlotCode<Code>[];
+	/** `<script setup>` only: the emits of the component, each with its type, its emit function, or both. */
+	emits?(): readonly VueCodegenEmits<Code>[];
 	/** `<script setup>` only: object types intersected into what the component exposes, in `defineExpose` form. */
 	expose?(): readonly VueCodegenSlotCode<Code>[];
 	/**
@@ -139,6 +139,20 @@ export type VueCodegenSlotCode<Code = VueCodegenPiece | VueCodegenSlice> = Code 
 export interface VueCodegenDeclaration<Code = VueCodegenPiece | VueCodegenSlice> {
 	name: string;
 	code: VueCodegenSlotCode<Code>;
+}
+
+/**
+ * Emits of a component. Those of the component are the intersection of the `type` of each, which its type checks
+ * against from Vue 3.5 when each has one, and else the emit functions, which also type its `$emit` and its emit props.
+ */
+export interface VueCodegenEmits<Code = VueCodegenPiece | VueCodegenSlice> {
+	/**
+	 * An object type of the emits in `defineEmits<…>` form; without `emit`, in `{ event: [args] }` form, whose emit
+	 * function the mapper gives. Text with `emit`.
+	 */
+	type?: VueCodegenSlotCode<Code>;
+	/** The type of the emit function, e.g. `typeof emit`. Text, as the mapper places it in several places. */
+	emit?: string;
 }
 
 export interface VueCodegenExports {
@@ -305,7 +319,6 @@ const codeSlots = [
 	'templateBody',
 	'templateDollars',
 	'props',
-	'emits',
 	'expose',
 	'generic',
 	'exposedInstanceTypes',
@@ -375,6 +388,21 @@ function checkFilePlugin(
 				}
 				return elementEnd;
 			};
+		}
+		else if (key === 'emits') {
+			checked[key] = () =>
+				toArray<VueCodegenEmits>(plugin, key, read()).map(emits => {
+					if (typeof emits !== 'object' || emits === null || (emits.type === undefined && emits.emit === undefined)) {
+						throw invalid(plugin, 'emits that are not an object with a type or an emit function');
+					}
+					if (emits.emit !== undefined && (typeof emits.emit !== 'string' || typeof (emits.type ?? '') !== 'string')) {
+						throw invalid(plugin, 'emits with an emit function whose type or itself is not text');
+					}
+					return {
+						type: emits.type === undefined ? undefined : checkSlotCode(plugin, blocks, emits.type),
+						emit: emits.emit,
+					};
+				});
 		}
 		else if (key === 'declaredSlots') {
 			checked[key] = () => {

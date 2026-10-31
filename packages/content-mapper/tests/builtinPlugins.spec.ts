@@ -58,9 +58,16 @@ function check(disabled?: string) {
  */
 const accepted: Record<string, string[]> = {
 	// the attributes of the root, which the component takes as props
-	'vue:inherited-attrs': ['Parent.vue(25,17): error TS2353'],
+	'vue:inherited-attrs': ['Parent.vue(26,17): error TS2353'],
 	// `$style`, and the reads of `v-bind()` in CSS
 	'vue:style': ['Refs.vue(14,15): error TS2339', 'Refs.vue(6,7): error TS6133'],
+	// the events that `defineEmits` declares: their listeners, and `$emit` of one beside the events of a model
+	'vue:emits': [
+		'InferredChild.vue(8,47): error TS2554',
+		'Parent.vue(19,50): error TS2353',
+		'Parent.vue(23,71): error TS2353',
+		'Parent.vue(26,66): error TS2353',
+	],
 };
 
 test.each([undefined, ...builtinPlugins.map(({ name }) => name)])(

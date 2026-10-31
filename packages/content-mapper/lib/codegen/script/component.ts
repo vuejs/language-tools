@@ -6,6 +6,7 @@ import { generateSpreadMerge } from '../writers/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 import { getExposeTypes } from './scriptSetup';
+import { getComponentEmits } from './template';
 
 /** The slots of the options of a script setup component. */
 export interface ComponentSlots {
@@ -35,7 +36,7 @@ export function* generateComponent(
 		yield `setup: () => ${names.exposed},${newLine}`;
 	}
 
-	const emitOptionCodes = [...generateEmitsOption(options, scriptSetupRanges)];
+	const emitOptionCodes = [...generateEmitsOption(options)];
 	yield* emitOptionCodes;
 	yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length);
 
@@ -46,63 +47,19 @@ export function* generateComponent(
 	yield `})`;
 }
 
-function* generateEmitsOption(
-	options: ScriptCodegenOptions,
-	scriptSetupRanges: ScriptSetupRanges,
-): Generator<TsCode> {
-	const typeCodes = options.vueCompilerOptions.target >= 3.5 && !scriptSetupRanges.defineEmits?.hasUnionTypeArg
-		? [...generateTypeEmitsOption(options, scriptSetupRanges)]
-		: [];
-
-	const runtimeCodes = !typeCodes.length
-		? [...generateRuntimeEmitsOption(options, scriptSetupRanges)]
-		: [];
-
-	if (typeCodes.length) {
+function* generateEmitsOption(options: ScriptCodegenOptions): Generator<TsCode> {
+	const { types, functions } = getComponentEmits(options);
+	if (options.vueCompilerOptions.target >= 3.5 && types?.length) {
 		yield `__typeEmits: `;
-		yield* asTypeCode(intersectTypes(typeCodes), options.scriptLang);
+		yield* asTypeCode(intersectTypes(types), options.scriptLang);
 		yield `,${newLine}`;
 	}
-	else if (runtimeCodes.length) {
+	else if (functions.length) {
 		yield `emits: `;
-		yield* generateSpreadMerge(...runtimeCodes);
+		yield* generateSpreadMerge(
+			...functions.map(emit => asType(`${names.NormalizeEmits}<${emit}>`, options.scriptLang)),
+		);
 		yield `,${newLine}`;
-	}
-}
-
-function* generateTypeEmitsOption(
-	options: ScriptCodegenOptions,
-	scriptSetupRanges: ScriptSetupRanges,
-): Generator<string | readonly TsCode[]> {
-	if (scriptSetupRanges.defineModel.length) {
-		yield typeAliasRef(names.ModelEmit, options.scriptLang);
-	}
-	if (scriptSetupRanges.defineEmits?.typeArg) {
-		yield names.Emit;
-	}
-	if (options.slots.emits.length) {
-		yield typeAliasRef(names.PluginEmits, options.scriptLang);
-	}
-}
-
-function* generateRuntimeEmitsOption(
-	options: ScriptCodegenOptions,
-	scriptSetupRanges: ScriptSetupRanges,
-): Generator<string | readonly TsCode[]> {
-	if (scriptSetupRanges.defineModel.length) {
-		yield asType(`${names.NormalizeEmits}<typeof ${names.modelEmit}>`, options.scriptLang);
-	}
-	if (scriptSetupRanges.defineEmits) {
-		yield asType(
-			`${names.NormalizeEmits}<typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}>`,
-			options.scriptLang,
-		);
-	}
-	if (options.slots.emits.length) {
-		yield asType(
-			`${names.NormalizeEmits}<${names.ShortEmits}<${typeAliasRef(names.PluginEmits, options.scriptLang)}>>`,
-			options.scriptLang,
-		);
 	}
 }
 

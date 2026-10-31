@@ -7,6 +7,7 @@ import Refs from './Refs.vue';
 
 const text = ref<string>();
 const picked = ref<number>();
+const open = ref<boolean>();
 const child = useTemplateRef('child');
 
 function onChange(value: number) {
@@ -22,7 +23,7 @@ function onChange(value: number) {
 	<GenericChild ref="child" v-model:selected="picked" :items="[1, 2]" @select="onChange">
 		<template #default="{ item }">{{ item }}</template>
 	</GenericChild>
-	<InferredChild id="inferred" title="title" @close="text = ''">
+	<InferredChild id="inferred" v-model:open="open" title="title" @close="text = ''">
 		<template #head="{ title }">{{ title }}</template>
 		body
 	</InferredChild>
