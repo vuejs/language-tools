@@ -207,9 +207,12 @@ test('moves the code that a plugin cuts to where it inserts the cut, with the ed
 test('throws for a node that a plugin cuts and places nowhere, as replace removes code', () => {
 	const content = `<script setup lang="ts">\nconst a = 1;\n</script>\n`;
 	expect(() =>
-		generateWith(content, rewriteSetup((writer, block) => {
-			writer.cut(nodeAt(block, 'a'), { data: { features: scriptFeatures } });
-		}))
+		generateWith(
+			content,
+			rewriteSetup((writer, block) => {
+				writer.cut(nodeAt(block, 'a'), { data: { features: scriptFeatures } });
+			}),
+		)
 	).toThrow(`The codegen plugin 'test-plugin' cut a node that the generated code places nowhere`);
 });
 
