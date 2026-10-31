@@ -349,14 +349,14 @@ function* generateScriptWithExportDefault(
 	}
 
 	// the head is the code up to the end of the default export, with the exported expression cut out of it
-	const core = blockRewrite.rewrite;
-	const head = core.cut(0, exportDefault.end, { data: { features: scriptFeatures } });
-	const exported = core.cut(expression.start, expression.end, {
+	const rewrite = blockRewrite.rewrite;
+	const head = rewrite.cut(0, exportDefault.end, { data: { features: scriptFeatures } });
+	const exported = rewrite.cut(expression.start, expression.end, {
 		data: { features: scriptFeatures },
 		placeholder: exportExpression,
 	});
 	const tail = exportDefault.end < script.content.length
-		? core.cut(exportDefault.end, script.content.length, { data: { features: scriptFeatures } })
+		? rewrite.cut(exportDefault.end, script.content.length, { data: { features: scriptFeatures } })
 		: undefined;
 
 	yield generateBlockAnchor(script);

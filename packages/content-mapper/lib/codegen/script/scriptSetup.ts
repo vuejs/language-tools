@@ -58,15 +58,15 @@ export function createScriptSetupCopies(
 	scriptSetupRanges: ScriptSetupRanges,
 	bodyAtRoot: boolean,
 ): ScriptSetupCopies {
-	const core = blockRewrite.rewrite;
+	const rewrite = blockRewrite.rewrite;
 	const importSectionEnd = getImportSectionEnd(scriptSetupRanges);
 	const { length } = scriptSetup.content;
 	if (bodyAtRoot) {
-		const whole = core.cut(0, length, { data: { features: scriptFeatures } });
-		addTransforms(options, core, scriptSetupRanges);
+		const whole = rewrite.cut(0, length, { data: { features: scriptFeatures } });
+		addTransforms(options, rewrite, scriptSetupRanges);
 		const macros = [...generateMacros(options)];
 		if (macros.length) {
-			core.insertAfter(importSectionEnd, macros);
+			rewrite.insertAfter(importSectionEnd, macros);
 		}
 		return {
 			*generateImports() {
@@ -77,12 +77,12 @@ export function createScriptSetupCopies(
 		};
 	}
 	const imports = importSectionEnd > 0
-		? core.cut(0, importSectionEnd, { data: { features: scriptFeatures } })
+		? rewrite.cut(0, importSectionEnd, { data: { features: scriptFeatures } })
 		: undefined;
 	const body = importSectionEnd < length || !length
-		? core.cut(importSectionEnd, length, { data: { features: scriptFeatures } })
+		? rewrite.cut(importSectionEnd, length, { data: { features: scriptFeatures } })
 		: undefined;
-	addTransforms(options, core, scriptSetupRanges);
+	addTransforms(options, rewrite, scriptSetupRanges);
 	return {
 		*generateImports() {
 			yield generateBlockAnchor(scriptSetup);
@@ -280,13 +280,13 @@ export function* generateMacros(options: ScriptCodegenOptions): Generator<string
 
 function addTransforms(
 	options: ScriptCodegenOptions,
-	core: BlockWriter,
+	writer: BlockWriter,
 	scriptSetupRanges: ScriptSetupRanges,
 ) {
 	const runtimeDefineProps = scriptSetupRanges.defineProps?.typeArg ? undefined : scriptSetupRanges.defineProps;
 	if (runtimeDefineProps && scriptSetupRanges.defineModel.some(({ defaultPropsArg }) => defaultPropsArg)) {
 		// the parameter of `default` may have the name of the props, which `typeof` in its own annotation would refer to
-		core.insertAfter(runtimeDefineProps.statement.end, [
+		writer.insertAfter(runtimeDefineProps.statement.end, [
 			newLine,
 			...generateTypeAlias(names.RuntimeProps, options.scriptLang, function*() {
 				yield `typeof ${runtimeDefineProps.name ?? names.props}`;
@@ -303,47 +303,47 @@ function addTransforms(
 			continue;
 		}
 		if (isTsLang(options.scriptLang)) {
-			core.insertAfter(defaultPropsArg.end, `: ${defaultPropsType}`);
+			writer.insertAfter(defaultPropsArg.end, `: ${defaultPropsType}`);
 		}
 		else {
-			core.insertBefore(defaultPropsArg.start, `/** @type {${defaultPropsType}} */ `);
+			writer.insertBefore(defaultPropsArg.start, `/** @type {${defaultPropsType}} */ `);
 		}
 	}
 	if (scriptSetupRanges.defineProps) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
 		const _callExp = scriptSetupRanges.withDefaults?.callExp ?? callExp;
-		addDefineWithTypeTransforms(core, statement, _callExp, typeArg, name, names.props, names.Props);
+		addDefineWithTypeTransforms(writer, statement, _callExp, typeArg, name, names.props, names.Props);
 	}
 	if (scriptSetupRanges.defineEmits) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineEmits;
-		addDefineWithTypeTransforms(core, statement, callExp, typeArg, name, names.emit, names.Emit);
+		addDefineWithTypeTransforms(writer, statement, callExp, typeArg, name, names.emit, names.Emit);
 	}
 	if (scriptSetupRanges.defineSlots) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineSlots;
-		addDefineWithTypeTransforms(core, statement, callExp, typeArg, name, names.slots, names.Slots);
+		addDefineWithTypeTransforms(writer, statement, callExp, typeArg, name, names.slots, names.Slots);
 		if (!name) {
-			core.insertAfter(statement.end, `${newLine}void ${names.slots}${endOfLine}`);
+			writer.insertAfter(statement.end, `${newLine}void ${names.slots}${endOfLine}`);
 		}
 	}
 	if (scriptSetupRanges.defineExpose) {
 		const { callExp, arg, typeArg } = scriptSetupRanges.defineExpose;
 		if (typeArg) {
-			const type = cutScriptCode(core, typeArg, `typeof ${names.exposed}`);
-			core.insertBefore(callExp.start, [`let ${names.exposed}!: `, type, endOfLine]);
+			const type = cutScriptCode(writer, typeArg, `typeof ${names.exposed}`);
+			writer.insertBefore(callExp.start, [`let ${names.exposed}!: `, type, endOfLine]);
 		}
 		else if (arg) {
-			const value = cutScriptCode(core, arg, names.exposed);
-			core.insertBefore(callExp.start, [`const ${names.exposed} = `, value, endOfLine]);
+			const value = cutScriptCode(writer, arg, names.exposed);
+			writer.insertBefore(callExp.start, [`const ${names.exposed} = `, value, endOfLine]);
 		}
 		else {
-			core.insertBefore(callExp.start, `const ${names.exposed} = {}${endOfLine}`);
+			writer.insertBefore(callExp.start, `const ${names.exposed} = {}${endOfLine}`);
 		}
 	}
 }
 
 /** The user's code at `range`, which `placeholder` takes the place of; it maps as script code where it is placed. */
-function cutScriptCode(core: BlockWriter, range: TextRange, placeholder: string) {
-	return core.cut(range.start, range.end, { data: { features: scriptFeatures }, placeholder });
+function cutScriptCode(writer: BlockWriter, range: TextRange, placeholder: string) {
+	return writer.cut(range.start, range.end, { data: { features: scriptFeatures }, placeholder });
 }
 
 /**
@@ -352,7 +352,7 @@ function cutScriptCode(core: BlockWriter, range: TextRange, placeholder: string)
  * after the statement, for a name that is not an identifier), and the alias goes with what takes its place.
  */
 function addDefineWithTypeTransforms(
-	core: BlockWriter,
+	writer: BlockWriter,
 	statement: TextRange,
 	callExp: TextRange,
 	typeArg: TextRange | undefined,
@@ -361,30 +361,30 @@ function addDefineWithTypeTransforms(
 	typeName: string,
 ) {
 	const alias: (string | BlockSlice)[] = typeArg
-		? [`type ${typeName} = `, cutScriptCode(core, typeArg, typeName), endOfLine]
+		? [`type ${typeName} = `, cutScriptCode(writer, typeArg, typeName), endOfLine]
 		: [];
 	if (name && identifierRE.test(name)) {
 		if (alias.length) {
-			core.insertBefore(statement.start, alias);
+			writer.insertBefore(statement.start, alias);
 		}
 		return;
 	}
 	const declaration = [...alias, `const ${defaultName} = `];
 	if (!name && statement.start === callExp.start && statement.end === callExp.end) {
-		core.insertBefore(statement.start, declaration);
+		writer.insertBefore(statement.start, declaration);
 		return;
 	}
 	let prefix: BlockSlice | undefined;
 	if (statement.start < callExp.start) {
-		prefix = core.cut(statement.start, callExp.start, {
+		prefix = writer.cut(statement.start, callExp.start, {
 			data: { features: scriptFeatures },
 			placeholder: declaration,
 		});
 	}
 	else {
-		core.insertBefore(statement.start, declaration);
+		writer.insertBefore(statement.start, declaration);
 	}
-	core.insertAfter(name ? statement.end : callExp.end, [endOfLine, ...prefix ? [prefix] : [], defaultName]);
+	writer.insertAfter(name ? statement.end : callExp.end, [endOfLine, ...prefix ? [prefix] : [], defaultName]);
 }
 
 function* generatePublicProps(
