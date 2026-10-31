@@ -29,7 +29,7 @@ import { getEmitTypes } from './template';
 
 /** The slots of `<script setup>`. */
 export interface ScriptSetupSlots {
-	/** Object types intersected into the public props, in `defineProps<…>` form. */
+	/** Object types intersected into the props, in `defineProps<…>` form; the template reads them. */
 	props: (readonly TsCode[])[];
 	/** Object types `{ event: [args] }` intersected into the emits, in `defineEmits<…>` form. */
 	emits: (readonly TsCode[])[];
@@ -420,8 +420,16 @@ function addDefineWithTypeTransforms(
 	writer.insertAfter(name ? statement.end : callExp.end, [endOfLine, ...prefix ? [prefix] : [], defaultName]);
 }
 
-/** The emits that the codegen plugins declare, as one alias, which places their code once. */
+/**
+ * The props and the emits that the codegen plugins declare, each as one alias, which places their code once for the
+ * component and the template to read.
+ */
 function* generatePluginTypes({ slots, scriptLang }: ScriptCodegenOptions): Generator<TsCode> {
+	if (slots.props.length) {
+		yield* generateTypeAlias(names.PluginProps, scriptLang, function*() {
+			yield* intersectTypes(slots.props);
+		});
+	}
 	if (slots.emits.length) {
 		yield* generateTypeAlias(names.PluginEmits, scriptLang, function*() {
 			yield* intersectTypes(slots.emits);
@@ -493,7 +501,9 @@ function* generatePublicProps(
 	if (scriptSetupRanges.defineModel.length) {
 		propTypes.push(typeAliasRef(names.ModelProps, options.scriptLang));
 	}
-	propTypes.push(...options.slots.props);
+	if (options.slots.props.length) {
+		propTypes.push(typeAliasRef(names.PluginProps, options.scriptLang));
+	}
 	const target = options.vueCompilerOptions.target;
 	const used = isGeneric(options, scriptSetup)
 		|| target < 3.6

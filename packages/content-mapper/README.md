@@ -160,33 +160,34 @@ not text or a range of a block of the file, and a slice that the writers of the 
 throw.
 
 ```js
-// define-prop.js: `defineProp<number>('count')` in `<script setup>` declares the public prop `count`
+// define-prop.js: `defineProp<number>('count')` in `<script setup>` declares the prop `count`, which
+// the template reads; the type argument moves into the props, and the rest of the call goes
 const { scriptFeatures } = require('@vue/language-core');
 
 exports.codegen = ({ ts, ir }) => {
 	const block = ir.scriptSetup;
-	const calls = [];
-	for (const statement of block?.ast.statements ?? []) {
-		const call = ts.isExpressionStatement(statement) ? statement.expression : undefined;
-		if (
-			call && ts.isCallExpression(call) && ts.isIdentifier(call.expression) && call.expression.text === 'defineProp'
-			&& call.typeArguments?.length === 1 && call.arguments.length === 1 && ts.isStringLiteral(call.arguments[0])
-		) {
-			calls.push({ statement, key: call.arguments[0].text, type: call.typeArguments[0] });
-		}
-	}
+	const props = [];
 	return {
 		rewrite({ scriptSetup }) {
-			for (const { statement } of calls) {
-				scriptSetup.replace(statement.getStart(block.ast), statement.end, '');
+			for (const statement of block?.ast.statements ?? []) {
+				const call = ts.isExpressionStatement(statement) ? statement.expression : undefined;
+				if (
+					call && ts.isCallExpression(call) && ts.isIdentifier(call.expression)
+					&& call.expression.text === 'defineProp' && call.typeArguments?.length === 1
+					&& call.arguments.length === 1 && ts.isStringLiteral(call.arguments[0])
+				) {
+					const [type] = call.typeArguments;
+					const start = type.getStart(block.ast);
+					scriptSetup.replace(statement.getStart(block.ast), start, '');
+					scriptSetup.replace(type.end, statement.end, '');
+					props.push({
+						key: call.arguments[0].text,
+						type: scriptSetup.cut(start, type.end, { data: { features: scriptFeatures } }),
+					});
+				}
 			}
 		},
-		props: () =>
-			calls.map(({ key, type }) => [
-				`{ ${JSON.stringify(key)}?: `,
-				{ source: block, start: type.getStart(block.ast), end: type.end, data: { features: scriptFeatures } },
-				' }',
-			]),
+		props: () => props.map(({ key, type }) => [`{ ${JSON.stringify(key)}: `, type, ' }']),
 	};
 };
 ```
@@ -198,7 +199,7 @@ exports.codegen = ({ ts, ir }) => {
 | `templateTypes` | `{ name, code }`: type aliases at the end of the template, each by a name that `file.name()` gave the plugin, which the setup scope and the module scope read too | the scope of the template |
 | `templateDollars` | Object types intersected into the `$` names that the template reads (`$slots`, `$attrs`, `$refs`, `$el`) | the scope of the template |
 | `elementEnd` | A map of elements of the template to code after their props, before their children | the scope of the template at the element |
-| `props`, `emits`, `expose` | `<script setup>` only: object types intersected into the public props (`defineProps<…>` form), the emits (`defineEmits<…>` form) and what the component exposes | the setup scope |
+| `props`, `emits`, `expose` | `<script setup>` only: object types intersected into the props (`defineProps<…>` form), which the template reads too, the emits (`defineEmits<…>` form) and what the component exposes | the setup scope |
 | `generic` | `<script setup>` only: type parameters of the component, after those of its `generic` attribute; with one, the component is generic | the module scope |
 | `exposedInstanceTypes`, `componentOptions`, `fallthroughProps` | Text only: object types intersected into what a generic component exposes, options of the component after its props, and object types of the props that the component takes besides its own | where the mapper declares the component |
 | `elements` | The tag → element type map of native elements, which replaces the DOM one in the file | the module scope |

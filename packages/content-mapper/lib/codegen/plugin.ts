@@ -82,7 +82,10 @@ export interface VueCodegenFilePlugin<Code = VueCodegenPiece | VueCodegenSlice> 
 	templateDollars?(): readonly VueCodegenSlotCode<Code>[];
 	/** Code after the props of an element of the template, before its children, by element. */
 	elementEnd?(): ReadonlyMap<ElementNode, readonly VueCodegenSlotCode<Code>[]>;
-	/** `<script setup>` only: object types intersected into the public props, in `defineProps<…>` form. */
+	/**
+	 * `<script setup>` only: object types intersected into the props, in `defineProps<…>` form, which the template reads
+	 * too.
+	 */
 	props?(): readonly VueCodegenSlotCode<Code>[];
 	/** `<script setup>` only: object types `{ event: [args] }` intersected into the emits, in `defineEmits<…>` form. */
 	emits?(): readonly VueCodegenSlotCode<Code>[];

@@ -154,6 +154,9 @@ function* generateTemplateCtx(
 	if (scriptSetupRanges?.defineModel.length) {
 		propTypes.push(typeAliasRef(names.ModelProps, scriptLang));
 	}
+	if (scriptSetupRanges && slots.props.length) {
+		propTypes.push(typeAliasRef(names.PluginProps, scriptLang));
+	}
 	if (emitTypes.length) {
 		propTypes.push(typeAliasRef(names.EmitProps, scriptLang));
 	}

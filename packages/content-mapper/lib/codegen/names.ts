@@ -31,6 +31,7 @@ const raw = {
 	ModelEmit: '',
 	ModelProps: '',
 	PluginEmits: '',
+	PluginProps: '',
 	Props: '',
 	PublicProps: '',
 	RuntimeProps: '',
