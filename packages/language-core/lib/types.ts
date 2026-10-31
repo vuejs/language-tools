@@ -261,10 +261,10 @@ export interface VuePluginContext {
 export interface TemplateHTML {
 	pieces: Piece[];
 	/**
-	 * Whether an error of the compiler, at offsets of the HTML, comes from the conversion rather than the template, so
-	 * that it is not reported.
+	 * Whether an error of the compiler, at offsets of `html`, the text of the pieces, comes from the conversion rather
+	 * than the template, so that it is not reported.
 	 */
-	ignoreError?(error: CompilerDOM.CompilerError): boolean;
+	ignoreError?(error: CompilerDOM.CompilerError, html: string): boolean;
 }
 
 /**

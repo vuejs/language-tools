@@ -30,7 +30,7 @@ export function compileTemplateHTML(
 	const ast = compileTemplate(html, {
 		...options,
 		onError(error) {
-			if (!ignoreError?.(error)) {
+			if (!ignoreError?.(error, html)) {
 				errors.push(error);
 			}
 		},

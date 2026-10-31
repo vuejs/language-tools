@@ -6,15 +6,12 @@ const classRE = /^class\s*=/;
 
 export const ir: VueIRPlugin = {
 	templateCompilers: {
-		pug(template) {
-			const { htmlCode: html, pieces } = parse(template);
-			return {
-				pieces,
-				// #5099: a class literal and a class attribute are two class attributes of the HTML
-				ignoreError: error =>
-					error.code === 2 satisfies CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE
-					&& classRE.test(html.slice(error.loc?.start.offset)),
-			};
-		},
+		pug: template => ({
+			pieces: parse(template).pieces,
+			// #5099: a class literal and a class attribute are two class attributes of the HTML
+			ignoreError: (error, html) =>
+				error.code === 2 satisfies CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE
+				&& classRE.test(html.slice(error.loc?.start.offset)),
+		}),
 	},
 };

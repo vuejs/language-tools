@@ -100,7 +100,7 @@ describe('pug template compiler', () => {
 	it('does not report a class attribute that duplicates a class literal', () => {
 		const source = `div.foo(class="bar")`;
 		const htmlErrors: (number | string)[] = [];
-		CompilerDOM.parse(parse(source).htmlCode, { onError: error => htmlErrors.push(error.code) });
+		CompilerDOM.parse(toString(parse(source).pieces, source), { onError: error => htmlErrors.push(error.code) });
 		expect(htmlErrors).toEqual([CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE]);
 
 		expect(compile(source).errors).toEqual([]);
@@ -154,6 +154,12 @@ describe('pug template compiler', () => {
 			.toMatchSnapshot();
 	});
 });
+
+function toString(pieces: ReturnType<typeof parse>['pieces'], pug: string) {
+	return pieces.map(piece => typeof piece === 'string' ? piece : piece.text ?? pug.slice(piece.start, piece.end)).join(
+		'',
+	);
+}
 
 function errorLoc(error: CompilerDOM.CompilerError) {
 	return [error.code, error.loc?.start.offset, error.loc?.end.offset];
