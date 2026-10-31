@@ -157,7 +157,7 @@ function rewriteUseCssModule(
 	for (const { callExp, exp, arg } of calls) {
 		if (arg) {
 			// the argument is copied as a reference into the cast, and is `any` at the call
-			const name = writer.cut(arg.start, arg.end, {
+			const name = writer.cut(arg.node, {
 				data: { features: navigationFeatures | completionFeatures },
 				placeholder: asType('any', scriptLang),
 			});

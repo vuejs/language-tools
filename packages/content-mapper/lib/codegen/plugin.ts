@@ -11,8 +11,10 @@ import {
 	type VuePluginContext,
 	type VuePluginError,
 } from '@vue/language-core';
-import type { Piece, RewriteCode, RewriteCutOptions, RewriteSlice, RewriteWriter } from 'muggle-string';
-import type { BlockRewrite, BlockSlice, BlockWriter } from './rewrite/blockRewrite';
+import { getStartEnd } from '@vue/language-core/lib/typescript/nodes';
+import type { Piece, RewriteCode, RewriteCutOptions, RewriteSlice } from 'muggle-string';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type { BlockRewrite, BlockSlice, BlockWriter, ScriptBlock } from './rewrite/blockRewrite';
 import type { ComponentExports } from './script';
 import type { TsCode, TsCodeData } from './tsCode';
 import { identifierRE } from './writers';
@@ -193,7 +195,7 @@ export interface VueCodegenData {
 	features: number;
 }
 
-/** A range that a writer cut from its block, with the edits in it; it renders where it is inserted, exactly once. */
+/** A node that a writer cut from its block, with the edits in it; it renders where it is inserted, exactly once. */
 export type VueCodegenSlice = RewriteSlice<IRBlock, VueCodegenData>;
 
 /** Code that a writer inserts: pieces, slices, and arrays of them. */
@@ -206,11 +208,24 @@ export interface VueCodegenWriters {
 }
 
 /**
- * The writer of one script block, at offsets of its content. An edit out of the range of the block, a replacement of no
- * char, a cut without integer features, and code that is not text, a range of a block of the file or a slice that the
- * writers of the plugin cut throw.
+ * The writer of one script block: edits at offsets of its content, and cuts of nodes of its AST. An edit out of the
+ * range of the block, a replacement of no char, a cut of what is not a node inside the AST of the block or of a node of
+ * no char, a cut without integer features, and code that is not text, a range of a block of the file or a slice that
+ * the writers of the plugin cut throw.
  */
-export type VueCodegenWriter = RewriteWriter<IRBlock, VueCodegenData>;
+export interface VueCodegenWriter {
+	/** Inserts `code` at `offset`, before the code that the writers before it inserted there. */
+	insertBefore(offset: number, code: VueCodegenCode): void;
+	/** Inserts `code` at `offset`, after the code that the writers before it inserted there. */
+	insertAfter(offset: number, code: VueCodegenCode): void;
+	/** Replaces the chars `start`..`end` with `code`. */
+	replace(start: number, end: number, code: VueCodegenCode): void;
+	/**
+	 * The text of `node`, from its start without trivia to its end, with the edits of all writers in it: it renders
+	 * where the slice is placed, and `placeholder` takes its place; unplaced, the node is deleted.
+	 */
+	cut(node: ts.Node, options: RewriteCutOptions<IRBlock, VueCodegenData>): VueCodegenSlice;
+}
 
 /**
  * A codegen plugin, built-in or of a `plugins` entry, by the name in its errors. The code of a built-in plugin is the
@@ -321,8 +336,8 @@ export function rewriteScripts(
 	const slices = new Map<PluginSlice, BlockSlice>();
 	for (const [rank, { getEdits }] of plugins.entries()) {
 		const writers: BlockWriters = {
-			script: rewrites.script?.rewrite.writer(rank),
-			scriptSetup: rewrites.scriptSetup?.rewrite.writer(rank),
+			script: rewrites.script?.writer(rank),
+			scriptSetup: rewrites.scriptSetup?.writer(rank),
 		};
 		for (const edit of getEdits().edits) {
 			edit(writers, slices);
@@ -538,6 +553,20 @@ function createWriter(
 			throw new RangeError(`The codegen plugin '${plugin}' edited ${start}..${end}, out of its block.`);
 		}
 	};
+	const checkNode = (node: ts.Node) => {
+		const { ast } = block as ScriptBlock;
+		let parent: ts.Node | undefined = typeof node === 'object' && node !== null && node !== ast ? node : undefined;
+		while (parent && parent !== ast) {
+			parent = parent.parent;
+		}
+		if (!parent) {
+			throw new TypeError(`The codegen plugin '${plugin}' cut what is not a node inside the AST of its block.`);
+		}
+		const { start, end } = getStartEnd(node, ast);
+		if (start === end) {
+			throw new RangeError(`The codegen plugin '${plugin}' cut a node at ${start}, which is no char.`);
+		}
+	};
 	return {
 		insertBefore(offset, code) {
 			checkRange(offset, offset);
@@ -557,8 +586,8 @@ function createWriter(
 			const checked = checkCode(file, code);
 			edits.push((writers, slices) => writers[key]!.replace(start, end, resolveSlices(checked, slices)));
 		},
-		cut(start, end, options) {
-			checkRange(start, end);
+		cut(node, options) {
+			checkNode(node);
 			const features = (options as Partial<RewriteCutOptions<IRBlock, VueCodegenData>> | undefined)?.data?.features;
 			if (!Number.isInteger(features)) {
 				throw new TypeError(`The codegen plugin '${plugin}' cut with features that are not an integer.`);
@@ -569,7 +598,7 @@ function createWriter(
 			edits.push((writers, slices) =>
 				slices.set(
 					slice,
-					writers[key]!.cut(start, end, {
+					writers[key]!.cut(node, {
 						data: { features: features! },
 						placeholder: placeholder === undefined ? undefined : resolveSlices(placeholder, slices),
 					}),

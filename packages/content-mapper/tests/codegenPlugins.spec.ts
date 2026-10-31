@@ -8,6 +8,7 @@ import {
 	scriptFeatures,
 } from '@vue/language-core';
 import { loadTypeScript } from '@vue/language-core/typescript';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { expect, test } from 'vitest';
 import { useServiceScript } from '../lib/codegen';
 import {
@@ -52,6 +53,16 @@ function rangeOf(block: IRScript | IRScriptSetup, text: string) {
 	return { start, end: start + text.length };
 }
 
+/** The outermost node of the AST of `block` whose text, from its start without trivia, is `text`. */
+function nodeAt(block: IRScript | IRScriptSetup, text: string) {
+	const { start, end } = rangeOf(block, text);
+	const find = (node: ts.Node): ts.Node | undefined =>
+		node.getStart(block.ast) === start && node.end === end ? node : node.forEachChild(find);
+	const node = block.ast.forEachChild(find);
+	expect(node).toBeDefined();
+	return node!;
+}
+
 test('applies the rewrites of plugins, mapping the source ranges that they keep', () => {
 	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
 	const { text, mappings } = generateWith(
@@ -78,20 +89,31 @@ test('applies the rewrites of plugins, mapping the source ranges that they keep'
 
 test('rejects an edit of a plugin that is not valid for its block', () => {
 	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
-	const edits: ((writer: VueCodegenWriter, block: IRScriptSetup) => void)[] = [
+	const edits: ((writer: VueCodegenWriter, block: IRScriptSetup, file: VueCodegenFile) => void)[] = [
 		(writer, block) => writer.insertBefore(block.content.length + 1, 'x'),
 		(writer, block) => writer.replace(0, block.content.length + 1, ''),
 		writer => writer.replace(1, 1, ''),
 		writer => writer.insertBefore(0, [{ text: 'x' }] as never),
 		(writer, block) => writer.insertBefore(0, { source: block, start: 0, end: 1, data: {} } as never),
-		writer => writer.cut(0, 1, {} as never),
-		writer => writer.cut(0, 1, { data: { features: 0.5 } }),
-		writer => writer.cut(0, 1, { data: { features: 0 } }).render(() => {}),
+		(writer, block) => writer.cut(nodeAt(block, 'useFoo'), {} as never),
+		(writer, block) => writer.cut(nodeAt(block, 'useFoo'), { data: { features: 0.5 } }),
+		(writer, block) => writer.cut(nodeAt(block, 'useFoo'), { data: { features: 0 } }).render(() => {}),
+		writer => writer.cut({ start: 0, end: 1 } as never, { data: { features: 0 } }),
+		(writer, block) => writer.cut(block.ast, { data: { features: 0 } }),
+		(writer, block, { ts }) =>
+			writer.cut(ts.createSourceFile('/a.ts', block.content, 99).statements[0]!, { data: { features: 0 } }),
 		writer => writer.insertBefore(0, { render() {} }),
 	];
 	for (const edit of edits) {
-		expect(() => generateWith(content, rewriteSetup(edit))).toThrow();
+		expect(() => generateWith(content, rewriteSetup(edit))).toThrow(`'test-plugin'`);
 	}
+	// the initializer that the parser gives for the missing expression, which has no char
+	const missing = (writer: VueCodegenWriter, block: IRScriptSetup) => {
+		const [statement] = block.ast.statements as readonly ts.Node[] as readonly ts.VariableStatement[];
+		writer.cut(statement!.declarationList.declarations[0]!.initializer!, { data: { features: 0 } });
+	};
+	expect(() => generateWith(`<script setup lang="ts">\nconst a = ;\n</script>\n`, rewriteSetup(missing)))
+		.toThrow(`'test-plugin'`);
 });
 
 test('exports what the plugins set, and rejects exports that are not valid', () => {
@@ -163,14 +185,11 @@ test('moves the code that a plugin cuts to where it inserts the cut, with the ed
 	const { text, mappings } = generateWith(
 		content,
 		rewriteSetup((writer, block) => {
-			const statement = rangeOf(block, 'const a = useFoo();');
 			const call = rangeOf(block, 'useFoo');
 			writer.insertBefore(call.start, 'wrap.');
-			const cut = writer.cut(statement.start, statement.end, { data: { features: scriptFeatures } });
+			const cut = writer.cut(nodeAt(block, 'const a = useFoo();'), { data: { features: scriptFeatures } });
 			writer.insertAfter(block.content.length, ['/* moved */ ', cut]);
-			writer.cut(rangeOf(block, 'const b').start, rangeOf(block, 'const b').end, {
-				data: { features: scriptFeatures },
-			});
+			writer.cut(nodeAt(block, 'b'), { data: { features: scriptFeatures } });
 		}),
 	);
 	expect(text).toContain('/* moved */ const a = wrap.useFoo();');
@@ -193,8 +212,7 @@ function moveTypeArgument(edit?: (writer: VueCodegenWriter, block: IRScriptSetup
 				onRewrite?.();
 				const block = ir.scriptSetup!;
 				edit?.(scriptSetup!, block);
-				const { start, end } = rangeOf(block, 'string');
-				type = scriptSetup!.cut(start, end, { data: { features: scriptFeatures }, placeholder: 'any' });
+				type = scriptSetup!.cut(nodeAt(block, 'string'), { data: { features: scriptFeatures }, placeholder: 'any' });
 			},
 			props: () => [{ type: ['{ foo: ', type!, ' }'] }],
 		};
@@ -226,7 +244,7 @@ test('moves the code that a plugin cuts into a slot, with the edits in it', () =
 });
 
 test('places the code of each slot of a plugin once, so that a slice in it renders, or nowhere for a slot of another shape', () => {
-	const setup = `const a = 1; /* moved */\n`;
+	const setup = `const a = 1; [/* moved */];\n`;
 	const contents = [
 		`<script setup lang="ts">\n${setup}</script>\n<template><div>{{ $attrs }}</div></template>\n`,
 		`<script setup lang="ts" generic="U">\n${setup}</script>\n<template><div>{{ $attrs }}</div></template>\n`,
@@ -264,8 +282,9 @@ test('places the code of each slot of a plugin once, so that a slice in it rende
 				let moved: VueCodegenSlice | undefined;
 				return {
 					rewrite({ scriptSetup }) {
-						const { start, end } = rangeOf(file.ir.scriptSetup!, '/* moved */');
-						moved = scriptSetup!.cut(start, end, { data: { features: scriptFeatures } });
+						moved = scriptSetup!.cut(nodeAt(file.ir.scriptSetup!, '[/* moved */]'), {
+							data: { features: scriptFeatures },
+						});
 					},
 					...slot(file, () => moved!),
 				};
@@ -296,9 +315,8 @@ test('leaves the placeholder of a cut where its chars are cut from, and maps the
 	const { text, mappings } = generateWith(
 		content,
 		rewriteSetup((writer, block) => {
-			const arg = rangeOf(block, `'a'`);
 			const call = rangeOf(block, `useFoo('a')`);
-			const cut = writer.cut(arg.start, arg.end, { data: { features: 0 }, placeholder: 'any' });
+			const cut = writer.cut(nodeAt(block, `'a'`), { data: { features: 0 }, placeholder: 'any' });
 			writer.insertAfter(call.end, [' as Foo[', cut, ']']);
 		}),
 	);

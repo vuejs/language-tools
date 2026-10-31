@@ -77,10 +77,10 @@ export function createScriptSetupCopies(
 	const { length } = scriptSetup.content;
 	if (bodyAtRoot) {
 		const whole = rewrite.cut(0, length, { data: { features: scriptFeatures } });
-		addTransforms(options, rewrite, scriptSetupRanges);
+		addTransforms(options, blockRewrite, scriptSetupRanges);
 		const macros = [...generateMacros(options)];
 		if (macros.length) {
-			rewrite.insertAfter(importSectionEnd, macros);
+			blockRewrite.insertAfter(importSectionEnd, macros);
 		}
 		return {
 			*generateImports() {
@@ -96,7 +96,7 @@ export function createScriptSetupCopies(
 	const body = importSectionEnd < length || !length
 		? rewrite.cut(importSectionEnd, length, { data: { features: scriptFeatures } })
 		: undefined;
-	addTransforms(options, rewrite, scriptSetupRanges);
+	addTransforms(options, blockRewrite, scriptSetupRanges);
 	return {
 		*generateImports() {
 			yield generateBlockAnchor(scriptSetup);
@@ -344,7 +344,7 @@ function addTransforms(
 
 /** The user's code at `range`, which `placeholder` takes the place of; it maps as script code where it is placed. */
 function cutScriptCode(writer: BlockWriter, range: TextRange, placeholder: string) {
-	return writer.cut(range.start, range.end, { data: { features: scriptFeatures }, placeholder });
+	return writer.cut(range.node, { data: { features: scriptFeatures }, placeholder });
 }
 
 /**

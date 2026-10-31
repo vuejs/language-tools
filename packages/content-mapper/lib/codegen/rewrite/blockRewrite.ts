@@ -1,16 +1,40 @@
 import { type IRBlock, type IRScript, type IRScriptSetup, scriptFeatures } from '@vue/language-core';
-import { createSourceRewrite, type RewriteSlice, type RewriteWriter, type SourceRewrite } from 'muggle-string';
+import { getStartEnd } from '@vue/language-core/lib/typescript/nodes';
+import {
+	createSourceRewrite,
+	type RewriteCode,
+	type RewriteCutOptions,
+	type RewriteSlice,
+	type RewriteWriter,
+	type SourceRewrite,
+} from 'muggle-string';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { TsCode, TsCodeData } from '../tsCode';
 import { generateTerminator } from '../writers';
 
 export type ScriptBlock = IRScript | IRScriptSetup;
 
-export type BlockWriter = RewriteWriter<IRBlock, TsCodeData>;
-
 export type BlockSlice = RewriteSlice<IRBlock, TsCodeData>;
 
-export interface BlockRewrite {
+export type BlockCode = RewriteCode<IRBlock, TsCodeData>;
+
+/** The writer of a script block: edits at offsets of its content, and cuts of nodes of its AST. */
+export interface BlockWriter {
+	insertBefore(offset: number, code: BlockCode): void;
+	insertAfter(offset: number, code: BlockCode): void;
+	replace(start: number, end: number, code: BlockCode): void;
+	/**
+	 * The text of `node`, a node inside the AST of the block, from its start without trivia to its end, with the edits
+	 * of all writers in it; it renders where the slice is placed, and `placeholder` takes its place.
+	 */
+	cut(node: ts.Node, options: RewriteCutOptions<IRBlock, TsCodeData>): BlockSlice;
+}
+
+/** A rewrite of a script block, which is itself the writer of the outermost rank. */
+export interface BlockRewrite extends BlockWriter {
 	rewrite: SourceRewrite<IRBlock, TsCodeData>;
+	/** The writer of `rank`, which sits inside the rewrite. */
+	writer(rank: number): BlockWriter;
 	/** The code of `slice`. `terminate` adds the terminator of a truncated copy of the block (#3632). */
 	render(slice: BlockSlice, terminate?: boolean): TsCode[];
 }
@@ -28,8 +52,19 @@ export function generateBlockAnchor(block: ScriptBlock): TsCode {
 /** A rewrite of the content of `block`. */
 export function createBlockRewrite(block: ScriptBlock): BlockRewrite {
 	const rewrite = createSourceRewrite<IRBlock, TsCodeData>(block);
+	const createWriter = (writer: RewriteWriter<IRBlock, TsCodeData>): BlockWriter => ({
+		insertBefore: (offset, code) => writer.insertBefore(offset, code),
+		insertAfter: (offset, code) => writer.insertAfter(offset, code),
+		replace: (start, end, code) => writer.replace(start, end, code),
+		cut(node, options) {
+			const { start, end } = getStartEnd(node, block.ast);
+			return writer.cut(start, end, options);
+		},
+	});
 	return {
+		...createWriter(rewrite),
 		rewrite,
+		writer: rank => createWriter(rewrite.writer(rank)),
 		render(slice, terminate = true) {
 			const out: TsCode[] = [];
 			slice.render(piece => {
