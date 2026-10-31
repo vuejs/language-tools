@@ -1,7 +1,6 @@
 import { completionFeatures, getScriptLang, navigationFeatures, type ScriptSetupRanges } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { BuiltinPluginFile, FileCodegen } from '../filePlugin';
-import type { VueCodegenWriter } from '../plugin';
+import type { VueCodegenFile, VueCodegenFilePlugin, VueCodegenWriter } from '../plugin';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, isTsLang, newLine, typeAliasRef } from '../writers';
 import { generatePropertyKey } from '../writers/stringLiteralKey';
@@ -10,7 +9,7 @@ import { generatePropertyKey } from '../writers/stringLiteralKey';
  * The types of the template refs: their type at the end of the template, which the component exposes as `$refs`, and
  * the types of `useTemplateRef()`.
  */
-export function createRefsPlugin({ ir, analysis, template, name }: BuiltinPluginFile): FileCodegen {
+export function createRefsPlugin({ ir, analysis, template, name }: VueCodegenFile): VueCodegenFilePlugin<TsCode> {
 	const TemplateRefs = name('TemplateRefs');
 	const getTemplateRefs = computed(() => {
 		const { templateRefs } = analysis.getTemplateScope();

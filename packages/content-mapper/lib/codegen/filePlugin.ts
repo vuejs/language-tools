@@ -1,68 +1,68 @@
+import type * as CompilerDOM from '@vue/compiler-dom';
+import type { IR } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { VueCodegenFile, VueCodegenTemplate, VueCodegenWriters } from './plugin';
+import { getExportsOf, type VueCodegenFilePlugin, type VueCodegenSlotCode } from './plugin';
 import type { ModuleSlots } from './script';
 import type { ComponentSlots } from './script/component';
 import type { ScriptSetupSlots } from './script/scriptSetup';
 import type { TemplateFunctionSlots } from './script/template';
 import type { ElementSlots } from './template/element';
-
-/** What a built-in codegen plugin reads: the same as a codegen plugin, its names, and the types of the template. */
-export interface BuiltinPluginFile extends VueCodegenFile {
-	/** A name of the plugin for an identifier that it declares, which no other code of the file declares. */
-	name(hint: string): string;
-	template: VueCodegenTemplate;
-}
+import type { TsCode } from './tsCode';
 
 /** The slots that the owners of the generated code declare, by name. */
 export type CodegenSlots = ModuleSlots & TemplateFunctionSlots & ComponentSlots & ScriptSetupSlots & ElementSlots;
 
-/**
- * What a codegen plugin, built-in or of `vueCompilerOptions.plugins`, gives for one file. It edits the user's code of
- * the script blocks through its writers, and writes its code into the slots that the owners of the generated code
- * declare; it knows neither their code nor the other plugins. Each slot is read lazily, so that an owner depends only on
- * the slots that it reads.
- */
-export type FileCodegen =
-	& { rewrite?(writers: VueCodegenWriters): void }
-	& { readonly [K in keyof CodegenSlots]?: () => CodegenSlots[K] };
-
-export interface FilePlugin extends FileCodegen {
-	/** The name in the errors of its edits. */
+/** A codegen plugin of a file, by the name in its errors. */
+export interface FilePlugin extends VueCodegenFilePlugin<TsCode> {
 	readonly name: string;
 }
 
-export type BuiltinPluginFactory = (file: BuiltinPluginFile) => FileCodegen;
-
-/** The slots of `plugins`, each the contributions in the order of `plugins`. */
+/** The slots of the plugins that `getPlugins` gives, each the contributions in the order of the plugins. */
 export type MergedSlots = { readonly [K in keyof CodegenSlots]: () => CodegenSlots[K] };
 
-export function mergeSlots(plugins: readonly FilePlugin[]): MergedSlots {
-	const listSlot = <K extends keyof CodegenSlots>(key: K) =>
-		computed(() => plugins.flatMap(plugin => (plugin[key]?.() ?? []) as unknown[])) as () => CodegenSlots[K];
-	const mapSlot = <K extends keyof CodegenSlots>(key: K) =>
-		computed(() => {
-			const merged = new Map<unknown, unknown[]>();
-			for (const plugin of plugins) {
-				for (const [node, values] of (plugin[key]?.() ?? new Map()) as Map<unknown, unknown[]>) {
-					merged.set(node, [...merged.get(node) ?? [], ...values]);
+export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): MergedSlots {
+	const listSlot = <
+		K extends 'templateContext' | 'templateDollars' | 'props' | 'emits' | 'expose' | 'elements' | 'declarations',
+	>(
+		key: K,
+	) => computed(() => getPlugins().flatMap(plugin => (plugin[key]?.() ?? []).map(toCodes)));
+	const textSlot = <K extends 'exposedInstanceTypes' | 'componentOptions' | 'fallthroughProps'>(key: K) =>
+		computed(() => getPlugins().flatMap(plugin => [...plugin[key]?.() ?? []]));
+	return {
+		templateContext: listSlot('templateContext'),
+		templateBody: computed(() => getPlugins().flatMap(plugin => (plugin.templateBody?.() ?? []).flatMap(toCodes))),
+		templateTypes: computed(() =>
+			getPlugins().flatMap(plugin =>
+				(plugin.templateTypes?.() ?? []).map(({ name, code }) => ({ name, code: toCodes(code) }))
+			)
+		),
+		templateDollars: listSlot('templateDollars'),
+		elementEnd: computed(() => {
+			const merged = new Map<CompilerDOM.ElementNode, TsCode[]>();
+			for (const plugin of getPlugins()) {
+				for (const [node, codes] of plugin.elementEnd?.() ?? []) {
+					merged.set(node, [...merged.get(node) ?? [], ...codes.flatMap(toCodes)]);
 				}
 			}
 			return merged;
-		}) as () => CodegenSlots[K];
-	return {
-		declarations: listSlot('declarations'),
-		elements: listSlot('elements'),
-		exports: listSlot('exports'),
-		templateTypes: listSlot('templateTypes'),
-		templateDollars: listSlot('templateDollars'),
-		templateContext: listSlot('templateContext'),
-		templateBody: listSlot('templateBody'),
-		componentOptions: listSlot('componentOptions'),
-		fallthroughProps: listSlot('fallthroughProps'),
+		}),
 		props: listSlot('props'),
 		emits: listSlot('emits'),
 		expose: listSlot('expose'),
-		exposedInstanceTypes: listSlot('exposedInstanceTypes'),
-		elementEnd: mapSlot('elementEnd'),
+		exposedInstanceTypes: textSlot('exposedInstanceTypes'),
+		componentOptions: textSlot('componentOptions'),
+		fallthroughProps: textSlot('fallthroughProps'),
+		elements: listSlot('elements'),
+		declarations: listSlot('declarations'),
+		exports: computed(() =>
+			getPlugins().flatMap(plugin => {
+				const exports = plugin.exports?.();
+				return exports === undefined ? [] : [getExportsOf(plugin.name, ir, exports)];
+			})
+		),
 	};
+}
+
+function toCodes(code: VueCodegenSlotCode<TsCode>): readonly TsCode[] {
+	return Array.isArray(code) ? code : [code as TsCode];
 }

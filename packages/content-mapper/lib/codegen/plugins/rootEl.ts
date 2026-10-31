@@ -1,10 +1,11 @@
 import { getScriptLang } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { BuiltinPluginFile, FileCodegen } from '../filePlugin';
+import type { VueCodegenFile, VueCodegenFilePlugin } from '../plugin';
+import type { TsCode } from '../tsCode';
 import { asType, newLine, typeAliasRef } from '../writers';
 
 /** The type of the root element of the template, which the component exposes as `$el`. */
-export function createRootElPlugin({ ir, analysis, template, name }: BuiltinPluginFile): FileCodegen {
+export function createRootElPlugin({ ir, analysis, template, name }: VueCodegenFile): VueCodegenFilePlugin<TsCode> {
 	const RootEl = name('RootEl');
 	/** The types of the root elements of a template with a single root element in each branch. */
 	const getRootElTypes = computed(() => {

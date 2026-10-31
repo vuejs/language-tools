@@ -158,41 +158,27 @@ test('plugins that fail to load are reported as option diagnostics', () => {
 test('codegen exports that are not codegen plugins are reported as option diagnostics', () => {
 	const configFileName = createProject('codegen-diagnostics', {
 		'tsconfig.json': '{}',
-		'throws.cjs': `exports.codegen = () => { throw new Error('no codegen'); };\n`,
 		'number.cjs': `exports.codegen = 1;\n`,
-		'no-hook.cjs': `exports.codegen = { contribute() {} };\n`,
-		'no-generate.cjs': `exports.codegen = { rewrite() {}, generate: 1 };\n`,
-		'ok.cjs': `exports.codegen = ({ config }) => ({ generate: () => config.contribution });\n`,
+		'object.cjs': `exports.codegen = { rewrite() {} };\n`,
+		'ok.cjs': `exports.codegen = (file, { config }) => ({ declarations: () => config.declarations });\n`,
 	});
 	const opened = open(configFileName, {
 		target: 3.5,
 		plugins: [
-			'./throws.cjs',
 			'./number.cjs',
-			'./no-hook.cjs',
-			'./no-generate.cjs',
-			{ name: './ok.cjs', contribution: {} },
+			'./object.cjs',
+			{ name: './ok.cjs', declarations: [] },
 		],
 	});
 	expect(opened.optionDiagnostics).toEqual([
 		{
 			path: ['plugins', 0],
-			messageText: `Plugin './throws.cjs': Failed to create the \`codegen\` export: Error: no codegen`,
+			messageText: `Plugin './number.cjs': The \`codegen\` export must be a function.`,
 			code: OptionDiagnosticCode.InvalidPlugin,
 		},
 		{
 			path: ['plugins', 1],
-			messageText: `Plugin './number.cjs': The \`codegen\` export must be an object or a function.`,
-			code: OptionDiagnosticCode.InvalidPlugin,
-		},
-		{
-			path: ['plugins', 2],
-			messageText: `Plugin './no-hook.cjs': The \`codegen\` export must have a \`rewrite\` or a \`generate\` function.`,
-			code: OptionDiagnosticCode.InvalidPlugin,
-		},
-		{
-			path: ['plugins', 3],
-			messageText: `Plugin './no-generate.cjs': The \`generate\` of the \`codegen\` export must be a function.`,
+			messageText: `Plugin './object.cjs': The \`codegen\` export must be a function.`,
 			code: OptionDiagnosticCode.InvalidPlugin,
 		},
 	]);

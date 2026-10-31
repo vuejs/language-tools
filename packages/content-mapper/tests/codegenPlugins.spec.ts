@@ -1,11 +1,19 @@
 import { SpanMapKind } from '@volar/language-core';
 import { type IRScript, type IRScriptSetup, scriptFeatures } from '@vue/language-core';
 import { expect, test } from 'vitest';
-import type { CodegenPlugin, VueCodegenFile, VueCodegenPlugin, VueCodegenWriter } from '../lib/codegen/plugin';
+import {
+	type CodegenPlugin,
+	loadCodegenPlugins,
+	type VueCodegenFile,
+	type VueCodegenPlugin,
+	type VueCodegenWriter,
+} from '../lib/codegen/plugin';
 import { generate } from './utils';
 
-function plugin(hooks: VueCodegenPlugin, name = 'test-plugin'): CodegenPlugin {
-	return { name, plugin: hooks };
+/** The plugin of `codegen`, loaded as the `codegen` export of an entry `name`. */
+function plugin(codegen: VueCodegenPlugin, name = 'test-plugin'): CodegenPlugin {
+	const { plugins: [loaded] } = loadCodegenPlugins({ plugins: [{ name, config: {}, module: { codegen } }] } as never);
+	return loaded!;
 }
 
 /** A plugin that rewrites the `<script setup>` of the file. */
@@ -13,7 +21,7 @@ function rewriteSetup(
 	rewrite: (writer: VueCodegenWriter, block: IRScriptSetup, file: VueCodegenFile) => void,
 	name?: string,
 ): CodegenPlugin {
-	return plugin({ rewrite: (file, { scriptSetup }) => rewrite(scriptSetup!, file.ir.scriptSetup!, file) }, name);
+	return plugin(file => ({ rewrite: ({ scriptSetup }) => rewrite(scriptSetup!, file.ir.scriptSetup!, file) }), name);
 }
 
 function generateWith(content: string, ...plugins: CodegenPlugin[]) {
@@ -78,28 +86,31 @@ test('exports what the plugins set, and rejects exports that are not valid', () 
 	const content = `<script setup lang="ts">\n/** Doc. */\nconst a = 1;\n</script>\n`;
 	const { text } = generateWith(
 		content,
-		plugin({
-			generate: ({ ir }) => ({
-				exports: {
-					names: ['Foo'],
-					docComment: { block: ir.scriptSetup!, ...rangeOf(ir.scriptSetup!, '/** Doc. */') },
-				},
+		plugin(({ ir }) => ({
+			exports: () => ({
+				names: ['Foo'],
+				docComment: { block: ir.scriptSetup!, ...rangeOf(ir.scriptSetup!, '/** Doc. */') },
 			}),
-		}),
+		})),
 	);
 	expect(text).toContain('/** Doc. */\nconst Foo = ');
 	const invalid: ((file: VueCodegenFile) => unknown)[] = [
 		() => 1,
 		() => ({ exports: 1 }),
-		() => ({ exports: { names: ['not a name'] } }),
-		() => ({ exports: { names: 'Foo' } }),
-		() => ({ exports: { default: 'no' } }),
-		() => ({ declarations: 'declare const x: 1' }),
-		({ ir }) => ({ exports: { docComment: { block: ir.scriptSetup!, ...rangeOf(ir.scriptSetup!, 'const a') } } }),
-		({ ir }) => ({ exports: { docComment: { block: ir.scriptSetup!, start: 0, end: 1000 } } }),
+		() => ({ generate: () => ({}) }),
+		() => ({ exports: () => 1 }),
+		() => ({ exports: () => ({ names: ['not a name'] }) }),
+		() => ({ exports: () => ({ names: 'Foo' }) }),
+		() => ({ exports: () => ({ default: 'no' }) }),
+		() => ({ declarations: () => 'declare const x: 1' }),
+		() => ({ componentOptions: () => [{ text: 'x' }] }),
+		({ ir }) => ({
+			exports: () => ({ docComment: { block: ir.scriptSetup!, ...rangeOf(ir.scriptSetup!, 'const a') } }),
+		}),
+		({ ir }) => ({ exports: () => ({ docComment: { block: ir.scriptSetup!, start: 0, end: 1000 } }) }),
 	];
-	for (const generate of invalid) {
-		expect(() => generateWith(content, plugin({ generate: generate as never }))).toThrow(`'test-plugin'`);
+	for (const codegen of invalid) {
+		expect(() => generateWith(content, plugin(codegen as never))).toThrow(`'test-plugin'`);
 	}
 });
 
@@ -175,19 +186,17 @@ test('maps a range of a plugin without text as a copy', () => {
 	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
 	const { text, mappings } = generateWith(
 		content,
-		plugin({
-			generate({ ir }) {
+		plugin(({ ir }) => ({
+			declarations() {
 				const block = ir.scriptSetup!;
 				const call = rangeOf(block, 'useFoo');
-				return {
-					declarations: [[
-						'declare const x: typeof ',
-						{ source: block, ...call, data: { features: scriptFeatures } },
-						';',
-					]],
-				};
+				return [[
+					'declare const x: typeof ',
+					{ source: block, ...call, data: { features: scriptFeatures } },
+					';',
+				]];
 			},
-		}),
+		})),
 	);
 	expect(text).toContain('declare const x: typeof useFoo;');
 	const copied = text.indexOf('declare const x: typeof ') + 'declare const x: typeof '.length;
@@ -204,16 +213,14 @@ test('rejects a range of a plugin out of its block', () => {
 	expect(() =>
 		generateWith(
 			content,
-			plugin({
-				generate({ ir }) {
+			plugin(({ ir }) => ({
+				declarations() {
 					const block = ir.scriptSetup!;
-					return {
-						declarations: [[
-							{ source: block, start: 0, end: block.content.length + 1, data: { features: scriptFeatures }, text: 'Y' },
-						]],
-					};
+					return [
+						{ source: block, start: 0, end: block.content.length + 1, data: { features: scriptFeatures }, text: 'Y' },
+					];
 				},
-			}),
+			})),
 		)
 	).toThrow(TypeError);
 });
@@ -222,20 +229,18 @@ test('maps a range of a plugin with its own text as a whole to the range', () =>
 	const content = `<script setup lang="ts">\nconst a = useFoo();\n</script>\n`;
 	const { text, mappings } = generateWith(
 		content,
-		plugin({
-			generate({ ir }) {
+		plugin(({ ir }) => ({
+			declarations() {
 				const block = ir.scriptSetup!;
 				const call = rangeOf(block, 'useFoo');
-				return {
-					declarations: [[`declare const x: `, {
-						source: block,
-						...call,
-						data: { features: scriptFeatures },
-						text: 'number[]',
-					}, `;`]],
-				};
+				return [[`declare const x: `, {
+					source: block,
+					...call,
+					data: { features: scriptFeatures },
+					text: 'number[]',
+				}, `;`]];
 			},
-		}),
+		})),
 	);
 	const generated = text.indexOf('declare const x: number[];') + 'declare const x: '.length;
 	expect(mappings).toContainEqual(expect.objectContaining({
@@ -327,29 +332,86 @@ test('maps a `<script setup>` whose code a plugin removes by one empty copy', ()
 	).toHaveLength(1);
 });
 
-test('runs each hook of the plugins once, in plugin order', () => {
+test('runs the codegen and each hook of the plugins once, in plugin order', () => {
 	const calls: string[] = [];
 	const traced = (name: string) =>
-		plugin({
-			rewrite: () => void calls.push(`${name}.rewrite`),
-			generate: () => void calls.push(`${name}.generate`),
+		plugin(() => {
+			calls.push(`${name}.codegen`);
+			return {
+				rewrite: () => void calls.push(`${name}.rewrite`),
+				declarations: () => (calls.push(`${name}.declarations`), []),
+			};
 		}, name);
 	generateWith(`<script setup lang="ts">\nconst a = 1;\n</script>\n`, traced('first'), traced('second'));
-	expect(calls.filter(call => call.endsWith('.rewrite'))).toEqual(['first.rewrite', 'second.rewrite']);
-	expect(calls.filter(call => call.endsWith('.generate'))).toEqual(['first.generate', 'second.generate']);
+	for (const hook of ['codegen', 'rewrite', 'declarations']) {
+		expect(calls.filter(call => call.endsWith(`.${hook}`))).toEqual([`first.${hook}`, `second.${hook}`]);
+	}
 });
 
-test('propagates an exception of a hook', () => {
-	for (const hook of ['rewrite', 'generate'] as const) {
-		expect(() =>
-			generateWith(
-				`<script setup lang="ts">\nconst a = 1;\n</script>\n`,
-				plugin({
-					[hook]() {
-						throw new Error(`${hook} failed`);
-					},
-				}),
-			)
-		).toThrow(`${hook} failed`);
+test('propagates an exception of the codegen and of a hook', () => {
+	const fail = (what: string) => () => {
+		throw new Error(`${what} failed`);
+	};
+	const codegens: [string, VueCodegenPlugin][] = [
+		['codegen', fail('codegen')],
+		['rewrite', () => ({ rewrite: fail('rewrite') })],
+		['declarations', () => ({ declarations: fail('declarations') })],
+	];
+	for (const [what, codegen] of codegens) {
+		expect(() => generateWith(`<script setup lang="ts">\nconst a = 1;\n</script>\n`, plugin(codegen)))
+			.toThrow(`${what} failed`);
 	}
+});
+
+test('names the identifiers of the plugins apart from the generated code and each other', () => {
+	const names: string[][] = [];
+	const naming = (name: string) =>
+		plugin(file => {
+			names.push([file.name('Foo'), file.name('ctx'), file.name('Foo')]);
+			return {};
+		}, name);
+	generateWith(`<script setup lang="ts">\nconst a = 1;\n</script>\n`, naming('first'), naming('second'));
+	expect(names).toEqual([
+		['__VLS_Foo', '__VLS_ctx$1', '__VLS_Foo'],
+		['__VLS_Foo$1', '__VLS_ctx$2', '__VLS_Foo$1'],
+	]);
+	const invalid: VueCodegenPlugin[] = [
+		file => (file.name('a$b'), {}),
+		file => ({ declarations: () => [file.name('Late')] }),
+	];
+	for (const codegen of invalid) {
+		expect(() => generateWith(`<script setup lang="ts">\nconst a = 1;\n</script>\n`, plugin(codegen)))
+			.toThrow(`'test-plugin'`);
+	}
+});
+
+test('declares a template type of a plugin at the end of the template, for setup and the export', () => {
+	const content = `<script setup lang="ts">\nconst a = 1;\n</script>\n<template><div /></template>\n`;
+	const { text } = generateWith(
+		content,
+		plugin(file => {
+			const Foo = file.name('Foo');
+			return {
+				templateTypes: () => [{ name: Foo, code: '{ foo: 1 }' }],
+				declarations: () => [`declare const foo: ${Foo};`],
+			};
+		}),
+	);
+	expect(text).toContain('type __VLS_Foo = { foo: 1 };\n');
+	expect(text).toContain(`type __VLS_Foo = ReturnType<typeof __VLS_template>['__VLS_Foo'];`);
+	expect(() => generateWith(content, plugin(() => ({ templateTypes: () => [{ name: '__VLS_ctx', code: '{}' }] }))))
+		.toThrow(`'test-plugin'`);
+});
+
+test('writes the code of a plugin after the props of an element of the template', () => {
+	const content = `<template><div id="a" /></template>\n`;
+	const { text } = generateWith(
+		content,
+		plugin(({ ir }) => ({
+			elementEnd: () => new Map([[ir.template!.ast!.children[0] as never, ['/* div */']]]),
+		})),
+	);
+	expect(text).toContain(`id: "a",\n});\n/* div */`);
+	expect(() => generateWith(content, plugin(() => ({ elementEnd: () => new Map([[{} as never, ['/* div */']]]) }))))
+		.toThrow(`'test-plugin'`);
 });

@@ -1,9 +1,9 @@
 import { getScriptLang, type IR, type ScriptAnalysis, type TypeScript, type VueSource } from '@vue/language-core';
 import { BindingFlag } from '@vue/language-core/lib/script/scriptBindings';
 import { computed } from 'alien-signals';
-import { type BuiltinPluginFactory, mergeSlots } from './filePlugin';
+import { type FilePlugin, mergeSlots } from './filePlugin';
 import { createPluginNames, names } from './names';
-import { type CodegenPlugin, createFilePlugin, rewriteScripts, type VueCodegenTemplate } from './plugin';
+import { type CodegenPlugin, rewriteScripts, type VueCodegenFile, type VueCodegenTemplate } from './plugin';
 import { createInheritedAttrsPlugin } from './plugins/inheritedAttrs';
 import { createRefsPlugin } from './plugins/refs';
 import { createRootElPlugin } from './plugins/rootEl';
@@ -20,12 +20,12 @@ export interface ServiceScript {
 }
 
 /** The built-in codegen plugins, in the order that their code takes in each slot, before the other plugins. */
-const builtinPlugins: readonly (readonly [name: string, create: BuiltinPluginFactory])[] = [
-	['vue:slots', createSlotsPlugin],
-	['vue:inherited-attrs', createInheritedAttrsPlugin],
-	['vue:refs', createRefsPlugin],
-	['vue:root-el', createRootElPlugin],
-	['vue:style', createStylePlugin],
+const builtinPlugins: readonly CodegenPlugin[] = [
+	{ name: 'vue:slots', create: createSlotsPlugin },
+	{ name: 'vue:inherited-attrs', create: createInheritedAttrsPlugin },
+	{ name: 'vue:refs', create: createRefsPlugin },
+	{ name: 'vue:root-el', create: createRootElPlugin },
+	{ name: 'vue:style', create: createStylePlugin },
 ];
 
 export function generateServiceScript(
@@ -96,15 +96,34 @@ function useCodegen(
 			return attrVars.length ? attrVars.map(name => `typeof ${name}`).join(` & `) : undefined;
 		},
 	};
-	const pluginNames = createPluginNames();
-	const filePlugins = [
-		...builtinPlugins.map(([name, create]) => ({
-			name,
-			...create({ ts, fileName, ir, analysis, template, name: pluginNames(name) }),
-		})),
-		...plugins.map(plugin => createFilePlugin(plugin, { ts, fileName, ir, analysis })),
-	];
-	const slots = mergeSlots(filePlugins);
+	// each snapshot creates the plugins of the file in order, so that they take the same names
+	const getFilePlugins = computed(() => {
+		const pluginNames = createPluginNames();
+		let naming = true;
+		const filePlugins = [...builtinPlugins, ...plugins].map(({ name, create }): FilePlugin => {
+			const nameOf = pluginNames(name);
+			const names = new Set<string>();
+			const file: VueCodegenFile = {
+				ts,
+				fileName,
+				ir,
+				analysis,
+				template,
+				name(hint) {
+					if (!naming) {
+						throw new TypeError(`The codegen plugin '${name}' named ${JSON.stringify(hint)} after its codegen.`);
+					}
+					const pluginName = nameOf(hint);
+					names.add(pluginName);
+					return pluginName;
+				},
+			};
+			return { ...create(file, names), name };
+		});
+		naming = false;
+		return filePlugins;
+	});
+	const slots = mergeSlots(getFilePlugins, ir);
 
 	const hasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
@@ -177,7 +196,7 @@ function useCodegen(
 				expose: slots.expose(),
 				exposedInstanceTypes: slots.exposedInstanceTypes(),
 			},
-			rewriteScripts: rewrites => rewriteScripts(filePlugins, ir, rewrites),
+			rewriteScripts: rewrites => rewriteScripts(getFilePlugins(), ir, rewrites),
 		});
 	});
 

@@ -1,5 +1,6 @@
 import type { ElementNode } from '@vue/compiler-dom';
 import {
+	forEachElementNode,
 	type IR,
 	type IRBlock,
 	type IRScript,
@@ -10,28 +11,18 @@ import {
 	type VuePluginContext,
 	type VuePluginError,
 } from '@vue/language-core';
-import { computed } from 'alien-signals';
 import type { Piece, RewriteCode, RewriteCutOptions, RewriteSlice, RewriteWriter } from 'muggle-string';
-import type { CodegenSlots, FilePlugin } from './filePlugin';
 import type { BlockRewrite, BlockSlice, BlockWriter } from './rewrite/blockRewrite';
 import type { ComponentExports } from './script';
-import type { TsCodeData } from './tsCode';
+import type { TsCode, TsCodeData } from './tsCode';
 import { identifierRE } from './writers';
 
-/** The `codegen` export of a `plugins` entry's module. */
-export type VueCodegenExport = VueCodegenPlugin | ((ctx: VuePluginContext) => VueCodegenPlugin);
-
 /**
- * A codegen plugin. For each file, the `rewrite` of every plugin runs in `plugins` order, after those of the built-in
- * plugins, and so does the `generate` of every plugin. Both must be pure functions of `file` and the plugin context: no
- * file system, no environment, no cache shared across projects.
+ * A codegen plugin: the `codegen` export of a `plugins` entry's module. It runs for each snapshot of each file, with the
+ * context of its entry, and gives the plugin of the file. It must be a pure function of `file` and `ctx`: no file
+ * system, no environment, no cache shared across projects. An exception of it or of what it gives propagates.
  */
-export interface VueCodegenPlugin {
-	/** Edits the user's code of `<script>` and `<script setup>` through the writer of each block. */
-	rewrite?(file: VueCodegenFile, writers: VueCodegenWriters): void;
-	/** What the plugin adds to the slots of the TS code of the file. */
-	generate?(file: VueCodegenFile): VueCodegenSlots | undefined;
-}
+export type VueCodegenPlugin = (file: VueCodegenFile, ctx: VuePluginContext) => VueCodegenFilePlugin;
 
 export interface VueCodegenFile {
 	/** The TS 7.1 AST API that parsed the IR's script ASTs. */
@@ -40,6 +31,13 @@ export interface VueCodegenFile {
 	ir: IR;
 	/** Resolved options (with SFC comment options), script and script-setup ranges, template scope. */
 	analysis: ScriptAnalysis;
+	/**
+	 * The name of an identifier that the plugin declares: `__VLS_<hint>`, or that with `$<n>` when the generated code or
+	 * a plugin before took it; the same hint is the same name. Only while `codegen` runs, so that each snapshot of the
+	 * file gives the plugins the same names.
+	 */
+	name(hint: string): string;
+	template: VueCodegenTemplate;
 }
 
 /**
@@ -61,6 +59,69 @@ export interface VueCodegenTemplate {
 }
 
 /**
+ * What a codegen plugin gives for a file: the edits of `rewrite`, which runs after those of the plugins before it, and
+ * its code in the slots of the generated code, which the code of each slot reads lazily, after the code of the plugins
+ * before it. The built-in plugins come first.
+ */
+export interface VueCodegenFilePlugin<Code = VueCodegenPiece> {
+	/** Edits the user's code of `<script>` and `<script setup>` through the writer of each block. */
+	rewrite?(writers: VueCodegenWriters): void;
+	/** Object types spread into the template context (what template expressions and `$` names resolve against). */
+	templateContext?(): readonly VueCodegenSlotCode<Code>[];
+	/** Statements in the template function, before the code of the template. */
+	templateBody?(): readonly VueCodegenSlotCode<Code>[];
+	/**
+	 * Type aliases at the end of the template, in its scope, which the template function returns to setup and the
+	 * export; each name is one that `file.name()` gave the plugin.
+	 */
+	templateTypes?(): readonly VueCodegenDeclaration<Code>[];
+	/**
+	 * Object types intersected into the `$` names that the template reads and types (`$slots`, `$attrs`, `$refs`,
+	 * `$el`), at the end of the template, in its scope.
+	 */
+	templateDollars?(): readonly VueCodegenSlotCode<Code>[];
+	/** Code after the props of an element of the template, before its children, by element. */
+	elementEnd?(): ReadonlyMap<ElementNode, readonly VueCodegenSlotCode<Code>[]>;
+	/** `<script setup>` only: object types intersected into the public props, in `defineProps<…>` form. */
+	props?(): readonly VueCodegenSlotCode<Code>[];
+	/** `<script setup>` only: object types `{ event: [args] }` intersected into the emits, in `defineEmits<…>` form. */
+	emits?(): readonly VueCodegenSlotCode<Code>[];
+	/** `<script setup>` only: object types intersected into what the component exposes, in `defineExpose` form. */
+	expose?(): readonly VueCodegenSlotCode<Code>[];
+	/** Object types intersected into what a generic component exposes, after the types of its `defineExpose`. */
+	exposedInstanceTypes?(): readonly string[];
+	/** Options of the component, after its props, e.g. `__typeEl: …`. */
+	componentOptions?(): readonly string[];
+	/**
+	 * Object types of the props that the component takes besides those that it declares, e.g. the attributes that fall
+	 * through to its root; the keys of its emit props are omitted from them.
+	 */
+	fallthroughProps?(): readonly string[];
+	/** Tag → element type maps of native elements; the first of the plugins replaces the DOM one in this file. */
+	elements?(): readonly VueCodegenSlotCode<Code>[];
+	/** Statements at module scope, after the user's code. */
+	declarations?(): readonly VueCodegenSlotCode<Code>[];
+	exports?(): VueCodegenExports | undefined;
+}
+
+/** The code of a slot: a piece, or pieces in order. A slot holds no slice, which renders in the block it is cut from. */
+export type VueCodegenSlotCode<Code = VueCodegenPiece> = Code | readonly Code[];
+
+export interface VueCodegenDeclaration<Code = VueCodegenPiece> {
+	name: string;
+	code: VueCodegenSlotCode<Code>;
+}
+
+export interface VueCodegenExports {
+	/** Named exports of the component. */
+	names?: readonly string[];
+	/** `false` drops the synthetic default export. A user `export default` in `<script>` is user code and stays. */
+	default?: boolean;
+	/** A doc comment of the block, copied onto the component's export. */
+	docComment?: { block: IRScript | IRScriptSetup; start: number; end: number };
+}
+
+/**
  * A piece of code added by a contribution: plain text, which maps nowhere and never reports diagnostics, or the range
  * `start`..`end` of `source`, an IR block, mapped with `data.features`. A range without `text` copies the block's text
  * there; `text` maps to the range char by char when it is as long as the range, and as a whole otherwise (e.g. a
@@ -71,8 +132,6 @@ export type VueCodegenPiece = Piece<{ source: IRBlock; data: VueCodegenData }>;
 export interface VueCodegenData {
 	features: number;
 }
-
-export type VueCodegenPieces = readonly VueCodegenPiece[];
 
 /** A range that a writer cut from its block, with the edits in it; it renders where it is inserted, exactly once. */
 export type VueCodegenSlice = RewriteSlice<IRBlock, VueCodegenData>;
@@ -92,39 +151,19 @@ export interface VueCodegenWriters {
  */
 export type VueCodegenWriter = RewriteWriter<IRBlock, VueCodegenData>;
 
-export interface VueCodegenSlots {
-	/** Object types spread into the template context (what template expressions and `$` names resolve against). */
-	templateContext?: readonly VueCodegenPieces[];
-	/** `<script setup>` only: object types intersected into the public props, in `defineProps<…>` form. */
-	props?: readonly VueCodegenPieces[];
-	/** `<script setup>` only: object types `{ event: [args] }` intersected into the emits, in `defineEmits<…>` form. */
-	emits?: readonly VueCodegenPieces[];
-	/** `<script setup>` only: object types intersected into what the component exposes, in `defineExpose` form. */
-	expose?: readonly VueCodegenPieces[];
-	/** The tag → element type map of native elements, which replaces the DOM one in this file. */
-	elements?: VueCodegenPieces;
-	/** Statements at module scope, after the user's code. */
-	declarations?: readonly VueCodegenPieces[];
-	exports?: {
-		/** Named exports of the component. */
-		names?: readonly string[];
-		/** `false` drops the synthetic default export. A user `export default` in `<script>` is user code and stays. */
-		default?: boolean;
-		/** A doc comment of the block, copied onto the component's export. */
-		docComment?: { block: IRScript | IRScriptSetup; start: number; end: number };
-	};
-}
-
-/** The `codegen` export of a `plugins` entry, created for the entry. */
+/**
+ * A codegen plugin, built-in or of a `plugins` entry, by the name in its errors. The code of a built-in plugin is the
+ * code of the generated code, which spans ranges that the pieces of a plugin of an entry can't.
+ */
 export interface CodegenPlugin {
-	/** The `name` of the entry. */
 	name: string;
-	plugin: VueCodegenPlugin;
+	/** The plugin of `file`, whose slots give the names in `names` that `file.name()` gave it. */
+	create(file: VueCodegenFile, names: ReadonlySet<string>): VueCodegenFilePlugin<TsCode>;
 }
 
 /**
- * Creates the `codegen` export of each plugin of `vueCompilerOptions.plugins`, in order. An export that is not a
- * plugin, or a factory that throws, gives an error and is not loaded.
+ * The codegen plugins of `vueCompilerOptions.plugins`, in order, each with the context of its entry and checked for the
+ * blocks of each file. An export that is not a function gives an error and is not loaded.
  */
 export function loadCodegenPlugins(
 	vueCompilerOptions: VueCompilerOptions,
@@ -138,32 +177,15 @@ export function loadCodegenPlugins(
 		if (codegen === undefined) {
 			continue;
 		}
-		if (typeof codegen !== 'function' && (typeof codegen !== 'object' || codegen === null)) {
-			errors.push({ plugin: name, message: 'The `codegen` export must be an object or a function.' });
+		if (typeof codegen !== 'function') {
+			errors.push({ plugin: name, message: 'The `codegen` export must be a function.' });
 			continue;
 		}
-		let plugin: unknown;
-		try {
-			plugin = typeof codegen === 'function'
-				? codegen({ config, vueCompilerOptions } satisfies VuePluginContext)
-				: codegen;
-		}
-		catch (error) {
-			errors.push({ plugin: name, message: `Failed to create the \`codegen\` export: ${error}` });
-			continue;
-		}
-		const { rewrite, generate } = (plugin ?? {}) as Partial<VueCodegenPlugin>;
-		if (rewrite === undefined && generate === undefined) {
-			errors.push({ plugin: name, message: 'The `codegen` export must have a `rewrite` or a `generate` function.' });
-			continue;
-		}
-		const nonFunction = ([['rewrite', rewrite], ['generate', generate]] as const)
-			.find(([, hook]) => hook !== undefined && typeof hook !== 'function');
-		if (nonFunction) {
-			errors.push({ plugin: name, message: `The \`${nonFunction[0]}\` of the \`codegen\` export must be a function.` });
-			continue;
-		}
-		plugins.push({ name, plugin: plugin as VueCodegenPlugin });
+		const ctx: VuePluginContext = { config, vueCompilerOptions };
+		plugins.push({
+			name,
+			create: (file, names) => checkFilePlugin(name, file.ir, names, (codegen as VueCodegenPlugin)(file, ctx)),
+		});
 	}
 	return { plugins, errors };
 }
@@ -178,7 +200,11 @@ export interface ScriptRewrites {
  * Runs the `rewrite` of each plugin of the file, in order, with its writers of `rewrites`. An exception of a hook
  * propagates, and so does an edit that is not valid for the IR of the file.
  */
-export function rewriteScripts(plugins: readonly FilePlugin[], ir: IR, rewrites: ScriptRewrites) {
+export function rewriteScripts(
+	plugins: readonly { name: string; rewrite?(writers: VueCodegenWriters): void }[],
+	ir: IR,
+	rewrites: ScriptRewrites,
+) {
 	const file = createCodeCheck(ir);
 	for (const [rank, { name, rewrite }] of plugins.entries()) {
 		rewrite?.({
@@ -188,63 +214,105 @@ export function rewriteScripts(plugins: readonly FilePlugin[], ir: IR, rewrites:
 	}
 }
 
+const codeSlots = [
+	'templateContext',
+	'templateBody',
+	'templateDollars',
+	'props',
+	'emits',
+	'expose',
+	'elements',
+	'declarations',
+] as const;
+
+const textSlots = ['exposedInstanceTypes', 'componentOptions', 'fallthroughProps'] as const;
+
 /**
- * `plugin` for `file`. Its `generate` runs once, when a slot is first read; an exception of it propagates, and slots
- * that are not valid for the IR of the file throw.
+ * `filePlugin`, which `plugin` gave for a file of `ir`, whose slots throw when they give what is not valid for the
+ * file, and whose names in `templateTypes` are of `names`.
  */
-export function createFilePlugin({ name, plugin }: CodegenPlugin, file: VueCodegenFile): FilePlugin {
-	const getSlots = computed(() => getSlotsOf(name, file.ir, plugin.generate?.(file)));
-	return {
-		name,
-		rewrite: plugin.rewrite && (writers => plugin.rewrite!(file, writers)),
-		templateContext: () => getSlots().templateContext,
-		props: () => getSlots().props,
-		emits: () => getSlots().emits,
-		expose: () => getSlots().expose,
-		elements: () => getSlots().elements,
-		declarations: () => getSlots().declarations,
-		exports: () => getSlots().exports,
-	};
-}
-
-type PublicSlots = Pick<
-	CodegenSlots,
-	'templateContext' | 'props' | 'emits' | 'expose' | 'elements' | 'declarations' | 'exports'
->;
-
-function getSlotsOf(plugin: string, ir: IR, contribution: VueCodegenSlots | undefined): PublicSlots {
+function checkFilePlugin(
+	plugin: string,
+	ir: IR,
+	names: ReadonlySet<string>,
+	filePlugin: unknown,
+): VueCodegenFilePlugin<TsCode> {
+	if (typeof filePlugin !== 'object' || filePlugin === null) {
+		throw invalid(plugin, 'a plugin of the file that is not an object');
+	}
 	const blocks = getBlocks(ir);
-	const slots: PublicSlots = {
-		templateContext: [],
-		props: [],
-		emits: [],
-		expose: [],
-		elements: [],
-		declarations: [],
-		exports: [],
-	};
-	if (contribution === undefined) {
-		return slots;
-	}
-	if (typeof contribution !== 'object' || contribution === null) {
-		throw invalid(plugin, 'slots that are not an object');
-	}
-	const elements = toArray(plugin, 'elements', contribution.elements);
-	if (elements.length) {
-		slots.elements.push(checkPieces(plugin, blocks, elements));
-	}
-	for (const key of ['templateContext', 'props', 'emits', 'expose', 'declarations'] as const) {
-		for (const type of toArray(plugin, key, contribution[key])) {
-			slots[key].push(checkPieces(plugin, blocks, type));
+	const checked: Record<string, unknown> = {};
+	for (const [key, hook] of Object.entries(filePlugin)) {
+		if (typeof hook !== 'function') {
+			throw invalid(plugin, `a \`${key}\` that is not a function`);
+		}
+		const read = () => hook.call(filePlugin);
+		if (key === 'rewrite') {
+			checked[key] = hook.bind(filePlugin);
+		}
+		else if ((codeSlots as readonly string[]).includes(key)) {
+			checked[key] = () => checkSlotCodes(plugin, blocks, key, read());
+		}
+		else if ((textSlots as readonly string[]).includes(key)) {
+			checked[key] = () => {
+				const texts = toArray(plugin, key, read());
+				if (texts.some(text => typeof text !== 'string')) {
+					throw invalid(plugin, `a \`${key}\` that is not text`);
+				}
+				return texts;
+			};
+		}
+		else if (key === 'templateTypes') {
+			checked[key] = () =>
+				toArray<VueCodegenDeclaration>(plugin, key, read()).map(declaration => {
+					if (typeof declaration !== 'object' || declaration === null || !names.has(declaration.name)) {
+						throw invalid(plugin, 'a template type whose name `file.name()` did not give it');
+					}
+					return { name: declaration.name, code: checkSlotCode(plugin, blocks, declaration.code) };
+				});
+		}
+		else if (key === 'elementEnd') {
+			checked[key] = () => {
+				const elementEnd = read();
+				if (!(elementEnd instanceof Map)) {
+					throw invalid(plugin, 'an `elementEnd` that is not a map');
+				}
+				const elements = new Set(ir.template?.ast ? forEachElementNode(ir.template.ast) : []);
+				for (const [node, codes] of elementEnd) {
+					if (!elements.has(node)) {
+						throw invalid(plugin, 'an `elementEnd` of a node that is not an element of the template');
+					}
+					checkSlotCodes(plugin, blocks, key, codes);
+				}
+				return elementEnd;
+			};
+		}
+		else if (key === 'exports') {
+			checked[key] = read;
+		}
+		else {
+			throw invalid(plugin, `\`${key}\`, which is not a slot`);
 		}
 	}
-	if (contribution.exports !== undefined) {
-		slots.exports.push(getExportsOf(plugin, ir, contribution.exports));
-	}
-	return slots;
+	return checked;
 }
 
-function getExportsOf(plugin: string, ir: IR, exports: NonNullable<VueCodegenSlots['exports']>): ComponentExports {
+function checkSlotCodes(plugin: string, blocks: Set<IRBlock>, key: string, codes: unknown) {
+	for (const code of toArray(plugin, key, codes as readonly VueCodegenSlotCode[])) {
+		checkSlotCode(plugin, blocks, code);
+	}
+	return codes as readonly VueCodegenSlotCode[];
+}
+
+function checkSlotCode(plugin: string, blocks: Set<IRBlock>, code: VueCodegenSlotCode) {
+	for (const piece of Array.isArray(code) ? code as readonly VueCodegenPiece[] : [code as VueCodegenPiece]) {
+		checkPiece(plugin, blocks, piece);
+	}
+	return code;
+}
+
+/** The exports that `plugin` sets for the component of `ir`, which throw if they are not valid for it. */
+export function getExportsOf(plugin: string, ir: IR, exports: VueCodegenExports): ComponentExports {
 	if (typeof exports !== 'object' || exports === null) {
 		throw invalid(plugin, 'exports that are not an object');
 	}
@@ -343,14 +411,6 @@ function checkCode(plugin: string, file: CodeCheck, code: VueCodegenCode): Rewri
 	}
 	checkPiece(plugin, file.blocks, code as VueCodegenPiece);
 	return code;
-}
-
-/** `pieces`, which throws if one is not text or a range of a block of the file mapped with features. */
-function checkPieces(plugin: string, blocks: Set<IRBlock>, pieces: VueCodegenPieces): VueCodegenPieces {
-	for (const piece of toArray(plugin, 'pieces', pieces)) {
-		checkPiece(plugin, blocks, piece);
-	}
-	return pieces;
 }
 
 function checkPiece(plugin: string, blocks: Set<IRBlock>, piece: VueCodegenPiece) {

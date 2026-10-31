@@ -15,8 +15,7 @@ import {
 	type VueCompilerOptions,
 } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { BuiltinPluginFile, FileCodegen } from '../filePlugin';
-import type { VueCodegenPiece, VueCodegenWriter } from '../plugin';
+import type { VueCodegenFile, VueCodegenFilePlugin, VueCodegenPiece, VueCodegenWriter } from '../plugin';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import type { TsCode } from '../tsCode';
@@ -42,7 +41,7 @@ export interface StyleCodegenOptions {
  * The style plugin: the types of the scoped classes and the CSS modules, the expressions of `v-bind()` in CSS, the
  * references of the template's class names to the scoped classes, and the types of `useCssModule()`.
  */
-export function createStylePlugin({ ts, ir, analysis, name }: BuiltinPluginFile): FileCodegen {
+export function createStylePlugin({ ts, ir, analysis, name }: VueCodegenFile): VueCodegenFilePlugin<TsCode> {
 	const StyleModules = name('StyleModules');
 	const getGeneratedStyle = computed(() => {
 		if (!ir.styles.length) {

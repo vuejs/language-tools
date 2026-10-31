@@ -1,13 +1,13 @@
 import { getScriptLang, navigationFeatures } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { BuiltinPluginFile, FileCodegen } from '../filePlugin';
 import { names } from '../names';
+import type { VueCodegenFile, VueCodegenFilePlugin } from '../plugin';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { newLine, typeAliasRef } from '../writers';
 import { generatePropertyKey } from '../writers/stringLiteralKey';
 
 /** The type of the slots that the template renders, unless `defineSlots` declares them. */
-export function createSlotsPlugin({ ir, analysis, template }: BuiltinPluginFile): FileCodegen {
+export function createSlotsPlugin({ ir, analysis, template }: VueCodegenFile): VueCodegenFilePlugin<TsCode> {
 	const hasDefineSlots = () => !!analysis.getScriptSetupRanges()?.defineSlots;
 	const getTemplateSlots = computed(() => {
 		const { slots, dynamicSlots } = analysis.getTemplateScope();

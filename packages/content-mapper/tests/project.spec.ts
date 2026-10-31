@@ -471,7 +471,7 @@ test('propagates an exception thrown by a hook of a codegen plugin', () => {
 	fs.writeFileSync(configFileName, JSON.stringify({ compilerOptions: { strict: true } }));
 	fs.writeFileSync(
 		pluginEntry(workspace),
-		`exports.codegen = { generate() { throw new Error('generate failed'); } };\n`,
+		`exports.codegen = () => ({ declarations() { throw new Error('declarations failed'); } });\n`,
 	);
 	try {
 		openProject({
@@ -486,7 +486,7 @@ test('propagates an exception thrown by a hook of a codegen plugin', () => {
 				fileName: path.join(workspace, 'App.vue'),
 				content: `<script setup lang="ts">const msg = '';</script>\n`,
 			})
-		).toThrow('generate failed');
+		).toThrow('declarations failed');
 	}
 	finally {
 		closeProject('hook-exception-project');

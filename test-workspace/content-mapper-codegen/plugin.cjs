@@ -2,10 +2,10 @@
 // have `"order": "second"` or `"order": "third"` and contribute what an earlier one already decides.
 const path = require('node:path');
 
-exports.codegen = ({ config }) => ({ second, third })[config.order] ?? first;
+exports.codegen = (file, { config }) => (({ second, third })[config.order] ?? first)(file);
 
-const first = {
-	rewrite({ ts, fileName, ir }, writers) {
+const first = ({ ts, fileName, ir }) => ({
+	rewrite(writers) {
 		const name = path.basename(fileName, '.vue');
 		for (const [block, writer] of [[ir.script, writers.script], [ir.scriptSetup, writers.scriptSetup]]) {
 			if (block) {
@@ -42,64 +42,66 @@ const first = {
 			writers.scriptSetup.insertBefore(0, "const s = 'setup';");
 		}
 	},
-	generate({ ts, fileName, ir }) {
+	declarations() {
 		const name = path.basename(fileName, '.vue');
 		const declarations = [];
 		if (name === 'WrapDefault') {
-			declarations.push(['declare function withWrapped(options: object): { props: { wrapped: NumberConstructor } };']);
+			declarations.push('declare function withWrapped(options: object): { props: { wrapped: NumberConstructor } };');
 		}
 		if (name === 'SlotsAlias') {
-			declarations.push(['type WithExtra<T> = T & { extra(props: { n: number }): any };']);
+			declarations.push('type WithExtra<T> = T & { extra(props: { n: number }): any };');
 		}
 		if (name === 'Declarations') {
-			declarations.push(["declare const $l: (key: 'a') => string;"]);
+			declarations.push("declare const $l: (key: 'a') => string;");
 		}
-		const isChild = name.startsWith('Props') && name !== 'PropsParent';
-		return {
-			templateContext: name.startsWith('TemplateContext') ? [['{ $foo: number }']] : [],
-			props: isChild ? [['{ contributed?: number }']] : [],
-			emits: isChild ? [['{ contributed: [value: number] }']] : [],
-			// `exposedValue` is a binding of `<script setup>`
-			expose: isChild ? [['{ contributedExposed: typeof exposedValue }']] : [],
-			elements: name.startsWith('Elements') ? ['{ div: HTMLDivElement & { readonly contributed: true } }'] : undefined,
-			declarations,
-			exports: {
-				names: ['NamedExport', 'NoDefault', 'ExportsScript', 'DocComment'].includes(name) ? [name] : [],
-				// `ExportsScript` keeps its own `export default`
-				default: name === 'NoDefault' || name === 'ExportsScript' ? false : undefined,
-			},
-		};
+		return declarations;
 	},
-};
-
-const second = {
-	generate({ ts, fileName, ir }) {
+	templateContext: () => path.basename(fileName, '.vue').startsWith('TemplateContext') ? ['{ $foo: number }'] : [],
+	props: () => isChild(fileName) ? ['{ contributed?: number }'] : [],
+	emits: () => isChild(fileName) ? ['{ contributed: [value: number] }'] : [],
+	// `exposedValue` is a binding of `<script setup>`
+	expose: () => isChild(fileName) ? ['{ contributedExposed: typeof exposedValue }'] : [],
+	elements: () =>
+		path.basename(fileName, '.vue').startsWith('Elements')
+			? ['{ div: HTMLDivElement & { readonly contributed: true } }']
+			: [],
+	exports() {
 		const name = path.basename(fileName, '.vue');
 		return {
-			elements: name.startsWith('Elements') ? ['{ div: HTMLSpanElement }'] : undefined,
-			exports: {
-				// `NamedExport` again
-				names: name === 'NamedExport'
-					? ['NamedExport', 'SecondExport']
-					: name === 'DocComment'
-					? ['DocComment']
-					: [],
-				default: name === 'NoDefault' ? true : undefined,
-				docComment: name === 'DocComment' ? getDocComment(ts, ir.scriptSetup, 0) : undefined,
-			},
+			names: ['NamedExport', 'NoDefault', 'ExportsScript', 'DocComment'].includes(name) ? [name] : [],
+			// `ExportsScript` keeps its own `export default`
+			default: name === 'NoDefault' || name === 'ExportsScript' ? false : undefined,
 		};
 	},
-};
+});
 
-const third = {
-	generate({ ts, fileName, ir }) {
+const second = ({ ts, fileName, ir }) => ({
+	elements: () => path.basename(fileName, '.vue').startsWith('Elements') ? ['{ div: HTMLSpanElement }'] : [],
+	exports() {
+		const name = path.basename(fileName, '.vue');
 		return {
-			exports: {
-				docComment: path.basename(fileName, '.vue') === 'DocComment' ? getDocComment(ts, ir.scriptSetup, 1) : undefined,
-			},
+			// `NamedExport` again
+			names: name === 'NamedExport'
+				? ['NamedExport', 'SecondExport']
+				: name === 'DocComment'
+				? ['DocComment']
+				: [],
+			default: name === 'NoDefault' ? true : undefined,
+			docComment: name === 'DocComment' ? getDocComment(ts, ir.scriptSetup, 0) : undefined,
 		};
 	},
-};
+});
+
+const third = ({ ts, fileName, ir }) => ({
+	exports: () => ({
+		docComment: path.basename(fileName, '.vue') === 'DocComment' ? getDocComment(ts, ir.scriptSetup, 1) : undefined,
+	}),
+});
+
+function isChild(fileName) {
+	const name = path.basename(fileName, '.vue');
+	return name.startsWith('Props') && name !== 'PropsParent';
+}
 
 // the JSDoc of the `index`th statement of `block`
 function getDocComment(ts, block, index) {

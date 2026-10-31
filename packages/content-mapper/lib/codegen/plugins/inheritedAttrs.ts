@@ -1,9 +1,12 @@
 import { getScriptLang } from '@vue/language-core';
-import type { BuiltinPluginFile, FileCodegen } from '../filePlugin';
+import type { VueCodegenFile, VueCodegenFilePlugin } from '../plugin';
+import type { TsCode } from '../tsCode';
 import { typeAliasRef } from '../writers';
 
 /** The type of the attributes that fall through to the root of the template, which the component takes as props. */
-export function createInheritedAttrsPlugin({ ir, analysis, template, name }: BuiltinPluginFile): FileCodegen {
+export function createInheritedAttrsPlugin(
+	{ ir, analysis, template, name }: VueCodegenFile,
+): VueCodegenFilePlugin<TsCode> {
 	const InheritedAttrs = name('InheritedAttrs');
 	const hasInheritedAttrs = () => !!template.fallthroughAttrsType();
 	return {

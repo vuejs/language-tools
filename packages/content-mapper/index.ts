@@ -1,11 +1,15 @@
 export type {
 	VueCodegenCode,
-	VueCodegenExport,
+	VueCodegenData,
+	VueCodegenDeclaration,
+	VueCodegenExports,
 	VueCodegenFile,
+	VueCodegenFilePlugin,
 	VueCodegenPiece,
-	VueCodegenPieces,
 	VueCodegenPlugin,
-	VueCodegenSlots,
+	VueCodegenSlice,
+	VueCodegenSlotCode,
+	VueCodegenTemplate,
 	VueCodegenWriter,
 	VueCodegenWriters,
 } from './lib/codegen/plugin';
