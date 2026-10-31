@@ -35,7 +35,7 @@ export function createSlotsPlugin(
 			const { name, statement, callExp, typeArg } = defineSlots;
 			addDefineWithTypeTransforms(scriptSetup, statement, callExp, typeArg, name, slots, Slots);
 			if (!name) {
-				scriptSetup.insertAfter(statement.end, `${newLine}void ${slots}${endOfLine}`);
+				scriptSetup.insertBefore(statement.end, `${newLine}void ${slots}${endOfLine}`);
 			}
 		},
 		declaredSlots: () => {

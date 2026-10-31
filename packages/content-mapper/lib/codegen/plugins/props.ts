@@ -45,7 +45,7 @@ export function createPropsPlugin({ ir, analysis, name }: VueCodegenFile): VueCo
 			if (runtimeDefineProps && ranges.defineModel.some(({ defaultPropsArg }) => defaultPropsArg)) {
 				// the parameter of `default` may have the name of the props, which `typeof` in its own annotation would
 				// refer to
-				scriptSetup.insertAfter(runtimeDefineProps.statement.end, [
+				scriptSetup.insertBefore(runtimeDefineProps.statement.end, [
 					newLine,
 					...generateTypeAlias(RuntimeProps, scriptLang, function*() {
 						yield `typeof ${runtimeDefineProps.name ?? props}`;
