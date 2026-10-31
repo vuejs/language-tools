@@ -53,13 +53,13 @@ export interface VueCodegenData {
 	features: number;
 }
 
-export type VueCodegenCode = readonly VueCodegenPiece[];
+export type VueCodegenPieces = readonly VueCodegenPiece[];
 
 /** A range that a writer cut from its block, with the edits in it; it renders where it is inserted, exactly once. */
 export type VueCodegenSlice = RewriteSlice<IRBlock, VueCodegenData>;
 
 /** Code that a writer inserts: pieces, slices, and arrays of them. */
-export type VueCodegenInsert = RewriteCode<IRBlock, VueCodegenData>;
+export type VueCodegenCode = RewriteCode<IRBlock, VueCodegenData>;
 
 /** The writers of the script blocks of the file, for one plugin. */
 export interface VueCodegenWriters {
@@ -73,9 +73,9 @@ export interface VueCodegenWriters {
  */
 export interface VueCodegenWriter {
 	/** `code` right before the char at `offset`; it goes wherever that char goes. */
-	insertBefore(offset: number, code: VueCodegenInsert): void;
+	insertBefore(offset: number, code: VueCodegenCode): void;
 	/** `code` right after the char before `offset`; it goes wherever that char goes. */
-	insertAfter(offset: number, code: VueCodegenInsert): void;
+	insertAfter(offset: number, code: VueCodegenCode): void;
 	/** The chars of `start`..`end` are not copied. */
 	remove(start: number, end: number): void;
 	/**
@@ -89,22 +89,22 @@ export interface VueCodegenCutOptions {
 	/** The features that the chars of the slice map with; `scriptFeatures` by default. */
 	features?: number;
 	/** Code that takes the place of the chars where they are cut from. */
-	placeholder?: VueCodegenInsert;
+	placeholder?: VueCodegenCode;
 }
 
 export interface VueCodegenSlots {
 	/** Object types spread into the template context (what template expressions and `$` names resolve against). */
-	templateContext?: readonly VueCodegenCode[];
+	templateContext?: readonly VueCodegenPieces[];
 	/** `<script setup>` only: object types intersected into the public props, in `defineProps<…>` form. */
-	props?: readonly VueCodegenCode[];
+	props?: readonly VueCodegenPieces[];
 	/** `<script setup>` only: object types `{ event: [args] }` intersected into the emits, in `defineEmits<…>` form. */
-	emits?: readonly VueCodegenCode[];
+	emits?: readonly VueCodegenPieces[];
 	/** `<script setup>` only: object types intersected into what the component exposes, in `defineExpose` form. */
-	expose?: readonly VueCodegenCode[];
+	expose?: readonly VueCodegenPieces[];
 	/** The tag → element type map of native elements, which replaces the DOM one in this file. */
-	elements?: VueCodegenCode;
+	elements?: VueCodegenPieces;
 	/** Statements at module scope, after the user's code. */
-	declarations?: readonly VueCodegenCode[];
+	declarations?: readonly VueCodegenPieces[];
 	exports?: {
 		/** Named exports of the component. */
 		names?: readonly string[];
@@ -231,11 +231,11 @@ function getSlotsOf(plugin: string, ir: IR, contribution: VueCodegenSlots | unde
 	}
 	const elements = toArray(plugin, 'elements', contribution.elements);
 	if (elements.length) {
-		slots.elements.push(checkCode(plugin, blocks, elements));
+		slots.elements.push(checkPieces(plugin, blocks, elements));
 	}
 	for (const key of ['templateContext', 'props', 'emits', 'expose', 'declarations'] as const) {
 		for (const type of toArray(plugin, key, contribution[key])) {
-			slots[key].push(checkCode(plugin, blocks, type));
+			slots[key].push(checkPieces(plugin, blocks, type));
 		}
 	}
 	if (contribution.exports !== undefined) {
@@ -284,10 +284,10 @@ function getBlocks(ir: IR): Set<IRBlock> {
 function createWriter(plugin: string, blocks: Set<IRBlock>, writer: BlockWriter): VueCodegenWriter {
 	return {
 		insertBefore(offset, code) {
-			writer.insertBefore(offset, checkInsert(plugin, blocks, code));
+			writer.insertBefore(offset, checkCode(plugin, blocks, code));
 		},
 		insertAfter(offset, code) {
-			writer.insertAfter(offset, checkInsert(plugin, blocks, code));
+			writer.insertAfter(offset, checkCode(plugin, blocks, code));
 		},
 		remove(start, end) {
 			writer.replace(start, end, '');
@@ -299,17 +299,17 @@ function createWriter(plugin: string, blocks: Set<IRBlock>, writer: BlockWriter)
 			// the data of the kept pieces only, which the slice does not let the plugin read
 			return writer.cut(start, end, {
 				data: { features },
-				placeholder: placeholder === undefined ? undefined : checkInsert(plugin, blocks, placeholder),
+				placeholder: placeholder === undefined ? undefined : checkCode(plugin, blocks, placeholder),
 			}) as VueCodegenSlice;
 		},
 	};
 }
 
-/** `code`, which throws if a part of it is not a piece of `checkCode` or a slice. */
-function checkInsert(plugin: string, blocks: Set<IRBlock>, code: VueCodegenInsert): VueCodegenInsert {
+/** `code`, which throws if a part of it is not a piece of `checkPieces` or a slice. */
+function checkCode(plugin: string, blocks: Set<IRBlock>, code: VueCodegenCode): VueCodegenCode {
 	if (Array.isArray(code)) {
-		for (const part of code as readonly VueCodegenInsert[]) {
-			checkInsert(plugin, blocks, part);
+		for (const part of code as readonly VueCodegenCode[]) {
+			checkCode(plugin, blocks, part);
 		}
 	}
 	else if (!isSlice(code)) {
@@ -318,16 +318,16 @@ function checkInsert(plugin: string, blocks: Set<IRBlock>, code: VueCodegenInser
 	return code;
 }
 
-function isSlice(code: VueCodegenInsert): code is VueCodegenSlice {
+function isSlice(code: VueCodegenCode): code is VueCodegenSlice {
 	return typeof code === 'object' && code !== null && typeof (code as VueCodegenSlice).render === 'function';
 }
 
-/** `code`, which throws if a piece of it is not text or a range of a block of the file mapped with features. */
-function checkCode(plugin: string, blocks: Set<IRBlock>, code: VueCodegenCode): VueCodegenCode {
-	for (const piece of toArray(plugin, 'code', code)) {
+/** `pieces`, which throws if one is not text or a range of a block of the file mapped with features. */
+function checkPieces(plugin: string, blocks: Set<IRBlock>, pieces: VueCodegenPieces): VueCodegenPieces {
+	for (const piece of toArray(plugin, 'pieces', pieces)) {
 		checkPiece(plugin, blocks, piece);
 	}
-	return code;
+	return pieces;
 }
 
 function checkPiece(plugin: string, blocks: Set<IRBlock>, piece: VueCodegenPiece) {

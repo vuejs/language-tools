@@ -3,6 +3,7 @@ export type {
 	VueCodegenExport,
 	VueCodegenFile,
 	VueCodegenPiece,
+	VueCodegenPieces,
 	VueCodegenPlugin,
 	VueCodegenSlots,
 	VueCodegenWriter,

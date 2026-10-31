@@ -130,7 +130,7 @@ environment, no cache shared across projects. The mapper hashes the plugin's ent
 elsewhere reaches TypeScript through type imports (`import('…')`), which TypeScript resolves and
 watches.
 
-Code is written as `VueCodegenCode`, an array of `VueCodegenPiece`s: plain strings, which map nowhere
+Slot code is `VueCodegenPieces`, an array of `VueCodegenPiece`s: plain strings, which map nowhere
 and report no diagnostics, and ranges `{ source, start, end, data: { features }, text? }` of a block
 `source`, mapped there with the given features (e.g. `scriptFeatures`). A range without `text` copies
 the text of the block; with `text`, the text maps to the range char by char when it is as long as the
@@ -151,7 +151,7 @@ one wins. Slots that are not valid, such as a doc comment out of its block, thro
 
 `writers.script` and `writers.scriptSetup` are the writers of the plugin for the file's script
 blocks (`undefined` without the block), at offsets of the block's content. Inserted code is
-`VueCodegenCode`, slices, or arrays of them. Inserts and removals never conflict. `insertBefore(offset, code)` attaches code to the
+`VueCodegenCode`: `VueCodegenPiece`s, slices, or arrays of them. Inserts and removals never conflict. `insertBefore(offset, code)` attaches code to the
 char at `offset` (at the end of the block, to the end of the block), `insertAfter(offset, code)` to
 the char before `offset` (at the start of the block, to the start of the block), and the code goes
 wherever the mapper copies that char. `remove(start, end)` drops the chars of `start..end`; the code
