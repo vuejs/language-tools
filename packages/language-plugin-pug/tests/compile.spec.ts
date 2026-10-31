@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { createIRPipeline, getDefaultCompilerOptions, type TypeScript } from '@vue/language-core';
-import { parse } from 'muggle-pug';
+import { compile as compilePug, type CompileResult } from 'muggle-pug';
 import { describe, expect, it } from 'vitest';
 import * as pug from '../index';
 
@@ -100,7 +100,7 @@ describe('pug template compiler', () => {
 	it('does not report a class attribute that duplicates a class literal', () => {
 		const source = `div.foo(class="bar")`;
 		const htmlErrors: (number | string)[] = [];
-		CompilerDOM.parse(toString(parse(source).pieces, source), { onError: error => htmlErrors.push(error.code) });
+		CompilerDOM.parse(toString(compilePug(source).pieces, source), { onError: error => htmlErrors.push(error.code) });
 		expect(htmlErrors).toEqual([CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE]);
 
 		expect(compile(source).errors).toEqual([]);
@@ -155,7 +155,7 @@ describe('pug template compiler', () => {
 	});
 });
 
-function toString(pieces: ReturnType<typeof parse>['pieces'], pug: string) {
+function toString(pieces: CompileResult['pieces'], pug: string) {
 	return pieces.map(piece => typeof piece === 'string' ? piece : piece.text ?? pug.slice(piece.start, piece.end)).join(
 		'',
 	);
