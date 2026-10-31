@@ -2,7 +2,6 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import {
 	completionFeatures,
 	forEachElementNode,
-	forEachPropStyleScopedClassReference,
 	getScriptLang,
 	type IR,
 	type IRScriptSetup,
@@ -76,25 +75,6 @@ export function createStylePlugin({ ts, ir, analysis }: BuiltinPluginFile): File
 		}
 		return elementEnd;
 	});
-	const getRenamedElsewhere = computed(() => {
-		const renamedElsewhere = new Map<CompilerDOM.DirectiveNode, [number, number][]>();
-		if (ir.template?.ast) {
-			for (const node of forEachElementNode(ir.template.ast)) {
-				for (const prop of node.props) {
-					if (prop.type !== CompilerDOM.NodeTypes.DIRECTIVE) {
-						continue;
-					}
-					// a class name renames through its reference to the style classes; the chars around it share its offsets
-					const ranges = [...forEachPropStyleScopedClassReference(ts, ir.template, prop)]
-						.map(([className, offset]): [number, number] => [offset - 1, offset + className.length + 1]);
-					if (ranges.length) {
-						renamedElsewhere.set(prop, ranges);
-					}
-				}
-			}
-		}
-		return renamedElsewhere;
-	});
 
 	return {
 		name: 'vue:style',
@@ -104,7 +84,6 @@ export function createStylePlugin({ ts, ir, analysis }: BuiltinPluginFile): File
 		templateExports: () => hasStyleModules() ? [names.StyleModules] : [],
 		declarations: () => [...generateStyleModuleImports(ir)],
 		elementEnd: getElementEnd,
-		renamedElsewhere: getRenamedElsewhere,
 		rewrite({ scriptSetup }) {
 			const scriptSetupRanges = analysis.getScriptSetupRanges();
 			if (scriptSetup && scriptSetupRanges) {

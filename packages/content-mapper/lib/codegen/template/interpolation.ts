@@ -19,7 +19,7 @@ import type { TemplateCodegenContext } from './context';
 /**
  * The code of the expression `code` at `start` of `block`. The ranges of `omit` (offsets in `code`, sorted and
  * disjoint) generate no code; the references inside them are skipped. The code out of references in the ranges of
- * `renamedElsewhere` (sorted and disjoint too) takes no rename, which another copy of the same source takes.
+ * `noRename` (sorted and disjoint too) takes no rename.
  */
 export function* generateInterpolation(
 	options: IdentifierOptions & {
@@ -34,7 +34,7 @@ export function* generateInterpolation(
 	prefix: string = '',
 	suffix: string = '',
 	omit: readonly (readonly [start: number, end: number])[] = [],
-	renamedElsewhere: readonly (readonly [start: number, end: number])[] = [],
+	noRename: readonly (readonly [start: number, end: number])[] = [],
 ): Generator<TsCode> {
 	if (prefix) {
 		yield prefix;
@@ -79,7 +79,7 @@ export function* generateInterpolation(
 			withoutRename(
 				generateNonIdentifierCode(code.slice(from, to), block, start + from, features, from > 0),
 				start,
-				renamedElsewhere,
+				noRename,
 			),
 			start,
 			omit,

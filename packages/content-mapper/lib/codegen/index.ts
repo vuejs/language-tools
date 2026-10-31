@@ -120,7 +120,7 @@ function useCodegen(
 			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getInheritAttrs(),
 			templateScope: getTemplateScope(),
-			slots: { elementEnd: slots.elementEnd(), renamedElsewhere: slots.renamedElsewhere() },
+			slots: { elementEnd: slots.elementEnd() },
 		});
 	});
 

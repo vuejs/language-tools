@@ -1,6 +1,7 @@
 import { SpanMapKind } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import {
+	forEachPropStyleScopedClassReference,
 	getModelPropName,
 	hyphenateAttr,
 	type IRTemplate,
@@ -287,9 +288,7 @@ export function* generatePropExp(
 			`(`,
 			`)`,
 			[],
-			(options.slots.renamedElsewhere.get(prop) ?? [])
-				.map(([start, end]) => [start - exp.loc.start.offset, end - exp.loc.start.offset] as const)
-				.sort((a, b) => a[0] - b[0]),
+			getClassNameRanges(options, prop, exp.loc.start.offset),
 		);
 	}
 	else {
@@ -349,4 +348,19 @@ function getShouldCamelize(
 
 function getPropsCodeFeatures(): VueCodeMarker {
 	return { features: semanticFeatures | navigationFeatures };
+}
+
+/**
+ * The ranges, at offsets of the expression at `start`, of the class names of a `:class` binding and the chars that
+ * share their offsets. A class name there is a CSS class, not code to rename: the expression copy takes no rename, so
+ * that a rename starts at the reference to the class.
+ */
+function getClassNameRanges(
+	options: TemplateCodegenOptions,
+	prop: CompilerDOM.DirectiveNode,
+	start: number,
+): (readonly [number, number])[] {
+	return [...forEachPropStyleScopedClassReference(options.typescript, options.template, prop)]
+		.map(([className, offset]) => [offset - 1 - start, offset + className.length + 1 - start] as const)
+		.sort((a, b) => a[0] - b[0]);
 }

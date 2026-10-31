@@ -30,11 +30,6 @@ import { generateVSlot } from './vSlot';
 export interface ElementSlots {
 	/** Code after the props of a component or a native element, before its children. */
 	elementEnd: Map<CompilerDOM.ElementNode, TsCode[]>;
-	/**
-	 * Ranges of the expression of a bound prop, at template offsets, whose code out of references takes no rename, as
-	 * another copy of the same source takes it.
-	 */
-	renamedElsewhere: Map<CompilerDOM.DirectiveNode, [start: number, end: number][]>;
 }
 
 export function* generateComponent(

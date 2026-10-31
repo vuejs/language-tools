@@ -70,6 +70,5 @@ export function mergeSlots(plugins: readonly FilePlugin[]): MergedSlots {
 		expose: listSlot('expose'),
 		exposedInstanceTypes: listSlot('exposedInstanceTypes'),
 		elementEnd: mapSlot('elementEnd'),
-		renamedElsewhere: mapSlot('renamedElsewhere'),
 	};
 }
