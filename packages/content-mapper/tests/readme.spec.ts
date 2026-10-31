@@ -7,7 +7,7 @@ import { generate, normalizeCompilerOutput, repositoryRoot, runTsc } from './uti
 /** The plugin modules of the README's examples, by the file name that their first line gives. */
 const examples = new Map(
 	[
-		...fs.readFileSync(path.join(__dirname, '../README.md'), 'utf8').matchAll(
+		...fs.readFileSync(path.join(__dirname, '../README.md'), 'utf8').replace(/\r\n/g, '\n').matchAll(
 			/^```js\n(\/\/ ([\w-]+\.js)\b.*?)^```$/gms,
 		),
 	]
