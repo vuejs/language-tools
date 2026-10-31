@@ -12,8 +12,9 @@ import {
 import { computed } from 'alien-signals';
 import type { Piece, RewriteCode, RewriteCutOptions, RewriteSlice, RewriteWriter } from 'muggle-string';
 import type { CodegenSlots, FilePlugin } from './filePlugin';
-import type { BlockRewrite, BlockWriter } from './rewrite/blockRewrite';
+import type { BlockRewrite, BlockSlice, BlockWriter } from './rewrite/blockRewrite';
 import type { ComponentExports } from './script';
+import type { TsCodeData } from './tsCode';
 import { identifierRE } from './writers';
 
 /** The `codegen` export of a `plugins` entry's module. */
@@ -159,11 +160,11 @@ export interface ScriptRewrites {
  * propagates, and so does an edit that is not valid for the IR of the file.
  */
 export function rewriteScripts(plugins: readonly FilePlugin[], ir: IR, rewrites: ScriptRewrites) {
-	const blocks = getBlocks(ir);
+	const file = createCodeCheck(ir);
 	for (const [rank, { name, rewrite }] of plugins.entries()) {
 		rewrite?.({
-			script: rewrites.script && createWriter(name, blocks, rewrites.script.rewrite.writer(rank)),
-			scriptSetup: rewrites.scriptSetup && createWriter(name, blocks, rewrites.scriptSetup.rewrite.writer(rank)),
+			script: rewrites.script && createWriter(name, file, rewrites.script.rewrite.writer(rank)),
+			scriptSetup: rewrites.scriptSetup && createWriter(name, file, rewrites.scriptSetup.rewrite.writer(rank)),
 		});
 	}
 }
@@ -260,17 +261,30 @@ function getBlocks(ir: IR): Set<IRBlock> {
 	return new Set([ir.template, ir.script, ir.scriptSetup, ...ir.styles, ...ir.customBlocks].filter(block => !!block));
 }
 
+/**
+ * What the code of the plugins of a file can hold: ranges of its blocks, and the slices that their writers cut, which
+ * a plugin holds as handles that render nothing, so that it can't freeze the rewrite before all plugins edit it.
+ */
+interface CodeCheck {
+	blocks: Set<IRBlock>;
+	slices: WeakMap<VueCodegenSlice, BlockSlice>;
+}
+
+function createCodeCheck(ir: IR): CodeCheck {
+	return { blocks: getBlocks(ir), slices: new WeakMap() };
+}
+
 /** The writer of `plugin` that edits through `writer` the code that it checks. */
-function createWriter(plugin: string, blocks: Set<IRBlock>, writer: BlockWriter): VueCodegenWriter {
+function createWriter(plugin: string, file: CodeCheck, writer: BlockWriter): VueCodegenWriter {
 	return {
 		insertBefore(offset, code) {
-			writer.insertBefore(offset, checkCode(plugin, blocks, code));
+			writer.insertBefore(offset, checkCode(plugin, file, code));
 		},
 		insertAfter(offset, code) {
-			writer.insertAfter(offset, checkCode(plugin, blocks, code));
+			writer.insertAfter(offset, checkCode(plugin, file, code));
 		},
 		replace(start, end, code) {
-			writer.replace(start, end, checkCode(plugin, blocks, code));
+			writer.replace(start, end, checkCode(plugin, file, code));
 		},
 		cut(start, end, options) {
 			const features = (options as Partial<RewriteCutOptions<IRBlock, VueCodegenData>> | undefined)?.data?.features;
@@ -278,30 +292,38 @@ function createWriter(plugin: string, blocks: Set<IRBlock>, writer: BlockWriter)
 				throw new TypeError(`The codegen plugin '${plugin}' cut with features that are not an integer.`);
 			}
 			const { placeholder } = options;
-			// the data of the kept pieces only, which the slice does not let the plugin read
-			return writer.cut(start, end, {
+			const slice = writer.cut(start, end, {
 				data: { features: features! },
-				placeholder: placeholder === undefined ? undefined : checkCode(plugin, blocks, placeholder),
-			}) as VueCodegenSlice;
+				placeholder: placeholder === undefined ? undefined : checkCode(plugin, file, placeholder),
+			});
+			const handle: VueCodegenSlice = {
+				render() {
+					throw new TypeError(`The codegen plugin '${plugin}' rendered a slice, which renders where it is inserted.`);
+				},
+			};
+			file.slices.set(handle, slice);
+			return handle;
 		},
 	};
 }
 
-/** `code`, which throws if a part of it is not a piece of `checkPieces` or a slice. */
-function checkCode(plugin: string, blocks: Set<IRBlock>, code: VueCodegenCode): VueCodegenCode {
+/**
+ * `code` with the slices that the writers of the file cut in place of their handles; throws if a part of it is not a
+ * piece of `checkPieces` or such a handle.
+ */
+function checkCode(plugin: string, file: CodeCheck, code: VueCodegenCode): RewriteCode<IRBlock, TsCodeData> {
 	if (Array.isArray(code)) {
-		for (const part of code as readonly VueCodegenCode[]) {
-			checkCode(plugin, blocks, part);
+		return (code as readonly VueCodegenCode[]).map(part => checkCode(plugin, file, part));
+	}
+	if (typeof code === 'object' && code !== null && 'render' in code) {
+		const slice = file.slices.get(code);
+		if (!slice) {
+			throw invalid(plugin, 'a slice that no writer of the file cut');
 		}
+		return slice;
 	}
-	else if (!isSlice(code)) {
-		checkPiece(plugin, blocks, code as VueCodegenPiece);
-	}
+	checkPiece(plugin, file.blocks, code as VueCodegenPiece);
 	return code;
-}
-
-function isSlice(code: VueCodegenCode): code is VueCodegenSlice {
-	return typeof code === 'object' && code !== null && typeof (code as VueCodegenSlice).render === 'function';
 }
 
 /** `pieces`, which throws if one is not text or a range of a block of the file mapped with features. */

@@ -159,7 +159,7 @@ wherever the mapper copies that char. `replace(start, end, code)` drops the char
 the place of the first; the code attached to them stays. Removals of several plugins are united.
 `cut(start, end, { data, placeholder })` returns a slice of
 the chars of `start..end` with all the edits in them, which renders where it is inserted, exactly
-once, and nowhere if it is not; the cuts of all plugins and the mapper nest or are disjoint, and a cut that partly overlaps another one throws, since no output can render the shared chars once in both slices. Its chars map
+once, and nowhere if it is not (a plugin renders no slice: its `render` throws, as a render would freeze the edits of the plugins after it); the cuts of all plugins and the mapper nest or are disjoint, and a cut that partly overlaps another one throws, since no output can render the shared chars once in both slices. Its chars map
 with `data.features` (e.g. `scriptFeatures`), and `placeholder` takes their place where
 they are cut from. When the mapper moves a range of the
 user's code (e.g. the type argument of `defineProps` into a type alias), the inserts attached to its

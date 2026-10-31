@@ -66,6 +66,8 @@ test('rejects an edit of a plugin that is not valid for its block', () => {
 		(writer, block) => writer.insertBefore(0, { source: block, start: 0, end: 1, data: {} } as never),
 		writer => writer.cut(0, 1, {} as never),
 		writer => writer.cut(0, 1, { data: { features: 0.5 } }),
+		writer => writer.cut(0, 1, { data: { features: 0 } }).render(() => {}),
+		writer => writer.insertBefore(0, { render() {} }),
 	];
 	for (const edit of edits) {
 		expect(() => generateWith(content, rewriteSetup(edit))).toThrow();
