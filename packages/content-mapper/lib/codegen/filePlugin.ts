@@ -7,15 +7,10 @@ import type { TemplateFunctionSlots } from './script/template';
 import type { TemplateVars } from './template';
 import type { ElementSlots } from './template/element';
 
-/**
- * What a built-in codegen plugin reads: the same as a codegen plugin, the variables of the template, and the names of
- * the types that the template function declares.
- */
+/** What a built-in codegen plugin reads: the same as a codegen plugin, and the variables of the template. */
 export interface BuiltinPluginFile extends VueCodegenFile {
 	/** The variables that the code of the template declares for its nodes, without a template `undefined`. */
 	getTemplateVars(): TemplateVars | undefined;
-	/** The names of the types that the template function declares. */
-	getTemplateTypes(): ReadonlySet<string>;
 }
 
 /** The slots that the owners of the generated code declare, by name. */
@@ -58,12 +53,9 @@ export function mergeSlots(plugins: readonly FilePlugin[]): MergedSlots {
 		elements: listSlot('elements'),
 		exports: listSlot('exports'),
 		templateTypes: listSlot('templateTypes'),
-		templateEnd: listSlot('templateEnd'),
 		templateDollars: listSlot('templateDollars'),
 		templateContext: listSlot('templateContext'),
 		templateBody: listSlot('templateBody'),
-		templateExports: listSlot('templateExports'),
-		templateExportValues: listSlot('templateExportValues'),
 		componentOptions: listSlot('componentOptions'),
 		fallthroughProps: listSlot('fallthroughProps'),
 		props: listSlot('props'),

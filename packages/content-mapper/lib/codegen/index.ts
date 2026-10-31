@@ -77,11 +77,8 @@ function useCodegen(
 	} = analysis;
 
 	const getTemplateVars = () => getGeneratedTemplate()?.vars;
-	const getTemplateTypes = computed((): ReadonlySet<string> =>
-		new Set([...getGeneratedTemplate()?.generatedTypes ?? [], ...slots.templateTypes()])
-	);
 	const filePlugins = [
-		...builtinPlugins.map(create => create({ ts, fileName, ir, analysis, getTemplateVars, getTemplateTypes })),
+		...builtinPlugins.map(create => create({ ts, fileName, ir, analysis, getTemplateVars })),
 		...plugins.map(plugin => createFilePlugin(plugin, { ts, fileName, ir, analysis })),
 	];
 	const slots = mergeSlots(filePlugins);
@@ -138,7 +135,7 @@ function useCodegen(
 			scopeBindings: getScopeBindings(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
-			templateTypes: new Set(getTemplateTypes()),
+			templateGeneratedTypes: getGeneratedTemplate()?.generatedTypes ?? new Set(),
 			templateCodes: getGeneratedTemplate()?.codes ?? [],
 			templateScopeEnd: getGeneratedTemplate()?.scopeEnd ?? [],
 			dollarVars: getGeneratedTemplate() ? getTemplateScope().dollarVars : new Set(),
@@ -148,10 +145,8 @@ function useCodegen(
 				exports: slots.exports(),
 				templateContext: slots.templateContext(),
 				templateBody: slots.templateBody(),
-				templateEnd: slots.templateEnd(),
+				templateTypes: slots.templateTypes(),
 				templateDollars: slots.templateDollars(),
-				templateExports: slots.templateExports(),
-				templateExportValues: slots.templateExportValues(),
 				componentOptions: slots.componentOptions(),
 				fallthroughProps: slots.fallthroughProps(),
 				props: slots.props(),

@@ -3,8 +3,8 @@ import { computed } from 'alien-signals';
 import type { BuiltinPluginFile, FilePlugin } from '../filePlugin';
 import { names } from '../names';
 import type { VueCodegenWriter } from '../plugin';
-import { Boundary, synthesizedIgnore } from '../tsCode';
-import { asType, generateTypeAlias, isTsLang, newLine, typeAliasRef } from '../writers';
+import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
+import { asType, isTsLang, newLine, typeAliasRef } from '../writers';
 import { generatePropertyKey } from '../writers/stringLiteralKey';
 
 /**
@@ -27,46 +27,47 @@ export function createRefsPlugin({ ir, analysis, getTemplateVars }: BuiltinPlugi
 	const hasTemplateRefs = () => !!getTemplateRefs();
 	return {
 		name: 'vue:refs',
-		templateTypes: () => hasTemplateRefs() ? [names.TemplateRefs] : [],
-		templateEnd: () => {
+		templateTypes: () => {
 			const refs = getTemplateRefs();
 			if (!refs) {
 				return [];
 			}
 			const template = ir.template!;
 			const { templateRefs, vars } = refs;
-			return [...generateTypeAlias(names.TemplateRefs, getScriptLang(ir), function*() {
-				yield `{}`;
-				for (const [name, refs] of templateRefs) {
-					yield `${newLine}& `;
-					if (refs.length >= 2) {
-						yield `(`;
-					}
-					for (let i = 0; i < refs.length; i++) {
-						const { node, offset, inVFor } = refs[i]!;
-						const instance = vars.componentInstanceVars.get(node);
-						let typeExp = instance
-							? `typeof ${instance.hoistedVar} | null`
-							: `${names.Elements}['${node.tag}']`;
-						if (inVFor) {
-							typeExp = instance ? `(${typeExp})[]` : `${typeExp}[]`;
+			return [{
+				name: names.TemplateRefs,
+				code: [...(function*(): Generator<TsCode> {
+					yield `{}`;
+					for (const [name, refs] of templateRefs) {
+						yield `${newLine}& `;
+						if (refs.length >= 2) {
+							yield `(`;
 						}
-						if (i) {
-							yield ` | `;
+						for (let i = 0; i < refs.length; i++) {
+							const { node, offset, inVFor } = refs[i]!;
+							const instance = vars.componentInstanceVars.get(node);
+							let typeExp = instance
+								? `typeof ${instance.hoistedVar} | null`
+								: `${names.Elements}['${node.tag}']`;
+							if (inVFor) {
+								typeExp = instance ? `(${typeExp})[]` : `${typeExp}[]`;
+							}
+							if (i) {
+								yield ` | `;
+							}
+							yield `{ `;
+							const ignore = yield* Boundary.start(template, 0, 0, synthesizedIgnore);
+							yield* generatePropertyKey(name, template, offset, { features: navigationFeatures });
+							yield ignore.end();
+							yield `: ${typeExp} }`;
 						}
-						yield `{ `;
-						const ignore = yield* Boundary.start(template, 0, 0, synthesizedIgnore);
-						yield* generatePropertyKey(name, template, offset, { features: navigationFeatures });
-						yield ignore.end();
-						yield `: ${typeExp} }`;
+						if (refs.length >= 2) {
+							yield `)`;
+						}
 					}
-					if (refs.length >= 2) {
-						yield `)`;
-					}
-				}
-			})];
+				})()],
+			}];
 		},
-		templateExports: () => hasTemplateRefs() ? [names.TemplateRefs] : [],
 		templateDollars: () =>
 			analysis.getTemplateScope().dollarVars.has('$refs')
 				? [[`{ $refs: ${hasTemplateRefs() ? typeAliasRef(names.TemplateRefs, getScriptLang(ir)) : `{}`} }`]]

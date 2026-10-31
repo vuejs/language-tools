@@ -37,8 +37,8 @@ export interface ScriptCodegenOptions {
 	scriptLang: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
-	/** The names of the types that the code in the template function declares. */
-	templateTypes: Set<string>;
+	/** The names of the types that the code of the template declares. */
+	templateGeneratedTypes: ReadonlySet<string>;
 	/** The code of the template, in its scope. */
 	templateCodes: readonly TsCode[];
 	/** The code that ends the scope of the template. */
@@ -46,7 +46,7 @@ export interface ScriptCodegenOptions {
 	/** The `$` names that the template reads and types at its end, which `useAttrs()` and `useSlots()` take. */
 	dollarVars: ReadonlySet<string>;
 	/** What the codegen plugins write into the slots of the module, the template function and the component. */
-	slots: Readonly<ModuleSlots & Omit<TemplateFunctionSlots, 'templateTypes'> & ComponentSlots & ScriptSetupSlots>;
+	slots: Readonly<ModuleSlots & TemplateFunctionSlots & ComponentSlots & ScriptSetupSlots>;
 	setupBindings: Set<string>;
 	localComponents: Set<string>;
 	localDirectives: Set<string>;

@@ -492,7 +492,7 @@ export function getExposeTypes(
 function hasSlotsType(options: ScriptCodegenOptions): boolean {
 	return !!(
 		options.scriptSetupRanges?.defineSlots
-		|| options.templateTypes.has(names.Slots)
+		|| options.slots.templateTypes.some(({ name }) => name === names.Slots)
 	);
 }
 

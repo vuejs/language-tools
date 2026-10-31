@@ -2,8 +2,8 @@ import { getScriptLang, navigationFeatures } from '@vue/language-core';
 import { computed } from 'alien-signals';
 import type { BuiltinPluginFile, FilePlugin } from '../filePlugin';
 import { names } from '../names';
-import { Boundary, synthesizedIgnore } from '../tsCode';
-import { generateTypeAlias, newLine, typeAliasRef } from '../writers';
+import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
+import { newLine, typeAliasRef } from '../writers';
 import { generatePropertyKey } from '../writers/stringLiteralKey';
 
 /** The type of the slots that the template renders, unless `defineSlots` declares them. */
@@ -18,38 +18,38 @@ export function createSlotsPlugin({ ir, analysis, getTemplateVars }: BuiltinPlug
 	});
 	return {
 		name: 'vue:slots',
-		// with `defineSlots`, the template function declares the type of the slots that it reads
-		templateTypes: () => getTemplateVars() && (hasDefineSlots() || getTemplateSlots()) ? [names.Slots] : [],
-		templateEnd: () => {
+		templateTypes: () => {
 			const templateSlots = getTemplateSlots();
 			if (!templateSlots) {
 				return [];
 			}
 			const template = ir.template!;
 			const { slots, dynamicSlots, vars } = templateSlots;
-			return [...generateTypeAlias(names.Slots, getScriptLang(ir), function*() {
-				yield `{}`;
-				for (const node of dynamicSlots) {
-					const { expVar, propsVar } = vars.slotVars.get(node)!;
-					yield `${newLine}& { [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${propsVar}) => any }`;
-				}
-				for (const slot of slots) {
-					yield `${newLine}& { `;
-					const ignore = yield* Boundary.start(template, 0, 0, synthesizedIgnore);
-					if (slot.name && slot.offset !== undefined) {
-						yield* generatePropertyKey(slot.name, template, slot.offset, { features: navigationFeatures });
+			return [{
+				name: names.Slots,
+				code: [...(function*(): Generator<TsCode> {
+					yield `{}`;
+					for (const node of dynamicSlots) {
+						const { expVar, propsVar } = vars.slotVars.get(node)!;
+						yield `${newLine}& { [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${propsVar}) => any }`;
 					}
-					else {
-						const boundary = yield* Boundary.start(template, ...slot.tagRange, { features: navigationFeatures });
-						yield `default`;
-						yield boundary.end();
+					for (const slot of slots) {
+						yield `${newLine}& { `;
+						const ignore = yield* Boundary.start(template, 0, 0, synthesizedIgnore);
+						if (slot.name && slot.offset !== undefined) {
+							yield* generatePropertyKey(slot.name, template, slot.offset, { features: navigationFeatures });
+						}
+						else {
+							const boundary = yield* Boundary.start(template, ...slot.tagRange, { features: navigationFeatures });
+							yield `default`;
+							yield boundary.end();
+						}
+						yield ignore.end();
+						yield `?: (props: typeof ${vars.slotVars.get(slot.node)!.propsVar}) => any }`;
 					}
-					yield ignore.end();
-					yield `?: (props: typeof ${vars.slotVars.get(slot.node)!.propsVar}) => any }`;
-				}
-			})];
+				})()],
+			}];
 		},
-		templateExports: () => getTemplateSlots() ? [names.Slots] : [],
 		templateDollars: () => {
 			if (!analysis.getTemplateScope().dollarVars.has('$slots')) {
 				return [];

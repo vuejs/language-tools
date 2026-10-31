@@ -2,7 +2,7 @@ import { getScriptLang } from '@vue/language-core';
 import { computed } from 'alien-signals';
 import type { BuiltinPluginFile, FilePlugin } from '../filePlugin';
 import { names } from '../names';
-import { asType, generateTypeAlias, newLine, typeAliasRef } from '../writers';
+import { asType, newLine, typeAliasRef } from '../writers';
 
 /** The type of the root element of the template, which the component exposes as `$el`. */
 export function createRootElPlugin({ ir, analysis, getTemplateVars }: BuiltinPluginFile): FilePlugin {
@@ -27,18 +27,10 @@ export function createRootElPlugin({ ir, analysis, getTemplateVars }: BuiltinPlu
 	const hasRootEl = () => !!getRootElTypes();
 	return {
 		name: 'vue:root-el',
-		templateTypes: () => hasRootEl() ? [names.RootEl] : [],
-		templateEnd: () => {
+		templateTypes: () => {
 			const types = getRootElTypes();
-			return types
-				? [...generateTypeAlias(names.RootEl, getScriptLang(ir), function*() {
-					for (const type of types) {
-						yield `${newLine}| ${type}`;
-					}
-				})]
-				: [];
+			return types ? [{ name: names.RootEl, code: [...types].map(type => `${newLine}| ${type}`) }] : [];
 		},
-		templateExports: () => hasRootEl() ? [names.RootEl] : [],
 		templateDollars: () =>
 			analysis.getTemplateScope().dollarVars.has('$el')
 				? [[`{ $el: ${hasRootEl() ? typeAliasRef(names.RootEl, getScriptLang(ir)) : `any`} }`]]

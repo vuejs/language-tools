@@ -19,10 +19,8 @@ import type { ScriptCodegenOptions } from './index';
 
 /** The slots of the template function, and of the template context that it reads. */
 export interface TemplateFunctionSlots {
-	/** The names of the types that the code in the template function declares. */
-	templateTypes: string[];
-	/** Code at the end of the template, in its scope. */
-	templateEnd: TsCode[];
+	/** Type aliases at the end of the template, in its scope, which setup and the export read by their names. */
+	templateTypes: TemplateTypeDeclaration[];
 	/**
 	 * Object types intersected into the `$` names that the template reads and types (`$slots`, `$attrs`, `$refs`,
 	 * `$el`), at the end of the template, in its scope.
@@ -35,10 +33,11 @@ export interface TemplateFunctionSlots {
 	templateContext: (readonly TsCode[])[];
 	/** Code in the template function, before the code of the template. */
 	templateBody: TsCode[];
-	/** Type aliases that the template function declares, returned to setup and the export. */
-	templateExports: string[];
-	/** Variables that the template function declares, returned to setup and the export after its type aliases. */
-	templateExportValues: string[];
+}
+
+export interface TemplateTypeDeclaration {
+	name: string;
+	code: readonly TsCode[];
 }
 
 export function* generateTemplate(
@@ -56,7 +55,7 @@ export function* generateTemplate(
 	// it reads take their render-time types, not the narrowing at the end of setup.
 	// The types setup and the export need from it are passed out through its return type.
 	const { scriptLang } = options;
-	const exportedTypes = options.slots.templateExports;
+	const exportedTypes = options.slots.templateTypes.map(({ name }) => name);
 	yield `const ${names.template} = () => {${newLine}`;
 
 	for (const name of options.dotValueBindings) {
@@ -65,8 +64,12 @@ export function* generateTemplate(
 
 	yield* options.slots.templateBody;
 	yield* options.templateCodes;
-	yield* options.slots.templateEnd;
-	const exportedValues = [...options.slots.templateExportValues];
+	for (const { name, code } of options.slots.templateTypes) {
+		yield* generateTypeAlias(name, scriptLang, function*() {
+			yield* code;
+		});
+	}
+	const exportedValues: string[] = [];
 	if (options.dollarVars.size) {
 		yield* generateTypedVar('var', names.dollars, scriptLang, function*() {
 			for (const type of options.slots.templateDollars) {
@@ -268,9 +271,9 @@ function* generateTemplateDirectives(
 }
 
 function* generateTemplateScope(
-	{ vueCompilerOptions, templateTypes, scopeBindings, scriptLang }: ScriptCodegenOptions,
+	{ vueCompilerOptions, templateGeneratedTypes, scopeBindings, scriptLang }: ScriptCodegenOptions,
 ): Generator<TsCode> {
-	if (!templateTypes.has(names.Scope)) {
+	if (!templateGeneratedTypes.has(names.Scope)) {
 		return;
 	}
 	yield* generateTypeAlias(names.Scope, scriptLang, function*() {

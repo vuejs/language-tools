@@ -22,7 +22,7 @@ import { createTemplateCodegenContext, type TemplateCodegenContext } from '../te
 import { generateInterpolation } from '../template/interpolation';
 import type { TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, typeAliasRef } from '../writers';
-import { generateStyleModuleImports, generateStyleModules } from './modules';
+import { generateStyleModuleImports, generateStyleModulesType } from './modules';
 import { generateStyleScopedClasses } from './scopedClassNames';
 import { generateStyleScopedClassReferences } from './scopedClassReferences';
 
@@ -61,7 +61,13 @@ export function createStylePlugin({ ts, ir, analysis }: BuiltinPluginFile): File
 			templateScope: analysis.getTemplateScope(),
 		});
 	});
-	const hasStyleModules = computed(() => !!getGeneratedStyle()?.generatedTypes.has(names.StyleModules));
+	const getStyleModulesType = computed(() => {
+		const styleModules = ir.styles.filter(style => style.module);
+		if (styleModules.length) {
+			return [...generateStyleModulesType(ir, analysis.getResolvedOptions(), styleModules)];
+		}
+	});
+	const hasStyleModules = () => !!getStyleModulesType();
 	const getElementEnd = computed(() => {
 		const elementEnd = new Map<CompilerDOM.ElementNode, TsCode[]>();
 		if (ir.template?.ast) {
@@ -78,10 +84,12 @@ export function createStylePlugin({ ts, ir, analysis }: BuiltinPluginFile): File
 
 	return {
 		name: 'vue:style',
-		templateTypes: () => [...getGeneratedStyle()?.generatedTypes ?? []],
+		templateTypes: () => {
+			const code = getStyleModulesType();
+			return code ? [{ name: names.StyleModules, code }] : [];
+		},
 		templateBody: () => getGeneratedStyle()?.codes ?? [],
 		templateContext: () => hasStyleModules() ? [[typeAliasRef(names.StyleModules, getScriptLang(ir))]] : [],
-		templateExports: () => hasStyleModules() ? [names.StyleModules] : [],
 		declarations: () => [...generateStyleModuleImports(ir)],
 		elementEnd: getElementEnd,
 		rewrite({ scriptSetup }) {
@@ -111,7 +119,6 @@ function* generateWorker(
 ) {
 	ctx.enterBlockScope(options.styles);
 	yield* generateStyleScopedClasses(options, ctx);
-	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);
 	yield* ctx.exitBlockScope();
 }
