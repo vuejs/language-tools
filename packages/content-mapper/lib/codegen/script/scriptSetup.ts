@@ -231,6 +231,7 @@ export function* generateSetupFunction(
 ): Generator<TsCode> {
 	yield* copies.generateBody();
 	yield* generateModels(options, scriptSetup, scriptSetupRanges);
+	yield* generatePluginTypes(options);
 	yield* generatePublicProps(options, ctx, scriptSetup, scriptSetupRanges);
 	yield* body;
 
@@ -417,6 +418,15 @@ function addDefineWithTypeTransforms(
 		writer.insertBefore(statement.start, declaration);
 	}
 	writer.insertAfter(name ? statement.end : callExp.end, [endOfLine, ...prefix ? [prefix] : [], defaultName]);
+}
+
+/** The emits that the codegen plugins declare, as one alias, which places their code once. */
+function* generatePluginTypes({ slots, scriptLang }: ScriptCodegenOptions): Generator<TsCode> {
+	if (slots.emits.length) {
+		yield* generateTypeAlias(names.PluginEmits, scriptLang, function*() {
+			yield* intersectTypes(slots.emits);
+		});
+	}
 }
 
 function* generatePublicProps(

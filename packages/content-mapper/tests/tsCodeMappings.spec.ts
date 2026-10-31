@@ -1,7 +1,7 @@
 import { SpanMapKind, type SpanMapSegment } from '@volar/language-core';
 import { completionFeatures, type IR, type IRBlock, navigationFeatures, type VueCodeMarker } from '@vue/language-core';
 import { expect, test } from 'vitest';
-import { type CodeBoundary, mapped, synthesizedIgnore, type TsCode } from '../lib/codegen/tsCode';
+import { type CodeBoundary, mapped, synthesizedIgnore, type TsPiece } from '../lib/codegen/tsCode';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../lib/protocol';
 import { buildDiagnosticDirectives, buildMappings } from '../lib/result/tsCodeMappings';
 
@@ -146,7 +146,7 @@ test('lets pieces inside a feature-less boundary stay individual', () => {
 
 test('keeps diagnostic directives out of the mappings', () => {
 	const directive: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Ignore];
-	const chunks: TsCode[] = [
+	const chunks: TsPiece[] = [
 		mapped('', template, 5, start(directive)),
 		mapped('abc', template, 5, none),
 		mapped('', template, 5, end),
@@ -190,7 +190,7 @@ test('keeps an empty expectation and drops empty ignores', () => {
 
 test('pairs directive and mapping boundaries by nesting', () => {
 	const directive: DiagnosticDirectiveMapping = [5, 3, 0, 0, DiagnosticDirectivePolicy.Ignore];
-	const chunks: TsCode[] = [
+	const chunks: TsPiece[] = [
 		mapped('', template, 5, start(directive)),
 		mapped('', template, 0, start(navigation)),
 		mapped('a', template, 0, undefined),

@@ -1,5 +1,6 @@
 import type { CodePiece, CodeSource, VueCodeMarker } from '@vue/language-core';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../protocol';
+import type { PluginSlice } from './plugin';
 
 /**
  * The data of an empty piece bounding a range of generated code. A start carries what the range is: the span
@@ -13,7 +14,13 @@ export type CodeBoundary = { start: VueCodeMarker | DiagnosticDirectiveMapping }
 export type TsCodeData = VueCodeMarker | CodeBoundary | undefined;
 
 /** A piece of generated TypeScript code. */
-export type TsCode = CodePiece<TsCodeData>;
+export type TsPiece = CodePiece<TsCodeData>;
+
+/**
+ * Generated TypeScript code: a piece, or a slice of a codegen plugin, which renders once all edits of the rewrites of
+ * the script blocks are made.
+ */
+export type TsCode = TsPiece | PluginSlice;
 
 /** A piece whose `text` maps char by char from `start`. */
 export interface MappedPiece<Data extends TsCodeData, Source extends CodeSource = CodeSource> {

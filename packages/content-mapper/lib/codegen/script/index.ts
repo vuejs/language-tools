@@ -13,9 +13,9 @@ import {
 } from '@vue/language-core';
 import * as path from 'path-browserify';
 import { names } from '../names';
-import type { ScriptRewrites } from '../plugin';
+import { isSlice, type PluginSlices, type ScriptRewrites } from '../plugin';
 import { type BlockRewrite, createBlockRewrite, generateBlockAnchor } from '../rewrite/blockRewrite';
-import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
+import { Boundary, mapped, synthesizedIgnore, type TsCode, type TsPiece } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine } from '../writers';
 import type { ComponentSlots } from './component';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
@@ -56,8 +56,8 @@ export interface ScriptCodegenOptions {
 	dotValueBindings: Set<string>;
 	/** Setup bindings that template and style expressions reference. */
 	scopeBindings: Set<string>;
-	/** Runs the rewrites of the codegen plugins on the rewrites of the script blocks. */
-	rewriteScripts(rewrites: ScriptRewrites): void;
+	/** Makes the edits of the codegen plugins in the rewrites of the script blocks, and gives the slices of their cuts. */
+	rewriteScripts(rewrites: ScriptRewrites): PluginSlices;
 }
 
 /** The slots of the module. */
@@ -130,21 +130,36 @@ function* generateNavigableExport(ir: IR, code: string): Generator<TsCode> {
 
 function generate(options: ScriptCodegenOptions) {
 	const ctx = createScriptCodegenContext(options);
-	const codeGenerator = generateWorker(options, ctx);
-	return { ...ctx, codes: [...codeGenerator] };
+	const rewrites: ScriptRewrites = {
+		script: options.script && createBlockRewrite(options.script),
+		scriptSetup: options.scriptSetup && createBlockRewrite(options.scriptSetup),
+	};
+	const slices = options.rewriteScripts(rewrites);
+	const codes = [...generateWorker(options, ctx, rewrites)];
+	return { ...ctx, codes: renderPluginSlices(codes, slices) };
+}
+
+/** `codes` with the code of each slice of a plugin in its place, once the rewrites have all their edits. */
+function renderPluginSlices(codes: readonly TsCode[], slices: PluginSlices): TsPiece[] {
+	const pieces: TsPiece[] = [];
+	for (const code of codes) {
+		if (isSlice(code)) {
+			slices.get(code)!.render(piece => pieces.push(piece));
+		}
+		else {
+			pieces.push(code);
+		}
+	}
+	return pieces;
 }
 
 function* generateWorker(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
+	rewrites: ScriptRewrites,
 ): Generator<TsCode> {
 	const { script, scriptRanges, scriptSetup, scriptSetupRanges, vueCompilerOptions, fileName } = options;
 	let exportExpression = asType(`typeof ${names.export}`, options.scriptLang);
-	const rewrites: ScriptRewrites = {
-		script: script && createBlockRewrite(script),
-		scriptSetup: scriptSetup && createBlockRewrite(scriptSetup),
-	};
-	options.rewriteScripts(rewrites);
 
 	yield* generateGlobalTypesReference(vueCompilerOptions, fileName);
 

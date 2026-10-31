@@ -79,7 +79,9 @@ function* generateTypeEmitsOption(
 	if (scriptSetupRanges.defineEmits?.typeArg) {
 		yield names.Emit;
 	}
-	yield* options.slots.emits;
+	if (options.slots.emits.length) {
+		yield typeAliasRef(names.PluginEmits, options.scriptLang);
+	}
 }
 
 function* generateRuntimeEmitsOption(
@@ -95,8 +97,11 @@ function* generateRuntimeEmitsOption(
 			options.scriptLang,
 		);
 	}
-	for (const type of options.slots.emits) {
-		yield asTypeCode([`${names.NormalizeEmits}<${names.ShortEmits}<`, ...type, `>>`], options.scriptLang);
+	if (options.slots.emits.length) {
+		yield asType(
+			`${names.NormalizeEmits}<${names.ShortEmits}<${typeAliasRef(names.PluginEmits, options.scriptLang)}>>`,
+			options.scriptLang,
+		);
 	}
 }
 

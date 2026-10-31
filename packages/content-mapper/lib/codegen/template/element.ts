@@ -12,7 +12,7 @@ import {
 import { camelize, capitalize } from '@vue/shared';
 import { names } from '../names';
 import { generateExportDeclareEqual } from '../script';
-import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
+import { Boundary, mapped, synthesizedIgnore, type TsCode, type TsPiece } from '../tsCode';
 import { endOfLine, generateTypedVar, identifierRE, newLine, typeAliasRef } from '../writers';
 import { generateCamelized } from '../writers/camelized';
 import { generateStringLiteralKey } from '../writers/stringLiteralKey';
@@ -196,7 +196,7 @@ export function* generateComponent(
 		props,
 		failedPropExps,
 	)];
-	const propsStr = codeToString(propCodes);
+	const propsStr = codeToString(propCodes as TsPiece[]);
 
 	// The instance type comes from a real construct call with a copy of the props: only a call resolves the
 	// overloads of the component and infers its type parameters from the props, including intersections of

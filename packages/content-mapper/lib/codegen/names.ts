@@ -30,6 +30,7 @@ const raw = {
 	BuiltInDirectives: '',
 	ModelEmit: '',
 	ModelProps: '',
+	PluginEmits: '',
 	Props: '',
 	PublicProps: '',
 	RuntimeProps: '',

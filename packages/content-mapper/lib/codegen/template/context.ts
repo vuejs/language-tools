@@ -11,6 +11,7 @@ import {
 } from '@vue/language-core';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../../protocol';
 import { names } from '../names';
+import { isSlice } from '../plugin';
 import { Boundary, isSynthesizedIgnore, mapped, OpenRanges, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine, typeAliasRef } from '../writers';
 
@@ -191,6 +192,9 @@ export function createTemplateCodegenContext(
 	function getMarker(code: TsCode) {
 		if (typeof code === 'string') {
 			return;
+		}
+		if (isSlice(code)) {
+			return code.data;
 		}
 		const { data } = code;
 		if (data === undefined) {

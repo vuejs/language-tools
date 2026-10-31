@@ -169,7 +169,7 @@ function* generateTemplateCtx(
 
 /** The types of the emit functions of a script setup component, which the codegen plugins add events to. */
 export function getEmitTypes(
-	{ scriptSetupRanges, slots }: ScriptCodegenOptions,
+	{ scriptSetupRanges, slots, scriptLang }: ScriptCodegenOptions,
 ): (string | readonly TsCode[])[] {
 	const emitTypes: (string | readonly TsCode[])[] = [];
 	if (!scriptSetupRanges) {
@@ -181,8 +181,8 @@ export function getEmitTypes(
 	if (scriptSetupRanges.defineModel.length) {
 		emitTypes.push(`typeof ${names.modelEmit}`);
 	}
-	for (const type of slots.emits) {
-		emitTypes.push([`${names.ShortEmits}<`, ...type, `>`]);
+	if (slots.emits.length) {
+		emitTypes.push(`${names.ShortEmits}<${typeAliasRef(names.PluginEmits, scriptLang)}>`);
 	}
 	return emitTypes;
 }

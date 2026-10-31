@@ -60,10 +60,10 @@ export interface VueCodegenTemplate {
 
 /**
  * What a codegen plugin gives for a file: the edits of `rewrite`, which runs after those of the plugins before it, and
- * its code in the slots of the generated code, which the code of each slot reads lazily, after the code of the plugins
- * before it. The built-in plugins come first.
+ * its code in the slots of the generated code, which the code of each slot reads lazily, after `rewrite` and the code
+ * of the plugins before it. Each hook runs at most once for a snapshot of the file. The built-in plugins come first.
  */
-export interface VueCodegenFilePlugin<Code = VueCodegenPiece> {
+export interface VueCodegenFilePlugin<Code = VueCodegenPiece | VueCodegenSlice> {
 	/** Edits the user's code of `<script>` and `<script setup>` through the writer of each block. */
 	rewrite?(writers: VueCodegenWriters): void;
 	/** Object types spread into the template context (what template expressions and `$` names resolve against). */
@@ -109,10 +109,13 @@ export interface VueCodegenFilePlugin<Code = VueCodegenPiece> {
 	exports?(): VueCodegenExports | undefined;
 }
 
-/** The code of a slot: a piece, or pieces in order. A slot holds no slice, which renders in the block it is cut from. */
-export type VueCodegenSlotCode<Code = VueCodegenPiece> = Code | readonly Code[];
+/**
+ * The code of a slot: a piece or a slice that a writer of the plugin cut, or them in order. The mapper places the code
+ * of a slot once, so a slice in it renders there, exactly once.
+ */
+export type VueCodegenSlotCode<Code = VueCodegenPiece | VueCodegenSlice> = Code | readonly Code[];
 
-export interface VueCodegenDeclaration<Code = VueCodegenPiece> {
+export interface VueCodegenDeclaration<Code = VueCodegenPiece | VueCodegenSlice> {
 	name: string;
 	code: VueCodegenSlotCode<Code>;
 }
@@ -152,7 +155,8 @@ export interface VueCodegenWriters {
 
 /**
  * The writer of one script block, at offsets of its content. An edit out of the range of the block, a replacement of no
- * char, a cut without integer features, and code that is not text, a range of a block of the file or a slice throw.
+ * char, a cut without integer features, and code that is not text, a range of a block of the file or a slice that the
+ * writers of the plugin cut throw.
  */
 export type VueCodegenWriter = RewriteWriter<IRBlock, VueCodegenData>;
 
@@ -202,21 +206,77 @@ export interface ScriptRewrites {
 }
 
 /**
- * Runs the `rewrite` of each plugin of the file, in order, with its writers of `rewrites`. An exception of a hook
- * propagates, and so does an edit that is not valid for the IR of the file.
+ * A slice that a writer of a plugin cut: a handle that renders nothing, so that the plugin can't freeze a rewrite before
+ * all plugins edit it, and that each rewrite of the script blocks replays as a slice of its own.
+ */
+export class PluginSlice implements VueCodegenSlice {
+	constructor(
+		readonly plugin: string,
+		/** The data of the chars of the cut. */
+		readonly data: VueCodegenData,
+	) {}
+
+	render(): never {
+		throw new TypeError(`The codegen plugin '${this.plugin}' rendered a slice, which renders where it is placed.`);
+	}
+}
+
+/** Whether `code` is a slice, which is a slice of a plugin when one of its writers cut it. */
+export function isSlice(code: unknown): code is PluginSlice {
+	return typeof code === 'object' && code !== null && 'render' in code;
+}
+
+/** The slices of a rewrite of the script blocks, by the handles that the plugins hold. */
+export type PluginSlices = ReadonlyMap<PluginSlice, BlockSlice>;
+
+type BlockWriters = { [K in keyof ScriptRewrites]: BlockWriter | undefined };
+
+/**
+ * What the `rewrite` of a plugin edits, which is the same for each rewrite of the script blocks of one snapshot of the
+ * file: its edits in order, which each rewrite replays, and the handles of its cuts, which its slots may place.
+ */
+export interface PluginEdits {
+	edits: readonly ((writers: BlockWriters, slices: Map<PluginSlice, BlockSlice>) => void)[];
+	cuts: ReadonlySet<PluginSlice>;
+}
+
+/**
+ * The edits of the `rewrite` of `plugin`, run with writers of the script blocks of `ir` that throw on an edit that is
+ * not valid for its block. An exception of the hook propagates.
+ */
+export function recordEdits(
+	plugin: string,
+	ir: IR,
+	rewrite: ((writers: VueCodegenWriters) => void) | undefined,
+): PluginEdits {
+	const edits: PluginEdits['edits'][number][] = [];
+	const cuts = new Set<PluginSlice>();
+	const file: CodeCheck = { plugin, blocks: getBlocks(ir), cuts };
+	rewrite?.({
+		script: ir.script && createWriter(file, ir.script, 'script', edits),
+		scriptSetup: ir.scriptSetup && createWriter(file, ir.scriptSetup, 'scriptSetup', edits),
+	});
+	return { edits, cuts };
+}
+
+/**
+ * Replays the edits of each plugin, in order, on its writers of `rewrites`, and gives the slices of its cuts there.
  */
 export function rewriteScripts(
-	plugins: readonly { name: string; rewrite?(writers: VueCodegenWriters): void }[],
-	ir: IR,
+	plugins: readonly { getEdits(): PluginEdits }[],
 	rewrites: ScriptRewrites,
-) {
-	const file = createCodeCheck(ir);
-	for (const [rank, { name, rewrite }] of plugins.entries()) {
-		rewrite?.({
-			script: rewrites.script && createWriter(name, file, rewrites.script.rewrite.writer(rank)),
-			scriptSetup: rewrites.scriptSetup && createWriter(name, file, rewrites.scriptSetup.rewrite.writer(rank)),
-		});
+): PluginSlices {
+	const slices = new Map<PluginSlice, BlockSlice>();
+	for (const [rank, { getEdits }] of plugins.entries()) {
+		const writers: BlockWriters = {
+			script: rewrites.script?.rewrite.writer(rank),
+			scriptSetup: rewrites.scriptSetup?.rewrite.writer(rank),
+		};
+		for (const edit of getEdits().edits) {
+			edit(writers, slices);
+		}
 	}
+	return slices;
 }
 
 const codeSlots = [
@@ -310,9 +370,12 @@ function checkSlotCodes(plugin: string, blocks: Set<IRBlock>, key: string, codes
 	return codes as readonly VueCodegenSlotCode[];
 }
 
+/** `code`, whose slices are checked where the slots of the plugins merge, with the cuts of its rewrite. */
 function checkSlotCode(plugin: string, blocks: Set<IRBlock>, code: VueCodegenSlotCode) {
-	for (const piece of Array.isArray(code) ? code as readonly VueCodegenPiece[] : [code as VueCodegenPiece]) {
-		checkPiece(plugin, blocks, piece);
+	for (const part of Array.isArray(code) ? code as readonly VueCodegenSlotCode[] : [code]) {
+		if (!isSlice(part)) {
+			checkPiece(plugin, blocks, part as VueCodegenPiece);
+		}
 	}
 	return code;
 }
@@ -354,69 +417,95 @@ function getBlocks(ir: IR): Set<IRBlock> {
 	return new Set([ir.template, ir.script, ir.scriptSetup, ...ir.styles, ...ir.customBlocks].filter(block => !!block));
 }
 
-/**
- * What the code of the plugins of a file can hold: ranges of its blocks, and the slices that their writers cut, which
- * a plugin holds as handles that render nothing, so that it can't freeze the rewrite before all plugins edit it.
- */
+/** What the code of a plugin can hold: ranges of the blocks of its file, and the slices that its writers cut. */
 interface CodeCheck {
+	plugin: string;
 	blocks: Set<IRBlock>;
-	slices: WeakMap<VueCodegenSlice, BlockSlice>;
+	cuts: Set<PluginSlice>;
 }
 
-function createCodeCheck(ir: IR): CodeCheck {
-	return { blocks: getBlocks(ir), slices: new WeakMap() };
-}
-
-/** The writer of `plugin` that edits through `writer` the code that it checks. */
-function createWriter(plugin: string, file: CodeCheck, writer: BlockWriter): VueCodegenWriter {
+/** The writer of `block` for the plugin of `file`, which records its edits of the writer of `key` in `edits`. */
+function createWriter(
+	file: CodeCheck,
+	block: IRBlock,
+	key: keyof BlockWriters,
+	edits: PluginEdits['edits'][number][],
+): VueCodegenWriter {
+	const { plugin } = file;
+	const checkRange = (start: number, end: number) => {
+		if (!isRange(block, start, end)) {
+			throw new RangeError(`The codegen plugin '${plugin}' edited ${start}..${end}, out of its block.`);
+		}
+	};
 	return {
 		insertBefore(offset, code) {
-			writer.insertBefore(offset, checkCode(plugin, file, code));
+			checkRange(offset, offset);
+			const checked = checkCode(file, code);
+			edits.push((writers, slices) => writers[key]!.insertBefore(offset, resolveSlices(checked, slices)));
 		},
 		insertAfter(offset, code) {
-			writer.insertAfter(offset, checkCode(plugin, file, code));
+			checkRange(offset, offset);
+			const checked = checkCode(file, code);
+			edits.push((writers, slices) => writers[key]!.insertAfter(offset, resolveSlices(checked, slices)));
 		},
 		replace(start, end, code) {
-			writer.replace(start, end, checkCode(plugin, file, code));
+			checkRange(start, end);
+			if (start === end) {
+				throw new RangeError(`The codegen plugin '${plugin}' replaced ${start}..${end}, which is no char.`);
+			}
+			const checked = checkCode(file, code);
+			edits.push((writers, slices) => writers[key]!.replace(start, end, resolveSlices(checked, slices)));
 		},
 		cut(start, end, options) {
+			checkRange(start, end);
 			const features = (options as Partial<RewriteCutOptions<IRBlock, VueCodegenData>> | undefined)?.data?.features;
 			if (!Number.isInteger(features)) {
 				throw new TypeError(`The codegen plugin '${plugin}' cut with features that are not an integer.`);
 			}
-			const { placeholder } = options;
-			const slice = writer.cut(start, end, {
-				data: { features: features! },
-				placeholder: placeholder === undefined ? undefined : checkCode(plugin, file, placeholder),
-			});
-			const handle: VueCodegenSlice = {
-				render() {
-					throw new TypeError(`The codegen plugin '${plugin}' rendered a slice, which renders where it is inserted.`);
-				},
-			};
-			file.slices.set(handle, slice);
-			return handle;
+			const placeholder = options.placeholder === undefined ? undefined : checkCode(file, options.placeholder);
+			const slice = new PluginSlice(plugin, { features: features! });
+			file.cuts.add(slice);
+			edits.push((writers, slices) =>
+				slices.set(
+					slice,
+					writers[key]!.cut(start, end, {
+						data: { features: features! },
+						placeholder: placeholder === undefined ? undefined : resolveSlices(placeholder, slices),
+					}),
+				)
+			);
+			return slice;
 		},
 	};
 }
 
-/**
- * `code` with the slices that the writers of the file cut in place of their handles; throws if a part of it is not a
- * piece of `checkPieces` or such a handle.
- */
-function checkCode(plugin: string, file: CodeCheck, code: VueCodegenCode): RewriteCode<IRBlock, TsCodeData> {
+/** `code`, which throws if a part of it is not a piece of `checkPiece` or a slice that the writers of `file` cut. */
+function checkCode(file: CodeCheck, code: VueCodegenCode): VueCodegenCode {
 	if (Array.isArray(code)) {
-		return (code as readonly VueCodegenCode[]).map(part => checkCode(plugin, file, part));
-	}
-	if (typeof code === 'object' && code !== null && 'render' in code) {
-		const slice = file.slices.get(code);
-		if (!slice) {
-			throw invalid(plugin, 'a slice that no writer of the file cut');
+		for (const part of code as readonly VueCodegenCode[]) {
+			checkCode(file, part);
 		}
-		return slice;
 	}
-	checkPiece(plugin, file.blocks, code as VueCodegenPiece);
+	else if (isSlice(code)) {
+		if (!file.cuts.has(code)) {
+			throw invalid(file.plugin, 'a slice that its writers did not cut');
+		}
+	}
+	else {
+		checkPiece(file.plugin, file.blocks, code as VueCodegenPiece);
+	}
 	return code;
+}
+
+/** `code` with the slices of `slices` in place of their handles. */
+function resolveSlices(code: VueCodegenCode, slices: PluginSlices): RewriteCode<IRBlock, TsCodeData> {
+	if (Array.isArray(code)) {
+		return (code as readonly VueCodegenCode[]).map(part => resolveSlices(part, slices));
+	}
+	if (isSlice(code)) {
+		return slices.get(code)!;
+	}
+	return code as VueCodegenPiece;
 }
 
 function checkPiece(plugin: string, blocks: Set<IRBlock>, piece: VueCodegenPiece) {

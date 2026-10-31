@@ -136,8 +136,9 @@ one of `VueCodegenFilePlugin`, fail the transform of the file.
 no cache shared across projects. The mapper hashes the plugin's entry file, its package's
 `name@version` and the entry config into the project identity, so nothing else is tracked. Data from
 elsewhere reaches TypeScript through type imports (`import('…')`), which TypeScript resolves and
-watches. The mapper reads each hook at most once for a snapshot, when it needs the slot, so what the
-hooks share belongs in the closure of `codegen`.
+watches. The mapper runs each hook at most once for a snapshot: `rewrite` first, and a slot when it
+needs it, so what the hooks share belongs in the closure of `codegen`, and a slot can place what
+`rewrite` cut.
 
 `file.name(hint)` gives the name of an identifier that the plugin declares: `__VLS_<hint>`, or that
 with `$<n>` when the generated code or a plugin before took it; the same hint gives the same name.
@@ -152,9 +153,11 @@ The code of a slot is a `VueCodegenPiece` or pieces in order: plain strings, whi
 report no diagnostics, and ranges `{ source, start, end, data: { features }, text? }` of a block
 `source`, mapped there with the given features (e.g. `scriptFeatures`). A range without `text` copies
 the text of the block; with `text`, the text maps to the range char by char when it is as long as the
-range, and as a whole otherwise (e.g. to report a diagnostic there). A piece that is not text or a
-range of a block of the file throws. A slot holds no slice, which renders in the block it is cut
-from.
+range, and as a whole otherwise (e.g. to report a diagnostic there). The code of a slot can also
+hold slices that the writers of the plugin cut; the mapper places the code of each slot once, so a
+slice there moves its chars, with the edits of all plugins in them, into the slot. A piece that is
+not text or a range of a block of the file, and a slice that the writers of the plugin did not cut,
+throw.
 
 ```js
 // define-prop.js: `defineProp<number>('count')` in `<script setup>` declares the public prop `count`
@@ -218,9 +221,10 @@ before `offset` (at the start of the block, to the start of the block), and the 
 the mapper copies that char. `replace(start, end, code)` drops the chars of `start..end` and puts
 `code` in the place of the first; the code attached to them stays. Removals of several plugins are
 united. `cut(start, end, { data, placeholder })` returns a slice of the chars of `start..end` with all
-the edits in them, which renders where it is inserted, exactly once, and nowhere if it is not (a
-plugin renders no slice: its `render` throws, as a render would freeze the edits of the plugins after
-it, and a writer takes only the slices that the writers of the file cut); the cuts of all plugins and
+the edits in them, which renders where it is inserted or placed in a slot, exactly once, and nowhere
+if it is not (a plugin renders no slice: its `render` throws, as a render would freeze the edits of
+the plugins after it, and a writer takes only the slices that the writers of its plugin cut); the
+cuts of all plugins and
 the mapper nest or are disjoint, and a cut that partly overlaps another one throws, since no output
 can render the shared chars once in both slices. Its chars map with `data.features` (e.g.
 `scriptFeatures`), and `placeholder` takes their place where they are cut from. When the mapper

@@ -1,14 +1,26 @@
 import { SpanMapKind } from '@volar/language-core';
-import { type IRScript, type IRScriptSetup, scriptFeatures } from '@vue/language-core';
+import {
+	codeToString,
+	getDefaultCompilerOptions,
+	type IRScript,
+	type IRScriptSetup,
+	resolveCodeOffsets,
+	scriptFeatures,
+} from '@vue/language-core';
+import { loadTypeScript } from '@vue/language-core/typescript';
 import { expect, test } from 'vitest';
+import { useServiceScript } from '../lib/codegen';
 import {
 	type CodegenPlugin,
 	loadCodegenPlugins,
+	PluginSlice,
 	type VueCodegenFile,
+	type VueCodegenFilePlugin,
 	type VueCodegenPlugin,
+	type VueCodegenSlice,
 	type VueCodegenWriter,
 } from '../lib/codegen/plugin';
-import { generate } from './utils';
+import { createSnapshot, createSource, generate } from './utils';
 
 /** The plugin of `codegen`, loaded as the `codegen` export of an entry `name`. */
 function plugin(codegen: VueCodegenPlugin, name = 'test-plugin'): CodegenPlugin {
@@ -161,6 +173,104 @@ test('moves the code that a plugin cuts to where it inserts the cut, with the ed
 		originalStart: content.indexOf('const a'),
 		kind: SpanMapKind.Verbatim,
 	}));
+});
+
+/** A plugin that moves the type argument of `defineProp<T>('foo')` into the props, with the edits of `edit` in it. */
+function moveTypeArgument(edit?: (writer: VueCodegenWriter, block: IRScriptSetup) => void, onRewrite?: () => void) {
+	return plugin(({ ir }) => {
+		let type: VueCodegenSlice | undefined;
+		return {
+			rewrite({ scriptSetup }) {
+				onRewrite?.();
+				const block = ir.scriptSetup!;
+				edit?.(scriptSetup!, block);
+				const { start, end } = rangeOf(block, 'string');
+				type = scriptSetup!.cut(start, end, { data: { features: scriptFeatures }, placeholder: 'any' });
+			},
+			props: () => [['{ foo: ', type!, ' }']],
+		};
+	});
+}
+
+test('moves the code that a plugin cuts into a slot, with the edits in it', () => {
+	const content = `<script setup lang="ts">\nconst foo = defineProp<string>('foo');\n</script>\n`;
+	const { text, mappings } = generateWith(
+		content,
+		moveTypeArgument((writer, block) => writer.insertBefore(rangeOf(block, 'string').start, 'Lowercase<'), undefined),
+		rewriteSetup((writer, block) => writer.insertAfter(rangeOf(block, 'string').end, '>')),
+	);
+	expect(text).toContain(`const foo = defineProp<any>('foo');`);
+	expect(text).toContain('{ foo: Lowercase<string> }');
+	expect(mappings).toContainEqual(expect.objectContaining({
+		virtualStart: text.indexOf('string>'),
+		originalStart: content.indexOf('string'),
+		kind: SpanMapKind.Verbatim,
+	}));
+	for (
+		const slot of [
+			() => ({ props: () => [new PluginSlice('test-plugin', { features: 0 })] }),
+			() => ({ props: () => [{ render() {} }] as never }),
+		]
+	) {
+		expect(() => generateWith(content, plugin(slot))).toThrow(`'test-plugin'`);
+	}
+});
+
+test('places the code of each slot of a plugin once, so that a slice in it renders', () => {
+	const setup = `const a = 1; /* moved */\n`;
+	const contents = [
+		`<script setup lang="ts">\n${setup}</script>\n<template><div>{{ $attrs }}</div></template>\n`,
+		`<script setup lang="ts" generic="U">\n${setup}</script>\n<template><div>{{ $attrs }}</div></template>\n`,
+		`<script lang="ts">\nexport default {};\n</script>\n<script setup lang="ts">\n${setup}</script>\n`
+		+ `<template><div>{{ $attrs }}</div></template>\n`,
+	];
+	const slots: ((file: VueCodegenFile, moved: () => VueCodegenSlice) => VueCodegenFilePlugin)[] = [
+		(_, moved) => ({ templateContext: () => [['{ a: 1 }', moved()]] }),
+		(_, moved) => ({ templateBody: () => [moved()] }),
+		(file, moved) => {
+			const name = file.name('Moved');
+			return { templateTypes: () => [{ name, code: ['{}', moved()] }] };
+		},
+		(_, moved) => ({ templateDollars: () => [['{}', moved()]] }),
+		({ ir }, moved) => ({ elementEnd: () => new Map([[ir.template!.ast!.children[0] as never, [moved()]]]) }),
+		(_, moved) => ({ props: () => [['{ a?: 1 }', moved()]] }),
+		(_, moved) => ({ emits: () => [['{ a: [] }', moved()]] }),
+		(_, moved) => ({ expose: () => [['{ a: 1 }', moved()]] }),
+		(_, moved) => ({ generic: () => [['T', moved()]] }),
+		(_, moved) => ({ elements: () => [['{ div: HTMLDivElement }', moved()]] }),
+		(_, moved) => ({ declarations: () => [moved()] }),
+	];
+	const vueCompilerOptions = { ...getDefaultCompilerOptions(), inferTemplateDollarAttrs: true };
+	for (const content of contents) {
+		for (const slot of slots) {
+			const moving = plugin(file => {
+				let moved: VueCodegenSlice | undefined;
+				return {
+					rewrite({ scriptSetup }) {
+						const { start, end } = rangeOf(file.ir.scriptSetup!, '/* moved */');
+						moved = scriptSetup!.cut(start, end, { data: { features: scriptFeatures } });
+					},
+					...slot(file, () => moved!),
+				};
+			});
+			const { text } = generate('/Comp.vue', content, vueCompilerOptions, [moving]);
+			expect(text.split('/* moved */').length, `${slot}\n${content}`).toBe(2);
+		}
+	}
+});
+
+test('places the slices of a slot of a plugin in each rewrite of its snapshot', () => {
+	const script = `<script setup lang="ts">\nconst foo = defineProp<string>('foo');\n</script>\n`;
+	const source = createSource('/Comp.vue', script + `<template>{{ 1 }}</template>\n`);
+	let rewrites = 0;
+	const getServiceScript = useServiceScript(loadTypeScript(), source, [moveTypeArgument(undefined, () => rewrites++)]);
+	const render = () => codeToString(resolveCodeOffsets(source.ir, getServiceScript().codes));
+	expect(render()).toContain('{ foo: string }');
+	source.update(createSnapshot(script + `<template>{{ 2 }}</template>\n`));
+	const text = render();
+	expect(text).toContain('{ foo: string }');
+	expect(text).toContain('2');
+	expect(rewrites).toBe(1);
 });
 
 test('leaves the placeholder of a cut where its chars are cut from, and maps them with its features', () => {

@@ -3,7 +3,13 @@ import { BindingFlag } from '@vue/language-core/lib/script/scriptBindings';
 import { computed } from 'alien-signals';
 import { type FilePlugin, mergeSlots } from './filePlugin';
 import { createPluginNames, names } from './names';
-import { type CodegenPlugin, rewriteScripts, type VueCodegenFile, type VueCodegenTemplate } from './plugin';
+import {
+	type CodegenPlugin,
+	recordEdits,
+	rewriteScripts,
+	type VueCodegenFile,
+	type VueCodegenTemplate,
+} from './plugin';
 import { createInheritedAttrsPlugin } from './plugins/inheritedAttrs';
 import { createRefsPlugin } from './plugins/refs';
 import { createRootElPlugin } from './plugins/rootEl';
@@ -11,12 +17,12 @@ import { createSlotsPlugin } from './plugins/slots';
 import { generateScript } from './script';
 import { createStylePlugin } from './style';
 import { generateTemplate } from './template';
-import type { TsCode } from './tsCode';
+import type { TsPiece } from './tsCode';
 
 /** The generated TypeScript / JavaScript code of a Vue file, and the language TypeScript should see it as. */
 export interface ServiceScript {
 	lang: 'js' | 'jsx' | 'ts' | 'tsx';
-	codes: TsCode[];
+	codes: TsPiece[];
 }
 
 /** The built-in codegen plugins, in the order that their code takes in each slot, before the other plugins. */
@@ -118,7 +124,9 @@ function useCodegen(
 					return pluginName;
 				},
 			};
-			return { ...create(file, names), name };
+			const plugin = create(file, names);
+			const getEdits = computed(() => recordEdits(name, ir, plugin.rewrite?.bind(plugin)));
+			return { ...plugin, name, getEdits };
 		});
 		naming = false;
 		return filePlugins;
@@ -197,7 +205,7 @@ function useCodegen(
 				generic: slots.generic(),
 				exposedInstanceTypes: slots.exposedInstanceTypes(),
 			},
-			rewriteScripts: rewrites => rewriteScripts(getFilePlugins(), ir, rewrites),
+			rewriteScripts: rewrites => rewriteScripts(getFilePlugins(), rewrites),
 		});
 	});
 

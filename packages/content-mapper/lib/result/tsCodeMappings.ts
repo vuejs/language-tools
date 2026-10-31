@@ -1,6 +1,6 @@
 import { isCompletionEnabled, SpanMapKind, type SpanMapSegment } from '@volar/language-core';
 import { pieceText, type VueCodeMarker } from '@vue/language-core';
-import { isSynthesizedIgnore, OpenRanges, type TsCode } from '../codegen/tsCode';
+import { isSynthesizedIgnore, OpenRanges, type TsPiece } from '../codegen/tsCode';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../protocol';
 
 interface Entry {
@@ -10,7 +10,7 @@ interface Entry {
 	info: VueCodeMarker;
 }
 
-export function buildMappings(chunks: TsCode[]): SpanMapSegment[] {
+export function buildMappings(chunks: TsPiece[]): SpanMapSegment[] {
 	return toItems(chunks).flatMap(item => isGroup(item) ? fromGroup(item) : [toMapping(item)]);
 }
 
@@ -57,7 +57,7 @@ function toMapping({ generatedStart, length, sourceStart, info }: Entry): SpanMa
  * diagnostics are ignored, the ranges of synthesized ignores and the `unmapped` ranges, is covered outside of the
  * explicit directives by ignore directives without an original range.
  */
-export function buildDiagnosticDirectives(chunks: TsCode[], unmapped: readonly [start: number, end: number][] = []) {
+export function buildDiagnosticDirectives(chunks: TsPiece[], unmapped: readonly [start: number, end: number][] = []) {
 	const directives = collectDiagnosticDirectives(chunks);
 	const explicit = checkExplicitDiagnosticDirectives(directives.filter(directive => !isSynthesizedIgnore(directive)));
 	const ignored = mergeRanges([
@@ -83,7 +83,7 @@ function createIgnoreDirectives(
 		.map<DiagnosticDirectiveMapping>(([start, end]) => [0, 0, start, end, DiagnosticDirectivePolicy.Ignore]);
 }
 
-function collectDiagnosticDirectives(chunks: TsCode[]) {
+function collectDiagnosticDirectives(chunks: TsPiece[]) {
 	const directives: DiagnosticDirectiveMapping[] = [];
 	const ranges = new OpenRanges<VueCodeMarker>();
 	let generatedStart = 0;
@@ -143,7 +143,7 @@ function checkExplicitDiagnosticDirectives(directives: DiagnosticDirectiveMappin
  * The pieces mapping themselves, and the bounded ranges as groups of their bounds and the pieces without data they
  * enclose, which carry the data of the range. A piece whose text is not as long as its range bounds the range itself.
  */
-function toItems(chunks: TsCode[]) {
+function toItems(chunks: TsPiece[]) {
 	const items: (Entry | Entry[])[] = [];
 	const ranges = new OpenRanges<Entry[]>();
 	let generatedStart = 0;

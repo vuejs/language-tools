@@ -1,7 +1,7 @@
 import type { IR } from '@vue/language-core';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
-import { mapped, synthesizedIgnore, type TsCode } from '../lib/codegen/tsCode';
+import { mapped, synthesizedIgnore, type TsPiece } from '../lib/codegen/tsCode';
 import {
 	type DiagnosticDirectiveMapping,
 	DiagnosticDirectivePolicy,
@@ -49,7 +49,7 @@ test('ignores synthesized virtual regions without overlapping explicit directive
 		[6, 2, 2, 2, SpanMapKind.Verbatim, 0],
 	];
 	const expectation: DiagnosticDirectiveMapping = [0, 1, 5, 7, DiagnosticDirectivePolicy.Expect];
-	const chunks: TsCode[] = [
+	const chunks: TsPiece[] = [
 		'01234',
 		mapped('', file, 0, { start: [0, 1, 0, 0, DiagnosticDirectivePolicy.Expect] }),
 		'56',
@@ -70,7 +70,7 @@ test('merges synthesized ignores with the ignores of mapped regions', () => {
 		[0, 2, 0, 2, SpanMapKind.Verbatim, 0],
 		[4, 2, 0, 2, SpanMapKind.Verbatim, 0],
 	];
-	const chunks: TsCode[] = [
+	const chunks: TsPiece[] = [
 		'0123',
 		mapped('', file, 0, { start: synthesizedIgnore }),
 		'45',
