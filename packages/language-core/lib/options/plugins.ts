@@ -37,24 +37,16 @@ export function loadIRPlugins(
 	const formatOwners = new Map<string, string>();
 	const templateCompilerOwners = new Map<string, string>();
 
-	for (const { name, config, module } of vueCompilerOptions.plugins) {
-		if (isLegacyPlugin(module)) {
-			loaded.errors.push({ plugin: name, message: legacyPluginMessage });
+	for (const { name, plugin, error } of createIRPlugins(vueCompilerOptions)) {
+		if (error !== undefined) {
+			loaded.errors.push({ plugin: name, message: error });
 			continue;
 		}
-		const ir = (module as VuePluginModule | undefined)?.ir;
-		if (!ir) {
+		if (!plugin) {
 			continue;
 		}
-		let plugin: VueIRPlugin;
-		try {
-			plugin = typeof ir === 'function'
-				? ir({ config, vueCompilerOptions } satisfies VuePluginContext)
-				: ir;
-		}
-		catch (error) {
-			loaded.errors.push({ plugin: name, message: `Failed to create the \`ir\` export: ${error}` });
-			continue;
+		for (const message of readMacros(plugin, vueCompilerOptions).errors) {
+			loaded.errors.push({ plugin: name, message });
 		}
 		claim('format', plugin.formats, builtIn.formats, formatOwners, loaded.formats);
 		claim(
@@ -92,6 +84,79 @@ export function loadIRPlugins(
 	}
 
 	return loaded;
+}
+
+/**
+ * The macros of `vueCompilerOptions` with the calls that the `ir` exports of its plugins add to each, in `plugins`
+ * order.
+ */
+export function resolvePluginMacros(vueCompilerOptions: VueCompilerOptions): VueCompilerOptions['macros'] {
+	const macros = { ...vueCompilerOptions.macros };
+	for (const { plugin } of createIRPlugins(vueCompilerOptions)) {
+		if (plugin) {
+			for (const [key, names] of readMacros(plugin, vueCompilerOptions).macros) {
+				macros[key] = [...new Set([...macros[key], ...names])];
+			}
+		}
+	}
+	return macros;
+}
+
+interface IRPluginInstance {
+	name: string;
+	plugin?: VueIRPlugin;
+	/** Why the entry has no effect. */
+	error?: string;
+}
+
+const instances = new WeakMap<VueCompilerOptions['plugins'], IRPluginInstance[]>();
+
+/**
+ * The `ir` export of each plugin of `vueCompilerOptions`, created once for its `plugins`, with the options that first
+ * read them: the options of an SFC comment share the plugins of their project.
+ */
+function createIRPlugins(vueCompilerOptions: VueCompilerOptions) {
+	let created = instances.get(vueCompilerOptions.plugins);
+	if (!created) {
+		created = vueCompilerOptions.plugins.map(({ name, config, module }): IRPluginInstance => {
+			if (isLegacyPlugin(module)) {
+				return { name, error: legacyPluginMessage };
+			}
+			const ir = (module as VuePluginModule | undefined)?.ir;
+			try {
+				return {
+					name,
+					plugin: typeof ir === 'function'
+						? ir({ config, vueCompilerOptions } satisfies VuePluginContext)
+						: ir,
+				};
+			}
+			catch (error) {
+				return { name, error: `Failed to create the \`ir\` export: ${error}` };
+			}
+		});
+		instances.set(vueCompilerOptions.plugins, created);
+	}
+	return created;
+}
+
+/** The `macros` of `plugin` that name a macro of `vueCompilerOptions` with a list of calls, and why the others do not. */
+function readMacros(plugin: VueIRPlugin, vueCompilerOptions: VueCompilerOptions) {
+	const macros: [keyof VueCompilerOptions['macros'], string[]][] = [];
+	const errors: string[] = [];
+	for (const key in plugin.macros) {
+		const names: unknown = plugin.macros[key as keyof VueCompilerOptions['macros']];
+		if (!Object.hasOwn(vueCompilerOptions.macros, key)) {
+			errors.push(`'${key}' is not a macro.`);
+		}
+		else if (!Array.isArray(names) || names.some(name => typeof name !== 'string')) {
+			errors.push(`The calls of the macro '${key}' are not a list of names.`);
+		}
+		else {
+			macros.push([key as keyof VueCompilerOptions['macros'], names]);
+		}
+	}
+	return { macros, errors };
 }
 
 function isLegacyPlugin(module: unknown) {

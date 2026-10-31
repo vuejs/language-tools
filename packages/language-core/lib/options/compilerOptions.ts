@@ -4,6 +4,7 @@ import picomatch from 'picomatch';
 import { hyphenateTag } from '../names';
 import type { RawPlugin, RawVueCompilerOptions, ResolvedVuePlugin, VueCompilerOptions, VuePluginError } from '../types';
 import { getDefaultTypesRoot } from '../typesRoot';
+import { resolvePluginMacros } from './plugins';
 
 export class CompilerOptionsResolver {
 	options: Omit<RawVueCompilerOptions, 'target' | 'typesRoot' | 'plugins'> = {};
@@ -100,6 +101,7 @@ export class CompilerOptionsResolver {
 		// Compiling a glob costs far more than testing it, and codegen tests every prop against these
 		resolvedOptions.isDataAttribute = picomatch(resolvedOptions.dataAttributes);
 		resolvedOptions.isHtmlAttribute = picomatch(resolvedOptions.htmlAttributes);
+		resolvedOptions.macros = resolvePluginMacros(resolvedOptions);
 
 		return resolvedOptions;
 	}

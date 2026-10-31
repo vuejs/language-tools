@@ -49,6 +49,7 @@ export function createScriptAnalysis(
 		if (options) {
 			const resolver = new CompilerOptionsResolver(() => undefined /* does not support resolving target="auto" */);
 			resolver.addConfig(options, path.dirname(fileName));
+			resolver.plugins = vueCompilerOptions.plugins;
 			return resolver.build(vueCompilerOptions);
 		}
 		return vueCompilerOptions;

@@ -278,6 +278,8 @@ export interface VueIRPlugin {
 	templateCompilers?: Record<string, (source: string) => TemplateHTML | undefined>;
 	/** Applied in `plugins` order to the options of every template compiler. */
 	resolveTemplateCompilerOptions?(options: CompilerDOM.CompilerOptions): CompilerDOM.CompilerOptions;
+	/** Calls to read as a macro of the key, e.g. `{ defineProps: ['$defineProps'] }`, added to `vueCompilerOptions.macros`. */
+	macros?: Partial<VueCompilerOptions['macros']>;
 }
 
 /** Why a `plugins` entry, a part of it or the `format`, has no effect. */

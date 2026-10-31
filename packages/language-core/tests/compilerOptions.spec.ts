@@ -3,10 +3,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createIRPipeline } from '../lib/ir/irPipeline';
-import { CompilerOptionsResolver } from '../lib/options/compilerOptions';
+import { createVueSource } from '../lib/ir/vueSource';
+import { CompilerOptionsResolver, getDefaultCompilerOptions } from '../lib/options/compilerOptions';
 import { loadIRPlugins } from '../lib/options/plugins';
 import type { VueCompilerOptions } from '../lib/types';
-import { ts } from './typescript';
+import { createSnapshot, ts } from './typescript';
 
 const PLUGIN_NAME = '@fixture/vue-language-plugin-pug';
 
@@ -165,5 +166,67 @@ describe('CompilerOptionsResolver', () => {
 		resolver.addConfig({ jsxSlots: true }, tmpDir);
 
 		expect(resolver.build().plugins).toEqual([]);
+	});
+
+	it('adds the macro calls of the plugins to the macros of the options, creating each `ir` export once', () => {
+		let created = 0;
+		const resolver = new CompilerOptionsResolver(() => undefined);
+		resolver.addConfig({ macros: { ...getDefaultCompilerOptions().macros, defineProps: ['myProps'] } }, '/project');
+		resolver.plugins = [
+			{
+				name: 'a',
+				file: '/project/a.js',
+				config: {},
+				module: { ir: () => (created++, { macros: { defineProps: ['$defineProps', 'myProps'] } }) },
+			},
+			{ name: 'b', file: '/project/b.js', config: {}, module: { ir: { macros: { defineEmits: ['$defineEmits'] } } } },
+		];
+
+		const vueCompilerOptions = resolver.build();
+		expect(vueCompilerOptions.macros.defineProps).toEqual(['myProps', '$defineProps']);
+		expect(vueCompilerOptions.macros.defineEmits).toEqual(['defineEmits', '$defineEmits']);
+		expect(createIRPipeline(ts, vueCompilerOptions).errors).toEqual([]);
+		expect(created).toBe(1);
+
+		const source = createVueSource(
+			ts,
+			vueCompilerOptions,
+			createIRPipeline(ts, vueCompilerOptions),
+			'/project/App.vue',
+			createSnapshot(`<script setup lang="ts">\nconst props = $defineProps<{ a: string }>();\n</script>\n`),
+		);
+		expect(source.analysis.getScriptSetupRanges()?.defineProps?.name).toBe('props');
+
+		const commented = createVueSource(
+			ts,
+			vueCompilerOptions,
+			createIRPipeline(ts, vueCompilerOptions),
+			'/project/App.vue',
+			createSnapshot(
+				`<!-- @macros { "defineProps": ["mine"] } -->\n`
+					+ `<script setup lang="ts">\nconst props = $defineProps<{ a: string }>();\n</script>\n`,
+			),
+		);
+		expect(commented.analysis.getResolvedOptions().macros.defineProps).toEqual(['mine', '$defineProps', 'myProps']);
+		expect(commented.analysis.getScriptSetupRanges()?.defineProps?.name).toBe('props');
+		expect(created).toBe(1);
+	});
+
+	it('reports the macro calls of a plugin that name no macro or are not a list of names', () => {
+		const resolver = new CompilerOptionsResolver(() => undefined);
+		resolver.plugins = [{
+			name: 'bad',
+			file: '/project/bad.js',
+			config: {},
+			module: { ir: { macros: { defineFoo: ['$defineFoo'], defineProps: '$defineProps', defineEmits: [1] } } },
+		}];
+
+		const vueCompilerOptions = resolver.build();
+		expect(vueCompilerOptions.macros).toEqual(new CompilerOptionsResolver(() => undefined).build().macros);
+		expect(createIRPipeline(ts, vueCompilerOptions).errors).toEqual([
+			{ plugin: 'bad', message: `'defineFoo' is not a macro.` },
+			{ plugin: 'bad', message: `The calls of the macro 'defineProps' are not a list of names.` },
+			{ plugin: 'bad', message: `The calls of the macro 'defineEmits' are not a list of names.` },
+		]);
 	});
 });
