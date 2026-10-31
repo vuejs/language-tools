@@ -1,0 +1,16 @@
+{
+	// Type-checks the services submodule with the repo's TypeScript 7 and the services' own options, emitting only declarations for project references.
+	// Its runtime JS is emitted by `npm run build:services` (TypeScript 7.1), as the services publish it.
+	"extends": "../services/packages/pug/tsconfig.json",
+	"compilerOptions": {
+		"rootDir": "../services/packages/pug",
+		"emitDeclarationOnly": true,
+		"declarationDir": "../node_modules/.services-types/pug",
+		"tsBuildInfoFile": "../node_modules/.services-types/pug.tsbuildinfo"
+	},
+	"references": [
+		{ "path": "../tsconfig.volar/language-service.json" },
+		{ "path": "./html.json" },
+		{ "path": "../tsconfig.muggle-pug/muggle-pug.json" }
+	]
+}

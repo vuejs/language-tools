@@ -1,0 +1,16 @@
+[submodule "volar.js"]
+	path = volar.js
+	url = https://github.com/volarjs/volar.js.git
+	branch = cursor/typescript-7-build-39dc
+[submodule "services"]
+	path = services
+	url = https://github.com/volarjs/services.git
+	branch = cursor/muggle-pug-0c97
+[submodule "muggle-string"]
+	path = muggle-string
+	url = https://github.com/johnsoncodehk/muggle-string.git
+	branch = master
+[submodule "muggle-pug"]
+	path = muggle-pug
+	url = https://github.com/johnsoncodehk/muggle-pug.git
+	branch = master

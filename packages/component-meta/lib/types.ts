@@ -1,134 +1,100 @@
-import type * as ts from 'typescript';
+export type TypeScript =
+	& typeof import('typescript/ast', { with: { 'resolution-mode': 'import' }})
+	& typeof import('typescript/async', { with: { 'resolution-mode': 'import' }});
 
-export type ComponentMetaChecker = ReturnType<typeof import('./checker')['createCheckerBase']>;
+export type ComponentMetaChecker = Awaited<ReturnType<typeof import('../index')['createChecker']>>;
 
+/** A declaration's range in UTF-16 offsets of the file's source text (for a Vue file, its `.vue` text). */
 export interface Declaration {
 	file: string;
-	range: [number, number];
+	start: number;
+	end: number;
 }
+
+/** An index into `ComponentMeta.types`. */
+export type TypeId = number;
 
 export interface ComponentMeta {
 	name?: string;
 	description?: string;
-	type: TypeMeta;
-	props: PropertyMeta[];
+	props: PropMeta[];
 	events: EventMeta[];
 	slots: SlotMeta[];
 	exposed: ExposeMeta[];
+	/** The types that members refer to by `TypeId`, each resolved once. */
+	types: TypeNode[];
 }
 
-export enum TypeMeta {
-	Unknown = 0,
-	Class = 1,
-	Function = 2,
-}
-
-export interface PropertyMeta {
+export interface Tag {
 	name: string;
-	description: string;
-	type: string;
-	default?: string;
-	global: boolean;
+	text?: string;
+}
+
+export interface PropMeta {
+	name: string;
 	required: boolean;
-	tags: { name: string; text?: string }[];
-	schema: PropertyMetaSchema;
-	/**
-	 * @deprecated use `getDeclarations()` instead
-	 */
+	default?: string;
+	description: string;
+	tags: Tag[];
+	/** Declared by Vue or the global component props (e.g. `key`, `class`) rather than the component. */
+	global: boolean;
 	declarations: Declaration[];
-	/**
-	 * @deprecated use `getTypeObject()` instead
-	 */
-	rawType?: ts.Type;
-	getDeclarations(): Declaration[];
-	getTypeObject(): ts.Type;
+	type: TypeId;
 }
 
 export interface EventMeta {
 	name: string;
 	description: string;
-	type: string;
-	signature: string;
-	tags: { name: string; text?: string }[];
-	schema: PropertyMetaSchema[];
-	/**
-	 * @deprecated use `getDeclarations()` instead
-	 */
+	tags: Tag[];
+	/** The event's call signature. */
 	declarations: Declaration[];
-	/**
-	 * @deprecated use `getTypeObject()` instead
-	 */
-	rawType?: ts.Type;
-	getDeclarations(): Declaration[];
-	getTypeObject(): ts.Type | undefined;
+	/** A `function` type of the event's arguments. */
+	type: TypeId;
 }
 
 export interface SlotMeta {
 	name: string;
 	description: string;
-	type: string;
-	tags: { name: string; text?: string }[];
-	schema: PropertyMetaSchema;
-	/**
-	 * @deprecated use `getDeclarations()` instead
-	 */
+	tags: Tag[];
 	declarations: Declaration[];
-	/**
-	 * @deprecated use `getTypeObject()` instead
-	 */
-	rawType?: ts.Type;
-	getDeclarations(): Declaration[];
-	getTypeObject(): ts.Type;
+	/** The type of the slot props. */
+	type: TypeId;
 }
 
 export interface ExposeMeta {
 	name: string;
 	description: string;
-	type: string;
-	tags: { name: string; text?: string }[];
-	schema: PropertyMetaSchema;
-	/**
-	 * @deprecated use `getDeclarations()` instead
-	 */
+	tags: Tag[];
 	declarations: Declaration[];
-	/**
-	 * @deprecated use `getTypeObject()` instead
-	 */
-	rawType?: ts.Type;
-	getDeclarations(): Declaration[];
-	getTypeObject(): ts.Type;
+	type: TypeId;
 }
 
-export type PropertyMetaSchema =
-	| string
-	| { kind: 'literal'; type: string; value: string }
-	| { kind: 'enum'; type: string; schema?: PropertyMetaSchema[] }
-	| { kind: 'array'; type: string; schema?: PropertyMetaSchema[] }
-	| { kind: 'event'; type: string; schema?: PropertyMetaSchema[] }
-	| { kind: 'object'; type: string; schema?: Record<string, PropertyMeta> };
-
-export type MetaCheckerSchemaOptions = boolean | {
-	/**
-	 * A list of type names to be ignored in expending in schema.
-	 * Can be functions to ignore types dynamically.
-	 */
-	ignore?:
-		(string | ((name: string, type: ts.Type, typeChecker: ts.TypeChecker) => boolean | void | undefined | null))[];
-};
-
-export interface MetaCheckerOptions {
-	schema?: MetaCheckerSchemaOptions;
-	printer?: ts.PrinterOptions;
-	/**
-	 * @deprecated No longer needed, this is default behavior now
-	 */
-	noDeclarations?: boolean;
-	/**
-	 * @deprecated No longer needed, this is default behavior now
-	 */
-	forceUseTs?: boolean;
-	/**
-	 * @deprecated No longer needed, use `getTypeObject()` instead
-	 */
-	rawType?: boolean;
+export interface PropertyNode {
+	name: string;
+	optional: boolean;
+	description: string;
+	type: TypeId;
 }
+
+export interface ParameterNode {
+	name: string;
+	optional: boolean;
+	rest: boolean;
+	type: TypeId;
+}
+
+/**
+ * A type as written by the checker (`text`) and, unless it is declared outside the project's own source files, its
+ * structure.
+ */
+export type TypeNode =
+	& { text: string }
+	& (
+		| { kind: 'primitive' | 'literal' }
+		| { kind: 'union'; types: TypeId[] }
+		| { kind: 'array'; element: TypeId }
+		| { kind: 'tuple'; elements: TypeId[] }
+		| { kind: 'object'; properties: PropertyNode[] }
+		| { kind: 'function'; parameters: ParameterNode[]; returns: TypeId }
+		| { kind: 'external'; declaration?: Declaration }
+	);

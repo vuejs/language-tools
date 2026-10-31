@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "3.3.14",
+	"version": "4.0.0-alpha.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -44,6 +44,17 @@
 					"jsconfig-*.json"
 				],
 				"url": "./schemas/vue-tsconfig.schema.json"
+			},
+			{
+				"fileMatch": [
+					"tsconfig.json",
+					"tsconfig.*.json",
+					"tsconfig-*.json",
+					"jsconfig.json",
+					"jsconfig.*.json",
+					"jsconfig-*.json"
+				],
+				"url": "./schemas/vue-content-mapper-tsconfig.schema.json"
 			}
 		],
 		"languages": [
@@ -215,35 +226,6 @@
 				]
 			}
 		],
-		"semanticTokenScopes": [
-			{
-				"language": "vue",
-				"scopes": {
-					"component": [
-						"support.class.component.vue",
-						"entity.name.type.class.vue"
-					]
-				}
-			},
-			{
-				"language": "markdown",
-				"scopes": {
-					"component": [
-						"support.class.component.vue",
-						"entity.name.type.class.vue"
-					]
-				}
-			},
-			{
-				"language": "html",
-				"scopes": {
-					"component": [
-						"support.class.component.vue",
-						"entity.name.type.class.vue"
-					]
-				}
-			}
-		],
 		"breakpoints": [
 			{
 				"language": "vue"
@@ -291,10 +273,32 @@
 				"vue.server.includeLanguages": {
 					"type": "array",
 					"items": {
-						"type": "string"
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "object",
+								"properties": {
+									"language": {
+										"type": "string"
+									},
+									"pattern": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"language"
+								]
+							}
+						]
 					},
 					"default": [
-						"vue"
+						"vue",
+						{
+							"language": "markdown",
+							"pattern": "**/*.vue.md"
+						}
 					],
 					"markdownDescription": "%configuration.server.includeLanguages%"
 				},
@@ -443,40 +447,23 @@
 		"menus": {
 			"editor/context": [
 				{
-					"command": "typescript.goToSourceDefinition",
-					"when": "tsSupportsSourceDefinition && resourceLangId == vue",
-					"group": "navigation@9"
-				}
-			],
-			"explorer/context": [
-				{
-					"command": "typescript.findAllFileReferences",
-					"when": "tsSupportsFileReferences && resourceLangId == vue",
-					"group": "4_search"
-				}
-			],
-			"editor/title/context": [
-				{
-					"command": "typescript.findAllFileReferences",
-					"when": "tsSupportsFileReferences && resourceLangId == vue"
+					"command": "typescript.native-preview.goToSourceDefinition",
+					"when": "typescript.native-preview.serverRunning && tsSupportsSourceDefinition && resourceLangId == vue",
+					"group": "navigation@1.41"
 				}
 			],
 			"commandPalette": [
 				{
-					"command": "typescript.reloadProjects",
-					"when": "editorLangId == vue && typescript.isManagedFile"
+					"command": "typescript.native-preview.goToSourceDefinition",
+					"when": "typescript.native-preview.serverRunning && tsSupportsSourceDefinition && editorLangId == vue"
 				},
 				{
-					"command": "typescript.goToProjectConfig",
-					"when": "editorLangId == vue && typescript.isManagedFile"
+					"command": "typescript.native-preview.sortImports",
+					"when": "typescript.native-preview.serverRunning && supportedCodeAction =~ /(\\s|^)source\\.sortImports\\b/ && editorLangId == vue"
 				},
 				{
-					"command": "typescript.sortImports",
-					"when": "supportedCodeAction =~ /(\\s|^)source\\.sortImports\\b/ && editorLangId =~ /^vue$/"
-				},
-				{
-					"command": "typescript.removeUnusedImports",
-					"when": "supportedCodeAction =~ /(\\s|^)source\\.removeUnusedImports\\b/ && editorLangId =~ /^vue$/"
+					"command": "typescript.native-preview.removeUnusedImports",
+					"when": "typescript.native-preview.serverRunning && supportedCodeAction =~ /(\\s|^)source\\.removeUnusedImports\\b/ && editorLangId == vue"
 				}
 			]
 		}
@@ -484,21 +471,16 @@
 	"scripts": {
 		"vscode:prepublish": "rolldown --config",
 		"pack": "npx @vscode/vsce package",
-		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generated-meta.ts && cd ../.. && npm run format",
-		"version": "npm run gen-ext-meta && git add src/generated-meta.ts"
+		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generatedMeta.ts && cd ../.. && npm run format",
+		"version": "npm run gen-ext-meta && git add src/generatedMeta.ts"
 	},
 	"devDependencies": {
 		"@types/node": "^26.0.1",
 		"@types/vscode": "1.88.0",
-		"@volar/typescript": "2.4.30",
-		"@volar/vscode": "2.4.30",
-		"@vue/language-core": "workspace:*",
+		"@volar/vscode": "workspace:*",
 		"@vue/language-server": "workspace:*",
-		"@vue/typescript-plugin": "workspace:*",
-		"laplacenoma": "latest",
 		"reactive-vscode": "^1.0.2",
 		"rolldown": "latest",
-		"typescript": "latest",
 		"vscode-ext-gen": "latest",
 		"vscode-tmlanguage-snapshot": "latest"
 	}

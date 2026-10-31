@@ -1,133 +1,17 @@
-import { SourceMap } from '@volar/source-map';
 import type * as CompilerDOM from '@vue/compiler-dom';
-import type { VueLanguagePlugin } from '@vue/language-core';
-import { baseParse } from './lib/baseParse';
+import type { VueIRPlugin } from '@vue/language-core';
+import { compile } from 'muggle-pug';
 
 const classRE = /^class\s*=/;
 
-const plugin: VueLanguagePlugin = ({ modules }) => {
-	const { allCodeFeatures, codeFeatures, compileTemplate } = modules['@vue/language-core'];
-
-	return {
-		name: require('./package.json').name,
-
-		version: 2.2,
-
-		getEmbeddedCodes(_fileName, ir) {
-			if (ir.template?.lang === 'pug') {
-				return [{
-					id: 'template',
-					lang: ir.template.lang,
-				}];
-			}
-			return [];
-		},
-
-		resolveEmbeddedCode(_fileName, ir, embeddedFile) {
-			if (embeddedFile.id === 'template' && ir.template?.lang === 'pug') {
-				const minIndent = calculateMinIndent(ir.template.content);
-				if (minIndent !== 0) {
-					embeddedFile.content.push(`template\n`);
-				}
-				embeddedFile.content.push([
-					ir.template.content,
-					ir.template.name,
-					0,
-					codeFeatures?.full ?? allCodeFeatures,
-				]);
-			}
-		},
-
-		compileSFCTemplate(lang, template, options) {
-			if (lang === 'pug') {
-				let parsed: ReturnType<typeof baseParse>;
-				let baseOffset = 0;
-
-				const minIndent = calculateMinIndent(template);
-				if (minIndent === 0) {
-					parsed = baseParse(template);
-				}
-				else {
-					parsed = baseParse(`template\n${template}`);
-					baseOffset = 'template\n'.length;
-					parsed.htmlCode = ' '.repeat('<template>'.length)
-						+ parsed.htmlCode.slice('<template>'.length, -'</template>'.length)
-						+ ' '.repeat('</template>'.length);
-				}
-
-				const map = new SourceMap(parsed.mappings);
-				let ast = compileTemplate(parsed.htmlCode, {
-					...options,
-					onWarn(warning) {
-						if (warning.loc) {
-							warning.loc.start.offset = toPugOffset(warning.loc.start.offset);
-							warning.loc.end.offset = toPugOffset(warning.loc.end.offset);
-						}
-						options.onWarn?.(warning);
-					},
-					onError(error) {
-						// #5099
-						if (
-							error.code === 2 satisfies CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE
-							&& classRE.test(parsed.htmlCode.slice(error.loc?.start.offset))
-						) {
-							return;
-						}
-						if (error.loc) {
-							error.loc.start.offset = toPugOffset(error.loc.start.offset);
-							error.loc.end.offset = toPugOffset(error.loc.end.offset);
-						}
-						options.onError?.(error);
-					},
-				});
-
-				const visited = new Set<object>();
-				visit(ast);
-
-				return {
-					ast,
-					code: '',
-					preamble: '',
-				};
-
-				function visit(obj: object) {
-					for (const key in obj) {
-						const value = (obj as any)[key];
-						if (value && typeof value === 'object') {
-							if (visited.has(value)) {
-								continue;
-							}
-							visited.add(value);
-							if ('offset' in value && typeof value.offset === 'number') {
-								const originalOffset = value.offset;
-								value.offset = toPugOffset(originalOffset);
-							}
-							visit(value);
-						}
-					}
-				}
-
-				function toPugOffset(htmlOffset: number) {
-					const nums: number[] = [];
-					for (const mapped of map.toSourceLocation(htmlOffset)) {
-						nums.push(mapped[0] - baseOffset);
-					}
-					return Math.max(-1, ...nums);
-				}
-			}
-		},
-	};
+export const ir: VueIRPlugin = {
+	templateCompilers: {
+		pug: template => ({
+			pieces: compile(template).pieces,
+			// #5099: a class literal and a class attribute are two class attributes of the HTML
+			ignoreError: (error, html) =>
+				error.code === 2 satisfies CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE
+				&& classRE.test(html.slice(error.loc?.start.offset)),
+		}),
+	},
 };
-export = plugin;
-
-function calculateMinIndent(s: string) {
-	const lines = s.split('\n');
-	const minIndent = lines.reduce(function(minIndent, line) {
-		if (line.trim() === '') {
-			return minIndent;
-		}
-		const indent = line.match(/^\s*/)?.[0]?.length || 0;
-		return Math.min(indent, minIndent);
-	}, Infinity);
-	return minIndent;
-}

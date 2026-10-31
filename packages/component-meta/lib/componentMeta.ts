@@ -1,221 +1,369 @@
-import * as core from '@vue/language-core';
-import type * as ts from 'typescript';
+import type { Node, PropertyAssignment } from 'typescript/ast' with { 'resolution-mode': 'import' };
+import type { Project, Symbol, Type } from 'typescript/async' with { 'resolution-mode': 'import' };
 import {
 	inferComponentEmit,
 	inferComponentExposed,
 	inferComponentProps,
 	inferComponentSlots,
-	inferComponentType,
-} from './helpers';
-import { createSchemaResolvers } from './schemaResolvers';
-import { getDefaultsFromScriptSetup } from './scriptSetup';
-import type { ComponentMeta, MetaCheckerSchemaOptions, PropertyMeta } from './types';
+} from './inferComponentTypes';
+import { resolveDefaultOptionExpression } from './scriptSetup';
+import type { ComponentMeta, EventMeta, ExposeMeta, PropMeta, SlotMeta, TypeScript } from './types';
+import { createTypeTable, toDeclarations } from './typeTable';
 
 const vnodeEventRE = /^onVnode[A-Z]/;
+const publicPropsInterfaces = new Set([
+	'PublicProps',
+	'VNodeProps',
+	'AllowedComponentProps',
+	'ComponentCustomProps',
+]);
 
-export function getComponentMeta(
-	ts: typeof import('typescript'),
-	typeChecker: ts.TypeChecker,
-	printer: ts.Printer,
-	language: core.Language,
-	getSourceScript: (fileName: string) => core.SourceScript | undefined,
-	componentNode: ts.Node,
-	componentType: ts.Type,
-	options: MetaCheckerSchemaOptions,
-	deprecatedOptions: { noDeclarations: boolean; rawType: boolean } = { noDeclarations: true, rawType: false },
-): ComponentMeta {
-	const componentSymbol = typeChecker.getSymbolAtLocation(componentNode);
+/** The names of a file's exports. Throws if the file is not part of `project`. */
+export async function getExportNames(project: Project, fileName: string): Promise<string[]> {
+	return (await getExports(project, fileName)).map(e => e.name);
+}
 
-	let componentFile = componentNode.getSourceFile();
-
-	if (componentSymbol) {
-		const symbol = componentSymbol.flags & ts.SymbolFlags.Alias
-			? typeChecker.getAliasedSymbol(componentSymbol)
-			: componentType.symbol;
-		const declaration = symbol?.valueDeclaration ?? symbol?.declarations?.[0];
-
-		if (declaration) {
-			componentFile = declaration.getSourceFile();
-			componentNode = declaration;
-		}
+/**
+ * The metadata of a component exported from a file. Throws if the file or the export is not found in `project`.
+ */
+export async function getComponentMeta(
+	ts: TypeScript,
+	project: Project,
+	fileName: string,
+	exportName = 'default',
+): Promise<ComponentMeta> {
+	const symbol = (await getExports(project, fileName)).find(e => e.name === exportName);
+	const declaration = await symbol?.valueDeclaration?.resolve();
+	const componentNode = declaration && getComponentExpression(ts, declaration);
+	if (!componentNode) {
+		throw new Error(`Export '${exportName}' not found in '${fileName}'.`);
 	}
+	const componentType = await project.checker.getTypeAtLocation(componentNode);
+	return await getComponentMetaOfType(ts, project, componentType, componentNode);
+}
 
-	let name: string | undefined;
-	let description: string | undefined;
-	let type: ReturnType<typeof getType> | undefined;
-	let props: ReturnType<typeof getProps> | undefined;
-	let events: ReturnType<typeof getEvents> | undefined;
-	let slots: ReturnType<typeof getSlots> | undefined;
-	let exposed: ReturnType<typeof getExposed> | undefined;
+async function getExports(project: Project, fileName: string) {
+	const { checker, program } = project;
+	fileName = fileName.replace(/\\/g, '/');
+	if (!await program.getSourceFile(fileName)) {
+		throw new Error(`'${fileName}' is not part of the project.`);
+	}
+	const moduleSymbol = await checker.getSymbolOfSourceFile(fileName);
+	return moduleSymbol ? await checker.getExportsOfModule(moduleSymbol) : [];
+}
 
-	const meta = {
-		get name() {
-			return name ?? (name = getName());
-		},
-		get description() {
-			return description ?? (description = getDescription());
-		},
-		get type() {
-			return type ?? (type = getType());
-		},
-		get props() {
-			return props ?? (props = getProps());
-		},
-		get events() {
-			return events ?? (events = getEvents());
-		},
-		get slots() {
-			return slots ?? (slots = getSlots());
-		},
-		get exposed() {
-			return exposed ?? (exposed = getExposed());
-		},
+function getComponentExpression(ts: TypeScript, node: Node) {
+	return ts.isExportAssignment(node)
+		? node.expression
+		: ts.isVariableDeclaration(node)
+		? node.initializer
+		: node;
+}
+
+/**
+ * The metadata of a component of type `componentType`. `componentNode` is the component's declaration, or a node
+ * referring to it, from which the name, description and script setup defaults are read.
+ */
+export async function getComponentMetaOfType(
+	ts: TypeScript,
+	project: Project,
+	componentType: Type,
+	componentNode: Node | undefined,
+): Promise<ComponentMeta> {
+	const { checker } = project;
+	const table = createTypeTable(ts, project);
+	const declaration = componentNode && await resolveDeclaration(componentNode);
+	const options = declaration && await getOptions(declaration);
+
+	const [events, slots, exposed, description] = await Promise.all([
+		getEvents(),
+		getSlots(),
+		getExposed(),
+		getDescription(),
+	]);
+	const props = await getProps(events);
+	await table.flush();
+
+	const members = [...props, ...events, ...slots, ...exposed];
+	const { types, map } = table.finish(members.map(member => member.type));
+	for (const member of members) {
+		member.type = map(member.type);
+	}
+	return {
+		name: getName(),
+		description,
+		props,
+		events,
+		slots,
+		exposed,
+		types,
 	};
 
-	return meta;
-
-	function getType() {
-		return inferComponentType(componentType) ?? 0;
-	}
-
-	function getProps() {
-		const propsType = inferComponentProps(typeChecker, componentType);
+	async function getProps(events: EventMeta[]): Promise<PropMeta[]> {
+		const propsType = await inferComponentProps(checker, componentType);
 		if (!propsType) {
 			return [];
 		}
-		let result: PropertyMeta[] = [];
-
-		const properties = propsType.getProperties();
 		const eventProps = new Set(
-			meta.events.map(event => `on${event.name.charAt(0).toUpperCase()}${event.name.slice(1)}`),
+			events.map(event => `on${event.name.charAt(0).toUpperCase()}${event.name.slice(1)}`),
 		);
+		const properties = (await propsType.getProperties()).filter(prop => !eventProps.has(prop.name));
+		const [types, optionDeclarations] = await Promise.all([
+			properties.length ? checker.getTypeOfSymbol(properties) : [],
+			getPropsOptionDeclarations(),
+		]);
 
-		result = properties
-			.map(prop => {
-				const {
-					resolveNestedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
-
-				return resolveNestedProperties(prop);
-			})
-			.filter((prop): prop is PropertyMeta => !!prop && !eventProps.has(prop.name));
-
-		const defaults = getDefaultsFromScriptSetup(ts, printer, getSourceScript(componentFile.fileName));
-
-		for (const prop of result) {
-			if (vnodeEventRE.test(prop.name)) {
-				prop.name = 'onVue:' + prop.name['onVnode'.length]?.toLowerCase() + prop.name.slice('onVnode'.length + 1);
+		return await Promise.all(properties.map(async (prop, i): Promise<PropMeta> => {
+			let name = prop.escapedName as string;
+			const [nodes, docs] = await Promise.all([table.resolveNodes(prop.declarations), getDocs(prop)]);
+			const options = getPropOptions(prop, nodes);
+			const _default = options.default ?? getDefault(optionDeclarations.get(name) ?? [], nodes);
+			if (vnodeEventRE.test(name)) {
+				name = 'onVue:' + name['onVnode'.length]?.toLowerCase() + name.slice('onVnode'.length + 1);
 			}
-			prop.default ??= defaults?.get(prop.name);
-		}
+			return {
+				name,
+				required: options.required,
+				default: _default,
+				...docs,
+				global: options.global,
+				declarations: toDeclarations(ts, nodes),
+				type: table.ref(types[i]!),
+			};
+		}));
+	}
 
+	/** The declarations of the properties of the type of the props option, by property name. */
+	async function getPropsOptionDeclarations() {
+		const result = new Map<string, Node[]>();
+		const initializer = getOption('props')?.initializer;
+		if (!initializer) {
+			return result;
+		}
+		const type = await checker.getTypeAtLocation(initializer);
+		await Promise.all((await type.getProperties()).map(async prop => {
+			result.set(prop.escapedName as string, await table.resolveNodes(prop.declarations));
+		}));
 		return result;
 	}
 
-	function getEvents() {
-		const emitType = inferComponentEmit(typeChecker, componentType);
-
-		if (emitType) {
-			const calls = emitType.getCallSignatures();
-
-			return calls.map(call => {
-				const {
-					resolveEventSignature,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
-
-				return resolveEventSignature(call);
-			}).filter(event => event.name);
-		}
-
-		return [];
+	/**
+	 * The default that the props option gives a prop: script setup defaults reach the type of the props option as
+	 * declarations of its properties, `name: value`, that are not declarations of the prop itself.
+	 */
+	function getDefault(optionDeclarations: Node[], propDeclarations: Node[]) {
+		const isSame = (a: Node, b: Node) =>
+			a.pos === b.pos && a.end === b.end && a.getSourceFile().fileName === b.getSourceFile().fileName;
+		const decl = optionDeclarations.find(decl =>
+			ts.isPropertyAssignment(decl) && !propDeclarations.some(node => isSame(node, decl))
+		) as PropertyAssignment | undefined;
+		return decl && resolveDefaultOptionExpression(ts, decl.initializer).getText();
 	}
 
-	function getSlots() {
-		const slotsType = inferComponentSlots(typeChecker, componentType);
-
-		if (slotsType) {
-			const properties = slotsType.getProperties();
-
-			return properties.map(prop => {
-				const {
-					resolveSlotProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
-
-				return resolveSlotProperties(prop);
-			});
-		}
-
-		return [];
-	}
-
-	function getExposed() {
-		const exposedType = inferComponentExposed(typeChecker, componentType);
-
-		if (exposedType) {
-			const propsType = inferComponentProps(typeChecker, componentType);
-			const propsProperties = propsType?.getProperties() ?? [];
-			const properties = exposedType.getProperties().filter(prop =>
-				// only exposed props will have at least one declaration and no valueDeclaration
-				prop.declarations?.length
-				&& !prop.valueDeclaration
-				// Cross-check with props to avoid including props here
-				&& (!propsProperties.length || !propsProperties.some(({ name }) => name === prop.name))
-				// Exclude $slots
-				&& prop.name !== '$slots'
-			);
-
-			return properties.map(prop => {
-				const {
-					resolveExposedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, getSourceScript, options, deprecatedOptions);
-
-				return resolveExposedProperties(prop);
-			});
-		}
-
-		return [];
-	}
-
-	function getName() {
-		let decl = componentNode;
-
-		// const __VLS_export = ...
-		const text = componentFile.text.slice(decl.pos, decl.end);
-		if (text.includes(core.names.export)) {
-			ts.forEachChild(componentFile, child2 => {
-				if (ts.isVariableStatement(child2)) {
-					for (const { name, initializer } of child2.declarationList.declarations) {
-						if (name.getText() === core.names.export && initializer) {
-							decl = initializer;
+	function getPropOptions(prop: Symbol, nodes: Node[]) {
+		let global = false;
+		let _default: string | undefined;
+		let required = !(prop.flags & ts.SymbolFlags.Optional);
+		for (const decl of nodes) {
+			if (isPublicProp(decl)) {
+				global = true;
+			}
+			if (ts.isPropertyAssignment(decl) && ts.isObjectLiteralExpression(decl.initializer)) {
+				for (const option of decl.initializer.properties) {
+					if (ts.isPropertyAssignment(option)) {
+						const key = option.name.getText();
+						if (key === 'default') {
+							_default = resolveDefaultOptionExpression(ts, option.initializer).getText();
+						}
+						else if (key === 'required' && option.initializer.getText() === 'true') {
+							required = true;
 						}
 					}
 				}
-			});
+			}
 		}
-
-		return core.parseOptionsFromExtression(ts, decl, componentFile)?.name?.node.text;
+		return { global, default: _default, required };
 	}
 
-	function getDescription() {
-		// Try to get JSDoc comments from the node using TypeScript API
-		const jsDocComments = ts.getJSDocCommentsAndTags(componentNode);
-		for (const jsDoc of jsDocComments) {
-			if (ts.isJSDoc(jsDoc) && jsDoc.comment) {
-				// Handle both string and array of comment parts
-				if (typeof jsDoc.comment === 'string') {
-					return jsDoc.comment;
-				}
-				else if (Array.isArray(jsDoc.comment)) {
-					return jsDoc.comment.map(part => (part as any).text || '').join('');
-				}
+	function isPublicProp(declaration: Node): boolean {
+		let parent = declaration.parent;
+		while (parent) {
+			if (ts.isInterfaceDeclaration(parent) || ts.isTypeAliasDeclaration(parent)) {
+				return publicPropsInterfaces.has(parent.name.text);
+			}
+			parent = parent.parent;
+		}
+		return false;
+	}
+
+	async function getEvents(): Promise<EventMeta[]> {
+		const emitType = await inferComponentEmit(checker, componentType);
+		if (!emitType) {
+			return [];
+		}
+		const events = await Promise.all((await emitType.getCallSignatures()).map(async signature => {
+			const [nameSymbol] = await signature.getParameters();
+			const nameType = nameSymbol && await checker.getTypeOfSymbol(nameSymbol);
+			if (!nameType?.isStringLiteralType() || !nameType.value) {
+				return;
+			}
+			const [nodes, type] = await Promise.all([
+				table.resolveNodes(signature.declaration ? [signature.declaration] : []),
+				table.refSignature(signature, 1),
+			]);
+			return {
+				name: nameType.value,
+				// Interim: the documentation of the call signature belongs here, which TS 7.1 does not expose for signatures
+				// (upstream ask TS-5); exit: read it once `Signature` or the checker gives it, and the
+				// 'reference-type-events w/ documentation' test passes.
+				description: '',
+				tags: [],
+				declarations: toDeclarations(ts, nodes),
+				type,
+			};
+		}));
+		return events.filter(event => !!event);
+	}
+
+	async function getSlots(): Promise<SlotMeta[]> {
+		const slotsType = await inferComponentSlots(checker, componentType);
+		if (!slotsType) {
+			return [];
+		}
+		return await Promise.all((await slotsType.getProperties()).map(async (prop): Promise<SlotMeta> => {
+			const [slotPropsType, docs, nodes] = await Promise.all([
+				getSlotPropsType(prop),
+				getDocs(prop),
+				table.resolveNodes(prop.declarations),
+			]);
+			return { name: prop.name, ...docs, declarations: toDeclarations(ts, nodes), type: table.ref(slotPropsType) };
+		}));
+	}
+
+	async function getSlotPropsType(slot: Symbol) {
+		const slotType = await checker.getNonNullableType(await checker.getTypeOfSymbol(slot));
+		const [signature] = await slotType.getCallSignatures();
+		const paramSymbol = signature ? (await signature.getParameters())[0] : undefined;
+		return paramSymbol ? await checker.getTypeOfSymbol(paramSymbol) : await checker.getAnyType();
+	}
+
+	async function getExposed(): Promise<ExposeMeta[]> {
+		const exposedType = await inferComponentExposed(checker, componentType);
+		if (!exposedType) {
+			return [];
+		}
+		const propsType = await inferComponentProps(checker, componentType);
+		const propsProperties = await propsType?.getProperties() ?? [];
+		const properties = (await exposedType.getProperties()).filter(prop =>
+			// only exposed props will have at least one declaration and no valueDeclaration
+			prop.declarations.length
+			&& !prop.valueDeclaration
+			// Cross-check with props to avoid including props here
+			&& !propsProperties.some(({ name }) => name === prop.name)
+			// Exclude $slots
+			&& prop.name !== '$slots'
+		);
+		const types = properties.length ? await checker.getTypeOfSymbol(properties) : [];
+		return await Promise.all(properties.map(async (prop, i): Promise<ExposeMeta> => {
+			const [docs, nodes] = await Promise.all([getDocs(prop), table.resolveNodes(prop.declarations)]);
+			return { name: prop.name, ...docs, declarations: toDeclarations(ts, nodes), type: table.ref(types[i]!) };
+		}));
+	}
+
+	async function getDocs(symbol: Symbol) {
+		const [description, tags] = await Promise.all([
+			checker.getDocumentationCommentOfSymbol(symbol),
+			checker.getJsDocTagsOfSymbol(symbol),
+		]);
+		return {
+			description,
+			tags: tags.map(tag => ({ name: tag.name, text: tag.text })),
+		};
+	}
+
+	async function resolveDeclaration(node: Node) {
+		const componentSymbol = await checker.getSymbolAtLocation(node);
+		if (componentSymbol) {
+			const symbol = componentSymbol.flags & ts.SymbolFlags.Alias
+				? await checker.getAliasedSymbol(componentSymbol)
+				: await componentType.getSymbol();
+			node = await (symbol?.valueDeclaration ?? symbol?.declarations[0])?.resolve() ?? node;
+		}
+		return getComponentExpression(ts, node);
+	}
+
+	/** Whether `node` is what the default export of a file that a content mapper maps evaluates to. */
+	function isVueFileExport(node: Node) {
+		const sourceFile = node.getSourceFile();
+		return !!sourceFile.contentMapper && sourceFile.statements.some(statement =>
+			ts.isExportAssignment(statement)
+			&& !statement.isExportEquals
+			&& statement.expression.pos === node.pos
+			&& statement.expression.end === node.end
+		);
+	}
+
+	/** The options object of the component that `node` declares, if it is given as an object literal. */
+	async function getOptions(node: Node) {
+		// a Vue file exports `{} as typeof <component>`, or the JSDoc type of it in JavaScript; the options are in the
+		// initializer of that declaration
+		if (isVueFileExport(node)) {
+			const typeExpression = ts.getJSDocTags(node).filter(ts.isJSDocTypeTag)[0]?.typeExpression;
+			const type = ts.isAsExpression(node)
+				? node.type
+				: typeExpression && ts.isJSDocTypeExpression(typeExpression)
+				? typeExpression.type
+				: undefined;
+			if (!type || !ts.isTypeQueryNode(type)) {
+				return;
+			}
+			const symbol = await checker.getSymbolAtLocation(type.exprName);
+			const component = await symbol?.valueDeclaration?.resolve();
+			if (!component || !ts.isVariableDeclaration(component) || !component.initializer) {
+				return;
+			}
+			node = component.initializer;
+		}
+		while (
+			ts.isParenthesizedExpression(node)
+			|| ts.isAssertionExpression(node)
+			|| ts.isNonNullExpression(node)
+			|| ts.isSatisfiesExpression(node)
+		) {
+			node = node.expression;
+		}
+		return ts.isObjectLiteralExpression(node)
+			? node
+			: ts.isCallExpression(node) && node.arguments[0] && ts.isObjectLiteralExpression(node.arguments[0])
+			? node.arguments[0]
+			: undefined;
+	}
+
+	function getOption(key: string) {
+		return options?.properties.find(prop =>
+			ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name) && prop.name.text === key
+		) as PropertyAssignment | undefined;
+	}
+
+	function getName() {
+		const initializer = getOption('name')?.initializer;
+		return initializer && ts.isStringLiteral(initializer) ? initializer.text : undefined;
+	}
+
+	async function getDescription() {
+		if (!declaration) {
+			return;
+		}
+		for (const jsDoc of ts.getJSDocCommentsAndTags(declaration)) {
+			const text = ts.isJSDoc(jsDoc) && jsDoc.comment && ts.getTextOfJSDocComment(jsDoc.comment);
+			if (text) {
+				return text;
 			}
 		}
 
-		// Fallback to symbol documentation
-		const symbol = typeChecker.getSymbolAtLocation(componentNode);
+		const symbol = await checker.getSymbolAtLocation(declaration);
 		if (symbol) {
-			const description = ts.displayPartsToString(symbol.getDocumentationComment(typeChecker));
-			return description || undefined;
+			return await checker.getDocumentationCommentOfSymbol(symbol) || undefined;
 		}
 	}
 }

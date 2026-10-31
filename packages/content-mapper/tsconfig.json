@@ -1,0 +1,15 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"types": [
+			"node"
+		]
+	},
+	"references": [
+		{ "path": "../../tsconfig.volar/language-core.json" },
+		{ "path": "../../tsconfig.muggle-string/muggle-string.json" },
+		{ "path": "../language-core/tsconfig.json" }
+	],
+	"include": ["*.ts", "lib/**/*.ts"],
+	"exclude": ["*.spec.ts"]
+}

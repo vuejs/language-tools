@@ -9,7 +9,6 @@ exactType($src, {} as Record<string, string> & {
 
 const $import = useCssModule("$import");
 exactType($import, {} as Record<string, string> & {
-	foo: string;
 	bar: string;
 });
 </script>

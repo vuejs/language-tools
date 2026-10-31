@@ -1,6 +1,6 @@
-import type { Analyzer } from 'laplacenoma';
+import type * as lsp from '@volar/vscode/node';
+import type { ReactivityAnalysisParams, ReactivityAnalysisResult } from '@vue/language-server/lib/reactivity';
 import { useActiveTextEditor, useTextEditorSelection, useVisibleTextEditors, watch } from 'reactive-vscode';
-import type * as ts from 'typescript';
 import * as vscode from 'vscode';
 import { config } from './config';
 
@@ -24,7 +24,7 @@ const dependentDecorations = vscode.window.createTextEditorDecorationType({
 	borderWidth: '0 0 0 3px',
 });
 
-export function activate(selector: vscode.DocumentSelector) {
+export function activate(selector: vscode.DocumentSelector, client: lsp.BaseLanguageClient) {
 	const documentUpdateVersions = new WeakMap<vscode.TextDocument, number>();
 
 	let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -68,8 +68,9 @@ export function activate(selector: vscode.DocumentSelector) {
 		if (document.uri.scheme !== 'file') {
 			return;
 		}
+		const isSynced = vscode.languages.match(selector, document) > 0;
 		if (
-			!vscode.languages.match(selector, document)
+			!isSynced
 			&& document.languageId !== 'typescript'
 			&& document.languageId !== 'javascript'
 			&& document.languageId !== 'typescriptreact'
@@ -84,26 +85,22 @@ export function activate(selector: vscode.DocumentSelector) {
 		}
 
 		try {
-			const result = await vscode.commands.executeCommand<
+			const result = await client.sendRequest<ReactivityAnalysisResult | null | undefined>(
+				'vue/reactivityAnalysis',
 				{
-					body?: ReturnType<Analyzer['analyze']> | undefined;
-				} | undefined
-			>(
-				'typescript.tsserverRequest',
-				'_vue:getReactivityAnalysis',
-				[
-					document.uri.fsPath.replace(/\\/g, '/'),
-					document.offsetAt(editor.selection.active),
-				],
-				{ isAsync: true, lowPriority: true },
+					textDocument: { uri: client.code2ProtocolConverter.asUri(document.uri) },
+					offset: document.offsetAt(editor.selection.active),
+					// the language server only syncs the documents of its selector
+					content: isSynced ? undefined : document.getText(),
+				} satisfies ReactivityAnalysisParams,
 			);
 			editor.setDecorations(
 				dependencyDecorations,
-				getFlatRanges(document, result?.body?.dependencyRanges ?? []),
+				getFlatRanges(document, result?.dependencyRanges ?? []),
 			);
 			editor.setDecorations(
 				dependentDecorations,
-				getFlatRanges(document, result?.body?.dependentRanges ?? []),
+				getFlatRanges(document, result?.dependentRanges ?? []),
 			);
 		}
 		catch {
@@ -113,7 +110,7 @@ export function activate(selector: vscode.DocumentSelector) {
 	}
 }
 
-function getFlatRanges(document: vscode.TextDocument, ranges: ts.TextRange[]) {
+function getFlatRanges(document: vscode.TextDocument, ranges: ReactivityAnalysisResult['dependencyRanges']) {
 	const documentRanges = ranges
 		.map(range =>
 			new vscode.Range(

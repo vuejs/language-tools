@@ -6,8 +6,9 @@
 		]
 	},
 	"references": [
+		{ "path": "../../tsconfig.muggle-pug/muggle-pug.json" },
 		{ "path": "../language-core/tsconfig.json" }
 	],
-	"include": ["*", "lib/**/*"],
+	"include": ["*"],
 	"exclude": ["tests"]
 }

@@ -1,0 +1,15 @@
+{
+	// Type-checks the muggle-pug submodule with the repo's TypeScript 7 and muggle-pug's own options, emitting only declarations for project references.
+	// Its runtime JS is emitted by `npm run build:muggle-pug` (TypeScript 7.1), as muggle-pug publishes it.
+	"extends": "../muggle-pug/tsconfig.json",
+	"compilerOptions": {
+		"composite": true,
+		"rootDir": "../muggle-pug/src",
+		"emitDeclarationOnly": true,
+		"declarationDir": "../node_modules/.muggle-pug-types",
+		"tsBuildInfoFile": "../node_modules/.muggle-pug-types.tsbuildinfo"
+	},
+	"references": [
+		{ "path": "../tsconfig.muggle-string/muggle-string.json" }
+	]
+}

@@ -1,0 +1,6 @@
+{
+	"include": ["*.vue"],
+	"contentMappers": [
+		{ "package": "stub-vue-mapper", "extensions": [".vue"] }
+	]
+}

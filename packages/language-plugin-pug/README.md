@@ -15,13 +15,17 @@ npm install @vue/language-plugin-pug --save-dev
 
 ## Configuration
 
-Add this plugin in `tsconfig.json`:
+Add this plugin to the `@vue/content-mapper` options in `tsconfig.json`:
 
 ```jsonc
 {
-  "vueCompilerOptions": {
-    "plugins": ["@vue/language-plugin-pug"]
-  }
+  "contentMappers": [
+    {
+      "package": "@vue/content-mapper",
+      "extensions": [".vue"],
+      "options": { "plugins": ["@vue/language-plugin-pug"] }
+    }
+  ]
 }
 ```
 
@@ -46,24 +50,21 @@ const handleClick = () => console.log('clicked')
 
 ## Features
 
-This plugin implements the `VueLanguagePlugin` interface, providing:
+This plugin exports `ir.templateCompilers.pug` (see [Plugins](../language-core#plugins)), which converts Pug to HTML with mappings to the Pug source; the host compiles the HTML into the template AST at the offsets of the Pug source. It drops the duplicate attribute error of a class literal next to a `class` attribute (`.foo(class="bar")`), which Pug merges. It is needed wherever the IR of a Pug template is built: by `@vue/content-mapper` for type checking, and by the language server for the features that read the template AST.
 
-- **`getEmbeddedCodes`** - Identifies `<template lang="pug">` blocks
-- **`resolveEmbeddedCode`** - Extracts Pug content as embedded code
-- **`compileSFCTemplate`** - Compiles Pug to HTML, then parses it into an AST using `@vue/compiler-dom`
+The language server's syntax features of Pug templates are built in and work without this plugin.
 
 ## How it Works
 
-1. Uses `pug-lexer` to convert Pug syntax into tokens
-2. Uses `pug-parser` to parse tokens into an AST
-3. Traverses the AST to generate HTML while building a source map
-4. Uses `@vue/compiler-dom.parse` to parse the HTML
-5. Uses `@vue/compiler-dom.transform` to transform the AST
-6. Maps error and warning positions back to the original Pug code via the source map
+1. [`muggle-pug`](https://github.com/johnsoncodehk/muggle-pug) compiles the Pug code to HTML pieces that copy the Pug code, with `pug-lexer` and `pug-parser`. A template whose every line is indented, which Vue dedents but Pug rejects, is read as the children of a `template` tag that is left out of the result
+2. Builds the mappings from the HTML to the Pug code from the pieces
+3. Compiles the HTML with the `compileTemplate` that the host passes
+4. Maps the offsets of the AST, errors and warnings back to the original Pug code via the mappings
 
 ## Related Packages
 
 - [`@vue/language-core`](../language-core) - Core module
+- [`muggle-pug`](https://github.com/johnsoncodehk/muggle-pug) - Pug to HTML pieces
 
 ## License
 

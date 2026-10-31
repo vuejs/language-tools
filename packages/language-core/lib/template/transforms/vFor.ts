@@ -1,5 +1,5 @@
 import { createCompilerError, ErrorCodes, findProp, type ForNode, isTemplateNode, NodeTypes } from '@vue/compiler-dom';
-import { createStructuralDirectiveTransform } from '../utils';
+import { createStructuralDirectiveTransform } from './structuralDirective';
 
 export const transformFor = createStructuralDirectiveTransform(
 	'for',

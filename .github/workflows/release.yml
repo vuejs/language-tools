@@ -32,6 +32,9 @@
 # job stops if a published package depends on another workspace package, such
 # as one of a git submodule, that is not on npm at its exact version released
 # from the checked out commit: pnpm rewrites `workspace:*` to that version.
+# @volar/*, volar-service-*, muggle-string and muggle-pug come from the volar.js,
+# services, muggle-string and muggle-pug submodules, so release them from their
+# repositories first and point the submodules at those release commits.
 
 name: release
 
@@ -91,6 +94,7 @@ jobs:
         with:
           fetch-depth: 0 # lerna reads the previous release tag
           persist-credentials: false
+          submodules: true
 
       - uses: pnpm/action-setup@v6
 
@@ -189,6 +193,7 @@ jobs:
         with:
           ref: v${{ needs.release.outputs.version }}
           persist-credentials: false
+          submodules: true
 
       - uses: pnpm/action-setup@v6
 
@@ -197,6 +202,8 @@ jobs:
           node-version: 24
 
       - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run build:volar
 
       - name: Publish to VSCode Marketplace
         working-directory: extensions/vscode
@@ -215,6 +222,7 @@ jobs:
         with:
           ref: v${{ needs.release.outputs.version }}
           persist-credentials: false
+          submodules: true
 
       - uses: pnpm/action-setup@v6
 
@@ -223,6 +231,8 @@ jobs:
           node-version: 24
 
       - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run build:volar
 
       - name: Publish to Open VSX
         working-directory: extensions/vscode

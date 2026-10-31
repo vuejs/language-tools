@@ -1,6 +1,12 @@
 declare global {
 	const __VLS_directiveBindingRestFields: { instance: null; oldValue: null; value: null; modifiers: any; dir: any };
 
+	type __VLS_BuiltInDirectives = {
+		vHtml: (el: HTMLElement, binding: { value: string }) => void;
+		vText: (el: HTMLElement, binding: { value: string | number }) => void;
+		vCloak: (el: HTMLElement) => void;
+		vMemo: (el: HTMLElement, binding: { value: any[] }) => void;
+	};
 	type __VLS_Elements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
@@ -10,7 +16,6 @@ declare global {
 		LocalComponents,
 		GlobalComponents,
 		Self,
-		Strict extends boolean,
 		N1 extends string,
 		N2 extends string = N1,
 		N3 extends string = N1,
@@ -21,8 +26,7 @@ declare global {
 		: N1 extends keyof GlobalComponents ? { [K in N0]: GlobalComponents[N1] }
 		: N2 extends keyof GlobalComponents ? { [K in N0]: GlobalComponents[N2] }
 		: N3 extends keyof GlobalComponents ? { [K in N0]: GlobalComponents[N3] }
-		: Strict extends true ? {}
-		: { [K in N0]: new(...args: any) => Record<string, any> };
+		: {};
 	type __VLS_ExtractComponentContext<T, K> = __VLS_PickNotAny<
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? NonNullable<Ctx> : never : any,
 		T extends (props: any, ctx: infer Ctx) => any ? (unknown extends Ctx ? any : Ctx) : any
@@ -43,16 +47,57 @@ declare global {
 			expose?: (exposed: T) => void;
 		};
 	};
+	// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/shared/src/globalsAllowList.ts
+	type __VLS_Globals =
+		& Pick<
+			typeof globalThis,
+			Extract<
+				| 'Infinity'
+				| 'NaN'
+				| 'isFinite'
+				| 'isNaN'
+				| 'parseFloat'
+				| 'parseInt'
+				| 'decodeURI'
+				| 'decodeURIComponent'
+				| 'encodeURI'
+				| 'encodeURIComponent'
+				| 'Math'
+				| 'Number'
+				| 'Date'
+				| 'Array'
+				| 'Object'
+				| 'Boolean'
+				| 'String'
+				| 'RegExp'
+				| 'Map'
+				| 'Set'
+				| 'JSON'
+				| 'Intl'
+				| 'BigInt'
+				| 'console'
+				| 'Error'
+				| 'Symbol',
+				keyof typeof globalThis
+			>
+		>
+		& { undefined: undefined };
 	type __VLS_IsFunction<T, K> = K extends keyof T ? unknown extends T[K] ? false
 		: true
 		: false;
+	// what `v-model` writes back from the prop it binds; `any` for a prop the component does not declare,
+	// which the props check reports instead
+	type __VLS_ModelWriteBack<Props, K extends PropertyKey> = K extends keyof Props ? Props[K] & {} : any;
+	// The checker links the properties of a mapped type to declarations only when it maps a `keyof` without renaming
+	// the keys (not `Remapping`); `Pick` does, so a declared event prop stays the listener's symbol and references and
+	// definitions reach it, while the listeners of emits are new symbols
 	type __VLS_ResolveEvent<
 		Props,
 		Emits,
 		onEvent extends string,
 		Event extends string,
 		CamelizedEvent extends string,
-	> = __VLS_IsFunction<Props, onEvent> extends true ? { [K in onEvent]?: Props[K & keyof Props] }
+	> = __VLS_IsFunction<Props, onEvent> extends true ? Pick<Props, onEvent & keyof Props>
 		: __VLS_IsFunction<Emits, Event> extends true ? { [K in onEvent]?: Emits[Event & keyof Emits] }
 		: __VLS_IsFunction<Emits, CamelizedEvent> extends true ? { [K in onEvent]?: Emits[CamelizedEvent & keyof Emits] }
 		: Props;
@@ -109,9 +154,14 @@ declare global {
 		TypeEmits = Comp extends { __typeEmits?: infer T } ? unknown extends T ? {} : __VLS_ShortEmitsToObject<T> : {},
 		NormalizedEmits = __VLS_NormalizeEmits<Emits> extends infer E ? string extends keyof E ? {} : E : never,
 	> = __VLS_SpreadMerge<NormalizedEmits, TypeEmits>;
-	type __VLS_ResolveDirectives<T> = {
-		[K in keyof T & string as `v${Capitalize<K>}`]: T[K];
+	// the entries of `T` by the names of `Searched`, each the entry of the first key in its list that `T` has
+	type __VLS_ResolveAssets<T, Searched extends Record<string, string[]>> = {
+		[N in keyof Searched as [__VLS_FirstKey<T, Searched[N]>] extends [never] ? never : N]: T[
+			__VLS_FirstKey<T, Searched[N]> & keyof T
+		];
 	};
+	type __VLS_FirstKey<T, Keys> = Keys extends [infer K, ...infer Rest] ? K extends keyof T ? K : __VLS_FirstKey<T, Rest>
+		: never;
 	type __VLS_PrettifyGlobal<T> = (T extends any ? { [K in keyof T]: T[K] } : { [K in keyof T as K]: T[K] }) & {};
 
 	// hooks are called with their own arity; those taking fewer than (el, binding) are padded so the binding can be passed
@@ -154,19 +204,11 @@ declare global {
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
 		: __VLS_FunctionalComponent<{}>;
-	function __VLS_asFunctionalComponent1<T, K>(
-		t: T,
-		instance: K,
-	): T extends new(...args: any) => any ? __VLS_FunctionalComponent<K, Record<string, unknown>>
-		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
-		: T extends (...args: any) => any ? T
-		: __VLS_FunctionalComponent<{}, Record<string, unknown>>;
 	type __VLS_PadArgs<A extends any[]> = A extends [any, ...infer Rest] ? [any, ...__VLS_PadArgs<Rest>] : [];
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(
 		t: T,
 	): __VLS_PadArgs<Parameters<T> extends [any, ...infer Rest] ? Rest : []>;
 	function __VLS_asFunctionalElement0<T>(tag: T, endTag?: T): (attrs: T) => void;
-	function __VLS_asFunctionalElement1<T>(tag: T, endTag?: T): (attrs: T & Record<string, unknown>) => void;
 	function __VLS_asFunctionalSlot<S>(
 		slot: S,
 	): S extends (...args: any) => any ? (S extends () => infer R ? (props: {}) => R : S)

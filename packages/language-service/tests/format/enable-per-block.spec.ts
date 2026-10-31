@@ -17,6 +17,7 @@ color: red;
 const units = {
 	'vue.format.style.enabled': {
 		description: 'disable style formatting',
+		formatsTypeScript: true,
 		output: `
 <template>
 \t<div />
@@ -34,6 +35,7 @@ color: red;
 	},
 	'vue.format.script.enabled': {
 		description: 'disable script formatting',
+		formatsTypeScript: false,
 		output: `
 <template>
 \t<div />
@@ -51,6 +53,7 @@ body {
 	},
 	'vue.format.template.enabled': {
 		description: 'disable template formatting',
+		formatsTypeScript: true,
 		output: `
 <template>
 <div />
@@ -68,7 +71,7 @@ body {
 	},
 };
 
-for (const [setting, { description, output }] of Object.entries(units)) {
+for (const [setting, { description, output, formatsTypeScript }] of Object.entries(units)) {
 	const title = '#' + __filename.split('.')[0];
 	defineFormatTest({
 		title: title + ' (' + description + ')',
@@ -76,5 +79,6 @@ for (const [setting, { description, output }] of Object.entries(units)) {
 		input: snippet.trim(),
 		output: output.trim(),
 		settings: { [setting]: false },
+		formatsTypeScript,
 	});
 }

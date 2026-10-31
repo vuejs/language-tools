@@ -1,13 +1,11 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
+		"lib": ["ES2022", "ESNext.Disposable"],
 		"types": [
 			"node"
 		]
 	},
-	"references": [
-		{ "path": "../language-core/tsconfig.json" }
-	],
 	"include": ["*", "lib/**/*"],
 	"exclude": ["tests"]
 }

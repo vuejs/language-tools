@@ -1,68 +1,53 @@
-import * as core from '@vue/language-core';
 import { posix as path } from 'path-browserify';
-import * as ts from 'typescript';
-import { createCheckerBase } from './lib/checker';
-import type { MetaCheckerOptions } from './lib/types';
+import type { Project } from 'typescript/async' with { 'resolution-mode': 'import' };
+import { getComponentMeta, getExportNames } from './lib/componentMeta';
 
+export { getComponentMeta, getExportNames };
 export * from './lib/types';
 
-export function createCheckerByJson(
-	rootDir: string,
-	json: any,
-	checkerOptions: MetaCheckerOptions = {},
-) {
-	rootDir = rootDir.replace(/\\/g, '/');
-	return createCheckerBase(
-		ts,
-		() => {
-			const commandLine = core.createParsedCommandLineByJson(ts, ts.sys, rootDir, json);
-			const { fileNames } = ts.parseJsonConfigFileContent(
-				json,
-				ts.sys,
-				rootDir,
-				{},
-				undefined,
-				undefined,
-				core.getAllExtensions(commandLine.vueOptions)
-					.map(extension => ({
-						extension: extension.slice(1),
-						isMixedContent: true,
-						scriptKind: ts.ScriptKind.Deferred,
-					})),
-			);
-			return [commandLine, fileNames];
-		},
-		checkerOptions,
-		rootDir,
-	);
-}
-
-export function createChecker(
-	tsconfig: string,
-	checkerOptions: MetaCheckerOptions = {},
-) {
+/**
+ * Runs the TypeScript 7 API in a child process for the project of `tsconfig`. Every query reads the files from disk
+ * into a new snapshot that is released when the query completes.
+ */
+export async function createChecker(tsconfig: string) {
 	tsconfig = tsconfig.replace(/\\/g, '/');
-	return createCheckerBase(
-		ts,
-		() => {
-			const commandLine = core.createParsedCommandLine(ts, ts.sys, tsconfig);
-			const { fileNames } = ts.parseJsonSourceFileConfigFileContent(
-				ts.readJsonConfigFile(tsconfig, ts.sys.readFile),
-				ts.sys,
-				path.dirname(tsconfig),
-				{},
-				tsconfig,
-				undefined,
-				core.getAllExtensions(commandLine.vueOptions)
-					.map(extension => ({
-						extension: extension.slice(1),
-						isMixedContent: true,
-						scriptKind: ts.ScriptKind.Deferred,
-					})),
-			);
-			return [commandLine, fileNames];
+
+	const ts = {
+		...await import('typescript/ast'),
+		...await import('typescript/async'),
+	};
+	const api = new ts.API({ cwd: path.dirname(tsconfig), runExternalCode: true });
+
+	return {
+		getComponentMeta(fileName: string, exportName?: string) {
+			return withProject(project => getComponentMeta(ts, project, fileName, exportName));
 		},
-		checkerOptions,
-		path.dirname(tsconfig),
-	);
+		/** The metadata of the default exports of `fileNames`, queried in a single snapshot. */
+		getComponentMetas(fileNames: string[]) {
+			return withProject(project => Promise.all(fileNames.map(fileName => getComponentMeta(ts, project, fileName))));
+		},
+		getExportNames(fileName: string) {
+			return withProject(project => getExportNames(project, fileName));
+		},
+		close() {
+			return api.close();
+		},
+		[Symbol.asyncDispose]() {
+			return api.close();
+		},
+	};
+
+	async function withProject<T>(query: (project: Project) => Promise<T>) {
+		const snapshot = await api.createSnapshot({ openProjects: [tsconfig] });
+		try {
+			const project = snapshot.getConfiguredProject(tsconfig);
+			if (!project) {
+				throw new Error(`Failed to open project '${tsconfig}'.`);
+			}
+			return await query(project);
+		}
+		finally {
+			await snapshot.dispose();
+		}
+	}
 }

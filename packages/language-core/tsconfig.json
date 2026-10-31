@@ -5,6 +5,10 @@
 			"node"
 		]
 	},
+	"references": [
+		{ "path": "../../tsconfig.volar/language-core.json" },
+		{ "path": "../../tsconfig.muggle-string/muggle-string.json" }
+	],
 	"include": ["*", "lib/**/*"],
 	"exclude": ["tests"]
 }

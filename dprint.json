@@ -10,7 +10,11 @@
 	"excludes": [
 		"**/node_modules",
 		"**/*-lock.json",
-		"packages/language-service/data"
+		"packages/language-service/data",
+		"volar.js",
+		"services",
+		"muggle-string",
+		"muggle-pug"
 	],
 	"plugins": [
 		"https://plugins.dprint.dev/typescript-0.95.7.wasm",

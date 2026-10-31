@@ -3,15 +3,29 @@ shellEmulator: true
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - semver@5.7.2
-  - volar-service-pug@0.0.71
-# This repo dogfoods typescript-native-bridge releases on publish day;
-# pnpm 11's default 24h minimumReleaseAge gate would reject them.
-minimumReleaseAge: 0
 
 packages:
   - extensions/*
   - packages/*
   - test-workspace
+  # the volar.js submodule (branch v3); the release workflow does not publish these
+  - volar.js/packages/language-core
+  - volar.js/packages/language-server
+  - volar.js/packages/language-service
+  - volar.js/packages/source-map
+  - volar.js/packages/test-utils
+  - volar.js/packages/vscode
+  # the services submodule (branch master), only the packages that @vue/language-service uses; the release workflow does not publish these
+  - services/packages/css
+  - services/packages/emmet
+  - services/packages/html
+  - services/packages/json
+  - services/packages/pug
+  - services/packages/pug-beautify
+  # the muggle-string submodule (branch master); the release workflow does not publish it
+  - muggle-string
+  # the muggle-pug submodule (branch master); the release workflow does not publish it
+  - muggle-pug
 
 allowBuilds:
   "@vscode/vsce-sign": true
@@ -21,4 +35,21 @@ allowBuilds:
   keytar: true
 
 overrides:
-  typescript: npm:typescript-native-bridge@6.0.3-bridge.16.tsgo.7.0.2
+  # dependencies such as volar-service-* resolve @volar/* to the submodule too, so there is one copy
+  '@volar/language-core': workspace:*
+  '@volar/language-server': workspace:*
+  '@volar/language-service': workspace:*
+  '@volar/source-map': workspace:*
+  '@volar/test-utils': workspace:*
+  '@volar/vscode': workspace:*
+  # dependencies such as volar-service-pug resolve volar-service-* to the submodule too, so there is one copy
+  volar-service-css: workspace:*
+  volar-service-emmet: workspace:*
+  volar-service-html: workspace:*
+  volar-service-json: workspace:*
+  volar-service-pug: workspace:*
+  volar-service-pug-beautify: workspace:*
+  # every package that depends on muggle-string, in or outside the workspace, resolves it to the submodule, so there is one copy
+  muggle-string: workspace:*
+  # every package that depends on muggle-pug, in or outside the workspace, resolves it to the submodule, so there is one copy
+  muggle-pug: workspace:*
