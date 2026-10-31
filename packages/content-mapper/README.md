@@ -96,84 +96,147 @@ generates. It is defined and read by `@vue/content-mapper` alone: the language s
 vue-component-meta never load it, and other Content Mappers may ignore it.
 
 ```js
-// my-plugin.js, listed as `{ "name": "./my-plugin.js", ...config }` in `plugins`
-exports.codegen = ctx => ({
-	rewrite({ ts, fileName, ir, analysis }, { script, scriptSetup }) {
-		scriptSetup?.insertBefore(0, '/* rewritten */');
-	},
-	generate({ ts, fileName, ir, analysis }) {
-		return {
-			templateContext: [['{ $foo: number }']],
-		};
-	},
-});
+// route-plugin.js, listed as `{ "name": "./route-plugin.js" }` in `plugins`:
+// `useRoute()` of `Page.vue` reads the route `/Page`, and so does `$route` of its template
+const path = require('node:path');
+
+exports.codegen = ({ ts, fileName, ir, name }) => {
+	const route = JSON.stringify('/' + path.basename(fileName, '.vue'));
+	const Route = name('Route');
+	return {
+		rewrite({ scriptSetup }) {
+			ir.scriptSetup?.ast.forEachChild(function visit(node) {
+				if (
+					ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'useRoute'
+					&& !node.typeArguments
+				) {
+					scriptSetup.insertAfter(node.expression.end, `<${route}>`);
+				}
+				node.forEachChild(visit);
+			});
+		},
+		declarations: () => [`type ${Route} = import('vue-router').RouteLocationNormalizedLoaded<${route}>;`],
+		templateContext: () => [`{ $route: ${Route} }`],
+	};
+};
 ```
 
-`codegen` is a `VueCodegenExport`: a `VueCodegenPlugin`, or a function of the entry's `config` and
-the resolved `vueCompilerOptions` that returns one. Options of the plugin come from its entry's
-`config`. A `codegen` that is neither an object nor a function, a factory that throws, a plugin with
-neither `rewrite` nor `generate`, and a hook that is not a function are reported as option
-diagnostics at the `plugins` entry.
+`codegen(file, ctx)` is a `VueCodegenPlugin`. It runs for each snapshot of each file, in `plugins`
+order after the built-in plugins of the mapper (slots, fallthrough attributes, template refs, root
+element, style), and gives the `VueCodegenFilePlugin` of the file: an optional `rewrite` of the
+user's code, and functions that give its code in the slots of the generated code. `ctx` holds the
+entry's `config`, the options of the plugin, and the resolved `vueCompilerOptions`. `file` holds the
+TS 7.1 AST API that parsed the scripts (`ts`), `fileName`, the IR, its analysis (resolved options,
+with SFC comment options, and script ranges), `name` and `template`. Walk ASTs with
+`node.forEachChild`. A `codegen` export that is not a function is reported as an option diagnostic at
+the `plugins` entry. An exception of `codegen` or of a hook, and a hook that is not a function or not
+one of `VueCodegenFilePlugin`, fail the transform of the file.
 
-A plugin has two optional hooks, which run for each file, each in `plugins` order after the built-in
-plugins of the mapper (style, template refs, slots, `$` names): the `rewrite` of every plugin and the
-`generate` of every plugin. `rewrite(file, writers)` edits the user's code
-of the script blocks; `generate(file)` returns `VueCodegenSlots`, the code that the plugin adds to
-the slots of the generated code. Both see the same `file`, not the result of another hook. `file`
-holds the TS 7.1 AST API that parsed the scripts (`ts`), the IR, and its analysis (resolved options,
-with SFC comment options, and script ranges). Walk ASTs with `node.forEachChild`. An exception of a
-hook fails the transform of the file.
-
-Hooks must be pure functions of `file` and the plugin's context: no file system, no
-environment, no cache shared across projects. The mapper hashes the plugin's entry file, its package's
+`codegen` and its hooks must be pure functions of `file` and `ctx`: no file system, no environment,
+no cache shared across projects. The mapper hashes the plugin's entry file, its package's
 `name@version` and the entry config into the project identity, so nothing else is tracked. Data from
 elsewhere reaches TypeScript through type imports (`import('…')`), which TypeScript resolves and
-watches.
+watches. The mapper reads each hook at most once for a snapshot, when it needs the slot, so what the
+hooks share belongs in the closure of `codegen`.
 
-Slot code is `VueCodegenPieces`, an array of `VueCodegenPiece`s: plain strings, which map nowhere
-and report no diagnostics, and ranges `{ source, start, end, data: { features }, text? }` of a block
+`file.name(hint)` gives the name of an identifier that the plugin declares: `__VLS_<hint>`, or that
+with `$<n>` when the generated code or a plugin before took it; the same hint gives the same name.
+It names only while `codegen` runs, so that each snapshot gives the plugins the same names. Plugins
+never see the names of the generated code: `file.template` gives, as type code that reads in the
+scope of the template, what the template declares — `instanceType(node)` of a component with a
+template ref or a root element whose `$el` is inferred, `elementType(tag)`, `slotOutletTypes(node)`
+and `fallthroughAttrsType()`. The template is open as this data only; its walk, scopes and
+interpolation stay in the mapper.
+
+The code of a slot is a `VueCodegenPiece` or pieces in order: plain strings, which map nowhere and
+report no diagnostics, and ranges `{ source, start, end, data: { features }, text? }` of a block
 `source`, mapped there with the given features (e.g. `scriptFeatures`). A range without `text` copies
 the text of the block; with `text`, the text maps to the range char by char when it is as long as the
 range, and as a whole otherwise (e.g. to report a diagnostic there). A piece that is not text or a
-range of a block of the file throws. Plugins never see generated names or offsets.
+range of a block of the file throws. A slot holds no slice, which renders in the block it is cut
+from.
+
+```js
+// define-prop.js: `defineProp<number>('count')` in `<script setup>` declares the public prop `count`
+const { scriptFeatures } = require('@vue/language-core');
+
+exports.codegen = ({ ts, ir }) => {
+	const block = ir.scriptSetup;
+	const calls = [];
+	for (const statement of block?.ast.statements ?? []) {
+		const call = ts.isExpressionStatement(statement) ? statement.expression : undefined;
+		if (
+			call && ts.isCallExpression(call) && ts.isIdentifier(call.expression) && call.expression.text === 'defineProp'
+			&& call.typeArguments?.length === 1 && call.arguments.length === 1 && ts.isStringLiteral(call.arguments[0])
+		) {
+			calls.push({ statement, key: call.arguments[0].text, type: call.typeArguments[0] });
+		}
+	}
+	return {
+		rewrite({ scriptSetup }) {
+			for (const { statement } of calls) {
+				scriptSetup.replace(statement.getStart(block.ast), statement.end, '');
+			}
+		},
+		props: () =>
+			calls.map(({ key, type }) => [
+				`{ ${JSON.stringify(key)}?: `,
+				{ source: block, start: type.getStart(block.ast), end: type.end, data: { features: scriptFeatures } },
+				' }',
+			]),
+	};
+};
+```
 
 | Slot | Where the mapper places it | What its code can reference |
 |---|---|---|
 | `templateContext` | Object types spread into the template context, after the component instance and before its props and emits | the setup scope of a script setup component, else the module scope |
+| `templateBody` | Statements in the template function, before the code of the template | the setup scope of a script setup component, else the module scope |
+| `templateTypes` | `{ name, code }`: type aliases at the end of the template, each by a name that `file.name()` gave the plugin, which the setup scope and the module scope read too | the scope of the template |
+| `templateDollars` | Object types intersected into the `$` names that the template reads (`$slots`, `$attrs`, `$refs`, `$el`) | the scope of the template |
+| `elementEnd` | A map of elements of the template to code after their props, before their children | the scope of the template at the element |
 | `props`, `emits`, `expose` | `<script setup>` only: object types intersected into the public props (`defineProps<…>` form), the emits (`defineEmits<…>` form) and what the component exposes | the setup scope |
+| `generic` | `<script setup>` only: type parameters of the component, after those of its `generic` attribute; with one, the component is generic | the module scope |
+| `exposedInstanceTypes`, `componentOptions`, `fallthroughProps` | Text only: object types intersected into what a generic component exposes, options of the component after its props, and object types of the props that the component takes besides its own | where the mapper declares the component |
 | `elements` | The tag → element type map of native elements, which replaces the DOM one in the file | the module scope |
 | `declarations` | Statements at module scope, after the user's code | the module scope |
 | `exports` | `names`: named exports of the component. `default: false`: no synthetic default export (a user `export default` in `<script>` stays). `docComment`: the range of a doc comment (one block comment) of a script block, copied onto the exports of the component | — |
 
-Slots combine in `plugins` order, after the code of the built-in plugins. Arrays and `exports.names` are concatenated, and names are
-de-duplicated. For `elements`, `exports.default` and `exports.docComment`, the first plugin that sets
-one wins. Slots that are not valid, such as a doc comment out of its block, throw.
+Slots combine in `plugins` order, after the code of the built-in plugins. Arrays, the codes of an
+element in `elementEnd` and `exports.names` are concatenated, and names are de-duplicated. For
+`elements`, `exports.default` and `exports.docComment`, the first plugin that sets one wins. Slots
+that are not valid, such as a doc comment out of its block or a template type that `file.name()` did
+not name, throw.
 
-`writers.script` and `writers.scriptSetup` are the writers of the plugin for the file's script
-blocks (`undefined` without the block), at offsets of the block's content: muggle-string writers,
-`RewriteWriter<IRBlock, VueCodegenData>`. Inserted code is `VueCodegenCode`: `VueCodegenPiece`s,
-slices, or arrays of them. Inserts and replacements never conflict. `insertBefore(offset, code)` attaches code to the
-char at `offset` (at the end of the block, to the end of the block), `insertAfter(offset, code)` to
-the char before `offset` (at the start of the block, to the start of the block), and the code goes
-wherever the mapper copies that char. `replace(start, end, code)` drops the chars of `start..end` and puts `code` in
-the place of the first; the code attached to them stays. Removals of several plugins are united.
-`cut(start, end, { data, placeholder })` returns a slice of
-the chars of `start..end` with all the edits in them, which renders where it is inserted, exactly
-once, and nowhere if it is not (a plugin renders no slice: its `render` throws, as a render would freeze the edits of the plugins after it); the cuts of all plugins and the mapper nest or are disjoint, and a cut that partly overlaps another one throws, since no output can render the shared chars once in both slices. Its chars map
-with `data.features` (e.g. `scriptFeatures`), and `placeholder` takes their place where
-they are cut from. When the mapper moves a range of the
-user's code (e.g. the type argument of `defineProps` into a type alias), the inserts attached to its
-chars move with it. At one char, the code nests: a later plugin sits outside an earlier one, and the
-mapper outside all. So inserts before the char come outermost first, and inserts after the char come
-innermost first. The edits of one plugin at one place keep their order. An edit out of the range of
-its block, a replacement of no char, a cut without integer features, and code that is not valid throw. The start of each script block always maps one empty
-position, so that an edit of the generated code there (e.g. an auto import) maps back even when all
-its chars are removed.
+`rewrite(writers)` runs after the `rewrite` of the plugins before it. `writers.script` and
+`writers.scriptSetup` are the writers of the plugin for the file's script blocks (`undefined` without
+the block), at offsets of the block's content: muggle-string writers, `RewriteWriter<IRBlock,
+VueCodegenData>`. Inserted code is `VueCodegenCode`: `VueCodegenPiece`s, slices, or arrays of them.
+Inserts and replacements never conflict. `insertBefore(offset, code)` attaches code to the char at
+`offset` (at the end of the block, to the end of the block), `insertAfter(offset, code)` to the char
+before `offset` (at the start of the block, to the start of the block), and the code goes wherever
+the mapper copies that char. `replace(start, end, code)` drops the chars of `start..end` and puts
+`code` in the place of the first; the code attached to them stays. Removals of several plugins are
+united. `cut(start, end, { data, placeholder })` returns a slice of the chars of `start..end` with all
+the edits in them, which renders where it is inserted, exactly once, and nowhere if it is not (a
+plugin renders no slice: its `render` throws, as a render would freeze the edits of the plugins after
+it, and a writer takes only the slices that the writers of the file cut); the cuts of all plugins and
+the mapper nest or are disjoint, and a cut that partly overlaps another one throws, since no output
+can render the shared chars once in both slices. Its chars map with `data.features` (e.g.
+`scriptFeatures`), and `placeholder` takes their place where they are cut from. When the mapper
+moves a range of the user's code (e.g. the type argument of `defineProps` into a type alias), the
+inserts attached to its chars move with it. At one char, the code nests: a later plugin sits outside
+an earlier one, and the mapper outside all. So inserts before the char come outermost first, and
+inserts after the char come innermost first. The edits of one plugin at one place keep their order.
+An edit out of the range of its block, a replacement of no char, a cut without integer features, and
+code that is not valid throw. The start of each script block always maps one empty position, so that
+an edit of the generated code there (e.g. an auto import) maps back even when all its chars are
+removed.
 
 Unsupported, since they would need generated structure that a contribution cannot reach without
 depending on generated names: wrapping the template (e.g. checking its root as the default slot of
-a layout component), changing the shape of the component (e.g. a `defineGeneric` macro; use `generic="…"`), template
-expressions in custom blocks, and intersecting a type into the default export.
+a layout component), template expressions in custom blocks, and intersecting a type into the default
+export.
 
 Each transform selects its virtual extension through the Content Mapper
 protocol, following the `lang` of the file's script blocks: `.ts` for `lang="ts"`,
