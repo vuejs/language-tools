@@ -27,7 +27,7 @@ export function generateBlockAnchor(block: ScriptBlock): TsCode {
 
 /** A rewrite of the content of `block`. */
 export function createBlockRewrite(block: ScriptBlock): BlockRewrite {
-	const rewrite = createSourceRewrite<IRBlock, TsCodeData>(block, block.content);
+	const rewrite = createSourceRewrite<IRBlock, TsCodeData>(block);
 	return {
 		rewrite,
 		render(slice, terminate = true) {

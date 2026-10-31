@@ -1,12 +1,13 @@
 import { SpanMapKind, type SpanMapSegment } from '@volar/language-core';
-import { type Code, pieceText } from '../types';
+import { rewritePieceText } from 'muggle-string';
+import type { Code } from '../types';
 
 /** One span map segment per piece with a marker, from the piece's text to its range. */
 export function buildMappings(chunks: Code[]): SpanMapSegment[] {
 	const mappings: SpanMapSegment[] = [];
 	let generatedStart = 0;
 	for (const piece of chunks) {
-		const { length } = pieceText(piece);
+		const { length } = rewritePieceText(piece);
 		if (typeof piece !== 'string') {
 			const { start, end, data } = piece;
 			mappings.push({

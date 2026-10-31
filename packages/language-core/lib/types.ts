@@ -1,6 +1,6 @@
 import type { SpanMapKind } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
-import type { Piece } from 'muggle-string';
+import { type Piece, rewritePieceText } from 'muggle-string';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 
 /** The node types of the TypeScript 7 AST API, for packages that do not resolve `typescript` to it. */
@@ -66,16 +66,11 @@ export type CodeSource = IR | IRBlock;
  */
 export type CodePiece<Data> = Piece<{ source: CodeSource; data: Data }>;
 
-/** The text of `piece`. */
-export function pieceText(piece: CodePiece<unknown>): string {
-	return typeof piece === 'string' ? piece : piece.text ?? piece.source.content.slice(piece.start, piece.end);
-}
-
 /** The text of `codes`. */
 export function codeToString(codes: readonly CodePiece<unknown>[]): string {
 	let text = '';
 	for (const code of codes) {
-		text += pieceText(code);
+		text += rewritePieceText(code);
 	}
 	return text;
 }

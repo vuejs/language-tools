@@ -1,4 +1,5 @@
-import { type CodePiece, type IR, type IRBlock, pieceText } from '../types';
+import { rewritePieceText } from 'muggle-string';
+import type { CodePiece, IR, IRBlock } from '../types';
 
 /**
  * Rebases the pieces whose source is a block of `ir` to `ir`, at offsets of the file; a copy takes the text of the
@@ -25,7 +26,7 @@ export function resolveCodeOffsets<Data>(ir: IR, codes: readonly CodePiece<Data>
 			start: piece.start + block.offset,
 			end: piece.end + block.offset,
 			data: piece.data,
-			text: pieceText(piece),
+			text: rewritePieceText(piece),
 		};
 	});
 }

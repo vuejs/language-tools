@@ -1,5 +1,6 @@
 import { isCompletionEnabled, SpanMapKind, type SpanMapSegment } from '@volar/language-core';
-import { pieceText, type VueCodeMarker } from '@vue/language-core';
+import type { VueCodeMarker } from '@vue/language-core';
+import { rewritePieceText } from 'muggle-string';
 import { isSynthesizedIgnore, OpenRanges, type TsPiece } from '../codegen/tsCode';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../protocol';
 
@@ -116,7 +117,7 @@ function collectDiagnosticDirectives(chunks: TsPiece[]) {
 				directive[3] = generatedStart;
 			}
 		}
-		generatedStart += pieceText(piece).length;
+		generatedStart += rewritePieceText(piece).length;
 	}
 	return directives;
 }
@@ -152,7 +153,7 @@ function toItems(chunks: TsPiece[]) {
 			generatedStart += piece.length;
 			continue;
 		}
-		const { length } = pieceText(piece);
+		const { length } = rewritePieceText(piece);
 		const { start: sourceStart, end: sourceEnd, data } = piece;
 		if (data === undefined) {
 			const range = ranges.mapping;
