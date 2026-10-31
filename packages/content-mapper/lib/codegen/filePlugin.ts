@@ -1,18 +1,16 @@
 import { computed } from 'alien-signals';
-import type { VueCodegenFile, VueCodegenWriters } from './plugin';
+import type { VueCodegenFile, VueCodegenTemplate, VueCodegenWriters } from './plugin';
 import type { ModuleSlots } from './script';
 import type { ComponentSlots } from './script/component';
 import type { ScriptSetupSlots } from './script/scriptSetup';
 import type { TemplateFunctionSlots } from './script/template';
-import type { TemplateVars } from './template';
 import type { ElementSlots } from './template/element';
 
-/** What a built-in codegen plugin reads: the same as a codegen plugin, and the variables of the template. */
+/** What a built-in codegen plugin reads: the same as a codegen plugin, its names, and the types of the template. */
 export interface BuiltinPluginFile extends VueCodegenFile {
 	/** A name of the plugin for an identifier that it declares, which no other code of the file declares. */
 	name(hint: string): string;
-	/** The variables that the code of the template declares for its nodes, without a template `undefined`. */
-	getTemplateVars(): TemplateVars | undefined;
+	template: VueCodegenTemplate;
 }
 
 /** The slots that the owners of the generated code declare, by name. */

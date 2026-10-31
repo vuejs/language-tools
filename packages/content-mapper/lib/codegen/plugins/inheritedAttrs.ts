@@ -3,15 +3,15 @@ import type { BuiltinPluginFile, FileCodegen } from '../filePlugin';
 import { typeAliasRef } from '../writers';
 
 /** The type of the attributes that fall through to the root of the template, which the component takes as props. */
-export function createInheritedAttrsPlugin({ ir, analysis, getTemplateVars, name }: BuiltinPluginFile): FileCodegen {
+export function createInheritedAttrsPlugin({ ir, analysis, template, name }: BuiltinPluginFile): FileCodegen {
 	const InheritedAttrs = name('InheritedAttrs');
-	const hasInheritedAttrs = () => !!getTemplateVars()?.inheritedAttrVars.size;
+	const hasInheritedAttrs = () => !!template.fallthroughAttrsType();
 	return {
 		templateTypes: () => {
 			if (!hasInheritedAttrs()) {
 				return [];
 			}
-			const type = [...getTemplateVars()!.inheritedAttrVars].map(name => `typeof ${name}`).join(` & `);
+			const type = template.fallthroughAttrsType()!;
 			const { checkRequiredFallthroughAttributes } = analysis.getResolvedOptions();
 			return [{
 				name: InheritedAttrs,

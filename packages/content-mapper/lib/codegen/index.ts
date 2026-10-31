@@ -2,8 +2,8 @@ import { getScriptLang, type IR, type ScriptAnalysis, type TypeScript, type VueS
 import { BindingFlag } from '@vue/language-core/lib/script/scriptBindings';
 import { computed } from 'alien-signals';
 import { type BuiltinPluginFactory, mergeSlots } from './filePlugin';
-import { createPluginNames } from './names';
-import { type CodegenPlugin, createFilePlugin, rewriteScripts } from './plugin';
+import { createPluginNames, names } from './names';
+import { type CodegenPlugin, createFilePlugin, rewriteScripts, type VueCodegenTemplate } from './plugin';
 import { createInheritedAttrsPlugin } from './plugins/inheritedAttrs';
 import { createRefsPlugin } from './plugins/refs';
 import { createRootElPlugin } from './plugins/rootEl';
@@ -78,11 +78,29 @@ function useCodegen(
 	} = analysis;
 
 	const getTemplateVars = () => getGeneratedTemplate()?.vars;
+	const template: VueCodegenTemplate = {
+		instanceType(node) {
+			const instance = getTemplateVars()?.componentInstanceVars.get(node);
+			return instance && `typeof ${instance.hoistedVar ?? instance.instanceVar}`;
+		},
+		elementType: tag => `${names.Elements}['${tag}']`,
+		slotOutletTypes(node) {
+			const outlet = getTemplateVars()?.slotVars.get(node);
+			return outlet && {
+				props: `typeof ${outlet.propsVar}`,
+				name: outlet.expVar && `NonNullable<typeof ${outlet.expVar}>`,
+			};
+		},
+		fallthroughAttrsType() {
+			const attrVars = [...getTemplateVars()?.inheritedAttrVars ?? []];
+			return attrVars.length ? attrVars.map(name => `typeof ${name}`).join(` & `) : undefined;
+		},
+	};
 	const pluginNames = createPluginNames();
 	const filePlugins = [
 		...builtinPlugins.map(([name, create]) => ({
 			name,
-			...create({ ts, fileName, ir, analysis, getTemplateVars, name: pluginNames(name) }),
+			...create({ ts, fileName, ir, analysis, template, name: pluginNames(name) }),
 		})),
 		...plugins.map(plugin => createFilePlugin(plugin, { ts, fileName, ir, analysis })),
 	];

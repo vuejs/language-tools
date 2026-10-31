@@ -1,18 +1,16 @@
 import { getScriptLang } from '@vue/language-core';
 import { computed } from 'alien-signals';
 import type { BuiltinPluginFile, FileCodegen } from '../filePlugin';
-import { names } from '../names';
 import { asType, newLine, typeAliasRef } from '../writers';
 
 /** The type of the root element of the template, which the component exposes as `$el`. */
-export function createRootElPlugin({ ir, analysis, getTemplateVars, name }: BuiltinPluginFile): FileCodegen {
+export function createRootElPlugin({ ir, analysis, template, name }: BuiltinPluginFile): FileCodegen {
 	const RootEl = name('RootEl');
 	/** The types of the root elements of a template with a single root element in each branch. */
 	const getRootElTypes = computed(() => {
 		const { rootElements, singleRootNodes, dollarVars } = analysis.getTemplateScope();
-		const vars = getTemplateVars();
 		if (
-			!vars
+			!ir.template
 			|| singleRootNodes.has(null)
 			|| !(dollarVars.has('$el') || analysis.getResolvedOptions().inferComponentDollarEl)
 		) {
@@ -20,8 +18,8 @@ export function createRootElPlugin({ ir, analysis, getTemplateVars, name }: Buil
 		}
 		const types = new Set<string>();
 		for (const node of rootElements) {
-			const instance = vars.componentInstanceVars.get(node);
-			types.add(instance ? `NonNullable<typeof ${instance.instanceVar}>['$el']` : `${names.Elements}['${node.tag}']`);
+			const instance = template.instanceType(node);
+			types.add(instance ? `NonNullable<${instance}>['$el']` : template.elementType(node.tag));
 		}
 		return types.size ? types : undefined;
 	});

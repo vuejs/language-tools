@@ -1,7 +1,6 @@
 import { completionFeatures, getScriptLang, navigationFeatures, type ScriptSetupRanges } from '@vue/language-core';
 import { computed } from 'alien-signals';
 import type { BuiltinPluginFile, FileCodegen } from '../filePlugin';
-import { names } from '../names';
 import type { VueCodegenWriter } from '../plugin';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, isTsLang, newLine, typeAliasRef } from '../writers';
@@ -11,29 +10,26 @@ import { generatePropertyKey } from '../writers/stringLiteralKey';
  * The types of the template refs: their type at the end of the template, which the component exposes as `$refs`, and
  * the types of `useTemplateRef()`.
  */
-export function createRefsPlugin({ ir, analysis, getTemplateVars, name }: BuiltinPluginFile): FileCodegen {
+export function createRefsPlugin({ ir, analysis, template, name }: BuiltinPluginFile): FileCodegen {
 	const TemplateRefs = name('TemplateRefs');
 	const getTemplateRefs = computed(() => {
 		const { templateRefs } = analysis.getTemplateScope();
 		const { inferTemplateDollarRefs, inferComponentDollarRefs } = analysis.getResolvedOptions();
-		const vars = getTemplateVars();
 		if (
-			vars
+			ir.template
 			&& templateRefs.size
 			&& (inferTemplateDollarRefs || inferComponentDollarRefs || analysis.getSetupRefs().size)
 		) {
-			return { templateRefs, vars };
+			return templateRefs;
 		}
 	});
 	const hasTemplateRefs = () => !!getTemplateRefs();
 	return {
 		templateTypes: () => {
-			const refs = getTemplateRefs();
-			if (!refs) {
+			const templateRefs = getTemplateRefs();
+			if (!templateRefs) {
 				return [];
 			}
-			const template = ir.template!;
-			const { templateRefs, vars } = refs;
 			return [{
 				name: TemplateRefs,
 				code: [...(function*(): Generator<TsCode> {
@@ -45,10 +41,8 @@ export function createRefsPlugin({ ir, analysis, getTemplateVars, name }: Builti
 						}
 						for (let i = 0; i < refs.length; i++) {
 							const { node, offset, inVFor } = refs[i]!;
-							const instance = vars.componentInstanceVars.get(node);
-							let typeExp = instance
-								? `typeof ${instance.hoistedVar} | null`
-								: `${names.Elements}['${node.tag}']`;
+							const instance = template.instanceType(node);
+							let typeExp = instance ? `${instance} | null` : template.elementType(node.tag);
 							if (inVFor) {
 								typeExp = instance ? `(${typeExp})[]` : `${typeExp}[]`;
 							}
@@ -56,8 +50,8 @@ export function createRefsPlugin({ ir, analysis, getTemplateVars, name }: Builti
 								yield ` | `;
 							}
 							yield `{ `;
-							const ignore = yield* Boundary.start(template, 0, 0, synthesizedIgnore);
-							yield* generatePropertyKey(name, template, offset, { features: navigationFeatures });
+							const ignore = yield* Boundary.start(ir.template!, 0, 0, synthesizedIgnore);
+							yield* generatePropertyKey(name, ir.template!, offset, { features: navigationFeatures });
 							yield ignore.end();
 							yield `: ${typeExp} }`;
 						}

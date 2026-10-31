@@ -1,3 +1,4 @@
+import type { ElementNode } from '@vue/compiler-dom';
 import {
 	type IR,
 	type IRBlock,
@@ -39,6 +40,24 @@ export interface VueCodegenFile {
 	ir: IR;
 	/** Resolved options (with SFC comment options), script and script-setup ranges, template scope. */
 	analysis: ScriptAnalysis;
+}
+
+/**
+ * The types of what the code of the template declares for its nodes, as code of the template function: what a type at
+ * the end of the template reads.
+ */
+export interface VueCodegenTemplate {
+	/**
+	 * The type of the instance of the component `node`, which the template declares for a component with a template ref
+	 * or a root element whose `$el` is inferred; `undefined` for another node.
+	 */
+	instanceType(node: ElementNode): string | undefined;
+	/** The type of the native element `tag`. */
+	elementType(tag: string): string;
+	/** The types of the props of the slot outlet `node`, and of its name when it is dynamic, without `defineSlots`. */
+	slotOutletTypes(node: ElementNode): { props: string; name?: string } | undefined;
+	/** The type of the attributes that fall through to the root of the template, `undefined` when none do. */
+	fallthroughAttrsType(): string | undefined;
 }
 
 /**
