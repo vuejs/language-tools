@@ -2,6 +2,7 @@ import { getScriptLang, type IR, type ScriptAnalysis, type TypeScript, type VueS
 import { BindingFlag } from '@vue/language-core/lib/script/scriptBindings';
 import { computed } from 'alien-signals';
 import { type BuiltinPluginFactory, mergeSlots } from './filePlugin';
+import { createPluginNames } from './names';
 import { type CodegenPlugin, createFilePlugin, rewriteScripts } from './plugin';
 import { createInheritedAttrsPlugin } from './plugins/inheritedAttrs';
 import { createRefsPlugin } from './plugins/refs';
@@ -19,12 +20,12 @@ export interface ServiceScript {
 }
 
 /** The built-in codegen plugins, in the order that their code takes in each slot, before the other plugins. */
-const builtinPlugins: readonly BuiltinPluginFactory[] = [
-	createSlotsPlugin,
-	createInheritedAttrsPlugin,
-	createRefsPlugin,
-	createRootElPlugin,
-	createStylePlugin,
+const builtinPlugins: readonly (readonly [name: string, create: BuiltinPluginFactory])[] = [
+	['vue:slots', createSlotsPlugin],
+	['vue:inherited-attrs', createInheritedAttrsPlugin],
+	['vue:refs', createRefsPlugin],
+	['vue:root-el', createRootElPlugin],
+	['vue:style', createStylePlugin],
 ];
 
 export function generateServiceScript(
@@ -77,8 +78,12 @@ function useCodegen(
 	} = analysis;
 
 	const getTemplateVars = () => getGeneratedTemplate()?.vars;
+	const pluginNames = createPluginNames();
 	const filePlugins = [
-		...builtinPlugins.map(create => create({ ts, fileName, ir, analysis, getTemplateVars })),
+		...builtinPlugins.map(([name, create]) => ({
+			name,
+			...create({ ts, fileName, ir, analysis, getTemplateVars, name: pluginNames(name) }),
+		})),
 		...plugins.map(plugin => createFilePlugin(plugin, { ts, fileName, ir, analysis })),
 	];
 	const slots = mergeSlots(filePlugins);

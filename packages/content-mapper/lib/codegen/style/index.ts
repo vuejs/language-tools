@@ -15,8 +15,7 @@ import {
 	type VueCompilerOptions,
 } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { BuiltinPluginFile, FilePlugin } from '../filePlugin';
-import { names } from '../names';
+import type { BuiltinPluginFile, FileCodegen } from '../filePlugin';
 import type { VueCodegenPiece, VueCodegenWriter } from '../plugin';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
@@ -43,7 +42,8 @@ export interface StyleCodegenOptions {
  * The style plugin: the types of the scoped classes and the CSS modules, the expressions of `v-bind()` in CSS, the
  * references of the template's class names to the scoped classes, and the types of `useCssModule()`.
  */
-export function createStylePlugin({ ts, ir, analysis }: BuiltinPluginFile): FilePlugin {
+export function createStylePlugin({ ts, ir, analysis, name }: BuiltinPluginFile): FileCodegen {
+	const StyleModules = name('StyleModules');
 	const getGeneratedStyle = computed(() => {
 		if (!ir.styles.length) {
 			return;
@@ -83,13 +83,12 @@ export function createStylePlugin({ ts, ir, analysis }: BuiltinPluginFile): File
 	});
 
 	return {
-		name: 'vue:style',
 		templateTypes: () => {
 			const code = getStyleModulesType();
-			return code ? [{ name: names.StyleModules, code }] : [];
+			return code ? [{ name: StyleModules, code }] : [];
 		},
 		templateBody: () => getGeneratedStyle()?.codes ?? [],
-		templateContext: () => hasStyleModules() ? [[typeAliasRef(names.StyleModules, getScriptLang(ir))]] : [],
+		templateContext: () => hasStyleModules() ? [[typeAliasRef(StyleModules, getScriptLang(ir))]] : [],
 		declarations: () => [...generateStyleModuleImports(ir)],
 		elementEnd: getElementEnd,
 		rewrite({ scriptSetup }) {
@@ -100,7 +99,7 @@ export function createStylePlugin({ ts, ir, analysis }: BuiltinPluginFile): File
 					ir.scriptSetup!,
 					scriptSetupRanges.useCssModule,
 					getScriptLang(ir),
-					hasStyleModules(),
+					hasStyleModules() ? StyleModules : undefined,
 				);
 			}
 		},
@@ -144,15 +143,15 @@ function* generateCssVars(
 	}
 }
 
-/** Casts each `useCssModule()` call of `<script setup>` to the type of its CSS module. */
+/** Casts each `useCssModule()` call of `<script setup>` to the type of its CSS module, of the type `styleModules`. */
 function rewriteUseCssModule(
 	writer: VueCodegenWriter,
 	scriptSetup: IRScriptSetup,
 	calls: ScriptSetupRanges['useCssModule'],
 	scriptLang: string,
-	hasStyleModules: boolean,
+	styleModules: string | undefined,
 ) {
-	const type = hasStyleModules ? typeAliasRef(names.StyleModules, scriptLang) : `{}`;
+	const type = styleModules ? typeAliasRef(styleModules, scriptLang) : `{}`;
 	for (const { callExp, exp, arg } of calls) {
 		if (arg) {
 			// the argument is copied as a reference into the cast, and is `any` at the call

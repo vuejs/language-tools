@@ -1,6 +1,6 @@
 import { completionFeatures, getScriptLang, navigationFeatures, type ScriptSetupRanges } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { BuiltinPluginFile, FilePlugin } from '../filePlugin';
+import type { BuiltinPluginFile, FileCodegen } from '../filePlugin';
 import { names } from '../names';
 import type { VueCodegenWriter } from '../plugin';
 import { Boundary, synthesizedIgnore, type TsCode } from '../tsCode';
@@ -11,7 +11,8 @@ import { generatePropertyKey } from '../writers/stringLiteralKey';
  * The types of the template refs: their type at the end of the template, which the component exposes as `$refs`, and
  * the types of `useTemplateRef()`.
  */
-export function createRefsPlugin({ ir, analysis, getTemplateVars }: BuiltinPluginFile): FilePlugin {
+export function createRefsPlugin({ ir, analysis, getTemplateVars, name }: BuiltinPluginFile): FileCodegen {
+	const TemplateRefs = name('TemplateRefs');
 	const getTemplateRefs = computed(() => {
 		const { templateRefs } = analysis.getTemplateScope();
 		const { inferTemplateDollarRefs, inferComponentDollarRefs } = analysis.getResolvedOptions();
@@ -26,7 +27,6 @@ export function createRefsPlugin({ ir, analysis, getTemplateVars }: BuiltinPlugi
 	});
 	const hasTemplateRefs = () => !!getTemplateRefs();
 	return {
-		name: 'vue:refs',
 		templateTypes: () => {
 			const refs = getTemplateRefs();
 			if (!refs) {
@@ -35,7 +35,7 @@ export function createRefsPlugin({ ir, analysis, getTemplateVars }: BuiltinPlugi
 			const template = ir.template!;
 			const { templateRefs, vars } = refs;
 			return [{
-				name: names.TemplateRefs,
+				name: TemplateRefs,
 				code: [...(function*(): Generator<TsCode> {
 					yield `{}`;
 					for (const [name, refs] of templateRefs) {
@@ -70,34 +70,44 @@ export function createRefsPlugin({ ir, analysis, getTemplateVars }: BuiltinPlugi
 		},
 		templateDollars: () =>
 			analysis.getTemplateScope().dollarVars.has('$refs')
-				? [[`{ $refs: ${hasTemplateRefs() ? typeAliasRef(names.TemplateRefs, getScriptLang(ir)) : `{}`} }`]]
+				? [[`{ $refs: ${hasTemplateRefs() ? typeAliasRef(TemplateRefs, getScriptLang(ir)) : `{}`} }`]]
 				: [],
 		componentOptions: () => {
 			const { target, inferComponentDollarRefs } = analysis.getResolvedOptions();
 			const scriptLang = getScriptLang(ir);
 			return target >= 3.5 && inferComponentDollarRefs && hasTemplateRefs()
-				? [`__typeRefs: ${asType(typeAliasRef(names.TemplateRefs, scriptLang), scriptLang)}`]
+				? [`__typeRefs: ${asType(typeAliasRef(TemplateRefs, scriptLang), scriptLang)}`]
 				: [];
 		},
 		exposedInstanceTypes: () =>
 			analysis.getResolvedOptions().inferComponentDollarRefs && hasTemplateRefs()
-				? [`{ $refs: ${typeAliasRef(names.TemplateRefs, getScriptLang(ir))}; }`]
+				? [`{ $refs: ${typeAliasRef(TemplateRefs, getScriptLang(ir))}; }`]
 				: [],
 		rewrite({ scriptSetup }) {
 			const scriptSetupRanges = analysis.getScriptSetupRanges();
 			if (scriptSetup && scriptSetupRanges) {
-				rewriteUseTemplateRef(scriptSetup, scriptSetupRanges, getScriptLang(ir), analysis.getResolvedOptions().lib);
+				rewriteUseTemplateRef(
+					scriptSetup,
+					scriptSetupRanges,
+					getScriptLang(ir),
+					analysis.getResolvedOptions().lib,
+					TemplateRefs,
+				);
 			}
 		},
 	};
 }
 
-/** Casts each `useTemplateRef()` call of `<script setup>` to a ref of the type of its template ref. */
+/**
+ * Casts each `useTemplateRef()` call of `<script setup>` to a ref of the type of its template ref, a property of the
+ * type `templateRefs`.
+ */
 function rewriteUseTemplateRef(
 	writer: VueCodegenWriter,
 	scriptSetupRanges: ScriptSetupRanges,
 	scriptLang: string,
 	lib: string,
+	templateRefs: string,
 ) {
 	for (const { callExp, arg } of scriptSetupRanges.useTemplateRef) {
 		// the argument is copied as a reference into the cast, and is `any` at the call
@@ -106,7 +116,7 @@ function rewriteUseTemplateRef(
 			placeholder: asType('any', scriptLang),
 		});
 		const refType = name
-			? [typeAliasRef(names.TemplateRefs, scriptLang), `[`, name, `]`]
+			? [typeAliasRef(templateRefs, scriptLang), `[`, name, `]`]
 			: [`unknown`];
 		const shallowRef = `Readonly<import('${lib}').ShallowRef<`;
 		if (isTsLang(scriptLang)) {

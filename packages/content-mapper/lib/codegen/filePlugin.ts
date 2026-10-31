@@ -9,6 +9,8 @@ import type { ElementSlots } from './template/element';
 
 /** What a built-in codegen plugin reads: the same as a codegen plugin, and the variables of the template. */
 export interface BuiltinPluginFile extends VueCodegenFile {
+	/** A name of the plugin for an identifier that it declares, which no other code of the file declares. */
+	name(hint: string): string;
 	/** The variables that the code of the template declares for its nodes, without a template `undefined`. */
 	getTemplateVars(): TemplateVars | undefined;
 }
@@ -17,20 +19,21 @@ export interface BuiltinPluginFile extends VueCodegenFile {
 export type CodegenSlots = ModuleSlots & TemplateFunctionSlots & ComponentSlots & ScriptSetupSlots & ElementSlots;
 
 /**
- * A codegen plugin, built-in or of `vueCompilerOptions.plugins`, for one file. It edits the user's code of the script
- * blocks through its writers, and writes its code into the slots that the owners of the generated code declare; it
- * knows neither their code nor the other plugins. Each slot is read lazily, so that an owner depends only on the slots
- * that it reads.
+ * What a codegen plugin, built-in or of `vueCompilerOptions.plugins`, gives for one file. It edits the user's code of
+ * the script blocks through its writers, and writes its code into the slots that the owners of the generated code
+ * declare; it knows neither their code nor the other plugins. Each slot is read lazily, so that an owner depends only on
+ * the slots that it reads.
  */
-export type FilePlugin =
-	& {
-		/** The name in the errors of its edits. */
-		readonly name: string;
-		rewrite?(writers: VueCodegenWriters): void;
-	}
+export type FileCodegen =
+	& { rewrite?(writers: VueCodegenWriters): void }
 	& { readonly [K in keyof CodegenSlots]?: () => CodegenSlots[K] };
 
-export type BuiltinPluginFactory = (file: BuiltinPluginFile) => FilePlugin;
+export interface FilePlugin extends FileCodegen {
+	/** The name in the errors of its edits. */
+	readonly name: string;
+}
+
+export type BuiltinPluginFactory = (file: BuiltinPluginFile) => FileCodegen;
 
 /** The slots of `plugins`, each the contributions in the order of `plugins`. */
 export type MergedSlots = { readonly [K in keyof CodegenSlots]: () => CodegenSlots[K] };

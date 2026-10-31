@@ -1,11 +1,12 @@
 import { getScriptLang } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { BuiltinPluginFile, FilePlugin } from '../filePlugin';
+import type { BuiltinPluginFile, FileCodegen } from '../filePlugin';
 import { names } from '../names';
 import { asType, newLine, typeAliasRef } from '../writers';
 
 /** The type of the root element of the template, which the component exposes as `$el`. */
-export function createRootElPlugin({ ir, analysis, getTemplateVars }: BuiltinPluginFile): FilePlugin {
+export function createRootElPlugin({ ir, analysis, getTemplateVars, name }: BuiltinPluginFile): FileCodegen {
+	const RootEl = name('RootEl');
 	/** The types of the root elements of a template with a single root element in each branch. */
 	const getRootElTypes = computed(() => {
 		const { rootElements, singleRootNodes, dollarVars } = analysis.getTemplateScope();
@@ -26,25 +27,24 @@ export function createRootElPlugin({ ir, analysis, getTemplateVars }: BuiltinPlu
 	});
 	const hasRootEl = () => !!getRootElTypes();
 	return {
-		name: 'vue:root-el',
 		templateTypes: () => {
 			const types = getRootElTypes();
-			return types ? [{ name: names.RootEl, code: [...types].map(type => `${newLine}| ${type}`) }] : [];
+			return types ? [{ name: RootEl, code: [...types].map(type => `${newLine}| ${type}`) }] : [];
 		},
 		templateDollars: () =>
 			analysis.getTemplateScope().dollarVars.has('$el')
-				? [[`{ $el: ${hasRootEl() ? typeAliasRef(names.RootEl, getScriptLang(ir)) : `any`} }`]]
+				? [[`{ $el: ${hasRootEl() ? typeAliasRef(RootEl, getScriptLang(ir)) : `any`} }`]]
 				: [],
 		componentOptions: () => {
 			const { target, inferComponentDollarEl } = analysis.getResolvedOptions();
 			const scriptLang = getScriptLang(ir);
 			return target >= 3.5 && inferComponentDollarEl && hasRootEl()
-				? [`__typeEl: ${asType(typeAliasRef(names.RootEl, scriptLang), scriptLang)}`]
+				? [`__typeEl: ${asType(typeAliasRef(RootEl, scriptLang), scriptLang)}`]
 				: [];
 		},
 		exposedInstanceTypes: () =>
 			analysis.getResolvedOptions().inferComponentDollarEl && hasRootEl()
-				? [`{ $el: ${typeAliasRef(names.RootEl, getScriptLang(ir))}; }`]
+				? [`{ $el: ${typeAliasRef(RootEl, getScriptLang(ir))}; }`]
 				: [],
 	};
 }

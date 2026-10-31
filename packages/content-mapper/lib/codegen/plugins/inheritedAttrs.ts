@@ -1,13 +1,12 @@
 import { getScriptLang } from '@vue/language-core';
-import type { BuiltinPluginFile, FilePlugin } from '../filePlugin';
-import { names } from '../names';
+import type { BuiltinPluginFile, FileCodegen } from '../filePlugin';
 import { typeAliasRef } from '../writers';
 
 /** The type of the attributes that fall through to the root of the template, which the component takes as props. */
-export function createInheritedAttrsPlugin({ ir, analysis, getTemplateVars }: BuiltinPluginFile): FilePlugin {
+export function createInheritedAttrsPlugin({ ir, analysis, getTemplateVars, name }: BuiltinPluginFile): FileCodegen {
+	const InheritedAttrs = name('InheritedAttrs');
 	const hasInheritedAttrs = () => !!getTemplateVars()?.inheritedAttrVars.size;
 	return {
-		name: 'vue:inherited-attrs',
 		templateTypes: () => {
 			if (!hasInheritedAttrs()) {
 				return [];
@@ -15,11 +14,11 @@ export function createInheritedAttrsPlugin({ ir, analysis, getTemplateVars }: Bu
 			const type = [...getTemplateVars()!.inheritedAttrVars].map(name => `typeof ${name}`).join(` & `);
 			const { checkRequiredFallthroughAttributes } = analysis.getResolvedOptions();
 			return [{
-				name: names.InheritedAttrs,
+				name: InheritedAttrs,
 				code: [checkRequiredFallthroughAttributes ? type : `Partial<${type}>`],
 			}];
 		},
-		fallthroughProps: () => hasInheritedAttrs() ? [typeAliasRef(names.InheritedAttrs, getScriptLang(ir))] : [],
+		fallthroughProps: () => hasInheritedAttrs() ? [typeAliasRef(InheritedAttrs, getScriptLang(ir))] : [],
 		templateDollars: () => {
 			if (!analysis.getTemplateScope().dollarVars.has('$attrs')) {
 				return [];
@@ -27,7 +26,7 @@ export function createInheritedAttrsPlugin({ ir, analysis, getTemplateVars }: Bu
 			const type = `import('${analysis.getResolvedOptions().lib}').ComponentPublicInstance['$attrs']`;
 			return [[
 				`{ $attrs: ${type}`,
-				hasInheritedAttrs() ? ` & ${typeAliasRef(names.InheritedAttrs, getScriptLang(ir))}` : ``,
+				hasInheritedAttrs() ? ` & ${typeAliasRef(InheritedAttrs, getScriptLang(ir))}` : ``,
 				` }`,
 			]];
 		},
