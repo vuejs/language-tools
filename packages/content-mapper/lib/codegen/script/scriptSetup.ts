@@ -61,9 +61,9 @@ export interface ScriptSetupCopies {
 
 /**
  * The copies of `<script setup>` of `blockRewrite`, with the transforms of Vue. With `bodyAtRoot`, the body follows
- * the imports and the macros at module scope, so one cut copies the whole block, with the macros inserted after the
- * imports, and the imports render it all. Otherwise the imports and the body are top-level cuts of one rewrite; an
- * empty block has a zero-width body, which renders its inserts.
+ * the imports and the macros at module scope, so one view copies the whole block, with the macros inserted after the
+ * imports, and the imports render it all. Otherwise the imports and the body are views of one rewrite; an empty block
+ * has an empty body, which renders its inserts.
  */
 export function createScriptSetupCopies(
 	options: ScriptCodegenOptions,
@@ -72,11 +72,9 @@ export function createScriptSetupCopies(
 	scriptSetupRanges: ScriptSetupRanges,
 	bodyAtRoot: boolean,
 ): ScriptSetupCopies {
-	const rewrite = blockRewrite.rewrite;
 	const importSectionEnd = getImportSectionEnd(scriptSetupRanges);
 	const { length } = scriptSetup.content;
 	if (bodyAtRoot) {
-		const whole = rewrite.cut(0, length, { data: { features: scriptFeatures } });
 		addTransforms(options, blockRewrite, scriptSetupRanges);
 		const macros = [...generateMacros(options)];
 		if (macros.length) {
@@ -85,28 +83,22 @@ export function createScriptSetupCopies(
 		return {
 			*generateImports() {
 				yield generateBlockAnchor(scriptSetup);
-				yield* blockRewrite.render(whole);
+				yield* blockRewrite.render(0, length);
 			},
 			*generateBody() {},
 		};
 	}
-	const imports = importSectionEnd > 0
-		? rewrite.cut(0, importSectionEnd, { data: { features: scriptFeatures } })
-		: undefined;
-	const body = importSectionEnd < length || !length
-		? rewrite.cut(importSectionEnd, length, { data: { features: scriptFeatures } })
-		: undefined;
 	addTransforms(options, blockRewrite, scriptSetupRanges);
 	return {
 		*generateImports() {
 			yield generateBlockAnchor(scriptSetup);
-			if (imports) {
-				yield* blockRewrite.render(imports, false);
+			if (importSectionEnd > 0) {
+				yield* blockRewrite.render(0, importSectionEnd, false);
 			}
 		},
 		*generateBody() {
-			if (body) {
-				yield* blockRewrite.render(body);
+			if (importSectionEnd < length || !length) {
+				yield* blockRewrite.render(importSectionEnd, length);
 			}
 		},
 	};

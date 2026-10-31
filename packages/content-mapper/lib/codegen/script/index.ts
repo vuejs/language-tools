@@ -365,18 +365,13 @@ function* generateScriptWithExportDefault(
 	}
 
 	// the head is the code up to the end of the default export, with the exported expression cut out of it
-	const rewrite = blockRewrite.rewrite;
-	const head = rewrite.cut(0, exportDefault.end, { data: { features: scriptFeatures } });
-	const exported = rewrite.cut(expression.start, expression.end, {
+	const exported = blockRewrite.cut(expression.node, {
 		data: { features: scriptFeatures },
 		placeholder: exportExpression,
 	});
-	const tail = exportDefault.end < script.content.length
-		? rewrite.cut(exportDefault.end, script.content.length, { data: { features: scriptFeatures } })
-		: undefined;
 
 	yield generateBlockAnchor(script);
-	yield* blockRewrite.render(head);
+	yield* blockRewrite.render(0, exportDefault.end);
 	yield endOfLine;
 	if (templateGenerator) {
 		yield* templateGenerator;
@@ -384,22 +379,21 @@ function* generateScriptWithExportDefault(
 	yield* generateComponentDeclareEqual(ir, script, varName);
 	if (wrapLeft && wrapRight) {
 		yield wrapLeft;
-		yield* blockRewrite.render(exported);
+		yield* blockRewrite.renderSlice(exported);
 		yield wrapRight;
 	}
 	else {
-		yield* blockRewrite.render(exported);
+		yield* blockRewrite.renderSlice(exported);
 	}
 	yield endOfLine;
-	if (tail) {
-		yield* blockRewrite.render(tail);
+	if (exportDefault.end < script.content.length) {
+		yield* blockRewrite.render(exportDefault.end, script.content.length);
 	}
 }
 
 function* generateWholeScript(script: IRScript, blockRewrite: BlockRewrite): Generator<TsCode> {
-	const whole = blockRewrite.rewrite.cut(0, script.content.length, { data: { features: scriptFeatures } });
 	yield generateBlockAnchor(script);
-	yield* blockRewrite.render(whole);
+	yield* blockRewrite.render(0, script.content.length);
 }
 
 function* generateGlobalTypesReference(
