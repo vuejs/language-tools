@@ -106,9 +106,9 @@ importers:
 
   muggle-string:
     devDependencies:
-      '@jridgewell/gen-mapping':
-        specifier: ^0.3.13
-        version: 0.3.13
+      '@jridgewell/trace-mapping':
+        specifier: ^0.3.31
+        version: 0.3.31
       '@types/node':
         specifier: ^26.0.1
         version: 26.6.5
