@@ -21,5 +21,16 @@ export function createInheritedAttrsPlugin({ ir, analysis, getTemplateVars }: Bu
 		},
 		templateExports: () => hasInheritedAttrs() ? [names.InheritedAttrs] : [],
 		fallthroughProps: () => hasInheritedAttrs() ? [typeAliasRef(names.InheritedAttrs, getScriptLang(ir))] : [],
+		templateDollars: () => {
+			if (!analysis.getTemplateScope().dollarVars.has('$attrs')) {
+				return [];
+			}
+			const type = `import('${analysis.getResolvedOptions().lib}').ComponentPublicInstance['$attrs']`;
+			return [[
+				`{ $attrs: ${type}`,
+				hasInheritedAttrs() ? ` & ${typeAliasRef(names.InheritedAttrs, getScriptLang(ir))}` : ``,
+				` }`,
+			]];
+		},
 	};
 }

@@ -39,6 +39,10 @@ export function createRootElPlugin({ ir, analysis, getTemplateVars }: BuiltinPlu
 				: [];
 		},
 		templateExports: () => hasRootEl() ? [names.RootEl] : [],
+		templateDollars: () =>
+			analysis.getTemplateScope().dollarVars.has('$el')
+				? [[`{ $el: ${hasRootEl() ? typeAliasRef(names.RootEl, getScriptLang(ir)) : `any`} }`]]
+				: [],
 		componentOptions: () => {
 			const { target, inferComponentDollarEl } = analysis.getResolvedOptions();
 			const scriptLang = getScriptLang(ir);

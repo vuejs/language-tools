@@ -67,6 +67,10 @@ export function createRefsPlugin({ ir, analysis, getTemplateVars }: BuiltinPlugi
 			})];
 		},
 		templateExports: () => hasTemplateRefs() ? [names.TemplateRefs] : [],
+		templateDollars: () =>
+			analysis.getTemplateScope().dollarVars.has('$refs')
+				? [[`{ $refs: ${hasTemplateRefs() ? typeAliasRef(names.TemplateRefs, getScriptLang(ir)) : `{}`} }`]]
+				: [],
 		componentOptions: () => {
 			const { target, inferComponentDollarRefs } = analysis.getResolvedOptions();
 			const scriptLang = getScriptLang(ir);

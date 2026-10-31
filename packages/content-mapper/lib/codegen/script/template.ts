@@ -24,6 +24,11 @@ export interface TemplateFunctionSlots {
 	/** Code at the end of the template, in its scope. */
 	templateEnd: TsCode[];
 	/**
+	 * Object types intersected into the `$` names that the template reads and types (`$slots`, `$attrs`, `$refs`,
+	 * `$el`), at the end of the template, in its scope.
+	 */
+	templateDollars: (readonly TsCode[])[];
+	/**
 	 * Object types spread into the template context (what template expressions and `$` names resolve against), after
 	 * the component instance.
 	 */
@@ -61,13 +66,24 @@ export function* generateTemplate(
 	yield* options.slots.templateBody;
 	yield* options.templateCodes;
 	yield* options.slots.templateEnd;
+	const exportedValues = [...options.slots.templateExportValues];
+	if (options.dollarVars.size) {
+		yield* generateTypedVar('var', names.dollars, scriptLang, function*() {
+			for (const type of options.slots.templateDollars) {
+				yield* intersectTypes([type]);
+				yield ` & `;
+			}
+			yield `{ [K in keyof import('${options.vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }`;
+		});
+		exportedValues.push(names.dollars);
+	}
 	yield* options.templateScopeEnd;
 
 	yield `return {${newLine}`;
 	for (const name of exportedTypes) {
 		yield `${name}: ${asType(typeAliasRef(name, scriptLang), scriptLang)},${newLine}`;
 	}
-	for (const name of options.slots.templateExportValues) {
+	for (const name of exportedValues) {
 		yield `${name},${newLine}`;
 	}
 	yield `}${endOfLine}`;
@@ -89,7 +105,7 @@ export function* generateTemplate(
 			used.push(...exportedTypes);
 		}
 	}
-	for (const name of options.slots.templateExportValues) {
+	for (const name of exportedValues) {
 		yield* generateTypedVar('let', name, scriptLang, function*() {
 			yield `${returnType}['${name}']`;
 		});

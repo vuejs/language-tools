@@ -59,6 +59,7 @@ export function mergeSlots(plugins: readonly FilePlugin[]): MergedSlots {
 		exports: listSlot('exports'),
 		templateTypes: listSlot('templateTypes'),
 		templateEnd: listSlot('templateEnd'),
+		templateDollars: listSlot('templateDollars'),
 		templateContext: listSlot('templateContext'),
 		templateBody: listSlot('templateBody'),
 		templateExports: listSlot('templateExports'),

@@ -43,6 +43,8 @@ export interface ScriptCodegenOptions {
 	templateCodes: readonly TsCode[];
 	/** The code that ends the scope of the template. */
 	templateScopeEnd: readonly TsCode[];
+	/** The `$` names that the template reads and types at its end, which `useAttrs()` and `useSlots()` take. */
+	dollarVars: ReadonlySet<string>;
 	/** What the codegen plugins write into the slots of the module, the template function and the component. */
 	slots: Readonly<ModuleSlots & Omit<TemplateFunctionSlots, 'templateTypes'> & ComponentSlots & ScriptSetupSlots>;
 	setupBindings: Set<string>;

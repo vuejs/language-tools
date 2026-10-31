@@ -339,6 +339,18 @@ function addTransforms(
 			writer.insertBefore(callExp.start, `const ${names.exposed} = {}${endOfLine}`);
 		}
 	}
+	const { inferTemplateDollarAttrs, inferTemplateDollarSlots } = options.vueCompilerOptions;
+	const isTs = isTsLang(options.scriptLang);
+	for (
+		const [{ callExp }, name] of [
+			...inferTemplateDollarAttrs ? scriptSetupRanges.useAttrs.map(call => [call, '$attrs'] as const) : [],
+			...inferTemplateDollarSlots ? scriptSetupRanges.useSlots.map(call => [call, '$slots'] as const) : [],
+		]
+	) {
+		const type = `typeof ${names.dollars}.${name}`;
+		writer.insertBefore(callExp.start, isTs ? `(` : `/** @type {${type}} */ (`);
+		writer.insertAfter(callExp.end, isTs ? ` as ${type})` : `)`);
+	}
 }
 
 /** The user's code at `range`, which `placeholder` takes the place of; it maps as script code where it is placed. */

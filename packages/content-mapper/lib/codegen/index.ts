@@ -3,7 +3,6 @@ import { BindingFlag } from '@vue/language-core/lib/script/scriptBindings';
 import { computed } from 'alien-signals';
 import { type BuiltinPluginFactory, mergeSlots } from './filePlugin';
 import { type CodegenPlugin, createFilePlugin, rewriteScripts } from './plugin';
-import { createDollarsPlugin } from './plugins/dollars';
 import { createInheritedAttrsPlugin } from './plugins/inheritedAttrs';
 import { createRefsPlugin } from './plugins/refs';
 import { createRootElPlugin } from './plugins/rootEl';
@@ -25,7 +24,6 @@ const builtinPlugins: readonly BuiltinPluginFactory[] = [
 	createInheritedAttrsPlugin,
 	createRefsPlugin,
 	createRootElPlugin,
-	createDollarsPlugin,
 	createStylePlugin,
 ];
 
@@ -143,6 +141,7 @@ function useCodegen(
 			templateTypes: new Set(getTemplateTypes()),
 			templateCodes: getGeneratedTemplate()?.codes ?? [],
 			templateScopeEnd: getGeneratedTemplate()?.scopeEnd ?? [],
+			dollarVars: getGeneratedTemplate() ? getTemplateScope().dollarVars : new Set(),
 			slots: {
 				declarations: slots.declarations(),
 				elements: slots.elements(),
@@ -150,6 +149,7 @@ function useCodegen(
 				templateContext: slots.templateContext(),
 				templateBody: slots.templateBody(),
 				templateEnd: slots.templateEnd(),
+				templateDollars: slots.templateDollars(),
 				templateExports: slots.templateExports(),
 				templateExportValues: slots.templateExportValues(),
 				componentOptions: slots.componentOptions(),

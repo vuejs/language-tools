@@ -3,7 +3,7 @@ import { computed } from 'alien-signals';
 import type { BuiltinPluginFile, FilePlugin } from '../filePlugin';
 import { names } from '../names';
 import { Boundary, synthesizedIgnore } from '../tsCode';
-import { generateTypeAlias, newLine } from '../writers';
+import { generateTypeAlias, newLine, typeAliasRef } from '../writers';
 import { generatePropertyKey } from '../writers/stringLiteralKey';
 
 /** The type of the slots that the template renders, unless `defineSlots` declares them. */
@@ -50,5 +50,12 @@ export function createSlotsPlugin({ ir, analysis, getTemplateVars }: BuiltinPlug
 			})];
 		},
 		templateExports: () => getTemplateSlots() ? [names.Slots] : [],
+		templateDollars: () => {
+			if (!analysis.getTemplateScope().dollarVars.has('$slots')) {
+				return [];
+			}
+			const type = hasDefineSlots() || getTemplateSlots() ? typeAliasRef(names.Slots, getScriptLang(ir)) : `{}`;
+			return [[`{ $slots: ${type} }`]];
+		},
 	};
 }
