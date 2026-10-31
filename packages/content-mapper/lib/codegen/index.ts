@@ -12,6 +12,7 @@ import {
 } from './plugin';
 import { createEmitsPlugin } from './plugins/emits';
 import { createInheritedAttrsPlugin } from './plugins/inheritedAttrs';
+import { createPropsPlugin } from './plugins/props';
 import { createRefsPlugin } from './plugins/refs';
 import { createRootElPlugin } from './plugins/rootEl';
 import { createSlotsPlugin } from './plugins/slots';
@@ -34,6 +35,7 @@ export const builtinPlugins: readonly CodegenPlugin[] = [
 	{ name: 'vue:root-el', create: createRootElPlugin },
 	{ name: 'vue:style', create: createStylePlugin },
 	{ name: 'vue:emits', create: createEmitsPlugin },
+	{ name: 'vue:props', create: createPropsPlugin },
 ];
 
 export function generateServiceScript(
@@ -192,6 +194,7 @@ function useCodegen(
 				templateDollars: slots.templateDollars(),
 				componentOptions: slots.componentOptions(),
 				fallthroughProps: slots.fallthroughProps(),
+				setupBody: slots.setupBody(),
 				props: slots.props(),
 				emits: slots.emits(),
 				expose: slots.expose(),

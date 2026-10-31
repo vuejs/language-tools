@@ -123,7 +123,7 @@ exports.codegen = ({ ts, fileName, ir, name }) => {
 
 `codegen(file, ctx)` is a `VueCodegenPlugin`. It runs for each snapshot of each file, in `plugins`
 order after the built-in plugins of the mapper (slots, fallthrough attributes, template refs, root
-element, style, emits), and gives the `VueCodegenFilePlugin` of the file: an optional `rewrite` of the
+element, style, emits, props), and gives the `VueCodegenFilePlugin` of the file: an optional `rewrite` of the
 user's code, and functions that give its code in the slots of the generated code. `ctx` holds the
 entry's `config`, the options of the plugin, and the resolved `vueCompilerOptions`. `file` holds the
 TS 7.1 AST API that parsed the scripts (`ts`), `fileName`, the IR, its analysis (resolved options,
@@ -187,7 +187,7 @@ exports.codegen = ({ ts, ir }) => {
 				}
 			}
 		},
-		props: () => props.map(({ key, type }) => [`{ ${JSON.stringify(key)}: `, type, ' }']),
+		props: () => props.map(({ key, type }) => ({ type: [`{ ${JSON.stringify(key)}: `, type, ' }'] })),
 	};
 };
 ```
@@ -199,7 +199,9 @@ exports.codegen = ({ ts, ir }) => {
 | `templateTypes` | `{ name, code }`: type aliases at the end of the template, each by a name that `file.name()` gave the plugin, which the setup scope and the module scope read too | the scope of the template |
 | `templateDollars` | Object types intersected into the `$` names that the template reads (`$slots`, `$attrs`, `$refs`, `$el`) | the scope of the template |
 | `elementEnd` | A map of elements of the template to code after their props, before their children | the scope of the template at the element |
-| `props`, `expose` | `<script setup>` only: object types intersected into the props (`defineProps<…>` form), which the template reads too, and what the component exposes | the setup scope |
+| `setupBody` | `<script setup>` only: statements in the setup function, after the user's code | the setup scope |
+| `props` | `<script setup>` only: `{ type?, local?, runtime?, defaults? }`, props of the component: an object type in `defineProps<…>` form, the type that the template reads in its place (e.g. `typeof props`), an expression of their runtime option, and the type of an object of the `default` options of props, which the props of each declaration take. `local` and `defaults` are text only, and so is `type` with them. The component declares its props by their types from Vue 3.5 when none has a runtime option, and else by the runtime options, with options for the types | the setup scope |
+| `expose` | `<script setup>` only: object types intersected into what the component exposes (`defineExpose` form) | the setup scope |
 | `emits` | `<script setup>` only: `{ type?, emit? }`, emits of the component: an object type in `defineEmits<…>` form (`{ event: [args] }` without `emit`), and the type of their emit function, text only, e.g. `typeof emit` (with it, `type` is text only too). The component checks against the intersection of the types from Vue 3.5 when each has one, and else against the emit functions, which also type `$emit` | the setup scope |
 | `generic` | `<script setup>` only: type parameters of the component, after those of its `generic` attribute; with one, the component is generic | the module scope |
 | `declaredSlots` | Text only: an expression of the slots that the component declares (e.g. what `defineSlots` returns), which each slot outlet of the template is checked against instead of giving types to infer the slots from | the setup scope |

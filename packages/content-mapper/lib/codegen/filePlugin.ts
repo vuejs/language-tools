@@ -65,8 +65,9 @@ function checkSlices(plugin: string, cuts: PluginEdits['cuts'], code: unknown) {
 	else if (typeof code === 'object' && code !== null && 'name' in code && 'code' in code) {
 		checkSlices(plugin, cuts, code.code);
 	}
-	else if (typeof code === 'object' && code !== null && 'type' in code) {
-		checkSlices(plugin, cuts, code.type);
+	else if (typeof code === 'object' && code !== null && ('type' in code || 'runtime' in code)) {
+		checkSlices(plugin, cuts, (code as { type?: unknown }).type);
+		checkSlices(plugin, cuts, (code as { runtime?: unknown }).runtime);
 	}
 }
 
@@ -75,7 +76,6 @@ export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): Mer
 		K extends
 			| 'templateContext'
 			| 'templateDollars'
-			| 'props'
 			| 'expose'
 			| 'generic'
 			| 'exposedInstanceTypes'
@@ -105,13 +105,20 @@ export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): Mer
 			}
 			return merged;
 		}),
-		props: listSlot('props'),
+		setupBody: computed(() => getPlugins().flatMap(plugin => (read(plugin, 'setupBody') ?? []).flatMap(toCodes))),
+		props: computed(() =>
+			getPlugins().flatMap(plugin =>
+				(read(plugin, 'props') ?? []).map(({ type, local, runtime, defaults }) => ({
+					type: toType(type),
+					local,
+					runtime: runtime === undefined ? undefined : toCodes(runtime),
+					defaults,
+				}))
+			)
+		),
 		emits: computed(() =>
 			getPlugins().flatMap(plugin =>
-				(read(plugin, 'emits') ?? []).map(({ type, emit }) => ({
-					type: typeof type === 'string' || type === undefined ? type : toCodes(type),
-					emit,
-				}))
+				(read(plugin, 'emits') ?? []).map(({ type, emit }) => ({ type: toType(type), emit }))
 			)
 		),
 		expose: listSlot('expose'),
@@ -145,4 +152,9 @@ export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): Mer
 
 function toCodes(code: VueCodegenSlotCode<TsCode>): readonly TsCode[] {
 	return Array.isArray(code) ? code : [code as TsCode];
+}
+
+/** The codes of a type, or the type itself when it is text. */
+function toType(type: VueCodegenSlotCode<TsCode> | undefined): string | readonly TsCode[] | undefined {
+	return typeof type === 'string' || type === undefined ? type : toCodes(type);
 }

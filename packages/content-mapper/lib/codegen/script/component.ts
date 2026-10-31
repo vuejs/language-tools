@@ -1,12 +1,11 @@
-import { type IRScriptSetup, navigationFeatures, type ScriptSetupRanges } from '@vue/language-core';
+import type { ScriptSetupRanges } from '@vue/language-core';
 import { names } from '../names';
 import type { TsCode } from '../tsCode';
-import { asType, asTypeCode, generateSfcBlockSection, intersectTypes, newLine, typeAliasRef } from '../writers';
+import { asType, asTypeCode, intersectTypes, newLine, typeAliasRef } from '../writers';
 import { generateSpreadMerge } from '../writers/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
-import { getExposeTypes } from './scriptSetup';
-import { getComponentEmits } from './template';
+import { type ComponentProps, getComponentEmits, getComponentProps, getExposeTypes } from './scriptSetup';
 
 /** The slots of the options of a script setup component. */
 export interface ComponentSlots {
@@ -22,7 +21,6 @@ export interface ComponentSlots {
 export function* generateComponent(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<TsCode> {
 	yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
@@ -38,7 +36,7 @@ export function* generateComponent(
 
 	const emitOptionCodes = [...generateEmitsOption(options)];
 	yield* emitOptionCodes;
-	yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length);
+	yield* generatePropsOption(options, ctx, !!emitOptionCodes.length);
 
 	for (const option of options.slots.componentOptions) {
 		yield* option;
@@ -66,18 +64,17 @@ function* generateEmitsOption(options: ScriptCodegenOptions): Generator<TsCode> 
 function* generatePropsOption(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	scriptSetup: IRScriptSetup,
-	scriptSetupRanges: ScriptSetupRanges,
 	hasEmitsOption: boolean,
 ): Generator<TsCode> {
-	const typeCodes = options.vueCompilerOptions.target >= 3.5 && !scriptSetupRanges.defineProps?.arg
+	const props = getComponentProps(options);
+	const typeCodes = options.vueCompilerOptions.target >= 3.5 && !props.runtime.length
 		? [...generateTypePropsOption(options, ctx, hasEmitsOption)]
 		: [];
 
 	// the instance type of a component gives the props that have defaults through the runtime option, also next to
 	// `__typeProps`
-	const runtimeCodes = ctx.propDefaults || !typeCodes.length
-		? [...generateRuntimePropsOption(options, ctx, scriptSetup, scriptSetupRanges, hasEmitsOption, !!typeCodes.length)]
+	const runtimeCodes = props.defaults || !typeCodes.length
+		? [...generateRuntimePropsOption(options, ctx, props, hasEmitsOption, !!typeCodes.length)]
 		: [];
 
 	if (typeCodes.length) {
@@ -108,8 +105,7 @@ function* generateTypePropsOption(
 function* generateRuntimePropsOption(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	scriptSetup: IRScriptSetup,
-	scriptSetupRanges: ScriptSetupRanges,
+	{ types, runtime, defaults }: ComponentProps,
 	hasEmitsOption: boolean,
 	hasTypeProps: boolean,
 ): Generator<string | readonly TsCode[]> {
@@ -119,35 +115,24 @@ function* generateRuntimePropsOption(
 		);
 		yield asType(propsType, options.scriptLang);
 	}
-	// a runtime `defineProps` argument alone types the props of a 3.6 component, but not its models or the props of
-	// plugins
+	// the runtime options alone type the props of a 3.6 component, but not the props of types
 	if (
 		!hasTypeProps
 		&& ctx.generatedTypes.has(names.PublicProps)
-		&& (
-			options.vueCompilerOptions.target < 3.6
-			|| ((options.slots.props.length || scriptSetupRanges.defineModel.length) && scriptSetupRanges.defineProps?.arg)
-		)
+		&& (options.vueCompilerOptions.target < 3.6 || (types.length && runtime.length))
 	) {
 		yield asType(
 			ctx.localTypes.TypePropsToOption(typeAliasRef(names.PublicProps, options.scriptLang)),
 			options.scriptLang,
 		);
 	}
-	if (scriptSetupRanges.defineProps?.arg) {
-		const { arg } = scriptSetupRanges.defineProps;
-		yield [...generateSfcBlockSection(
-			scriptSetup,
-			arg.start,
-			arg.end,
-			{ features: navigationFeatures },
-			true,
-		)];
-	}
+	yield* runtime;
 	// last, so that a prop with a default takes its option from it
-	if (ctx.propDefaults) {
-		const { props, defaults } = ctx.propDefaults;
-		yield asType(ctx.localTypes.WithDefaults(props.join(' & '), defaults.join(' & ')), options.scriptLang);
+	if (defaults) {
+		yield asType(
+			ctx.localTypes.WithDefaults(defaults.props.join(' & '), defaults.defaults.join(' & ')),
+			options.scriptLang,
+		);
 	}
 }
 

@@ -16,6 +16,7 @@ import {
 } from '../writers';
 import { generateSpreadMerge } from '../writers/merge';
 import type { ScriptCodegenOptions } from './index';
+import { getComponentEmits, getComponentProps } from './scriptSetup';
 
 /** The slots of the template function, and of the template context that it reads. */
 export interface TemplateFunctionSlots {
@@ -121,10 +122,9 @@ function* generateTemplateCtx(
 	options: ScriptCodegenOptions,
 	selfType: string | undefined,
 ): Generator<TsCode> {
-	const { vueCompilerOptions, scriptSetupRanges, scriptLang, slots } = options;
+	const { vueCompilerOptions, scriptLang, slots } = options;
 	const exps: (string | readonly TsCode[])[] = [];
 	const emitTypes = getComponentEmits(options).functions;
-	const propTypes: string[] = [];
 
 	if (vueCompilerOptions.globalTemplateContext) {
 		exps.push(`globalThis`);
@@ -148,15 +148,7 @@ function* generateTemplateCtx(
 		exps.push(asTypeCode([`{ $emit: `, ...intersectTypes(emitTypes), ` }`], scriptLang));
 	}
 
-	if (scriptSetupRanges?.defineProps) {
-		propTypes.push(`typeof ${scriptSetupRanges.defineProps.name ?? names.props}`);
-	}
-	if (scriptSetupRanges?.defineModel.length) {
-		propTypes.push(typeAliasRef(names.ModelProps, scriptLang));
-	}
-	if (scriptSetupRanges && slots.props.length) {
-		propTypes.push(typeAliasRef(names.PluginProps, scriptLang));
-	}
+	const propTypes = getComponentProps(options).templateTypes;
 	if (emitTypes.length) {
 		propTypes.push(typeAliasRef(names.EmitProps, scriptLang));
 	}
@@ -168,55 +160,6 @@ function* generateTemplateCtx(
 	yield `const ${names.ctx} = `;
 	yield* generateSpreadMerge(...exps);
 	yield endOfLine;
-}
-
-/** The emits of a script setup component, which the codegen plugins declare. */
-export interface ComponentEmits {
-	/** The types of the emits in `defineEmits<…>` form, when each declaration has one. */
-	types: string[] | undefined;
-	/** The types of the emit functions. */
-	functions: string[];
-}
-
-/**
- * The emits of a script setup component, those whose type is not text as the alias of all of them, where the first of
- * them is.
- */
-export function getComponentEmits({ scriptSetupRanges, slots, scriptLang }: ScriptCodegenOptions): ComponentEmits {
-	const emits: ComponentEmits = { types: [], functions: [] };
-	if (!scriptSetupRanges) {
-		return emits;
-	}
-	const declarations = [...slots.emits];
-	if (scriptSetupRanges.defineModel.length) {
-		declarations.push({ type: typeAliasRef(names.ModelEmit, scriptLang), emit: `typeof ${names.modelEmit}` });
-	}
-	const pluginEmits = typeAliasRef(names.PluginEmits, scriptLang);
-	let hasPluginEmits = false;
-	for (const { type, emit } of declarations) {
-		if (typeof type === 'object') {
-			if (!hasPluginEmits) {
-				hasPluginEmits = true;
-				emits.types?.push(pluginEmits);
-				emits.functions.push(`${names.ShortEmits}<${pluginEmits}>`);
-			}
-		}
-		else {
-			if (type === undefined) {
-				emits.types = undefined;
-			}
-			else {
-				emits.types?.push(type);
-			}
-			emits.functions.push(emit ?? `${names.ShortEmits}<${type}>`);
-		}
-	}
-	return emits;
-}
-
-/** The types of the emits that the codegen plugins declare by types that are not text, which one alias places. */
-export function getPluginEmitTypes({ slots }: ScriptCodegenOptions): (readonly TsCode[])[] {
-	return slots.emits.flatMap(({ type }) => typeof type === 'object' ? [type] : []);
 }
 
 function* generateTemplateComponents(

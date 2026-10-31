@@ -117,6 +117,10 @@ test('exports what the plugins set, and rejects exports that are not valid', () 
 		() => ({ declarations: () => 'declare const x: 1' }),
 		() => ({ componentOptions: () => [{ text: 'x' }] }),
 		() => ({ fallthroughProps: () => [['x']] }),
+		() => ({ props: () => [['{ a?: 1 }']] }),
+		() => ({ props: () => [{ defaults: 'D' }] }),
+		() => ({ props: () => [{ type: ['{ a?: 1 }'], local: 'L' }] }),
+		() => ({ props: () => [{ runtime: '{}', local: ['L'] }] }),
 		() => ({ emits: () => [['{ a: [] }']] }),
 		() => ({ emits: () => [{}] }),
 		() => ({ emits: () => [{ type: ['{ a: [] }'], emit: 'E' }] }),
@@ -192,7 +196,7 @@ function moveTypeArgument(edit?: (writer: VueCodegenWriter, block: IRScriptSetup
 				const { start, end } = rangeOf(block, 'string');
 				type = scriptSetup!.cut(start, end, { data: { features: scriptFeatures }, placeholder: 'any' });
 			},
-			props: () => [['{ foo: ', type!, ' }']],
+			props: () => [{ type: ['{ foo: ', type!, ' }'] }],
 		};
 	});
 }
@@ -213,8 +217,8 @@ test('moves the code that a plugin cuts into a slot, with the edits in it', () =
 	}));
 	for (
 		const slot of [
-			() => ({ props: () => [new PluginSlice('test-plugin', { features: 0 })] }),
-			() => ({ props: () => [{ render() {} }] as never }),
+			() => ({ props: () => [{ type: new PluginSlice('test-plugin', { features: 0 }) }] }),
+			() => ({ props: () => [{ type: { render() {} } }] as never }),
 		]
 	) {
 		expect(() => generateWith(content, plugin(slot))).toThrow(`'test-plugin'`);
@@ -238,7 +242,9 @@ test('places the code of each slot of a plugin once, so that a slice in it rende
 		},
 		(_, moved) => ({ templateDollars: () => [['{}', moved()]] }),
 		({ ir }, moved) => ({ elementEnd: () => new Map([[ir.template!.ast!.children[0] as never, [moved()]]]) }),
-		(_, moved) => ({ props: () => [['{ a?: 1 }', moved()]] }),
+		(_, moved) => ({ props: () => [{ type: ['{ a?: 1 }', moved()] }] }),
+		(_, moved) => ({ props: () => [{ runtime: ['{}', moved()] }] }),
+		(_, moved) => ({ setupBody: () => [moved()] }),
 		(_, moved) => ({ emits: () => [{ type: ['{ a: [] }', moved()] }] }),
 		(_, moved) => ({ expose: () => [['{ a: 1 }', moved()]] }),
 		(_, moved) => ({ generic: () => [['T', moved()]] }),

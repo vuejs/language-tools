@@ -12,7 +12,6 @@ import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
 import {
 	asType,
 	endOfLine,
-	generateSfcBlockSection,
 	generateTypeAlias,
 	generateTypedVar,
 	identifierRE,
@@ -22,15 +21,17 @@ import {
 	typeAliasRef,
 } from '../writers';
 import { generateCamelized } from '../writers/camelized';
+import { generateSpreadMerge } from '../writers/merge';
 import { generateComponent } from './component';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
-import { getComponentEmits, getPluginEmitTypes } from './template';
 
 /** The slots of `<script setup>`. */
 export interface ScriptSetupSlots {
-	/** Object types intersected into the props, in `defineProps<…>` form; the template reads them. */
-	props: (readonly TsCode[])[];
+	/** Statements in the setup function, after the user's code. */
+	setupBody: TsCode[];
+	/** The props of the component, each with its type, its runtime option, or both. */
+	props: PropsDeclaration[];
 	/** The emits of the component, each with its type, its emit function, or both. */
 	emits: EmitsDeclaration[];
 	/** Object types intersected into what the component exposes, in `defineExpose` form. */
@@ -41,6 +42,17 @@ export interface ScriptSetupSlots {
 	generic: (readonly TsCode[])[];
 	/** Object types intersected into the slots of the component, e.g. what `defineSlots` declares; else any slot. */
 	componentSlots: string[];
+}
+
+export interface PropsDeclaration {
+	/** An object type of the props in `defineProps<…>` form; a string as text. */
+	type: string | readonly TsCode[] | undefined;
+	/** The type of the props that the template reads in place of `type`. */
+	local: string | undefined;
+	/** An expression of the runtime option of the props. */
+	runtime: readonly TsCode[] | undefined;
+	/** The type of an object whose properties are the `default` options of props, which `type` or else `local` take. */
+	defaults: string | undefined;
 }
 
 export interface EmitsDeclaration {
@@ -155,8 +167,9 @@ export function* generateGeneric(
 		yield* generatePluginTypeParameters(options);
 		yield `>`;
 	}
+	// not a name of the generated code: the code of setup may declare its own, which shadows it
 	yield `(${newLine}`
-		+ `	${names.props}: NonNullable<Awaited<typeof ${names.setup}>>['props'],${newLine}`
+		+ `	__VLS_props: NonNullable<Awaited<typeof ${names.setup}>>['props'],${newLine}`
 		+ `	${names.ctx}?: ${
 			ctx.localTypes.PrettifyLocal(`Pick<NonNullable<Awaited<typeof ${names.setup}>>, 'attrs' | 'emit' | 'slots'>`)
 		},${newLine}`
@@ -172,15 +185,10 @@ export function* generateGeneric(
 	if (ctx.generatedTypes.has(names.PublicProps)) {
 		propTypes.push(typeAliasRef(names.PublicProps, scriptLang));
 	}
-	if (scriptSetupRanges.defineProps?.arg) {
+	const { runtime } = getComponentProps(options);
+	if (runtime.length) {
 		yield `const ${names.propsOption} = `;
-		yield* generateSfcBlockSection(
-			scriptSetup,
-			scriptSetupRanges.defineProps.arg.start,
-			scriptSetupRanges.defineProps.arg.end,
-			{ features: navigationFeatures },
-			true,
-		);
+		yield* generateSpreadMerge(...runtime);
 		yield endOfLine;
 		propTypes.push(
 			`import('${vueCompilerOptions.lib}').ExtractPublicPropTypes<typeof ${names.propsOption}>`,
@@ -241,15 +249,16 @@ export function* generateSetupFunction(
 ): Generator<TsCode> {
 	yield* copies.generateBody();
 	yield* generateModels(options, scriptSetup, scriptSetupRanges);
+	yield* options.slots.setupBody;
 	yield* generatePluginTypes(options);
-	yield* generatePublicProps(options, ctx, scriptSetup, scriptSetupRanges);
+	yield* generatePublicProps(options, ctx, scriptSetup);
 	yield* body;
 
 	if (output) {
 		const slotsType = getSlotsType(options);
 		if (slotsType) {
 			yield `const ${names.base} = `;
-			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
+			yield* generateComponent(options, ctx, scriptSetupRanges);
 			yield endOfLine;
 			yield* output;
 			yield asType(
@@ -260,7 +269,7 @@ export function* generateSetupFunction(
 		}
 		else {
 			yield* output;
-			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
+			yield* generateComponent(options, ctx, scriptSetupRanges);
 			yield endOfLine;
 		}
 	}
@@ -315,37 +324,6 @@ function addTransforms(
 	writer: BlockWriter,
 	scriptSetupRanges: ScriptSetupRanges,
 ) {
-	const runtimeDefineProps = scriptSetupRanges.defineProps?.typeArg ? undefined : scriptSetupRanges.defineProps;
-	if (runtimeDefineProps && scriptSetupRanges.defineModel.some(({ defaultPropsArg }) => defaultPropsArg)) {
-		// the parameter of `default` may have the name of the props, which `typeof` in its own annotation would refer to
-		writer.insertAfter(runtimeDefineProps.statement.end, [
-			newLine,
-			...generateTypeAlias(names.RuntimeProps, options.scriptLang, function*() {
-				yield `typeof ${runtimeDefineProps.name ?? names.props}`;
-			}),
-		]);
-	}
-	const defaultPropsType = scriptSetupRanges.defineProps?.typeArg
-		? names.Props
-		: runtimeDefineProps
-		? typeAliasRef(names.RuntimeProps, options.scriptLang)
-		: `typeof ${names.props}`;
-	for (const { defaultPropsArg } of scriptSetupRanges.defineModel) {
-		if (!defaultPropsArg) {
-			continue;
-		}
-		if (isTsLang(options.scriptLang)) {
-			writer.insertAfter(defaultPropsArg.end, `: ${defaultPropsType}`);
-		}
-		else {
-			writer.insertBefore(defaultPropsArg.start, `/** @type {${defaultPropsType}} */ `);
-		}
-	}
-	if (scriptSetupRanges.defineProps) {
-		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
-		const _callExp = scriptSetupRanges.withDefaults?.callExp ?? callExp;
-		addDefineWithTypeTransforms(writer, statement, _callExp, typeArg, name, names.props, names.Props);
-	}
 	if (scriptSetupRanges.defineExpose) {
 		const { callExp, arg, typeArg } = scriptSetupRanges.defineExpose;
 		if (typeArg) {
@@ -425,10 +403,11 @@ export function addDefineWithTypeTransforms(
  * component and the template to read.
  */
 function* generatePluginTypes(options: ScriptCodegenOptions): Generator<TsCode> {
-	const { slots, scriptLang } = options;
-	if (slots.props.length) {
+	const { scriptLang } = options;
+	const propTypes = getPluginPropTypes(options);
+	if (propTypes.length) {
 		yield* generateTypeAlias(names.PluginProps, scriptLang, function*() {
-			yield* intersectTypes(slots.props);
+			yield* intersectTypes(propTypes);
 		});
 	}
 	const emitTypes = getPluginEmitTypes(options);
@@ -439,80 +418,145 @@ function* generatePluginTypes(options: ScriptCodegenOptions): Generator<TsCode> 
 	}
 }
 
+/** The props of a script setup component, which the codegen plugins declare. */
+export interface ComponentProps {
+	/** The types of the props in `defineProps<…>` form. */
+	types: string[];
+	/** The types of the props that the template reads. */
+	templateTypes: string[];
+	/** The expressions of the runtime options of the props. */
+	runtime: (readonly TsCode[])[];
+	/** The types of the props that take defaults, and of the objects of their `default` options. */
+	defaults: { props: string[]; defaults: string[] } | undefined;
+}
+
+/**
+ * The props of a script setup component, those whose type is not text as the alias of all of them, where the first of
+ * them is.
+ */
+export function getComponentProps({ scriptSetupRanges, slots, scriptLang }: ScriptCodegenOptions): ComponentProps {
+	const props: ComponentProps = { types: [], templateTypes: [], runtime: [], defaults: undefined };
+	if (!scriptSetupRanges) {
+		return props;
+	}
+	const declarations = [...slots.props];
+	const { defineModel } = scriptSetupRanges;
+	if (defineModel.length) {
+		declarations.push({
+			type: typeAliasRef(names.ModelProps, scriptLang),
+			local: undefined,
+			runtime: undefined,
+			defaults: defineModel.some(model => model.defaultValue) ? `typeof ${names.defaultModels}` : undefined,
+		});
+	}
+	const pluginProps = typeAliasRef(names.PluginProps, scriptLang);
+	let hasPluginProps = false;
+	const defaultProps: string[] = [];
+	const defaults: string[] = [];
+	for (const declaration of declarations) {
+		let type: string | undefined;
+		if (typeof declaration.type !== 'object') {
+			type = declaration.type;
+		}
+		else if (!hasPluginProps) {
+			hasPluginProps = true;
+			type = pluginProps;
+		}
+		if (type !== undefined) {
+			props.types.push(type);
+		}
+		const own = declaration.local ?? type;
+		if (own !== undefined) {
+			props.templateTypes.push(own);
+		}
+		const defaultsOf = type ?? declaration.local;
+		if (defaultsOf !== undefined) {
+			defaultProps.push(defaultsOf);
+		}
+		if (declaration.defaults !== undefined) {
+			defaults.push(declaration.defaults);
+		}
+		if (declaration.runtime) {
+			props.runtime.push(declaration.runtime);
+		}
+	}
+	if (defaults.length) {
+		props.defaults = { props: defaultProps, defaults };
+	}
+	return props;
+}
+
+/** The emits of a script setup component, which the codegen plugins declare. */
+export interface ComponentEmits {
+	/** The types of the emits in `defineEmits<…>` form, when each declaration has one. */
+	types: string[] | undefined;
+	/** The types of the emit functions. */
+	functions: string[];
+}
+
+/**
+ * The emits of a script setup component, those whose type is not text as the alias of all of them, where the first of
+ * them is.
+ */
+export function getComponentEmits({ scriptSetupRanges, slots, scriptLang }: ScriptCodegenOptions): ComponentEmits {
+	const emits: ComponentEmits = { types: [], functions: [] };
+	if (!scriptSetupRanges) {
+		return emits;
+	}
+	const declarations = [...slots.emits];
+	if (scriptSetupRanges.defineModel.length) {
+		declarations.push({ type: typeAliasRef(names.ModelEmit, scriptLang), emit: `typeof ${names.modelEmit}` });
+	}
+	const pluginEmits = typeAliasRef(names.PluginEmits, scriptLang);
+	let hasPluginEmits = false;
+	for (const { type, emit } of declarations) {
+		if (typeof type === 'object') {
+			if (!hasPluginEmits) {
+				hasPluginEmits = true;
+				emits.types?.push(pluginEmits);
+				emits.functions.push(`${names.ShortEmits}<${pluginEmits}>`);
+			}
+		}
+		else {
+			if (type === undefined) {
+				emits.types = undefined;
+			}
+			else {
+				emits.types?.push(type);
+			}
+			emits.functions.push(emit ?? `${names.ShortEmits}<${type}>`);
+		}
+	}
+	return emits;
+}
+
+/** The types of the emits that the codegen plugins declare by types that are not text, which one alias places. */
+function getPluginEmitTypes({ slots }: ScriptCodegenOptions): (readonly TsCode[])[] {
+	return slots.emits.flatMap(({ type }) => typeof type === 'object' ? [type] : []);
+}
+
+/** The types of the props that the codegen plugins declare by types that are not text, which one alias places. */
+function getPluginPropTypes({ slots }: ScriptCodegenOptions): (readonly TsCode[])[] {
+	return slots.props.flatMap(({ type }) => typeof type === 'object' ? [type] : []);
+}
+
 function* generatePublicProps(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: IRScriptSetup,
-	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<TsCode> {
-	const { defineProps, withDefaults, defineModel } = scriptSetupRanges;
-	const defaults: string[] = [];
-	if (defineProps?.typeArg && withDefaults?.arg) {
-		yield `const ${names.defaults} = `;
-		yield* generateSfcBlockSection(
-			scriptSetup,
-			withDefaults.arg.start,
-			withDefaults.arg.end,
-			{ features: navigationFeatures },
-			true,
-		);
-		yield endOfLine;
-		yield `void ${names.defaults}${endOfLine}`;
-		defaults.push(`typeof ${names.defaults}`);
-	}
-	// Vue applies the defaults of a destructure from 3.5, unless `withDefaults` is used
-	else if (
-		options.vueCompilerOptions.target >= 3.5
-		&& !withDefaults
-		&& defineProps?.destructuredDefaults?.length
-	) {
-		yield `const ${names.defaults} = {${newLine}`;
-		for (const { key, value } of defineProps.destructuredDefaults) {
-			// a destructure default is the value, which the `default` option of a prop gives through a factory
-			yield `${key}: () => (${getRangeText(scriptSetup, value)}),${newLine}`;
-		}
-		yield `}${endOfLine}`;
-		yield `void ${names.defaults}${endOfLine}`;
-		defaults.push(`typeof ${names.defaults}`);
-	}
-	if (defineModel.some(model => model.defaultValue)) {
-		defaults.push(`typeof ${names.defaultModels}`);
-	}
-	if (defaults.length) {
-		const props: string[] = [];
-		if (defineProps) {
-			props.push(
-				defineProps.typeArg
-					? names.Props
-					: `typeof ${defineProps.name && identifierRE.test(defineProps.name) ? defineProps.name : names.props}`,
-			);
-		}
-		if (defineModel.length) {
-			props.push(typeAliasRef(names.ModelProps, options.scriptLang));
-		}
-		ctx.propDefaults = { props, defaults };
-	}
-
-	const propTypes: (string | readonly TsCode[])[] = [];
+	const { types, runtime } = getComponentProps(options);
+	const propTypes: string[] = [];
 	const slotsType = getSlotsType(options);
 	if (options.vueCompilerOptions.jsxSlots && slotsType) {
 		propTypes.push(ctx.localTypes.PropsChildren(slotsType));
 	}
-	if (scriptSetupRanges.defineProps?.typeArg) {
-		propTypes.push(names.Props);
-	}
-	if (scriptSetupRanges.defineModel.length) {
-		propTypes.push(typeAliasRef(names.ModelProps, options.scriptLang));
-	}
-	if (options.slots.props.length) {
-		propTypes.push(typeAliasRef(names.PluginProps, options.scriptLang));
-	}
-	const target = options.vueCompilerOptions.target;
+	propTypes.push(...types);
+	// a runtime option alone types the props of a 3.6 component that is not generic
 	const used = isGeneric(options, scriptSetup)
-		|| target < 3.6
-		|| (target >= 3.5 && !scriptSetupRanges.defineProps?.arg)
-		|| !!options.slots.props.length
-		|| !!scriptSetupRanges.defineModel.length;
+		|| options.vueCompilerOptions.target < 3.6
+		|| !runtime.length
+		|| !!types.length;
 	if (propTypes.length && used) {
 		yield* generateTypeAlias(names.PublicProps, options.scriptLang, function*() {
 			yield* intersectTypes(propTypes);

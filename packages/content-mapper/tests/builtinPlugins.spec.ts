@@ -68,6 +68,19 @@ const accepted: Record<string, string[]> = {
 		'Parent.vue(23,71): error TS2353',
 		'Parent.vue(26,66): error TS2353',
 	],
+	// the props that `defineProps` declares: their reads in the template, and the props that a parent passes
+	'vue:props': [
+		'Child.vue(14,30): error TS2339',
+		'Child.vue(14,42): error TS2339',
+		'Child.vue(15,15): error TS2339',
+		'Child.vue(17,39): error TS2339',
+		'GenericChild.vue(10,22): error TS2339',
+		'InferredChild.vue(8,22): error TS2339',
+		'InferredChild.vue(8,31): error TS2339',
+		'InferredChild.vue(9,29): error TS2339',
+		'Parent.vue(19,25): error TS2353',
+		'Parent.vue(23,55): error TS2353',
+	],
 };
 
 test.each([undefined, ...builtinPlugins.map(({ name }) => name)])(

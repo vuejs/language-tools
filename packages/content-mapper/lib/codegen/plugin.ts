@@ -85,11 +85,10 @@ export interface VueCodegenFilePlugin<Code = VueCodegenPiece | VueCodegenSlice> 
 	templateDollars?(): readonly VueCodegenSlotCode<Code>[];
 	/** Code after the props of an element of the template, before its children, by element. */
 	elementEnd?(): ReadonlyMap<ElementNode, readonly VueCodegenSlotCode<Code>[]>;
-	/**
-	 * `<script setup>` only: object types intersected into the props, in `defineProps<…>` form, which the template reads
-	 * too.
-	 */
-	props?(): readonly VueCodegenSlotCode<Code>[];
+	/** `<script setup>` only: statements in the setup function, after the user's code. */
+	setupBody?(): readonly VueCodegenSlotCode<Code>[];
+	/** `<script setup>` only: the props of the component, each with its type, its runtime option, or both. */
+	props?(): readonly VueCodegenProps<Code>[];
 	/** `<script setup>` only: the emits of the component, each with its type, its emit function, or both. */
 	emits?(): readonly VueCodegenEmits<Code>[];
 	/** `<script setup>` only: object types intersected into what the component exposes, in `defineExpose` form. */
@@ -139,6 +138,24 @@ export type VueCodegenSlotCode<Code = VueCodegenPiece | VueCodegenSlice> = Code 
 export interface VueCodegenDeclaration<Code = VueCodegenPiece | VueCodegenSlice> {
 	name: string;
 	code: VueCodegenSlotCode<Code>;
+}
+
+/**
+ * Props of a component, which it declares by their types from Vue 3.5 when none has a runtime option, and else by the
+ * runtime options, with options for the types.
+ */
+export interface VueCodegenProps<Code = VueCodegenPiece | VueCodegenSlice> {
+	/** An object type of the props in `defineProps<…>` form; text with `local` or `defaults`. */
+	type?: VueCodegenSlotCode<Code>;
+	/** The type of the props that the template reads in place of `type`, e.g. `typeof props`. Text. */
+	local?: string;
+	/** An expression of the runtime option of the props, e.g. the argument of `defineProps`. */
+	runtime?: VueCodegenSlotCode<Code>;
+	/**
+	 * The type of an object whose properties are the `default` options of props of the component, e.g. of the second
+	 * argument of `withDefaults`, which the props of each declaration, by its `type` or else its `local`, take. Text.
+	 */
+	defaults?: string;
 }
 
 /**
@@ -318,7 +335,7 @@ const codeSlots = [
 	'templateContext',
 	'templateBody',
 	'templateDollars',
-	'props',
+	'setupBody',
 	'expose',
 	'generic',
 	'exposedInstanceTypes',
@@ -388,6 +405,30 @@ function checkFilePlugin(
 				}
 				return elementEnd;
 			};
+		}
+		else if (key === 'props') {
+			checked[key] = () =>
+				toArray<VueCodegenProps>(plugin, key, read()).map(props => {
+					if (
+						typeof props !== 'object' || props === null
+						|| (props.type === undefined && props.local === undefined && props.runtime === undefined)
+					) {
+						throw invalid(plugin, 'props that are not an object with a type, a local type or a runtime option');
+					}
+					const texts = [props.local, props.defaults];
+					if (texts.some(text => text !== undefined && typeof text !== 'string')) {
+						throw invalid(plugin, 'props with a local type or defaults that are not text');
+					}
+					if (texts.some(text => text !== undefined) && typeof (props.type ?? '') !== 'string') {
+						throw invalid(plugin, 'props with a local type or defaults, whose type is not text');
+					}
+					return {
+						type: props.type === undefined ? undefined : checkSlotCode(plugin, blocks, props.type),
+						local: props.local,
+						runtime: props.runtime === undefined ? undefined : checkSlotCode(plugin, blocks, props.runtime),
+						defaults: props.defaults,
+					};
+				});
 		}
 		else if (key === 'emits') {
 			checked[key] = () =>
