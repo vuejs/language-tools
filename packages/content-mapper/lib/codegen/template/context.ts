@@ -11,7 +11,7 @@ import {
 } from '@vue/language-core';
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../../protocol';
 import { names } from '../names';
-import { Boundary, isSynthesizedIgnore, mapped, OpenRanges, type TsCode } from '../tsCode';
+import { Boundary, isSynthesizedIgnore, mapped, OpenRanges, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine, typeAliasRef } from '../writers';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
@@ -326,7 +326,9 @@ export function createTemplateCodegenContext(
 			if (condition.accesses.length && condition.accesses.every(isDeclared)) {
 				continue;
 			}
+			const boundary = yield* Boundary.start(getTemplate(), 0, 0, synthesizedIgnore);
 			yield `if (!${condition.text}) throw 0${endOfLine}`;
+			yield boundary.end();
 		}
 	}
 
