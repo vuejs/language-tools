@@ -49,7 +49,8 @@ export function createScriptAnalysis(
 		if (options) {
 			const resolver = new CompilerOptionsResolver(() => undefined /* does not support resolving target="auto" */);
 			resolver.addConfig(options, path.dirname(fileName));
-			resolver.plugins = vueCompilerOptions.plugins;
+			// No plugins, by intent: a file comment must not load or enable plugins. It keeps the macros that the
+			// project's plugins added, as `vueCompilerOptions` gives them, unless it sets their lists.
 			return resolver.build(vueCompilerOptions);
 		}
 		return vueCompilerOptions;

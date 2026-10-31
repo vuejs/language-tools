@@ -111,10 +111,7 @@ interface IRPluginInstance {
 
 const instances = new WeakMap<VueCompilerOptions['plugins'], IRPluginInstance[]>();
 
-/**
- * The `ir` export of each plugin of `vueCompilerOptions`, created once for its `plugins`, with the options that first
- * read them: the options of an SFC comment share the plugins of their project.
- */
+/** The `ir` export of each plugin of `vueCompilerOptions`, created once for its `plugins`. */
 function createIRPlugins(vueCompilerOptions: VueCompilerOptions) {
 	let created = instances.get(vueCompilerOptions.plugins);
 	if (!created) {

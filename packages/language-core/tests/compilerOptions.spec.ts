@@ -168,7 +168,7 @@ describe('CompilerOptionsResolver', () => {
 		expect(resolver.build().plugins).toEqual([]);
 	});
 
-	it('adds the macro calls of the plugins to the macros of the options, creating each `ir` export once', () => {
+	it('adds the macro calls of the plugins to the macros of the options, creating each `ir` export once, and gives a file comment no plugins', () => {
 		let created = 0;
 		const resolver = new CompilerOptionsResolver(() => undefined);
 		resolver.addConfig({ macros: { ...getDefaultCompilerOptions().macros, defineProps: ['myProps'] } }, '/project');
@@ -203,11 +203,15 @@ describe('CompilerOptionsResolver', () => {
 			createIRPipeline(ts, vueCompilerOptions),
 			'/project/App.vue',
 			createSnapshot(
-				`<!-- @macros { "defineProps": ["mine"] } -->\n`
+				`<!-- @plugins ["./evil.js"] -->\n<!-- @macros { "defineEmits": ["myEmits"] } -->\n`
 					+ `<script setup lang="ts">\nconst props = $defineProps<{ a: string }>();\n</script>\n`,
 			),
 		);
-		expect(commented.analysis.getResolvedOptions().macros.defineProps).toEqual(['mine', '$defineProps', 'myProps']);
+		const commentOptions = commented.analysis.getResolvedOptions();
+		expect(commentOptions).not.toBe(vueCompilerOptions);
+		expect(commentOptions.plugins).toEqual([]);
+		expect(commentOptions.macros.defineProps).toEqual(['myProps', '$defineProps']);
+		expect(commentOptions.macros.defineEmits).toEqual(['myEmits']);
 		expect(commented.analysis.getScriptSetupRanges()?.defineProps?.name).toBe('props');
 		expect(created).toBe(1);
 	});
