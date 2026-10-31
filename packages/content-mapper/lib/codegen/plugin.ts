@@ -196,10 +196,10 @@ export interface VueCodegenData {
 }
 
 /** A node that a writer cut from its block, with the edits in it; it renders where it is inserted, exactly once. */
-export type VueCodegenSlice = RewriteSlice<IRBlock, VueCodegenData>;
+export type VueCodegenSlice = RewriteSlice<IRBlock, { data: VueCodegenData }>;
 
 /** Code that a writer inserts: pieces, slices, and arrays of them. */
-export type VueCodegenCode = RewriteCode<IRBlock, VueCodegenData>;
+export type VueCodegenCode = RewriteCode<IRBlock, { data: VueCodegenData }>;
 
 /** The writers of the script blocks of the file, for one plugin. */
 export interface VueCodegenWriters {
@@ -225,7 +225,7 @@ export interface VueCodegenWriter {
 	 * where the slice is placed, exactly once, and `placeholder` takes its place; a slice that the generated code places
 	 * nowhere throws, as `replace` removes code.
 	 */
-	cut(node: ts.Node, options: RewriteCutOptions<IRBlock, VueCodegenData>): VueCodegenSlice;
+	cut(node: ts.Node, options: RewriteCutOptions<IRBlock, { data: VueCodegenData }>): VueCodegenSlice;
 }
 
 /**
@@ -589,7 +589,8 @@ function createWriter(
 		},
 		cut(node, options) {
 			checkNode(node);
-			const features = (options as Partial<RewriteCutOptions<IRBlock, VueCodegenData>> | undefined)?.data?.features;
+			const features = (options as Partial<RewriteCutOptions<IRBlock, { data: VueCodegenData }>> | undefined)?.data
+				?.features;
 			if (!Number.isInteger(features)) {
 				throw new TypeError(`The codegen plugin '${plugin}' cut with features that are not an integer.`);
 			}
@@ -629,7 +630,7 @@ function checkCode(file: CodeCheck, code: VueCodegenCode): VueCodegenCode {
 }
 
 /** `code` with the slices of `slices` in place of their handles. */
-function resolveSlices(code: VueCodegenCode, slices: PluginSlices): RewriteCode<IRBlock, TsCodeData> {
+function resolveSlices(code: VueCodegenCode, slices: PluginSlices): RewriteCode<IRBlock, { data: TsCodeData }> {
 	if (Array.isArray(code)) {
 		return (code as readonly VueCodegenCode[]).map(part => resolveSlices(part, slices));
 	}
