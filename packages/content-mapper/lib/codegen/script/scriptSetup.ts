@@ -389,8 +389,8 @@ export function addDefineWithTypeTransforms(
 }
 
 /**
- * The props and the emits that the codegen plugins declare, each as one alias, which places their code once for the
- * component and the template to read.
+ * The types of the props and the emits that the codegen plugins declare by code that is not text, each as one alias,
+ * which places their code once for the component and the template to read.
  */
 function* generatePluginTypes(options: ScriptCodegenOptions): Generator<TsCode> {
 	const { scriptLang } = options;
