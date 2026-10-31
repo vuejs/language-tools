@@ -10,7 +10,7 @@ import { getExposeTypes } from './scriptSetup';
 /** The slots of the options of a script setup component. */
 export interface ComponentSlots {
 	/** Options of the component, after its props, e.g. `__typeEl: …`. */
-	componentOptions: string[];
+	componentOptions: (readonly TsCode[])[];
 	/**
 	 * Object types of the props that the component takes besides those that it declares, e.g. the attributes that
 	 * fall through to its root; the keys of its emit props are omitted from them.
@@ -40,7 +40,8 @@ export function* generateComponent(
 	yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length);
 
 	for (const option of options.slots.componentOptions) {
-		yield `${option},${newLine}`;
+		yield* option;
+		yield `,${newLine}`;
 	}
 	yield `})`;
 }

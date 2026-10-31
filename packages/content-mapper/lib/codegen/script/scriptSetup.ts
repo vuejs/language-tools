@@ -36,7 +36,7 @@ export interface ScriptSetupSlots {
 	/** Object types intersected into what the component exposes, in `defineExpose` form. */
 	expose: (readonly TsCode[])[];
 	/** Object types intersected into what a generic component exposes, after the types of its `defineExpose`. */
-	exposedInstanceTypes: string[];
+	exposedInstanceTypes: (readonly TsCode[])[];
 	/** Type parameters of the component, after those of its `generic` attribute; with one, the component is generic. */
 	generic: (readonly TsCode[])[];
 	/** Object types intersected into the slots of the component, e.g. what `defineSlots` declares. */
@@ -209,7 +209,8 @@ export function* generateGeneric(
 		yield `{}`;
 	}
 	for (const type of options.slots.exposedInstanceTypes) {
-		yield ` & ${type}`;
+		yield ` & `;
+		yield* type;
 	}
 	yield `) => void${endOfLine}`;
 	yield `	attrs: any${endOfLine}`;

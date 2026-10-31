@@ -203,7 +203,8 @@ exports.codegen = ({ ts, ir }) => {
 | `generic` | `<script setup>` only: type parameters of the component, after those of its `generic` attribute; with one, the component is generic | the module scope |
 | `declaredSlots` | Text only: an expression of the slots that the component declares (e.g. what `defineSlots` returns), which each slot outlet of the template is checked against instead of giving types to infer the slots from | the setup scope |
 | `componentSlots` | `<script setup>` only, text only: object types intersected into the slots of the component (`defineSlots` form) | where the mapper declares the component |
-| `exposedInstanceTypes`, `componentOptions`, `fallthroughProps` | Text only: object types intersected into what a generic component exposes, options of the component after its props, and object types of the props that the component takes besides its own | where the mapper declares the component |
+| `exposedInstanceTypes`, `componentOptions` | `<script setup>` only: object types intersected into what a generic component exposes, and options of a component that is not generic, after its props | where the mapper declares the component |
+| `fallthroughProps` | `<script setup>` only, text only: object types of the props that the component takes besides its own | where the mapper declares the component |
 | `elements` | The tag → element type map of native elements, which replaces the DOM one in the file | the module scope |
 | `declarations` | Statements at module scope, after the user's code | the module scope |
 | `exports` | `names`: named exports of the component. `default: false`: no synthetic default export (a user `export default` in `<script>` stays). `docComment`: the range of a doc comment (one block comment) of a script block, copied onto the exports of the component | — |

@@ -110,13 +110,17 @@ export interface VueCodegenFilePlugin<Code = VueCodegenPiece | VueCodegenSlice> 
 	 * the mapper places them in several places.
 	 */
 	componentSlots?(): readonly string[];
-	/** Object types intersected into what a generic component exposes, after the types of its `defineExpose`. */
-	exposedInstanceTypes?(): readonly string[];
-	/** Options of the component, after its props, e.g. `__typeEl: …`. */
-	componentOptions?(): readonly string[];
 	/**
-	 * Object types of the props that the component takes besides those that it declares, e.g. the attributes that fall
-	 * through to its root; the keys of its emit props are omitted from them.
+	 * `<script setup>` only: object types intersected into what a generic component exposes, after the types of its
+	 * `defineExpose`.
+	 */
+	exposedInstanceTypes?(): readonly VueCodegenSlotCode<Code>[];
+	/** `<script setup>` only: options of a component that is not generic, after its props, e.g. `__typeEl: …`. */
+	componentOptions?(): readonly VueCodegenSlotCode<Code>[];
+	/**
+	 * `<script setup>` only: object types of the props that the component takes besides those that it declares, e.g.
+	 * the attributes that fall through to its root; the keys of its emit props are omitted from them. Text, as the
+	 * mapper places them in several places.
 	 */
 	fallthroughProps?(): readonly string[];
 	/** Tag → element type maps of native elements; the first of the plugins replaces the DOM one in this file. */
@@ -304,11 +308,13 @@ const codeSlots = [
 	'emits',
 	'expose',
 	'generic',
+	'exposedInstanceTypes',
+	'componentOptions',
 	'elements',
 	'declarations',
 ] as const;
 
-const textSlots = ['componentSlots', 'exposedInstanceTypes', 'componentOptions', 'fallthroughProps'] as const;
+const textSlots = ['componentSlots', 'fallthroughProps'] as const;
 
 /**
  * `filePlugin`, which `plugin` gave for a file of `ir`, whose slots throw when they give what is not valid for the

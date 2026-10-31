@@ -76,14 +76,15 @@ export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): Mer
 			| 'emits'
 			| 'expose'
 			| 'generic'
+			| 'exposedInstanceTypes'
+			| 'componentOptions'
 			| 'elements'
 			| 'declarations',
 	>(
 		key: K,
 	) => computed(() => getPlugins().flatMap(plugin => (read(plugin, key) ?? []).map(toCodes)));
-	const textSlot = <K extends 'componentSlots' | 'exposedInstanceTypes' | 'componentOptions' | 'fallthroughProps'>(
-		key: K,
-	) => computed(() => getPlugins().flatMap(plugin => [...read(plugin, key) ?? []]));
+	const textSlot = <K extends 'componentSlots' | 'fallthroughProps'>(key: K) =>
+		computed(() => getPlugins().flatMap(plugin => [...read(plugin, key) ?? []]));
 	return {
 		templateContext: listSlot('templateContext'),
 		templateBody: computed(() => getPlugins().flatMap(plugin => (read(plugin, 'templateBody') ?? []).flatMap(toCodes))),
@@ -119,8 +120,8 @@ export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): Mer
 			return declared[0]?.slots;
 		}),
 		componentSlots: textSlot('componentSlots'),
-		exposedInstanceTypes: textSlot('exposedInstanceTypes'),
-		componentOptions: textSlot('componentOptions'),
+		exposedInstanceTypes: listSlot('exposedInstanceTypes'),
+		componentOptions: listSlot('componentOptions'),
 		fallthroughProps: textSlot('fallthroughProps'),
 		elements: listSlot('elements'),
 		declarations: listSlot('declarations'),

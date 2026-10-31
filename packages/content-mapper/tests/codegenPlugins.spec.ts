@@ -116,6 +116,7 @@ test('exports what the plugins set, and rejects exports that are not valid', () 
 		() => ({ exports: () => ({ default: 'no' }) }),
 		() => ({ declarations: () => 'declare const x: 1' }),
 		() => ({ componentOptions: () => [{ text: 'x' }] }),
+		() => ({ fallthroughProps: () => [['x']] }),
 		({ ir }) => ({
 			exports: () => ({ docComment: { block: ir.scriptSetup!, ...rangeOf(ir.scriptSetup!, 'const a') } }),
 		}),
@@ -216,7 +217,7 @@ test('moves the code that a plugin cuts into a slot, with the edits in it', () =
 	}
 });
 
-test('places the code of each slot of a plugin once, so that a slice in it renders', () => {
+test('places the code of each slot of a plugin once, so that a slice in it renders, or nowhere for a slot of another shape', () => {
 	const setup = `const a = 1; /* moved */\n`;
 	const contents = [
 		`<script setup lang="ts">\n${setup}</script>\n<template><div>{{ $attrs }}</div></template>\n`,
@@ -240,8 +241,14 @@ test('places the code of each slot of a plugin once, so that a slice in it rende
 		(_, moved) => ({ elements: () => [['{ div: HTMLDivElement }', moved()]] }),
 		(_, moved) => ({ declarations: () => [moved()] }),
 	];
+	// the slots of the component that the other shape of the component has no place for
+	const shapes = new Map<(typeof slots)[number], number[]>([
+		[(_, moved) => ({ componentOptions: () => [['__typeMoved: {}', moved()]] }), [0, 2]],
+		[(_, moved) => ({ exposedInstanceTypes: () => [['{}', moved()]] }), [1]],
+	]);
+	slots.push(...shapes.keys());
 	const vueCompilerOptions = { ...getDefaultCompilerOptions(), inferTemplateDollarAttrs: true };
-	for (const content of contents) {
+	for (const [index, content] of contents.entries()) {
 		for (const slot of slots) {
 			const moving = plugin(file => {
 				let moved: VueCodegenSlice | undefined;
@@ -254,7 +261,8 @@ test('places the code of each slot of a plugin once, so that a slice in it rende
 				};
 			});
 			const { text } = generate('/Comp.vue', content, vueCompilerOptions, [moving]);
-			expect(text.split('/* moved */').length, `${slot}\n${content}`).toBe(2);
+			const placed = shapes.get(slot)?.includes(index) ?? true;
+			expect(text.split('/* moved */').length, `${slot}\n${content}`).toBe(placed ? 2 : 1);
 		}
 	}
 });
