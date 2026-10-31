@@ -349,8 +349,8 @@ function cutScriptCode(writer: BlockWriter, range: TextRange, placeholder: strin
 
 /**
  * Hoists the type argument of a macro into the alias `typeName`, and an unnamed or destructured call into the variable
- * `defaultName`, which the statement then reads: the statement up to the call is cut and placed after the call (or
- * after the statement, for a name that is not an identifier), and the alias goes with what takes its place.
+ * `defaultName`, which the statement then reads: a call after the start of its statement is cut and placed before the
+ * statement, with the alias, and a call that starts its statement is declared in place.
  */
 export function addDefineWithTypeTransforms(
 	writer: BlockWriter,
@@ -375,17 +375,12 @@ export function addDefineWithTypeTransforms(
 		writer.insertBefore(statement.start, declaration);
 		return;
 	}
-	let prefix: BlockSlice | undefined;
 	if (statement.start < callExp.start) {
-		prefix = writer.cut(statement.start, callExp.start, {
-			data: { features: scriptFeatures },
-			placeholder: declaration,
-		});
+		writer.insertBefore(statement.start, [...declaration, cutScriptCode(writer, callExp, defaultName), endOfLine]);
+		return;
 	}
-	else {
-		writer.insertBefore(statement.start, declaration);
-	}
-	writer.insertAfter(name ? statement.end : callExp.end, [endOfLine, ...prefix ? [prefix] : [], defaultName]);
+	writer.insertBefore(statement.start, declaration);
+	writer.insertAfter(name ? statement.end : callExp.end, [endOfLine, defaultName]);
 }
 
 /**
