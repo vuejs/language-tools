@@ -202,7 +202,7 @@ exports.codegen = ({ ts, ir }) => {
 | `props`, `emits`, `expose` | `<script setup>` only: object types intersected into the props (`defineProps<…>` form), which the template reads too, the emits (`defineEmits<…>` form) and what the component exposes | the setup scope |
 | `generic` | `<script setup>` only: type parameters of the component, after those of its `generic` attribute; with one, the component is generic | the module scope |
 | `declaredSlots` | Text only: an expression of the slots that the component declares (e.g. what `defineSlots` returns), which each slot outlet of the template is checked against instead of giving types to infer the slots from | the setup scope |
-| `componentSlots` | `<script setup>` only, text only: object types intersected into the slots of the component (`defineSlots` form) | where the mapper declares the component |
+| `componentSlots` | `<script setup>` only, text only: object types intersected into the slots of the component (`defineSlots` form); without one, the component takes any slot, as in Vue | where the mapper declares the component |
 | `exposedInstanceTypes`, `componentOptions` | `<script setup>` only: object types intersected into what a generic component exposes, and options of a component that is not generic, after its props | where the mapper declares the component |
 | `fallthroughProps` | `<script setup>` only, text only: object types of the props that the component takes besides its own | where the mapper declares the component |
 | `elements` | The tag → element type map of native elements, which replaces the DOM one in the file | the module scope |

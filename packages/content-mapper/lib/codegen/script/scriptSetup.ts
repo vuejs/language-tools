@@ -39,7 +39,7 @@ export interface ScriptSetupSlots {
 	exposedInstanceTypes: (readonly TsCode[])[];
 	/** Type parameters of the component, after those of its `generic` attribute; with one, the component is generic. */
 	generic: (readonly TsCode[])[];
-	/** Object types intersected into the slots of the component, e.g. what `defineSlots` declares. */
+	/** Object types intersected into the slots of the component, e.g. what `defineSlots` declares; else any slot. */
 	componentSlots: string[];
 }
 
@@ -214,7 +214,7 @@ export function* generateGeneric(
 	}
 	yield `) => void${endOfLine}`;
 	yield `	attrs: any${endOfLine}`;
-	yield `	slots: ${getSlotsType(options) ?? `{}`}${endOfLine}`;
+	yield `	slots: ${getSlotsType(options) ?? `Record<string, any>`}${endOfLine}`;
 	yield `	emit: `;
 	yield* emitTypes.length ? intersectTypes(emitTypes) : [`{}`];
 	yield endOfLine;

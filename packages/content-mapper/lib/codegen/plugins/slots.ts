@@ -8,7 +8,7 @@ import { generatePropertyKey } from '../writers/stringLiteralKey';
 
 /**
  * The slots of the component: what `defineSlots` declares, which the slot outlets of the template are checked against,
- * or else the type of the slots that the template renders.
+ * or else the type of the slots that the template renders; `$slots` is `{}` in a template that renders none.
  */
 export function createSlotsPlugin(
 	{ ir, analysis, template, name }: VueCodegenFile,

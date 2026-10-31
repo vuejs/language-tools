@@ -106,8 +106,8 @@ export interface VueCodegenFilePlugin<Code = VueCodegenPiece | VueCodegenSlice> 
 	 */
 	declaredSlots?(): string | undefined;
 	/**
-	 * `<script setup>` only: object types intersected into the slots of the component, in `defineSlots` form. Text, as
-	 * the mapper places them in several places.
+	 * `<script setup>` only: object types intersected into the slots of the component, in `defineSlots` form; without
+	 * one, the component takes any slot, as in Vue. Text, as the mapper places them in several places.
 	 */
 	componentSlots?(): readonly string[];
 	/**

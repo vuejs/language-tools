@@ -241,7 +241,7 @@ exports[`content mapper declaration emit: component-meta > generic/component-def
     }>;
     expose: (exposed: {}) => void;
     attrs: any;
-    slots: {};
+    slots: Record<string, any>;
     emit: (event: "update:modelValue", value: number) => void;
 }>) => import('vue').VNode & {
     __ctx?: NonNullable<Awaited<typeof __VLS_setup>>;
@@ -269,7 +269,7 @@ exports[`content mapper declaration emit: component-meta > generic/component-des
     }>;
     expose: (exposed: {}) => void;
     attrs: any;
-    slots: {};
+    slots: Record<string, any>;
     emit: (event: "update:title", value: string) => void;
 }>) => import('vue').VNode & {
     __ctx?: NonNullable<Awaited<typeof __VLS_setup>>;
