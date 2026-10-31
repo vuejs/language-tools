@@ -26,7 +26,7 @@ export interface ServiceScript {
 }
 
 /** The built-in codegen plugins, in the order that their code takes in each slot, before the other plugins. */
-const builtinPlugins: readonly CodegenPlugin[] = [
+export const builtinPlugins: readonly CodegenPlugin[] = [
 	{ name: 'vue:slots', create: createSlotsPlugin },
 	{ name: 'vue:inherited-attrs', create: createInheritedAttrsPlugin },
 	{ name: 'vue:refs', create: createRefsPlugin },
