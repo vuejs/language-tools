@@ -12,6 +12,7 @@ import {
 } from './plugin';
 import { createEmitsPlugin } from './plugins/emits';
 import { createInheritedAttrsPlugin } from './plugins/inheritedAttrs';
+import { createModelPlugin } from './plugins/model';
 import { createPropsPlugin } from './plugins/props';
 import { createRefsPlugin } from './plugins/refs';
 import { createRootElPlugin } from './plugins/rootEl';
@@ -36,6 +37,7 @@ export const builtinPlugins: readonly CodegenPlugin[] = [
 	{ name: 'vue:style', create: createStylePlugin },
 	{ name: 'vue:emits', create: createEmitsPlugin },
 	{ name: 'vue:props', create: createPropsPlugin },
+	{ name: 'vue:model', create: createModelPlugin },
 ];
 
 export function generateServiceScript(

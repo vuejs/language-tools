@@ -81,6 +81,8 @@ const accepted: Record<string, string[]> = {
 		'Parent.vue(19,25): error TS2353',
 		'Parent.vue(23,55): error TS2353',
 	],
+	// the models that `defineModel` declares, which a parent binds
+	'vue:model': ['Parent.vue(19,9): error TS2353', 'Parent.vue(23,36): error TS2353', 'Parent.vue(26,39): error TS2353'],
 };
 
 test.each([undefined, ...builtinPlugins.map(({ name }) => name)])(

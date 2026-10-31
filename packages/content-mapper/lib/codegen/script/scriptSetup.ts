@@ -1,26 +1,17 @@
-import {
-	getDefineModelPropName,
-	type IRScriptSetup,
-	navigationFeatures,
-	scriptFeatures,
-	type ScriptSetupRanges,
-	type TextRange,
-} from '@vue/language-core';
+import { type IRScriptSetup, scriptFeatures, type ScriptSetupRanges, type TextRange } from '@vue/language-core';
 import { names } from '../names';
 import { type BlockRewrite, type BlockSlice, type BlockWriter, generateBlockAnchor } from '../rewrite/blockRewrite';
-import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
+import { Boundary, mapped, type TsCode } from '../tsCode';
 import {
 	asType,
 	endOfLine,
 	generateTypeAlias,
-	generateTypedVar,
 	identifierRE,
 	intersectTypes,
 	isTsLang,
 	newLine,
 	typeAliasRef,
 } from '../writers';
-import { generateCamelized } from '../writers/camelized';
 import { generateSpreadMerge } from '../writers/merge';
 import { generateComponent } from './component';
 import type { ScriptCodegenContext } from './context';
@@ -248,7 +239,6 @@ export function* generateSetupFunction(
 	output?: Iterable<TsCode>,
 ): Generator<TsCode> {
 	yield* copies.generateBody();
-	yield* generateModels(options, scriptSetup, scriptSetupRanges);
 	yield* options.slots.setupBody;
 	yield* generatePluginTypes(options);
 	yield* generatePublicProps(options, ctx, scriptSetup);
@@ -439,21 +429,11 @@ export function getComponentProps({ scriptSetupRanges, slots, scriptLang }: Scri
 	if (!scriptSetupRanges) {
 		return props;
 	}
-	const declarations = [...slots.props];
-	const { defineModel } = scriptSetupRanges;
-	if (defineModel.length) {
-		declarations.push({
-			type: typeAliasRef(names.ModelProps, scriptLang),
-			local: undefined,
-			runtime: undefined,
-			defaults: defineModel.some(model => model.defaultValue) ? `typeof ${names.defaultModels}` : undefined,
-		});
-	}
 	const pluginProps = typeAliasRef(names.PluginProps, scriptLang);
 	let hasPluginProps = false;
 	const defaultProps: string[] = [];
 	const defaults: string[] = [];
-	for (const declaration of declarations) {
+	for (const declaration of slots.props) {
 		let type: string | undefined;
 		if (typeof declaration.type !== 'object') {
 			type = declaration.type;
@@ -503,13 +483,9 @@ export function getComponentEmits({ scriptSetupRanges, slots, scriptLang }: Scri
 	if (!scriptSetupRanges) {
 		return emits;
 	}
-	const declarations = [...slots.emits];
-	if (scriptSetupRanges.defineModel.length) {
-		declarations.push({ type: typeAliasRef(names.ModelEmit, scriptLang), emit: `typeof ${names.modelEmit}` });
-	}
 	const pluginEmits = typeAliasRef(names.PluginEmits, scriptLang);
 	let hasPluginEmits = false;
-	for (const { type, emit } of declarations) {
+	for (const { type, emit } of slots.emits) {
 		if (typeof type === 'object') {
 			if (!hasPluginEmits) {
 				hasPluginEmits = true;
@@ -578,130 +554,6 @@ export function getExposeTypes(
 
 function getSlotsType(options: ScriptCodegenOptions): string | undefined {
 	return options.slots.componentSlots.join(` & `) || undefined;
-}
-
-function* generateModels(
-	options: ScriptCodegenOptions,
-	scriptSetup: IRScriptSetup,
-	scriptSetupRanges: ScriptSetupRanges,
-): Generator<TsCode> {
-	if (!scriptSetupRanges.defineModel.length) {
-		return;
-	}
-
-	const defaultCodes: string[] = [];
-	const propCodes: Generator<TsCode>[] = [];
-	const emitCodes: Generator<TsCode>[] = [];
-
-	for (const defineModel of scriptSetupRanges.defineModel) {
-		const propName = getDefineModelPropName(scriptSetup, defineModel);
-
-		let modelType: string;
-		if (defineModel.type) {
-			// Infer from defineModel<T>
-			modelType = getRangeText(scriptSetup, defineModel.type);
-		}
-		else if (defineModel.runtimeType && defineModel.localName) {
-			// Infer from actual prop declaration code
-			modelType = `typeof ${getRangeText(scriptSetup, defineModel.localName)}['value']`;
-		}
-		else if (defineModel.defaultValue && propName) {
-			// Infer from defineModel({ default: T })
-			modelType = `typeof ${names.defaultModels}['${propName}']`;
-		}
-		else {
-			modelType = `any`;
-		}
-
-		if (defineModel.defaultValue) {
-			defaultCodes.push(
-				`'${propName}': ${getRangeText(scriptSetup, defineModel.defaultValue)},${newLine}`,
-			);
-		}
-
-		propCodes.push(generateModelProp(options, scriptSetup, defineModel, propName, modelType));
-		emitCodes.push(generateModelEmit(defineModel, propName, modelType));
-	}
-
-	if (defaultCodes.length) {
-		yield `const ${names.defaultModels} = {${newLine}`;
-		yield* defaultCodes;
-		yield `}${endOfLine}`;
-		yield `void ${names.defaultModels}${endOfLine}`;
-	}
-
-	yield* generateTypeAlias(names.ModelProps, options.scriptLang, function*() {
-		yield `{${newLine}`;
-		for (const codes of propCodes) {
-			yield* codes;
-		}
-		yield `}`;
-	});
-
-	yield* generateTypeAlias(names.ModelEmit, options.scriptLang, function*() {
-		yield `{${newLine}`;
-		for (const codes of emitCodes) {
-			yield* codes;
-		}
-		yield `}`;
-	});
-
-	// avoid `defineModel<...>()` to prevent JS AST issues
-	yield* generateTypedVar('let', names.modelEmit, options.scriptLang, function*() {
-		yield `${names.ShortEmits}<${typeAliasRef(names.ModelEmit, options.scriptLang)}>`;
-	});
-}
-
-function* generateModelProp(
-	options: ScriptCodegenOptions,
-	scriptSetup: IRScriptSetup,
-	defineModel: ScriptSetupRanges['defineModel'][number],
-	propName: string,
-	modelType: string,
-): Generator<TsCode> {
-	// In JS the alias body lives inside a JSDoc comment; user comments could
-	// contain `*/` and terminate it early, so they are dropped.
-	if (defineModel.comments && isTsLang(options.scriptLang)) {
-		yield scriptSetup.content.slice(defineModel.comments.start, defineModel.comments.end);
-		yield newLine;
-	}
-
-	if (defineModel.name) {
-		const ignore = yield* Boundary.start(scriptSetup, 0, 0, synthesizedIgnore);
-		yield* generateCamelized(
-			getRangeText(scriptSetup, defineModel.name),
-			scriptSetup,
-			defineModel.name.start,
-			{ features: navigationFeatures },
-		);
-		yield ignore.end();
-	}
-	else {
-		yield propName;
-	}
-
-	yield defineModel.required ? `: ` : `?: `;
-	yield modelType;
-	yield endOfLine;
-
-	if (defineModel.modifierType) {
-		const modifierName = `${propName === 'modelValue' ? 'model' : propName}Modifiers`;
-		const modifierType = getRangeText(scriptSetup, defineModel.modifierType);
-		yield `'${modifierName}'?: Partial<Record<${modifierType}, true>>${endOfLine}`;
-	}
-}
-
-function* generateModelEmit(
-	defineModel: ScriptSetupRanges['defineModel'][number],
-	propName: string,
-	modelType: string,
-): Generator<TsCode> {
-	yield `'update:${propName}': [value: `;
-	yield modelType;
-	if (!defineModel.required && !defineModel.defaultValue) {
-		yield ` | undefined`;
-	}
-	yield `]${endOfLine}`;
 }
 
 function getRangeText(

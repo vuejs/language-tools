@@ -123,9 +123,10 @@ exports.codegen = ({ ts, fileName, ir, name }) => {
 
 `codegen(file, ctx)` is a `VueCodegenPlugin`. It runs for each snapshot of each file, in `plugins`
 order after the built-in plugins of the mapper (slots, fallthrough attributes, template refs, root
-element, style, emits, props), and gives the `VueCodegenFilePlugin` of the file: an optional `rewrite` of the
-user's code, and functions that give its code in the slots of the generated code. `ctx` holds the
-entry's `config`, the options of the plugin, and the resolved `vueCompilerOptions`. `file` holds the
+element, style, emits, props, models), and gives the `VueCodegenFilePlugin` of the file: an
+optional `rewrite` of the user's code, and functions that give its code in the slots of the
+generated code. `ctx` holds the entry's `config`, the options of the plugin, and the resolved
+`vueCompilerOptions`. `file` holds the
 TS 7.1 AST API that parsed the scripts (`ts`), `fileName`, the IR, its analysis (resolved options,
 with SFC comment options, and script ranges), `name` and `template`. Walk ASTs with
 `node.forEachChild`. A `codegen` export that is not a function is reported as an option diagnostic at
