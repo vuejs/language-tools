@@ -31,8 +31,11 @@ export interface ElementSlots {
 	elementEnd: Map<CompilerDOM.ElementNode, TsCode[]>;
 	/** The components whose instance a plugin reads, which the template declares, hoisted for a read out of its scope. */
 	instances: ReadonlyMap<CompilerDOM.ElementNode, { hoisted: boolean }>;
-	/** Whether a plugin reads the type of the attributes that fall through to the root, which the template declares. */
-	fallthroughAttrs: boolean;
+	/**
+	 * Whether a plugin reads the type of the attributes that fall through to the root, which the template declares;
+	 * `'required'` when a plugin requires those that the template does not pass the root from the parent.
+	 */
+	fallthroughAttrs: boolean | 'required';
 }
 
 export function* generateComponent(
@@ -242,8 +245,8 @@ export function* generateComponent(
 	const boundary2 = yield* Boundary.start(options.template, startTagOffset, startTagOffset + tag.length, {
 		features: 0,
 	});
-	if (shouldInheritAttrs && options.vueCompilerOptions.checkRequiredFallthroughAttributes) {
-		// the props the fallthrough attributes supply are reported missing at the start of the object
+	if (shouldInheritAttrs && options.slots.fallthroughAttrs === 'required') {
+		// the props the parent supplies are reported missing at the start of the object
 		const ignore = yield* Boundary.start(options.template, 0, 0, synthesizedIgnore);
 		yield `{`;
 		yield ignore.end();
@@ -282,7 +285,7 @@ export function* generateComponent(
 	}
 
 	if (shouldInheritAttrs && options.slots.fallthroughAttrs) {
-		if (options.vueCompilerOptions.checkRequiredFallthroughAttributes) {
+		if (options.slots.fallthroughAttrs === 'required') {
 			const restsVar = ctx.getInternalVariable();
 			yield `var ${restsVar} = ${names.omit}(${getPropsVar()}, {\n${propsStr}})${endOfLine}`;
 			ctx.inheritedAttrVars.add(restsVar);
@@ -438,12 +441,10 @@ function* generateFailedExpressions(
 }
 
 function hasVBindAttrs(options: TemplateCodegenOptions, node: CompilerDOM.ElementNode) {
-	return options.vueCompilerOptions.fallthroughAttributes && (
-		(options.inheritAttrs && options.templateScope.singleRootNodes.has(node))
+	return (options.inheritAttrs && options.templateScope.singleRootNodes.has(node))
 		|| node.props.some(prop =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& prop.name === 'bind'
 			&& prop.exp?.loc.source === '$attrs'
-		)
-	);
+		);
 }

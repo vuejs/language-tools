@@ -61,7 +61,8 @@ export interface VueCodegenTemplate {
 	slotOutletTypes(node: ElementNode): { props: string; name?: string } | undefined;
 	/**
 	 * The type of the attributes that fall through to the root of the template, when a plugin reads it by
-	 * `templateReads`; `undefined` when none do.
+	 * `templateReads`: the props of the root, or, read as `'required'`, those that the template does not pass it;
+	 * `undefined` when none do.
 	 */
 	fallthroughAttrsType(): string | undefined;
 }
@@ -78,8 +79,11 @@ export interface VueCodegenTemplateReads {
 	instances?: ReadonlyMap<ElementNode, { hoisted: boolean }>;
 	/** Whether the plugin reads `slotOutletTypes`. */
 	slotOutlets?: boolean;
-	/** Whether the plugin reads `fallthroughAttrsType`. */
-	fallthroughAttrs?: boolean;
+	/**
+	 * Whether the plugin reads `fallthroughAttrsType`; `'required'` when it requires the props that the template does not
+	 * pass the root from the parent, so that the template does not report them missing at the root.
+	 */
+	fallthroughAttrs?: boolean | 'required';
 }
 
 /**
@@ -464,8 +468,16 @@ function checkFilePlugin(
 						}
 					}
 				}
-				if ([slotOutlets, fallthroughAttrs].some(read => read !== undefined && typeof read !== 'boolean')) {
-					throw invalid(plugin, 'a `templateReads` with reads that are not booleans');
+				if (slotOutlets !== undefined && typeof slotOutlets !== 'boolean') {
+					throw invalid(plugin, 'a `templateReads` whose read of the slot outlets is not a boolean');
+				}
+				if (
+					fallthroughAttrs !== undefined && typeof fallthroughAttrs !== 'boolean' && fallthroughAttrs !== 'required'
+				) {
+					throw invalid(
+						plugin,
+						'a `templateReads` whose read of the fallthrough attributes is not a boolean or `required`',
+					);
 				}
 				return reads as VueCodegenTemplateReads;
 			};

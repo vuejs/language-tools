@@ -115,7 +115,10 @@ export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): Mer
 			}
 			return merged;
 		}),
-		fallthroughAttrs: computed(() => getTemplateReads().some(reads => !!reads.fallthroughAttrs)),
+		fallthroughAttrs: computed(() => {
+			const reads = getTemplateReads().map(reads => reads.fallthroughAttrs);
+			return reads.includes('required') ? 'required' : reads.includes(true);
+		}),
 		slotOutlets: computed(() => getTemplateReads().some(reads => !!reads.slotOutlets)),
 		setupBody: computed(() => getPlugins().flatMap(plugin => (read(plugin, 'setupBody') ?? []).flatMap(toCodes))),
 		props: computed(() =>

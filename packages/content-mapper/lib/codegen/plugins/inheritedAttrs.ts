@@ -10,7 +10,11 @@ export function createInheritedAttrsPlugin(
 	const InheritedAttrs = name('InheritedAttrs');
 	const hasInheritedAttrs = () => !!template.fallthroughAttrsType();
 	return {
-		templateReads: () => ({ fallthroughAttrs: true }),
+		// with required fallthrough attributes, the parent passes what the root lacks, which the root then misses no more
+		templateReads: () => {
+			const { fallthroughAttributes, checkRequiredFallthroughAttributes } = analysis.getResolvedOptions();
+			return fallthroughAttributes ? { fallthroughAttrs: checkRequiredFallthroughAttributes ? 'required' : true } : {};
+		},
 		templateTypes: () => {
 			if (!hasInheritedAttrs()) {
 				return [];

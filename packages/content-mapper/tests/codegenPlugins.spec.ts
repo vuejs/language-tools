@@ -616,7 +616,11 @@ test('declares in the template what a plugin reads of it, and nothing that none 
 	expect(hoisted).toContain(`var ${instanceVar}!: Parameters<`);
 	expect(hoisted).toContain(`type __VLS_Instance = typeof ${hoistedVar};`);
 	expect(generateWith(content).text).not.toContain(`['expose']`);
-	for (const reads of [1, { instances: [] }, { instances: new Map([[{}, { hoisted: true }]]) }, { slotOutlets: 1 }]) {
+	for (
+		const reads of [1, { instances: [] }, { instances: new Map([[{}, { hoisted: true }]]) }, { slotOutlets: 1 }, {
+			fallthroughAttrs: 'all',
+		}]
+	) {
 		expect(() => generateWith(content, plugin(() => ({ templateReads: () => reads as never }))))
 			.toThrow(`'test-plugin'`);
 	}
