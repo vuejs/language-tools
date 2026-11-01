@@ -1,7 +1,8 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { parseVForAliases, scriptFeatures } from '@vue/language-core';
+import { type CodeSource, parseVForAliases, scriptFeatures } from '@vue/language-core';
+import { createSourceRewrite } from 'muggle-string';
 import { names } from '../names';
-import { mapped, type TsCode } from '../tsCode';
+import type { TsCode, TsCodeData } from '../tsCode';
 import { asType, endOfLine, newLine } from '../writers';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -45,31 +46,28 @@ export function* generateVFor(
 
 	yield `for (const [`;
 	if (leftExpressionRange && leftExpressionText) {
-		let lastOffset = 0;
+		// the aliases are the text of the template, with the defaults in it as expressions of the template
+		const rewrite = createSourceRewrite<CodeSource, { data: TsCodeData }>(options.template);
 		for (const [start, end] of defaultInitializerRanges) {
-			if (start > lastOffset) {
-				yield mapped(
-					leftExpressionText.slice(lastOffset, start),
+			rewrite.replace(leftExpressionRange.start + start, leftExpressionRange.start + end, [
+				...generateInterpolation(
+					options,
+					ctx,
 					options.template,
-					leftExpressionRange.start + lastOffset,
 					{ features: scriptFeatures },
-				);
-			}
-			yield* generateInterpolation(
-				options,
-				ctx,
-				options.template,
-				{ features: scriptFeatures },
-				leftExpressionText.slice(start, end),
-				leftExpressionRange.start + start,
-			);
-			lastOffset = end;
+					leftExpressionText.slice(start, end),
+					leftExpressionRange.start + start,
+				),
+			]);
 		}
-		if (lastOffset < leftExpressionText.length) {
-			yield mapped(leftExpressionText.slice(lastOffset), options.template, leftExpressionRange.start + lastOffset, {
-				features: scriptFeatures,
-			});
-		}
+		const codes: TsCode[] = [];
+		rewrite.render(
+			leftExpressionRange.start,
+			leftExpressionRange.end,
+			piece => codes.push(piece),
+			{ data: { features: scriptFeatures } },
+		);
+		yield* codes;
 	}
 	yield `] of `;
 	if (sourceAlias !== undefined) {
