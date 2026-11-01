@@ -125,8 +125,13 @@ const acceptedUnread: Record<string, string[]> = {
  * the code that reads what the plugin declares is rejected, as without the declaration.
  */
 const accepted: Record<string, string[]> = {
-	// the attributes of the root, which the component takes as props
-	'vue:inherited-attrs': ['Parent.vue(26,17): error TS2353'],
+	// the attributes of the root, which the component takes as props, and with required fallthrough attributes, the
+	// required props of the root that the parent passes, which the root then misses
+	'vue:inherited-attrs': [
+		'Parent.vue(26,17): error TS2353',
+		'RequiredParent.vue(6,17): error TS2353',
+		'RequiredRoot.vue(9,3): error TS2345',
+	],
 	// `$style`, and the reads of `v-bind()` in CSS
 	'vue:style': ['Refs.vue(14,15): error TS2339', 'Refs.vue(6,7): error TS6133'],
 	// the events that `defineEmits` declares: their listeners, and `$emit` of one beside the events of a model
@@ -148,6 +153,7 @@ const accepted: Record<string, string[]> = {
 		'InferredChild.vue(9,29): error TS2339',
 		'Parent.vue(19,25): error TS2353',
 		'Parent.vue(23,55): error TS2353',
+		'RequiredParent.vue(6,17): error TS2353',
 	],
 	// the models that `defineModel` declares, which a parent binds
 	'vue:model': ['Parent.vue(19,9): error TS2353', 'Parent.vue(23,36): error TS2353', 'Parent.vue(26,39): error TS2353'],
@@ -156,7 +162,8 @@ const accepted: Record<string, string[]> = {
 test.each([undefined, ...builtinPlugins.map(({ name }) => name)])(
 	'type checks the fixture without the built-in plugin %s, which drops only its checks',
 	disabled => {
-		const diagnostics = check(disabled).split('\n').filter(Boolean).map(line =>
+		// the first line of each diagnostic, without the lines that go on with its message
+		const diagnostics = check(disabled).split('\n').filter(line => line && !/^\s/.test(line)).map(line =>
 			line.replace(/^test-workspace\/content-mapper-builtins\/(.*?error TS\d+).*$/, '$1')
 		);
 		expect(diagnostics).toEqual(accepted[disabled!] ?? []);
