@@ -112,6 +112,9 @@ importers:
       '@types/node':
         specifier: ^26.0.1
         version: 26.6.5
+      muggle-string-0.4:
+        specifier: npm:muggle-string@0.4.1
+        version: muggle-string@0.4.1
       typescript:
         specifier: 7.1.0-beta
         version: 7.1.0-beta
@@ -2115,6 +2118,9 @@ packages:
 
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
+
+  muggle-string@0.4.1:
+    resolution: {integrity: sha512-VNTrAak/KhO2i8dqqnqnAHOa3cYBwXEZe9h+D5h/1ZqFSTEFHdM65lR7RoIqq3tBBYavsOXV84NoHXZ0AkPyqQ==}
 
   mute-stream@3.0.0:
     resolution: {integrity: sha512-dkEJPVvun4FryqBmZ5KhDo0K9iDXAwn08tMLDinNdRBNPcYEDiWYysLcc6k3mjTMlbP9KyylvRpd4wFtwrT9rw==}
@@ -4135,6 +4141,8 @@ snapshots:
       minipass: 7.1.3
 
   ms@2.1.3: {}
+
+  muggle-string@0.4.1: {}
 
   mute-stream@3.0.0: {}
 
