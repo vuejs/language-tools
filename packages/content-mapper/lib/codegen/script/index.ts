@@ -200,8 +200,7 @@ function* generateWorker(
 			src !== script.src.text ? { features: scriptFeatures & ~SpanMapFeature.Rename } : { features: scriptFeatures },
 		);
 		yield `'`;
-		yield mapped(src.slice(0, script.src.text.length), options.ir, script.src.offset, undefined);
-		yield src.slice(script.src.text.length);
+		yield mapped(src, options.ir, script.src.offset, undefined);
 		yield `'`;
 		yield boundary.end();
 		yield endOfLine;
