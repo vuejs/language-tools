@@ -77,9 +77,7 @@ export function* generateInterpolation(
 	const expression = { content: code };
 	const rewrite = createSourceRewrite<Source, { data: TsCodeData }>(expression);
 	for (const [omitStart, omitEnd] of omit) {
-		if (omitStart < omitEnd) {
-			rewrite.replace(omitStart, omitEnd, '');
-		}
+		rewrite.replace(omitStart, omitEnd, '');
 	}
 
 	let prevEnd = 0;
