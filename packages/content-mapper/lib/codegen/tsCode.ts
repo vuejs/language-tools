@@ -70,6 +70,16 @@ export class Boundary<Source extends CodeSource = CodeSource> {
 		return new Boundary(source, end);
 	}
 
+	/** The start piece of the range and the range, for code that is not generated in order. */
+	static open<Source extends CodeSource>(
+		source: Source,
+		start: number,
+		end: number,
+		data: VueCodeMarker | DiagnosticDirectiveMapping,
+	): [MappedPiece<CodeBoundary, Source>, Boundary<Source>] {
+		return [mapped(``, source, start, { start: data }), new Boundary(source, end)];
+	}
+
 	end(): MappedPiece<CodeBoundary, Source> {
 		return mapped(``, this.source, this.endOffset, end);
 	}

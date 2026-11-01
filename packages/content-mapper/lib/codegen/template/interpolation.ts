@@ -10,16 +10,23 @@ import {
 } from '@vue/language-core';
 import { getStartEnd } from '@vue/language-core/lib/typescript/nodes';
 import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAST';
+import {
+	createSourceRewrite,
+	type Piece,
+	type RewriteOrigin,
+	type RewriteSource,
+	type RewriteWriter,
+} from 'muggle-string';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { names } from '../names';
-import { Boundary, mapped, type MappedPiece, type TsCode } from '../tsCode';
+import { Boundary, mapped, type TsCode, type TsCodeData, type TsPiece } from '../tsCode';
 import { endOfLine, getRefBrandArgument, newLine } from '../writers';
 import type { TemplateCodegenContext } from './context';
 
 /**
- * The code of the expression `code` at `start` of `block`. The ranges of `omit` (offsets in `code`, sorted and
- * disjoint) generate no code; the references inside them are skipped. The code out of references in the ranges of
- * `noRename` (sorted and disjoint too) takes no rename.
+ * The code of the expression `code` at `start` of `block`: a rewrite of `code` that replaces its references with their
+ * accesses. The ranges of `omit` (offsets in `code`, sorted and disjoint) generate no code; the references inside them
+ * are skipped. The code out of references in the ranges of `noRename` (sorted and disjoint too) takes no rename.
  */
 export function* generateInterpolation(
 	options: IdentifierOptions & {
@@ -50,7 +57,6 @@ export function* generateInterpolation(
 	// bindings (TS limitation), so each function body re-asserts the ones it reads.
 	// Parameter defaults run before the body, so each one that reads such a binding
 	// re-asserts it in an immediately invoked arrow, whose flow stays in the function.
-	// Bodies are buffered until their end, when those reads are known.
 	const references = ctx.getExpression(block, start, code).references;
 	const bodies = options.typescript && options.reassertBindings?.size
 			&& references.some(({ name, local }) => !local && options.reassertBindings!.has(name))
@@ -62,84 +68,23 @@ export function* generateInterpolation(
 		...bodies.map(body => ({ offset: body.end, body, enter: false })).reverse(),
 		...bodies.map(body => ({ offset: body.start, body, enter: true })),
 	].sort((a, b) => a.offset - b.offset);
-	const frames: { body: typeof bodies[number]; codes: TsCode[]; reasserts: Set<string> }[] = [];
+	/** The bindings that each function body re-asserts, of the bodies entered and not left. */
+	const frames: Set<string>[] = [];
+	const reasserts = new Map<FunctionBody, Set<string>>();
 	let markIndex = 0;
+	/**
+	 * The offsets of the runs of code between the references and the bounds of the function bodies, but the first.
+	 * The first char of each maps without features: adjacent mappings share the boundary offset (closed interval), so
+	 * both the end of the token before and the start of the run claim it, and rename / navigation would fire on the
+	 * neighbouring token.
+	 */
+	const runStarts: number[] = [];
 
-	function* write(codes: Iterable<TsCode>): Generator<TsCode> {
-		if (frames.length) {
-			frames[frames.length - 1]!.codes.push(...codes);
-		}
-		else {
-			yield* codes;
-		}
-	}
-
-	function* generateSourceCode(from: number, to: number): Generator<TsCode> {
-		yield* write(omitRanges(
-			withoutRename(
-				generateNonIdentifierCode(code.slice(from, to), block, start + from, features, from > 0),
-				start,
-				noRename,
-			),
-			start,
-			omit,
-		));
-	}
-
-	function* generateCodeUntil(from: number, end: number): Generator<TsCode> {
-		while (markIndex < marks.length && marks[markIndex]!.offset <= end) {
-			const { offset, body, enter } = marks[markIndex++]!;
-			yield* generateSourceCode(from, offset);
-			from = offset;
-			if (enter) {
-				frames.push({ body, codes: [], reasserts: new Set() });
-			}
-			else {
-				yield* write(generateFunctionBody(frames.pop()!));
-			}
-		}
-		yield* generateSourceCode(from, end);
-	}
-
-	function* generateFunctionBody({ body, codes, reasserts }: typeof frames[number]): Generator<TsCode> {
-		if (!reasserts.size) {
-			yield* codes;
-			return;
-		}
-		if (body.kind === 'block') {
-			yield newLine;
-			yield* generateReasserts(reasserts);
-			yield* codes;
-			return;
-		}
-		// Diagnostics reported on the generated call, or on the `return` keyword (where TS reports
-		// return type mismatches), map back to the original expression.
-		if (body.kind === 'parameter') {
-			const boundary = yield* Boundary.start(block, start + body.start, start + body.end, { features: 0 });
-			yield `(() => {${newLine}`;
-			yield* generateReasserts(reasserts);
-			yield `return (`;
-			yield* codes;
-			yield `)${endOfLine}})()`;
-			yield boundary.end();
-		}
-		else {
-			yield `{${newLine}`;
-			yield* generateReasserts(reasserts);
-			const boundary = yield* Boundary.start(block, start + body.start, start + body.end, { features: 0 });
-			yield `return`;
-			yield boundary.end();
-			yield ` (`;
-			yield* codes;
-			yield `)${endOfLine}}`;
-		}
-	}
-
-	function* generateReasserts(reasserts: Set<string>): Generator<TsCode> {
-		for (const name of reasserts) {
-			yield `${names.withDotValue}(${name}, ${
-				getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
-			})${endOfLine}`;
+	const expression = { content: code };
+	const rewrite = createSourceRewrite<RewriteSource, { data: TsCodeData }>(expression);
+	for (const [omitStart, omitEnd] of omit) {
+		if (omitStart < omitEnd) {
+			rewrite.replace(omitStart, omitEnd, '');
 		}
 	}
 
@@ -153,21 +98,21 @@ export function* generateInterpolation(
 		if (local && !member) {
 			continue;
 		}
-		yield* generateCodeUntil(prevEnd, offset);
+		skipUntil(prevEnd, offset);
 		prevEnd = offset + name.length;
 		if (omitted) {
+			if (name) {
+				rewrite.replace(offset, prevEnd, '');
+			}
 			continue;
 		}
 
 		const identifierFeatures = member ? featuresWithoutCompletion : features;
 		if (local || (isShorthand && options.setupConsts.has(name))) {
-			yield* write([mapped(name, block, start + offset, identifierFeatures)]);
+			replaceReference(offset, prevEnd, mapped(name, block, start + offset, identifierFeatures));
 			continue;
 		}
 		const marker = isShorthand ? { ...identifierFeatures, kind: SpanMapKind.Atom } : identifierFeatures;
-		if (isShorthand) {
-			yield* write([mapped(name, block, start + offset, marker), `: `]);
-		}
 
 		if (
 			frames.length
@@ -175,33 +120,141 @@ export function* generateInterpolation(
 			&& !options.setupConsts.has(name)
 			&& !options.setupRefs.has(name)
 		) {
-			frames[frames.length - 1]!.reasserts.add(name);
+			frames[frames.length - 1]!.add(name);
 		}
 
-		const codes: TsCode[] = [mapped(name, block, start + offset, marker)];
-
-		yield* write(generateIdentifier(
+		const codes: TsCode[] = isShorthand ? [mapped(name, block, start + offset, marker), `: `] : [];
+		codes.push(...generateIdentifier(
 			options,
 			ctx,
-			codes,
+			[mapped(name, block, start + offset, marker)],
 			reference,
 			block,
 			start + offset,
-			start + offset + name.length,
+			start + prevEnd,
 		));
+		replaceReference(offset, prevEnd, codes);
+	}
+	skipUntil(prevEnd, code.length);
+
+	// a body sits inside the bodies before it, so its rank is lower: their code goes outside its own at one offset
+	for (const [index, body] of bodies.entries()) {
+		const bindings = reasserts.get(body);
+		if (bindings?.size) {
+			wrapFunctionBody(rewrite.writer(bodies.length - index), body, bindings);
+		}
 	}
 
-	yield* generateCodeUntil(prevEnd, code.length);
+	const pieces: TsCode[] = [];
+	const sink = (piece: Piece<RewriteOrigin<RewriteSource, { data: TsCodeData }>>) => {
+		pieces.push(
+			typeof piece !== 'string' && piece.source === expression
+				? mapped(code.slice(piece.start, piece.end), block, start + piece.start, piece.data as VueCodeMarker)
+				: piece as TsPiece,
+		);
+	};
+	// the kept code renders by views, which give the features of its ranges
+	const runStartFeatures: VueCodeMarker = { features: 0 };
+	const noRenameFeatures: VueCodeMarker = { ...features, features: features.features & ~SpanMapFeature.Rename };
+	let viewEnd = 0;
+	let runIndex = 0;
+	const renderView = (end: number, data: VueCodeMarker) => {
+		// an empty expression renders its inserts too
+		if (viewEnd < end || !code.length) {
+			rewrite.render(viewEnd, end, sink, { data });
+			viewEnd = end;
+		}
+	};
+	const renderUntil = (end: number, data: VueCodeMarker) => {
+		end = Math.min(end, code.length);
+		for (; runIndex < runStarts.length && runStarts[runIndex]! < end; runIndex++) {
+			renderView(runStarts[runIndex]!, data);
+			renderView(runStarts[runIndex]! + 1, runStartFeatures);
+		}
+		renderView(end, data);
+	};
+	for (const [rangeStart, rangeEnd] of noRename) {
+		renderUntil(rangeStart, features);
+		renderUntil(rangeEnd, noRenameFeatures);
+	}
+	renderUntil(code.length, features);
+	yield* pieces;
 
 	if (suffix) {
 		yield suffix;
 	}
+
+	/**
+	 * Replaces the reference at `from`..`to` with `codes`. A reference of no char, which a parse error gives, maybe
+	 * past the end of `code`, inserts them, inside the code of the function bodies that open there.
+	 */
+	function replaceReference(from: number, to: number, codes: TsCode | TsCode[]) {
+		if (from < to) {
+			rewrite.replace(from, to, codes);
+		}
+		else {
+			rewrite.writer(0).insertBefore(Math.min(from, code.length), codes);
+		}
+	}
+
+	function skipUntil(from: number, end: number) {
+		while (markIndex < marks.length && marks[markIndex]!.offset <= end) {
+			const { offset, body, enter } = marks[markIndex++]!;
+			addRun(from, offset);
+			from = offset;
+			if (enter) {
+				const bindings = new Set<string>();
+				frames.push(bindings);
+				reasserts.set(body, bindings);
+			}
+			else {
+				frames.pop();
+			}
+		}
+		addRun(from, end);
+	}
+
+	function addRun(from: number, to: number) {
+		if (from > 0 && from < to) {
+			runStarts.push(from);
+		}
+	}
+
+	// Diagnostics reported on the generated call, or on the `return` keyword (where TS reports
+	// return type mismatches), map back to the original expression.
+	function wrapFunctionBody(
+		writer: RewriteWriter<RewriteSource, { data: TsCodeData }>,
+		body: FunctionBody,
+		bindings: Set<string>,
+	) {
+		const brand = getRefBrandArgument(options.vueCompilerOptions, options.scriptLang);
+		const reassertCodes = [...bindings].map(name => `${names.withDotValue}(${name}, ${brand})${endOfLine}`);
+		if (body.kind === 'block') {
+			writer.insertBefore(body.start, [newLine, ...reassertCodes]);
+		}
+		else if (body.kind === 'parameter') {
+			const [boundaryStart, boundary] = Boundary.open(block, start + body.start, start + body.end, { features: 0 });
+			writer.insertBefore(body.start, [boundaryStart, `(() => {${newLine}`, ...reassertCodes, `return (`]);
+			writer.insertAfter(body.end, [`)${endOfLine}})()`, boundary.end()]);
+		}
+		else {
+			const [boundaryStart, boundary] = Boundary.open(block, start + body.start, start + body.end, { features: 0 });
+			writer.insertBefore(body.start, [`{${newLine}`, ...reassertCodes, boundaryStart, `return`, boundary.end(), ` (`]);
+			writer.insertAfter(body.end, `)${endOfLine}}`);
+		}
+	}
+}
+
+interface FunctionBody {
+	start: number;
+	end: number;
+	kind: 'block' | 'expression' | 'parameter';
 }
 
 // Function scopes in pre-order: the expressions a parameter list evaluates, then the body.
 // A block body spans from after its directive prologue to its closing brace.
 function collectFunctionBodies(ts: TypeScript, ast: ts.SourceFile) {
-	const bodies: { start: number; end: number; kind: 'block' | 'expression' | 'parameter' }[] = [];
+	const bodies: FunctionBody[] = [];
 	const pushParameterExpression = (node: ts.Expression) => {
 		const { start, end } = getStartEnd(node, ast);
 		bodies.push({ start, end, kind: 'parameter' });
@@ -288,86 +341,6 @@ function collectFunctionBodies(ts: TypeScript, ast: ts.SourceFile) {
 	}
 	ast.forEachChild(visit);
 	return bodies;
-}
-
-/** The parts of the source `pieces` of an expression at `start` out of the ranges of `omit`. */
-function* omitRanges(
-	pieces: Generator<MappedPiece<VueCodeMarker>>,
-	start: number,
-	omit: readonly (readonly [start: number, end: number])[],
-): Generator<TsCode> {
-	for (const { text, source, start: offset, end, data } of pieces) {
-		let kept = offset;
-		for (const [omitStart, omitEnd] of omit) {
-			if (start + omitEnd <= kept || start + omitStart >= end) {
-				continue;
-			}
-			if (kept < start + omitStart) {
-				yield mapped(text.slice(kept - offset, start + omitStart - offset), source, kept, data);
-			}
-			kept = start + omitEnd;
-		}
-		if (kept < end) {
-			yield mapped(text.slice(kept - offset), source, kept, data);
-		}
-	}
-}
-
-/** The parts of the source `pieces` of an expression at `start`, without rename in the ranges of `ranges`. */
-function* withoutRename(
-	pieces: Generator<MappedPiece<VueCodeMarker>>,
-	start: number,
-	ranges: readonly (readonly [start: number, end: number])[],
-): Generator<MappedPiece<VueCodeMarker>> {
-	for (const { text, source, start: offset, end, data } of pieces) {
-		let kept = offset;
-		for (const [rangeStart, rangeEnd] of ranges) {
-			const from = Math.max(start + rangeStart, kept);
-			const to = Math.min(start + rangeEnd, end);
-			if (from >= to) {
-				continue;
-			}
-			if (kept < from) {
-				yield mapped(text.slice(kept - offset, from - offset), source, kept, data);
-			}
-			yield mapped(text.slice(from - offset, to - offset), source, from, {
-				...data,
-				features: data.features & ~SpanMapFeature.Rename,
-			});
-			kept = to;
-		}
-		if (kept < end) {
-			yield mapped(text.slice(kept - offset), source, kept, data);
-		}
-	}
-}
-
-/**
- * Yield a code chunk, cutting the boundary character off as diagnostics-only.
- *
- * Adjacent mappings share the boundary offset (closed interval), so both the
- * neighbouring token's end and this chunk's start claim the same source offset.
- * Downgrading the boundary character to diagnostics-only keeps content-sensitive
- * features (rename / navigation) from firing on the neighbouring chunk.
- */
-function* generateNonIdentifierCode(
-	code: string,
-	source: CodeSource,
-	offset: number,
-	data: VueCodeMarker,
-	shouldCut = true,
-): Generator<MappedPiece<VueCodeMarker>> {
-	if (!code.length) {
-		return;
-	}
-	if (!shouldCut) {
-		yield mapped(code, source, offset, data);
-		return;
-	}
-	yield mapped(code.slice(0, 1), source, offset, { features: 0 });
-	if (code.length > 1) {
-		yield mapped(code.slice(1), source, offset + 1, data);
-	}
 }
 
 interface IdentifierOptions {
