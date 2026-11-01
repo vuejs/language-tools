@@ -1,16 +1,20 @@
 import * as fs from 'node:fs';
+import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
 import { builtinPlugins } from '../lib/codegen';
+import type { createContentMapper as CreateContentMapper } from '../lib/mapper/contentMapper';
 import { normalizeCompilerOutput, repositoryRoot, runTsc } from './utils';
 
 const packageRoot = path.resolve(__dirname, '..');
 const fixture = path.join(repositoryRoot, 'test-workspace/content-mapper-builtins');
+const mapperOptions = { languageFeatures: false, target: 99, fallthroughAttributes: true };
 
 /**
- * The diagnostics of the fixture with a copy of the built mapper that runs without the built-in plugin `disabled`.
+ * `run` in a workspace beside the fixture, with a copy of the built mapper that runs without the built-in plugin
+ * `disabled`.
  */
-function check(disabled?: string) {
+function withMapper<T>(disabled: string | undefined, run: (workspace: string, mapper: string) => T): T {
 	const workspace = fs.mkdtempSync(path.join(repositoryRoot, 'test-workspace', '.builtins-'));
 	try {
 		const copy = path.join(workspace, 'node_modules/@vue/content-mapper');
@@ -30,27 +34,82 @@ function check(disabled?: string) {
 			expect(code).toMatch(entry);
 			fs.writeFileSync(index, code.replace(entry, ''));
 		}
+		return run(workspace, copy);
+	}
+	finally {
+		fs.rmSync(workspace, { recursive: true, force: true });
+	}
+}
+
+/** The diagnostics of the fixture through the mapper. */
+function check(disabled?: string) {
+	return withMapper(disabled, workspace => {
 		fs.writeFileSync(
 			path.join(workspace, 'tsconfig.json'),
 			JSON.stringify({
 				extends: '../tsconfig.base.json',
 				compilerOptions: { strict: true },
-				contentMappers: [{
-					package: '@vue/content-mapper',
-					extensions: ['.vue'],
-					options: { languageFeatures: false, target: 99, fallthroughAttributes: true },
-				}],
+				contentMappers: [{ package: '@vue/content-mapper', extensions: ['.vue'], options: mapperOptions }],
 				include: [path.relative(workspace, fixture).replaceAll('\\', '/') + '/*.vue'],
 			}),
 		);
 		return normalizeCompilerOutput(
 			runTsc(['-p', path.join(workspace, 'tsconfig.json'), '--runExternalCode', '--pretty', 'false']),
 		);
-	}
-	finally {
-		fs.rmSync(workspace, { recursive: true, force: true });
-	}
+	});
 }
+
+/**
+ * The diagnostics of the virtual code of the fixture as plain TypeScript files, with all of them: the mapper drops
+ * those at code that maps to no source, such as a declaration that no code reads.
+ */
+function checkVirtualCode(disabled?: string) {
+	return withMapper(disabled, (workspace, mapper) => {
+		const { createContentMapper } = createRequire(__filename)(
+			path.join(mapper, 'lib/mapper/contentMapper.js'),
+		) as { createContentMapper: typeof CreateContentMapper };
+		const configFileName = path.join(workspace, 'tsconfig.json');
+		fs.writeFileSync(
+			configFileName,
+			JSON.stringify({
+				extends: '../tsconfig.base.json',
+				compilerOptions: { strict: true, noUnusedLocals: true, noUnusedParameters: true },
+				contentMappers: [],
+				include: ['*.vue.ts'],
+			}),
+		);
+		const contentMapper = createContentMapper({ name: 'builtins' });
+		contentMapper.openProject({
+			projectHandle: 'builtins',
+			configFileName,
+			compilerOptions: {},
+			options: mapperOptions,
+		});
+		for (const name of fs.readdirSync(fixture).filter(name => name.endsWith('.vue'))) {
+			const fileName = path.join(fixture, name);
+			const { text, extension } = contentMapper.transform({
+				projectHandle: 'builtins',
+				fileName,
+				content: fs.readFileSync(fileName, 'utf8'),
+			});
+			// beside the fixture, so that the references of the virtual code resolve the same, and `./X.vue` is `X.vue.ts`
+			fs.writeFileSync(path.join(workspace, name + extension), text);
+		}
+		return normalizeCompilerOutput(runTsc(['-p', configFileName, '--pretty', 'false']))
+			.split('\n')
+			.filter(Boolean)
+			.map(line => line.replace(/^test-workspace\/\.builtins-[^/]+\/(.*?)\(\d+,\d+\)(: error TS\d+: .*)$/, '$1$2'));
+	});
+}
+
+/**
+ * The declarations of the user's code that only the code of a plugin reads, which the virtual code without it does not
+ * read, by the plugin.
+ */
+const acceptedUnread: Record<string, string[]> = {
+	// what `v-bind()` in CSS reads
+	'vue:style': [`Refs.vue.ts: error TS6133: 'color' is declared but its value is never read.`],
+};
 
 /**
  * The diagnostics that the fixture gets without a plugin that accepts what it reads, by the plugin: without the plugin,
@@ -92,5 +151,13 @@ test.each([undefined, ...builtinPlugins.map(({ name }) => name)])(
 			line.replace(/^test-workspace\/content-mapper-builtins\/(.*?error TS\d+).*$/, '$1')
 		);
 		expect(diagnostics).toEqual(accepted[disabled!] ?? []);
+	},
+);
+
+test.each([undefined, ...builtinPlugins.map(({ name }) => name)])(
+	'the virtual code of the fixture without the built-in plugin %s declares nothing that no code reads',
+	disabled => {
+		expect(checkVirtualCode(disabled).filter(line => /: error TS(?:6133|6138|6192|6196|6198|6199|6205):/.test(line)))
+			.toEqual(acceptedUnread[disabled!] ?? []);
 	},
 );
