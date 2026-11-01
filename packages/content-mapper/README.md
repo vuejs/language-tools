@@ -145,10 +145,12 @@ needs it, so what the hooks share belongs in the closure of `codegen`, and a slo
 with `$<n>` when the generated code or a plugin before took it; the same hint gives the same name.
 It names only while `codegen` runs, so that each snapshot gives the plugins the same names. Plugins
 never see the names of the generated code: `file.template` gives, as type code that reads in the
-scope of the template, what the template declares — `instanceType(node)` of a component with a
-template ref or a root element whose `$el` is inferred, `elementType(tag)`, `slotOutletTypes(node)`
-and `fallthroughAttrsType()`. The template is open as this data only; its walk, scopes and
-interpolation stay in the mapper.
+scope of the template, what the template declares — `instanceType(node)` of a component,
+`elementType(tag)`, `slotOutletTypes(node)` and `fallthroughAttrsType()`. The template declares an
+instance, the props of the slot outlets and the fallthrough attributes only for the plugins that
+read them by their `templateReads` hook, so that a file without them declares nothing that no code
+reads. The template is open as this data only; its walk, scopes and interpolation stay in the
+mapper.
 
 The code of a slot is a `VueCodegenPiece` or pieces in order: plain strings, which map nowhere and
 report no diagnostics, and ranges `{ source, start, end, data: { features }, text? }` of a block

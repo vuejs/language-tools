@@ -7,14 +7,20 @@ import { asType, newLine, typeAliasRef } from '../writers';
 /** The type of the root element of the template, which the component exposes as `$el`. */
 export function createRootElPlugin({ ir, analysis, template, name }: VueCodegenFile): VueCodegenFilePlugin<TsCode> {
 	const RootEl = name('RootEl');
-	/** The types of the root elements of a template with a single root element in each branch. */
-	const getRootElTypes = computed(() => {
+	/** The root elements of a template with a single root element in each branch. */
+	const getRootElements = computed(() => {
 		const { rootElements, singleRootNodes, dollarVars } = analysis.getTemplateScope();
 		if (
-			!ir.template
-			|| singleRootNodes.has(null)
-			|| !(dollarVars.has('$el') || analysis.getResolvedOptions().inferComponentDollarEl)
+			ir.template
+			&& !singleRootNodes.has(null)
+			&& (dollarVars.has('$el') || analysis.getResolvedOptions().inferComponentDollarEl)
 		) {
+			return rootElements;
+		}
+	});
+	const getRootElTypes = computed(() => {
+		const rootElements = getRootElements();
+		if (!rootElements) {
 			return;
 		}
 		const types = new Set<string>();
@@ -26,6 +32,10 @@ export function createRootElPlugin({ ir, analysis, template, name }: VueCodegenF
 	});
 	const hasRootEl = () => !!getRootElTypes();
 	return {
+		// a root element is in the scope of the end of the template
+		templateReads: () => ({
+			instances: new Map(getRootElements()?.map(node => [node, { hoisted: false }])),
+		}),
 		templateTypes: () => {
 			const types = getRootElTypes();
 			return types ? [{ name: RootEl, code: [...types].map(type => `${newLine}| ${type}`) }] : [];

@@ -48,19 +48,38 @@ export interface VueCodegenFile {
  */
 export interface VueCodegenTemplate {
 	/**
-	 * The type of the instance of the component `node`, which the template declares for a component with a template ref
-	 * or a root element whose `$el` is inferred; `undefined` for another node.
+	 * The type of the instance of the component `node`, which the template declares for a component whose instance a
+	 * plugin reads by `templateReads`; `undefined` for another node.
 	 */
 	instanceType(node: ElementNode): string | undefined;
 	/** The type of the native element `tag`. */
 	elementType(tag: string): string;
 	/**
 	 * The types of the props of the slot outlet `node`, and of its name when it is dynamic, when no plugin declares the
-	 * slots.
+	 * slots and a plugin reads them by `templateReads`.
 	 */
 	slotOutletTypes(node: ElementNode): { props: string; name?: string } | undefined;
-	/** The type of the attributes that fall through to the root of the template, `undefined` when none do. */
+	/**
+	 * The type of the attributes that fall through to the root of the template, when a plugin reads it by
+	 * `templateReads`; `undefined` when none do.
+	 */
 	fallthroughAttrsType(): string | undefined;
+}
+
+/**
+ * What a plugin reads of `file.template`, which the template declares only for the plugins that read it, so that the
+ * code of a file without them declares nothing that no code reads.
+ */
+export interface VueCodegenTemplateReads {
+	/**
+	 * The components whose `instanceType` the plugin reads, each by whether it is read out of the scope of the
+	 * component, as at the end of the template for a component in a slot; another node has no instance.
+	 */
+	instances?: ReadonlyMap<ElementNode, { hoisted: boolean }>;
+	/** Whether the plugin reads `slotOutletTypes`. */
+	slotOutlets?: boolean;
+	/** Whether the plugin reads `fallthroughAttrsType`. */
+	fallthroughAttrs?: boolean;
 }
 
 /**
@@ -87,6 +106,8 @@ export interface VueCodegenFilePlugin<Code = VueCodegenPiece | VueCodegenSlice> 
 	templateDollars?(): readonly VueCodegenSlotCode<Code>[];
 	/** Code after the props of an element of the template, before its children, by element. */
 	elementEnd?(): ReadonlyMap<ElementNode, readonly VueCodegenSlotCode<Code>[]>;
+	/** What the plugin reads of `file.template`; it reads nothing else of it. */
+	templateReads?(): VueCodegenTemplateReads;
 	/** `<script setup>` only: statements in the setup function, after the user's code. */
 	setupBody?(): readonly VueCodegenSlotCode<Code>[];
 	/** `<script setup>` only: the props of the component, each with its type, its runtime option, or both. */
@@ -420,6 +441,33 @@ function checkFilePlugin(
 					checkSlotCodes(plugin, blocks, key, codes);
 				}
 				return elementEnd;
+			};
+		}
+		else if (key === 'templateReads') {
+			checked[key] = () => {
+				const reads = read();
+				if (typeof reads !== 'object' || reads === null) {
+					throw invalid(plugin, 'a `templateReads` that is not an object');
+				}
+				const { instances, slotOutlets, fallthroughAttrs } = reads as VueCodegenTemplateReads;
+				if (instances !== undefined) {
+					if (!(instances instanceof Map)) {
+						throw invalid(plugin, 'instances of `templateReads` that are not a map');
+					}
+					const elements = new Set(ir.template?.ast ? forEachElementNode(ir.template.ast) : []);
+					for (const [node, instance] of instances) {
+						if (!elements.has(node)) {
+							throw invalid(plugin, 'an instance of `templateReads` of a node that is not an element of the template');
+						}
+						if (typeof instance !== 'object' || instance === null || typeof instance.hoisted !== 'boolean') {
+							throw invalid(plugin, 'an instance of `templateReads` that is not an object with `hoisted`');
+						}
+					}
+				}
+				if ([slotOutlets, fallthroughAttrs].some(read => read !== undefined && typeof read !== 'boolean')) {
+					throw invalid(plugin, 'a `templateReads` with reads that are not booleans');
+				}
+				return reads as VueCodegenTemplateReads;
 			};
 		}
 		else if (key === 'props') {

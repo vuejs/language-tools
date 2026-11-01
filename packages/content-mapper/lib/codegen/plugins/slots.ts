@@ -27,6 +27,7 @@ export function createSlotsPlugin(
 	const getSlotsType = () =>
 		getDefineSlots() || getTemplateSlots() ? typeAliasRef(Slots, getScriptLang(ir)) : undefined;
 	return {
+		templateReads: () => ({ slotOutlets: true }),
 		rewrite({ scriptSetup }) {
 			const defineSlots = getDefineSlots();
 			if (!scriptSetup || !defineSlots) {

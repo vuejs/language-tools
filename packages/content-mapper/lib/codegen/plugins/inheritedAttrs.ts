@@ -10,6 +10,7 @@ export function createInheritedAttrsPlugin(
 	const InheritedAttrs = name('InheritedAttrs');
 	const hasInheritedAttrs = () => !!template.fallthroughAttrsType();
 	return {
+		templateReads: () => ({ fallthroughAttrs: true }),
 		templateTypes: () => {
 			if (!hasInheritedAttrs()) {
 				return [];

@@ -1,4 +1,5 @@
 import { SpanMapKind } from '@volar/language-core';
+import type { ElementNode } from '@vue/compiler-dom';
 import {
 	codeToString,
 	getDefaultCompilerOptions,
@@ -595,6 +596,30 @@ test('writes the code of a plugin after the props of an element of the template'
 	expect(text).toContain(`id: "a",\n});\n/* div */`);
 	expect(() => generateWith(content, plugin(() => ({ elementEnd: () => new Map([[{} as never, ['/* div */']]]) }))))
 		.toThrow(`'test-plugin'`);
+});
+
+test('declares in the template what a plugin reads of it, and nothing that none reads', () => {
+	const content = `<template><div><Foo /></div></template>\n`;
+	const getFoo = (file: VueCodegenFile) =>
+		(file.ir.template!.ast!.children[0] as ElementNode).children[0] as ElementNode;
+	const reading = (hoisted: boolean) =>
+		plugin(file => {
+			const Instance = file.name('Instance');
+			return {
+				templateReads: () => ({ instances: new Map([[getFoo(file), { hoisted }]]) }),
+				templateTypes: () => [{ name: Instance, code: file.template.instanceType(getFoo(file))! }],
+			};
+		});
+	expect(generateWith(content, reading(false)).text).toMatch(/\ntype __VLS_Instance = typeof (__VLS_\d+);\n/);
+	const hoisted = generateWith(content, reading(true)).text;
+	const [, hoistedVar, instanceVar] = hoisted.match(/\nvar (__VLS_\d+) = (__VLS_\d+)!;\n/)!;
+	expect(hoisted).toContain(`var ${instanceVar}!: Parameters<`);
+	expect(hoisted).toContain(`type __VLS_Instance = typeof ${hoistedVar};`);
+	expect(generateWith(content).text).not.toContain(`['expose']`);
+	for (const reads of [1, { instances: [] }, { instances: new Map([[{}, { hoisted: true }]]) }, { slotOutlets: 1 }]) {
+		expect(() => generateWith(content, plugin(() => ({ templateReads: () => reads as never }))))
+			.toThrow(`'test-plugin'`);
+	}
 });
 
 test('makes the component generic over the type parameters of a plugin, after those of its attribute', () => {

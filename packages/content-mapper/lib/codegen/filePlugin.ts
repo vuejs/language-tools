@@ -87,6 +87,7 @@ export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): Mer
 	) => computed(() => getPlugins().flatMap(plugin => (read(plugin, key) ?? []).map(toCodes)));
 	const textSlot = <K extends 'componentSlots' | 'fallthroughProps'>(key: K) =>
 		computed(() => getPlugins().flatMap(plugin => [...read(plugin, key) ?? []]));
+	const getTemplateReads = computed(() => getPlugins().map(plugin => read(plugin, 'templateReads') ?? {}));
 	return {
 		templateContext: listSlot('templateContext'),
 		templateBody: computed(() => getPlugins().flatMap(plugin => (read(plugin, 'templateBody') ?? []).flatMap(toCodes))),
@@ -105,6 +106,17 @@ export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): Mer
 			}
 			return merged;
 		}),
+		instances: computed(() => {
+			const merged = new Map<CompilerDOM.ElementNode, { hoisted: boolean }>();
+			for (const { instances } of getTemplateReads()) {
+				for (const [node, { hoisted }] of instances ?? []) {
+					merged.set(node, { hoisted: hoisted || !!merged.get(node)?.hoisted });
+				}
+			}
+			return merged;
+		}),
+		fallthroughAttrs: computed(() => getTemplateReads().some(reads => !!reads.fallthroughAttrs)),
+		slotOutlets: computed(() => getTemplateReads().some(reads => !!reads.slotOutlets)),
 		setupBody: computed(() => getPlugins().flatMap(plugin => (read(plugin, 'setupBody') ?? []).flatMap(toCodes))),
 		props: computed(() =>
 			getPlugins().flatMap(plugin =>

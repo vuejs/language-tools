@@ -4,7 +4,6 @@ import {
 	completionFeatures,
 	getComponentIsBinding,
 	getElementTagOffsets,
-	getTemplateRef,
 	navigationFeatures,
 	scriptFeatures,
 	semanticFeatures,
@@ -30,6 +29,10 @@ import { generateVSlot } from './vSlot';
 export interface ElementSlots {
 	/** Code after the props of a component or a native element, before its children. */
 	elementEnd: Map<CompilerDOM.ElementNode, TsCode[]>;
+	/** The components whose instance a plugin reads, which the template declares, hoisted for a read out of its scope. */
+	instances: ReadonlyMap<CompilerDOM.ElementNode, { hoisted: boolean }>;
+	/** Whether a plugin reads the type of the attributes that fall through to the root, which the template declares. */
+	fallthroughAttrs: boolean;
 }
 
 export function* generateComponent(
@@ -266,26 +269,19 @@ export function* generateComponent(
 	);
 	yield* generateElementDirectives(options, ctx, node);
 
-	const hasTemplateRef = !!getTemplateRef(node) && (
-		options.vueCompilerOptions.inferTemplateDollarRefs
-		|| options.vueCompilerOptions.inferComponentDollarRefs
-		|| options.setupRefs.size > 0
-	);
-	const isRootEl = options.templateScope.rootElements.includes(node)
-		&& (options.templateScope.dollarVars.has('$el') || options.vueCompilerOptions.inferComponentDollarEl);
-
-	if (hasTemplateRef || isRootEl) {
+	const instance = options.slots.instances.get(node);
+	if (instance) {
 		const instanceVar = ctx.getInternalVariable();
 		yield* generateTypedVar('var', instanceVar, options.scriptLang, function*() {
 			yield `Parameters<NonNullable<typeof ${getCtxVar()}['expose']>>[0]`;
 		});
 		ctx.componentInstanceVars.set(node, {
 			instanceVar,
-			hoistedVar: hasTemplateRef ? ctx.getHoistVariable(instanceVar) : undefined,
+			hoistedVar: instance.hoisted ? ctx.getHoistVariable(instanceVar) : undefined,
 		});
 	}
 
-	if (shouldInheritAttrs) {
+	if (shouldInheritAttrs && options.slots.fallthroughAttrs) {
 		if (options.vueCompilerOptions.checkRequiredFallthroughAttributes) {
 			const restsVar = ctx.getInternalVariable();
 			yield `var ${restsVar} = ${names.omit}(${getPropsVar()}, {\n${propsStr}})${endOfLine}`;
@@ -370,7 +366,7 @@ export function* generateElement(
 	yield* generateFailedExpressions(options, ctx, failedPropExps);
 	yield* generateElementDirectives(options, ctx, node);
 
-	if (hasVBindAttrs(options, node)) {
+	if (options.slots.fallthroughAttrs && hasVBindAttrs(options, node)) {
 		ctx.inheritedAttrVars.add(`${names.intrinsics}.${node.tag}`);
 	}
 

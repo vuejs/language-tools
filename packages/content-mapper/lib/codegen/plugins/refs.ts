@@ -24,6 +24,10 @@ export function createRefsPlugin({ ir, analysis, template, name }: VueCodegenFil
 	});
 	const hasTemplateRefs = () => !!getTemplateRefs();
 	return {
+		// the refs are read at the end of the template, which a ref in a slot is out of the scope of
+		templateReads: () => ({
+			instances: new Map([...getTemplateRefs()?.values() ?? []].flat().map(({ node }) => [node, { hoisted: true }])),
+		}),
 		templateTypes: () => {
 			const templateRefs = getTemplateRefs();
 			if (!templateRefs) {

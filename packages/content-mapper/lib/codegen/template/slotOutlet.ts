@@ -23,6 +23,8 @@ export interface SlotOutletSlots {
 	 * against; without one, the template declares the props of each outlet, which the slots are inferred from.
 	 */
 	declaredSlots: string | undefined;
+	/** Whether a plugin reads the props of the slot outlets, which the template declares only then. */
+	slotOutlets: boolean;
 }
 
 export function* generateSlotOutlet(
@@ -125,7 +127,9 @@ export function* generateSlotOutlet(
 		yield `)${endOfLine}`;
 	}
 	else {
-		yield `var ${propsVar} = {${newLine}`;
+		// without a plugin that reads the props, the outlet only checks its code
+		const { slotOutlets } = options.slots;
+		yield slotOutlets ? `var ${propsVar} = {${newLine}` : `void {${newLine}`;
 		yield* generateElementProps(
 			options,
 			ctx,
@@ -134,7 +138,16 @@ export function* generateSlotOutlet(
 		);
 		yield `}${endOfLine}`;
 
-		if (
+		if (!slotOutlets) {
+			if (
+				nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			) {
+				yield `void `;
+				yield* generateSlotNameExp(options, ctx, nameProp, nameProp.exp);
+			}
+		}
+		else if (
 			nameProp?.type === CompilerDOM.NodeTypes.ATTRIBUTE
 			&& nameProp.value
 		) {
@@ -144,20 +157,9 @@ export function* generateSlotOutlet(
 			nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
-			const isShortHand = nameProp.arg?.loc.start.offset === nameProp.exp.loc.start.offset;
 			const expVar = ctx.getInternalVariable();
-			yield `var ${expVar} = ${names.tryAsConstant}(`;
-			yield* generateInterpolation(
-				options,
-				ctx,
-				options.template,
-				isShortHand
-					? { features: semanticFeatures | navigationFeatures }
-					: { features: scriptFeatures },
-				nameProp.exp.content,
-				nameProp.exp.loc.start.offset,
-			);
-			yield `)${endOfLine}`;
+			yield `var ${expVar} = `;
+			yield* generateSlotNameExp(options, ctx, nameProp, nameProp.exp);
 			ctx.slotVars.set(node, {
 				expVar: ctx.getHoistVariable(expVar),
 				propsVar: ctx.getHoistVariable(propsVar),
@@ -171,4 +173,26 @@ export function* generateSlotOutlet(
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}
+}
+
+/** The dynamic name of a slot outlet, as a constant. */
+function* generateSlotNameExp(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	nameProp: CompilerDOM.DirectiveNode,
+	exp: CompilerDOM.SimpleExpressionNode,
+): Generator<TsCode> {
+	const isShortHand = nameProp.arg?.loc.start.offset === exp.loc.start.offset;
+	yield `${names.tryAsConstant}(`;
+	yield* generateInterpolation(
+		options,
+		ctx,
+		options.template,
+		isShortHand
+			? { features: semanticFeatures | navigationFeatures }
+			: { features: scriptFeatures },
+		exp.content,
+		exp.loc.start.offset,
+	);
+	yield `)${endOfLine}`;
 }

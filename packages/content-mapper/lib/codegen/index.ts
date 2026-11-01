@@ -162,7 +162,13 @@ function useCodegen(
 			),
 			inheritAttrs: getInheritAttrs(),
 			templateScope: getTemplateScope(),
-			slots: { elementEnd: slots.elementEnd(), declaredSlots: slots.declaredSlots() },
+			slots: {
+				elementEnd: slots.elementEnd(),
+				instances: slots.instances(),
+				fallthroughAttrs: slots.fallthroughAttrs(),
+				declaredSlots: slots.declaredSlots(),
+				slotOutlets: slots.slotOutlets(),
+			},
 		});
 	});
 
