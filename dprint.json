@@ -13,7 +13,6 @@
 		"packages/language-service/data",
 		"volar.js",
 		"services",
-		"muggle-string",
 		"muggle-pug"
 	],
 	"plugins": [

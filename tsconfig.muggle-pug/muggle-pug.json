@@ -8,8 +8,5 @@
 		"emitDeclarationOnly": true,
 		"declarationDir": "../node_modules/.muggle-pug-types",
 		"tsBuildInfoFile": "../node_modules/.muggle-pug-types.tsbuildinfo"
-	},
-	"references": [
-		{ "path": "../tsconfig.muggle-string/muggle-string.json" }
-	]
+	}
 }

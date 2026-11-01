@@ -17,7 +17,6 @@ overrides:
   volar-service-json: workspace:*
   volar-service-pug: workspace:*
   volar-service-pug-beautify: workspace:*
-  muggle-string: workspace:*
   muggle-pug: workspace:*
 
 importers:
@@ -85,8 +84,8 @@ importers:
   muggle-pug:
     dependencies:
       muggle-string:
-        specifier: workspace:*
-        version: link:../muggle-string
+        specifier: ^1.0.0-alpha.2
+        version: 1.0.0
       pug-lexer:
         specifier: ^5.0.1
         version: 5.0.1
@@ -97,24 +96,6 @@ importers:
       '@types/node':
         specifier: ^26.0.1
         version: 26.6.5
-      typescript:
-        specifier: 7.1.0-beta
-        version: 7.1.0-beta
-      vitest:
-        specifier: latest
-        version: 5.0.5(@types/node@26.6.5)(vite@8.1.5(@types/node@26.6.5)(yaml@2.9.1))
-
-  muggle-string:
-    devDependencies:
-      '@jridgewell/trace-mapping':
-        specifier: ^0.3.31
-        version: 0.3.31
-      '@types/node':
-        specifier: ^26.0.1
-        version: 26.6.5
-      muggle-string-0.4:
-        specifier: npm:muggle-string@0.4.1
-        version: muggle-string@0.4.1
       typescript:
         specifier: 7.1.0-beta
         version: 7.1.0-beta
@@ -158,8 +139,8 @@ importers:
         specifier: ^3.2.1
         version: 3.2.1
       muggle-string:
-        specifier: workspace:*
-        version: link:../../muggle-string
+        specifier: ^1.0.0
+        version: 1.0.0
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
@@ -192,8 +173,8 @@ importers:
         specifier: ^3.2.1
         version: 3.2.1
       muggle-string:
-        specifier: workspace:*
-        version: link:../../muggle-string
+        specifier: ^1.0.0
+        version: 1.0.0
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
@@ -2119,8 +2100,9 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  muggle-string@0.4.1:
-    resolution: {integrity: sha512-VNTrAak/KhO2i8dqqnqnAHOa3cYBwXEZe9h+D5h/1ZqFSTEFHdM65lR7RoIqq3tBBYavsOXV84NoHXZ0AkPyqQ==}
+  muggle-string@1.0.0:
+    resolution: {integrity: sha512-TIHQgdyxVPc6+vjbhx7dC6J7vKD6jvmSKEqkfRqoDmFB0wiq8N154HiZf1nz0ul19caDgJ3ndg8uKjSVNDq+Qg==}
+    engines: {node: ^20.19.0 || >=22.12.0}
 
   mute-stream@3.0.0:
     resolution: {integrity: sha512-dkEJPVvun4FryqBmZ5KhDo0K9iDXAwn08tMLDinNdRBNPcYEDiWYysLcc6k3mjTMlbP9KyylvRpd4wFtwrT9rw==}
@@ -4142,7 +4124,7 @@ snapshots:
 
   ms@2.1.3: {}
 
-  muggle-string@0.4.1: {}
+  muggle-string@1.0.0: {}
 
   mute-stream@3.0.0: {}
 
