@@ -231,6 +231,12 @@ export function* generateSetupFunction(
 	output?: Iterable<TsCode>,
 ): Generator<TsCode> {
 	yield* copies.generateBody();
+	// what `defineProps` and `defineEmits` return is read by the component, whichever plugins declare them
+	const macroResults = [scriptSetupRanges.defineProps?.name, scriptSetupRanges.defineEmits?.name]
+		.filter((name): name is string => !!name && identifierRE.test(name));
+	if (macroResults.length) {
+		yield `void ${macroResults.join(`, `)}${endOfLine}`;
+	}
 	yield* options.slots.setupBody;
 	yield* generatePluginTypes(options);
 	yield* generatePublicProps(options, ctx, scriptSetup);
