@@ -29,7 +29,7 @@ export interface BlockWriter {
 	replace(start: number, end: number, code: BlockCode): void;
 	/**
 	 * The text of `node`, a node inside the AST of the block, from its start without trivia to its end, with the edits
-	 * of all writers in it; it renders where the slice is placed, exactly once, and `placeholder` takes its place.
+	 * of all writers in it; it renders wherever the slice is placed, and `placeholder` takes its place.
 	 */
 	cut(node: ts.Node, options: RewriteCutOptions<IRBlock, BlockData>): BlockSlice;
 }

@@ -158,7 +158,7 @@ export interface VueCodegenFilePlugin<Code = VueCodegenPiece | VueCodegenSlice> 
 
 /**
  * The code of a slot: a piece or a slice that a writer of the plugin cut, or them in order. The mapper places the code
- * of a slot once, so a slice in it renders there, exactly once.
+ * of a slot once, so a slice in it renders there once.
  */
 export type VueCodegenSlotCode<Code = VueCodegenPiece | VueCodegenSlice> = Code | readonly Code[];
 
@@ -220,7 +220,7 @@ export interface VueCodegenData {
 	features: number;
 }
 
-/** A node that a writer cut from its block, with the edits in it; it renders where it is inserted, exactly once. */
+/** A node that a writer cut from its block, with the edits in it; it renders wherever it is inserted or placed. */
 export type VueCodegenSlice = RewriteSlice<IRBlock, { data: VueCodegenData }>;
 
 /** Code that a writer inserts: pieces, slices, and arrays of them. */
@@ -247,7 +247,7 @@ export interface VueCodegenWriter {
 	replace(start: number, end: number, code: VueCodegenCode): void;
 	/**
 	 * The text of `node`, from its start without trivia to its end, with the edits of all writers in it: it renders
-	 * where the slice is placed, exactly once, and `placeholder` takes its place; a slice that the generated code places
+	 * wherever the slice is placed, and `placeholder` takes its place; a slice that the generated code places
 	 * nowhere throws, as `replace` removes code.
 	 */
 	cut(node: ts.Node, options: RewriteCutOptions<IRBlock, { data: VueCodegenData }>): VueCodegenSlice;
@@ -299,8 +299,8 @@ export interface ScriptRewrites {
 }
 
 /**
- * A slice that a writer of a plugin cut: a handle that renders nothing, so that the plugin can't freeze a rewrite before
- * all plugins edit it, and that each rewrite of the script blocks replays as a slice of its own.
+ * A slice that a writer of a plugin cut: a handle that renders nothing, as each rewrite of the script blocks replays it
+ * as a slice of its own.
  */
 export class PluginSlice implements VueCodegenSlice {
 	constructor(
