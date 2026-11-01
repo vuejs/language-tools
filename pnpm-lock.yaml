@@ -17,7 +17,6 @@ overrides:
   volar-service-json: workspace:*
   volar-service-pug: workspace:*
   volar-service-pug-beautify: workspace:*
-  muggle-pug: ^0.1.0
 
 importers:
 

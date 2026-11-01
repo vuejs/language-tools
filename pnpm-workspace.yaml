@@ -49,5 +49,3 @@ overrides:
   volar-service-json: workspace:*
   volar-service-pug: workspace:*
   volar-service-pug-beautify: workspace:*
-  # volar-service-pug of the services submodule pins a prerelease of muggle-pug, so every package resolves it to the release, one copy
-  muggle-pug: ^0.1.0
