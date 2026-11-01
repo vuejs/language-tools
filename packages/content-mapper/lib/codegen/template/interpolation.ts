@@ -10,13 +10,7 @@ import {
 } from '@vue/language-core';
 import { getStartEnd } from '@vue/language-core/lib/typescript/nodes';
 import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAST';
-import {
-	createSourceRewrite,
-	type Piece,
-	type RewriteOrigin,
-	type RewriteSource,
-	type RewriteWriter,
-} from 'muggle-string';
+import { createSourceRewrite, type Piece, type RewriteOrigin, type RewriteWriter, type Source } from 'muggle-string';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import { names } from '../names';
 import { Boundary, mapped, type TsCode, type TsCodeData, type TsPiece } from '../tsCode';
@@ -81,7 +75,7 @@ export function* generateInterpolation(
 	const runStarts: number[] = [];
 
 	const expression = { content: code };
-	const rewrite = createSourceRewrite<RewriteSource, { data: TsCodeData }>(expression);
+	const rewrite = createSourceRewrite<Source, { data: TsCodeData }>(expression);
 	for (const [omitStart, omitEnd] of omit) {
 		if (omitStart < omitEnd) {
 			rewrite.replace(omitStart, omitEnd, '');
@@ -146,7 +140,7 @@ export function* generateInterpolation(
 	}
 
 	const pieces: TsCode[] = [];
-	const sink = (piece: Piece<RewriteOrigin<RewriteSource, { data: TsCodeData }>>) => {
+	const sink = (piece: Piece<RewriteOrigin<Source, { data: TsCodeData }>>) => {
 		pieces.push(
 			typeof piece !== 'string' && piece.source === expression
 				? mapped(code.slice(piece.start, piece.end), block, start + piece.start, piece.data as VueCodeMarker)
@@ -223,7 +217,7 @@ export function* generateInterpolation(
 	// Diagnostics reported on the generated call, or on the `return` keyword (where TS reports
 	// return type mismatches), map back to the original expression.
 	function wrapFunctionBody(
-		writer: RewriteWriter<RewriteSource, { data: TsCodeData }>,
+		writer: RewriteWriter<Source, { data: TsCodeData }>,
 		body: FunctionBody,
 		bindings: Set<string>,
 	) {
