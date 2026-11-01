@@ -1,9 +1,8 @@
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
-import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import { expect, test } from 'vitest';
 import { builtinPlugins } from '../lib/codegen';
-import type { createContentMapper as CreateContentMapper } from '../lib/mapper/contentMapper';
 import { normalizeCompilerOutput, repositoryRoot, runTsc } from './utils';
 
 const packageRoot = path.resolve(__dirname, '..');
@@ -60,14 +59,32 @@ function check(disabled?: string) {
 }
 
 /**
+ * Writes the virtual code of each file of the fixture, by the mapper of a copy, into a workspace beside the fixture, so
+ * that its references resolve the same, and `./X.vue` is `X.vue.ts`. It runs in a process of its own: a mapper run in
+ * the process of the tests, which the tests share, breaks the definitions of the language server tests after it.
+ */
+const transformFixture = `
+const fs = require('node:fs');
+const path = require('node:path');
+const [mapper, fixture, workspace, configFileName, options] = process.argv.slice(1);
+const { createContentMapper } = require(path.join(mapper, 'lib/mapper/contentMapper.js'));
+const contentMapper = createContentMapper({ name: 'builtins' });
+contentMapper.openProject({ projectHandle: 'builtins', configFileName, compilerOptions: {}, options: JSON.parse(options) });
+for (const name of fs.readdirSync(fixture).filter(name => name.endsWith('.vue'))) {
+	const fileName = path.join(fixture, name);
+	const content = fs.readFileSync(fileName, 'utf8');
+	const { text, extension } = contentMapper.transform({ projectHandle: 'builtins', fileName, content });
+	fs.writeFileSync(path.join(workspace, name + extension), text);
+}
+process.exit();
+`;
+
+/**
  * The diagnostics of the virtual code of the fixture as plain TypeScript files, with all of them: the mapper drops
  * those at code that maps to no source, such as a declaration that no code reads.
  */
 function checkVirtualCode(disabled?: string) {
 	return withMapper(disabled, (workspace, mapper) => {
-		const { createContentMapper } = createRequire(__filename)(
-			path.join(mapper, 'lib/mapper/contentMapper.js'),
-		) as { createContentMapper: typeof CreateContentMapper };
 		const configFileName = path.join(workspace, 'tsconfig.json');
 		fs.writeFileSync(
 			configFileName,
@@ -78,23 +95,15 @@ function checkVirtualCode(disabled?: string) {
 				include: ['*.vue.ts'],
 			}),
 		);
-		const contentMapper = createContentMapper({ name: 'builtins' });
-		contentMapper.openProject({
-			projectHandle: 'builtins',
+		execFileSync(process.execPath, [
+			'-e',
+			transformFixture,
+			mapper,
+			fixture,
+			workspace,
 			configFileName,
-			compilerOptions: {},
-			options: mapperOptions,
-		});
-		for (const name of fs.readdirSync(fixture).filter(name => name.endsWith('.vue'))) {
-			const fileName = path.join(fixture, name);
-			const { text, extension } = contentMapper.transform({
-				projectHandle: 'builtins',
-				fileName,
-				content: fs.readFileSync(fileName, 'utf8'),
-			});
-			// beside the fixture, so that the references of the virtual code resolve the same, and `./X.vue` is `X.vue.ts`
-			fs.writeFileSync(path.join(workspace, name + extension), text);
-		}
+			JSON.stringify(mapperOptions),
+		]);
 		return normalizeCompilerOutput(runTsc(['-p', configFileName, '--pretty', 'false']))
 			.split('\n')
 			.filter(Boolean)
