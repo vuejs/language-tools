@@ -1,6 +1,8 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
+		// muggle-pug is ES modules only, which CommonJS requires from Node 20.19 and 22.12
+		"module": "node20",
 		"types": [
 			"node"
 		]
@@ -8,6 +10,6 @@
 	"references": [
 		{ "path": "../language-core/tsconfig.json" }
 	],
-	"include": ["*", "lib/**/*"],
+	"include": ["*"],
 	"exclude": ["tests"]
 }

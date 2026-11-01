@@ -1,0 +1,12 @@
+{
+	"include": ["**/*"],
+	"contentMappers": [
+		{
+			"package": "@vue/content-mapper",
+			"extensions": [".vue"],
+			"options": {
+				"plugins": ["./plugin.cjs"]
+			}
+		}
+	]
+}

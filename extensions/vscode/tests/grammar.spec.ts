@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { createGrammarSnapshot } from 'vscode-tmlanguage-snapshot';
@@ -19,6 +20,25 @@ describe('grammar', async () => {
 
 			expect(result).toMatchSnapshot();
 		});
+	}
+});
+
+it('component tags exclude exactly the native tags of the Vue compiler', () => {
+	const require = createRequire(import.meta.url);
+	const sharedPath = require.resolve('@vue/shared', { paths: [require.resolve('@vue/language-core')] });
+	const sharedSource = fs.readFileSync(sharedPath.replace(/index\.js$/, 'dist/shared.cjs.js'), 'utf8');
+	const nativeTags = new Set(
+		['HTML_TAGS', 'SVG_TAGS', 'MATH_TAGS'].flatMap(name =>
+			sharedSource.match(new RegExp(`const ${name} = "([^"]+)"`))![1]!.split(',')
+		),
+	);
+	// not a native tag, but the compiler resolves it as a slot outlet before checking for components
+	nativeTags.add('slot');
+
+	const grammar = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../syntaxes/vue.tmLanguage.json'), 'utf8'));
+	for (const rule of grammar.repository['component-tag'].patterns) {
+		const excluded: string[] = (rule.begin ?? rule.match).match(/\(\?!\(\?:([^)]+)\)/)[1].split('|');
+		expect(new Set(excluded)).toEqual(nativeTags);
 	}
 });
 

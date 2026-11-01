@@ -3,10 +3,18 @@
 	"compilerOptions": {
 		"strict": true
 	},
-	"vueCompilerOptions": {
-		"macros": {
-			"defineProps": ["dp"]
+	"contentMappers": [
+		{
+			"package": "@vue/content-mapper",
+			"extensions": [".vue"],
+			"options": {
+				"languageFeatures": false,
+				"target": 99,
+				"macros": {
+					"defineProps": ["dp"]
+				}
+			}
 		}
-	},
+	],
 	"include": ["**/*"]
 }

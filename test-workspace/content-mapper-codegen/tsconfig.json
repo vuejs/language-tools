@@ -1,0 +1,21 @@
+{
+	"extends": "../tsconfig.base.json",
+	"compilerOptions": {
+		"checkJs": true,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"strict": true
+	},
+	"contentMappers": [
+		{
+			"package": "@vue/content-mapper",
+			"extensions": [".vue"],
+			"options": {
+				"languageFeatures": false,
+				"target": 99,
+				"plugins": ["./plugin.cjs", { "name": "./plugin.cjs", "order": "second" }]
+			}
+		}
+	],
+	"include": ["*.vue"]
+}

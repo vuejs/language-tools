@@ -20,7 +20,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: Vue - Official extension or vue-tsc version
+      label: Vue - Official extension version
     validations:
       required: true
   - type: input

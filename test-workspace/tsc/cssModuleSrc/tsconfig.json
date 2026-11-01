@@ -1,0 +1,8 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		// `./a.module.css` resolves to the `a.module.d.css.ts` declaration a CSS content mapper would provide
+		"allowArbitraryExtensions": true
+	},
+	"include": ["**/*"]
+}

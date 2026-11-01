@@ -103,6 +103,53 @@ test('Document links', async () => {
 	`);
 });
 
+test('Template ref links reach every static ref attribute of an element or component', async () => {
+	const links = await requestDocumentLinks(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<script setup lang="ts">
+		import { useTemplateRef } from 'vue';
+		useTemplateRef('comp');
+		useTemplateRef('skipped');
+		</script>
+
+		<template>
+			<Comp ref="comp" />
+			<!-- @vue-skip -->
+			<div ref="skipped"></div>
+		</template>
+	`,
+	);
+	expect(links.map(link => link.target!.slice(link.target!.indexOf('#')))).toEqual([
+		'#L9%2C15-L9%2C19',
+		'#L11%2C14-L11%2C21',
+	]);
+});
+
+test('Scoped class links reach the class names of skipped elements', async () => {
+	const links = await requestDocumentLinks(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
+		<template>
+			<div class="kept"></div>
+			<!-- @vue-skip -->
+			<div class="skipped"></div>
+		</template>
+
+		<style scoped>
+		.kept {}
+		.skipped {}
+		</style>
+	`,
+	);
+	expect(links.map(link => [link.range.start, link.target!.slice(link.target!.indexOf('#'))])).toEqual([
+		[{ line: 2, character: 15 }, '#L9%2C3-L9%2C8'],
+		[{ line: 4, character: 15 }, '#L10%2C3-L10%2C11'],
+	]);
+});
+
 const openedDocuments: TextDocument[] = [];
 
 afterEach(async () => {

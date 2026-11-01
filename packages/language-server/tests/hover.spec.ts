@@ -1,3 +1,5 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server';
@@ -19,63 +21,79 @@ const foo = 1;
 		content,
 	);
 
-	const res = await server.tsserver.message({
-		seq: server.nextSeq(),
-		command: 'quickinfo',
-		arguments: {
-			file: URI.parse(document.uri).fsPath,
-			position: offset,
-		},
+	const hover = await server.typescript('textDocument/hover', {
+		textDocument: { uri: document.uri },
+		position: document.positionAt(offset),
 	});
 
 	await server.close(document.uri);
 
-	expect(res.success).toBe(true);
-	expect(res.body?.displayString).toBe('var Math: Math');
+	expect(hover?.contents?.value).toContain('var Math: Math');
 });
 
-test('setup refs are unwrapped in template', async () => {
-	const content = `<script setup lang="ts">
-import { computed, ref } from 'vue';
-const count = ref(0);
-const message = ref('hello');
-const double = computed(() => count.value * 2);
-let plain = 1;
-</script>
+test('rich hover of a component tag shows its meta from the TypeScript language server', async () => {
+	const value = await getRichHover('Parent.vue', 'Child');
 
-<template>
-	{{ count }}
-	{{ message }}
-	{{ double }}
-	{{ message.length }}
-	{{ plain }}
-</template>`;
+	expect(value).toContain('label');
+	expect(value).toContain('The label');
+	expect(value).toContain(`<code>'hello'</code>`);
+	expect(value).toContain('change');
+});
+
+test('rich hover of a global component declared with typeof import()', async () => {
+	const value = await getRichHover('ParentGlobal.vue', 'GlobalChild');
+
+	expect(value).toContain('The label');
+	expect(value).toContain(`<code>'hello'</code>`);
+	expect(value).toContain('change');
+});
+
+test('rich hover of a namespaced component', async () => {
+	const value = await getRichHover('ParentNamespace.vue', 'Foo.Bar');
+
+	expect(value).toContain('The label');
+	expect(value).toContain(`<code>'hello'</code>`);
+	expect(value).toContain('change');
+});
+
+test('rich hover of a component that is not exported', async () => {
+	const value = await getRichHover('ParentLocal.vue', 'Local');
+
+	expect(value).toContain('The local label');
+	expect(value).toContain(`<code>'local'</code>`);
+	expect(value).toContain('change');
+});
+
+test('rich hover of a component tag follows the binding the template checks against', async () => {
+	const shadowing = await getRichHover('ParentShadow.vue', 'GlobalChild');
+	expect(shadowing).toContain('The shadowing label');
+	expect(shadowing).not.toContain('The label');
+
+	// `<loading>` refers to `Loading`, as `@vue/compiler-sfc` tries the PascalCase name first.
+	expect(await getRichHover('ParentCasing.vue', 'loading')).toContain('The label');
+});
+
+test('rich hover of a Vue file referring to itself by its `defineOptions` name', async () => {
+	expect(await getRichHover('SelfNamed.vue', 'Named')).toContain('The named label');
+});
+
+async function getRichHover(file: string, tag: string) {
+	const fileName = path.join(testWorkspacePath, 'hoverComponentMeta', file);
+	// The TypeScript language server reads the file from disk, so the document must match it.
+	const content = fs.readFileSync(fileName, 'utf8');
 
 	const server = await getLanguageServer();
-	const document = await server.open(
-		URI.file(`${testWorkspacePath}/tsconfigProject/fixture.vue`).toString(),
-		'vue',
-		content,
-	);
-	const templateStart = content.indexOf('<template>');
-	const hover = async (text: string, from = templateStart) => {
-		const res = await server.tsserver.message({
-			seq: server.nextSeq(),
-			command: 'quickinfo',
-			arguments: {
-				file: URI.parse(document.uri).fsPath,
-				position: content.indexOf(text, from),
-			},
-		});
-		return res.body?.displayString;
-	};
-
-	expect(await hover('count.value', 0)).toBe('const count: Ref<number, number>');
-	expect(await hover('count }}')).toBe('(property) count: number');
-	expect(await hover('message }}')).toBe('(property) message: string');
-	expect(await hover('double }}')).toBe('(property) double: number');
-	expect(await hover('message.length')).toBe('(property) message: string');
-	expect(await hover('plain }}')).toBe('let plain: number');
-
-	await server.close(document.uri);
-});
+	const document = await server.open(URI.file(fileName).toString(), 'vue', content);
+	try {
+		const hover = await server.vueserver.sendHoverRequest(
+			document.uri,
+			document.positionAt(content.indexOf('<' + tag) + 2),
+		);
+		const contents = hover?.contents as { kind: string; value: string } | undefined;
+		expect(contents?.kind).toBe('markdown');
+		return contents?.value;
+	}
+	finally {
+		await server.close(document.uri);
+	}
+}

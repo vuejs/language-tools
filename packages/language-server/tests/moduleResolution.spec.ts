@@ -1,4 +1,4 @@
-import type { TextDocument } from '@volar/language-server';
+import { FileChangeType, type TextDocument } from '@volar/language-server';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, expect, test } from 'vitest';
@@ -25,6 +25,12 @@ import Comp from './module-rename-comp-renamed.vue'
 
 	fs.renameSync(oldComponentPath, newComponentPath);
 	createdFiles.push(newComponentPath);
+	// The TypeScript language server only watches the disk itself when the client cannot, and its watcher may miss
+	// the rename in time (e.g. on Linux CI); an editor reports the change.
+	await server.changeWatchedFiles([
+		{ uri: URI.file(oldComponentPath).toString(), type: FileChangeType.Deleted },
+		{ uri: URI.file(newComponentPath).toString(), type: FileChangeType.Created },
+	]);
 
 	await expect.poll(
 		async () => {
@@ -38,32 +44,27 @@ import Comp from './module-rename-comp-renamed.vue'
 	).toBe(false);
 });
 
-test('resolves module names with the owning project in a multi-project session', async () => {
+test('a <style> @import is resolved by the CSS language service alone', async () => {
 	const server = await getLanguageServer();
-	const firstProjectFile = path.join(testWorkspacePath, 'tsconfigProject', 'fixture.vue');
-	const secondProjectFile = path.join(testWorkspacePath, 'tsconfigProject2', 'fixture.vue');
-
-	// Open a file of the first project before any file of the second project,
-	// so the session-level `_vue:` handlers are registered by the first project.
-	for (const fileName of [firstProjectFile, secondProjectFile]) {
-		const document = await server.open(URI.file(fileName).toString(), 'vue', fs.readFileSync(fileName, 'utf8'));
-		if (openedDocuments.every(doc => doc.uri !== document.uri)) {
-			openedDocuments.push(document);
-		}
-	}
-
-	// The `@2/*` path alias only exists in tsconfigProject2, so the module can
-	// only be resolved with the second project's compilerOptions.
-	const res = await server.tsserver.message({
-		seq: server.nextSeq(),
-		command: '_vue:resolveModuleName',
-		arguments: [secondProjectFile, '@2/fixture'],
-	});
-	expect(res.success).toBe(true);
-	// to lower case for fixing windows path
-	expect(res.body?.replace(/\\/g, '/').toLowerCase()).toBe(
-		path.join(testWorkspacePath, 'tsconfigProject2', 'fixture.ts').replace(/\\/g, '/').toLowerCase(),
+	const fileName = path.join(testWorkspacePath, 'tsconfigProject2', 'style-import.vue');
+	// On disk, so the TypeScript language server can find the file's project.
+	const document = await openDocument(
+		server,
+		fileName,
+		`<template><div /></template>
+<style>
+@import "./styles/fixture.css";
+@import "@2/styles/fixture.css";
+</style>
+`,
 	);
+
+	const links = await server.vueserver.sendDocumentLinkRequest(document.uri);
+	expect(links?.map(link => link.target)).toEqual([
+		URI.file(path.join(testWorkspacePath, 'tsconfigProject2', 'styles', 'fixture.css')).toString(),
+		// a CSS URL, not a module specifier: the project's `paths` alias does not apply
+		URI.file(path.join(testWorkspacePath, 'tsconfigProject2', '@2', 'styles', 'fixture.css')).toString(),
+	]);
 });
 
 const openedDocuments: TextDocument[] = [];
@@ -99,13 +100,6 @@ async function openDocument(server: Awaited<ReturnType<typeof getLanguageServer>
 }
 
 async function getSemanticDiagnostics(server: Awaited<ReturnType<typeof getLanguageServer>>, uri: string) {
-	const res = await server.tsserver.message({
-		seq: server.nextSeq(),
-		command: 'semanticDiagnosticsSync',
-		arguments: {
-			file: URI.parse(uri).fsPath,
-		},
-	});
-	expect(res.success).toBe(true);
-	return res.body as any[];
+	const report = await server.typescript('textDocument/diagnostic', { textDocument: { uri } });
+	return report.items as { code?: number | string }[];
 }

@@ -1,9 +1,15 @@
 {
 	"extends": "../../tsconfig.base.json",
-	"include": ["**/*"],
-	"vueCompilerOptions": {
-		"plugins": [
-			"../../../packages/language-plugin-pug"
-		]
-	}
+	"contentMappers": [
+		{
+			"package": "@vue/content-mapper",
+			"extensions": [".vue"],
+			"options": {
+				"languageFeatures": false,
+				"target": 99,
+				"plugins": ["../../../packages/language-plugin-pug"]
+			}
+		}
+	],
+	"include": ["**/*"]
 }

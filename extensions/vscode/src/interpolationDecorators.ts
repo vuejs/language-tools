@@ -1,3 +1,4 @@
+import type * as lsp from '@volar/vscode/node';
 import { useActiveTextEditor, useDocumentText, useVisibleTextEditors, watch } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
@@ -10,7 +11,7 @@ const decorationType = vscode.window.createTextEditorDecorationType({
 	borderRadius: '4px',
 });
 
-export function activate(selector: vscode.DocumentSelector) {
+export function activate(selector: vscode.DocumentSelector, client: lsp.BaseLanguageClient) {
 	let timeout: ReturnType<typeof setTimeout> | undefined;
 
 	const visibleTextEditors = useVisibleTextEditors();
@@ -50,19 +51,13 @@ export function activate(selector: vscode.DocumentSelector) {
 			return;
 		}
 		try {
-			const result = await vscode.commands.executeCommand<
-				{
-					body?: [number, number][];
-				} | undefined
-			>(
-				'typescript.tsserverRequest',
-				'_vue:getInterpolationRanges',
-				[editor.document.uri.fsPath.replace(/\\/g, '/')],
-				{ isAsync: true, lowPriority: true },
+			const result = await client.sendRequest<[number, number][] | null | undefined>(
+				'vue/interpolationRanges',
+				{ textDocument: { uri: client.code2ProtocolConverter.asUri(editor.document.uri) } },
 			);
 			editor.setDecorations(
 				decorationType,
-				(result?.body ?? []).map(range =>
+				(result ?? []).map(range =>
 					new vscode.Range(
 						editor.document.positionAt(range[0]),
 						editor.document.positionAt(range[1]),

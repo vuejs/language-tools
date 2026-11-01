@@ -1,0 +1,174 @@
+import * as CompilerDOM from '@vue/compiler-dom';
+import { completionFeatures, navigationFeatures, scriptFeatures, semanticFeatures } from '@vue/language-core';
+import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAST';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import { names } from '../names';
+import { Boundary, mapped, synthesizedIgnore, type TsCode } from '../tsCode';
+import { endOfLine, isTsLang, newLine } from '../writers';
+import type { TemplateCodegenContext } from './context';
+import type { TemplateCodegenOptions } from './index';
+import { generateInterpolation } from './interpolation';
+import { generateObjectProperty } from './objectProperty';
+import { generateTemplateChild } from './templateChild';
+
+export function* generateVSlot(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	node: CompilerDOM.ElementNode,
+	slotDir: CompilerDOM.DirectiveNode | undefined,
+	ctxVar: string,
+): Generator<TsCode> {
+	const slotVar = ctx.getInternalVariable();
+	if (slotDir) {
+		yield `{${newLine}`;
+		yield `const { `;
+		if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
+			yield* generateObjectProperty(
+				options,
+				ctx,
+				slotDir.arg.loc.source,
+				slotDir.arg.loc.start.offset,
+				slotDir.arg.isStatic
+					? { features: semanticFeatures | navigationFeatures | completionFeatures }
+					: { features: scriptFeatures },
+				false,
+				true,
+			);
+		}
+		else {
+			const boundary = yield* Boundary.start(
+				options.template,
+				slotDir.loc.start.offset,
+				slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
+				{ features: semanticFeatures | navigationFeatures },
+			);
+			yield `default`;
+			yield boundary.end();
+		}
+	}
+	else {
+		yield `const { `;
+		// #932: reference for implicit default slot, anchored at the element's `<`
+		// because a mapped range may not contain the element's other mappings
+		const ignore = yield* Boundary.start(options.template, 0, 0, synthesizedIgnore);
+		const boundary = yield* Boundary.start(
+			options.template,
+			node.loc.start.offset,
+			node.loc.start.offset + 1,
+			{ features: navigationFeatures },
+		);
+		yield `default`;
+		yield boundary.end();
+		yield ignore.end();
+	}
+	yield `: ${slotVar} } = ${names.nonNull}(${ctxVar}.slots)${endOfLine}`;
+
+	ctx.enterBlockScope(node);
+	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+		const slotAst = getTypeScriptAST(options.typescript, options.template, `(${slotDir.exp.content}) => {}`);
+		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
+	}
+	yield* ctx.generateDiagnosticDirectiveEnd();
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child);
+	}
+	yield* ctx.exitBlockScope();
+
+	if (slotDir) {
+		let isStatic = true;
+		if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+			isStatic = slotDir.arg.isStatic;
+		}
+		yield `}${newLine}`;
+		if (isStatic && !slotDir.arg) {
+			if (slotDir.loc.source.startsWith('#') || slotDir.loc.source.startsWith('v-slot:')) {
+				yield `/** @type {NonNullable<typeof ${ctxVar}['slots']>['`;
+				yield mapped(
+					'',
+					options.template,
+					slotDir.loc.start.offset + (
+						slotDir.loc.source.startsWith('#')
+							? '#'.length
+							: 'v-slot:'.length
+					),
+					{ features: completionFeatures },
+				);
+				yield `']} */${endOfLine}`;
+			}
+		}
+	}
+}
+
+function* generateSlotParameters(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	ast: ts.SourceFile,
+	exp: CompilerDOM.SimpleExpressionNode,
+	slotVar: string,
+): Generator<TsCode> {
+	const { typescript: ts } = options;
+	const statement = ast.statements[0];
+	if (!statement || !ts.isExpressionStatement(statement) || !ts.isArrowFunction(statement.expression)) {
+		return;
+	}
+
+	const { expression } = statement;
+	const startOffset = exp.loc.start.offset - 1;
+	const types: ([number, number] | null)[] = [];
+	const omit: [number, number][] = [[0, `(`.length]];
+	for (const { name, type } of expression.parameters) {
+		if (type) {
+			types.push([name.end, type.end]);
+			omit.push([name.end, type.end]);
+		}
+		else {
+			types.push(null);
+		}
+	}
+	omit.push([ast.text.length - `) => {}`.length, ast.text.length]);
+
+	yield `const [`;
+	yield* generateInterpolation(
+		options,
+		ctx,
+		options.template,
+		{ features: scriptFeatures },
+		ast.text,
+		startOffset,
+		undefined,
+		undefined,
+		omit,
+	);
+	yield `] = ${names.vSlot}(${names.nonNull}(${slotVar})`;
+
+	if (types.some(t => t)) {
+		yield `, `;
+		const boundary = yield* Boundary.start(
+			options.template,
+			exp.loc.start.offset,
+			exp.loc.end.offset,
+			{ features: 0 },
+		);
+		yield `(`;
+		for (const type of types) {
+			yield `_`;
+			if (type) {
+				yield* generateInterpolation(
+					options,
+					ctx,
+					options.template,
+					{ features: scriptFeatures },
+					ast.text,
+					startOffset,
+					undefined,
+					undefined,
+					[[0, type[0]], [type[1], ast.text.length]],
+				);
+			}
+			yield `, `;
+		}
+		yield isTsLang(options.scriptLang) ? `) => [] as any` : `) => /** @type {any} */ ([])`;
+		yield boundary.end();
+	}
+	yield `)${endOfLine}`;
+}

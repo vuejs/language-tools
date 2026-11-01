@@ -1,8 +1,15 @@
 {
 	"extends": "../../tsconfig.base.json",
-	"include": ["**/*"],
-	"vueCompilerOptions": {
-		"strictTemplates": true,
-		"fallthroughAttributes": true
-	}
+	"contentMappers": [
+		{
+			"package": "@vue/content-mapper",
+			"extensions": [".vue"],
+			"options": {
+				"languageFeatures": false,
+				"target": 99,
+				"fallthroughAttributes": true
+			}
+		}
+	],
+	"include": ["**/*"]
 }

@@ -1,0 +1,42 @@
+import { getScriptLang } from '@vue/language-core';
+import type { VueCodegenFile, VueCodegenFilePlugin } from '../plugin';
+import type { TsCode } from '../tsCode';
+import { typeAliasRef } from '../writers';
+
+/** The type of the attributes that fall through to the root of the template, which the component takes as props. */
+export function createInheritedAttrsPlugin(
+	{ ir, analysis, template, name }: VueCodegenFile,
+): VueCodegenFilePlugin<TsCode> {
+	const InheritedAttrs = name('InheritedAttrs');
+	const hasInheritedAttrs = () => !!template.fallthroughAttrsType();
+	return {
+		// with required fallthrough attributes, the parent passes what the root lacks, which the root then misses no more
+		templateReads: () => {
+			const { fallthroughAttributes, checkRequiredFallthroughAttributes } = analysis.getResolvedOptions();
+			return fallthroughAttributes ? { fallthroughAttrs: checkRequiredFallthroughAttributes ? 'required' : true } : {};
+		},
+		templateTypes: () => {
+			if (!hasInheritedAttrs()) {
+				return [];
+			}
+			const type = template.fallthroughAttrsType()!;
+			const { checkRequiredFallthroughAttributes } = analysis.getResolvedOptions();
+			return [{
+				name: InheritedAttrs,
+				code: [checkRequiredFallthroughAttributes ? type : `Partial<${type}>`],
+			}];
+		},
+		fallthroughProps: () => hasInheritedAttrs() ? [typeAliasRef(InheritedAttrs, getScriptLang(ir))] : [],
+		templateDollars: () => {
+			if (!analysis.getTemplateScope().dollarVars.has('$attrs')) {
+				return [];
+			}
+			const type = `import('${analysis.getResolvedOptions().lib}').ComponentPublicInstance['$attrs']`;
+			return [[
+				`{ $attrs: ${type}`,
+				hasInheritedAttrs() ? ` & ${typeAliasRef(InheritedAttrs, getScriptLang(ir))}` : ``,
+				` }`,
+			]];
+		},
+	};
+}

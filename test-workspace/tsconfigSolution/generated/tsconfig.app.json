@@ -1,0 +1,11 @@
+{
+	"include": ["../**/*"],
+	"compilerOptions": {
+		"paths": {
+			"@solution/*": ["../src/*"]
+		}
+	},
+	"contentMappers": [
+		{ "package": "@vue/content-mapper", "extensions": [".vue"] }
+	]
+}

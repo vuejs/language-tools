@@ -497,13 +497,13 @@ exports[`grammar > capitalized-tag.vue 1`] = `
 >	<Div />
 #^ text.html.vue text.html.derivative
 # ^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue punctuation.definition.tag.begin.html.vue
-#  ^^^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue entity.name.tag.html.vue
+#  ^^^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
 #     ^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue
 #      ^^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue punctuation.definition.tag.end.html.vue
 >	<Div v-if="true">
 #^ text.html.vue text.html.derivative
 # ^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue punctuation.definition.tag.begin.html.vue
-#  ^^^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue entity.name.tag.html.vue
+#  ^^^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
 #     ^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue
 #      ^^^^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue meta.attribute.directive.vue entity.other.attribute-name.html.vue
 #          ^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue meta.attribute.directive.vue
@@ -512,14 +512,118 @@ exports[`grammar > capitalized-tag.vue 1`] = `
 >		<Div foo=">" />
 #^^ text.html.vue text.html.derivative
 #  ^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue punctuation.definition.tag.begin.html.vue
-#   ^^^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue entity.name.tag.html.vue
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
 #      ^^^^^^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue
 #            ^ text.html.vue text.html.derivative meta.tag.structure.Div.start.html.vue punctuation.definition.tag.end.html.vue
 #             ^^^^^ text.html.vue text.html.derivative
 >		<div />
 #^^^^^^^^^^ text.html.vue text.html.derivative
 >	</Div>
-#^^^^^^^^ text.html.vue text.html.derivative
+#^ text.html.vue text.html.derivative
+# ^^ text.html.vue text.html.derivative meta.tag.structure.Div.end.html.vue punctuation.definition.tag.begin.html.vue
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.Div.end.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#      ^ text.html.vue text.html.derivative meta.tag.structure.Div.end.html.vue punctuation.definition.tag.end.html.vue
+></template>
+#^^ text.html.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ text.html.vue entity.name.tag.template.html.vue
+#          ^ text.html.vue punctuation.definition.tag.end.html.vue
+>
+#^ text.html.vue"
+`;
+
+exports[`grammar > component-tag.vue 1`] = `
+"><template>
+#^ text.html.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^^^ text.html.vue entity.name.tag.template.html.vue
+#         ^ text.html.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>	<MyButton>ok</MyButton>
+#^ text.html.vue text.html.derivative
+# ^ text.html.vue text.html.derivative meta.tag.structure.MyButton.start.html.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.MyButton.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#          ^ text.html.vue text.html.derivative meta.tag.structure.MyButton.start.html.vue punctuation.definition.tag.end.html.vue
+#           ^^ text.html.vue text.html.derivative
+#             ^^ text.html.vue text.html.derivative meta.tag.structure.MyButton.end.html.vue punctuation.definition.tag.begin.html.vue
+#               ^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.MyButton.end.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                       ^ text.html.vue text.html.derivative meta.tag.structure.MyButton.end.html.vue punctuation.definition.tag.end.html.vue
+>	<my-button>ok</my-button>
+#^ text.html.vue text.html.derivative
+# ^ text.html.vue text.html.derivative meta.tag.structure.my-button.start.html.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.my-button.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.my-button.start.html.vue punctuation.definition.tag.end.html.vue
+#            ^^ text.html.vue text.html.derivative
+#              ^^ text.html.vue text.html.derivative meta.tag.structure.my-button.end.html.vue punctuation.definition.tag.begin.html.vue
+#                ^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.my-button.end.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                         ^ text.html.vue text.html.derivative meta.tag.structure.my-button.end.html.vue punctuation.definition.tag.end.html.vue
+>	<Foo.Bar />
+#^ text.html.vue text.html.derivative
+# ^ text.html.vue text.html.derivative meta.tag.structure.Foo.Bar.start.html.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.Foo.Bar.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#         ^ text.html.vue text.html.derivative meta.tag.structure.Foo.Bar.start.html.vue
+#          ^^ text.html.vue text.html.derivative meta.tag.structure.Foo.Bar.start.html.vue punctuation.definition.tag.end.html.vue
+>	<component :is="comp" />
+#^ text.html.vue text.html.derivative
+# ^ text.html.vue text.html.derivative meta.tag.structure.component.start.html.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.component.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.component.start.html.vue
+#            ^ text.html.vue text.html.derivative meta.tag.structure.component.start.html.vue meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#             ^^ text.html.vue text.html.derivative meta.tag.structure.component.start.html.vue meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#               ^ text.html.vue text.html.derivative meta.tag.structure.component.start.html.vue meta.attribute.directive.vue
+#                ^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.component.start.html.vue
+#                       ^^ text.html.vue text.html.derivative meta.tag.structure.component.start.html.vue punctuation.definition.tag.end.html.vue
+>	<transition-group><keep-alive /></transition-group>
+#^ text.html.vue text.html.derivative
+# ^ text.html.vue text.html.derivative meta.tag.structure.transition-group.start.html.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.transition-group.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                  ^ text.html.vue text.html.derivative meta.tag.structure.transition-group.start.html.vue punctuation.definition.tag.end.html.vue
+#                   ^ text.html.vue text.html.derivative meta.tag.structure.keep-alive.start.html.vue punctuation.definition.tag.begin.html.vue
+#                    ^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.keep-alive.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                              ^ text.html.vue text.html.derivative meta.tag.structure.keep-alive.start.html.vue
+#                               ^^ text.html.vue text.html.derivative meta.tag.structure.keep-alive.start.html.vue punctuation.definition.tag.end.html.vue
+#                                 ^^ text.html.vue text.html.derivative meta.tag.structure.transition-group.end.html.vue punctuation.definition.tag.begin.html.vue
+#                                   ^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.transition-group.end.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                                                   ^ text.html.vue text.html.derivative meta.tag.structure.transition-group.end.html.vue punctuation.definition.tag.end.html.vue
+>	<Teleport to="body" />
+#^ text.html.vue text.html.derivative
+# ^ text.html.vue text.html.derivative meta.tag.structure.Teleport.start.html.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.Teleport.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#          ^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.Teleport.start.html.vue
+#                     ^^ text.html.vue text.html.derivative meta.tag.structure.Teleport.start.html.vue punctuation.definition.tag.end.html.vue
+>	<DIV />
+#^ text.html.vue text.html.derivative
+# ^ text.html.vue text.html.derivative meta.tag.structure.DIV.start.html.vue punctuation.definition.tag.begin.html.vue
+#  ^^^ text.html.vue text.html.derivative meta.tag.structure.DIV.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#     ^ text.html.vue text.html.derivative meta.tag.structure.DIV.start.html.vue
+#      ^^ text.html.vue text.html.derivative meta.tag.structure.DIV.start.html.vue punctuation.definition.tag.end.html.vue
+>	<clipPath />
+#^^^^^^^^^^^^^^ text.html.vue text.html.derivative
+>	<clippath />
+#^ text.html.vue text.html.derivative
+# ^ text.html.vue text.html.derivative meta.tag.structure.clippath.start.html.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.clippath.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#          ^ text.html.vue text.html.derivative meta.tag.structure.clippath.start.html.vue
+#           ^^ text.html.vue text.html.derivative meta.tag.structure.clippath.start.html.vue punctuation.definition.tag.end.html.vue
+>	<slot />
+#^^^^^^^^^^ text.html.vue text.html.derivative
+>	<template v-if="ok" />
+#^ text.html.vue text.html.derivative
+# ^ text.html.vue text.html.derivative meta.template-tag.start punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ text.html.vue text.html.derivative meta.template-tag.start entity.name.tag.template.html.vue
+#          ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff
+#           ^^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#               ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.vue
+#                ^^^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff
+#                     ^^ text.html.vue text.html.derivative meta.template-tag.start punctuation.definition.tag.end.html.vue
+>	<div>native</div>
+#^^^^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative
+>	<MultiLine
+#^ text.html.vue text.html.derivative
+# ^ text.html.vue text.html.derivative meta.tag.structure.MultiLine.start.html.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.MultiLine.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+>		foo="bar"
+#^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.MultiLine.start.html.vue
+>	/>
+#^ text.html.vue text.html.derivative meta.tag.structure.MultiLine.start.html.vue
+# ^^ text.html.vue text.html.derivative meta.tag.structure.MultiLine.start.html.vue punctuation.definition.tag.end.html.vue
 ></template>
 #^^ text.html.vue punctuation.definition.tag.begin.html.vue
 #  ^^^^^^^^ text.html.vue entity.name.tag.template.html.vue
@@ -826,20 +930,45 @@ exports[`grammar > namespaced.vue 1`] = `
 # ^^^^^^^^ text.html.vue entity.name.tag.template.html.vue
 #         ^ text.html.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
 >  <A.B.C> {{ A.B.C }} </A.B.C>
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.A.B.C.start.html.vue punctuation.definition.tag.begin.html.vue
+#   ^^^^^ text.html.vue text.html.derivative meta.tag.structure.A.B.C.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#        ^ text.html.vue text.html.derivative meta.tag.structure.A.B.C.start.html.vue punctuation.definition.tag.end.html.vue
+#         ^^^^^^^^^^^^^ text.html.vue text.html.derivative
+#                      ^^ text.html.vue text.html.derivative meta.tag.structure.A.B.C.end.html.vue punctuation.definition.tag.begin.html.vue
+#                        ^^^^^ text.html.vue text.html.derivative meta.tag.structure.A.B.C.end.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                             ^ text.html.vue text.html.derivative meta.tag.structure.A.B.C.end.html.vue punctuation.definition.tag.end.html.vue
 >  <A.B.C />
-#^^^^^^^^^^^^ text.html.vue text.html.derivative
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.A.B.C.start.html.vue punctuation.definition.tag.begin.html.vue
+#   ^^^^^ text.html.vue text.html.derivative meta.tag.structure.A.B.C.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#        ^ text.html.vue text.html.derivative meta.tag.structure.A.B.C.start.html.vue
+#         ^^ text.html.vue text.html.derivative meta.tag.structure.A.B.C.start.html.vue punctuation.definition.tag.end.html.vue
 >  <C>
 #^^ text.html.vue text.html.derivative
 #  ^ text.html.vue text.html.derivative meta.tag.structure.C.start.html.vue punctuation.definition.tag.begin.html.vue
-#   ^ text.html.vue text.html.derivative meta.tag.structure.C.start.html.vue entity.name.tag.html.vue
+#   ^ text.html.vue text.html.derivative meta.tag.structure.C.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
 #    ^ text.html.vue text.html.derivative meta.tag.structure.C.start.html.vue punctuation.definition.tag.end.html.vue
 >    <C.D> 222 </C.D>
-#^^^^^^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative
+#^^^^ text.html.vue text.html.derivative
+#    ^ text.html.vue text.html.derivative meta.tag.structure.C.D.start.html.vue punctuation.definition.tag.begin.html.vue
+#     ^^^ text.html.vue text.html.derivative meta.tag.structure.C.D.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#        ^ text.html.vue text.html.derivative meta.tag.structure.C.D.start.html.vue punctuation.definition.tag.end.html.vue
+#         ^^^^^ text.html.vue text.html.derivative
+#              ^^ text.html.vue text.html.derivative meta.tag.structure.C.D.end.html.vue punctuation.definition.tag.begin.html.vue
+#                ^^^ text.html.vue text.html.derivative meta.tag.structure.C.D.end.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                   ^ text.html.vue text.html.derivative meta.tag.structure.C.D.end.html.vue punctuation.definition.tag.end.html.vue
 >    <C.D />
-#^^^^^^^^^^^^ text.html.vue text.html.derivative
+#^^^^ text.html.vue text.html.derivative
+#    ^ text.html.vue text.html.derivative meta.tag.structure.C.D.start.html.vue punctuation.definition.tag.begin.html.vue
+#     ^^^ text.html.vue text.html.derivative meta.tag.structure.C.D.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#        ^ text.html.vue text.html.derivative meta.tag.structure.C.D.start.html.vue
+#         ^^ text.html.vue text.html.derivative meta.tag.structure.C.D.start.html.vue punctuation.definition.tag.end.html.vue
 >  </C>
-#^^^^^^^ text.html.vue text.html.derivative
+#^^ text.html.vue text.html.derivative
+#  ^^ text.html.vue text.html.derivative meta.tag.structure.C.end.html.vue punctuation.definition.tag.begin.html.vue
+#    ^ text.html.vue text.html.derivative meta.tag.structure.C.end.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#     ^ text.html.vue text.html.derivative meta.tag.structure.C.end.html.vue punctuation.definition.tag.end.html.vue
 ></template>
 #^^ text.html.vue punctuation.definition.tag.begin.html.vue
 #  ^^^^^^^^ text.html.vue entity.name.tag.template.html.vue
@@ -872,19 +1001,58 @@ exports[`grammar > tag-starts-with-template.vue 1`] = `
 # ^^^^^^^^ text.html.vue entity.name.tag.template.html.vue
 #         ^ text.html.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
 >    <template-foo></template-foo>
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative
+#^^^^ text.html.vue text.html.derivative
+#    ^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue punctuation.definition.tag.begin.html.vue
+#     ^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                 ^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue punctuation.definition.tag.end.html.vue
+#                  ^^ text.html.vue text.html.derivative meta.tag.structure.template-foo.end.html.vue punctuation.definition.tag.begin.html.vue
+#                    ^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.template-foo.end.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                                ^ text.html.vue text.html.derivative meta.tag.structure.template-foo.end.html.vue punctuation.definition.tag.end.html.vue
 >    <template:foo></template:foo>
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative
+#^^^^ text.html.vue text.html.derivative
+#    ^ text.html.vue text.html.derivative meta.tag.structure.template:foo.start.html.vue punctuation.definition.tag.begin.html.vue
+#     ^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.template:foo.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                 ^ text.html.vue text.html.derivative meta.tag.structure.template:foo.start.html.vue punctuation.definition.tag.end.html.vue
+#                  ^^ text.html.vue text.html.derivative meta.tag.structure.template:foo.end.html.vue punctuation.definition.tag.begin.html.vue
+#                    ^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.template:foo.end.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                                ^ text.html.vue text.html.derivative meta.tag.structure.template:foo.end.html.vue punctuation.definition.tag.end.html.vue
 >    <template-foo bar></template-foo>
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative
+#^^^^ text.html.vue text.html.derivative
+#    ^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue punctuation.definition.tag.begin.html.vue
+#     ^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                 ^^^^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue
+#                     ^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue punctuation.definition.tag.end.html.vue
+#                      ^^ text.html.vue text.html.derivative meta.tag.structure.template-foo.end.html.vue punctuation.definition.tag.begin.html.vue
+#                        ^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.template-foo.end.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                                    ^ text.html.vue text.html.derivative meta.tag.structure.template-foo.end.html.vue punctuation.definition.tag.end.html.vue
 >    <template-foo>{{ 0 }}</template-foo>
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative
+#^^^^ text.html.vue text.html.derivative
+#    ^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue punctuation.definition.tag.begin.html.vue
+#     ^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                 ^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue punctuation.definition.tag.end.html.vue
+#                  ^^^^^^^ text.html.vue text.html.derivative
+#                         ^^ text.html.vue text.html.derivative meta.tag.structure.template-foo.end.html.vue punctuation.definition.tag.begin.html.vue
+#                           ^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.template-foo.end.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                                       ^ text.html.vue text.html.derivative meta.tag.structure.template-foo.end.html.vue punctuation.definition.tag.end.html.vue
 >    <template.foo[0].bar></template.foo[0].bar>
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative
+#^^^^ text.html.vue text.html.derivative
+#    ^ text.html.vue text.html.derivative meta.tag.structure.template.foo[0].bar.start.html.vue punctuation.definition.tag.begin.html.vue
+#     ^^^^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.template.foo[0].bar.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                        ^ text.html.vue text.html.derivative meta.tag.structure.template.foo[0].bar.start.html.vue punctuation.definition.tag.end.html.vue
+#                         ^^ text.html.vue text.html.derivative meta.tag.structure.template.foo[0].bar.end.html.vue punctuation.definition.tag.begin.html.vue
+#                           ^^^^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.template.foo[0].bar.end.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                                              ^ text.html.vue text.html.derivative meta.tag.structure.template.foo[0].bar.end.html.vue punctuation.definition.tag.end.html.vue
 >    <template-foo />
-#^^^^^^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative
+#^^^^ text.html.vue text.html.derivative
+#    ^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue punctuation.definition.tag.begin.html.vue
+#     ^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                 ^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue
+#                  ^^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue punctuation.definition.tag.end.html.vue
 >    <template-foo/>
-#^^^^^^^^^^^^^^^^^^^^ text.html.vue text.html.derivative
+#^^^^ text.html.vue text.html.derivative
+#    ^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue punctuation.definition.tag.begin.html.vue
+#     ^^^^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue entity.name.tag.html.vue entity.name.type.class.vue support.class.component.vue
+#                 ^^ text.html.vue text.html.derivative meta.tag.structure.template-foo.start.html.vue punctuation.definition.tag.end.html.vue
 ></template>
 #^^ text.html.vue punctuation.definition.tag.begin.html.vue
 #  ^^^^^^^^ text.html.vue entity.name.tag.template.html.vue

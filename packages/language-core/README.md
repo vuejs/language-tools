@@ -5,7 +5,7 @@
   <a href="https://github.com/vuejs/language-tools/blob/master/LICENSE"><img src="https://img.shields.io/github/license/vuejs/language-tools.svg?labelColor=18181B&color=1584FC" alt="License"></a>
 </p>
 
-The core module for Vue Language Tools, responsible for parsing Vue Single File Components (SFCs) and transforming them into virtual code structures that TypeScript can understand. This package is a low-level dependency for `@vue/language-server` and `vue-tsc`.
+The core module for Vue Language Tools, responsible for parsing Vue Single File Components (SFCs) and transforming them into virtual code structures that TypeScript can understand. This package is a low-level dependency for `@vue/language-server` and `@vue/content-mapper`.
 
 ## Installation
 
@@ -15,39 +15,29 @@ npm install @vue/language-core
 
 ## Core API
 
-### `createVueLanguagePlugin`
+### `createVueSource`
 
-Creates a Vue language plugin for integration with Volar language services.
-
-```typescript
-import { createVueLanguagePlugin } from '@vue/language-core';
-import type { LanguagePlugin } from '@volar/language-core';
-import ts from 'typescript';
-
-const plugin: LanguagePlugin<string> = createVueLanguagePlugin(
-  ts,
-  compilerOptions,    // ts.CompilerOptions
-  vueCompilerOptions, // VueCompilerOptions
-  (scriptId) => scriptId  // asFileName: Converts scriptId to a file name
-);
-```
-
-### `createParsedCommandLine`
-
-Parses TypeScript and Vue compiler options from `tsconfig.json`.
+Reads a Vue file into its IR and script analysis, without any embedded or generated code. It updates in place when given a new snapshot.
 
 ```typescript
-import { createParsedCommandLine } from '@vue/language-core';
-import ts from 'typescript';
+import { createIRPipeline, createVueSource } from '@vue/language-core';
 
-const parsed = createParsedCommandLine(ts, ts.sys, '/path/to/tsconfig.json');
-// parsed.options: ts.CompilerOptions
-// parsed.vueOptions: VueCompilerOptions
+const pipeline = createIRPipeline(ts, vueCompilerOptions);
+const source = createVueSource(ts, vueCompilerOptions, pipeline, fileName, snapshot);
+source.ir; // the blocks of the file
+source.analysis; // what its script blocks declare
+source.update(newSnapshot);
 ```
+
+`ts` is the TypeScript 7 `typescript/ast` module plus a synchronous `createSourceFile`, which TypeScript 7 only offers through its API process (`loadTypeScript` from `@vue/language-core/typescript` builds it from `typescript/sync`). The classic `typescript` module provides the same names, so `@vue/language-server` passes that instead.
+
+`createIRPipeline` builds the IR of every file by `vueCompilerOptions.format`, with the built-in compilers and the `ir` exports of `vueCompilerOptions.plugins` ([Plugins](#plugins)). Its `errors` list the plugins, or the parts of them, that have no effect. A host creates one pipeline per `contentMappers` entry and gives it only the files of that entry's `extensions`. Nothing in the IR depends on other entries: like `@vue/compiler-sfc`, a template tag refers to the `<script setup>` binding of its name whatever it is imported from, and a file's own component name is its file name without the last extension.
+
+The Volar language plugin that adds the embedded documents of the language service, `createVueLanguagePlugin`, is in [`@vue/language-service`](../language-service).
 
 ### `parse`
 
-Parses Vue SFC source code and returns an `SFCParseResult`.
+Reads the blocks of Vue SFC source code into a `VueFormatResult`, at the offsets of the source.
 
 ```typescript
 import { parse } from '@vue/language-core';
@@ -61,24 +51,29 @@ const msg = 'Hello'
 </script>
 `);
 
-// result.descriptor.template
-// result.descriptor.scriptSetup
-// result.descriptor.styles
+// result.template: { content, offset, lang, element: { start, end } }
+// result.scriptSetup
+// result.styles
 // result.errors
+// result.vapor: whether `<script setup>` or `<template>` has `vapor`
 ```
 
 ## `vueCompilerOptions`
 
-Configure Vue compiler behavior through the `vueCompilerOptions` field in `tsconfig.json`:
+[`@vue/content-mapper`](../content-mapper) takes these options from its `contentMappers` entry's `options`, and `resolveVueCompilerOptions` resolves them. `@vue/language-server` reads them from the entry of a Vue file the same way, whichever Content Mapper the entry names, so another Vue Content Mapper that accepts these keys in its `options` gets the same language server behavior:
 
 ```jsonc
 {
-  "compilerOptions": { /* ... */ },
-  "vueCompilerOptions": {
-    "target": 3.5,
-    "strictTemplates": true,
-    "plugins": ["@vue/language-plugin-pug"]
-  }
+  "contentMappers": [
+    {
+      "package": "@vue/content-mapper",
+      "extensions": [".vue"],
+      "options": {
+        "target": 3.5,
+        "plugins": ["@vue/language-plugin-pug"]
+      }
+    }
+  ]
 }
 ```
 
@@ -87,75 +82,90 @@ Configure Vue compiler behavior through the `vueCompilerOptions` field in `tscon
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `target` | `number \| 'auto'` | `'auto'` | Vue version. `'auto'` reads from `node_modules/vue/package.json`. |
-| `extensions` | `string[]` | `['.vue']` | File extensions to be treated as Vue SFCs. |
-| `vitePressExtensions` | `string[]` | `[]` | File extensions to be treated as VitePress Markdown. |
-| `petiteVueExtensions` | `string[]` | `[]` | File extensions to be treated as Petite Vue HTML. |
-| `plugins` | `string[]` | `[]` | Custom language plugins, e.g., [`@vue/language-plugin-pug`](../language-plugin-pug). |
+| `format` | `string` | `'sfc'` | How files are read: a built-in format (below) or one of the `formats` of a plugin. A `format` that nothing provides is an error, and no file is read. |
+| `plugins` | `(string \| { name: string, ... })[]` | `[]` | [Plugins](#plugins) that change how the IR is built, e.g. [`@vue/language-plugin-pug`](../language-plugin-pug). A config that declares `plugins` replaces the inherited list. |
+
+The built-in formats:
+
+| `format` | Parses |
+| :--- | :--- |
+| `sfc` | A Vue SFC. |
+| `vitepress` | VitePress markdown: `<script>` / `<style>` blocks are lifted out and the rest becomes the template. |
+| `petite-vue` | A petite-vue HTML page: `<script>` / `<style>` blocks are lifted out and the rest becomes the template. |
 
 ### Type Checking Options
 
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `strictTemplates` | `boolean` | `false` | A convenience option that enables the four `check*` options below and `strictVModel`. |
-| `checkUnknownProps` | `boolean` | `false` | Check for unknown props. |
-| `checkUnknownEvents` | `boolean` | `false` | Check for unknown events. |
-| `checkUnknownComponents` | `boolean` | `false` | Check for unknown components. |
-| `checkUnknownDirectives` | `boolean` | `false` | Check for unknown directives. |
-| `strictVModel` | `boolean` | `false` | Strictly check v-model bindings. |
-| `strictCssModules` | `boolean` | `false` | Strictly check CSS Modules class names (not affected by `strictTemplates`). |
+| `strictCssModules` | `boolean` | `false` | Strictly check CSS Modules class names. |
 
 ### Advanced Options
 
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `lib` | `string` | `'vue'` | Vue package name, used for generating import statements. |
-| `skipTemplateCodegen` | `boolean` | `false` | Skip virtual code generation for templates. |
 | `vapor` | `boolean` | `false` | Enable Vapor mode for all Vue SFCs. |
 | `fallthroughAttributes` | `boolean` | `false` | Enable type inference for fallthrough attributes. |
 | `checkRequiredFallthroughAttributes` | `boolean` | `false` | Check required fallthrough attributes. |
 | `jsxSlots` | `boolean` | `false` | Use JSX-style slots types. |
 | `dataAttributes` | `string[]` | `[]` | Allowed data-* attribute patterns. |
 | `htmlAttributes` | `string[]` | `['aria-*']` | Allowed HTML attribute patterns. |
-| `resolveStyleImports` | `boolean` | `false` | Resolve import statements in styles. |
 | `resolveStyleClassNames` | `boolean \| 'scoped'` | `'scoped'` | Resolve class names in styles. |
 
-## Built-in Plugins
+## Plugins
 
-This package includes the following built-in plugins to handle different file types and blocks:
+A `plugins` entry names a module, resolved from the directory of the config that declares it; an object entry passes the rest of its keys to the module as its `config`. A module takes part in a mode by exporting its key, so nothing switches modes:
 
-### File Parsing Plugins
+```ts
+import type { VuePluginModule } from '@vue/language-core';
 
-| Plugin | Function | Controlled By |
-| :--- | :--- | :--- |
-| `file-vue` | Parses `.vue` files into an SFC structure. | `extensions` |
-| `file-md` | Parses Markdown files into an SFC structure. | `vitePressExtensions` |
-| `file-html` | Parses HTML files into an SFC structure. | `petiteVueExtensions` |
+// Changes the IR, so every IR builder reads it: Content Mappers built on language-core,
+// the language server and vue-component-meta.
+export const ir: VuePluginModule['ir'] = ({ config, vueCompilerOptions }) => ({
+  // Formats that `format` selects by name.
+  formats: {
+    'my-format': {
+      // The blocks of the file (`VueFormatResult`): each block's `content` at its `offset` in the file, and the
+      // `element` range only for a block written as an element, like the blocks of an SFC. Every block sets its
+      // `lang`; the IR has no default language, and reading the `lang` of a block without one throws.
+      parse(fileName, content) { /* return a VueFormatResult */ },
+      update(oldResult, { start, end, newText }) { /* optional: return a new result that keeps the objects of oldResult for the untouched blocks (oldResult itself for an edit that changes nothing) without changing oldResult, or undefined to parse the file again */ },
+    },
+  },
+  // Template languages, by the `lang` of `<template>`: the HTML of `source`, as the pieces of muggle-string
+  // (`Piece`): new text, and `{ start, end, text? }` ranges of `source`.
+  templateCompilers: {
+    'my-lang'(source) {
+      return { pieces: toPieces(source) };
+    },
+  },
+  // Applied in `plugins` order to the options of every template compiler.
+  resolveTemplateCompilerOptions(options) {
+    return options;
+  },
+  // Calls to read as a macro of the key, added to `vueCompilerOptions.macros`.
+  macros: {
+    defineProps: ['$defineProps'],
+  },
+});
+```
 
-### Virtual Code Generation Plugins
+`ir` is a `VueIRPlugin` or a function of the entry's `config` and the resolved `vueCompilerOptions` that returns one. The `codegen` export contributes to the TS code that `@vue/content-mapper` generates. It is defined and read by that package alone (`VueCodegenPlugin`, see [Codegen plugins](../content-mapper#codegen-plugins)); the language server and vue-component-meta never load it.
 
-| Plugin | Function |
-| :--- | :--- |
-| `vue-tsx` | Generates TypeScript virtual code from an SFC. |
-| `vue-template-html` | Compiles HTML templates. |
-| `vue-template-inline-ts` | Handles TypeScript expressions in templates. |
-| `vue-template-inline-css` | Handles inline styles in templates. |
-| `vue-style-css` | Compiles CSS styles. |
-| `vue-script-js` | Handles JavaScript script blocks. |
+- The `ir` export of a plugin is created once for the resolved `plugins`. Its `macros` add calls to the lists of `vueCompilerOptions.macros`, in `plugins` order, after the lists of the options, so the resolved options name every macro call that the IR reads. An SFC comment never names plugins: it keeps these lists, and a list that it sets replaces them. Such a call is that macro, typed as it; a call whose value differs (e.g. refs of the props) is not one, and declares what it adds through the `codegen` export. A key that is not a macro, or a value that is not a list of names, is a load error.
+- A format or template language belongs to the one plugin that provides its key. Providing a built-in key (`sfc`, `vitepress`, `petite-vue`, `html`, `md`) or a key of an earlier plugin is a load error, and that key of the plugin is not used.
+- A template language only converts to HTML (`TemplateHTML`). The host compiles the text of the pieces and gives every location of the AST, and of the compiler's errors and warnings, the offsets of `source`: an HTML offset into a range gets the source offset as far into it, up to its end; one that several ranges cover, their ends included, gets the greatest source offset, one that no range covers gets -1 (no source), and a location of which only one end has a source gets -1 at both ends. `ignoreError(error, html)` drops compiler errors that come from the conversion rather than the template; `html` is the text of the pieces, which the offsets of `error` index.
+- Script and style blocks are always read by the built-in compilers: the script AST is a TypeScript `SourceFile`, and the style scanner does not depend on the style language.
+- The embedded documents of the language service are built in, including the document of a `pug` template, so a plugin has no part in them.
+- A module that exports a function, an array, or an object with `version` is a `VueLanguagePlugin` of v3 and fails to load with: "VueLanguagePlugin functions are no longer supported; export `{ ir: … }` (see language-core README)".
 
-### Embedded Code Extraction Plugins
-
-| Plugin | Function |
-| :--- | :--- |
-| `vue-sfc-template` | Extracts the `<template>` block. |
-| `vue-sfc-styles` | Extracts `<style>` blocks. |
-| `vue-sfc-scripts` | Extracts `<script>` blocks (for formatting). |
-| `vue-sfc-customblocks` | Extracts custom blocks. |
+`@vue/content-mapper` reports the plugins that fail to load, and a `format` that nothing provides, as option diagnostics of its `contentMappers` entry. It watches each plugin's entry file and the `package.json` of its package, and the language server creates a project's IR again when one of them changes.
 
 ## Related Packages
 
 - [`@vue/language-server`](../language-server) - Language Server
 - [`@vue/language-service`](../language-service) - Language Service
-- [`vue-tsc`](../tsc) - Command-line Type Checker
+- [`@vue/content-mapper`](../content-mapper) - Content mapper for native TypeScript
 
 ## License
 

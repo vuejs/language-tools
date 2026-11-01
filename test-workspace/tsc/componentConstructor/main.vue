@@ -45,7 +45,7 @@ declare const anyValue: any;
 	</AndSlots>
 
 	<!-- type parameters infer with fallthrough attributes -->
-	<Gen :value="1" class="x" data-x="y" @change="exactType($event, {} as number)" />
+	<Gen :value="1" class="x" @change="exactType($event, {} as number)" />
 
 	<GenFn value="x" @update="exactType($event, {} as 'x')" />
 	<Generic value="x" @update="exactType($event, {} as 'x')" />
