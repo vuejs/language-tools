@@ -3,6 +3,8 @@
 	// Its runtime JS is emitted by `npm run build:services` (TypeScript 7.1), as the services publish it.
 	"extends": "../services/packages/pug/tsconfig.json",
 	"compilerOptions": {
+		// muggle-pug is ES modules only, which CommonJS requires from Node 20.19 and 22.12
+		"module": "node20",
 		"rootDir": "../services/packages/pug",
 		"emitDeclarationOnly": true,
 		"declarationDir": "../node_modules/.services-types/pug",
@@ -10,7 +12,6 @@
 	},
 	"references": [
 		{ "path": "../tsconfig.volar/language-service.json" },
-		{ "path": "./html.json" },
-		{ "path": "../tsconfig.muggle-pug/muggle-pug.json" }
+		{ "path": "./html.json" }
 	]
 }

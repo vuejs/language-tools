@@ -13,7 +13,7 @@
 		"directory": "packages/language-plugin-pug"
 	},
 	"dependencies": {
-		"muggle-pug": "workspace:*"
+		"muggle-pug": "^0.1.0"
 	},
 	"devDependencies": {
 		"@types/node": "^26.0.1",

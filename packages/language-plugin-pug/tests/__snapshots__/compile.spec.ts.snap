@@ -7,7 +7,7 @@ exports[`pug template compiler > gives the locations of "div #[span x] y" 1`] = 
     [
       "root.children.0.children.0.children.0.loc",
       11,
-      13,
+      12,
     ],
     [
       "root.children.0.children.0.loc",
@@ -91,7 +91,7 @@ exports[`pug template compiler > gives the locations of "div(class=\\"a\\" :titl
     [
       "root.children.0.children.0.children.0.loc",
       47,
-      61,
+      58,
     ],
     [
       "root.children.0.children.0.loc",
@@ -101,12 +101,12 @@ exports[`pug template compiler > gives the locations of "div(class=\\"a\\" :titl
     [
       "root.children.0.children.1.loc",
       61,
-      61,
+      75,
     ],
     [
       "root.children.0.children.1.branches.0.loc",
       61,
-      61,
+      75,
     ],
     [
       "root.children.0.children.1.branches.0.condition.loc",
@@ -337,7 +337,7 @@ exports[`pug template compiler > gives the locations of "ul\\n  li(v-for=\\"item
     [
       "root.children.0.children.0.children.0.loc",
       5,
-      5,
+      53,
     ],
     [
       "root.children.0.loc",

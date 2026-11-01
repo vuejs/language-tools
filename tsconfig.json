@@ -1,6 +1,8 @@
 {
 	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
+		// muggle-pug, which tests import, is ES modules only, which CommonJS requires from Node 20.19 and 22.12
+		"module": "node20",
 		"noEmit": true,
 		"allowImportingTsExtensions": true
 	},
@@ -17,7 +19,6 @@
 		{ "path": "./tsconfig.services/json.json" },
 		{ "path": "./tsconfig.services/pug.json" },
 		{ "path": "./tsconfig.services/pug-beautify.json" },
-		{ "path": "./tsconfig.muggle-pug/muggle-pug.json" },
 		{ "path": "./extensions/vscode/tsconfig.json" },
 		{ "path": "./packages/component-meta/tsconfig.json" },
 		{ "path": "./packages/component-type-helpers/tsconfig.json" },

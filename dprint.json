@@ -12,8 +12,7 @@
 		"**/*-lock.json",
 		"packages/language-service/data",
 		"volar.js",
-		"services",
-		"muggle-pug"
+		"services"
 	],
 	"plugins": [
 		"https://plugins.dprint.dev/typescript-0.95.7.wasm",

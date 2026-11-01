@@ -6,6 +6,7 @@ trustPolicyExclude:
 # published by the maintainer of this repo for it, within the minimum release age that pnpm applies by default
 minimumReleaseAgeExclude:
   - muggle-string
+  - muggle-pug
 
 packages:
   - extensions/*
@@ -25,8 +26,6 @@ packages:
   - services/packages/json
   - services/packages/pug
   - services/packages/pug-beautify
-  # the muggle-pug submodule (branch master); the release workflow does not publish it
-  - muggle-pug
 
 allowBuilds:
   "@vscode/vsce-sign": true
@@ -50,5 +49,5 @@ overrides:
   volar-service-json: workspace:*
   volar-service-pug: workspace:*
   volar-service-pug-beautify: workspace:*
-  # every package that depends on muggle-pug, in or outside the workspace, resolves it to the submodule, so there is one copy
-  muggle-pug: workspace:*
+  # volar-service-pug of the services submodule pins a prerelease of muggle-pug, so every package resolves it to the release, one copy
+  muggle-pug: ^0.1.0
