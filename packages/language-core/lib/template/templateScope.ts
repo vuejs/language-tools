@@ -746,7 +746,14 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 				else {
 					propName = getModelPropName(node, vueCompilerOptions);
 				}
-				if (propName === undefined || vueCompilerOptions.isDataAttribute(propName)) {
+				if (
+					propName === undefined
+					|| vueCompilerOptions.isDataAttribute(propName)
+					|| (
+						node.tagType === CompilerDOM.ElementTypes.COMPONENT
+						&& vueCompilerOptions.isHtmlAttribute(propName)
+					)
+				) {
 					if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
 						failedExpressions.push([prop.exp, `(`, `)`]);
 					}
@@ -766,7 +773,13 @@ export function collectTemplateScope(ts: TypeScript, ir: IR, options: TemplateSc
 				}
 			}
 			else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
-				if (vueCompilerOptions.isDataAttribute(prop.name)) {
+				if (
+					vueCompilerOptions.isDataAttribute(prop.name)
+					|| (
+						node.tagType === CompilerDOM.ElementTypes.COMPONENT
+						&& vueCompilerOptions.isHtmlAttribute(prop.name)
+					)
+				) {
 					continue;
 				}
 				const prefix = template.content.slice(prop.loc.start.offset, prop.loc.start.offset + 1);
