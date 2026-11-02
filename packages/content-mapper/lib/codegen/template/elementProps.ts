@@ -184,8 +184,11 @@ export function* generateElementProps(
 						? `[${names.tryAsConstant}(\`\${${prop.arg.content}}Modifiers\`)]`
 						: camelize(propName) + `Modifiers`
 					: `modelModifiers`;
+				// the vnode props carry the modifiers whether or not the component declares them: a spread property takes
+				// no excess property check, while the modifiers of a declared one are still checked against its type
+				yield `...{ `;
 				yield* generateModifiers(options, ctx, prop, propertyName);
-				yield newLine;
+				yield `},${newLine}`;
 			}
 		}
 		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
