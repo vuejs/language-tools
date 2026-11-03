@@ -494,6 +494,34 @@ test('propagates an exception thrown by a hook of a codegen plugin', () => {
 	}
 });
 
+test('gives codegen plugins the compiler options of the project', () => {
+	const workspace = createWorkspace();
+	const configFileName = path.join(workspace, 'tsconfig.json');
+	fs.writeFileSync(configFileName, '{}');
+	fs.writeFileSync(
+		pluginEntry(workspace),
+		`exports.codegen = (file, { compilerOptions }) => ({ declarations: () => [\`type RootDir = \${JSON.stringify(compilerOptions?.rootDir)};\`] });\n`,
+	);
+	try {
+		openProject({
+			configFileName,
+			projectHandle: 'compiler-options-project',
+			compilerOptions: { rootDir: path.join(workspace, 'src') },
+			options: { plugins: ['vue-test-plugin'] },
+		});
+		const { text } = transformVue({
+			projectHandle: 'compiler-options-project',
+			fileName: path.join(workspace, 'src/App.vue'),
+			content: `<script setup lang="ts"></script>\n`,
+		});
+		expect(text).toContain(`type RootDir = ${JSON.stringify(path.join(workspace, 'src'))};`);
+	}
+	finally {
+		closeProject('compiler-options-project');
+		fs.rmSync(workspace, { recursive: true, force: true });
+	}
+});
+
 test('reuses the transform result of a file whose content did not change', () => {
 	const fileName = path.resolve(__dirname, 'Unchanged.vue');
 	const content = `<script setup lang="ts">const msg = '';</script>\n<template>{{ msg }}</template>\n`;

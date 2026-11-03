@@ -24,7 +24,12 @@ import { identifierRE } from './writers';
  * context of its entry, and gives the plugin of the file. It must be a pure function of `file` and `ctx`: no file
  * system, no environment, no cache shared across projects. An exception of it or of what it gives propagates.
  */
-export type VueCodegenPlugin = (file: VueCodegenFile, ctx: VuePluginContext) => VueCodegenFilePlugin;
+export type VueCodegenPlugin = (file: VueCodegenFile, ctx: VueCodegenContext) => VueCodegenFilePlugin;
+
+export interface VueCodegenContext extends VuePluginContext {
+	/** The project's effective compiler options that TypeScript sends, with absolute paths. */
+	compilerOptions: Readonly<Record<string, unknown>>;
+}
 
 export interface VueCodegenFile {
 	/** The TS 7.1 AST API that parsed the IR's script ASTs. */
@@ -269,6 +274,7 @@ export interface CodegenPlugin {
  */
 export function loadCodegenPlugins(
 	vueCompilerOptions: VueCompilerOptions,
+	compilerOptions: Record<string, unknown>,
 ): { plugins: CodegenPlugin[]; errors: VuePluginError[] } {
 	const plugins: CodegenPlugin[] = [];
 	const errors: VuePluginError[] = [];
@@ -283,7 +289,7 @@ export function loadCodegenPlugins(
 			errors.push({ plugin: name, message: 'The `codegen` export must be a function.' });
 			continue;
 		}
-		const ctx: VuePluginContext = { config, vueCompilerOptions };
+		const ctx: VueCodegenContext = { config, vueCompilerOptions, compilerOptions };
 		plugins.push({
 			name,
 			create: (file, names) => checkFilePlugin(name, file.ir, names, (codegen as VueCodegenPlugin)(file, ctx)),

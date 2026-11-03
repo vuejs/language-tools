@@ -26,7 +26,10 @@ import { createSnapshot, createSource, generate } from './utils';
 
 /** The plugin of `codegen`, loaded as the `codegen` export of an entry `name`. */
 function plugin(codegen: VueCodegenPlugin, name = 'test-plugin'): CodegenPlugin {
-	const { plugins: [loaded] } = loadCodegenPlugins({ plugins: [{ name, config: {}, module: { codegen } }] } as never);
+	const { plugins: [loaded] } = loadCodegenPlugins(
+		{ plugins: [{ name, config: {}, module: { codegen } }] } as never,
+		{},
+	);
 	return loaded!;
 }
 

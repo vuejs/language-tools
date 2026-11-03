@@ -21,6 +21,7 @@ function generateWith(example: string, fileName: string, content: string) {
 	new Function('exports', 'require', source!)(module.exports, require);
 	const { plugins } = loadCodegenPlugins(
 		{ plugins: [{ name: example, config: {}, module: module.exports }] } as never,
+		{},
 	);
 	return generate(fileName, content, undefined, plugins);
 }
