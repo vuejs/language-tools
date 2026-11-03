@@ -125,8 +125,9 @@ exports.codegen = ({ ts, fileName, ir, name }) => {
 order after the built-in plugins of the mapper (slots, fallthrough attributes, template refs, root
 element, style, emits, props, models), and gives the `VueCodegenFilePlugin` of the file: an
 optional `rewrite` of the user's code, and functions that give its code in the slots of the
-generated code. `ctx` holds the entry's `config`, the options of the plugin, and the resolved
-`vueCompilerOptions`. `file` holds the
+generated code. `ctx` holds the entry's `config`, the options of the plugin, the resolved
+`vueCompilerOptions`, and the project's `compilerOptions` as TypeScript sends them, with absolute
+paths. `file` holds the
 TS 7.1 AST API that parsed the scripts (`ts`), `fileName`, the IR, its analysis (resolved options,
 with SFC comment options, and script ranges), `name` and `template`. Walk ASTs with
 `node.forEachChild`. A `codegen` export that is not a function is reported as an option diagnostic at
@@ -135,7 +136,8 @@ one of `VueCodegenFilePlugin`, fail the transform of the file.
 
 `codegen` and its hooks must be pure functions of `file` and `ctx`: no file system, no environment,
 no cache shared across projects. The mapper hashes the plugin's entry file, its package's
-`name@version` and the entry config into the project identity, so nothing else is tracked. Data from
+`name@version`, the entry config and the project's `compilerOptions` into the project identity, so
+nothing else is tracked. Data from
 elsewhere reaches TypeScript through type imports (`import('…')`), which TypeScript resolves and
 watches. The mapper runs each hook at most once for a snapshot: `rewrite` first, and a slot when it
 needs it, so what the hooks share belongs in the closure of `codegen`, and a slot can place what

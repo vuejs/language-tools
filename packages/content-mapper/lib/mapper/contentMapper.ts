@@ -162,7 +162,7 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 		);
 		const ts = loadTypeScript(resolveTypeScriptPackageJson(getProjectDirectory(configFileName || undefined)));
 		const pipeline = vue.createIRPipeline(ts, vueOptions);
-		const codegen = loadCodegenPlugins(vueOptions);
+		const codegen = loadCodegenPlugins(vueOptions, state.params.compilerOptions);
 		const configuration: ProjectConfiguration = {
 			ts,
 			pipeline,
@@ -203,6 +203,7 @@ function createIdentity(params: OpenProjectParams, configuration: ProjectConfigu
 			params.options ?? null,
 			configuration.languageFeatures,
 			vueOptions,
+			configuration.codegenPlugins.length ? params.compilerOptions : null,
 			configuration.pluginFiles.map(fileName => {
 				const content = readFileIfExists(fileName) ?? null;
 				// A package is identified by its version, not by the rest of its manifest

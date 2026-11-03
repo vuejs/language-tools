@@ -1,5 +1,6 @@
 export type {
 	VueCodegenCode,
+	VueCodegenContext,
 	VueCodegenData,
 	VueCodegenDeclaration,
 	VueCodegenExports,

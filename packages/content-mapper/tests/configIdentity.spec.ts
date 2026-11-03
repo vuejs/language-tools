@@ -22,9 +22,9 @@ function createProject(name: string, files: Record<string, string>) {
 	return path.join(dir, 'tsconfig.json');
 }
 
-function open(configFileName: string, options?: MapperOptions) {
+function open(configFileName: string, options?: MapperOptions, compilerOptions: Record<string, unknown> = {}) {
 	const projectHandle = `identity-${nextHandle++}`;
-	const opened = openProject({ configFileName, projectHandle, compilerOptions: {}, options });
+	const opened = openProject({ configFileName, projectHandle, compilerOptions, options });
 	closeProject(projectHandle);
 	return opened;
 }
@@ -153,6 +153,21 @@ test('plugins that fail to load are reported as option diagnostics', () => {
 			code: OptionDiagnosticCode.InvalidOptionType,
 		},
 	]);
+});
+
+test('compiler options that differ give another identity only with a codegen plugin', () => {
+	const configFileName = createProject('codegen-compiler-options', {
+		'tsconfig.json': '{}',
+		'codegen.cjs': `exports.codegen = () => ({});\n`,
+		'ir.cjs': plugin('ir'),
+	});
+	const withCodegen = { target: 3.5, plugins: ['./codegen.cjs'] };
+	const withoutCodegen = { target: 3.5, plugins: ['./ir.cjs'] };
+
+	expect(open(configFileName, withCodegen, { rootDir: '/a' }).configIdentity)
+		.not.toBe(open(configFileName, withCodegen, { rootDir: '/b' }).configIdentity);
+	expect(open(configFileName, withoutCodegen, { rootDir: '/a' }).configIdentity)
+		.toBe(open(configFileName, withoutCodegen, { rootDir: '/b' }).configIdentity);
 });
 
 test('codegen exports that are not codegen plugins are reported as option diagnostics', () => {
