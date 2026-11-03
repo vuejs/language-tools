@@ -38,6 +38,7 @@ const raw = {
 	TemplateRefs: '',
 
 	// #region template helpers
+	asDefaultFactory: '',
 	asFunctionalComponent0: '',
 	asFunctionalComponent1: '',
 	asFunctionalDirective: '',
