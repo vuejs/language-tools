@@ -22,7 +22,7 @@ function createProject(name: string, files: Record<string, string>) {
 	return path.join(dir, 'tsconfig.json');
 }
 
-function open(configFileName: string, options?: MapperOptions, compilerOptions = {}) {
+function open(configFileName: string, options?: MapperOptions, compilerOptions: Record<string, unknown> = {}) {
 	const projectHandle = `identity-${nextHandle++}`;
 	const opened = openProject({ configFileName, projectHandle, compilerOptions, options });
 	closeProject(projectHandle);
@@ -155,7 +155,7 @@ test('plugins that fail to load are reported as option diagnostics', () => {
 	]);
 });
 
-test('compiler options give another identity only with a codegen plugin', () => {
+test('compiler options that differ give another identity only with a codegen plugin', () => {
 	const configFileName = createProject('codegen-compiler-options', {
 		'tsconfig.json': '{}',
 		'codegen.cjs': `exports.codegen = () => ({});\n`,
