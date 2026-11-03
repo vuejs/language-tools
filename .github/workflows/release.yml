@@ -13,6 +13,10 @@
 #
 # Only `latest` releases go to the VS Code Marketplace and Open VSX, built from
 # the pushed release tag: the marketplaces have no semver prerelease versions.
+# After an `alpha` release, github-actions[bot] comments the version on the open
+# pull request whose head is the released branch, if there is one.
+# auto-alpha.yml on master dispatches `prerelease` / `alpha` releases of
+# feature branches.
 #
 # The npm trusted publisher is bound to this filename, and a dispatch runs the
 # workflow file of the selected branch, so every release branch carries this
@@ -23,6 +27,11 @@
 # publishes the version in lerna.json, provided the branch HEAD carries its
 # `vX.Y.Z` tag. pnpm skips packages whose version is already on npm, and the
 # marketplaces skip an extension version they already have.
+#
+# Only the lerna.json packages are published. Before anything is versioned, the
+# job stops if a published package depends on another workspace package, such
+# as one of a git submodule, that is not on npm at its exact version released
+# from the checked out commit: pnpm rewrites `workspace:*` to that version.
 
 name: release
 
@@ -52,6 +61,8 @@ jobs:
       id-token: write # npm trusted publishing / provenance
     outputs:
       version: ${{ steps.publish.outputs.version }}
+      previous: ${{ steps.publish.outputs.previous }}
+      commits: ${{ steps.publish.outputs.commits }}
     steps:
       - name: Validate inputs
         env:
@@ -89,6 +100,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Check the workspace dependencies outside this release
+        run: node .github/scripts/check-workspace-deps.mjs
+
       - run: pnpm run build
 
       - name: Publish
@@ -118,10 +132,51 @@ jobs:
               --sync-workspace-lock \
               --yes
           fi
-          pnpm -r publish --tag "$DIST_TAG" --no-git-checks
+          pnpm -r --filter './packages/**' --filter './extensions/**' publish --tag "$DIST_TAG" --no-git-checks
           published="$(node -p "require('./lerna.json').version")"
           echo "version=$published" >> "$GITHUB_OUTPUT"
+          if previous="$(git describe --tags --abbrev=0 --match 'v*' "v$published^" 2>/dev/null)"; then
+            echo "previous=${previous#v}" >> "$GITHUB_OUTPUT"
+            echo "commits=$(git rev-list --count "$previous..v$published^")" >> "$GITHUB_OUTPUT"
+          fi
           echo "Published \`$published\` with dist-tag \`$DIST_TAG\`." >> "$GITHUB_STEP_SUMMARY"
+
+  comment-alpha:
+    needs: release
+    if: inputs.dist-tag == 'alpha'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write # comment on the pull request of the branch
+    steps:
+      - name: Comment on the open pull request of the branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD: ${{ github.repository_owner }}:${{ github.ref_name }}
+          VERSION: ${{ needs.release.outputs.version }}
+          PREVIOUS: ${{ needs.release.outputs.previous }}
+          COMMITS: ${{ needs.release.outputs.commits }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [[ -z "$VERSION" ]]; then
+            echo "::error::The release job gave no version"
+            exit 1
+          fi
+          prs="$(gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&head=$HEAD" --jq '.[].number')"
+          if [[ -z "$prs" ]]; then
+            echo "No open pull request has the head $HEAD; nothing to comment on."
+            exit 0
+          fi
+          if [[ -n "$PREVIOUS" ]]; then
+            commits="$COMMITS commit"
+            (( COMMITS == 1 )) || commits+=s
+            links="[$commits]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/v$PREVIOUS...v$VERSION), [run]($RUN_URL)"
+          else
+            links="[run]($RUN_URL)"
+          fi
+          body="\`$VERSION\` is on npm with dist-tag \`alpha\` ($links)."
+          for pr in $prs; do
+            gh api "repos/$GITHUB_REPOSITORY/issues/$pr/comments" -f body="$body" --jq '.html_url'
+          done
 
   publish-vscode-marketplace:
     needs: release

@@ -1,0 +1,161 @@
+# Dispatches release.yml with `version` prerelease and `dist-tag` alpha on each
+# branch of the matrix below, once the branch has settled. Scheduled workflows
+# only run from the default branch, so this file lives on master, and the
+# release runs the release.yml of the released branch.
+#
+# A branch is released when all of these hold, checked in this order:
+#
+# 1. Its HEAD carries no `v*` tag, so the version commit of the last release is
+#    not a new commit.
+# 2. Its HEAD was committed more than 4 hours ago.
+# 3. Test has run on its HEAD, and every Test run of the HEAD concluded success.
+# 4. Nothing changed for more than 4 hours: the first Test run of the HEAD, which
+#    starts at its push, is more than 4 hours old.
+# 5. The newest `v*-alpha.*` tag reachable from its HEAD, and the newest
+#    release.yml run on the branch, whatever its outcome, are more than 24 hours
+#    old, so alphas are 24 hours apart and a failed release is not retried every
+#    hour.
+#
+# A branch that does not meet a condition is skipped with a notice. A state that
+# none of the conditions expect fails the job of the branch: a branch that
+# cannot be fetched, a HEAD older than 4 hours that Test never ran on, a failed
+# API call or a run status that is not known.
+
+name: auto-alpha
+
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+    inputs:
+      branches:
+        description: 'JSON array of the branches to check; empty for the list in this file'
+        required: false
+      dry-run:
+        description: 'Report the decision without dispatching a release'
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: auto-alpha
+  cancel-in-progress: false
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ${{ fromJSON(inputs.branches || '["feat/vue-content-mapper"]') }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write # read the Test and release runs, dispatch release.yml
+      contents: read # fetch the branch and its tags
+    env:
+      BRANCH: ${{ matrix.branch }}
+      DRY_RUN: ${{ inputs.dry-run || false }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Dispatch an alpha release if the branch has settled
+        run: |
+          set -euo pipefail
+          quiet=$((4 * 3600))
+          apart=$((24 * 3600))
+          now="$(date +%s)"
+          skip() {
+            echo "::notice::$BRANCH: $1; no alpha release"
+            echo "$BRANCH: $1; no alpha release." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          }
+          fail() {
+            echo "::error::$BRANCH: $1"
+            exit 1
+          }
+          age() {
+            echo "$(( (now - $1) / 60 )) min"
+          }
+
+          git init -q repo
+          cd repo
+          git remote add origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          git fetch -q --filter=blob:none origin \
+            "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH" \
+            '+refs/tags/v*:refs/tags/v*' \
+            || fail "cannot fetch the branch and its tags"
+          sha="$(git rev-parse "refs/remotes/origin/$BRANCH")"
+
+          # 1. the version commit of a release is not a new commit
+          tags="$(git tag --points-at "$sha" --list 'v*' | paste -sd ' ' -)"
+          if [[ -n "$tags" ]]; then
+            skip "HEAD $sha is the release commit of $tags"
+          fi
+
+          # 2. the HEAD commit is old enough
+          committed="$(git log -1 --format=%ct "$sha")"
+          if (( now - committed <= quiet )); then
+            skip "HEAD $sha was committed $(age "$committed") ago"
+          fi
+
+          # 3. Test concluded success on the HEAD
+          runs="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/test.yml/runs?head_sha=$sha&per_page=100" \
+            --jq '.workflow_runs[] | "\(.id) \(.status) \(.conclusion // "-") \(.created_at)"')" \
+            || fail "cannot list the Test runs of $sha"
+          if [[ -z "$runs" ]]; then
+            fail "Test never ran on HEAD $sha, committed $(age "$committed") ago; a push with the GITHUB_TOKEN, like that of Auto Fix, starts no Test run, so dispatch Test on the branch"
+          fi
+          pushed="$now"
+          while read -r id status conclusion created; do
+            case "$status" in
+              completed) ;;
+              queued | in_progress | waiting | pending | requested)
+                skip "Test run $id on HEAD $sha is $status" ;;
+              *)
+                fail "Test run $id on HEAD $sha has the unknown status '$status'" ;;
+            esac
+            case "$conclusion" in
+              success) ;;
+              failure | cancelled | timed_out | skipped | neutral | action_required | stale | startup_failure)
+                echo "::warning::$BRANCH: Test run $id on HEAD $sha concluded $conclusion"
+                skip "Test run $id on HEAD $sha concluded $conclusion" ;;
+              *)
+                fail "Test run $id on HEAD $sha has the unknown conclusion '$conclusion'" ;;
+            esac
+            started="$(date -d "$created" +%s)" || fail "Test run $id has the creation time '$created'"
+            if (( started < pushed )); then
+              pushed="$started"
+            fi
+          done <<< "$runs"
+
+          # 4. nothing was pushed for 4 hours, whatever the commit time says
+          if (( now - pushed <= quiet )); then
+            skip "HEAD $sha was pushed $(age "$pushed") ago"
+          fi
+
+          # 5. alphas are 24 hours apart, and so are release attempts
+          last_alpha="$(git for-each-ref --merged "$sha" --sort=-creatordate --count=1 \
+            --format='%(creatordate:unix) %(refname:short)' 'refs/tags/v*-alpha.*')"
+          if [[ -n "$last_alpha" ]]; then
+            read -r tagged tag <<< "$last_alpha"
+            if (( now - tagged <= apart )); then
+              skip "the alpha $tag was tagged $(age "$tagged") ago"
+            fi
+          fi
+          last_release="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/release.yml/runs?branch=$BRANCH&per_page=1" \
+            --jq '.workflow_runs[0] | select(.) | "\(.id) \(.created_at)"')" \
+            || fail "cannot list the release runs of the branch"
+          if [[ -n "$last_release" ]]; then
+            read -r id created <<< "$last_release"
+            released="$(date -d "$created" +%s)" || fail "release run $id has the creation time '$created'"
+            if (( now - released <= apart )); then
+              skip "release run $id started $(age "$released") ago"
+            fi
+          fi
+
+          if [[ "$DRY_RUN" == true ]]; then
+            skip "HEAD $sha is ready, but this is a dry run"
+          fi
+          gh workflow run release.yml --ref "$BRANCH" -f version=prerelease -f dist-tag=alpha
+          echo "::notice::$BRANCH: dispatched an alpha release of HEAD $sha"
+          echo "$BRANCH: dispatched an alpha release of HEAD $sha." >> "$GITHUB_STEP_SUMMARY"

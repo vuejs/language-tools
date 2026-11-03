@@ -218,10 +218,7 @@ export function* generateEventExpression(
 			scope.declare('$event');
 
 			const accessMark = ctx.accessLog.length;
-			const codes: Code[] = [];
-			for (const code of interpolation) {
-				codes.push(code);
-			}
+			const codes = [...interpolation];
 
 			yield* generateEventParameter(options, argsType);
 			// consume $event to avoid TS6133 when the expression doesn't use it
