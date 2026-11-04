@@ -173,17 +173,16 @@ declare global {
 		: (S extends null | undefined ? never : S & ((props: S) => any));
 	function __VLS_omit<T, K>(target: T, props: K): Omit<T, keyof K>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
-	// Rewrites the binding so codegen's appended `.value` resolves with the
-	// unwrapped type: a wholly-ref type stays as-is; anything else gains a
-	// `Ref` conjunct (passed by the caller — this file cannot import vue) that
-	// doubles as the idempotency marker for re-assertion. The tuple form keeps
-	// every branch assignable to `T` (TS2677); distributing the intersection
-	// would turn nullish union members into `never`.
-	function __VLS_withDotValue<T, Ref>(
+	// Ref bindings already have the required access shape. Avoid asserting them
+	// again so TypeScript keeps discriminating generic unions by their getter.
+	function __VLS_withDotValue<T extends Ref, Ref>(t: T, ref: Ref): void;
+	// Capture non-ref unions before distributing so narrowed reads retain the
+	// complete write type, and keep each ref's getter, setter and readonly shape.
+	function __VLS_withDotValue<T, Ref, NonRef = Exclude<T, Ref>>(
 		t: T,
 		ref: Ref,
-	): asserts t is [T] extends [Ref] ? T
-		: NonNullable<T> & Ref & { value: T extends Ref & { value: infer V } ? V : T };
+	): asserts t is T extends Ref ? T
+		: NonNullable<T> & Ref & { value: NonRef };
 	// `const` keeps literal bindings (`const n = 1`) from widening: since TS 7.1
 	// the false-branch `T` is the distributed type parameter, which no longer
 	// counts as `T` appearing at the top level of the return type.
