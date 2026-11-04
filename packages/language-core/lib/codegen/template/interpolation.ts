@@ -91,7 +91,11 @@ export function* generateInterpolation(
 			yield boundary.end();
 		}
 		else {
-			yield `{${newLine}`;
+			// Contextual return-type errors span the arrow through this synthetic opening brace.
+			const openingBoundary = yield* Boundary.start(block.name, start + body.start, start + body.end, verification);
+			yield `{`;
+			yield openingBoundary.end();
+			yield newLine;
 			yield* generateReasserts(reasserts);
 			const boundary = yield* Boundary.start(block.name, start + body.start, start + body.end, verification);
 			yield `return`;
