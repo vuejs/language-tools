@@ -129,7 +129,24 @@ export function createContentMapper(frontend: ContentMapperFrontend): ContentMap
 			};
 			configuration.files.set(params.fileName, file);
 		}
-		return file.getResult();
+		const result = file.getResult();
+
+		// As in vue-tsc, a JavaScript SFC with a sibling `.d.vue.ts` or `.vue.d.ts` (a compiled component
+		// shipped by a package) is typed by those declarations, unchecked like a `.d.ts` under `skipLibCheck`.
+		// `.d.vue.ts` comes first, the order `tsc` resolves them in.
+		if (result.extension === '.js' || result.extension === '.jsx') {
+			const extension = path.extname(params.fileName);
+			const declarations = readFileIfExists(params.fileName.slice(0, -extension.length) + '.d' + extension + '.ts')
+				?? readFileIfExists(params.fileName + '.d.ts');
+			if (declarations !== undefined) {
+				return {
+					text: '// @ts-nocheck\n' + declarations,
+					extension: '.ts',
+					mappings: [],
+				};
+			}
+		}
+		return result;
 	}
 
 	function getConfiguration(state: ProjectState) {
