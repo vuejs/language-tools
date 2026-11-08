@@ -26,15 +26,21 @@ function generate(options: StyleCodegenOptions) {
 		styleScopedClassReferences.delete(style);
 	}
 	const ctx = createTemplateCodegenContext();
-	const codeGenerator = generateWorker(options, ctx);
-	const codes: Code[] = [];
-	for (const code of codeGenerator) {
-		if (typeof code === 'object') {
-			code[3] = ctx.resolveCodeFeatures(code[3]);
+	const resolve = (codeGenerator: Iterable<Code>) => {
+		const codes: Code[] = [];
+		for (const code of codeGenerator) {
+			if (typeof code === 'object') {
+				code[3] = ctx.resolveCodeFeatures(code[3]);
+			}
+			codes.push(code);
 		}
-		codes.push(code);
-	}
-	return { ...ctx, codes };
+		return codes;
+	};
+	// The CSS modules type depends on nothing in the template, so it is kept apart
+	// and declared outside the template function (see codegen/script/template.ts).
+	const styleModulesCodes = resolve(generateStyleModules(options, ctx));
+	const codes = resolve(generateWorker(options, ctx));
+	return { ...ctx, codes, styleModulesCodes };
 }
 
 function* generateWorker(
@@ -43,7 +49,6 @@ function* generateWorker(
 ) {
 	const scope = ctx.scope();
 	yield* generateStyleScopedClasses(options, ctx);
-	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);
 	yield* scope.end();
 }

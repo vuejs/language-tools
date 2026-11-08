@@ -298,6 +298,7 @@ function useCodegen(
 				...getGeneratedTemplate()?.generatedTypes ?? [],
 				...getGeneratedStyle()?.generatedTypes ?? [],
 			]),
+			styleModulesCodes: getGeneratedStyle()?.styleModulesCodes ?? [],
 			templateAndStyleCodes: [
 				...getGeneratedStyle()?.codes ?? [],
 				...getGeneratedTemplate()?.codes ?? [],

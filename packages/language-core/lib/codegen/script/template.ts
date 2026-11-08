@@ -17,6 +17,10 @@ export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	selfType?: string,
 ): Generator<Code> {
+	// Declared outside the template function: `__VLS_ctx` reads it, and reading it
+	// through the template's return type would make the template's inferred type
+	// depend on itself whenever that type depends on `$style` (e.g. a slot name).
+	yield* options.styleModulesCodes;
 	yield* generateTemplateCtx(options, selfType);
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
@@ -26,7 +30,7 @@ export function* generateTemplate(
 	// The template renders after setup, so it runs in its own function: the bindings
 	// it reads take their render-time types, not the narrowing at the end of setup.
 	// The types setup and the export need from it are passed out through its return type.
-	const exportedTypes = [names.Slots, names.InheritedAttrs, names.TemplateRefs, names.RootEl, names.StyleModules]
+	const exportedTypes = [names.Slots, names.InheritedAttrs, names.TemplateRefs, names.RootEl]
 		.filter(name =>
 			options.templateAndStyleTypes.has(name) && !(name === names.Slots && options.scriptSetupRanges?.defineSlots)
 		);
