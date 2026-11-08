@@ -186,9 +186,11 @@ declare global {
 		: NonNullable<T> & Ref & { value: T extends Ref & { value: infer V } ? V : T };
 	// `const` keeps literal bindings (`const n = 1`) from widening: since TS 7.1
 	// the false-branch `T` is the distributed type parameter, which no longer
-	// counts as `T` appearing at the top level of the return type.
+	// counts as `T` appearing at the top level of the return type. The false
+	// branch is a TS 5.0-safe `NoInfer`: a generic function binding must not
+	// fix the type parameters of the component it is passed to.
 	function __VLS_unwrap<const T, Ref>(t: T, ref: Ref): T extends Ref & { value: infer V } ? V
-		: T;
+		: [T][T extends any ? 0 : never];
 }
 
 export {};
