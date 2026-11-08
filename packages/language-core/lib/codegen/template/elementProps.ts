@@ -11,7 +11,7 @@ import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
 import type { TemplateCodegenContext } from './context';
 import { generateModifiers } from './elementDirectives';
-import { generateEventArg, generateEventExpression } from './elementEvents';
+import { generateEventArg, generateEventExpression, getEventArgName } from './elementEvents';
 import type { TemplateCodegenOptions } from './index';
 import { generateIdentifier, generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
@@ -29,6 +29,8 @@ export function* generateElementProps(
 	props: CompilerDOM.ElementNode['props'],
 	checkUnknownProps: boolean,
 	failedPropExps?: FailedPropExpressions[],
+	// type of the object the props are passed to, if any
+	attrsType?: string,
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
@@ -46,7 +48,14 @@ export function* generateElementProps(
 					yield `...{ `;
 					yield* generateEventArg(options, prop.arg.loc.source, prop.arg.loc.start.offset);
 					yield `: `;
-					yield* generateEventExpression(options, ctx, prop);
+					yield* generateEventExpression(
+						options,
+						ctx,
+						prop,
+						attrsType
+							? `${names.EventArgs}<${attrsType}, '${getEventArgName(prop.arg.loc.source)}'>`
+							: `any[]`,
+					);
 					yield `},`;
 				}
 				else {

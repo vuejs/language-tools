@@ -20,10 +20,9 @@ export function parseBindings(
 
 	ts.forEachChild(ast, node => {
 		if (ts.isVariableStatement(node)) {
-			const flags = (node.declarationList.flags & ts.NodeFlags.Const)
-				? BindingFlag.None
-				: BindingFlag.Variable;
+			const isConst = !!(node.declarationList.flags & ts.NodeFlags.Const);
 			for (const decl of node.declarationList.declarations) {
+				const flags = isConst ? BindingFlag.None : BindingFlag.Variable;
 				for (const { start, end } of collectBindingRanges(ts, decl.name, ast)) {
 					bindings.set(ast.text.slice(start, end), flags);
 				}

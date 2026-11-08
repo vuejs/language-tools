@@ -38,7 +38,7 @@ export = createLanguageServicePlugin(
 		addVueCommands();
 
 		let _language: core.Language<string> | undefined;
-		info.languageService = preprocessLanguageService(info.languageService, () => _language);
+		info.languageService = preprocessLanguageService(ts, info.languageService, () => _language);
 
 		return {
 			languagePlugins: [languagePlugin],

@@ -23,8 +23,16 @@ export function* generateTemplate(
 
 	yield `void ${names.ctx}, ${names.components}, ${names.intrinsics}, ${names.directives}${endOfLine}`;
 
+	// The template renders after setup, so it runs in its own function: the bindings
+	// it reads take their render-time types, not the narrowing at the end of setup.
+	// The types setup and the export need from it are passed out through its return type.
+	const exportedTypes = [names.Slots, names.InheritedAttrs, names.TemplateRefs, names.RootEl, names.StyleModules]
+		.filter(name =>
+			options.templateAndStyleTypes.has(name) && !(name === names.Slots && options.scriptSetupRanges?.defineSlots)
+		);
+	yield `const ${names.template} = () => {${newLine}`;
+
 	for (const name of options.dotValueBindings) {
-		yield `// @ts-ignore${newLine}`;
 		yield `${names.withDotValue}(${name}, ${
 			getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)
 		})${endOfLine}`;
@@ -33,6 +41,35 @@ export function* generateTemplate(
 	if (options.templateAndStyleCodes.length) {
 		yield* options.templateAndStyleCodes;
 	}
+
+	yield `return {${newLine}`;
+	for (const name of exportedTypes) {
+		yield `${name}: ${asType(name, options.scriptLang)},${newLine}`;
+	}
+	if (options.templateAndStyleTypes.has(names.dollars)) {
+		yield `${names.dollars},${newLine}`;
+	}
+	yield `}${endOfLine}`;
+	yield `}${endOfLine}`;
+
+	// Consumed only by the parts of setup and the export that apply.
+	const used = [names.template];
+	const returnType = `ReturnType<typeof ${names.template}>`;
+	for (const name of exportedTypes) {
+		yield* generateTypeAlias(name, options.scriptLang, function*() {
+			yield `${returnType}['${name}']`;
+		});
+	}
+	if (exportedTypes.length) {
+		used.push(asType(`[${exportedTypes.join(`, `)}]`, options.scriptLang));
+	}
+	if (options.templateAndStyleTypes.has(names.dollars)) {
+		yield* generateTypedVar('let', names.dollars, options.scriptLang, function*() {
+			yield `${returnType}['${names.dollars}']`;
+		});
+		used.push(names.dollars);
+	}
+	yield `void [${used.join(`, `)}]${endOfLine}`;
 }
 
 function* generateTemplateCtx(

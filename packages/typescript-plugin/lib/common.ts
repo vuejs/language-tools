@@ -7,6 +7,7 @@ import {
 import { getServiceScript } from '@volar/typescript/lib/node/utils';
 import {
 	type Language,
+	names,
 	tsCodegen,
 	type VueCodeInformation,
 	type VueCompilerOptions,
@@ -19,6 +20,7 @@ import { forEachTouchingNode } from './requests/utils';
 const windowsPathRE = /\\/g;
 
 export function preprocessLanguageService(
+	ts: typeof import('typescript'),
 	languageService: ts.LanguageService,
 	getLanguage: () => Language<any> | undefined,
 ) {
@@ -56,7 +58,7 @@ export function preprocessLanguageService(
 	): ts.LanguageService['getQuickInfoAtPosition'] {
 		return (fileName, position, ...rests) => {
 			const result = getQuickInfoAtPosition(fileName, position, ...rests);
-			if (!result || result.tags?.length) {
+			if (!result) {
 				return result;
 			}
 			const language = getLanguage();
@@ -67,10 +69,11 @@ export function preprocessLanguageService(
 			if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
 				return result;
 			}
-			const codegen = tsCodegen.get(sourceScript.generated.root.ir);
+			const { ir } = sourceScript.generated.root;
+			const codegen = tsCodegen.get(ir);
 			const leadingOffset = sourceScript.snapshot.getLength();
-			for (
-				const sourceRange of toSourceRanges(
+			const sourceRanges = [
+				...toSourceRanges(
 					sourceScript,
 					language,
 					serviceScript,
@@ -78,8 +81,19 @@ export function preprocessLanguageService(
 					result.textSpan.start + result.textSpan.length,
 					true,
 					() => true,
-				)
+				),
+			];
+			if (
+				codegen
+				&& ir.template
+				&& sourceRanges.some(([, start]) => start >= ir.template!.startTagEnd && start <= ir.template!.endTagStart)
 			) {
+				unwrapTemplateBindingQuickInfo(fileName, result, codegen.getUsedSetupBindings());
+			}
+			if (result.tags?.length) {
+				return result;
+			}
+			for (const sourceRange of sourceRanges) {
 				const generateRange2 = toGeneratedRange(
 					language,
 					serviceScript,
@@ -101,6 +115,54 @@ export function preprocessLanguageService(
 			}
 			return result;
 		};
+	}
+
+	// Template reads of setup bindings compile to `__VLS_unwrap(foo, ...)` or `foo.value`,
+	// so the mapped identifier alone still carries the wrapped `Ref` type.
+	function unwrapTemplateBindingQuickInfo(fileName: string, quickInfo: ts.QuickInfo, bindings: Set<string>) {
+		const program = languageService.getProgram();
+		const sourceFile = program?.getSourceFile(fileName);
+		if (!program || !sourceFile) {
+			return;
+		}
+		let id: ts.Identifier | undefined;
+		for (const node of forEachTouchingNode(ts, sourceFile, quickInfo.textSpan.start)) {
+			if (ts.isIdentifier(node)) {
+				id = node;
+				break;
+			}
+		}
+		if (!id || !bindings.has(id.text)) {
+			return;
+		}
+		const { parent } = id;
+		const isUnwrapCall = ts.isCallExpression(parent)
+			&& parent.arguments[0] === id
+			&& ts.isIdentifier(parent.expression)
+			&& parent.expression.text === names.unwrap;
+		const isDotValue = ts.isPropertyAccessExpression(parent)
+			&& parent.expression === id
+			&& parent.name.text === 'value';
+		if (!isUnwrapCall && !isDotValue) {
+			return;
+		}
+		const checker = program.getTypeChecker();
+		const type = checker.getTypeAtLocation(parent);
+		if (type === checker.getTypeAtLocation(id)) {
+			return;
+		}
+		quickInfo.kind = ts.ScriptElementKind.memberVariableElement;
+		quickInfo.kindModifiers = '';
+		quickInfo.displayParts = [
+			{ text: '(', kind: 'punctuation' },
+			{ text: 'property', kind: 'text' },
+			{ text: ')', kind: 'punctuation' },
+			{ text: ' ', kind: 'space' },
+			{ text: id.text, kind: 'propertyName' },
+			{ text: ':', kind: 'punctuation' },
+			{ text: ' ', kind: 'space' },
+			{ text: checker.typeToString(type, id), kind: 'text' },
+		];
 	}
 
 	function getCompletionsAtPosition(

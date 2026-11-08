@@ -8,7 +8,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning 注意\n在 `src` 中使用别名时，不要以 `~` 开头，后面的任何内容都会被解释为模块请求。这意味着你可以引用 node 模块中的资源：\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n:::"
+            "value": "如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning 注意\n在 `src` 中使用别名时，不要以 `~` 开头，后面的任何内容都会被解释为模块请求。这意味着你可以引用 node 模块中的资源：\n\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n\n:::"
           },
           "references": "api/sfc-spec.html#src-imports"
         },
@@ -16,7 +16,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)"
+            "value": "代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vite.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)"
           },
           "values": [
             {
@@ -42,7 +42,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning 注意\n在 `src` 中使用别名时，不要以 `~` 开头，后面的任何内容都会被解释为模块请求。这意味着你可以引用 node 模块中的资源：\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n:::"
+            "value": "如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning 注意\n在 `src` 中使用别名时，不要以 `~` 开头，后面的任何内容都会被解释为模块请求。这意味着你可以引用 node 模块中的资源：\n\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n\n:::"
           },
           "references": "api/sfc-spec.html#src-imports"
         },
@@ -50,7 +50,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)"
+            "value": "代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vite.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)"
           },
           "values": [
             {
@@ -103,7 +103,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning 注意\n在 `src` 中使用别名时，不要以 `~` 开头，后面的任何内容都会被解释为模块请求。这意味着你可以引用 node 模块中的资源：\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n:::"
+            "value": "如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning 注意\n在 `src` 中使用别名时，不要以 `~` 开头，后面的任何内容都会被解释为模块请求。这意味着你可以引用 node 模块中的资源：\n\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n\n:::"
           },
           "references": "api/sfc-spec.html#src-imports"
         },
@@ -111,7 +111,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)"
+            "value": "代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vite.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)"
           },
           "values": [
             {
@@ -167,7 +167,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning 注意\n在 `src` 中使用别名时，不要以 `~` 开头，后面的任何内容都会被解释为模块请求。这意味着你可以引用 node 模块中的资源：\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n:::"
+            "value": "如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning 注意\n在 `src` 中使用别名时，不要以 `~` 开头，后面的任何内容都会被解释为模块请求。这意味着你可以引用 node 模块中的资源：\n\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n\n:::"
           },
           "references": "api/sfc-spec.html#src-imports"
         }
@@ -184,7 +184,7 @@
       "name": "lang",
       "description": {
         "kind": "markdown",
-        "value": "代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)"
+        "value": "代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vite.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)"
       },
       "values": [],
       "references": "api/sfc-spec.html#pre-processors"
@@ -193,7 +193,7 @@
       "name": "src",
       "description": {
         "kind": "markdown",
-        "value": "如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning 注意\n在 `src` 中使用别名时，不要以 `~` 开头，后面的任何内容都会被解释为模块请求。这意味着你可以引用 node 模块中的资源：\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n:::"
+        "value": "如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning 注意\n在 `src` 中使用别名时，不要以 `~` 开头，后面的任何内容都会被解释为模块请求。这意味着你可以引用 node 模块中的资源：\n\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n\n:::"
       },
       "references": "api/sfc-spec.html#src-imports"
     }
