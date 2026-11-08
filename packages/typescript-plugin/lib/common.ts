@@ -117,7 +117,7 @@ export function preprocessLanguageService(
 		};
 	}
 
-	// Template reads of setup bindings compile to `__VLS_unwrap(foo, ...)` or `foo.value`,
+	// Template reads of setup bindings compile to `__VLS_unwrap(foo, ...)[0]` or `foo.value`,
 	// so the mapped identifier alone still carries the wrapped `Ref` type.
 	function unwrapTemplateBindingQuickInfo(fileName: string, quickInfo: ts.QuickInfo, bindings: Set<string>) {
 		const program = languageService.getProgram();
@@ -147,7 +147,7 @@ export function preprocessLanguageService(
 			return;
 		}
 		const checker = program.getTypeChecker();
-		const type = checker.getTypeAtLocation(parent);
+		const type = checker.getTypeAtLocation(isUnwrapCall ? parent.parent : parent);
 		if (type === checker.getTypeAtLocation(id)) {
 			return;
 		}
