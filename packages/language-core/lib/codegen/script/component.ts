@@ -44,7 +44,9 @@ function* generateEmitsOption(
 	options: ScriptCodegenOptions,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
-	const typeCodes = options.vueCompilerOptions.target >= 3.5 && !scriptSetupRanges.defineEmits?.hasUnionTypeArg
+	const typeCodes = options.vueCompilerOptions.target >= 3.5
+			&& !scriptSetupRanges.defineEmits?.arg
+			&& !scriptSetupRanges.defineEmits?.hasUnionTypeArg
 		? [...generateTypeEmitsOption(scriptSetupRanges)]
 		: [];
 
