@@ -950,7 +950,7 @@ test.skip('#2511', async () => {
 		),
 	).toMatchInlineSnapshot(`
 			{
-			  "newText": "import componentForAutoImport$1 from './component-for-auto-import.vue';",
+			  "newText": "import ComponentForAutoImport$1 from './component-for-auto-import.vue';",
 			  "range": {
 			    "end": {
 			      "character": 23,
