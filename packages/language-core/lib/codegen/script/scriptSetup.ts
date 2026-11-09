@@ -1,6 +1,7 @@
 import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRScriptSetup, TextRange } from '../../types';
+import type { RawIRAttr } from '../../virtualCode/rawIr';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
 import {
@@ -40,7 +41,7 @@ export function* generateGeneric(
 	ctx: ScriptCodegenContext,
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
-	generic: NonNullable<IRScriptSetup['generic']>,
+	generic: RawIRAttr,
 	body: Iterable<Code>,
 ): Generator<Code> {
 	yield `(`;

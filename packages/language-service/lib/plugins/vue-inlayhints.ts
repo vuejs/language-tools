@@ -72,7 +72,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 							continue;
 						}
 
-						const hintOffset = block.startTagEnd + hint.offset;
+						const hintOffset = block.innerStart + hint.offset;
 						if (hintOffset < start || hintOffset >= end) {
 							continue;
 						}

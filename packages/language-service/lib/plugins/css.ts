@@ -136,7 +136,7 @@ export function create(
 					return false;
 				}
 
-				const offset = document.offsetAt(position) + block.startTagEnd;
+				const offset = document.offsetAt(position) + block.innerStart;
 				for (const { sourceOffsets, lengths, data } of script.mappings) {
 					if (!sourceOffsets.length || !isRenameEnabled(data)) {
 						continue;

@@ -43,8 +43,8 @@ export function collectExtractProps(
 			const { name } = node;
 			for (const [offset] of map.toSourceLocation(name.getEnd() - leadingOffset, isSemanticTokensEnabled)) {
 				if (
-					offset >= ir.template!.startTagEnd + templateCodeRange[0]
-					&& offset <= ir.template!.startTagEnd + templateCodeRange[1]
+					offset >= ir.template!.innerStart + templateCodeRange[0]
+					&& offset <= ir.template!.innerStart + templateCodeRange[1]
 				) {
 					if (!result.has(name.text)) {
 						const type = checker.getTypeAtLocation(node);
