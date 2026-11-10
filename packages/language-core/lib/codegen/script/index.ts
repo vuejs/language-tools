@@ -4,7 +4,7 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, IRBlock, IRScript, IRScriptSetup, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { names } from '../names';
-import { asType, endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { asType, endOfLine, ensureTrailingLineBreak, generateSfcBlockSection, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateGeneric, generateMacros, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
@@ -93,6 +93,7 @@ function* generateWorker(
 		}
 		else {
 			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
+			yield* ensureTrailingLineBreak(script.content);
 			yield `export default ${exportExpression}${endOfLine}`;
 		}
 
@@ -180,6 +181,7 @@ function* generateWorker(
 		}
 		else {
 			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
+			yield* ensureTrailingLineBreak(script.content);
 			yield* generateExportDeclareEqual(script, names.export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 			yield* generateTemplate(options, names.export);
@@ -245,6 +247,7 @@ function* generateScriptWithExportDefault(
 	}
 	yield endOfLine;
 	yield* generateSfcBlockSection(script, exportDefault.end, script.content.length, codeFeatures.all);
+	yield* ensureTrailingLineBreak(script.content.slice(exportDefault.end));
 }
 
 function* generateGlobalTypesReference(

@@ -113,6 +113,13 @@ export function* generateSfcBlockSection(
 	}
 }
 
+export function* ensureTrailingLineBreak(content: string): Generator<Code> {
+	const trimmed = content.trimEnd();
+	if (trimmed.length && !/[\r\n]/.test(content.slice(trimmed.length))) {
+		yield newLine;
+	}
+}
+
 export function* forEachNode(ts: typeof import('typescript'), node: ts.Node): Generator<ts.Node> {
 	const children: ts.Node[] = [];
 	ts.forEachChild(node, child => {

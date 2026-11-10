@@ -6,6 +6,7 @@ import { names } from '../names';
 import {
 	asType,
 	endOfLine,
+	ensureTrailingLineBreak,
 	generateSfcBlockSection,
 	generateTypeAlias,
 	generateTypedVar,
@@ -361,6 +362,9 @@ export function* generateSetupFunction(
 		transforms,
 		(start, end) => generateSfcBlockSection(scriptSetup, start, end, codeFeatures.all),
 	);
+
+	yield* ensureTrailingLineBreak(scriptSetup.content);
+
 	yield* generateModels(options, scriptSetup, scriptSetupRanges);
 	yield* generatePublicProps(options, ctx, scriptSetup, scriptSetupRanges);
 	yield* body;
