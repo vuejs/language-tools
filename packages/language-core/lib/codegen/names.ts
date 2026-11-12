@@ -21,6 +21,7 @@ const raw = {
 	src: '',
 	template: '',
 
+	Elements: '',
 	Emit: '',
 	EmitProps: '',
 	GlobalComponents: '',
@@ -56,7 +57,6 @@ const raw = {
 	withDotValue: '',
 
 	ConstructorOverloads: '',
-	Elements: '',
 	EmitsToProps: '',
 	EventArgs: '',
 	ExtractComponentContext: '',
