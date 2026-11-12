@@ -1,0 +1,41 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ensure vendor is updated 1`] = `
+[
+  {
+    "commit": "96acaa52902feb1320e1d8ec8936b8669cca447d",
+    "path": "src/services/types.ts",
+    "repo": "microsoft/TypeScript",
+  },
+  {
+    "commit": "a134f3050c22fe80954241467cd429811792a81d",
+    "path": "src/services/htmlFormatter.ts",
+    "repo": "microsoft/vscode-html-languageservice",
+  },
+  {
+    "commit": "210541906e5a96ab39f9c753f921b1bd35f4138b",
+    "path": "extensions/css/syntaxes/css.tmLanguage.json",
+    "repo": "microsoft/vscode",
+  },
+  {
+    "commit": "45324363153075dab0482312ae24d8c068d81e4f",
+    "path": "extensions/html/syntaxes/html.tmLanguage.json",
+    "repo": "microsoft/vscode",
+  },
+  {
+    "commit": "210541906e5a96ab39f9c753f921b1bd35f4138b",
+    "path": "extensions/javascript/syntaxes/JavaScript.tmLanguage.json",
+    "repo": "microsoft/vscode",
+  },
+  {
+    "commit": "cf8d61ebd2f022f4ce8280171f0360d1fe0a206d",
+    "path": "extensions/scss/syntaxes/scss.tmLanguage.json",
+    "repo": "microsoft/vscode",
+  },
+  {
+    "commit": "210541906e5a96ab39f9c753f921b1bd35f4138b",
+    "path": "extensions/typescript-basics/syntaxes/TypeScript.tmLanguage.json",
+    "repo": "microsoft/vscode",
+  },
+]
+`;
