@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
+import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
@@ -203,9 +204,7 @@ export function* generateComponent(
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
 	yield `// @ts-ignore${newLine}`;
-	yield propsStr
-		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
-		.replace(/\n/g, ' ');
+	yield toSingleLine(options.typescript, propsStr);
 	yield `}))${endOfLine}`;
 
 	yield `const `;
@@ -489,4 +488,74 @@ function hasVBindAttrs(
 			&& prop.exp?.loc.source === '$attrs'
 		)
 	);
+}
+
+/**
+ * Joins generated code onto one line. Line comments become block comments so they don't swallow the code
+ * after them, and the scanner keeps `//` inside strings, template literals and regular expressions as it is.
+ */
+function toSingleLine(typescript: typeof ts, code: string) {
+	const scanner = typescript.createScanner(
+		typescript.ScriptTarget.Latest,
+		false,
+		typescript.LanguageVariant.Standard,
+		code,
+	);
+	const braces: boolean[] = [];
+	let result = '';
+	let previous: ts.SyntaxKind | undefined;
+	let kind = scanner.scan();
+	while (kind !== typescript.SyntaxKind.EndOfFileToken) {
+		if (kind === typescript.SyntaxKind.CloseBraceToken && braces.pop()) {
+			kind = scanner.reScanTemplateToken(false);
+		}
+		else if (
+			(kind === typescript.SyntaxKind.SlashToken || kind === typescript.SyntaxKind.SlashEqualsToken)
+			&& !endsExpression(typescript, previous)
+		) {
+			kind = scanner.reScanSlashToken();
+		}
+		const text = scanner.getTokenText();
+		if (kind === typescript.SyntaxKind.SingleLineCommentTrivia) {
+			result += `/*${text.slice(2).replaceAll('*/', '*\\/')} */`;
+		}
+		else {
+			result += text.replace(/\r?\n/g, ' ');
+		}
+		if (kind === typescript.SyntaxKind.OpenBraceToken) {
+			braces.push(false);
+		}
+		else if (kind === typescript.SyntaxKind.TemplateHead || kind === typescript.SyntaxKind.TemplateMiddle) {
+			braces.push(true);
+		}
+		if (
+			kind !== typescript.SyntaxKind.WhitespaceTrivia
+			&& kind !== typescript.SyntaxKind.NewLineTrivia
+			&& kind !== typescript.SyntaxKind.SingleLineCommentTrivia
+			&& kind !== typescript.SyntaxKind.MultiLineCommentTrivia
+		) {
+			previous = kind;
+		}
+		kind = scanner.scan();
+	}
+	return result;
+}
+
+function endsExpression(typescript: typeof ts, kind: ts.SyntaxKind | undefined) {
+	return kind === typescript.SyntaxKind.Identifier
+		|| kind === typescript.SyntaxKind.CloseParenToken
+		|| kind === typescript.SyntaxKind.CloseBracketToken
+		|| kind === typescript.SyntaxKind.CloseBraceToken
+		|| kind === typescript.SyntaxKind.NumericLiteral
+		|| kind === typescript.SyntaxKind.BigIntLiteral
+		|| kind === typescript.SyntaxKind.StringLiteral
+		|| kind === typescript.SyntaxKind.NoSubstitutionTemplateLiteral
+		|| kind === typescript.SyntaxKind.TemplateTail
+		|| kind === typescript.SyntaxKind.RegularExpressionLiteral
+		|| kind === typescript.SyntaxKind.ThisKeyword
+		|| kind === typescript.SyntaxKind.TrueKeyword
+		|| kind === typescript.SyntaxKind.FalseKeyword
+		|| kind === typescript.SyntaxKind.NullKeyword
+		|| kind === typescript.SyntaxKind.PlusPlusToken
+		|| kind === typescript.SyntaxKind.MinusMinusToken;
 }
