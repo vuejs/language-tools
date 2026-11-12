@@ -23,6 +23,10 @@ export function* generateComponent(
 	yield* emitOptionCodes;
 	yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length);
 
+	if (options.vueCompilerOptions.target >= 3.3 && scriptSetupRanges.defineSlots) {
+		const slotsType = `import('${options.vueCompilerOptions.lib}').SlotsType<${names.Slots}>`;
+		yield `slots: ${asType(slotsType, options.scriptLang)},${newLine}`;
+	}
 	if (
 		options.vueCompilerOptions.target >= 3.5
 		&& options.vueCompilerOptions.inferComponentDollarRefs
