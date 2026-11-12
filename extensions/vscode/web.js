@@ -1,6 +1,9 @@
 const vscode = require('vscode');
 
 exports.activate = async function() {
+	if (!vscode.workspace.isTrusted) {
+		return;
+	}
 	const tsWeb = vscode.extensions.getExtension('johnsoncodehk.vscode-typescript-web');
 	if (!tsWeb) {
 		const select = await vscode.window.showInformationMessage(
