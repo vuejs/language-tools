@@ -10,7 +10,7 @@
 	<C4 value="1" @foo-bar="exactType($event, {} as string)" />
 	<C4 :value="1" @foo-bar="exactType($event, {} as number)" />
 
-	<C1 @fooBar="exactType($event, {} as number)" @barBaz="exactType($event, {} as any)" />
+	<C1 @fooBar="exactType($event, {} as number)" @barBaz="exactType($event, {} as number)" />
 	<C2 @fooBar="exactType($event, {} as number)" />
 	<C3 @fooBar="exactType($event, {} as number)" />
 	<C4 value="1" @fooBar="exactType($event, {} as string)" />
