@@ -240,16 +240,19 @@ function* generateElementsType(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
-	const types = [
-		...ctx.generatedTypes.has(names.TemplateRefs) ? [...ctx.templateRefs.values()].flat().map(ref => ref.typeExp) : [],
-		...ctx.generatedTypes.has(names.RootEl) ? ctx.singleRootElTypes : [],
-	];
+	const types: string[] = [];
+	if (ctx.generatedTypes.has(names.TemplateRefs)) {
+		types.push(...[...ctx.templateRefs.values()].flat().map(ref => ref.typeExp));
+	}
+	if (ctx.generatedTypes.has(names.RootEl)) {
+		types.push(...ctx.singleRootElTypes);
+	}
 	if (!types.some(type => type.startsWith(names.Elements))) {
 		return;
 	}
 
 	// Declared in the template function so the emitted d.ts inlines the element types.
 	yield* generateTypeAlias(names.Elements, options.scriptLang, function*() {
-		yield `Omit<SVGElementTagNameMap, keyof HTMLElementTagNameMap> & HTMLElementTagNameMap`;
+		yield `${names.SpreadMerge}<SVGElementTagNameMap, HTMLElementTagNameMap>`;
 	});
 }
