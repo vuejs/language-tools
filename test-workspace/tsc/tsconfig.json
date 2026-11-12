@@ -623,6 +623,9 @@
 			"path": "./defineOptions/tsconfig.json"
 		},
 		{
+			"path": "./directive-valueless/tsconfig.json"
+		},
+		{
 			"path": "./directiveComments/tsconfig.json"
 		},
 		{
