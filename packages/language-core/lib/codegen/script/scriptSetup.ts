@@ -6,8 +6,8 @@ import { names } from '../names';
 import {
 	asType,
 	endOfLine,
-	ensureTrailingLineBreak,
 	generateSfcBlockSection,
+	generateSfcBlockSectionEnd,
 	generateTypeAlias,
 	generateTypedVar,
 	identifierRE,
@@ -25,15 +25,12 @@ export function* generateScriptSetupImports(
 	scriptSetup: IRScriptSetup,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
-	yield [
-		scriptSetup.content.slice(
-			0,
-			Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset),
-		),
-		'scriptSetup',
+	yield* generateSfcBlockSectionEnd(
+		scriptSetup,
 		0,
+		Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset),
 		codeFeatures.all,
-	];
+	);
 }
 
 export function* generateGeneric(
@@ -356,15 +353,14 @@ export function* generateSetupFunction(
 		}
 	}
 
+	const contentStart = Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset);
 	yield* generateCodeWithTransforms(
-		Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset),
+		contentStart,
 		scriptSetup.content.length,
 		transforms,
 		(start, end) => generateSfcBlockSection(scriptSetup, start, end, codeFeatures.all),
+		(start, end) => generateSfcBlockSectionEnd(scriptSetup, start, end, codeFeatures.all, contentStart),
 	);
-
-	yield* ensureTrailingLineBreak(scriptSetup.content);
-
 	yield* generateModels(options, scriptSetup, scriptSetupRanges);
 	yield* generatePublicProps(options, ctx, scriptSetup, scriptSetupRanges);
 	yield* body;

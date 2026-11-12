@@ -6,6 +6,8 @@ export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
 export const identifierRE = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
+const lineBreakRE = /[\r\n]/;
+
 export function isTsLang(lang: string): boolean {
 	return lang === 'ts' || lang === 'tsx';
 }
@@ -113,11 +115,39 @@ export function* generateSfcBlockSection(
 	}
 }
 
-export function* ensureTrailingLineBreak(content: string): Generator<Code> {
-	const trimmed = content.trimEnd();
-	if (trimmed.length && !/[\r\n]/.test(content.slice(trimmed.length))) {
-		yield newLine;
+// A section followed by generated code, which must start on a new line: user
+// text can end without a line break, or with a `//` comment.
+// The position after the line break joins the section's mapping, because
+// TypeScript extends the edits of a statement through that line break.
+export function* generateSfcBlockSectionEnd(
+	block: IRScript | IRScriptSetup,
+	start: number,
+	end: number,
+	features: VueCodeInformation,
+	// where the user text begins, when earlier sections have emitted part of it
+	textStart = start,
+): Generator<Code> {
+	if (!needsLineBreak(block.content, textStart, end)) {
+		yield* generateSfcBlockSection(block, start, end, features);
+		return;
 	}
+	features = { ...features, __combineToken: Symbol() };
+	yield* generateSfcBlockSection(block, start, end, features);
+	yield newLine;
+	yield [``, block.name, end, features];
+}
+
+function needsLineBreak(content: string, start: number, end: number): boolean {
+	const before = content.slice(start, end);
+	const text = before.trimEnd();
+	if (!text.length || lineBreakRE.test(before.slice(text.length))) {
+		return false;
+	}
+	// More text on the same source line means a line break would hide a missing
+	// separator between the two (#5071).
+	const after = content.slice(end);
+	const rest = after.trimStart();
+	return !rest.length || lineBreakRE.test(after.slice(0, after.length - rest.length));
 }
 
 export function* forEachNode(ts: typeof import('typescript'), node: ts.Node): Generator<ts.Node> {

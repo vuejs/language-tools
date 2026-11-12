@@ -39,6 +39,49 @@ test('"Add import" quick fix for undefined variable in template', async () => {
 	).toBe(true);
 });
 
+test('quick fix on the last statement of a block without a trailing line break', async () => {
+	const content = `<script setup lang="ts">
+function unused() {}</script>
+`;
+	const server = await getLanguageServer();
+	const document = await prepareDocument('tsconfigProject/fixture.vue', 'vue', content);
+	const start = document.positionAt(content.indexOf('unused'));
+	const end = document.positionAt(content.indexOf('unused') + 'unused'.length);
+
+	const res = await server.tsserver.message({
+		seq: server.nextSeq(),
+		command: 'getCodeFixes',
+		arguments: {
+			file: URI.parse(document.uri).fsPath,
+			startLine: start.line + 1,
+			startOffset: start.character + 1,
+			endLine: end.line + 1,
+			endOffset: end.character + 1,
+			errorCodes: [6133],
+		},
+	});
+	expect(res.success).toBe(true);
+
+	const codeFix = (res.body as any[]).find(fix => fix.fixName === 'unusedIdentifier');
+	expect(codeFix?.changes.map((change: any) => change.textChanges)).toMatchInlineSnapshot(`
+		[
+		  [
+		    {
+		      "end": {
+		        "line": 2,
+		        "offset": 21,
+		      },
+		      "newText": "",
+		      "start": {
+		        "line": 2,
+		        "offset": 1,
+		      },
+		    },
+		  ],
+		]
+	`);
+});
+
 async function requestCodeFixes(
 	fileName: string,
 	languageId: string,
