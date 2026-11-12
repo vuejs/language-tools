@@ -1,0 +1,56 @@
+name: Sync Grammar
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 1 * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-grammar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Pin the Monogram dependency to latest master
+        id: pin
+        run: |
+          hash=$(git ls-remote https://github.com/johnsoncodehk/monogram.git master | cut -f1)
+          sed -i "s|monogram#[0-9a-f]*|monogram#${hash}|" extensions/vscode/package.json
+          echo "hash=${hash}" >> "$GITHUB_OUTPUT"
+
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Generate grammars from Monogram
+        run: npm run gen:grammar
+
+      - name: Regenerate grammar snapshots
+        run: npm run test:grammar -- -u
+
+      - name: Open or update the sync pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          branch: ci/sync-grammar
+          delete-branch: true
+          commit-message: "ci(vscode): sync vue grammars from monogram"
+          title: "ci(vscode): sync vue grammars from monogram"
+          body: |
+            Bumps the pinned `monogram` dependency to johnsoncodehk/monogram@${{ steps.pin.outputs.hash }} and regenerates the Vue grammars, language configuration and grammar snapshots.
+
+            Review the snapshot diff for tokenization changes.
+          add-paths: |
+            extensions/vscode/package.json
+            pnpm-lock.yaml
+            extensions/vscode/syntaxes
+            extensions/vscode/languages
+            extensions/vscode/tests/__snapshots__/grammar.spec.ts.snap
