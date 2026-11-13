@@ -42,7 +42,17 @@ export function* generateVIf(
 				`)`,
 			)];
 			yield* codes;
-			ctx.conditions.push({ text: codeToString(codes as TsPiece[]), accesses: ctx.accessLog.slice(accessMark) });
+			// Locals (`v-for` / `v-slot` variables) are `const`, so their narrowing already
+			// reaches handler closures; list them too, or a condition that reads only locals
+			// is replayed against the narrowed type (TS2367 in a `v-else` handler).
+			const locals = ctx.getExpression(options.template, branch.condition.loc.start.offset, branch.condition.content)
+				.references
+				.filter(reference => reference.local)
+				.map(reference => reference.name);
+			ctx.conditions.push({
+				text: codeToString(codes as TsPiece[]),
+				accesses: [...ctx.accessLog.slice(accessMark), ...locals],
+			});
 			addedBlockCondition = true;
 			yield ` `;
 		}
