@@ -397,9 +397,18 @@ export function* generateIdentifier(
 			if (isNewOperand) {
 				yield `(`;
 			}
+			// A diagnostic on the whole call, e.g. as an argument of a wrong type,
+			// starts at `__VLS_unwrap`; map it to the binding.
+			const boundary = yield* Boundary.start(
+				source,
+				start,
+				end,
+				{ features: 0 },
+			);
 			yield `${names.unwrap}(`;
 			yield* codes;
 			yield `, ${getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)})`;
+			yield boundary.end();
 			if (isNewOperand) {
 				yield `)`;
 			}
