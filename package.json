@@ -5,6 +5,7 @@
 		"build": "tsc -b",
 		"watch": "tsc -b -w",
 		"watch:ext": "node extensions/vscode/scripts/write-plugins.ts --dev && npm run watch",
+		"test:vscode": "cd extensions/vscode && npm run test",
 		"test": "npm run build && vitest run",
 		"test:grammar": "vitest run extensions/vscode/tests/grammar.spec.ts",
 		"format": "dprint fmt",

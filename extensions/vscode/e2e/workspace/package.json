@@ -1,0 +1,9 @@
+{
+	"name": "@volar/e2e-workspace",
+	"private": true,
+	"version": "0.0.0",
+	"dependencies": {
+		"vue": "latest",
+		"typescript": "latest"
+	}
+}
