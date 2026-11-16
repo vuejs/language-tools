@@ -95,8 +95,8 @@ export function create(): LanguageServicePlugin {
 						return [];
 					}
 
-					const { vueSfc, ir } = info.root;
-					if (!vueSfc) {
+					const { parsed, ir } = info.root;
+					if (!parsed) {
 						return;
 					}
 
@@ -105,15 +105,15 @@ export function create(): LanguageServicePlugin {
 					const { template } = ir;
 
 					const {
-						startTagEnd = Infinity,
-						endTagStart = -Infinity,
+						innerStart = Infinity,
+						innerEnd = -Infinity,
 					} = template ?? {};
 
-					for (const error of vueSfc.errors) {
+					for (const error of parsed.errors) {
 						if ('code' in error) {
 							const start = error.loc?.start.offset ?? 0;
 							const end = error.loc?.end.offset ?? 0;
-							if (end < startTagEnd || start >= endTagStart) {
+							if (end < innerStart || start >= innerEnd) {
 								sfcErrors.push({
 									range: {
 										start: document.positionAt(start),
@@ -153,7 +153,7 @@ export function create(): LanguageServicePlugin {
 							},
 							selectionRange: {
 								start: document.positionAt(ir.template.start),
-								end: document.positionAt(ir.template.startTagEnd),
+								end: document.positionAt(ir.template.innerStart),
 							},
 						});
 					}
@@ -167,7 +167,7 @@ export function create(): LanguageServicePlugin {
 							},
 							selectionRange: {
 								start: document.positionAt(ir.script.start),
-								end: document.positionAt(ir.script.startTagEnd),
+								end: document.positionAt(ir.script.innerStart),
 							},
 						});
 					}
@@ -181,7 +181,7 @@ export function create(): LanguageServicePlugin {
 							},
 							selectionRange: {
 								start: document.positionAt(ir.scriptSetup.start),
-								end: document.positionAt(ir.scriptSetup.startTagEnd),
+								end: document.positionAt(ir.scriptSetup.innerStart),
 							},
 						});
 					}
@@ -202,7 +202,7 @@ export function create(): LanguageServicePlugin {
 							},
 							selectionRange: {
 								start: document.positionAt(style.start),
-								end: document.positionAt(style.startTagEnd),
+								end: document.positionAt(style.innerStart),
 							},
 						});
 					}
@@ -216,7 +216,7 @@ export function create(): LanguageServicePlugin {
 							},
 							selectionRange: {
 								start: document.positionAt(customBlock.start),
-								end: document.positionAt(customBlock.startTagEnd),
+								end: document.positionAt(customBlock.innerStart),
 							},
 						});
 					}

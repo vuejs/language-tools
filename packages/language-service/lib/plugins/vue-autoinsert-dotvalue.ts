@@ -51,11 +51,11 @@ export function create(
 						return;
 					}
 
-					for (const { ast, startTagEnd, endTagStart } of scriptBlocks) {
-						if (sourceOffset < startTagEnd || sourceOffset > endTagStart) {
+					for (const { ast, innerStart, innerEnd } of scriptBlocks) {
+						if (sourceOffset < innerStart || sourceOffset > innerEnd) {
 							continue;
 						}
-						if (shouldSkip(ts, ast, sourceOffset - startTagEnd, false)) {
+						if (shouldSkip(ts, ast, sourceOffset - innerStart, false)) {
 							return;
 						}
 					}

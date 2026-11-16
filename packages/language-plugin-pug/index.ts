@@ -11,7 +11,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 	return {
 		name: require('./package.json').name,
 
-		version: 2.2,
+		version: 3,
 
 		getEmbeddedCodes(_fileName, ir) {
 			if (ir.template?.lang === 'pug') {
@@ -84,11 +84,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 				const visited = new Set<object>();
 				visit(ast);
 
-				return {
-					ast,
-					code: '',
-					preamble: '',
-				};
+				return ast;
 
 				function visit(obj: object) {
 					for (const key in obj) {

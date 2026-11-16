@@ -21,8 +21,8 @@ export function create(
 					const { template } = info.root.ir;
 					const offset = document.offsetAt(position);
 
-					if (template?.ast && offset >= template.startTagEnd && offset <= template.endTagStart) {
-						const pos = offset - template.startTagEnd;
+					if (template?.ast && offset >= template.innerStart && offset <= template.innerEnd) {
+						const pos = offset - template.innerStart;
 						for (const node of forEachElementNode(template.ast)) {
 							if (pos < node.loc.start.offset || pos > node.loc.end.offset) {
 								continue;
