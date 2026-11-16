@@ -1349,6 +1349,24 @@
 							"name": "source.ts.embedded.html.vue",
 							"patterns": [
 								{
+									"comment": "Same as source.ts#expression-operators `as`/`satisfies`, but also ends before a quote so the type cannot run past the attribute value. https://github.com/vuejs/language-tools/issues/6296",
+									"begin": "(?<![_$[:alnum:]])(?:(?<=\\.\\.\\.)|(?<!\\.))(?:(as)|(satisfies))\\s+",
+									"beginCaptures": {
+										"1": {
+											"name": "keyword.control.as.ts"
+										},
+										"2": {
+											"name": "keyword.control.satisfies.ts"
+										}
+									},
+									"end": "(?=['\"`]|^|[;),}\\]:?\\-\\+\\>]|\\|\\||\\&\\&|\\!\\=\\=|$|((?<![_$[:alnum:]])(?:(?<=\\.\\.\\.)|(?<!\\.))(as|satisfies)\\s+)|(\\s+\\<))",
+									"patterns": [
+										{
+											"include": "source.ts#type"
+										}
+									]
+								},
+								{
 									"include": "source.ts#expression"
 								}
 							]
