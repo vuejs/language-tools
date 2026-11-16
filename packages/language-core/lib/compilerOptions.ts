@@ -265,6 +265,7 @@ export function getDefaultCompilerOptions(
 	const htmlAttributes = ['aria-*'];
 
 	return {
+		environment: 'typecheck',
 		target,
 		lib,
 		typesRoot,
