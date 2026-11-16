@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 export enum Mode {
 	A,
@@ -7,3 +7,6 @@ export enum Mode {
 
 export const options = { mode: Mode.A };
 export const count = ref(0);
+export const object = { locale: { value: 'en' } };
+export const maybe = ref<string | undefined>();
+export const readonlyCount = computed(() => 1);
