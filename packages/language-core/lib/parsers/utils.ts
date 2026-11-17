@@ -22,7 +22,13 @@ export function parseBindings(
 		if (ts.isVariableStatement(node)) {
 			const isConst = !!(node.declarationList.flags & ts.NodeFlags.Const);
 			for (const decl of node.declarationList.declarations) {
-				const flags = isConst ? BindingFlag.None : BindingFlag.Variable;
+				const isObjectLiteral = ts.isIdentifier(decl.name) && !!decl.initializer
+					&& ts.isObjectLiteralExpression(getUnwrappedExpression(ts, decl.initializer));
+				const flags = !isConst
+					? BindingFlag.Variable
+					: isObjectLiteral
+					? BindingFlag.Const
+					: BindingFlag.None;
 				for (const { start, end } of collectBindingRanges(ts, decl.name, ast)) {
 					bindings.set(ast.text.slice(start, end), flags);
 				}
