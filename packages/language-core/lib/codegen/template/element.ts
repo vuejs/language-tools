@@ -1,12 +1,13 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
+import type * as ts from 'typescript';
 import type { Code } from '../../types';
-import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
+import { getElementTagOffsets, getStartEnd, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { endOfLine, generateTypedVar, identifierRE, newLine } from '../utils';
+import { endOfLine, forEachNode, generateTypedVar, getTypeScriptAST, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
@@ -203,9 +204,7 @@ export function* generateComponent(
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
 	yield `// @ts-ignore${newLine}`;
-	yield propsStr
-		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
-		.replace(/\n/g, ' ');
+	yield toSingleLine(options, propsStr);
 	yield `}))${endOfLine}`;
 
 	yield `const `;
@@ -489,4 +488,46 @@ function hasVBindAttrs(
 			&& prop.exp?.loc.source === '$attrs'
 		)
 	);
+}
+
+/**
+ * Joins the code of object literal members onto one line, so that a single `@ts-ignore` covers all of it.
+ * Line comments become block comments to not swallow the code after them. They are told apart from `//` in
+ * strings, template literals and regular expressions by parsing the code, e.g. `url="https://example.com"`.
+ */
+function toSingleLine(options: TemplateCodegenOptions, code: string) {
+	if (!code.includes('//')) {
+		return code.replace(/\n/g, ' ');
+	}
+
+	const { typescript: ts } = options;
+	const prefix = '({';
+	const ast = getTypeScriptAST(ts, options.template, `${prefix}${code}})`);
+	const literals = [...forEachLiteral(ts, ast)];
+
+	let result = '';
+	let start = 0;
+	for (const literal of [...literals, undefined]) {
+		const end = literal ? getStartEnd(ts, literal, ast).start - prefix.length : code.length;
+		result += code.slice(start, end).replace(
+			/\/\*[\s\S]*?\*\/|\/\/(.*)/g,
+			(comment, body?: string) => body === undefined ? comment : `/*${body.replaceAll('*/', '*\\/')} */`,
+		);
+		if (literal) {
+			start = literal.end - prefix.length;
+			result += code.slice(end, start);
+		}
+	}
+	return result.replace(/\n/g, ' ');
+}
+
+function* forEachLiteral(ts: typeof import('typescript'), node: ts.Node): Generator<ts.Node> {
+	if (ts.isStringLiteral(node) || ts.isTemplateLiteralToken(node) || ts.isRegularExpressionLiteral(node)) {
+		yield node;
+	}
+	else {
+		for (const child of forEachNode(ts, node)) {
+			yield* forEachLiteral(ts, child);
+		}
+	}
 }
