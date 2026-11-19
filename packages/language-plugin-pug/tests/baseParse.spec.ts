@@ -114,4 +114,71 @@ describe('baseParse', () => {
 			expect((classDir?.exp as CompilerDOM.SimpleExpressionNode)?.content).toBe('["foo", "bar"]');
 		});
 	});
+
+	describe('mixins', () => {
+		const compact = (code: string) => code.replace(/\s+/g, '');
+
+		it('should expand a mixin where it is called', () => {
+			const result = baseParse(`mixin row
+  span {{ item }}
+
+div
+  template(v-for="item in items")
+    +row
+`);
+
+			expect(result.error).toBeUndefined();
+			// the definition itself is not emitted, only the expansion inside the loop
+			expect(compact(result.htmlCode)).toBe(
+				compact('<div><template v-for="item in items"><span>{{ item }}</span></template></div>'),
+			);
+		});
+
+		it('should expand a mixin once per call', () => {
+			const result = baseParse(`mixin row
+  span a
+
+div
+  +row
+  +row
+`);
+
+			expect(compact(result.htmlCode)).toBe('<div><span>a</span><span>a</span></div>');
+		});
+
+		it('should emit the definition of a mixin that is never called', () => {
+			const result = baseParse(`mixin row
+  span {{ item }}
+`);
+
+			expect(compact(result.htmlCode)).toBe('<span>{{item}}</span>');
+		});
+
+		it('should place the block of a call where the mixin uses `block`', () => {
+			const result = baseParse(`mixin card
+  section
+    block
+
+div
+  +card
+    span {{ item }}
+`);
+
+			expect(result.error).toBeUndefined();
+			expect(compact(result.htmlCode)).toBe('<div><section><span>{{item}}</span></section></div>');
+		});
+
+		it('should not expand a recursive mixin forever', () => {
+			const result = baseParse(`mixin tree
+  li
+    +tree
+
+ul
+  +tree
+`);
+
+			expect(result.error).toBeUndefined();
+			expect(compact(result.htmlCode)).toBe('<ul><li></li></ul>');
+		});
+	});
 });
