@@ -1,12 +1,13 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
-import type { Code } from '../../types';
-import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
+import type * as ts from 'typescript';
+import type { Code, TextRange } from '../../types';
+import { getElementTagOffsets, getStartEnd, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { endOfLine, generateTypedVar, identifierRE, newLine } from '../utils';
+import { endOfLine, generateTypedVar, getTypeScriptAST, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
@@ -191,7 +192,7 @@ export function* generateComponent(
 	// overloads of the component and infers its type parameters from the props, including intersections of
 	// construct signatures such as `DefineComponent<...> & (new <T>(props: { items: T[] }, slots) => ...)` of
 	// Vuetify's `genericComponent`. Inferring from the constructor type alone takes the last overload and loses
-	// the type parameters of intersections. The two `@ts-ignore`s cover what the call reports for valid templates:
+	// the type parameters of intersections. The `@ts-ignore`s cover what the call reports for valid templates:
 	// - components that are not constructable (functional components, plain objects, `{}`) or abstract;
 	// - construct signatures of other arities (`new () => ...`, Vuetify's `(props, slots)`);
 	// - excess or weakly matching props, since attributes and events are passed along with the props;
@@ -202,10 +203,7 @@ export function* generateComponent(
 	yield `const ${functionalVar} = ${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
-	yield `// @ts-ignore${newLine}`;
-	yield propsStr
-		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
-		.replace(/\n/g, ' ');
+	yield ignoreEachLine(options, propsStr);
 	yield `}))${endOfLine}`;
 
 	yield `const `;
@@ -489,4 +487,68 @@ function hasVBindAttrs(
 			&& prop.exp?.loc.source === '$attrs'
 		)
 	);
+}
+
+const blankOrCommentLineRE = /^(?:\/\/.*)?$/;
+
+/**
+ * Puts a `@ts-ignore` before each line of the code: a directive covers one line, and the lines cannot be
+ * joined, as their breaks end `//` comments and statements. A line after a blank or comment line gets none:
+ * TypeScript applies the directive above that line, so that a directive comment in the code keeps its effect.
+ */
+function ignoreEachLine(options: TemplateCodegenOptions, code: string) {
+	const text = escapeLineBreaksInTokens(options, code);
+	let result = '';
+	let covered = false;
+	for (let start = 0, end: number; start < text.length; start = end) {
+		end = text.indexOf(newLine, start) + 1 || text.length;
+		const line = text.slice(start, end);
+		if (!covered) {
+			result += `// @ts-ignore${newLine}`;
+		}
+		result += line;
+		covered = blankOrCommentLineRE.test(line.trim());
+	}
+	return result;
+}
+
+/**
+ * Writes the line breaks inside template literals and strings as escapes, which keeps their values. These are
+ * the only tokens that can span lines, and a line that starts inside one cannot get a directive.
+ */
+function escapeLineBreaksInTokens(options: TemplateCodegenOptions, text: string) {
+	// such a token has a backtick, or a `\` before its line break
+	if (!/`|\\\r?\n/.test(text)) {
+		return text;
+	}
+
+	const { typescript: ts } = options;
+	const prefix = `({`;
+	const suffix = `})`;
+	const ast = getTypeScriptAST(ts, options.template, `${prefix}${text}${suffix}`);
+	const tokens: TextRange[] = [];
+	const visit = (node: ts.Node) => {
+		if (
+			node.kind === ts.SyntaxKind.StringLiteral
+			|| node.kind >= ts.SyntaxKind.FirstTemplateToken && node.kind <= ts.SyntaxKind.LastTemplateToken
+		) {
+			tokens.push(getStartEnd(ts, node, ast));
+		}
+		else {
+			ts.forEachChild(node, visit);
+		}
+	};
+	visit(ast);
+
+	let result = '';
+	let offset = 0;
+	for (const { start, end } of tokens.sort((a, b) => a.start - b.start)) {
+		result += ast.text.slice(offset, start) + ast.text.slice(start, end).replace(
+			// after an odd number of `\`, the line break continues the line and is not part of the value
+			/(\\*)\r?\n/g,
+			(_, slashes: string) => slashes.length % 2 ? slashes.slice(1) : `${slashes}\\n`,
+		);
+		offset = end;
+	}
+	return (result + ast.text.slice(offset)).slice(prefix.length, -suffix.length);
 }
