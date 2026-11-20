@@ -517,6 +517,7 @@ const commentRE = /\/\/.*|\/\*[^]*?\*\//g;
 /**
  * Writes the template literals, strings and block comments that span lines on one line: a line that starts
  * inside one of them cannot get a directive. A literal is written again from its value, which keeps its type.
+ * A line break follows such a comment, as the comment ends a statement like a line break does.
  */
 function removeInnerLineBreaks(options: TemplateCodegenOptions, text: string) {
 	// only these have a backtick, a `\` before the line break or a `/*`
@@ -544,7 +545,11 @@ function removeInnerLineBreaks(options: TemplateCodegenOptions, text: string) {
 	};
 	visit(ast);
 
-	const joinComments = (code: string) => code.replace(commentRE, comment => comment.replace(/\r?\n/g, ' '));
+	const joinComments = (code: string) =>
+		code.replace(
+			commentRE,
+			comment => comment.includes(newLine) ? comment.replace(/\r?\n/g, ' ') + newLine : comment,
+		);
 	let result = '';
 	let offset = 0;
 	for (const { node, start, end } of tokens.sort((a, b) => a.start - b.start)) {

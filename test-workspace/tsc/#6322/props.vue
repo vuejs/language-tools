@@ -60,6 +60,14 @@ b`, onClose: event => event.preventDefault(),
 */ value => String(value)"
 	/>
 
+	<!-- statements separated by the line break in a block comment only -->
+	<Child
+		:format="value => {
+			log(value) /*
+			*/ return String(value)
+		}"
+	/>
+
 	<!-- line breaks in a template literal and in a string -->
 	<Generic
 		:value="`a
