@@ -497,7 +497,7 @@ const blankOrCommentLineRE = /^(?:\/\/.*)?$/;
  * TypeScript applies the directive above that line, so that a directive comment in the code keeps its effect.
  */
 function ignoreEachLine(options: TemplateCodegenOptions, code: string) {
-	const text = escapeLineBreaksInTokens(options, code);
+	const text = removeInnerLineBreaks(options, code);
 	let result = '';
 	let covered = false;
 	for (let start = 0, end: number; start < text.length; start = end) {
@@ -512,13 +512,15 @@ function ignoreEachLine(options: TemplateCodegenOptions, code: string) {
 	return result;
 }
 
+const commentRE = /\/\/.*|\/\*[^]*?\*\//g;
+
 /**
- * Writes the line breaks inside template literals and strings as escapes, which keeps their values. These are
- * the only tokens that can span lines, and a line that starts inside one cannot get a directive.
+ * Writes the template literals, strings and block comments that span lines on one line: a line that starts
+ * inside one of them cannot get a directive. A literal is written again from its value, which keeps its type.
  */
-function escapeLineBreaksInTokens(options: TemplateCodegenOptions, text: string) {
-	// such a token has a backtick, or a `\` before its line break
-	if (!/`|\\\r?\n/.test(text)) {
+function removeInnerLineBreaks(options: TemplateCodegenOptions, text: string) {
+	// only these have a backtick, a `\` before the line break or a `/*`
+	if (!/`|\\\r?\n|\/\*/.test(text)) {
 		return text;
 	}
 
@@ -526,13 +528,15 @@ function escapeLineBreaksInTokens(options: TemplateCodegenOptions, text: string)
 	const prefix = `({`;
 	const suffix = `})`;
 	const ast = getTypeScriptAST(ts, options.template, `${prefix}${text}${suffix}`);
-	const tokens: TextRange[] = [];
+	// the tokens that can contain what looks like a comment
+	const tokens: TextRange<ts.LiteralLikeNode>[] = [];
 	const visit = (node: ts.Node) => {
 		if (
 			node.kind === ts.SyntaxKind.StringLiteral
+			|| node.kind === ts.SyntaxKind.RegularExpressionLiteral
 			|| node.kind >= ts.SyntaxKind.FirstTemplateToken && node.kind <= ts.SyntaxKind.LastTemplateToken
 		) {
-			tokens.push(getStartEnd(ts, node, ast));
+			tokens.push(getStartEnd(ts, node as ts.LiteralLikeNode, ast));
 		}
 		else {
 			ts.forEachChild(node, visit);
@@ -540,15 +544,20 @@ function escapeLineBreaksInTokens(options: TemplateCodegenOptions, text: string)
 	};
 	visit(ast);
 
+	const joinComments = (code: string) => code.replace(commentRE, comment => comment.replace(/\r?\n/g, ' '));
 	let result = '';
 	let offset = 0;
-	for (const { start, end } of tokens.sort((a, b) => a.start - b.start)) {
-		result += ast.text.slice(offset, start) + ast.text.slice(start, end).replace(
-			// after an odd number of `\`, the line break continues the line and is not part of the value
-			/(\\*)\r?\n/g,
-			(_, slashes: string) => slashes.length % 2 ? slashes.slice(1) : `${slashes}\\n`,
-		);
+	for (const { node, start, end } of tokens.sort((a, b) => a.start - b.start)) {
+		let token = ast.text.slice(start, end);
+		if (token.includes(newLine) && !node.isUnterminated) {
+			const value = JSON.stringify(node.text);
+			token = node.kind === ts.SyntaxKind.StringLiteral
+				? value
+				// between the delimiters of the token: a backtick or `}`, and a backtick or `${`
+				: token[0] + value.slice(1, -1).replace(/[`$]/g, '\\$&') + (token.endsWith('`') ? '`' : '${');
+		}
+		result += joinComments(ast.text.slice(offset, start)) + token;
 		offset = end;
 	}
-	return (result + ast.text.slice(offset)).slice(prefix.length, -suffix.length);
+	return (result + joinComments(ast.text.slice(offset))).slice(prefix.length, -suffix.length);
 }

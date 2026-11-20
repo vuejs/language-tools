@@ -54,6 +54,12 @@ b`, onClose: event => event.preventDefault(),
 		}"
 	/>
 
+	<!-- a function after a line break in a block comment -->
+	<Child
+		:format="/* a comment
+*/ value => String(value)"
+	/>
+
 	<!-- line breaks in a template literal and in a string -->
 	<Generic
 		:value="`a
@@ -62,5 +68,9 @@ b`"
 	<Generic
 		:value="'a\
 b'"
+	/>
+	<Generic
+		:value="`$\
+{}`"
 	/>
 </template>
