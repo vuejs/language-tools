@@ -28,6 +28,20 @@ function log(_value: number) {}
 			log('not a number') ?? 1
 		"
 	/>
+	<Child
+		:count="
+			/* @ts-expect-error */
+			log('not a number') ?? 1
+		"
+	/>
+
+	<!-- an expected error that needs the type of the parameter -->
+	<Child
+		:format="value => {
+			// @ts-expect-error
+			return value.missing
+		}"
+	/>
 
 	<!-- statements separated by line breaks only, with blank and comment lines -->
 	<Child

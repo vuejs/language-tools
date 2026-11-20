@@ -489,39 +489,27 @@ function hasVBindAttrs(
 	);
 }
 
-const blankOrCommentLineRE = /^(?:\/\/.*)?$/;
-
 /**
  * Puts a `@ts-ignore` before each line of the code: a directive covers one line, and the lines cannot be
- * joined, as their breaks end `//` comments and statements. A line after a blank or comment line gets none:
- * TypeScript applies the directive above that line, so that a directive comment in the code keeps its effect.
+ * joined, as their breaks end `//` comments and statements.
  */
 function ignoreEachLine(options: TemplateCodegenOptions, code: string) {
-	const text = removeInnerLineBreaks(options, code);
-	let result = '';
-	let covered = false;
-	for (let start = 0, end: number; start < text.length; start = end) {
-		end = text.indexOf(newLine, start) + 1 || text.length;
-		const line = text.slice(start, end);
-		if (!covered) {
-			result += `// @ts-ignore${newLine}`;
-		}
-		result += line;
-		covered = blankOrCommentLineRE.test(line.trim());
-	}
-	return result;
+	return prepareForDirectives(options, code).replace(/(?<=^|\n)(?=[^\r\n])/g, `// @ts-ignore${newLine}`);
 }
 
 const commentRE = /\/\/.*|\/\*[^]*?\*\//g;
 
 /**
- * Writes the template literals, strings and block comments that span lines on one line: a line that starts
- * inside one of them cannot get a directive. A literal is written again from its value, which keeps its type.
- * A line break follows such a comment, as the comment ends a statement like a line break does.
+ * Rewrites what keeps a directive before each line from covering the code:
+ * - a template literal or a string that spans lines, as a line that starts inside one cannot get a directive.
+ *   It is written again from its value on one line, which keeps its type;
+ * - a block comment that spans lines, for the same reason. It is written on one line, and a line break follows
+ *   it, as such a comment ends a statement like a line break does;
+ * - `@ts-expect-error` in a comment, which becomes `@ts-ignore`: the code may not have the expected error
+ *   when it is checked against other types, and an expectation that is not met is an error itself.
  */
-function removeInnerLineBreaks(options: TemplateCodegenOptions, text: string) {
-	// only these have a backtick, a `\` before the line break or a `/*`
-	if (!/`|\\\r?\n|\/\*/.test(text)) {
+function prepareForDirectives(options: TemplateCodegenOptions, text: string) {
+	if (!/`|\\\r?\n|\/\*|@ts-expect-error/.test(text)) {
 		return text;
 	}
 
@@ -545,10 +533,12 @@ function removeInnerLineBreaks(options: TemplateCodegenOptions, text: string) {
 	};
 	visit(ast);
 
-	const joinComments = (code: string) =>
+	const rewriteComments = (code: string) =>
 		code.replace(
 			commentRE,
-			comment => comment.includes(newLine) ? comment.replace(/\r?\n/g, ' ') + newLine : comment,
+			comment =>
+				(comment.includes(newLine) ? comment.replace(/\r?\n/g, ' ') + newLine : comment)
+					.replace(/@ts-expect-error/g, '@ts-ignore'),
 		);
 	let result = '';
 	let offset = 0;
@@ -561,8 +551,8 @@ function removeInnerLineBreaks(options: TemplateCodegenOptions, text: string) {
 				// between the delimiters of the token: a backtick or `}`, and a backtick or `${`
 				: token[0] + value.slice(1, -1).replace(/[`$]/g, '\\$&') + (token.endsWith('`') ? '`' : '${');
 		}
-		result += joinComments(ast.text.slice(offset, start)) + token;
+		result += rewriteComments(ast.text.slice(offset, start)) + token;
 		offset = end;
 	}
-	return (result + joinComments(ast.text.slice(offset))).slice(prefix.length, -suffix.length);
+	return (result + rewriteComments(ast.text.slice(offset))).slice(prefix.length, -suffix.length);
 }
