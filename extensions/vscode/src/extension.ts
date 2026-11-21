@@ -8,6 +8,7 @@ import {
 	extensionContext,
 	nextTick,
 	onDeactivate,
+	shallowRef,
 	useActiveTextEditor,
 	useCommand,
 	useVisibleTextEditors,
@@ -22,8 +23,15 @@ import * as reactivityVisualization from './reactivityVisualization';
 import { registerModuleTransform } from './registerModuleTransform';
 import * as welcome from './welcome';
 
-let serverPath = resolveServerPath();
-const neededRestart = !patchTypeScriptExtension();
+let serverPath: string | undefined;
+let neededRestart = false;
+const isWorkspacePrepared = shallowRef(false);
+
+prepareWorkspace();
+if (!isWorkspacePrepared.value) {
+	vscode.workspace.onDidGrantWorkspaceTrust(prepareWorkspace);
+	vscode.extensions.onDidChange(prepareWorkspace);
+}
 
 for (
 	const incompatibleExtensionId of [
@@ -53,7 +61,10 @@ export = defineExtension(() => {
 	const volarLabs = createLabsInfo();
 	const activeTextEditor = useActiveTextEditor();
 	const visibleTextEditors = useVisibleTextEditors();
-	const { stop } = watch(activeTextEditor, () => {
+	const { stop } = watch([activeTextEditor, isWorkspacePrepared], () => {
+		if (!isWorkspacePrepared.value) {
+			return;
+		}
 		if (
 			!visibleTextEditors.value.some(
 				editor => config.server.includeLanguages.includes(editor.document.languageId),
@@ -245,6 +256,19 @@ function resolveTsdkPath() {
 			return theiaTsdk;
 		}
 	}
+}
+
+function prepareWorkspace() {
+	if (
+		isWorkspacePrepared.value
+		|| !vscode.workspace.isTrusted
+		|| !vscode.extensions.getExtension('vscode.typescript-language-features')
+	) {
+		return;
+	}
+	serverPath = resolveServerPath();
+	neededRestart = !patchTypeScriptExtension();
+	isWorkspacePrepared.value = true;
 }
 
 function resolveServerPath() {

@@ -27,6 +27,13 @@
 	"main": "./main.js",
 	"browser": "./web.js",
 	"capabilities": {
+		"untrustedWorkspaces": {
+			"supported": "limited",
+			"description": "The Vue language server only starts in a trusted workspace, because it can load plugins from the workspace. Syntax highlighting works in Restricted Mode.",
+			"restrictedConfigurations": [
+				"vue.server.path"
+			]
+		},
 		"virtualWorkspaces": {
 			"supported": "limited",
 			"description": "Install https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-typescript-web to have IntelliSense for .vue files in Web IDE."
@@ -437,7 +444,8 @@
 			{
 				"command": "vue.action.restartServer",
 				"title": "%command.action.restartServer%",
-				"category": "Vue"
+				"category": "Vue",
+				"enablement": "isWorkspaceTrusted"
 			}
 		],
 		"menus": {
