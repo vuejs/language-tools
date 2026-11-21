@@ -86,6 +86,7 @@ function* generateWorker(
 	yield* generateInheritedAttrsType(options, ctx);
 	yield* generateTemplateRefsType(options, ctx);
 	yield* generateRootElType(options, ctx);
+	yield* generateElementsType(options, ctx);
 
 	if (ctx.dollarVars.size) {
 		ctx.generatedTypes.add(names.dollars);
@@ -232,5 +233,26 @@ function* generateRootElType(
 		for (const type of ctx.singleRootElTypes) {
 			yield `${newLine}| ${type}`;
 		}
+	});
+}
+
+function* generateElementsType(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+): Generator<Code> {
+	const types: string[] = [];
+	if (ctx.generatedTypes.has(names.TemplateRefs)) {
+		types.push(...[...ctx.templateRefs.values()].flat().map(ref => ref.typeExp));
+	}
+	if (ctx.generatedTypes.has(names.RootEl)) {
+		types.push(...ctx.singleRootElTypes);
+	}
+	if (!types.some(type => type.startsWith(names.Elements))) {
+		return;
+	}
+
+	// Declared in the template function so the emitted d.ts inlines the element types.
+	yield* generateTypeAlias(names.Elements, options.scriptLang, function*() {
+		yield `${names.SpreadMerge}<SVGElementTagNameMap, HTMLElementTagNameMap>`;
 	});
 }
