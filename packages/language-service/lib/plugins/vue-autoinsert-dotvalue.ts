@@ -51,13 +51,15 @@ export function create(
 						return;
 					}
 
-					for (const { ast, startTagEnd, endTagStart } of scriptBlocks) {
-						if (sourceOffset < startTagEnd || sourceOffset > endTagStart) {
-							continue;
-						}
-						if (shouldSkip(ts, ast, sourceOffset - startTagEnd, false)) {
-							return;
-						}
+					const block = scriptBlocks.find(block =>
+						sourceOffset >= block.startTagEnd && sourceOffset <= block.endTagStart
+					);
+					if (!block) {
+						return;
+					}
+
+					if (shouldSkip(ts, block.ast, sourceOffset - block.startTagEnd, false)) {
+						return;
 					}
 
 					if (await isRefAtPosition(info.root.fileName, sourceOffset)) {
