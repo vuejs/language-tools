@@ -51,13 +51,21 @@ export function create(
 						return;
 					}
 
+					// the offset may be mapped from outside the script blocks, e.g. from the template
+					let inScriptBlock = false;
+
 					for (const { ast, startTagEnd, endTagStart } of scriptBlocks) {
 						if (sourceOffset < startTagEnd || sourceOffset > endTagStart) {
 							continue;
 						}
+						inScriptBlock = true;
 						if (shouldSkip(ts, ast, sourceOffset - startTagEnd, false)) {
 							return;
 						}
+					}
+
+					if (!inScriptBlock) {
+						return;
 					}
 
 					if (await isRefAtPosition(info.root.fileName, sourceOffset)) {
