@@ -810,6 +810,44 @@ test('Directive modifiers', async () => {
 		`);
 });
 
+test.each(['|count', 'cou|nt', 'count|'])('setup binding completion at %s', async expression => {
+	const completions = await requestCompletionListToTsServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`<script setup lang="ts">
+import { ref } from 'vue';
+const count = ref(1);
+const counter = ref(2);
+</script>
+<template>{{ ${expression} }}</template>`,
+	);
+	const names = completions.map(item => item.name);
+	expect(names).toContain('count');
+	expect(names).toContain('counter');
+	expect(names).not.toContain('value');
+});
+
+test.each([
+	'<span v-for="item in [1]">{{ cou|nt }}</span>',
+	'{{ [1].map(item => cou|nt) }}',
+])('setup binding completion retains local scope in %s', async template => {
+	const completions = await requestCompletionListToTsServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`<script setup lang="ts">
+import { ref } from 'vue';
+const count = ref(1);
+const counter = ref(2);
+</script>
+<template>${template}</template>`,
+	);
+	const names = completions.map(item => item.name);
+	expect(names).toContain('count');
+	expect(names).toContain('counter');
+	expect(names).toContain('item');
+	expect(names).not.toContain('value');
+});
+
 test('$event argument', async () => {
 	await requestCompletionItemToTsServer(
 		'fixture.vue',
