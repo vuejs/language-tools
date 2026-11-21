@@ -19,6 +19,9 @@ export function baseParse(pugCode: string) {
 	let emptyLineEnds: ReturnType<typeof collectEmptyLineEnds> = [];
 	let attrsBlocks: ReturnType<typeof collectAttrsBlocks>;
 	let ast: Node | undefined;
+	const mixinDefinitions = new Map<string, MixinNode>();
+	const calledMixins = new Set<string>();
+	const mixinCallStack: MixinNode[] = [];
 
 	try {
 		const tokens = pugLex(pugCode, { filename: fileName });
@@ -27,6 +30,7 @@ export function baseParse(pugCode: string) {
 		attrsBlocks = collectAttrsBlocks(tokens);
 		ast = pugParser(tokens, { filename: fileName, src: pugCode }) as Node;
 
+		collectMixins(ast);
 		visitNode(ast, undefined, undefined);
 
 		codes.push([
@@ -60,8 +64,33 @@ export function baseParse(pugCode: string) {
 			}
 		}
 		else if (node.type === 'Mixin') {
-			if (node.block) {
+			if (node.call) {
+				const definition = mixinDefinitions.get(node.name);
+				// Pug inlines a mixin where it is called, so scope variables
+				// (`v-for`, slot props, ...) of the call site are visible in its body.
+				// Skip recursive calls to avoid infinite expansion.
+				if (definition?.block && !mixinCallStack.some(call => call.name === node.name)) {
+					mixinCallStack.push(node);
+					visitNode(definition.block, undefined, node);
+					mixinCallStack.pop();
+				}
+				else if (node.block) {
+					visitNode(node.block, undefined, node);
+				}
+			}
+			// A mixin that is never called is still emitted at its definition,
+			// so that it gets diagnostics and completions while being written.
+			else if (node.block && !calledMixins.has(node.name)) {
 				visitNode(node.block, undefined, node);
+			}
+		}
+		else if (node.type === 'MixinBlock') {
+			const call = mixinCallStack.pop();
+			if (call?.block) {
+				visitNode(call.block, undefined, call);
+			}
+			if (call) {
+				mixinCallStack.push(call);
 			}
 		}
 		else if (node.type === 'Tag') {
@@ -91,6 +120,26 @@ export function baseParse(pugCode: string) {
 				undefined,
 				getDocOffset(node.line, node.column),
 			]);
+		}
+	}
+
+	function collectMixins(node: Node) {
+		if (node.type === 'Block') {
+			node.nodes.forEach(collectMixins);
+		}
+		else if (node.type === 'Mixin') {
+			if (node.call) {
+				calledMixins.add(node.name);
+			}
+			else {
+				mixinDefinitions.set(node.name, node);
+			}
+			if (node.block) {
+				collectMixins(node.block);
+			}
+		}
+		else if (node.type === 'Tag' || node.type === 'BlockComment') {
+			collectMixins(node.block);
 		}
 	}
 
@@ -300,7 +349,7 @@ export function baseParse(pugCode: string) {
 	}
 }
 
-export type Node = BlockNode | MixinNode | TagNode | TextNode | CommentNode | BlockCommentNode;
+export type Node = BlockNode | MixinNode | MixinBlockNode | TagNode | TextNode | CommentNode | BlockCommentNode;
 
 export interface BlockNode {
 	type: 'Block';
@@ -352,10 +401,17 @@ export interface BlockCommentNode {
 	column: number;
 }
 
+export interface MixinBlockNode {
+	type: 'MixinBlock';
+	line: number;
+	column: number;
+}
+
 export interface MixinNode {
 	type: 'Mixin';
 	name: string;
-	args: null;
+	args: string | null;
+	call: boolean;
 	block: BlockNode | null;
 	line: number;
 	column: number;
