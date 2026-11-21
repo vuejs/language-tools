@@ -7,7 +7,7 @@ import { getElementTagOffsets, getStartEnd, hyphenateTag, normalizeAttributeValu
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { endOfLine, generateTypedVar, getTypeScriptAST, identifierRE, newLine } from '../utils';
+import { asType, endOfLine, generateTypedVar, getTypeScriptAST, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
@@ -199,10 +199,14 @@ export function* generateComponent(
 	// - diagnostics of the copy itself: its expressions have the parameter types of the constructor as contextual
 	//   type (`any` for `DefineComponent`), so function expressions report implicit `any`, and typing it like
 	//   `$props` instead would report every props error a second time. The copy is not mapped to the template.
+	// A native tag name can appear in `is` but is not part of the component constructor.
+	const componentConstructor = node.tag === 'component' && isExpression
+		? `(typeof ${componentVar} === 'string' ? ${asType('never', options.scriptLang)} : ${componentVar})`
+		: componentVar;
 	yield `// @ts-ignore${newLine}`;
 	yield `const ${functionalVar} = ${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
-	}(${componentVar}, new ${componentVar}({${newLine}`;
+	}(${componentVar}, new ${componentConstructor}({${newLine}`;
 	yield ignoreEachLine(options, propsStr);
 	yield `}))${endOfLine}`;
 
