@@ -1,12 +1,13 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
-import type { Code } from '../../types';
-import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
+import type * as ts from 'typescript';
+import type { Code, TextRange } from '../../types';
+import { getElementTagOffsets, getStartEnd, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { endOfLine, generateTypedVar, identifierRE, newLine } from '../utils';
+import { endOfLine, generateTypedVar, getTypeScriptAST, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
@@ -191,7 +192,7 @@ export function* generateComponent(
 	// overloads of the component and infers its type parameters from the props, including intersections of
 	// construct signatures such as `DefineComponent<...> & (new <T>(props: { items: T[] }, slots) => ...)` of
 	// Vuetify's `genericComponent`. Inferring from the constructor type alone takes the last overload and loses
-	// the type parameters of intersections. The two `@ts-ignore`s cover what the call reports for valid templates:
+	// the type parameters of intersections. The `@ts-ignore`s cover what the call reports for valid templates:
 	// - components that are not constructable (functional components, plain objects, `{}`) or abstract;
 	// - construct signatures of other arities (`new () => ...`, Vuetify's `(props, slots)`);
 	// - excess or weakly matching props, since attributes and events are passed along with the props;
@@ -202,10 +203,7 @@ export function* generateComponent(
 	yield `const ${functionalVar} = ${
 		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalComponent0 : names.asFunctionalComponent1
 	}(${componentVar}, new ${componentVar}({${newLine}`;
-	yield `// @ts-ignore${newLine}`;
-	yield propsStr
-		.replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
-		.replace(/\n/g, ' ');
+	yield ignoreEachLine(options, propsStr);
 	yield `}))${endOfLine}`;
 
 	yield `const `;
@@ -489,4 +487,72 @@ function hasVBindAttrs(
 			&& prop.exp?.loc.source === '$attrs'
 		)
 	);
+}
+
+/**
+ * Puts a `@ts-ignore` before each line of the code: a directive covers one line, and the lines cannot be
+ * joined, as their breaks end `//` comments and statements.
+ */
+function ignoreEachLine(options: TemplateCodegenOptions, code: string) {
+	return prepareForDirectives(options, code).replace(/(?<=^|\n)(?=[^\r\n])/g, `// @ts-ignore${newLine}`);
+}
+
+const commentRE = /\/\/.*|\/\*[^]*?\*\//g;
+
+/**
+ * Rewrites what keeps a directive before each line from covering the code:
+ * - a template literal or a string that spans lines, as a line that starts inside one cannot get a directive.
+ *   It is written again from its value on one line, which keeps its type;
+ * - a block comment that spans lines, for the same reason. It is written on one line, and a line break follows
+ *   it, as such a comment ends a statement like a line break does;
+ * - `@ts-expect-error` in a comment, which becomes `@ts-ignore`: the code may not have the expected error
+ *   when it is checked against other types, and an expectation that is not met is an error itself.
+ */
+function prepareForDirectives(options: TemplateCodegenOptions, text: string) {
+	if (!/`|\\\r?\n|\/\*|@ts-expect-error/.test(text)) {
+		return text;
+	}
+
+	const { typescript: ts } = options;
+	const prefix = `({`;
+	const suffix = `})`;
+	const ast = getTypeScriptAST(ts, options.template, `${prefix}${text}${suffix}`);
+	// the tokens that can contain what looks like a comment
+	const tokens: TextRange<ts.LiteralLikeNode>[] = [];
+	const visit = (node: ts.Node) => {
+		if (
+			node.kind === ts.SyntaxKind.StringLiteral
+			|| node.kind === ts.SyntaxKind.RegularExpressionLiteral
+			|| node.kind >= ts.SyntaxKind.FirstTemplateToken && node.kind <= ts.SyntaxKind.LastTemplateToken
+		) {
+			tokens.push(getStartEnd(ts, node as ts.LiteralLikeNode, ast));
+		}
+		else {
+			ts.forEachChild(node, visit);
+		}
+	};
+	visit(ast);
+
+	const rewriteComments = (code: string) =>
+		code.replace(
+			commentRE,
+			comment =>
+				(comment.includes(newLine) ? comment.replace(/\r?\n/g, ' ') + newLine : comment)
+					.replace(/@ts-expect-error/g, '@ts-ignore'),
+		);
+	let result = '';
+	let offset = 0;
+	for (const { node, start, end } of tokens.sort((a, b) => a.start - b.start)) {
+		let token = ast.text.slice(start, end);
+		if (token.includes(newLine) && !node.isUnterminated) {
+			const value = JSON.stringify(node.text);
+			token = node.kind === ts.SyntaxKind.StringLiteral
+				? value
+				// between the delimiters of the token: a backtick or `}`, and a backtick or `${`
+				: token[0] + value.slice(1, -1).replace(/[`$]/g, '\\$&') + (token.endsWith('`') ? '`' : '${');
+		}
+		result += rewriteComments(ast.text.slice(offset, start)) + token;
+		offset = end;
+	}
+	return (result + rewriteComments(ast.text.slice(offset))).slice(prefix.length, -suffix.length);
 }
