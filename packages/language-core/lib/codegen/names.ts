@@ -19,6 +19,7 @@ const raw = {
 	setup: '',
 	slots: '',
 	src: '',
+	template: '',
 
 	Emit: '',
 	EmitProps: '',

@@ -1,5 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { camelize, capitalize } from '@vue/shared';
+import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript';
 import { getUnwrappedExpression } from '../../parsers/utils';
 import type { Code, VueCodeInformation } from '../../types';
@@ -103,7 +103,7 @@ export function* generateElementEvents(
 			options.vueCompilerOptions.checkUnknownEvents ? '' : 'Record<string, unknown> & '
 		}Partial<${names.ResolveEvent}<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${
 			camelize(emitName)
-		}'>>`;
+		}', '${hyphenate(emitName)}'>>`;
 		if (isTsLang(options.scriptLang)) {
 			yield `const ${eventVar}: ${eventType} = {${newLine}`;
 		}
@@ -218,10 +218,7 @@ export function* generateEventExpression(
 			scope.declare('$event');
 
 			const accessMark = ctx.accessLog.length;
-			const codes: Code[] = [];
-			for (const code of interpolation) {
-				codes.push(code);
-			}
+			const codes = [...interpolation];
 
 			yield* generateEventParameter(options, argsType);
 			// consume $event to avoid TS6133 when the expression doesn't use it
