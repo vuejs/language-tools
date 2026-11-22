@@ -24,6 +24,7 @@ export function* generateCodeWithTransforms(
 	end: number,
 	transforms: CodeTransform[],
 	section: (start: number, end: number) => Iterable<Code>,
+	lastSection = section,
 ): Generator<Code> {
 	const sortedTransforms = transforms.sort((a, b) => a.range[0] - b.range[0]);
 	for (const { range, generate } of sortedTransforms) {
@@ -31,5 +32,5 @@ export function* generateCodeWithTransforms(
 		yield* generate();
 		start = range[1];
 	}
-	yield* section(start, end);
+	yield* lastSection(start, end);
 }

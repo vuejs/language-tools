@@ -1,5 +1,11 @@
 declare global {
-	const __VLS_directiveBindingRestFields: { instance: null; oldValue: null; value: null; modifiers: any; dir: any };
+	const __VLS_directiveBindingRestFields: {
+		instance: null;
+		oldValue: null;
+		value: undefined;
+		modifiers: any;
+		dir: any;
+	};
 
 	type __VLS_Elements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
@@ -52,9 +58,11 @@ declare global {
 		onEvent extends string,
 		Event extends string,
 		CamelizedEvent extends string,
+		HyphenatedEvent extends string,
 	> = __VLS_IsFunction<Props, onEvent> extends true ? { [K in onEvent]?: Props[K & keyof Props] }
 		: __VLS_IsFunction<Emits, Event> extends true ? { [K in onEvent]?: Emits[Event & keyof Emits] }
 		: __VLS_IsFunction<Emits, CamelizedEvent> extends true ? { [K in onEvent]?: Emits[CamelizedEvent & keyof Emits] }
+		: __VLS_IsFunction<Emits, HyphenatedEvent> extends true ? { [K in onEvent]?: Emits[HyphenatedEvent & keyof Emits] }
 		: Props;
 	// the rest parameter `$event` of an inline handler is destructured from, as if it were contextually typed by `T[K]`:
 	// the parameters of the handler (`[undefined?]` for none), or `any[]` without one handler signature
