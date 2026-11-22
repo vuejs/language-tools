@@ -357,7 +357,7 @@ export function* generateIdentifier(
 			}
 			yield `${names.unwrap}(`;
 			yield* codes;
-			yield `, ${getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)})`;
+			yield `, ${getRefBrandArgument(options.vueCompilerOptions, options.scriptLang)})[0]`;
 			if (isNewOperand) {
 				yield `)`;
 			}
