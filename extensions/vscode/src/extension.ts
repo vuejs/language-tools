@@ -19,7 +19,7 @@ import * as focusMode from './focusMode';
 import * as interpolationDecorators from './interpolationDecorators';
 import { restrictFormattingEditsToRange } from './rangeFormatting';
 import * as reactivityVisualization from './reactivityVisualization';
-import { registerModuleTransform } from './registerModuleTransform';
+import { registerModuleTransform, reloadModuleExports } from './registerModuleTransform';
 import * as welcome from './welcome';
 
 let serverPath = resolveServerPath();
@@ -376,11 +376,7 @@ function patchTypeScriptExtension() {
 		return path.isAbsolute(file) && path.basename(file) === 'tsserver.js';
 	}
 
-	const loadedModule = require.cache[extensionJsPath];
-	if (loadedModule) {
-		delete require.cache[extensionJsPath];
-		const patchedModule = require(extensionJsPath);
-		Object.assign(loadedModule.exports, patchedModule);
-	}
-	return true;
+	// the TypeScript extension may already be loading when this module is evaluated, in which case the
+	// patch only applies if its exports can be swapped in place before VS Code calls activate()
+	return reloadModuleExports(extensionJsPath);
 }
