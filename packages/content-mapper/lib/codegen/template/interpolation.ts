@@ -171,8 +171,9 @@ interface IdentifierOptions {
 // - locals and globals of the template scope → direct reference (the interpolation
 //   path filters these earlier; the v-bind shorthand path relies on this branch)
 // - template refs → direct `.value`
-// - dotValue bindings (narrowed at least once anywhere) → `.value` at
-//   every position; narrowing then works on the `.value` reference chain
+// - dotValue bindings (narrowed at least once anywhere) → `.value` of the wrapper
+//   that shadows the binding in the template function, at every position;
+//   narrowing then works on the `.value` reference chain
 // - other bindings → `__VLS_unwrap` (plain reads keep the original type)
 // - otherwise → `__VLS_ctx.<name>`
 export function* generateIdentifier(

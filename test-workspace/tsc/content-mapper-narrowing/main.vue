@@ -32,6 +32,10 @@ const select = (id: number) => id;
 	<template v-for="page in pages">
 		<span v-if="page === 'ellipsis'" />
 		<button v-else @click="select(page)" />
+		<template v-for="row in rows">
+			<span v-if="page === 'ellipsis' || !row.meta" />
+			<button v-else @click="select(page); select(row.meta.id)" />
+		</template>
 	</template>
 	<!-- @vue-ignore -->
 	{{ Status.Active }}

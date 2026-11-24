@@ -12,7 +12,7 @@ import {
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../../protocol';
 import { names } from '../names';
 import { isSlice } from '../plugin';
-import { Boundary, isSynthesizedIgnore, mapped, OpenRanges, type TsCode } from '../tsCode';
+import { Boundary, isSynthesizedIgnore, mapped, OpenRanges, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine, typeAliasRef } from '../writers';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
@@ -329,17 +329,22 @@ export function createTemplateCodegenContext(
 	// block-scope locals, which are `const`, but not of their properties.
 	const conditions: { text: string; accesses: string[]; readsLocalProperty: boolean }[] = [];
 
-	function* generateConditionGuards() {
-		for (const condition of conditions) {
-			if (
-				!condition.readsLocalProperty
-				&& condition.accesses.length
-				&& condition.accesses.every(isDeclared)
-			) {
-				continue;
-			}
+	function* generateConditionGuards(): Generator<TsCode> {
+		const guards = conditions.filter(condition =>
+			condition.readsLocalProperty
+			|| !condition.accesses.length
+			|| !condition.accesses.every(isDeclared)
+		);
+		if (!guards.length) {
+			return;
+		}
+		// The conditions are checked where they are written. A replay may compare a local that its own
+		// branch already narrowed, like `page === 'ellipsis'` in the `v-else` of `v-if="page === 'ellipsis' || …"`.
+		const ignore = yield* Boundary.start(getTemplate(), 0, 0, synthesizedIgnore);
+		for (const condition of guards) {
 			yield `if (!${condition.text}) throw 0${endOfLine}`;
 		}
+		yield ignore.end();
 	}
 
 	// hoist vars -----------------------------------------------------------------
