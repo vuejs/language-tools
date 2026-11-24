@@ -87,14 +87,13 @@ export function* generateGeneric(
 			}<typeof ${names.propsOption}>`,
 		);
 	}
-	const hasEmitProps = scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length;
-	if (hasEmitProps) {
+	if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
 		propTypes.push(names.EmitProps);
 	}
 	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
 		propTypes.push(
-			hasEmitProps
-				? `Omit<${names.InheritedAttrs}, keyof ${names.EmitProps}>`
+			propTypes.length
+				? `Omit<${names.InheritedAttrs}, keyof (${propTypes.join(` & `)})>`
 				: names.InheritedAttrs,
 		);
 	}
