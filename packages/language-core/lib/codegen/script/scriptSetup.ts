@@ -92,9 +92,16 @@ export function* generateGeneric(
 		propTypes.push(names.EmitProps);
 	}
 	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
+		const omitKeys: string[] = [];
+		if (ctx.generatedTypes.has(names.PublicProps)) {
+			omitKeys.push(`keyof ${names.PublicProps}`);
+		}
+		if (hasEmitProps) {
+			omitKeys.push(`keyof ${names.EmitProps}`);
+		}
 		propTypes.push(
-			hasEmitProps
-				? `Omit<${names.InheritedAttrs}, keyof ${names.EmitProps}>`
+			omitKeys.length
+				? `Omit<${names.InheritedAttrs}, ${omitKeys.join(` | `)}>`
 				: names.InheritedAttrs,
 		);
 	}
