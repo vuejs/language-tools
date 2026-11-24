@@ -8,7 +8,7 @@ import {
 	generateSfcBlockSection,
 	generateTypeAlias,
 	generateTypedVar,
-	getRefBrandArgument,
+	getRefBrandType,
 	intersectTypes,
 	isTsLang,
 	newLine,
@@ -68,9 +68,8 @@ export function* generateTemplate(
 	if (dotValueBindings.length) {
 		yield `const ${names.dotValueBindings} = () => ({${newLine}`;
 		for (const name of dotValueBindings) {
-			yield `${name}: ${names.withDotValue}(${name}, ${
-				getRefBrandArgument(options.vueCompilerOptions, scriptLang)
-			}),${newLine}`;
+			const type = `${names.WithDotValue}<typeof ${name}, ${getRefBrandType(options.vueCompilerOptions)}>`;
+			yield `${name}: ${asType(type, scriptLang)},${newLine}`;
 		}
 		yield `})${endOfLine}`;
 	}

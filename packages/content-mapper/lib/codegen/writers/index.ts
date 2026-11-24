@@ -69,11 +69,15 @@ export function typeAliasRef(name: string, lang: string): string {
 	return isTsLang(lang) ? name : `typeof ${name}`;
 }
 
-// The phantom argument that carries the component library's `Ref` brand into
-// `__VLS_unwrap` / `__VLS_withDotValue`; the helper declarations cannot
-// resolve the library import themselves.
+// The component library's `Ref` brand, which `__VLS_WithDotValue` takes as a type
+// argument and `__VLS_unwrap` as a phantom argument; the helper declarations
+// cannot resolve the library import themselves.
+export function getRefBrandType(vueCompilerOptions: VueCompilerOptions): string {
+	return `import('${vueCompilerOptions.lib}').Ref<unknown>`;
+}
+
 export function getRefBrandArgument(vueCompilerOptions: VueCompilerOptions, lang: string): string {
-	return asType(`import('${vueCompilerOptions.lib}').Ref<unknown>`, lang);
+	return asType(getRefBrandType(vueCompilerOptions), lang);
 }
 
 export function* generateSfcBlockSection(

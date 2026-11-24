@@ -42,7 +42,6 @@ const raw = {
 	unwrap: '',
 	vFor: '',
 	vSlot: '',
-	withDotValue: '',
 
 	ConstructorOverloads: '',
 	Elements: '',
@@ -71,6 +70,7 @@ const raw = {
 	SpreadMerge: '',
 	UnionToIntersection: '',
 	WithComponent: '',
+	WithDotValue: '',
 	// #endregion
 };
 

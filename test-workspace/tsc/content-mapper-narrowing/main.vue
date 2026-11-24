@@ -25,6 +25,9 @@ const select = (id: number) => id;
 	</div>
 	<template v-for="row in rows">
 		<button v-if="row.meta" @click="select(row.meta.id)" />
+		<button v-if="(row).meta" @click="select(row.meta.id)" />
+		<button v-if="row!.meta" @click="select(row.meta.id)" />
+		<button v-if="row['meta']" @click="select(row.meta.id)" />
 	</template>
 	<template v-for="page in pages">
 		<span v-if="page === 'ellipsis'" />

@@ -1,14 +1,13 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { codeToString, scriptFeatures } from '@vue/language-core';
+import { codeToString, scriptFeatures, type TemplateReference, type TypeScript } from '@vue/language-core';
+import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAST';
+import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { TsCode, TsPiece } from '../tsCode';
 import { newLine } from '../writers';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateTemplateChild } from './templateChild';
-
-// The start of a property read of the preceding identifier: `.`, `?.`, `[` or `!.`.
-const propertyAccessRE = /^\s*(?:!\s*)*(?:\??\.|\[)/;
 
 export function* generateVIf(
 	options: TemplateCodegenOptions,
@@ -50,9 +49,7 @@ export function* generateVIf(
 			ctx.conditions.push({
 				text: codeToString(codes as TsPiece[]),
 				accesses: ctx.accessLog.slice(accessMark),
-				readsLocalProperty: references.some(({ name, offset, local, member }) =>
-					local && member && propertyAccessRE.test(content.slice(offset + name.length))
-				),
+				readsLocalProperty: readsLocalProperty(options.typescript, options, content, references),
 			});
 			addedBlockCondition = true;
 			yield ` `;
@@ -73,3 +70,35 @@ export function* generateVIf(
 	ctx.conditions.length = originalBlockConditionsLength;
 }
 
+/**
+ * Whether the condition `code` reads a property of a block-scope local, like `row.meta`, `(row).meta` or
+ * `row!['meta']`: closures keep the narrowing of the local, which is `const`, but not of its properties.
+ */
+function readsLocalProperty(
+	ts: TypeScript,
+	options: TemplateCodegenOptions,
+	code: string,
+	references: readonly TemplateReference[],
+) {
+	// the code is parsed in parentheses, so its offsets are one char after those of the references
+	const localOffsets = new Set(
+		references.filter(({ local, member }) => local && member).map(({ offset }) => offset + 1),
+	);
+	if (!localOffsets.size) {
+		return false;
+	}
+	const ast = getTypeScriptAST(ts, options.template, `(${code})`);
+	const visit = (node: ts.Node): boolean => {
+		if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
+			let object = node.expression;
+			while (ts.isParenthesizedExpression(object) || ts.isNonNullExpression(object)) {
+				object = object.expression;
+			}
+			if (ts.isIdentifier(object) && localOffsets.has(object.getStart(ast))) {
+				return true;
+			}
+		}
+		return !!node.forEachChild(visit);
+	};
+	return !!ast.forEachChild(visit);
+}

@@ -7,3 +7,7 @@ const maybe = getValue();
 <template>
 	<div v-if="maybe">{{ maybe.toUpperCase() }}</div>
 </template>
+
+<style>
+div { color: v-bind(maybe); }
+</style>

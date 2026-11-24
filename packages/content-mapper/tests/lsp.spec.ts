@@ -444,8 +444,16 @@ test('narrowed bindings retain script definitions and rename links', async () =>
 	const variable = templateNarrowing.at('const maybe', 0, 6);
 	const usage = templateNarrowing.at('maybe.toUpperCase');
 	expect(await definition(templateNarrowing, usage)).toEqual(['3:6 maybe']);
-	expect(await references(templateNarrowing, variable)).toEqual(['3:6 maybe', '7:12 maybe', '7:22 maybe']);
-	const edits = ['3:6 maybe -> NEW', '7:12 maybe -> NEW', '7:22 maybe -> NEW'];
+	const style = templateNarrowing.at('v-bind(maybe)', 0, 7);
+	expect(await definition(templateNarrowing, style)).toEqual(['3:6 maybe']);
+	expect(await references(templateNarrowing, variable)).toEqual([
+		'11:20 maybe',
+		'3:6 maybe',
+		'7:12 maybe',
+		'7:22 maybe',
+	]);
+	const edits = ['11:20 maybe -> NEW', '3:6 maybe -> NEW', '7:12 maybe -> NEW', '7:22 maybe -> NEW'];
 	expect(await rename(templateNarrowing, variable)).toEqual(edits);
 	expect(await rename(templateNarrowing, usage)).toEqual(edits);
+	expect(await rename(templateNarrowing, style)).toEqual(edits);
 });

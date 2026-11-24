@@ -203,11 +203,12 @@ export function* generateIdentifier(
 		ctx.accessBinding(name);
 		if (inTypeQuery || options.dotValueBindings.has(name)) {
 			// The template reads a wrapper that shadows the binding. A type query outside
-			// the template function links the source to the binding without reading it.
+			// the template function links the source to the binding without reading it;
+			// the tuple keeps a `const` enum from being the type of an expression (TS2475).
 			ctx.bindingReferences.push(
 				...isTsLang(options.scriptLang)
-					? [`void ({} as unknown as typeof `, ...codes, `);\n`]
-					: [`void /** @type {typeof `, ...codes, `} */ (/** @type {unknown} */ ({}));\n`],
+					? [`void ({} as unknown as [typeof `, ...codes, `]);\n`]
+					: [`void /** @type {[typeof `, ...codes, `]} */ (/** @type {unknown} */ ({}));\n`],
 			);
 			const boundary = yield* Boundary.start(source, start, end, { features: 0 });
 			yield `${name}.value`;

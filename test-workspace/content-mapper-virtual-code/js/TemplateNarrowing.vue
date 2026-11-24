@@ -1,5 +1,5 @@
 <script setup>
-import { EMPTY_ID } from '../constants';
+import { EMPTY_ID, Status } from '../constants';
 
 /** @returns {import('vue').MaybeRef<string | undefined>} */
 function getValue() { return Math.random() ? 'value' : undefined; }
@@ -27,4 +27,6 @@ let mutable = getValue();
 		<span v-if="item === 'ellipsis'" />
 		<button v-else @click="item.toFixed()" />
 	</template>
+	{{ Status.Active }}
+	<div v-if="Status.Active">{{ Status.Active }}</div>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { MaybeRef } from 'vue';
-import { EMPTY_ID } from '../constants';
+import { EMPTY_ID, Status } from '../constants';
 
 declare function getValue(): MaybeRef<string | undefined>;
 const maybe = getValue();
@@ -27,4 +27,6 @@ let mutable = getValue();
 		<span v-if="item === 'ellipsis'" />
 		<button v-else @click="item.toFixed()" />
 	</template>
+	{{ Status.Active }}
+	<div v-if="Status.Active">{{ Status.Active }}</div>
 </template>
