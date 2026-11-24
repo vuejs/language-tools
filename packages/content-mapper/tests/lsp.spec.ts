@@ -29,7 +29,9 @@ const unnamedProps = new LspDocument(path.join(workspace, 'UnnamedProps.vue'));
 const emptySetup = new LspDocument(path.join(workspace, 'EmptySetup.vue'));
 const emptyScript = new LspDocument(path.join(workspace, 'EmptyScript.vue'));
 const emptySetupTemplate = new LspDocument(path.join(workspace, 'EmptySetupTemplate.vue'));
+const templateNarrowing = new LspDocument(path.join(workspace, 'TemplateNarrowing.vue'));
 const documents = [
+	templateNarrowing,
 	shorthand,
 	constShorthand,
 	cssModule,
@@ -436,4 +438,14 @@ test('completions in a wholly empty block import into the block', async () => {
 // verbatim template segment it keeps the point, which maps into the block. v3 imports into the block in both cases.
 test.fails('completions in a wholly empty block of a component with a template import into the block', async () => {
 	expect(await refImportEdits(emptySetupTemplate, emptySetupTemplate.at('></script>', 0, 1))).toEqual(['0:24']);
+});
+
+test('narrowed bindings retain script definitions and rename links', async () => {
+	const variable = templateNarrowing.at('const maybe', 0, 6);
+	const usage = templateNarrowing.at('maybe.toUpperCase');
+	expect(await definition(templateNarrowing, usage)).toEqual(['3:6 maybe']);
+	expect(await references(templateNarrowing, variable)).toEqual(['3:6 maybe', '7:12 maybe', '7:22 maybe']);
+	const edits = ['3:6 maybe -> NEW', '7:12 maybe -> NEW', '7:22 maybe -> NEW'];
+	expect(await rename(templateNarrowing, variable)).toEqual(edits);
+	expect(await rename(templateNarrowing, usage)).toEqual(edits);
 });

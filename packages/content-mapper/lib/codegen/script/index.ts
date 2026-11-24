@@ -42,6 +42,8 @@ export interface ScriptCodegenOptions {
 	templateGeneratedTypes: ReadonlySet<string>;
 	/** The code of the template, in its scope. */
 	templateCodes: readonly TsCode[];
+	/** Type queries that link template reads of shadowed bindings back to the setup bindings. */
+	templateBindingReferences: readonly TsCode[];
 	/** The code that ends the scope of the template. */
 	templateScopeEnd: readonly TsCode[];
 	/** The `$` names that the template reads and types at its end, which `useAttrs()` and `useSlots()` take. */

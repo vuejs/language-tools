@@ -6,6 +6,7 @@ const raw = {
 	ctx: '',
 	directives: '',
 	directivesOption: '',
+	dotValueBindings: '',
 	dollars: '',
 	exposed: '',
 	intrinsics: '',

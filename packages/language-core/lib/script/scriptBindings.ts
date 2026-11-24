@@ -5,7 +5,7 @@ import { collectBindingRanges } from './bindingPatterns';
 
 export const enum BindingFlag {
 	None,
-	// Bindings re-asserted per closure by the template codegen (imports, `let`/`var`).
+	// Imports and `let`/`var` bindings.
 	Variable,
 	Const = 1 << 1,
 }
