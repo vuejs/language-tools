@@ -87,21 +87,13 @@ export function* generateGeneric(
 			}<typeof ${names.propsOption}>`,
 		);
 	}
-	const hasEmitProps = scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length;
-	if (hasEmitProps) {
+	if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
 		propTypes.push(names.EmitProps);
 	}
 	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
-		const omitKeys: string[] = [];
-		if (ctx.generatedTypes.has(names.PublicProps)) {
-			omitKeys.push(`keyof ${names.PublicProps}`);
-		}
-		if (hasEmitProps) {
-			omitKeys.push(`keyof ${names.EmitProps}`);
-		}
 		propTypes.push(
-			omitKeys.length
-				? `Omit<${names.InheritedAttrs}, ${omitKeys.join(` | `)}>`
+			propTypes.length
+				? `Omit<${names.InheritedAttrs}, keyof (${propTypes.join(` & `)})>`
 				: names.InheritedAttrs,
 		);
 	}
