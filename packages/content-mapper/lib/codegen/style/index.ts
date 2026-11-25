@@ -15,8 +15,7 @@ import {
 	type VueCompilerOptions,
 } from '@vue/language-core';
 import { computed } from 'alien-signals';
-import type { BuiltinFilePlugin } from '../filePlugin';
-import type { VueCodegenFile, VueCodegenPiece, VueCodegenWriter } from '../plugin';
+import type { VueCodegenFile, VueCodegenFilePlugin, VueCodegenPiece, VueCodegenWriter } from '../plugin';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import type { TsCode } from '../tsCode';
@@ -42,7 +41,7 @@ export interface StyleCodegenOptions {
  * The style plugin: the types of the scoped classes and the CSS modules, the expressions of `v-bind()` in CSS, the
  * references of the template's class names to the scoped classes, and the types of `useCssModule()`.
  */
-export function createStylePlugin({ ts, ir, analysis, name }: VueCodegenFile): BuiltinFilePlugin {
+export function createStylePlugin({ ts, ir, analysis, name }: VueCodegenFile): VueCodegenFilePlugin<TsCode> {
 	const StyleModules = name('StyleModules');
 	const moduleImports = ir.styles.flatMap((style): StyleModuleImport[] =>
 		style.module && typeof style.src === 'object' ? [{ style, src: style.src, name: name(style.name) }] : []
@@ -91,7 +90,8 @@ export function createStylePlugin({ ts, ir, analysis, name }: VueCodegenFile): B
 			return code ? [{ name: StyleModules, code }] : [];
 		},
 		templateBody: () => getGeneratedStyle()?.codes ?? [],
-		templateBindingReferences: () => getGeneratedStyle()?.bindingReferences ?? [],
+		// links its reads of the bindings that the template function shadows, from outside of it
+		setupBody: () => getGeneratedStyle()?.bindingReferences ?? [],
 		templateContext: () => hasStyleModules() ? [[typeAliasRef(StyleModules, getScriptLang(ir))]] : [],
 		declarations: () => [...generateStyleModuleImports(ir, moduleImports)],
 		elementEnd: getElementEnd,

@@ -19,17 +19,8 @@ export type CodegenSlots =
 	& ElementSlots
 	& SlotOutletSlots;
 
-/** A codegen plugin of a file, with the slots that only the built-in plugins give. */
-export interface BuiltinFilePlugin extends VueCodegenFilePlugin<TsCode> {
-	/**
-	 * Type queries before the template function, which link the reads of the setup bindings that the template
-	 * function shadows with `.value` wrappers back to the bindings.
-	 */
-	templateBindingReferences?(): readonly TsCode[];
-}
-
 /** A codegen plugin of a file, by the name in its errors. */
-export interface FilePlugin extends BuiltinFilePlugin {
+export interface FilePlugin extends VueCodegenFilePlugin<TsCode> {
 	readonly name: string;
 	/** The edits of its `rewrite`, whose cuts the slices of its slots are. */
 	getEdits(): PluginEdits;
@@ -38,7 +29,7 @@ export interface FilePlugin extends BuiltinFilePlugin {
 /** The slots of the plugins that `getPlugins` gives, each the contributions in the order of the plugins. */
 export type MergedSlots = { readonly [K in keyof CodegenSlots]: () => CodegenSlots[K] };
 
-type SlotKey = Exclude<keyof BuiltinFilePlugin, 'rewrite'>;
+type SlotKey = Exclude<keyof VueCodegenFilePlugin, 'rewrite'>;
 
 /**
  * The code that `plugin` gives in the slot `key`, read after the edits of its rewrite, so that a slice in it is one of
@@ -106,9 +97,6 @@ export function mergeSlots(getPlugins: () => readonly FilePlugin[], ir: IR): Mer
 			)
 		),
 		templateDollars: listSlot('templateDollars'),
-		templateBindingReferences: computed(() =>
-			getPlugins().flatMap(plugin => [...read(plugin, 'templateBindingReferences') ?? []])
-		),
 		elementEnd: computed(() => {
 			const merged = new Map<CompilerDOM.ElementNode, TsCode[]>();
 			for (const plugin of getPlugins()) {

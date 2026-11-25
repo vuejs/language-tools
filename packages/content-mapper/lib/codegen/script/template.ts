@@ -34,8 +34,6 @@ export interface TemplateFunctionSlots {
 	templateContext: (readonly TsCode[])[];
 	/** Code in the template function, before the code of the template. */
 	templateBody: TsCode[];
-	/** Type queries before the template function, which link the reads of the bindings that it shadows. */
-	templateBindingReferences: TsCode[];
 }
 
 export interface TemplateTypeDeclaration {
@@ -59,7 +57,6 @@ export function* generateTemplate(
 	// The types setup and the export need from it are passed out through its return type.
 	const { scriptLang } = options;
 	const exportedTypes = options.slots.templateTypes.map(({ name }) => name);
-	yield* options.slots.templateBindingReferences;
 	yield* options.templateBindingReferences;
 
 	// Bindings the template narrows are read through `.value` wrappers. The wrappers keep the

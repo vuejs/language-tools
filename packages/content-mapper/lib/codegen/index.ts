@@ -195,7 +195,6 @@ function useCodegen(
 				templateBody: slots.templateBody(),
 				templateTypes: slots.templateTypes(),
 				templateDollars: slots.templateDollars(),
-				templateBindingReferences: slots.templateBindingReferences(),
 				componentOptions: slots.componentOptions(),
 				fallthroughProps: slots.fallthroughProps(),
 				setupBody: slots.setupBody(),
