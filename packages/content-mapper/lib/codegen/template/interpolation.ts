@@ -3,12 +3,14 @@ import {
 	type CodeSource,
 	completionFeatures,
 	type IRBlock,
+	semanticFeatures,
 	type TemplateReference,
 	type VueCodeMarker,
 	type VueCompilerOptions,
 } from '@vue/language-core';
 import { createSourceRewrite, type Piece, type RewriteOrigin, type Source } from 'muggle-string';
 import { names } from '../names';
+import { isSlice } from '../plugin';
 import { Boundary, mapped, type TsCode, type TsCodeData, type TsPiece } from '../tsCode';
 import { getRefBrandArgument, isTsLang } from '../writers';
 import type { TemplateCodegenContext } from './context';
@@ -202,13 +204,18 @@ export function* generateIdentifier(
 			// The template reads a wrapper that shadows the binding. A type query outside
 			// the template function links the source to the binding without reading it;
 			// the tuple keeps a `const` enum from being the type of an expression (TS2475).
+			// The type information is of the read, which the template narrows.
+			const [linkCodes, readFeatures] = splitSemanticFeatures(codes);
 			ctx.bindingReferences.push(
 				...isTsLang(options.scriptLang)
-					? [`void ({} as unknown as [typeof `, ...codes, `]);\n`]
-					: [`void /** @type {[typeof `, ...codes, `]} */ (/** @type {unknown} */ ({}));\n`],
+					? [`void ({} as unknown as [typeof `, ...linkCodes, `]);\n`]
+					: [`void /** @type {[typeof `, ...linkCodes, `]} */ (/** @type {unknown} */ ({}));\n`],
 			);
 			const boundary = yield* Boundary.start(source, start, end, { features: 0 });
-			yield `${name}.value`;
+			yield `${name}.`;
+			const value = yield* Boundary.start(source, start, end, { features: readFeatures });
+			yield `value`;
+			yield value.end();
 			yield boundary.end();
 		}
 		else {
@@ -243,4 +250,17 @@ export function* generateIdentifier(
 		yield* codes;
 		yield boundary.end();
 	}
+}
+
+/** The codes without their type information features, and those features. */
+function splitSemanticFeatures(codes: Iterable<TsCode>): [TsCode[], number] {
+	let features = 0;
+	const linkCodes = [...codes].map(code => {
+		if (typeof code !== 'object' || isSlice(code) || !code.data || !('features' in code.data)) {
+			return code;
+		}
+		features |= code.data.features & semanticFeatures;
+		return { ...code, data: { ...code.data, features: code.data.features & ~semanticFeatures } };
+	});
+	return [linkCodes, features];
 }

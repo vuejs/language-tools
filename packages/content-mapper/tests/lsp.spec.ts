@@ -106,6 +106,14 @@ async function highlights(doc: LspDocument, position: ReturnType<LspDocument['at
 	return result.map(highlight => doc.describe(highlight.range)).sort();
 }
 
+async function hover(doc: LspDocument, position: ReturnType<LspDocument['at']>) {
+	const result: { contents: { value: string } } | null = await server.request('textDocument/hover', {
+		textDocument: { uri: doc.uri },
+		position,
+	});
+	return result?.contents.value;
+}
+
 async function rename(doc: LspDocument, position: ReturnType<LspDocument['at']>) {
 	const result: { changes?: Record<string, { range: any; newText: string }[]> } | null = await server.request(
 		'textDocument/rename',
@@ -456,4 +464,11 @@ test('narrowed bindings retain script definitions and rename links', async () =>
 	expect(await rename(templateNarrowing, variable)).toEqual(edits);
 	expect(await rename(templateNarrowing, usage)).toEqual(edits);
 	expect(await rename(templateNarrowing, style)).toEqual(edits);
+});
+
+test('narrowed bindings hover with the narrowed value', async () => {
+	const condition = templateNarrowing.at('"maybe"', 0, 1);
+	const usage = templateNarrowing.at('maybe.toUpperCase', 0, 1);
+	expect(await hover(templateNarrowing, condition)).toBe('(property) value: string | undefined');
+	expect(await hover(templateNarrowing, usage)).toBe('(property) value: string');
 });
