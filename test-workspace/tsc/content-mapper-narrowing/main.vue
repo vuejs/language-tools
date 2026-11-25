@@ -7,6 +7,7 @@ const maybe = getValue();
 const readonlyValue = computed(() => 'value');
 const rows: { meta?: { id: number } }[] = [];
 const pages: (number | 'ellipsis')[] = [];
+const shadows: { value?: { id: number } }[] = [];
 const select = (id: number) => id;
 </script>
 
@@ -36,6 +37,20 @@ const select = (id: number) => id;
 			<span v-if="page === 'ellipsis' || !row.meta" />
 			<button v-else @click="select(page); select(row.meta.id)" />
 		</template>
+	</template>
+	<div v-if="maybe">
+		<template v-for="maybe in shadows">
+			<!-- @vue-expect-error -->
+			<button @click="select(1); select(maybe.value.id)" />
+		</template>
+	</div>
+	<template v-for="row in rows">
+		<div v-if="row.meta">
+			<template v-for="row in rows">
+				<!-- @vue-expect-error -->
+				<button @click="select(1); select(row.meta.id)" />
+			</template>
+		</div>
 	</template>
 	<!-- @vue-ignore -->
 	{{ Status.Active }}

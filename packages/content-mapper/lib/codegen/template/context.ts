@@ -313,10 +313,20 @@ export function createTemplateCodegenContext(
 	// conditions -----------------------------------------------------------------
 
 	// Active branch conditions; inline-handler closures replay the guards of the ones that they do not keep.
-	const conditions: { text: string; replayed: boolean }[] = [];
+	const conditions: { text: string; replayed: boolean; names: readonly string[]; scopeDepth: number }[] = [];
+
+	/** Adds a branch condition, which reads the variables `names` by name, in the current block scope. */
+	function addCondition(text: string, replayed: boolean, names: readonly string[]) {
+		conditions.push({ text, replayed, names, scopeDepth: blockScopes.length });
+	}
+
+	// A guard reads the variables of its condition by name, which a block scope within may declare again.
+	function isShadowed({ names, scopeDepth }: (typeof conditions)[number]) {
+		return blockScopes.slice(scopeDepth).some(scope => names.some(name => scope.declared.has(name)));
+	}
 
 	function* generateConditionGuards(): Generator<TsCode> {
-		const guards = conditions.filter(condition => condition.replayed);
+		const guards = conditions.filter(condition => condition.replayed && !isShadowed(condition));
 		if (!guards.length) {
 			return;
 		}
@@ -386,6 +396,7 @@ export function createTemplateCodegenContext(
 		setMemberFeatures,
 		bindingReferences,
 		conditions,
+		addCondition,
 		generateConditionGuards,
 		hoistVars,
 		getHoistVariable,

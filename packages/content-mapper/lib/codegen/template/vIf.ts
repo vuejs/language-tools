@@ -1,5 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { codeToString, scriptFeatures } from '@vue/language-core';
+import { codeToString, scriptFeatures, type TemplateReference } from '@vue/language-core';
 import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAST';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { TsCode, TsPiece } from '../tsCode';
@@ -44,10 +44,12 @@ export function* generateVIf(
 				`)`,
 			)];
 			yield* codes;
-			ctx.conditions.push({
-				text: codeToString(codes as TsPiece[]),
-				replayed: narrowsPropertyAccess(options, ctx, content, loc.start.offset),
-			});
+			const { references } = ctx.getExpression(options.template, loc.start.offset, content);
+			ctx.addCondition(
+				codeToString(codes as TsPiece[]),
+				narrowsPropertyAccess(options, content, references),
+				references.filter(reference => readsByName(options, reference)).map(({ name }) => name),
+			);
 			addedBlockCondition = true;
 			yield ` `;
 		}
@@ -74,11 +76,9 @@ export function* generateVIf(
  */
 function narrowsPropertyAccess(
 	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
 	code: string,
-	start: number,
+	references: readonly TemplateReference[],
 ) {
-	const { references } = ctx.getExpression(options.template, start, code);
 	if (references.some(({ name, local }) => !local && !options.setupConsts.has(name))) {
 		return true;
 	}
@@ -87,4 +87,12 @@ function narrowsPropertyAccess(
 		|| options.typescript.isElementAccessExpression(node)
 		|| !!node.forEachChild(visit);
 	return !!getTypeScriptAST(options.typescript, options.template, `(${code})`).forEachChild(visit);
+}
+
+/** Whether the generated code reads the reference by its name, which a block scope within may declare again. */
+function readsByName(options: TemplateCodegenOptions, { name, local }: TemplateReference) {
+	return local
+		|| options.setupConsts.has(name)
+		|| options.setupRefs.has(name)
+		|| options.setupBindings.has(name);
 }
