@@ -6,6 +6,7 @@ const raw = {
 	ctx: '',
 	directives: '',
 	directivesOption: '',
+	dotValueBindings: '',
 	dollars: '',
 	exposed: '',
 	intrinsics: '',
@@ -41,7 +42,6 @@ const raw = {
 	unwrap: '',
 	vFor: '',
 	vSlot: '',
-	withDotValue: '',
 
 	ConstructorOverloads: '',
 	Elements: '',
@@ -70,6 +70,7 @@ const raw = {
 	SpreadMerge: '',
 	UnionToIntersection: '',
 	WithComponent: '',
+	WithDotValue: '',
 	// #endregion
 };
 

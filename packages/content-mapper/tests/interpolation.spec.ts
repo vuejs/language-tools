@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { generate } from './utils';
 
-test('re-asserts the bindings of a function whose parameter default or body a parse error leaves empty', () => {
+test('reads the shadowed binding in a function whose parameter default or body a parse error leaves empty', () => {
 	const source = `<script setup lang="ts">
 let a: number | undefined = 1;
 </script>
@@ -12,6 +12,7 @@ let a: number | undefined = 1;
 </template>
 `;
 	const { text } = generate('/Comp.vue', source);
-	expect(text).toMatch(/\(\(p =[^)]*\) => \{\n__VLS_withDotValue\(a, /);
-	expect(text).toContain(`((p = (() => {\n__VLS_withDotValue(a, `);
+	expect(text).toContain(`const { a } = __VLS_dotValueBindings();\n`);
+	expect(text).toContain(`x: ((p =__VLS_ctx. ) => a.value),\n`);
+	expect(text).toContain(`y: ((p = a.value) =>__VLS_ctx. ),\n`);
 });

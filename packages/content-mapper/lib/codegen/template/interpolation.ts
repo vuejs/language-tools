@@ -4,17 +4,13 @@ import {
 	completionFeatures,
 	type IRBlock,
 	type TemplateReference,
-	type TypeScript,
 	type VueCodeMarker,
 	type VueCompilerOptions,
 } from '@vue/language-core';
-import { getStartEnd } from '@vue/language-core/lib/typescript/nodes';
-import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAST';
-import { createSourceRewrite, type Piece, type RewriteOrigin, type RewriteWriter, type Source } from 'muggle-string';
-import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
+import { createSourceRewrite, type Piece, type RewriteOrigin, type Source } from 'muggle-string';
 import { names } from '../names';
 import { Boundary, mapped, type TsCode, type TsCodeData, type TsPiece } from '../tsCode';
-import { endOfLine, getRefBrandArgument, newLine } from '../writers';
+import { getRefBrandArgument, isTsLang } from '../writers';
 import type { TemplateCodegenContext } from './context';
 
 /**
@@ -23,10 +19,7 @@ import type { TemplateCodegenContext } from './context';
  * are skipped. The code out of references in the ranges of `noRename` (sorted and disjoint too) takes no rename.
  */
 export function* generateInterpolation(
-	options: IdentifierOptions & {
-		typescript?: TypeScript;
-		reassertBindings?: Set<string>;
-	},
+	options: IdentifierOptions,
 	ctx: TemplateCodegenContext,
 	block: IRBlock,
 	features: VueCodeMarker,
@@ -47,27 +40,9 @@ export function* generateInterpolation(
 		features: features.features & ~completionFeatures,
 	};
 
-	// Assertion narrowing does not flow into functions for imports and `let`/`var`
-	// bindings (TS limitation), so each function body re-asserts the ones it reads.
-	// Parameter defaults run before the body, so each one that reads such a binding
-	// re-asserts it in an immediately invoked arrow, whose flow stays in the function.
 	const references = ctx.getExpression(block, start, code).references;
-	const bodies = options.typescript && options.reassertBindings?.size
-			&& references.some(({ name, local }) => !local && options.reassertBindings!.has(name))
-		? collectFunctionBodies(options.typescript, getTypeScriptAST(options.typescript, block, prefix + code + suffix))
-			.map(body => ({ ...body, start: body.start - prefix.length, end: body.end - prefix.length }))
-		: [];
-	// Exits precede enters at the same offset; the stable sort keeps the inner exit and the outer enter first.
-	const marks = [
-		...bodies.map(body => ({ offset: body.end, body, enter: false })).reverse(),
-		...bodies.map(body => ({ offset: body.start, body, enter: true })),
-	].sort((a, b) => a.offset - b.offset);
-	/** The bindings that each function body re-asserts, of the bodies entered and not left. */
-	const frames: Set<string>[] = [];
-	const reasserts = new Map<FunctionBody, Set<string>>();
-	let markIndex = 0;
 	/**
-	 * The offsets of the runs of code between the references and the bounds of the function bodies, but the first.
+	 * The offsets of the runs of code between the references, but the first.
 	 * The first char of each maps without features: adjacent mappings share the boundary offset (closed interval), so
 	 * both the end of the token before and the start of the run claim it, and rename / navigation would fire on the
 	 * neighbouring token.
@@ -90,7 +65,7 @@ export function* generateInterpolation(
 		if (local && !member) {
 			continue;
 		}
-		skipUntil(prevEnd, offset);
+		addRun(prevEnd, offset);
 		prevEnd = offset + name.length;
 		if (omitted) {
 			if (name) {
@@ -106,15 +81,6 @@ export function* generateInterpolation(
 		}
 		const marker = isShorthand ? { ...identifierFeatures, kind: SpanMapKind.Atom } : identifierFeatures;
 
-		if (
-			frames.length
-			&& options.reassertBindings!.has(name)
-			&& !options.setupConsts.has(name)
-			&& !options.setupRefs.has(name)
-		) {
-			frames[frames.length - 1]!.add(name);
-		}
-
 		const codes: TsCode[] = isShorthand ? [mapped(name, block, start + offset, marker), `: `] : [];
 		codes.push(...generateIdentifier(
 			options,
@@ -127,15 +93,7 @@ export function* generateInterpolation(
 		));
 		replaceReference(offset, prevEnd, codes);
 	}
-	skipUntil(prevEnd, code.length);
-
-	// a body sits inside the bodies before it, so its rank is lower: their code goes outside its own at one offset
-	for (const [index, body] of bodies.entries()) {
-		const bindings = reasserts.get(body);
-		if (bindings?.size) {
-			wrapFunctionBody(rewrite.writer(bodies.length - index), body, bindings);
-		}
-	}
+	addRun(prevEnd, code.length);
 
 	const pieces: TsCode[] = [];
 	const sink = (piece: Piece<RewriteOrigin<Source, { data: TsCodeData }>>) => {
@@ -178,7 +136,7 @@ export function* generateInterpolation(
 
 	/**
 	 * Replaces the reference at `from`..`to` with `codes`. A reference of no char, which a parse error gives, maybe
-	 * past the end of `code`, inserts them, inside the code of the function bodies that open there.
+	 * past the end of `code`, inserts them.
 	 */
 	function replaceReference(from: number, to: number, codes: TsCode | TsCode[]) {
 		if (from < to) {
@@ -189,150 +147,11 @@ export function* generateInterpolation(
 		}
 	}
 
-	function skipUntil(from: number, end: number) {
-		while (markIndex < marks.length && marks[markIndex]!.offset <= end) {
-			const { offset, body, enter } = marks[markIndex++]!;
-			addRun(from, offset);
-			from = offset;
-			if (enter) {
-				const bindings = new Set<string>();
-				frames.push(bindings);
-				reasserts.set(body, bindings);
-			}
-			else {
-				frames.pop();
-			}
-		}
-		addRun(from, end);
-	}
-
 	function addRun(from: number, to: number) {
 		if (from > 0 && from < to) {
 			runStarts.push(from);
 		}
 	}
-
-	// Diagnostics reported on the generated call, or on the `return` keyword (where TS reports
-	// return type mismatches), map back to the original expression.
-	function wrapFunctionBody(
-		writer: RewriteWriter<Source, { data: TsCodeData }>,
-		body: FunctionBody,
-		bindings: Set<string>,
-	) {
-		const brand = getRefBrandArgument(options.vueCompilerOptions, options.scriptLang);
-		const reassertCodes = [...bindings].map(name => `${names.withDotValue}(${name}, ${brand})${endOfLine}`);
-		if (body.kind === 'block') {
-			writer.insertBefore(body.start, [newLine, ...reassertCodes]);
-		}
-		else if (body.kind === 'parameter') {
-			const [boundaryStart, boundary] = Boundary.open(block, start + body.start, start + body.end, { features: 0 });
-			writer.insertBefore(body.start, [boundaryStart, `(() => {${newLine}`, ...reassertCodes, `return (`]);
-			writer.insertAfter(body.end, [`)${endOfLine}})()`, boundary.end()]);
-		}
-		else {
-			const [boundaryStart, boundary] = Boundary.open(block, start + body.start, start + body.end, { features: 0 });
-			writer.insertBefore(body.start, [`{${newLine}`, ...reassertCodes, boundaryStart, `return`, boundary.end(), ` (`]);
-			writer.insertAfter(body.end, `)${endOfLine}}`);
-		}
-	}
-}
-
-interface FunctionBody {
-	start: number;
-	end: number;
-	kind: 'block' | 'expression' | 'parameter';
-}
-
-// Function scopes in pre-order: the expressions a parameter list evaluates, then the body.
-// A block body spans from after its directive prologue to its closing brace.
-function collectFunctionBodies(ts: TypeScript, ast: ts.SourceFile) {
-	const bodies: FunctionBody[] = [];
-	const pushParameterExpression = (node: ts.Expression) => {
-		const { start, end } = getStartEnd(node, ast);
-		bodies.push({ start, end, kind: 'parameter' });
-		visit(node);
-	};
-	const visitBinding = (name: ts.BindingName) => {
-		if (ts.isIdentifier(name)) {
-			return;
-		}
-		for (const element of name.elements) {
-			if (!ts.isBindingElement(element)) {
-				continue;
-			}
-			if (element.propertyName && ts.isComputedPropertyName(element.propertyName)) {
-				pushParameterExpression(element.propertyName.expression);
-			}
-			if (element.name) {
-				visitBinding(element.name);
-			}
-			if (element.initializer) {
-				pushParameterExpression(element.initializer);
-			}
-		}
-	};
-	function visit(node: ts.Node): undefined {
-		if (
-			(ts.isArrowFunction(node)
-				|| ts.isFunctionExpression(node)
-				|| ts.isFunctionDeclaration(node)
-				|| ts.isMethodDeclaration(node)
-				|| ts.isGetAccessorDeclaration(node)
-				|| ts.isSetAccessorDeclaration(node)
-				|| ts.isConstructorDeclaration(node)
-				|| ts.isClassStaticBlockDeclaration(node))
-			&& node.body
-		) {
-			if (!ts.isClassStaticBlockDeclaration(node)) {
-				for (const modifier of node.modifiers ?? []) {
-					visit(modifier);
-				}
-				if (!ts.isArrowFunction(node) && !ts.isConstructorDeclaration(node) && node.name) {
-					visit(node.name);
-				}
-				for (const typeParameter of node.typeParameters ?? []) {
-					visit(typeParameter);
-				}
-				for (const parameter of node.parameters) {
-					for (const modifier of parameter.modifiers ?? []) {
-						visit(modifier);
-					}
-					visitBinding(parameter.name);
-					if (parameter.type) {
-						visit(parameter.type);
-					}
-					if (parameter.initializer) {
-						pushParameterExpression(parameter.initializer);
-					}
-				}
-				if (node.type) {
-					visit(node.type);
-				}
-			}
-			const { start, end } = getStartEnd(node.body, ast);
-			if (ts.isBlock(node.body)) {
-				const statements = node.body.statements;
-				const prologue = statements.findIndex(statement =>
-					!ts.isExpressionStatement(statement) || !ts.isStringLiteral(statement.expression)
-				);
-				if (prologue !== -1) {
-					bodies.push({
-						start: prologue ? statements[prologue - 1]!.end : start + 1,
-						end: end - 1,
-						kind: 'block',
-					});
-				}
-			}
-			else {
-				bodies.push({ start, end, kind: 'expression' });
-			}
-			visit(node.body);
-			return;
-		}
-		node.forEachChild(visit);
-	}
-	ast.forEachChild(visit);
-	return bodies;
 }
 
 interface IdentifierOptions {
@@ -349,8 +168,9 @@ interface IdentifierOptions {
 // - locals and globals of the template scope → direct reference (the interpolation
 //   path filters these earlier; the v-bind shorthand path relies on this branch)
 // - template refs → direct `.value`
-// - dotValue bindings (narrowed at least once anywhere) → `.value` at
-//   every position; narrowing then works on the `.value` reference chain
+// - dotValue bindings (narrowed at least once anywhere) → `.value` of the wrapper
+//   that shadows the binding in the template function, at every position;
+//   narrowing then works on the `.value` reference chain
 // - other bindings → `__VLS_unwrap` (plain reads keep the original type)
 // - otherwise → `__VLS_ctx.<name>`
 export function* generateIdentifier(
@@ -378,17 +198,17 @@ export function* generateIdentifier(
 		yield boundary.end();
 	}
 	else if (options.setupBindings.has(name)) {
-		ctx.accessBinding(name);
 		if (inTypeQuery || options.dotValueBindings.has(name)) {
-			yield* codes;
-			yield `.`;
-			const boundary = yield* Boundary.start(
-				source,
-				start,
-				end,
-				{ features: 0 },
+			// The template reads a wrapper that shadows the binding. A type query outside
+			// the template function links the source to the binding without reading it;
+			// the tuple keeps a `const` enum from being the type of an expression (TS2475).
+			ctx.bindingReferences.push(
+				...isTsLang(options.scriptLang)
+					? [`void ({} as unknown as [typeof `, ...codes, `]);\n`]
+					: [`void /** @type {[typeof `, ...codes, `]} */ (/** @type {unknown} */ ({}));\n`],
 			);
-			yield `value`;
+			const boundary = yield* Boundary.start(source, start, end, { features: 0 });
+			yield `${name}.value`;
 			yield boundary.end();
 		}
 		else {
@@ -417,7 +237,6 @@ export function* generateIdentifier(
 			yield names.dollars;
 		}
 		else {
-			ctx.accessLog.push(name);
 			yield names.ctx;
 		}
 		yield `.`;

@@ -12,7 +12,7 @@ import {
 import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../../protocol';
 import { names } from '../names';
 import { isSlice } from '../plugin';
-import { Boundary, isSynthesizedIgnore, mapped, OpenRanges, type TsCode } from '../tsCode';
+import { Boundary, isSynthesizedIgnore, mapped, OpenRanges, synthesizedIgnore, type TsCode } from '../tsCode';
 import { asType, endOfLine, isTsLang, newLine, typeAliasRef } from '../writers';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
@@ -258,10 +258,6 @@ export function createTemplateCodegenContext(
 		blockScopes.push(scope);
 	}
 
-	function isDeclared(name: string) {
-		return blockScopes.some(scope => scope.declared.has(name));
-	}
-
 	/** The features of the code of a reference, which its member in the block scope maps with for completion. */
 	function setMemberFeatures(block: IRBlock, offset: number, features: VueCodeMarker) {
 		let blockFeatures = memberFeatures.get(block);
@@ -311,27 +307,36 @@ export function createTemplateCodegenContext(
 
 	// context accesses -----------------------------------------------------------
 
-	// Ordered log of the names the generated code reads from the setup bindings or the template context;
-	// event-handler closures slice from a mark to find the names accessed within their body.
-	const accessLog: string[] = [];
-
-	function accessBinding(name: string) {
-		accessLog.push(name);
-	}
+	// Direct references preserve editor links to the script bindings behind synthetic wrappers.
+	const bindingReferences: TsCode[] = [];
 
 	// conditions -----------------------------------------------------------------
 
-	// Active branch conditions with the names each accessed; the guards are
-	// replayed inside inline-handler closures.
-	const conditions: { text: string; accesses: string[] }[] = [];
+	// Active branch conditions; inline-handler closures replay the guards of the ones that they do not keep.
+	const conditions: { text: string; replayed: boolean; names: readonly string[]; scopeDepth: number }[] = [];
 
-	function* generateConditionGuards() {
-		for (const condition of conditions) {
-			if (condition.accesses.length && condition.accesses.every(isDeclared)) {
-				continue;
-			}
+	/** Adds a branch condition, which reads the variables `names` by name, in the current block scope. */
+	function addCondition(text: string, replayed: boolean, names: readonly string[]) {
+		conditions.push({ text, replayed, names, scopeDepth: blockScopes.length });
+	}
+
+	// A guard reads the variables of its condition by name, which a block scope within may declare again.
+	function isShadowed({ names, scopeDepth }: (typeof conditions)[number]) {
+		return blockScopes.slice(scopeDepth).some(scope => names.some(name => scope.declared.has(name)));
+	}
+
+	function* generateConditionGuards(): Generator<TsCode> {
+		const guards = conditions.filter(condition => condition.replayed && !isShadowed(condition));
+		if (!guards.length) {
+			return;
+		}
+		// The conditions are checked where they are written. A replay may compare a local that its own
+		// branch already narrowed, like `page === 'ellipsis'` in the `v-else` of `v-if="page === 'ellipsis' || …"`.
+		const ignore = yield* Boundary.start(getTemplate(), 0, 0, synthesizedIgnore);
+		for (const condition of guards) {
 			yield `if (!${condition.text}) throw 0${endOfLine}`;
 		}
+		yield ignore.end();
 	}
 
 	// hoist vars -----------------------------------------------------------------
@@ -388,11 +393,10 @@ export function createTemplateCodegenContext(
 		getExpression,
 		enterBlockScope,
 		exitBlockScope,
-		isDeclared,
 		setMemberFeatures,
-		accessLog,
-		accessBinding,
+		bindingReferences,
 		conditions,
+		addCondition,
 		generateConditionGuards,
 		hoistVars,
 		getHoistVariable,

@@ -90,6 +90,8 @@ export function createStylePlugin({ ts, ir, analysis, name }: VueCodegenFile): V
 			return code ? [{ name: StyleModules, code }] : [];
 		},
 		templateBody: () => getGeneratedStyle()?.codes ?? [],
+		// links its reads of the bindings that the template function shadows, from outside of it
+		setupBody: () => getGeneratedStyle()?.bindingReferences ?? [],
 		templateContext: () => hasStyleModules() ? [[typeAliasRef(StyleModules, getScriptLang(ir))]] : [],
 		declarations: () => [...generateStyleModuleImports(ir, moduleImports)],
 		elementEnd: getElementEnd,

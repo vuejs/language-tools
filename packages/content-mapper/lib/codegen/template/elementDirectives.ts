@@ -126,9 +126,6 @@ function* generateDirectiveName(
 	if (ignore) {
 		yield ignore.end();
 	}
-	else {
-		ctx.accessLog.push(name);
-	}
 	yield boundary.end();
 }
 
