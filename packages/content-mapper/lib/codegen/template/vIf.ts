@@ -1,5 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { codeToString, scriptFeatures, type TemplateReference, type TypeScript } from '@vue/language-core';
+import { codeToString, scriptFeatures } from '@vue/language-core';
 import { getTypeScriptAST } from '@vue/language-core/lib/typescript/typescriptAST';
 import type * as ts from 'typescript/ast' with { 'resolution-mode': 'import' };
 import type { TsCode, TsPiece } from '../tsCode';
@@ -33,7 +33,6 @@ export function* generateVIf(
 
 		if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 			const { content, loc } = branch.condition;
-			const accessMark = ctx.accessLog.length;
 			const codes = [...generateInterpolation(
 				options,
 				ctx,
@@ -45,11 +44,9 @@ export function* generateVIf(
 				`)`,
 			)];
 			yield* codes;
-			const { references } = ctx.getExpression(options.template, loc.start.offset, content);
 			ctx.conditions.push({
 				text: codeToString(codes as TsPiece[]),
-				accesses: ctx.accessLog.slice(accessMark),
-				readsLocalProperty: readsLocalProperty(options.typescript, options, content, references),
+				replayed: narrowsPropertyAccess(options, ctx, content, loc.start.offset),
 			});
 			addedBlockCondition = true;
 			yield ` `;
@@ -71,34 +68,23 @@ export function* generateVIf(
 }
 
 /**
- * Whether the condition `code` reads a property of a block-scope local, like `row.meta`, `(row).meta` or
- * `row!['meta']`: closures keep the narrowing of the local, which is `const`, but not of its properties.
+ * Whether the condition narrows a property access, which closures do not keep, unlike the narrowing of `const`
+ * identifiers: the locals of the template and the setup consts. The other setup bindings and the context are read
+ * through property accesses too, like `x.value` and `__VLS_ctx.x`.
  */
-function readsLocalProperty(
-	ts: TypeScript,
+function narrowsPropertyAccess(
 	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
 	code: string,
-	references: readonly TemplateReference[],
+	start: number,
 ) {
-	// the code is parsed in parentheses, so its offsets are one char after those of the references
-	const localOffsets = new Set(
-		references.filter(({ local, member }) => local && member).map(({ offset }) => offset + 1),
-	);
-	if (!localOffsets.size) {
-		return false;
+	const { references } = ctx.getExpression(options.template, start, code);
+	if (references.some(({ name, local }) => !local && !options.setupConsts.has(name))) {
+		return true;
 	}
-	const ast = getTypeScriptAST(ts, options.template, `(${code})`);
-	const visit = (node: ts.Node): boolean => {
-		if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
-			let object = node.expression;
-			while (ts.isParenthesizedExpression(object) || ts.isNonNullExpression(object)) {
-				object = object.expression;
-			}
-			if (ts.isIdentifier(object) && localOffsets.has(object.getStart(ast))) {
-				return true;
-			}
-		}
-		return !!node.forEachChild(visit);
-	};
-	return !!ast.forEachChild(visit);
+	const visit = (node: ts.Node): boolean =>
+		options.typescript.isPropertyAccessExpression(node)
+		|| options.typescript.isElementAccessExpression(node)
+		|| !!node.forEachChild(visit);
+	return !!getTypeScriptAST(options.typescript, options.template, `(${code})`).forEachChild(visit);
 }

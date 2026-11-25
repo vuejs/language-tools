@@ -258,10 +258,6 @@ export function createTemplateCodegenContext(
 		blockScopes.push(scope);
 	}
 
-	function isDeclared(name: string) {
-		return blockScopes.some(scope => scope.declared.has(name));
-	}
-
 	/** The features of the code of a reference, which its member in the block scope maps with for completion. */
 	function setMemberFeatures(block: IRBlock, offset: number, features: VueCodeMarker) {
 		let blockFeatures = memberFeatures.get(block);
@@ -311,30 +307,16 @@ export function createTemplateCodegenContext(
 
 	// context accesses -----------------------------------------------------------
 
-	// Ordered log of the names the generated code reads from the setup bindings or the template context;
-	// event-handler closures slice from a mark to find the names accessed within their body.
-	const accessLog: string[] = [];
-
 	// Direct references preserve editor links to the script bindings behind synthetic wrappers.
 	const bindingReferences: TsCode[] = [];
 
-	function accessBinding(name: string) {
-		accessLog.push(name);
-	}
-
 	// conditions -----------------------------------------------------------------
 
-	// Active branch conditions with the names each accessed; the guards are
-	// replayed inside inline-handler closures. Closures keep the narrowing of the
-	// block-scope locals, which are `const`, but not of their properties.
-	const conditions: { text: string; accesses: string[]; readsLocalProperty: boolean }[] = [];
+	// Active branch conditions; inline-handler closures replay the guards of the ones that they do not keep.
+	const conditions: { text: string; replayed: boolean }[] = [];
 
 	function* generateConditionGuards(): Generator<TsCode> {
-		const guards = conditions.filter(condition =>
-			condition.readsLocalProperty
-			|| !condition.accesses.length
-			|| !condition.accesses.every(isDeclared)
-		);
+		const guards = conditions.filter(condition => condition.replayed);
 		if (!guards.length) {
 			return;
 		}
@@ -401,11 +383,8 @@ export function createTemplateCodegenContext(
 		getExpression,
 		enterBlockScope,
 		exitBlockScope,
-		isDeclared,
 		setMemberFeatures,
-		accessLog,
 		bindingReferences,
-		accessBinding,
 		conditions,
 		generateConditionGuards,
 		hoistVars,

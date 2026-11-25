@@ -60,9 +60,6 @@ export function* generateInterpolation(
 		const { name, offset, isShorthand, local, member } = reference;
 		const omitted = omit.some(([omitStart, omitEnd]) => omitStart <= offset && offset < omitEnd);
 		if (member && !omitted) {
-			if (local) {
-				ctx.accessLog.push(name);
-			}
 			ctx.setMemberFeatures(block, start + offset, memberFeatures);
 		}
 		if (local && !member) {
@@ -201,7 +198,6 @@ export function* generateIdentifier(
 		yield boundary.end();
 	}
 	else if (options.setupBindings.has(name)) {
-		ctx.accessBinding(name);
 		if (inTypeQuery || options.dotValueBindings.has(name)) {
 			// The template reads a wrapper that shadows the binding. A type query outside
 			// the template function links the source to the binding without reading it;
@@ -241,7 +237,6 @@ export function* generateIdentifier(
 			yield names.dollars;
 		}
 		else {
-			ctx.accessLog.push(name);
 			yield names.ctx;
 		}
 		yield `.`;
