@@ -1,0 +1,506 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`componentHoverDocs.ts > snapshots > jsdoc 1`] = `
+"## Models
+
+~~~ts
+/**
+ * This is the default model
+ */
+modelValue?: string | undefined
+
+/**
+ * This is a required model
+ */
+requiredModel: string
+
+/**
+ * This is a model with a default value
+ */
+modelWithDefault?: string | undefined = "default value"
+
+/**
+ * This is a deprecated model
+ * 
+ * @deprecated This model is deprecated and should not be used
+ */
+deprecatedModel?: string | undefined
+
+/**
+ * This is a model created without \`defineModel\`
+ */
+manualModel?: string | undefined
+
+/**
+ * This is a model created without \`defineModel\` and with a prop as an event
+ */
+manualModelWithPropEvent?: string | undefined
+~~~
+
+
+## Props
+
+~~~ts
+/**
+ * This is a requird prop
+ * 
+ * @foo This is a custom tag
+ */
+requiredProp: string
+
+/**
+ * This is a prop with a default value
+ */
+withDefault?: boolean | undefined = false
+
+/**
+ * @description A very long description: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+ * 
+ * @anotherDescription Now with multiple lines!
+ * Lorem ipsum
+ * 
+ * @name Some name
+ */
+justTags?: string | undefined
+
+noDescription?: boolean | undefined
+
+/**
+ * Object type
+ */
+withObjectType?: { foo: string; bar: number; } | undefined
+
+/**
+ * With some markdown
+ * 
+ * # Who puts a title in a jsdoc comment?
+ * 
+ * > This is a blockquote
+ * 
+ * - This is a list item
+ * - This is another list item
+ */
+withMarkdown?: string | undefined
+
+/**
+ * With code block
+ * \`\`\`ts
+ * const foo: string = 'bar'
+ * \`\`\`
+ */
+withCodeBlock?: string | undefined
+
+/**
+ * This is a deprecated prop
+ * 
+ * @deprecated This prop is deprecated and should not be used
+ */
+deprecatedProp?: string | undefined
+
+/**
+ * Because the "l" is lower case this prop will is not being treated as
+ * an event
+ */
+onlyAPropStartingWithOn?: string | undefined
+~~~
+
+
+## Events
+
+~~~ts
+@customEvent: () => any
+
+@eventWithPayload: (payload: string, payload2: number) => any
+
+@deprecatedEvent: () => any
+
+/**
+ * Because it starts with "onX" this prop is treated as an event
+ */
+@somePropEvent: ((value: string) => void) | undefined
+~~~
+
+
+## Slots
+
+~~~ts
+/**
+ * This is a default slot
+ */
+#default
+
+/**
+ * This is a slot with props
+ */
+#slotWithProps: { foo: string; }
+
+/**
+ * This is a deprecated slot
+ * 
+ * @deprecated This slot is deprecated and should not be used
+ */
+#deprecatedSlot
+~~~
+
+
+## Exposed
+
+~~~ts
+/**
+ * This is a method that can be called from the parent component
+ */
+exposedMethod: () => void
+
+/**
+ * This is a property that can be accessed from the parent component
+ */
+exposedProperty: string
+~~~"
+`;
+
+exports[`componentHoverDocs.ts > snapshots > markdown 1`] = `
+"## Models
+
+\`modelValue?: string | undefined\`
+
+> This is the default model
+
+\`requiredModel: string\`
+
+> This is a required model
+
+\`modelWithDefault?: string | undefined = "default value"\`
+
+> This is a model with a default value
+
+~~\`deprecatedModel?: string | undefined\`~~
+
+> This is a deprecated model
+> 
+> ***@deprecated*** This model is deprecated and should not be used
+
+\`manualModel?: string | undefined\`
+
+> This is a model created without \`defineModel\`
+
+\`manualModelWithPropEvent?: string | undefined\`
+
+> This is a model created without \`defineModel\` and with a prop as an event
+
+## Props
+
+\`requiredProp: string\`
+
+> This is a requird prop
+> 
+> ***@foo*** This is a custom tag
+
+\`withDefault?: boolean | undefined = false\`
+
+> This is a prop with a default value
+
+\`justTags?: string | undefined\`
+
+> 
+> 
+> ***@description*** A very long description: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+> 
+> ***@anotherDescription*** Now with multiple lines!
+> Lorem ipsum
+> 
+> ***@name*** Some name
+
+\`noDescription?: boolean | undefined\`
+
+\`withObjectType?: { foo: string; bar: number; } | undefined\`
+
+> Object type
+
+\`withMarkdown?: string | undefined\`
+
+> With some markdown
+> 
+> # Who puts a title in a jsdoc comment?
+> 
+> > This is a blockquote
+> 
+> - This is a list item
+> - This is another list item
+
+\`withCodeBlock?: string | undefined\`
+
+> With code block
+> \`\`\`ts
+> const foo: string = 'bar'
+> \`\`\`
+
+~~\`deprecatedProp?: string | undefined\`~~
+
+> This is a deprecated prop
+> 
+> ***@deprecated*** This prop is deprecated and should not be used
+
+\`onlyAPropStartingWithOn?: string | undefined\`
+
+> Because the "l" is lower case this prop will is not being treated as
+> an event
+
+## Events
+
+\`@customEvent: () => any\`
+
+\`@eventWithPayload: (payload: string, payload2: number) => any\`
+
+\`@deprecatedEvent: () => any\`
+
+\`@somePropEvent: ((value: string) => void) | undefined\`
+
+> Because it starts with "onX" this prop is treated as an event
+
+## Slots
+
+\`#default\`
+
+> This is a default slot
+
+\`#slotWithProps\` - \`{ foo: string; }\`
+
+> This is a slot with props
+
+~~\`#deprecatedSlot\`~~
+
+> This is a deprecated slot
+> 
+> ***@deprecated*** This slot is deprecated and should not be used
+
+## Exposed
+
+\`exposedMethod: () => void\`
+
+> This is a method that can be called from the parent component
+
+\`exposedProperty: string\`
+
+> This is a property that can be accessed from the parent component"
+`;
+
+exports[`componentHoverDocs.ts > snapshots > table 1`] = `
+"<table>
+<tr><th align="left">Prop</th><th align="left">Description</th><th align="left">Default</th></tr>
+<tr>
+						<td>requiredProp <sup><em>required</em></sup></td>
+						<td>
+
+This is a requird prop
+<br><code>string</code></td>
+						<td></td>
+					</tr>
+<tr>
+						<td>withDefault</td>
+						<td>
+
+This is a prop with a default value
+<br><code>boolean | undefined</code></td>
+						<td><code>false</code></td>
+					</tr>
+<tr>
+						<td>justTags</td>
+						<td><code>string | undefined</code></td>
+						<td></td>
+					</tr>
+<tr>
+						<td>noDescription</td>
+						<td><code>boolean | undefined</code></td>
+						<td></td>
+					</tr>
+<tr>
+						<td>withObjectType</td>
+						<td>
+
+Object type
+<br><code>{ foo: string; bar: number; } | undefined</code></td>
+						<td></td>
+					</tr>
+<tr>
+						<td>withMarkdown</td>
+						<td>
+
+With some markdown
+
+# Who puts a title in a jsdoc comment?
+
+> This is a blockquote
+
+- This is a list item
+- This is another list item
+<br><code>string | undefined</code></td>
+						<td></td>
+					</tr>
+<tr>
+						<td>withCodeBlock</td>
+						<td>
+
+With code block
+\`\`\`ts
+const foo: string = 'bar'
+\`\`\`
+<br><code>string | undefined</code></td>
+						<td></td>
+					</tr>
+<tr>
+						<td><del>deprecatedProp</del></td>
+						<td>
+
+This is a deprecated prop
+<br><code>string | undefined</code></td>
+						<td></td>
+					</tr>
+<tr>
+						<td>onSomePropEvent</td>
+						<td>
+
+Because it starts with "onX" this prop is treated as an event
+<br><code>((value: string) => void) | undefined</code></td>
+						<td></td>
+					</tr>
+<tr>
+						<td>onlyAPropStartingWithOn</td>
+						<td>
+
+Because the "l" is lower case this prop will is not being treated as
+an event
+<br><code>string | undefined</code></td>
+						<td></td>
+					</tr>
+<tr>
+						<td>manualModel <sup><em>model</em></sup></td>
+						<td>
+
+This is a model created without \`defineModel\`
+<br><code>string | undefined</code></td>
+						<td></td>
+					</tr>
+<tr>
+						<td>manualModelWithPropEvent <sup><em>model</em></sup></td>
+						<td>
+
+This is a model created without \`defineModel\` and with a prop as an event
+<br><code>string | undefined</code></td>
+						<td></td>
+					</tr>
+<tr>
+						<td>onUpdate:manualModelWithPropEvent</td>
+						<td><code>((value: string) => Promise<void>) | undefined</code></td>
+						<td></td>
+					</tr>
+<tr>
+						<td>modelValue <sup><em>model</em></sup></td>
+						<td>
+
+This is the default model
+<br><code>string | undefined</code></td>
+						<td></td>
+					</tr>
+<tr>
+						<td>requiredModel <sup><em>required</em></sup> <sup><em>model</em></sup></td>
+						<td>
+
+This is a required model
+<br><code>string</code></td>
+						<td></td>
+					</tr>
+<tr>
+						<td>modelWithDefault <sup><em>model</em></sup></td>
+						<td>
+
+This is a model with a default value
+<br><code>string | undefined</code></td>
+						<td><code>"default value"</code></td>
+					</tr>
+<tr>
+						<td><del>deprecatedModel</del> <sup><em>model</em></sup></td>
+						<td>
+
+This is a deprecated model
+<br><code>string | undefined</code></td>
+						<td></td>
+					</tr>
+
+<tr></tr><tr></tr><tr></tr><tr></tr>
+<tr><th align="left">Event</th><th align="left">Description</th><th></th></tr>
+<tr>
+						<td>update:modelValue</td>
+						<td colspan="2"><code>[value: string | undefined]</code></td>
+					</tr>
+<tr>
+						<td>update:requiredModel</td>
+						<td colspan="2"><code>[value: string]</code></td>
+					</tr>
+<tr>
+						<td>update:modelWithDefault</td>
+						<td colspan="2"><code>[value: string]</code></td>
+					</tr>
+<tr>
+						<td>update:deprecatedModel</td>
+						<td colspan="2"><code>[value: string | undefined]</code></td>
+					</tr>
+<tr>
+						<td>customEvent</td>
+						<td colspan="2"><code>[]</code></td>
+					</tr>
+<tr>
+						<td>eventWithPayload</td>
+						<td colspan="2"><code>[payload: string, payload2: number]</code></td>
+					</tr>
+<tr>
+						<td>deprecatedEvent</td>
+						<td colspan="2"><code>[]</code></td>
+					</tr>
+<tr>
+						<td>update:manualModel</td>
+						<td colspan="2"><code>[value: string]</code></td>
+					</tr>
+
+<tr></tr><tr></tr><tr></tr><tr></tr>
+<tr><th align="left">Slot</th><th align="left">Description</th><th></th></tr>
+<tr>
+						<td>default</td>
+						<td colspan="2">
+
+This is a default slot
+<br><code>any</code></td>
+					</tr>
+<tr>
+						<td>slotWithProps</td>
+						<td colspan="2">
+
+This is a slot with props
+<br><code>{ foo: string; }</code></td>
+					</tr>
+<tr>
+						<td><del>deprecatedSlot</del></td>
+						<td colspan="2">
+
+This is a deprecated slot
+<br><code>any</code></td>
+					</tr>
+
+<tr></tr><tr></tr><tr></tr><tr></tr>
+<tr><th align="left">Exposed</th><th align="left">Description</th><th></th></tr>
+<tr>
+						<td>exposedMethod</td>
+						<td colspan="2">
+
+This is a method that can be called from the parent component
+<br><code>() => void</code></td>
+					</tr>
+<tr>
+						<td>exposedProperty</td>
+						<td colspan="2">
+
+This is a property that can be accessed from the parent component
+<br><code>string</code></td>
+					</tr>
+
+</table>"
+`;
