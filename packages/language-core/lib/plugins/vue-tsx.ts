@@ -95,7 +95,13 @@ function useCodegen(
 	const getBindingFlags = computed(() => {
 		const flags = new Map<string, BindingFlag>(getScriptSetupRanges()?.bindings);
 		const scriptRanges = getScriptRanges();
-		if (ir.scriptSetup && scriptRanges) {
+		const { script, scriptSetup } = ir;
+		// compiler-sfc drops whitespace-only inline setup blocks.
+		const isEmptyInlineSetup = script && scriptSetup
+			&& 'setup' in scriptSetup.attrs && !('vapor' in scriptSetup.attrs)
+			&& !('src' in script.attrs) && !('src' in scriptSetup.attrs)
+			&& validLangs.has(scriptSetup.lang) && !scriptSetup.content.trim();
+		if (scriptSetup && scriptRanges && !isEmptyInlineSetup) {
 			for (const [name, flag] of scriptRanges.bindings) {
 				if (!flags.has(name)) {
 					flags.set(name, flag);

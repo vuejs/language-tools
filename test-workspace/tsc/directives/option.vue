@@ -12,6 +12,7 @@ export default {
 </script>
 
 <script setup lang="ts">
+// Expose the script bindings to the template.
 </script>
 
 <template>

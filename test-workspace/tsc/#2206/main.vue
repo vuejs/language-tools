@@ -15,4 +15,5 @@ declare const D: (props: { foo: (_: string) => void; }) => { props: {} };
 </script>
 
 <script lang="ts" setup>
+// Expose the function components to the template.
 </script>
