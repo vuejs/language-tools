@@ -834,6 +834,24 @@ test('<script setup>', async () => {
 	);
 });
 
+test('completion inside an empty <script setup>', async () => {
+	await requestCompletionItemToTsServer(
+		'fixture.vue',
+		'vue',
+		`
+		<template>{{ message }}</template>
+
+		<script lang="ts">
+		const message = 'Hello';
+		</script>
+		<script setup lang="ts">
+		|
+		</script>
+	`,
+		'message',
+	);
+});
+
 test('Slot name', async () => {
 	const completion = await requestCompletionItemToTsServer(
 		'fixture.vue',
