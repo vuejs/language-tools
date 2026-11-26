@@ -333,6 +333,518 @@ exports[`embedded grammar > #4741-leading-operator.vue 1`] = `
 #^ text.html.vue"
 `;
 
+exports[`embedded grammar > #6296-directive-as-cast.vue 1`] = `
+"><template>
+#^ text.html.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^^^ text.html.vue entity.name.tag.template.html.vue
+#         ^ text.html.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>	<div class="main">
+#^ text.html.vue text.html.derivative
+# ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#  ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#      ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.class.html entity.other.attribute-name.html
+#           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.class.html punctuation.separator.key-value.html
+#            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.class.html string.quoted.double.html punctuation.definition.string.begin.html
+#             ^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.class.html string.quoted.double.html
+#                 ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.class.html string.quoted.double.html punctuation.definition.string.end.html
+#                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+>		<template v-for="(item, i) in list as any[]" :key="i">
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.template-tag.start punctuation.definition.tag.begin.html.vue
+#   ^^^^^^^^ text.html.vue text.html.derivative meta.template-tag.start entity.name.tag.template.html.vue
+#           ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff
+#            ^^^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue keyword.control.loop.vue
+#                 ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue punctuation.separator.key-value.html.vue
+#                  ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue punctuation.definition.string.begin.html.vue
+#                   ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue meta.brace.round.ts
+#                    ^^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                        ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue punctuation.separator.comma.ts
+#                         ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue
+#                          ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                           ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue meta.brace.round.ts
+#                            ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue
+#                             ^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue keyword.operator.expression.in.ts
+#                               ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue
+#                                ^^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                                    ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue
+#                                     ^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue keyword.control.as.ts
+#                                       ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue
+#                                        ^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue support.type.primitive.ts
+#                                           ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue meta.type.tuple.ts meta.brace.square.ts
+#                                            ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue source.ts.embedded.html.vue meta.type.tuple.ts meta.brace.square.ts
+#                                             ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.control.vue punctuation.definition.string.end.html.vue
+#                                              ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff
+#                                               ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                                                ^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                                                   ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                                                    ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                                                     ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                                                      ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                                       ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag-stuff punctuation.definition.tag.end.html.vue
+>			<div class="row">{{ item.name }}</div>
+#^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end
+#   ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#    ^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag.structure.div.start.html entity.name.tag.html
+#       ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag.structure.div.start.html
+#        ^^^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag.structure.div.start.html meta.attribute.class.html entity.other.attribute-name.html
+#             ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag.structure.div.start.html meta.attribute.class.html punctuation.separator.key-value.html
+#              ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag.structure.div.start.html meta.attribute.class.html string.quoted.double.html punctuation.definition.string.begin.html
+#               ^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag.structure.div.start.html meta.attribute.class.html string.quoted.double.html
+#                  ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag.structure.div.start.html meta.attribute.class.html string.quoted.double.html punctuation.definition.string.end.html
+#                   ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                    ^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end expression.embedded.vue punctuation.definition.interpolation.begin.html.vue
+#                      ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end expression.embedded.vue source.ts.embedded.html.vue
+#                       ^^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end expression.embedded.vue source.ts.embedded.html.vue variable.other.object.ts
+#                           ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end expression.embedded.vue source.ts.embedded.html.vue punctuation.accessor.ts
+#                            ^^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end expression.embedded.vue source.ts.embedded.html.vue variable.other.property.ts
+#                                ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end expression.embedded.vue source.ts.embedded.html.vue
+#                                 ^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end expression.embedded.vue punctuation.definition.interpolation.end.html.vue
+#                                   ^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                     ^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag.structure.div.end.html entity.name.tag.html
+#                                        ^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>		</template>
+#^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end
+#  ^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end punctuation.definition.tag.begin.html.vue
+#    ^^^^^^^^ text.html.vue text.html.derivative meta.template-tag.start meta.template-tag.end entity.name.tag.template.html.vue
+#            ^ text.html.vue text.html.derivative meta.template-tag.start punctuation.definition.tag.end.html.vue
+>		<div :foo="value as string" :bar="1"></div>
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#             ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                   ^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue keyword.control.as.ts
+#                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                      ^^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue support.type.primitive.ts
+#                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#                              ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                               ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                                   ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                                    ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue constant.numeric.decimal.ts
+#                                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                                       ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                         ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#                                            ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>		<div :foo='value as string' :bar="1"></div>
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#             ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                   ^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue keyword.control.as.ts
+#                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                      ^^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue support.type.primitive.ts
+#                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#                              ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                               ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                                   ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                                    ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue constant.numeric.decimal.ts
+#                                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                                       ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                         ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#                                            ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>		<div :foo="value satisfies string" :bar="1"></div>
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#             ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                   ^^^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue keyword.control.satisfies.ts
+#                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                             ^^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue support.type.primitive.ts
+#                                   ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                    ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#                                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                                      ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                                         ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                                          ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                                           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue constant.numeric.decimal.ts
+#                                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                                              ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                                ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#                                                   ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>		<div :foo="value as Array<string>" :bar="1"></div>
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#             ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                   ^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue keyword.control.as.ts
+#                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                      ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue entity.name.type.ts
+#                           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.type.parameters.ts punctuation.definition.typeparameters.begin.ts
+#                            ^^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.type.parameters.ts support.type.primitive.ts
+#                                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.type.parameters.ts punctuation.definition.typeparameters.end.ts
+#                                   ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                    ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#                                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                                      ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                                         ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                                          ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                                           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue constant.numeric.decimal.ts
+#                                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                                              ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                                ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#                                                   ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>		<div :foo="value as 'a' | 'b'" :bar="1"></div>
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#             ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                   ^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue keyword.control.as.ts
+#                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue string.quoted.single.ts punctuation.definition.string.begin.ts
+#                       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue string.quoted.single.ts
+#                        ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue string.quoted.single.ts punctuation.definition.string.end.ts
+#                         ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                          ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue keyword.operator.bitwise.ts
+#                           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue string.quoted.single.ts punctuation.definition.string.begin.ts
+#                             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue string.quoted.single.ts
+#                              ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue string.quoted.single.ts punctuation.definition.string.end.ts
+#                               ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#                                 ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                                  ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                                      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                                       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue constant.numeric.decimal.ts
+#                                        ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                         ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                                          ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                            ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#                                               ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>		<div @click="handler(value as string)" :bar="1"></div>
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.event.html.vue
+#        ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#              ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#               ^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.function-call.ts entity.name.function.ts
+#                      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.brace.round.ts
+#                       ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                             ^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue keyword.control.as.ts
+#                               ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                                ^^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue support.type.primitive.ts
+#                                      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.brace.round.ts
+#                                       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                        ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#                                         ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                                          ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                                             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                                              ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                                               ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue constant.numeric.decimal.ts
+#                                                ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                                 ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                                                  ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                                    ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#                                                       ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>		<div v-if="value as boolean" :bar="1"></div>
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#       ^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.control.vue keyword.control.conditional.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.control.vue punctuation.separator.key-value.html.vue
+#            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.control.vue punctuation.definition.string.begin.html.vue
+#             ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.control.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.control.vue source.ts.embedded.html.vue
+#                   ^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.control.vue source.ts.embedded.html.vue keyword.control.as.ts
+#                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.control.vue source.ts.embedded.html.vue
+#                      ^^^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.control.vue source.ts.embedded.html.vue support.type.primitive.ts
+#                             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.control.vue punctuation.definition.string.end.html.vue
+#                              ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#                               ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                                ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                                   ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                                    ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue constant.numeric.decimal.ts
+#                                      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                                        ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                          ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#                                             ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>		<div :foo="value as string[]" :bar="1"></div>
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#             ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                   ^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue keyword.control.as.ts
+#                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                      ^^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue support.type.primitive.ts
+#                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.type.tuple.ts meta.brace.square.ts
+#                             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.type.tuple.ts meta.brace.square.ts
+#                              ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                               ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#                                ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                                 ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                                    ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                                      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue constant.numeric.decimal.ts
+#                                       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                        ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                                         ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                           ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#                                              ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>		<div :foo="value as const" :bar="1"></div>
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#             ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                   ^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue keyword.control.as.ts
+#                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                      ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue entity.name.type.ts
+#                           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#                             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                              ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                                 ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                                   ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue constant.numeric.decimal.ts
+#                                    ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                                      ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#                                           ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>		<div :foo="(value as string).length" :bar="1"></div>
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.brace.round.ts
+#              ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                   ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                    ^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue keyword.control.as.ts
+#                      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                       ^^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue support.type.primitive.ts
+#                             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.brace.round.ts
+#                              ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue punctuation.accessor.ts
+#                               ^^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue support.variable.property.ts
+#                                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#                                       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                                        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                                           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                                             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue constant.numeric.decimal.ts
+#                                              ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                               ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                                                ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                                  ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#                                                     ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>		<div :foo="cond ? value as string : other" :bar="1"></div>
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#             ^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                 ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue keyword.operator.ternary.ts
+#                   ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                    ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                         ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                          ^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue keyword.control.as.ts
+#                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                             ^^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue support.type.primitive.ts
+#                                   ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                                    ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue keyword.operator.ternary.ts
+#                                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                                      ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                                           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#                                             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                                              ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                                                 ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                                                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                                                   ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue constant.numeric.decimal.ts
+#                                                    ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                                                      ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                                        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#                                                           ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>		<div :foo="'as ' + value" :bar="1"></div>
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue string.quoted.single.ts punctuation.definition.string.begin.ts
+#              ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue string.quoted.single.ts
+#                 ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue string.quoted.single.ts punctuation.definition.string.end.ts
+#                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                   ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue keyword.operator.arithmetic.ts
+#                    ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue
+#                     ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.readwrite.ts
+#                          ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                             ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                                ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                                 ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue constant.numeric.decimal.ts
+#                                   ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                    ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                                     ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                       ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#                                          ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>		<div :foo="{ as: value }" :bar="1"></div>
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.objectliteral.ts punctuation.definition.block.ts
+#              ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.objectliteral.ts
+#               ^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.objectliteral.ts meta.object.member.ts meta.object-literal.key.ts
+#                 ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.objectliteral.ts meta.object.member.ts meta.object-literal.key.ts punctuation.separator.key-value.ts
+#                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.objectliteral.ts meta.object.member.ts
+#                   ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.objectliteral.ts meta.object.member.ts variable.other.readwrite.ts
+#                        ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.objectliteral.ts meta.object.member.ts
+#                         ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue meta.objectliteral.ts punctuation.definition.block.ts
+#                          ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                             ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                                ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                                 ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue constant.numeric.decimal.ts
+#                                   ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                                    ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                                     ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                       ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#                                          ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>		<div :foo="value.as" :bar="1"></div>
+#^^ text.html.vue text.html.derivative
+#  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#             ^^^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.object.ts
+#                  ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue punctuation.accessor.ts
+#                   ^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue variable.other.property.ts
+#                     ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                      ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html
+#                       ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.attribute-shorthand.bind.html.vue
+#                        ^^^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue entity.other.attribute-name.html.vue
+#                           ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.separator.key-value.html.vue
+#                            ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.begin.html.vue
+#                             ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue source.ts.embedded.html.vue constant.numeric.decimal.ts
+#                              ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html meta.attribute.directive.vue punctuation.definition.string.end.html.vue
+#                               ^ text.html.vue text.html.derivative meta.tag.structure.div.start.html punctuation.definition.tag.end.html
+#                                ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#                                  ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#                                     ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+>	</div>
+#^ text.html.vue text.html.derivative
+# ^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.begin.html
+#   ^^^ text.html.vue text.html.derivative meta.tag.structure.div.end.html entity.name.tag.html
+#      ^ text.html.vue text.html.derivative meta.tag.structure.div.end.html punctuation.definition.tag.end.html
+></template>
+#^^ text.html.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ text.html.vue entity.name.tag.template.html.vue
+#          ^ text.html.vue punctuation.definition.tag.end.html.vue
+>
+#^ text.html.vue
+><script setup lang="ts">
+#^ text.html.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^ text.html.vue entity.name.tag.script.html.vue
+#       ^ text.html.vue meta.tag-stuff
+#        ^^^^^ text.html.vue meta.tag-stuff meta.attribute.unrecognized.setup.html entity.other.attribute-name.html
+#             ^ text.html.vue meta.tag-stuff
+#              ^^^^ text.html.vue meta.tag-stuff meta.attribute.lang.html entity.other.attribute-name.html
+#                  ^ text.html.vue meta.tag-stuff meta.attribute.lang.html punctuation.separator.key-value.html
+#                   ^ text.html.vue meta.tag-stuff meta.attribute.lang.html string.quoted.double.html punctuation.definition.string.begin.html
+#                    ^^ text.html.vue meta.tag-stuff meta.attribute.lang.html string.quoted.double.html
+#                      ^ text.html.vue meta.tag-stuff meta.attribute.lang.html string.quoted.double.html punctuation.definition.string.end.html
+#                       ^ text.html.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>const list: any = []
+#^^^^^ text.html.vue source.ts meta.var.expr.ts storage.type.ts
+#     ^ text.html.vue source.ts meta.var.expr.ts
+#      ^^^^ text.html.vue source.ts meta.var.expr.ts meta.var-single-variable.expr.ts meta.definition.variable.ts variable.other.constant.ts
+#          ^ text.html.vue source.ts meta.var.expr.ts meta.var-single-variable.expr.ts meta.type.annotation.ts keyword.operator.type.annotation.ts
+#           ^ text.html.vue source.ts meta.var.expr.ts meta.var-single-variable.expr.ts meta.type.annotation.ts
+#            ^^^ text.html.vue source.ts meta.var.expr.ts meta.var-single-variable.expr.ts meta.type.annotation.ts support.type.primitive.ts
+#               ^ text.html.vue source.ts meta.var.expr.ts meta.var-single-variable.expr.ts meta.type.annotation.ts
+#                ^ text.html.vue source.ts meta.var.expr.ts keyword.operator.assignment.ts
+#                 ^ text.html.vue source.ts meta.var.expr.ts meta.array.literal.ts
+#                  ^ text.html.vue source.ts meta.var.expr.ts meta.array.literal.ts meta.brace.square.ts
+#                   ^ text.html.vue source.ts meta.var.expr.ts meta.array.literal.ts meta.brace.square.ts
+></script>
+#^^ text.html.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^ text.html.vue entity.name.tag.script.html.vue
+#        ^ text.html.vue punctuation.definition.tag.end.html.vue
+>
+#^ text.html.vue"
+`;
+
 exports[`embedded grammar > basic.vue 1`] = `
 "><script setup>
 #^ text.html.vue punctuation.definition.tag.begin.html.vue
