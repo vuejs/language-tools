@@ -66,6 +66,7 @@ const raw = {
 	HandlerParameters: '',
 	IsAny: '',
 	IsFunction: '',
+	NativeElementProps: '',
 	NormalizeEmits: '',
 	OverloadUnion: '',
 	OverloadUnionInner: '',

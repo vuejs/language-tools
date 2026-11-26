@@ -31,6 +31,7 @@ export function* generateElementProps(
 	failedPropExps?: FailedPropExpressions[],
 	// type of the object the props are passed to, if any
 	attrsType?: string,
+	isDom = false,
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
@@ -111,15 +112,21 @@ export function* generateElementProps(
 				continue;
 			}
 
+			const staticArg = prop.arg && CompilerDOM.isStaticExp(prop.arg) ? prop.arg : undefined;
 			if (
 				prop.name === 'bind'
+				&& (!isDom || staticArg)
 				&& prop.modifiers.some(m => m.content === 'prop' || m.content === 'attr')
 			) {
 				propName = propName.slice(1);
 			}
 
-			const shouldSpread = propName === 'style' || propName === 'class';
-			const shouldCamelize = getShouldCamelize(options, node, prop, propName);
+			const shouldSpread = !isDom && (propName === 'style' || propName === 'class');
+			const shouldCamelizeDomProp = isDom
+				&& staticArg
+				&& staticArg.loc.source !== propName
+				&& camelize(staticArg.loc.source) === propName;
+			const shouldCamelize = shouldCamelizeDomProp || getShouldCamelize(options, node, prop, propName);
 			const features = getPropsCodeFeatures(checkUnknownProps);
 
 			if (shouldSpread) {
@@ -135,7 +142,7 @@ export function* generateElementProps(
 				yield* generateObjectProperty(
 					options,
 					ctx,
-					propName,
+					shouldCamelizeDomProp ? staticArg.loc.source : propName,
 					prop.arg.loc.start.offset,
 					features,
 					shouldCamelize,

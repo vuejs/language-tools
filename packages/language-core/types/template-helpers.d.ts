@@ -8,6 +8,9 @@ declare global {
 	};
 
 	type __VLS_Elements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
+	type __VLS_NativeElementProps<Tag extends string, Elements, Fallback> = Partial<
+		Tag extends keyof Elements ? Elements[Tag] : Fallback
+	>;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 	type __VLS_SpreadMerge<A, B> = Omit<A, keyof B> & B;
