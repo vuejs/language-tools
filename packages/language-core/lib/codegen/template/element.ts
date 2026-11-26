@@ -1,5 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { camelize, capitalize } from '@vue/shared';
+import { camelize, capitalize, isHTMLTag, isMathMLTag, isSVGTag } from '@vue/shared';
 import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
 import type { Code, TextRange } from '../../types';
@@ -7,7 +7,7 @@ import { getElementTagOffsets, getStartEnd, hyphenateTag, normalizeAttributeValu
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { names } from '../names';
-import { endOfLine, generateTypedVar, getTypeScriptAST, identifierRE, newLine } from '../utils';
+import { asType, endOfLine, generateTypedVar, getTypeScriptAST, identifierRE, newLine } from '../utils';
 import { Boundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
@@ -330,10 +330,13 @@ export function* generateElement(
 ): Generator<Code> {
 	const [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
 	const failedPropExps: FailedPropExpressions[] = [];
+	const { checkUnknownProps } = options.vueCompilerOptions;
+	const asFunctionalElement = checkUnknownProps ? names.asFunctionalElement0 : names.asFunctionalElement1;
+	const domProps = isHTMLTag(node.tag) || isSVGTag(node.tag) || isMathMLTag(node.tag)
+		? node.props.filter(isDomPropBinding)
+		: [];
 
-	yield `${
-		options.vueCompilerOptions.checkUnknownProps ? names.asFunctionalElement0 : names.asFunctionalElement1
-	}(${names.intrinsics}`;
+	yield `${asFunctionalElement}(${names.intrinsics}`;
 	yield* generatePropertyAccess(
 		options,
 		ctx,
@@ -364,14 +367,26 @@ export function* generateElement(
 		options,
 		ctx,
 		node,
-		node.props,
-		options.vueCompilerOptions.checkUnknownProps,
+		domProps.length ? node.props.filter(prop => !domProps.includes(prop)) : node.props,
+		checkUnknownProps,
 		failedPropExps,
 		`typeof ${names.intrinsics}['${node.tag}']`,
 	);
 	yield `}`;
 	yield boundary.end();
 	yield `)${endOfLine}`;
+
+	if (domProps.length) {
+		const element = node.ns === CompilerDOM.Namespaces.SVG
+			? 'SVGElement'
+			: node.ns === CompilerDOM.Namespaces.MATH_ML
+			? 'MathMLElement'
+			: 'HTMLElement';
+		const type = `${names.NativeElementProps}<'${node.tag}', ${element}TagNameMap, ${element}>`;
+		yield `${asFunctionalElement}(${asType(type, options.scriptLang)})({${newLine}`;
+		yield* generateElementProps(options, ctx, node, domProps, checkUnknownProps, failedPropExps, undefined, true);
+		yield `})${endOfLine}`;
+	}
 
 	yield* generateFailedExpressions(options, ctx, failedPropExps);
 	yield* generateElementDirectives(options, ctx, node);
@@ -440,6 +455,14 @@ export function* generateFragment(
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
 	}
+}
+
+function isDomPropBinding(prop: CompilerDOM.ElementNode['props'][number]) {
+	return prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+		&& prop.name === 'bind'
+		&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+		&& prop.modifiers.some(modifier => modifier.content === 'prop')
+		&& !prop.modifiers.some(modifier => modifier.content === 'attr');
 }
 
 function* generateFailedExpressions(
