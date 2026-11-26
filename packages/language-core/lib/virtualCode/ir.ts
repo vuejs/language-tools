@@ -11,13 +11,13 @@ import type {
 	IRScriptSetup,
 	IRStyle,
 	IRTemplate,
-	VueLanguagePluginReturn,
+	VueLanguagePluginInstance,
 } from '../types';
 import { computedArray, reactiveArray } from '../utils/signals';
 
 export function useIR(
 	ts: typeof import('typescript'),
-	plugins: VueLanguagePluginReturn[],
+	plugins: VueLanguagePluginInstance[],
 	fileName: string,
 	getSnapshot: () => ts.IScriptSnapshot,
 	getParseSfcResult: () => SFCParseResult | undefined,
@@ -219,7 +219,7 @@ export function useIR(
 			errors: CompilerDOM.CompilerError[];
 			warnings: CompilerDOM.CompilerError[];
 			result?: CompilerDOM.CodegenResult;
-			plugin?: VueLanguagePluginReturn;
+			plugin?: VueLanguagePluginInstance;
 		}>(lastResult => {
 			if (lastResult?.template === base.content) {
 				return lastResult;
