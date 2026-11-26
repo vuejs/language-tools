@@ -19,14 +19,10 @@ function writePluginPackage(rootDir: string, tag: string) {
 		path.join(packageDir, 'index.js'),
 		`module.exports = () => ({
 			name: ${JSON.stringify(PLUGIN_NAME)},
-			version: 2.2,
+			version: 3,
 			compileSFCTemplate(lang) {
 				if (lang === 'pug') {
-					return {
-						ast: { tag: ${JSON.stringify(tag)} },
-						code: '',
-						preamble: '',
-					};
+					return { tag: ${JSON.stringify(tag)} };
 				}
 			},
 		});`,
@@ -41,7 +37,7 @@ function writeNamedPluginPackage(rootDir: string, specifier: string, factoryName
 		JSON.stringify({ name: specifier, main: 'index.js' }),
 	);
 	const factories = factoryNames
-		.map(name => `function ${name}() {\n\treturn { name: ${JSON.stringify(name)}, version: 2.2 };\n}`)
+		.map(name => `function ${name}() {\n\treturn { name: ${JSON.stringify(name)}, version: 3 };\n}`)
 		.join(',\n');
 	fs.writeFileSync(
 		path.join(packageDir, 'index.js'),
@@ -90,11 +86,7 @@ describe('CompilerOptionsResolver', () => {
 		});
 		const pugPlugin = instances.find(plugin => plugin.name === PLUGIN_NAME);
 
-		expect(pugPlugin?.compileSFCTemplate?.('pug', '', {})).toEqual({
-			ast: { tag: 'client' },
-			code: '',
-			preamble: '',
-		});
+		expect(pugPlugin?.compileSFCTemplate?.('pug', '', {})).toEqual({ tag: 'client' });
 	});
 
 	it('drops every plugin inherited from the extended configs', () => {
