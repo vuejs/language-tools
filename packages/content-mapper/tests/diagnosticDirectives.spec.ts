@@ -81,3 +81,22 @@ test('merges synthesized ignores with the ignores of mapped regions', () => {
 		[0, 0, 2, 6, DiagnosticDirectivePolicy.Ignore],
 	]);
 });
+
+test('scopes top-level diagnostic directives to the following CSS module', () => {
+	const result = runTsc([
+		'-p',
+		path.join(repositoryRoot, 'test-workspace/content-mapper-style-directives/tsconfig.json'),
+		'--noEmit',
+		'--runExternalCode',
+		'--pretty',
+		'false',
+	]);
+	const lines = normalizeCompilerOutput(result).replaceAll('\\', '/').split('\n');
+	expect(lines).toEqual([
+		"test-workspace/content-mapper-style-directives/App.vue(10,1): error vue2578: Unused '@vue-expect-error' directive.",
+		"test-workspace/content-mapper-style-directives/App.vue(12,16): error TS2300: Duplicate identifier 'visible'.",
+		"test-workspace/content-mapper-style-directives/App.vue(13,16): error TS2300: Duplicate identifier 'visible'.",
+		"test-workspace/content-mapper-style-directives/App.vue(16,16): error TS2300: Duplicate identifier 'separated'.",
+		"test-workspace/content-mapper-style-directives/App.vue(17,16): error TS2300: Duplicate identifier 'separated'.",
+	]);
+});

@@ -143,6 +143,9 @@ export function useIR(
 					get scoped() {
 						return getScoped();
 					},
+					get leadingComments() {
+						return getBlock().leadingComments;
+					},
 					get bindings() {
 						return getBindings();
 					},
