@@ -194,6 +194,8 @@ export interface VueFormatStyle extends VueFormatBlock {
 	src?: IRAttr;
 	module?: IRAttr;
 	scoped?: boolean;
+	/** The consecutive top-level comments immediately before this style block. */
+	leadingComments?: readonly Pick<TextRange, 'start' | 'end'>[];
 }
 
 export interface VueFormatCustomBlock extends VueFormatBlock {
@@ -329,6 +331,7 @@ export interface IRStyle extends IRBlock {
 	src: IRAttr | undefined;
 	module: IRAttr | undefined;
 	scoped: boolean;
+	leadingComments?: VueFormatStyle['leadingComments'];
 	bindings: {
 		text: string;
 		offset: number;

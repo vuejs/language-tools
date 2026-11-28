@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { normalizeAttributeValue } from '../template/elements';
-import type { IRAttr, VueFormatBlock, VueFormatResult } from '../types';
+import type { IRAttr, TextRange, VueFormatBlock, VueFormatResult } from '../types';
 
 /** Reads the blocks of a Vue SFC. */
 export function parse(source: string): VueFormatResult {
@@ -27,12 +27,19 @@ export function parse(source: string): VueFormatResult {
 	};
 	let templateVapor = false;
 	let scriptSetupVapor = false;
+	let pendingComments: Pick<TextRange, 'start' | 'end'>[] | undefined;
 	for (const node of ast.children) {
 		if (node.type === CompilerDOM.NodeTypes.COMMENT) {
 			result.comments.push(node.content);
+			(pendingComments ??= []).push({ start: node.loc.start.offset, end: node.loc.end.offset });
 			continue;
 		}
-		else if (node.type !== CompilerDOM.NodeTypes.ELEMENT) {
+		if (node.type === CompilerDOM.NodeTypes.TEXT && !node.content.trim()) {
+			continue;
+		}
+		const leadingComments = pendingComments;
+		pendingComments = undefined;
+		if (node.type !== CompilerDOM.NodeTypes.ELEMENT) {
 			continue;
 		}
 		const block = createBlock(node, source);
@@ -68,6 +75,7 @@ export function parse(source: string): VueFormatResult {
 				const moduleName = module && parseAttr(module);
 				result.styles.push({
 					...block,
+					leadingComments,
 					src: src && parseAttr(src),
 					// an empty name means the default `$style`, anchored to the attribute name
 					module: module && (moduleName !== true && moduleName?.text

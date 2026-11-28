@@ -1,4 +1,12 @@
-import { type IR, type IRAttr, type IRStyle, navigationFeatures, type VueCompilerOptions } from '@vue/language-core';
+import {
+	directiveCommentRE,
+	type IR,
+	type IRAttr,
+	type IRStyle,
+	navigationFeatures,
+	type VueCompilerOptions,
+} from '@vue/language-core';
+import { type DiagnosticDirectiveMapping, DiagnosticDirectivePolicy } from '../../protocol';
 import { names } from '../names';
 import { Boundary, mapped, type TsCode } from '../tsCode';
 import { endOfLine, identifierRE, newLine } from '../writers';
@@ -33,6 +41,7 @@ export function* generateStyleModulesType(
 ): Generator<TsCode> {
 	yield `{${newLine}`;
 	for (const style of styleModules) {
+		const directiveBoundary = yield* startModuleDirective(ir, style);
 		if (style.module === true) {
 			yield `$style`;
 		}
@@ -75,6 +84,31 @@ export function* generateStyleModulesType(
 			);
 		}
 		yield `>${endOfLine}`;
+		if (directiveBoundary) {
+			yield directiveBoundary.end();
+		}
 	}
 	yield `}`;
+}
+
+function* startModuleDirective(ir: IR, style: IRStyle): Generator<TsCode, Boundary<IR> | undefined> {
+	let ignore: DiagnosticDirectiveMapping | undefined;
+	let expect: DiagnosticDirectiveMapping | undefined;
+	for (const { start, end } of style.leadingComments ?? []) {
+		const name = ir.content.slice(start, end).match(directiveCommentRE)?.groups?.name;
+		if (name === 'ignore') {
+			ignore = [start, end - start, 0, 0, DiagnosticDirectivePolicy.Ignore];
+		}
+		else if (name === 'expect-error') {
+			expect = [start, end - start, 0, 0, DiagnosticDirectivePolicy.Expect];
+		}
+	}
+	if (ignore && expect) {
+		const unusedExpectation = yield* Boundary.start(ir, expect[0], expect[0], expect);
+		yield unusedExpectation.end();
+	}
+	const directive = ignore ?? expect;
+	if (directive) {
+		return yield* Boundary.start(ir, directive[0], directive[0], directive);
+	}
 }
